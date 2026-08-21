@@ -1,0 +1,4 @@
+# Codex project config for Niuva.
+# AGENTS.md and agent_docs/ are the project source of truth.
+# Keep environment-specific approval and sandbox settings conservative.
+# No model is pinned; use the model selected by the active Codex environment.
