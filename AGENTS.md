@@ -12,18 +12,16 @@
 
 - **What this is:** Website operasional responsif yang menyatukan company profile dan project brief B2B, retail ready-made, serta custom 3D print berbasis review operator.
 - **Who it is for:** Calon klien B2B, customer retail/B2C, serta Owner/Admin Niuva yang bukan pengguna teknis.
-- **Current phase:** Foundation / implementation planning. Step 4 agent documentation is ready; the application scaffold has not been created.
+- **Current phase:** Foundation / baseline scaffold complete. The Next.js application exists at the repository root; verification harness and UI Foundation / Visual Proof are still pending.
 
 ## Commands
 
-The commands below are design targets and are not runnable until `package.json`
-and the application scaffold exist:
+The baseline scaffold currently exposes these commands:
 
-- `pnpm lint` — required static-analysis gate.
-- `pnpm typecheck` — required strict TypeScript gate.
-- `pnpm test` — required Vitest unit/integration gate.
-- `pnpm build` — required production-build gate.
-- `pnpm test:e2e` — required for critical retail, custom-print, B2B, payment, shipping, or auth changes.
+- `corepack pnpm lint` — required static-analysis gate.
+- `corepack pnpm build` — required production-build gate.
+- `corepack pnpm exec tsc --noEmit` — temporary direct strict TypeScript check until Task 2 adds the `typecheck` script.
+- `pnpm test`, `pnpm test:e2e`, and `pnpm typecheck` — planned Task 2 scripts; not yet defined in `package.json`.
 - `pnpm prisma migrate dev` — development only; never use a destructive reset on production.
 - `pnpm prisma migrate deploy` — staging/production only after migration review and explicit deployment approval.
 
@@ -65,6 +63,9 @@ user request and the authority order above.
   Business rules live in domain services; database access lives in repositories.
 - Treat the current PRD as product authority and the Tech Design as technical
   authority. If they conflict, stop and ask instead of blending them.
+- The repository folder name contains spaces and uppercase characters, so the
+  Next.js generator was run in an isolated lowercase staging folder and its
+  generated files were copied into this root. The package name remains `niuva`.
 
 ## Protected areas — ask before changing
 
@@ -119,3 +120,13 @@ context and the body loads when it is actually needed. Move
 directory-specific conventions into `<subdir>/CLAUDE.md`, which loads only when
 work touches that directory. Keep universal constraints and safety prohibitions
 here — never move a "never do X" rule somewhere it might not be loaded.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
