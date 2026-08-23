@@ -10,15 +10,17 @@
 
 ## Commands
 
-- All unit/integration tests: `pnpm test`
-- Single test: Not specified yet; define the Vitest script pattern during application scaffold instead of assuming one.
-- E2E: `pnpm test:e2e`
-- Typecheck: `pnpm typecheck`
-- Lint: `pnpm lint`
-- Build: `pnpm build`
+- All unit/integration tests: `corepack pnpm test`
+- Single test: `corepack pnpm exec vitest run tests/unit/<name>.test.tsx`
+- E2E: `corepack pnpm test:e2e`
+- Typecheck: `corepack pnpm typecheck`
+- Lint: `corepack pnpm lint`
+- Build: `corepack pnpm build`
+- First-time browser setup: `corepack pnpm exec playwright install chromium`
 - Browser/device check: Playwright plus manual desktop/mobile, keyboard, focus, reduced-motion, and Visual Proof review
 
-These commands are design targets until `package.json` and test configuration exist.
+The scripts and test configurations now exist. The browser smoke test starts the
+local Next dev server through Playwright's `webServer` configuration.
 
 ## What To Test
 

@@ -3,13 +3,13 @@
 ## Phase 1: Foundation and Visual Proof
 
 - [x] Task 1 — Bootstrap Next.js at the current project root.
-- [ ] Task 2 — Establish Vitest, React Testing Library, Playwright, and quality scripts.
+- [x] Task 2 — Establish Vitest, React Testing Library, Playwright, and quality scripts.
 - [ ] Task 3a — Create semantic UI foundation and reusable Niuva components.
 - [ ] Task 3b — Render homepage and admin Action Queue Visual Proof.
 
 ## Checkpoint: Foundation
 
-- [ ] Baseline lint, typecheck, test, E2E, and build pass.
+- [x] Baseline lint, typecheck, test, E2E, and build pass.
 - [ ] Desktop/mobile/keyboard/focus/reduced-motion checks recorded.
 - [ ] Visual Proof approved before broader screen work.
 

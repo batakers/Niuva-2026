@@ -12,16 +12,18 @@
 
 - **What this is:** Website operasional responsif yang menyatukan company profile dan project brief B2B, retail ready-made, serta custom 3D print berbasis review operator.
 - **Who it is for:** Calon klien B2B, customer retail/B2C, serta Owner/Admin Niuva yang bukan pengguna teknis.
-- **Current phase:** Foundation / baseline scaffold complete. The Next.js application exists at the repository root; verification harness and UI Foundation / Visual Proof are still pending.
+- **Current phase:** Foundation / baseline scaffold and verification harness complete. The UI Foundation / Visual Proof gate is still pending.
 
 ## Commands
 
-The baseline scaffold currently exposes these commands:
+The baseline application currently exposes these commands:
 
+- `corepack pnpm install` — install the lockfile dependencies.
 - `corepack pnpm lint` — required static-analysis gate.
+- `corepack pnpm typecheck` — required strict TypeScript gate.
+- `corepack pnpm test` — Vitest + React Testing Library unit/component gate.
+- `corepack pnpm test:e2e` — Playwright browser smoke gate; it starts the local Next dev server.
 - `corepack pnpm build` — required production-build gate.
-- `corepack pnpm exec tsc --noEmit` — temporary direct strict TypeScript check until Task 2 adds the `typecheck` script.
-- `pnpm test`, `pnpm test:e2e`, and `pnpm typecheck` — planned Task 2 scripts; not yet defined in `package.json`.
 - `pnpm prisma migrate dev` — development only; never use a destructive reset on production.
 - `pnpm prisma migrate deploy` — staging/production only after migration review and explicit deployment approval.
 

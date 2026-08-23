@@ -80,20 +80,20 @@ Testing Library, dan Playwright tanpa membuat test palsu atau melemahkan gate.
 
 **Acceptance criteria:**
 
-- [ ] Script lint, typecheck, test, test:e2e, dan build benar-benar menunjuk
+- [x] Script lint, typecheck, test, test:e2e, dan build benar-benar menunjuk
   ke tool yang terpasang.
-- [ ] Ada satu smoke test unit dan satu smoke test browser yang dapat gagal
+- [x] Ada satu smoke test unit/component dan satu smoke test browser yang dapat gagal
   secara bermakna.
-- [ ] .env.example hanya berisi nama variable dari Tech Design tanpa nilai
+- [x] .env.example hanya berisi nama variable dari Tech Design tanpa nilai
   rahasia.
 
 **Verification:**
 
-- [ ] pnpm test
-- [ ] pnpm test:e2e
-- [ ] pnpm typecheck
-- [ ] pnpm lint
-- [ ] pnpm build
+- [x] `corepack pnpm test`
+- [x] `corepack pnpm test:e2e`
+- [x] `corepack pnpm typecheck`
+- [x] `corepack pnpm lint`
+- [x] `corepack pnpm build`
 
 **Dependencies:** Task 1.
 
