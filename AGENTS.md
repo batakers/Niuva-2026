@@ -12,7 +12,7 @@
 
 - **What this is:** Website operasional responsif yang menyatukan company profile dan project brief B2B, retail ready-made, serta custom 3D print berbasis review operator.
 - **Who it is for:** Calon klien B2B, customer retail/B2C, serta Owner/Admin Niuva yang bukan pengguna teknis.
-- **Current phase:** Foundation / baseline scaffold and verification harness complete. The UI Foundation / Visual Proof gate is still pending.
+- **Current phase:** Foundation / baseline scaffold and verification harness complete. Task 3a, Task 3b, and the UI Foundation / Visual Proof gate are still pending.
 
 ## Commands
 
@@ -24,8 +24,10 @@ The baseline application currently exposes these commands:
 - `corepack pnpm test` — Vitest + React Testing Library unit/component gate.
 - `corepack pnpm test:e2e` — Playwright browser smoke gate; it starts the local Next dev server.
 - `corepack pnpm build` — required production-build gate.
-- `pnpm prisma migrate dev` — development only; never use a destructive reset on production.
-- `pnpm prisma migrate deploy` — staging/production only after migration review and explicit deployment approval.
+Prisma is not installed in the baseline yet. Once the Prisma dependency and schema are introduced, use:
+
+- `corepack pnpm prisma migrate dev` — development only; never use a destructive reset on production.
+- `corepack pnpm prisma migrate deploy` — staging/production only after migration review and explicit deployment approval.
 
 ## Read first
 
@@ -57,8 +59,10 @@ user request and the authority order above.
 - Customer 3D/CAD files stay in private R2 storage with short-lived signed
   access. Maximum file size and final retention policy remain TBD.
 - Custom-print shipping is priced only after final package measurement.
-- Exact brand colors and typography remain TBD. Complete the UI Foundation /
-  Visual Proof gate before propagating screens or permanent token values.
+- The approved logo system locks logo colors; the broader UI palette and final
+  typography remain TBD. Use `docs/source/brand/Niuva_Logo_System_v1.0/` during
+  UI Foundation / Visual Proof, and do not propagate permanent UI tokens before
+  that gate.
 - Public pages, checkout, and admin share one Niuva identity but have different
   density and motion needs. Passing tests/build is not visual approval.
 - Route handlers and Server Actions own request/response boundaries only.
