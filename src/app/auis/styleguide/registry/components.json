@@ -1,0 +1,69 @@
+{
+  "status": "p0-p1-components-official-review-ready",
+  "foundation": {
+    "status": "approved",
+    "acceptedAt": "2026-08-28",
+    "source": "src/app/globals.css",
+    "proofRoute": "/auis/styleguide"
+  },
+  "contract": {
+    "status": "p0-p1-approved",
+    "source": "src/app/auis/styleguide/registry/component-contracts.md",
+    "p0ApprovedAt": "2026-08-28",
+    "p1ApprovedAt": "2026-08-28",
+    "componentImplementationAllowed": [
+      "evidence-card",
+      "form-field",
+      "status-notice",
+      "action-queue-item",
+      "money-summary",
+      "file-upload-field",
+      "order-status-timeline",
+      "variant-selector"
+    ],
+    "screenPropagationAllowed": false
+  },
+  "components": [
+    "alert",
+    "badge",
+    "button",
+    "card",
+    "dialog",
+    "dropdown-menu",
+    "input",
+    "label",
+    "radio-group",
+    "select",
+    "separator",
+    "switch",
+    "tabs",
+    "tooltip"
+  ],
+  "productComponents": ["au-logo"],
+  "initialNiuvaComponents": [
+    "evidence-card",
+    "form-field",
+    "status-notice",
+    "action-queue-item",
+    "money-summary",
+    "file-upload-field",
+    "order-status-timeline",
+    "variant-selector"
+  ],
+  "officialNiuvaComponents": [
+    "evidence-card",
+    "form-field",
+    "status-notice",
+    "action-queue-item",
+    "money-summary",
+    "file-upload-field",
+    "order-status-timeline",
+    "variant-selector"
+  ],
+  "pageOnlyCompositions": [
+    "public-narrative",
+    "checkout-flow",
+    "custom-print-review-workspace",
+    "admin-action-queue-layout"
+  ]
+}

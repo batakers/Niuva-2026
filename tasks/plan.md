@@ -4,9 +4,10 @@
 
 Niuva akan dibangun sebagai satu modular monolith yang menghubungkan company
 profile, project brief B2B, ready-made retail, dan custom 3D print berbasis
-review operator. Tujuan fase ini adalah menghasilkan fondasi yang dapat
-diverifikasi dan satu UI Foundation / Visual Proof yang terasa seperti Niuva
-sebelum pola visual disebarkan ke seluruh aplikasi.
+review operator. Urutan kerja visualnya harus melewati diskusi UI Foundation,
+Visual Proof, approval, dan finalisasi terlebih dahulu. Design System baru
+diturunkan dari UI Foundation yang sudah disetujui sebelum screen produk
+diperluas.
 
 ## Authority and assumptions
 
@@ -35,12 +36,17 @@ sebelum pola visual disebarkan ke seluruh aplikasi.
   untuk status order/quote.
 - Harga, stock, shipping, payment, dan state transition authoritative di
   server. File customer berada di private R2 dengan signed URL berumur pendek.
-- UI memakai semantic tokens dan komponen bersama. Exact brand color dan
-  typography tetap TBD sampai identity asset Niuva disetujui.
+- UI memakai semantic tokens dan komponen bersama. Niuva Blue, palette
+  industrial, typography roles, shape, elevation, motion, dan state rules
+  mengikuti UI Foundation yang sudah diterima; component usage tetap mengikuti
+  kontrak Design System.
+- UI Foundation adalah lapisan keputusan visual; Design System adalah
+  operationalisasi foundation menjadi tokens, components, patterns, dan docs.
+  Scaffold AUiS yang sudah ada tetap candidate dan bukan approval visual.
 
 ## Task List
 
-### Phase 1: Foundation and Visual Proof
+### Phase 1: UI Foundation discovery, proof, and finalization
 
 #### Task 1: Bootstrap application at the current project root
 
@@ -101,74 +107,197 @@ Testing Library, dan Playwright tanpa membuat test palsu atau melemahkan gate.
 
 **Estimated scope:** Medium.
 
-#### Task 3a: Create the semantic UI foundation
+#### Task 3a: Discuss and record the UI Foundation (no implementation)
 
-**Description:** Bangun contract token dan komponen dasar yang cukup untuk
-  membuktikan bahasa visual tanpa mengarang permanent brand hex atau typography.
+**Description:** Diskusikan dan catat keputusan visual Niuva sebelum token,
+komponen, atau screen produk dianggap final. Setiap keputusan harus dipisahkan
+menjadi `CONFIRMED`, `CANDIDATE`, atau `OPEN`.
 
 **Acceptance criteria:**
 
-- [ ] Button, form field, section heading, status badge, dan card memakai
-  semantic token.
-- [ ] Komponen memakai satu hierarchy components/niuva → components/ui →
-  Base UI primitives.
-- [ ] Focus, keyboard, contrast, loading, validation, error, success, dan
-  reduced-motion states memiliki pola yang dapat digunakan ulang.
-- [ ] Tidak ada gradient, glassmorphism, decorative blob, atau generic SaaS
-  pattern tanpa alasan terdokumentasi.
+- [x] Arah visual dan prinsip desain Niuva disepakati berdasarkan bukti brand,
+  produk, dan visual reference yang tersedia.
+- [x] Typography ditetapkan: family, role, weight, size, line-height, dan
+  letter-spacing.
+- [x] Color ditetapkan: brand identity, UI palette, semantic colors, contrast,
+  focus, disabled, error, success, warning, dan info.
+- [x] Shape dan surface ditetapkan: spacing rhythm, layout/container, radius,
+  border, divider, shadow/elevation, dan treatment media.
+- [x] Motion, iconography, responsive density, dark-mode scope, dan
+  accessibility states dibahas serta dicatat.
+- [x] Tidak ada nilai `OPEN` yang diisi diam-diam.
 
 **Verification:**
 
-- [ ] Component tests lulus.
-- [ ] pnpm lint, pnpm typecheck, dan pnpm build lulus.
-- [ ] Manual keyboard/focus/reduced-motion check selesai.
+- [x] User meninjau decision record dan menyetujui keputusan yang masuk
+  ke Visual Proof.
+- [x] Tidak ada perubahan source code atau permanent token sebelum explicit
+  implementation approval.
 
 **Dependencies:** Task 1, Task 2.
 
-**Files likely touched:** src/components/ui/*, src/components/niuva/*,
-src/app/globals.css, Tailwind/theme config.
+**Files likely touched:** tasks/plan.md, tasks/todo.md, dan visual reference
+yang secara eksplisit disetujui untuk digunakan.
 
 **Estimated scope:** Medium.
 
-#### Task 3b: Render the Visual Proof checkpoint
+#### Task 3b: Implement the approved UI Foundation and render Visual Proof
 
-**Description:** Render satu section homepage dan satu Action Queue admin
-menggunakan komponen Task 3a, dengan data statis yang jelas diberi label
-preview. Hentikan propagasi setelah review visual user.
+**Description:** Setelah Task 3a disetujui, implementasikan draft foundation
+secukupnya untuk membuktikan keputusan visual pada konteks public, checkout,
+dan admin. Gunakan data preview yang jelas; jangan membangun fitur produk
+lengkap atau menyebarkan pola ke seluruh route.
 
 **Acceptance criteria:**
 
-- [ ] Homepage section menunjukkan positioning Niuva dan tiga entry paths.
-- [ ] Action Queue menunjukkan pekerjaan operasional, bukan tabel database
+- [x] Public proof menunjukkan positioning Niuva dan tiga entry paths.
+- [x] Checkout proof menunjukkan density, form, summary, dan feedback states
+  yang dapat dipahami.
+- [x] Action Queue proof menunjukkan pekerjaan operasional, bukan tabel database
   mentah.
-- [ ] Desktop dan mobile memiliki hierarchy yang disengaja.
-- [ ] Tidak ada placeholder production content atau claim portfolio yang
+- [x] Desktop, mobile, keyboard/focus, contrast, dan reduced-motion memiliki
+  hierarchy yang disengaja.
+- [x] Tidak ada placeholder production content atau claim portfolio yang
   dibuat-buat.
-- [ ] User menyetujui Visual Proof sebelum screen lain diperluas.
+- [x] Semua nilai yang belum final tetap ditandai sebagai candidate.
 
 **Verification:**
 
-- [ ] pnpm test:e2e smoke flow lulus.
-- [ ] Manual render/inspect pada desktop dan mobile.
-- [ ] Catat keputusan visual dan residual risks sebelum checkpoint ditutup.
+- [x] Component/preview tests lulus bila tersedia.
+- [x] `corepack pnpm lint`, `corepack pnpm typecheck`, dan
+  `corepack pnpm build` lulus.
+- [x] Manual render/inspect pada desktop dan mobile.
+- [x] Catat feedback visual dan residual risks untuk Task 3c.
 
-**Dependencies:** Task 3a.
+**Dependencies:** Task 3a dan explicit implementation approval setelah
+decision record diterima.
 
-**Files likely touched:** src/app/(public)/page.tsx, admin preview route,
-fixture data, visual proof notes.
+**Files likely touched:** src/app/globals.css, foundation preview, preview
+fixtures, dan minimal proof surfaces.
 
 **Estimated scope:** Medium.
 
+#### Task 3c: Review and finalize the UI Foundation
+
+**Description:** Tinjau Visual Proof bersama user, revisi keputusan yang belum
+tepat, lalu tetapkan foundation final. Task ini adalah gate sebelum derivasi
+Design System.
+
+**Status:** Complete — owner explicitly approved `setujui UI Foundation` on
+2026-08-28.
+
+**Acceptance criteria:**
+
+- [x] Visual Proof public, checkout, dan admin diterima user.
+- [x] Typography, color, spacing, shape, surface, motion, iconography, dan
+  state rules yang dibutuhkan sudah `CONFIRMED` atau sengaja tetap `OPEN`.
+- [x] Token yang menjadi foundation token memiliki mapping dan contrast
+  rationale yang dapat ditelusuri.
+- [x] Status foundation pada dokumentasi dan registry diperbarui hanya setelah
+  approval eksplisit.
+
+**Verification:**
+
+- [x] User memberikan approval final terhadap UI Foundation.
+- [x] Diff token dan residual risks direview.
+- [x] Tidak ada screen produk yang diperluas sebelum checkpoint ini selesai.
+
+**Dependencies:** Task 3b.
+
+**Files likely touched:** src/app/globals.css, PRODUCT_CONTEXT.md,
+tasks/plan.md, dan tasks/todo.md setelah approval.
+
+**Estimated scope:** Small–Medium.
+
 ### Checkpoint: Foundation
 
-- [ ] Tasks 1–3b terverifikasi.
-- [ ] Visual Proof diterima user.
-- [ ] Tidak ada perubahan database, payment, storage, DNS, atau provider
+- [x] Tasks 1–3c terverifikasi.
+- [x] UI Foundation diterima dan difinalisasikan user.
+- [x] Tidak ada perubahan database, payment, storage, DNS, atau provider
   production yang dilakukan diam-diam.
 
-### Phase 2: Core vertical slices
+### Phase 2: Design System derivation
 
-#### Task 4: Public content and B2B project brief
+#### Task 4: Define the Design System contract from finalized Foundation
+
+**Status:** P0/P1 approved — owner approved `setujui component contracts P0`
+and `setujui component contracts P1` on 2026-08-28. Implementation is tracked
+in Task 5; visual Design System acceptance and screen propagation remain gated.
+
+**Description:** Turunkan UI Foundation final menjadi arsitektur Design System
+yang eksplisit. Bedakan primitive, composite component, Niuva pattern, dan
+page-only composition sebelum implementasi komponen produk.
+
+**Acceptance criteria:**
+
+- [x] Semantic token map, component hierarchy, naming, import boundary, dan
+  ownership ditetapkan.
+- [x] Setiap kandidat component memiliki purpose, anatomy, variants, sizes,
+  states, props, accessibility, token usage, dan showcase requirement.
+- [x] Komponen yang hanya merupakan komposisi satu route tidak dipaksa menjadi
+  reusable component.
+- [x] Business rules seperti pricing, stock, payment, upload authorization,
+  dan state transition tetap berada di domain/API layer.
+
+**Verification:**
+
+- [x] Component inventory dan P0/P1 contracts direview serta disetujui user.
+- [x] Tidak ada komponen baru yang diimplementasikan sebelum contract diterima.
+
+**Dependencies:** Checkpoint Foundation.
+
+**Files likely touched:** tasks/plan.md, tasks/todo.md,
+`src/app/auis/styleguide/registry/components.json`, dan
+`src/app/auis/styleguide/registry/component-contracts.md`.
+
+**Estimated scope:** Medium.
+
+#### Task 5: Implement and document the initial Design System components
+
+**Status:** P0/P1 implementation complete in the styleguide and ready for
+visual/technical Design System review; product screen propagation remains
+blocked.
+
+**Description:** Implementasikan hanya component contracts yang sudah diterima
+di Task 4. Setiap official component harus memakai foundation final, tercatat
+di `/auis/styleguide`, dan memiliki showcase serta state coverage.
+
+**Acceptance criteria:**
+
+- [x] Primitive AUiS/shadcn tidak diduplikasi; wrapper atau extension dibuat
+  hanya bila ada kebutuhan Niuva yang jelas.
+- [x] Component states mencakup default, focus, disabled, loading, validation,
+  error, success, empty, dan reduced-motion sesuai relevansi.
+- [x] Setiap official component terdokumentasi dan terdaftar di styleguide.
+- [x] Tidak ada page-specific business logic di component layer.
+
+**Verification:**
+
+- [x] Focused component tests lulus.
+- [x] `corepack pnpm lint`, `corepack pnpm typecheck`, dan
+  `corepack pnpm build` lulus.
+- [x] Manual styleguide review pada desktop/mobile selesai; owner Design
+  System acceptance tetap menjadi gate berikutnya.
+
+**Dependencies:** Task 4, P0 contract approval, dan explicit implementation
+approval.
+
+**Files likely touched:** src/components/ui/*, src/components/niuva/*,
+src/app/auis/styleguide/*, dan tests terkait.
+
+**Estimated scope:** Medium.
+
+### Checkpoint: Design System
+
+- [ ] Tasks 4–5 terverifikasi.
+- [ ] Component inventory, P0/P1 contracts, showcases, dan token usage
+  diterima.
+- [ ] Baru setelah checkpoint ini component/page skills boleh digunakan untuk
+  screen produk.
+
+### Phase 3: Core vertical slices
+
+#### Task 6: Public content and B2B project brief
 
 - Services, portfolio, project detail, dan process content menggunakan data
   yang dapat dilacak ke sumber Niuva.
@@ -176,24 +305,24 @@ fixture data, visual proof notes.
   attachment secara privat, masuk Action Queue, dan menyediakan WhatsApp
   continuation.
 
-#### Task 5: Ready-made catalog, stock, cart, and guest checkout
+#### Task 7: Ready-made catalog, stock, cart, and guest checkout
 
 - Product/category/variant/stock model, catalog, product detail, cart, stock
   reservation, contact/address capture, dan duplicate checkout protection.
 
-#### Task 6: Shipping and authoritative payment
+#### Task 8: Shipping and authoritative payment
 
 - Biteship rate normalization dan snapshot; Midtrans Snap attempt; webhook
   signature/amount verification, idempotency, dan explicit payment state.
 
-#### Task 7: Custom print upload, review, quote, and pricing
+#### Task 9: Custom print upload, review, quote, and pricing
 
 - Private STL/3MF/OBJ flow, operator review/slicer input, Decimal Pricing v1,
   immutable quote, approval, dan revalidation sebelum payment.
 - Pricing 1–49 g dan communal ABS berhenti sebagai blocker sampai owner
   mengonfirmasi aturan.
 
-#### Task 8: Order state, admin operations, email, and observability
+#### Task 10: Order state, admin operations, email, and observability
 
 - Secure order/quote status, valid transition map, audit log, Action Queue,
   thin admin CRUD, Resend events setelah commit, dan Sentry/Vercel logging
@@ -207,14 +336,14 @@ fixture data, visual proof notes.
 - [ ] Invalid state, duplicate webhook, private file, dan authorization tests
   lulus.
 
-### Phase 3: Reliability and launch readiness
+### Phase 4: Reliability and launch readiness
 
-#### Task 9: Failure, accessibility, and owner usability pass
+#### Task 11: Failure, accessibility, and owner usability pass
 
 - Cover failure matrix dari agent_docs/testing.md, mobile/desktop,
   keyboard/focus, empty/loading/error/success, and owner usability.
 
-#### Task 10: Staging and soft-launch gate
+#### Task 12: Staging and soft-launch gate
 
 - Staging/production separation, backup/restore rehearsal, spend alerts,
   provider sandbox evidence, three test transactions, and launch decision.
@@ -241,7 +370,7 @@ fixture data, visual proof notes.
 
 - Next.js 16.3.2 dipilih sebagai baseline pada tanggal instalasi; upgrade tetap
   memerlukan verifikasi compatibility dan approval sesuai workflow.
-- Final Niuva brand colors and typography from approved identity assets.
+- Approval component inventory and contracts for the initial Design System.
 - Pricing 1–49 g and communal ABS rate.
 - Maximum upload size and retention policy.
 - Permission for public client names/logos and quantitative case-study results.

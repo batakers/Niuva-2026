@@ -12,7 +12,7 @@
 
 - **What this is:** Website operasional responsif yang menyatukan company profile dan project brief B2B, retail ready-made, serta custom 3D print berbasis review operator.
 - **Who it is for:** Calon klien B2B, customer retail/B2C, serta Owner/Admin Niuva yang bukan pengguna teknis.
-- **Current phase:** Foundation / baseline scaffold and verification harness complete. Task 3a, Task 3b, and the UI Foundation / Visual Proof gate are still pending.
+- **Current phase:** Foundation / baseline scaffold and verification harness complete. UI Foundation / Visual Proof and the P0/P1 component contracts were accepted on 2026-08-28; P0/P1 implementation is available for Design System review, while product screen propagation remains gated.
 
 ## Commands
 
@@ -59,10 +59,11 @@ user request and the authority order above.
 - Customer 3D/CAD files stay in private R2 storage with short-lived signed
   access. Maximum file size and final retention policy remain TBD.
 - Custom-print shipping is priced only after final package measurement.
-- The approved logo system locks logo colors; the broader UI palette and final
-  typography remain TBD. Use `docs/source/brand/Niuva_Logo_System_v1.0/` during
-  UI Foundation / Visual Proof, and do not propagate permanent UI tokens before
-  that gate.
+- The approved logo system locks logo colors; the accepted UI Foundation tokens
+  are recorded in `src/app/globals.css` and
+  `src/app/auis/styleguide/foundation/tokens.ts`. Use the logo source during
+  future UI work, and do not bypass the Design System contract checkpoint when
+  propagating those tokens to product screens.
 - Public pages, checkout, and admin share one Niuva identity but have different
   density and motion needs. Passing tests/build is not visual approval.
 - Route handlers and Server Actions own request/response boundaries only.
@@ -108,7 +109,8 @@ infrastructure/auth/billing/migrations without approval.
 - Do not add features outside the active phase, silently weaken tests, bypass
   hooks, or resolve a business TBD through code.
 - Do not add arbitrary visual values when semantic tokens exist. Do not invent
-  permanent tokens before UI Foundation approval.
+  permanent tokens outside the accepted UI Foundation or bypass the component
+  contract when applying them.
 - Do not delete files, change schemas, commit, push, deploy, activate providers,
   or use subagents without the approval required by the user and repository.
 
