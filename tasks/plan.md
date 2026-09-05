@@ -42,7 +42,10 @@ diperluas.
   kontrak Design System.
 - UI Foundation adalah lapisan keputusan visual; Design System adalah
   operationalisasi foundation menjadi tokens, components, patterns, dan docs.
-  Scaffold AUiS yang sudah ada tetap candidate dan bukan approval visual.
+  Revised UI Foundation Visual Proof telah disetujui pada 2026-09-03 untuk
+  styleguide-only, sementara product-screen propagation tetap merupakan gate
+  terpisah. Approval tetap bersifat per gate untuk P0/P1, Motion, Patterns,
+  Creative, dan Decorative.
 
 ## Task List
 
@@ -183,12 +186,18 @@ fixtures, dan minimal proof surfaces.
 tepat, lalu tetapkan foundation final. Task ini adalah gate sebelum derivasi
 Design System.
 
-**Status:** Complete — owner explicitly approved `setujui UI Foundation` on
-2026-08-28.
+**Status:** Complete — owner approved the revised UI Foundation Visual Proof on
+2026-09-03 for styleguide-only scope. Typography System v1.0, P0/P1, Motion
+System v1 CSS-first, and Pattern proofs have their own recorded gates;
+product-screen propagation remains paused.
 
 **Acceptance criteria:**
 
-- [x] Visual Proof public, checkout, dan admin diterima user.
+- [x] Revised Visual Proof public, checkout, dan admin diterima user untuk
+  styleguide-only scope pada 2026-09-03.
+- [x] Typography System v1.0 (Space Grotesk + restrained Fraunces, scale,
+  responsive steps, weight, tracking, line-height, dan Fraunces axis policy)
+  diterima user tanpa propagasi product screens.
 - [x] Typography, color, spacing, shape, surface, motion, iconography, dan
   state rules yang dibutuhkan sudah `CONFIRMED` atau sengaja tetap `OPEN`.
 - [x] Token yang menjadi foundation token memiliki mapping dan contrast
@@ -198,7 +207,10 @@ Design System.
 
 **Verification:**
 
-- [x] User memberikan approval final terhadap UI Foundation.
+- [x] User memberikan approval final terhadap revised UI Foundation pada
+  2026-09-03 dengan batas styleguide-only.
+- [x] User memberikan approval eksplisit terhadap Typography System v1.0 pada
+  2026-08-29 dengan batas foundation/styleguide only.
 - [x] Diff token dan residual risks direview.
 - [x] Tidak ada screen produk yang diperluas sebelum checkpoint ini selesai.
 
@@ -211,8 +223,10 @@ tasks/plan.md, dan tasks/todo.md setelah approval.
 
 ### Checkpoint: Foundation
 
-- [x] Tasks 1–3c terverifikasi.
-- [x] UI Foundation diterima dan difinalisasikan user.
+- [x] Tasks 1–3c memiliki decision record dan verification baseline.
+- [x] Revised UI Foundation diterima dan difinalisasikan user pada 2026-09-03
+  untuk styleguide-only; product-screen propagation tetap merupakan gate
+  terpisah.
 - [x] Tidak ada perubahan database, payment, storage, DNS, atau provider
   production yang dilakukan diam-diam.
 
@@ -220,9 +234,12 @@ tasks/plan.md, dan tasks/todo.md setelah approval.
 
 #### Task 4: Define the Design System contract from finalized Foundation
 
-**Status:** P0/P1 approved — owner approved `setujui component contracts P0`
-and `setujui component contracts P1` on 2026-08-28. Implementation is tracked
-in Task 5; visual Design System acceptance and screen propagation remain gated.
+**Status:** Architecture v1 is documented, and the revised UI Foundation Visual
+Proof was approved for styleguide-only scope on 2026-09-03. The renewed P0/P1
+visual gate was approved on 2026-09-02 and Typography System v1.0 on 2026-08-29.
+A scoped propagation proof is authorized for `/` and `/project-brief` only;
+visual acceptance is pending and bulk product-screen propagation remains
+paused.
 
 **Description:** Turunkan UI Foundation final menjadi arsitektur Design System
 yang eksplisit. Bedakan primitive, composite component, Niuva pattern, dan
@@ -238,10 +255,15 @@ page-only composition sebelum implementasi komponen produk.
   reusable component.
 - [x] Business rules seperti pricing, stock, payment, upload authorization,
   dan state transition tetap berada di domain/API layer.
+- [x] Architecture v1 records Foundation, Primitives, Core Components, Motion,
+  Creative, Decorative, Patterns, and Governance layers with source and
+  promotion boundaries.
 
 **Verification:**
 
 - [x] Component inventory dan P0/P1 contracts direview serta disetujui user.
+- [x] Architecture & Registry v1 ditampilkan di `/auis/styleguide#architecture`
+  dan dicatat dalam registry typed/JSON serta contract documentation.
 - [x] Tidak ada komponen baru yang diimplementasikan sebelum contract diterima.
 
 **Dependencies:** Checkpoint Foundation.
@@ -254,9 +276,9 @@ page-only composition sebelum implementasi komponen produk.
 
 #### Task 5: Implement and document the initial Design System components
 
-**Status:** P0/P1 implementation complete in the styleguide and ready for
-visual/technical Design System review; product screen propagation remains
-blocked.
+**Status:** Visual review approved for styleguide-only scope on 2026-09-02.
+Typography System v1.0 and the revised P0/P1 visual defaults are accepted within
+the current styleguide proof; product-screen propagation remains paused.
 
 **Description:** Implementasikan hanya component contracts yang sudah diterima
 di Task 4. Setiap official component harus memakai foundation final, tercatat
@@ -276,8 +298,9 @@ di `/auis/styleguide`, dan memiliki showcase serta state coverage.
 - [x] Focused component tests lulus.
 - [x] `corepack pnpm lint`, `corepack pnpm typecheck`, dan
   `corepack pnpm build` lulus.
-- [x] Manual styleguide review pada desktop/mobile selesai; owner Design
-  System acceptance tetap menjadi gate berikutnya.
+- [x] Manual styleguide review pada desktop/mobile selesai untuk revised visual
+  language dan diterima owner pada 2026-09-02; CTA contrast dan compact summary
+  alignment ikut diverifikasi.
 
 **Dependencies:** Task 4, P0 contract approval, dan explicit implementation
 approval.
@@ -289,11 +312,20 @@ src/app/auis/styleguide/*, dan tests terkait.
 
 ### Checkpoint: Design System
 
-- [ ] Tasks 4–5 terverifikasi.
-- [ ] Component inventory, P0/P1 contracts, showcases, dan token usage
-  diterima.
-- [ ] Baru setelah checkpoint ini component/page skills boleh digunakan untuk
-  screen produk.
+- [x] Tasks 4–5 memiliki implementation baseline dan historical approvals.
+- [x] Revised component defaults, showcases, dan token usage diterima setelah
+  visual review pada 2026-09-02 untuk styleguide-only scope.
+- [x] Motion System v1 CSS-first proof dan empat Pattern proofs dirender
+  di `/auis/styleguide`; tidak ada dependency baru, global token change, atau
+  product-screen propagation.
+- [x] Motion dan Pattern proofs diterima owner secara visual pada 2026-09-03
+  untuk styleguide-only; status `Official` dan product-screen usage tetap
+  membutuhkan task terpisah.
+- [x] MVP wireframe architecture untuk 20 surface disetujui owner pada
+  2026-09-03; Admin Sign-in termasuk MVP, Customer Account Access tetap
+  deferred, dan visual screen proof tetap merupakan gate berikutnya.
+- [x] Component/page skills boleh digunakan untuk screen produk melalui task
+  page/route yang ter-scope; tidak ada bulk propagation otomatis.
 
 ### Phase 3: Core vertical slices
 

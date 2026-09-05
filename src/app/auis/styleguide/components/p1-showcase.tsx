@@ -87,10 +87,16 @@ function PreviewAction({ children, variant = "outline" }: { children: string; va
 
 export function P1ComponentShowcase() {
   return (
-    <section className="scroll-mt-8 space-y-6" data-component-showcase="p1" id="p1-components">
+    <section
+      className="scroll-mt-8 space-y-6"
+      data-component-showcase="p1"
+      data-visual-review="approved"
+      data-visual-review-scope="styleguide-only"
+      id="p1-components"
+    >
       <div className="space-y-2">
-        <p className="text-sm font-medium uppercase tracking-[0.12em] text-brand-700">
-          Design System / P1 official components
+        <p className="text-sm font-medium text-brand-700">
+          Design System · komponen P1 resmi
         </p>
         <h2 className="text-2xl font-semibold tracking-tight">Komponen untuk workflow yang berwenang</h2>
         <p className="max-w-3xl leading-7 text-muted-foreground">
@@ -107,7 +113,7 @@ export function P1ComponentShowcase() {
             <h3 className="font-semibold">MoneySummary</h3>
             <p className="text-sm text-muted-foreground">Nilai ditampilkan, bukan dihitung oleh UI.</p>
           </div>
-          <Badge variant="secondary">P1 / official</Badge>
+          <Badge>P1 · visual approved</Badge>
         </div>
         <div className="grid gap-4 xl:grid-cols-2">
           <MoneySummary
@@ -125,7 +131,7 @@ export function P1ComponentShowcase() {
             lines={quoteLines}
             note="Operator quote · fixture diterima"
             sourceStatus="changed"
-            title="Accepted custom quote"
+            title="Custom quote diterima"
             total="Rp 800.000"
             currency="IDR"
             variant="quote"
@@ -135,7 +141,7 @@ export function P1ComponentShowcase() {
           <MoneySummary
             lines={[]}
             sourceStatus="loading"
-            title="Loading state"
+            title="Sedang dimuat"
             total="—"
             currency="IDR"
             variant="compact"
@@ -144,7 +150,7 @@ export function P1ComponentShowcase() {
             action={<PreviewAction>Lengkapi alamat</PreviewAction>}
             lines={[]}
             sourceStatus="unavailable"
-            title="Unavailable state"
+            title="Belum tersedia"
             total="—"
             currency="IDR"
             variant="compact"
@@ -153,7 +159,7 @@ export function P1ComponentShowcase() {
             action={<PreviewAction>Muat ulang rincian</PreviewAction>}
             lines={[]}
             sourceStatus="error"
-            title="Error state"
+            title="Terjadi kendala"
             total="—"
             currency="IDR"
             variant="compact"
@@ -167,7 +173,7 @@ export function P1ComponentShowcase() {
             <h3 className="font-semibold">FileUploadField</h3>
             <p className="text-sm text-muted-foreground">Private file lifecycle dengan policy yang terlihat.</p>
           </div>
-          <Badge variant="secondary">P1 / official</Badge>
+          <Badge>P1 · visual approved</Badge>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <FileUploadField
@@ -181,7 +187,7 @@ export function P1ComponentShowcase() {
           <FileUploadField
             acceptedExtensions={[".stl", ".3mf", ".obj"]}
             description="Metadata berasal dari validasi server, bukan asumsi browser."
-            fileMeta="STL · 4,2 MB · accepted by server"
+            fileMeta="STL · 4,2 MB · diterima server"
             fileName="housing-prototype.stl"
             id="p1-upload-accepted"
             label="Berkas diterima"
@@ -231,7 +237,7 @@ export function P1ComponentShowcase() {
             <h3 className="font-semibold">OrderStatusTimeline</h3>
             <p className="text-sm text-muted-foreground">Tahapan publik yang tidak mengekspos transition internal.</p>
           </div>
-          <Badge variant="secondary">P1 / official</Badge>
+          <Badge>P1 · visual approved</Badge>
         </div>
         <div className="grid gap-4 xl:grid-cols-2">
           <OrderStatusTimeline
@@ -271,7 +277,7 @@ export function P1ComponentShowcase() {
             <h3 className="font-semibold">VariantSelector</h3>
             <p className="text-sm text-muted-foreground">Pilihan retail mengikuti ketersediaan dari server.</p>
           </div>
-          <Badge variant="secondary">P1 / official</Badge>
+          <Badge>P1 · visual approved</Badge>
         </div>
         <div className="grid gap-4 xl:grid-cols-3">
           <div className="rounded-xl border border-border bg-card p-4 shadow-card">
@@ -318,7 +324,7 @@ export function P1ComponentShowcase() {
 
       <div className="flex items-center gap-2 border-t border-border pt-4 text-sm text-muted-foreground">
         <span className="size-2 rounded-full bg-success" />
-        <span>P1 contracts implemented and showcased. Screen propagation remains gated by the Design System checkpoint.</span>
+        <span>Visual gate P1 disetujui untuk styleguide. Propagasi layar tetap menunggu task page/route terpisah.</span>
       </div>
     </section>
   );

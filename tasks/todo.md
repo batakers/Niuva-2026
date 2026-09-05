@@ -6,25 +6,39 @@
 - [x] Task 2 — Establish Vitest, React Testing Library, Playwright, and quality scripts.
 - [x] Task 3a — Diskusikan dan catat UI Foundation tanpa implementasi.
 - [x] Task 3b — Implementasikan foundation yang disetujui dan render Visual Proof public, checkout, serta admin.
-- [x] Task 3c — Review, approve, dan finalisasikan UI Foundation (approved 2026-08-28).
+- [x] Task 3c — Review ulang typography dan visual language UI Foundation setelah feedback owner; revised Foundation Visual Proof disetujui untuk styleguide-only pada 2026-09-03 (reopened 2026-08-29).
+  - [x] Candidate v2 disetujui sebagai Typography System v1.0 pada 2026-08-29; foundation/styleguide only, tanpa propagasi product screens.
+  - [x] Revised Foundation Visual Proof disetujui owner pada 2026-09-03 untuk styleguide-only; product-screen propagation tetap paused.
 
 ## Checkpoint: Foundation
 
 - [x] Baseline lint, typecheck, test, E2E, and build pass.
 - [x] UI Foundation decisions recorded as CONFIRMED/CANDIDATE/OPEN.
 - [x] Desktop/mobile/keyboard/focus/reduced-motion checks recorded.
-- [x] Visual Proof approved and UI Foundation finalized.
+- [x] Revised Visual Proof approved and UI Foundation finalized for styleguide-only on 2026-09-03; product-screen propagation outside the named proof remains separately paused.
 
 ## Phase 2: Design System derivation
 
-- [x] Task 4 — Define Design System contract from the finalized UI Foundation (P0/P1 approved 2026-08-28).
-- [x] Task 5 — Implement and document the initial Design System components (P0/P1 implementation ready for Design System review).
+- [x] Task 4 — Define Design System contract from the finalized UI Foundation (P0/P1 contract approval recorded 2026-08-28; renewed visual gate approved for styleguide-only on 2026-09-02).
+  - [x] Design System Architecture & Registry v1 documented in `/auis/styleguide` on 2026-09-02; source and promotion boundaries recorded without new dependencies or product propagation.
+- [x] Task 5 — Rework and re-review the initial Design System components (visual gate approved for styleguide-only on 2026-09-02).
+- [x] Motion System v1 — CSS-first token/recipe proof added to the styleguide on 2026-09-02; no new dependency or product propagation.
+- [x] Pattern proof — Hero / case-study opener, Product discovery, Checkout Summary, and Admin Action Queue rendered from Niuva flow evidence on 2026-09-02.
+- [x] Wireframe architecture MVP — 20-surface inventory and MVP/deferred boundary approved by owner on 2026-09-03; final visual proof and product-screen propagation remain separate gates.
+- [ ] Scoped product-screen propagation proof — public homepage and `/project-brief` authorized on 2026-09-03; visual acceptance pending; checkout/admin and Creative/Decorative excluded.
 
 ## Checkpoint: Design System
 
 - [x] Component inventory and P0/P1 contracts approved.
-- [x] Components use finalized foundation tokens and are documented in `/auis/styleguide`.
-- [ ] No product pages are expanded before this checkpoint.
+- [x] Architecture & Registry v1 documented with Foundation, Primitives, Core Components, Motion, Creative, Decorative, Patterns, and Governance layers.
+- [x] Revised components use the reviewed foundation rules and are documented in `/auis/styleguide`; product-screen propagation remains separately paused.
+- [x] No product pages were expanded before this checkpoint; new screen work remains paused until visual reapproval.
+- [x] Motion System v1 and Pattern proofs received owner visual acceptance on
+  2026-09-03 for styleguide-only use; product-screen promotion remains a
+  separate scoped authorization.
+- [x] MVP wireframe architecture received owner approval on 2026-09-03;
+  customer account remains deferred and product-screen visual acceptance
+  remains pending.
 
 ## Phase 3: Core vertical slices
 

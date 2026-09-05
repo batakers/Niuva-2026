@@ -1,20 +1,16 @@
 import type { ReactNode } from "react";
-import {
-  AlertCircle,
-  CheckCircle2,
-  Info,
-  TriangleAlert,
-  type LucideIcon,
-} from "lucide-react";
 
 import {
   Alert,
   AlertDescription,
   AlertTitle,
 } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Icon, type IconName } from "@/components/ui/Icon";
 import { cn } from "@/lib/utils";
 
 export type StatusNoticeTone = "success" | "warning" | "info" | "error";
+export type StatusNoticeSize = "default" | "compact";
 
 export type StatusNoticeProps = {
   tone: StatusNoticeTone;
@@ -23,15 +19,20 @@ export type StatusNoticeProps = {
   reason?: string;
   action?: ReactNode;
   secondaryAction?: ReactNode;
+  actionLabel?: string;
+  secondaryActionLabel?: string;
+  onAction?: () => void;
+  ariaLive?: "polite" | "assertive" | "off";
   role?: "status" | "alert";
+  size?: StatusNoticeSize;
   className?: string;
 };
 
-const icons: Record<StatusNoticeTone, LucideIcon> = {
-  success: CheckCircle2,
-  warning: TriangleAlert,
-  info: Info,
-  error: AlertCircle,
+const icons: Record<StatusNoticeTone, IconName> = {
+  success: "check-circle-2",
+  warning: "triangle-alert",
+  info: "info",
+  error: "alert-circle",
 };
 
 const toneClasses: Record<StatusNoticeTone, string> = {
@@ -41,6 +42,13 @@ const toneClasses: Record<StatusNoticeTone, string> = {
   error: "border-destructive-border bg-destructive-background text-destructive",
 };
 
+const toneLabels: Record<StatusNoticeTone, string> = {
+  success: "Berhasil",
+  warning: "Perlu perhatian",
+  info: "Informasi",
+  error: "Terjadi kendala",
+};
+
 export function StatusNotice({
   tone,
   title,
@@ -48,36 +56,59 @@ export function StatusNotice({
   reason,
   action,
   secondaryAction,
+  actionLabel,
+  secondaryActionLabel,
+  onAction,
+  ariaLive,
   role,
+  size = "default",
   className,
 }: StatusNoticeProps) {
-  const Icon = icons[tone];
+  const resolvedRole = role ?? (tone === "error" ? "alert" : "status");
+  const resolvedAriaLive = ariaLive ?? (resolvedRole === "alert" ? "assertive" : "polite");
+  const primaryAction =
+    action ??
+    (actionLabel ? (
+      <Button onClick={onAction} size={size === "compact" ? "sm" : "default"} type="button">
+        {actionLabel}
+      </Button>
+    ) : null);
+  const secondaryActionNode =
+    secondaryAction ??
+    (secondaryActionLabel ? (
+      <Button size={size === "compact" ? "sm" : "default"} type="button" variant="outline">
+        {secondaryActionLabel}
+      </Button>
+    ) : null);
 
   return (
     <Alert
       className={cn(
-        "gap-3 p-4 [&>[data-slot=alert-description]]:text-current/80",
+        "gap-3",
+        size === "compact" ? "p-3" : "p-4",
         toneClasses[tone],
         className,
       )}
       data-component="status-notice"
+      data-size={size}
       data-tone={tone}
-      role={role ?? (tone === "error" ? "alert" : "status")}
+      aria-live={resolvedAriaLive}
+      role={resolvedRole}
     >
-      <Icon aria-hidden="true" className="mt-0.5" />
+      <Icon aria-hidden="true" className="mt-0.5" name={icons[tone]} />
       <div className="min-w-0 space-y-1">
-        <AlertTitle className="font-mono text-[0.68rem] uppercase tracking-[0.14em]">
-          {tone}
+        <AlertTitle className="text-xs font-semibold">
+          {toneLabels[tone]}
         </AlertTitle>
         <p className="font-medium text-current">{title}</p>
-        <AlertDescription className="text-current/80">
+        <AlertDescription className="text-current">
           {description}
         </AlertDescription>
-        {reason ? <p className="text-xs text-current/80">Alasan: {reason}</p> : null}
-        {action || secondaryAction ? (
+        {reason ? <p className="text-xs text-current">Alasan: {reason}</p> : null}
+        {primaryAction || secondaryActionNode ? (
           <div className="flex flex-wrap items-center gap-2 pt-2">
-            {action}
-            {secondaryAction}
+            {primaryAction}
+            {secondaryActionNode}
           </div>
         ) : null}
       </div>

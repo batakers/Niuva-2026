@@ -21,16 +21,20 @@ import {
   rhythmTokens,
   semanticTokens,
   shadowTokens,
-  typographyTokens,
   type TokenSwatch,
 } from "./foundation/tokens";
 import { VisualProof } from "./components/visual-proof";
+import { CorePrimitiveShowcase } from "./components/core-showcase";
+import { DesignSystemArchitecture } from "./components/design-system-architecture";
+import { MotionSystemProof } from "./components/motion-system";
 import { P0ComponentShowcase } from "./components/p0-showcase";
 import { P1ComponentShowcase } from "./components/p1-showcase";
+import { PatternsShowcase } from "./components/patterns-showcase";
+import { TypographyProof } from "./components/typography-proof";
 
 export const metadata: Metadata = {
-  title: "Foundation styleguide · Niuva",
-  description: "Approved Niuva UI Foundation and P0/P1 Design System contracts.",
+  title: "Design System styleguide · Niuva",
+  description: "Niuva Design System Architecture v1, Motion System, dan pattern proof.",
 };
 
 function Palette({ title, tokens }: { title: string; tokens: readonly TokenSwatch[] }) {
@@ -40,18 +44,19 @@ function Palette({ title, tokens }: { title: string; tokens: readonly TokenSwatc
         <h3 className="text-base font-semibold">{title}</h3>
         <span className="text-xs text-muted-foreground">50 → 950</span>
       </div>
-      <div className="grid grid-cols-11 gap-1 overflow-x-auto pb-2">
+      <div className="grid grid-cols-6 gap-1 sm:grid-cols-11">
         {tokens.map((token) => (
-          <div className="min-w-12 space-y-1.5" key={token.token}>
+          <figure className="min-w-0 space-y-1.5" key={token.token}>
             <div
-              aria-label={`${title} ${token.label}`}
+              aria-hidden="true"
               className="aspect-square rounded-md border border-border shadow-card"
               style={{ backgroundColor: `var(${token.token})` }}
             />
-            <p className="text-center font-mono text-[0.65rem] text-muted-foreground">
+            <figcaption className="text-center text-xs tabular-nums text-muted-foreground">
+              <span className="sr-only">{title} </span>
               {token.label}
-            </p>
-          </div>
+            </figcaption>
+          </figure>
         ))}
       </div>
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -69,7 +74,7 @@ function Palette({ title, tokens }: { title: string; tokens: readonly TokenSwatc
 
 function SemanticTokenList() {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
       {semanticTokens.map((token) => (
         <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-3" key={token.token}>
           <span
@@ -78,8 +83,8 @@ function SemanticTokenList() {
             style={{ backgroundColor: `var(${token.token})` }}
           />
           <span className="min-w-0">
-            <span className="block truncate text-sm font-medium">{token.label}</span>
-            <code className="block truncate text-xs text-muted-foreground">{token.token}</code>
+            <span className="block text-sm font-medium">{token.label}</span>
+            <code className="block break-words text-xs text-muted-foreground">{token.token}</code>
           </span>
         </div>
       ))}
@@ -96,8 +101,8 @@ export default function StyleguidePage() {
     <div className="space-y-section">
       <header className="space-y-6" id="review-state">
         <div className="space-y-3">
-          <p className="text-sm font-medium uppercase tracking-[0.14em] text-brand-700">
-            Foundation disetujui · Design System P0/P1
+          <p className="text-sm font-medium text-brand-700">
+            Foundation, P0/P1, Motion, dan Patterns disetujui
           </p>
           <h1 className="max-w-4xl text-4xl font-semibold tracking-tight sm:text-5xl">
             Visual foundation Niuva
@@ -108,21 +113,28 @@ export default function StyleguidePage() {
             ruang bagi bukti tanpa mengambil alih komunikasi.
           </p>
         </div>
-        <Alert>
-          <AlertTitle>Status: UI Foundation disetujui — P0/P1 contracts approved</AlertTitle>
+        <Alert role="status">
+          <AlertTitle>
+            Status: Foundation, Typography System v1.0, Motion, Patterns, dan P0/P1 disetujui
+          </AlertTitle>
           <AlertDescription>
-            Visual Proof public, checkout, admin, semantic states, contrast, dan
-            motion telah diterima. Delapan kontrak P0/P1 sudah disetujui dan
-            implementasinya tersedia sebagai official components untuk review;
-            propagasi layar produk tetap menunggu checkpoint Design System.
+            Revised UI Foundation, Space Grotesk, Fraunces, scale, responsive
+            steps, weight, tracking, line-height, dan axis policy sudah
+            disetujui untuk styleguide-only. P0/P1, Motion System v1, dan empat Pattern proof sudah
+            melewati visual proof desktop/mobile dan diterima untuk
+            styleguide-only. Proof product screen untuk homepage dan
+            `/project-brief` masih menunggu penerimaan visual owner; kedua route
+            belum menjadi surface resmi dan checkout/admin tetap tertutup.
           </AlertDescription>
         </Alert>
       </header>
 
+      <DesignSystemArchitecture />
+
       <section className="scroll-mt-8 space-y-6" id="colors">
         <div className="space-y-2">
-          <p className="text-sm font-medium uppercase tracking-[0.12em] text-muted-foreground">
-            Foundation / colors
+          <p className="text-sm font-medium text-muted-foreground">
+            Foundation · colors
           </p>
           <h2 className="text-2xl font-semibold tracking-tight">Identitas dan surface semantik</h2>
           <p className="max-w-3xl leading-7 text-muted-foreground">
@@ -142,36 +154,12 @@ export default function StyleguidePage() {
 
       <VisualProof />
 
-      <section className="scroll-mt-8 space-y-6" id="typography">
-        <div className="space-y-2">
-          <p className="text-sm font-medium uppercase tracking-[0.12em] text-muted-foreground">
-            Foundation / typography
-          </p>
-          <h2 className="text-2xl font-semibold tracking-tight">Hierarki typography Niuva</h2>
-          <p className="max-w-3xl leading-7 text-muted-foreground">
-            Geist Sans menjadi display dan body; Geist Mono dibatasi untuk label
-            teknis, metadata, dan status.
-          </p>
-        </div>
-        <div className="grid gap-4 rounded-xl border border-border bg-card p-5 shadow-card sm:p-6">
-          {typographyTokens.map((token) => (
-            <div className="grid gap-2 border-b border-border pb-4 last:border-0 last:pb-0 sm:grid-cols-[10rem_minmax(0,1fr)] sm:items-baseline" key={token.role}>
-              <div>
-                <p className="text-sm font-medium">{token.role}</p>
-                <p className="text-xs text-muted-foreground">{token.usage}</p>
-              </div>
-              <p className={token.className}>
-                Niuva builds from evidence.
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <TypographyProof />
 
       <section className="scroll-mt-8 space-y-6" id="rhythm">
         <div className="space-y-2">
-          <p className="text-sm font-medium uppercase tracking-[0.12em] text-muted-foreground">
-            Foundation / rhythm
+          <p className="text-sm font-medium text-muted-foreground">
+            Foundation · rhythm
           </p>
           <h2 className="text-2xl font-semibold tracking-tight">Spacing, shape, dan elevation</h2>
           <p className="max-w-3xl leading-7 text-muted-foreground">
@@ -235,8 +223,8 @@ export default function StyleguidePage() {
 
       <section className="scroll-mt-8 space-y-6" id="components">
         <div className="space-y-2">
-          <p className="text-sm font-medium uppercase tracking-[0.12em] text-muted-foreground">
-            Preview / core components
+          <p className="text-sm font-medium text-muted-foreground">
+            Preview · core components
           </p>
           <h2 className="text-2xl font-semibold tracking-tight">Primitif operasional</h2>
           <p className="max-w-3xl leading-7 text-muted-foreground">
@@ -245,7 +233,7 @@ export default function StyleguidePage() {
             ke produk.
           </p>
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid items-start gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle>Action controls</CardTitle>
@@ -296,54 +284,62 @@ export default function StyleguidePage() {
             </AlertDescription>
           </Alert>
         </div>
+        <CorePrimitiveShowcase />
       </section>
 
       <P0ComponentShowcase />
       <P1ComponentShowcase />
+      <MotionSystemProof />
+      <PatternsShowcase />
 
       <section className="space-y-6" id="dark-preview">
         <div className="space-y-2">
-          <p className="text-sm font-medium uppercase tracking-[0.12em] text-muted-foreground">
-            Theme preview
+          <p className="text-sm font-medium text-muted-foreground">
+            Tema · dark mode
           </p>
           <h2 className="text-2xl font-semibold tracking-tight">Mapping dark mode eksplisit</h2>
         </div>
         <div className="dark rounded-xl border border-border bg-background p-6 text-foreground shadow-card">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="font-semibold">Dark tokens are opt-in</p>
+              <p className="font-semibold">Token dark mode hanya dipakai secara eksplisit</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                The foundation does not follow OS preference automatically.
+                Foundation tidak mengikuti preferensi OS secara otomatis.
               </p>
             </div>
-            <Button type="button" variant="outline">Inspect state</Button>
+            <Button type="button" variant="outline">Periksa state</Button>
           </div>
         </div>
       </section>
 
       <section className="scroll-mt-8 space-y-6" id="registry">
         <div className="space-y-2">
-          <p className="text-sm font-medium uppercase tracking-[0.12em] text-muted-foreground">
-            Registry
+          <p className="text-sm font-medium text-muted-foreground">
+            Registry komponen
           </p>
-          <h2 className="text-2xl font-semibold tracking-tight">Foundation inventory</h2>
+          <h2 className="text-2xl font-semibold tracking-tight">Inventaris foundation</h2>
         </div>
         <div className="rounded-xl border border-border bg-card p-5 shadow-card sm:p-6">
           <p className="text-sm leading-7 text-muted-foreground">
             Source primitive resmi berada di <code>src/components/ui</code>;
             kontrak komponen dan pola khusus Niuva didokumentasikan di
             <code className="break-all">src/app/auis/styleguide/registry/component-contracts.md</code>.
-            Implementasi official component P0/P1 sudah tersedia untuk review;
-            screen propagation tetap menunggu checkpoint Design System.
+            Typography System v1.0 dan visual P0/P1 sudah diterima untuk
+            styleguide-only. Screen propagation tetap ditahan sampai ada task
+            page/route yang ter-scope.
           </p>
           <Separator className="my-5" />
           <div className="mb-4 flex flex-wrap gap-2">
-            <Badge>Foundation approved</Badge>
-            <Badge variant="secondary">P0 contract approved</Badge>
-            <Badge variant="secondary">P1 contract approved</Badge>
-            <Badge variant="outline">Propagation blocked</Badge>
+            <Badge>Typography v1.0 · approved</Badge>
+            <Badge>P0 visual · approved</Badge>
+            <Badge>P1 visual · approved</Badge>
+            <Badge variant="outline">Product propagation · paused</Badge>
           </div>
-          <div className="flex flex-wrap gap-2" data-contract-status="approved">
+          <div
+            className="flex flex-wrap gap-2"
+            data-contract-scope="styleguide-only"
+            data-contract-status="approved"
+          >
             {[
               "alert",
               "badge",

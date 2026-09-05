@@ -6,7 +6,7 @@
 - **One-line positioning:** Niuva Inovasi Utama adalah mitra inovasi dan pengembangan produk end-to-end yang membantu perusahaan mengubah ide menjadi solusi teknologi dan produk kreatif bernilai tinggi melalui riset, desain, engineering, prototyping, hingga dukungan manufaktur.
 - **Primary mark:** `/assets/brand/niuva-logo-horizontal-dark.svg`
 - **Logo source:** `docs/source/brand/Niuva_Logo_System_v1.0/SVG/Horizontal/niuva-logo-horizontal-dark.svg`
-- **Setup status:** Brand established from owner interview; UI Foundation approved after Visual Proof acceptance; P0/P1 Design System contracts are approved and implemented in the styleguide, while product screen propagation remains gated; Voice bootstrapped from owner positioning and product documents.
+- **Setup status:** Brand established from owner interview; the revised UI Foundation Visual Proof was approved on 2026-09-03 for styleguide-only scope; Typography System v1.0 was approved on 2026-08-29; Design System Architecture & Registry v1 was documented on 2026-09-02; the initial P0/P1 visual gate was approved on 2026-09-02 for styleguide-only scope; Motion System v1 CSS-first and four Niuva Pattern proofs were approved on 2026-09-03 for styleguide-only scope; the scoped product-screen proof for `/` and `/project-brief` is authorized but still pending visual acceptance; checkout/admin, Creative/Decorative, and bulk propagation remain paused; Voice bootstrapped from owner positioning and product documents.
 
 ## Foundation status
 
@@ -20,8 +20,8 @@
   bahasa visual dan storytelling dengan prinsip `adopt`, `adapt`, dan `do not
   copy`; bukan template, aset, atau identitas yang disalin.
 - **Confirmed reference principles for Niuva:** Editorial narrative, tangible
-  proof, kontras surface gelap-terang, controlled accent, technical labels,
-  dan directional CTA. Implementasinya harus memakai bukti produk, material,
+  proof, kontras surface gelap-terang, controlled accent, selective technical
+  detail, dan directional CTA. Implementasinya harus memakai bukti produk, material,
   prototipe, engineering, dan manufaktur Niuva sendiri.
 - **Confirmed adaptation constraints:** Visual language harus tetap membedakan
   public, checkout, dan admin; tidak mengambil palette hijau/lime atau objek
@@ -49,20 +49,40 @@
 - **Confirmed semantic color rule:** Success, warning, error, dan info harus
   memiliki peran fungsional yang jelas dan tidak boleh menjadi satu-satunya
   cara menyampaikan status.
-- **Confirmed typography roles:** Display sans untuk headline dan positioning;
-  body sans untuk penjelasan dan form; monospace terbatas untuk label teknis,
-  metadata, dan status. Foundation mapping yang diterima adalah Geist Sans
-  untuk display/body dan Geist Mono untuk technical metadata/status.
+- **Approved Typography System v1.0:** Space Grotesk menjadi family utama untuk
+  display, heading, subheading, body, UI, product, dan data. Fraunces dibatasi
+  sebagai editorial accent 5–10% untuk standalone statement atau quote; bukan
+  control, body panjang, atau data. Tidak ada family mono ketiga pada v1.0.
+- **Approved typography scale:** Anchor `16px`, modular ratio `1.25`, dan optical
+  rounding ke langkah `2px/4px`. Responsive steps: compact `0–639px`, standard
+  `640–1279px`, dan wide `>=1280px`. Display `40/43 → 48/51 → 60/63`, heading
+  `30/36 → 36/42 → 40/46`, subheading `22/29 → 24/31 → 24/31`, body `16/24`,
+  UI/data `14/20`, dan Fraunces accent `28/35 → 32/39 → 36/43`.
+- **Approved typography behavior:** Core weights `400/500/600`; `700` hanya
+  exception dan `300` tidak dipakai. Display tracking `-0.03em → -0.035em →
+  -0.04em`; heading `-0.02em → -0.025em → -0.03em`; subheading `-0.015em`;
+  body dan UI/data `0`; Fraunces `-0.01em`. Body measure dijaga `55–70ch` dan
+  UI/data memakai tabular numerals.
+- **Approved Fraunces policy:** Weight `500`, normal Roman,
+  `font-optical-sizing: auto`, hanya axis `opsz` yang dimuat; `SOFT`, `WONK`,
+  dan italic core v1 tidak dimuat. Technical micro-label tetap Space Grotesk
+  `12/18`, weight `500`, tracking `0.05em`, uppercase hanya untuk 1–3 kata.
 - **Evidence-backed identity accent:** `--brand-500: #6390BB`.
-- **Approved type and shape:** Geist role mapping, type scale, weight,
-  line-height, letter-spacing, spacing rhythm, radius roles, elevation, motion,
-  and reduced-motion behavior shown in Visual Proof are accepted foundation
-  decisions.
-- **Review state:** Visual Proof at `/auis/styleguide` has been accepted by the
-  owner on 2026-08-28. P0/P1 component contracts and their styleguide
-  showcases are approved and implemented; the implementation is ready for the
-  Design System review, and broad screen propagation remains blocked until that
-  checkpoint is accepted.
+- **Retained non-typography baseline:** Spacing rhythm, radius roles, elevation,
+  motion, and reduced-motion behavior remain accepted. Typography System v1.0
+  is locked in `src/app/auis/styleguide/foundation/typography-proof.ts` and
+  loaded only inside the nested styleguide layout. Motion System v1 is
+  CSS-first and approved for styleguide-only use; no runtime motion dependency
+  was added.
+- **Review state:** Visual Proof at `/auis/styleguide` and the P0/P1 Design
+  System implementation were returned to visual review on 2026-08-29 after
+  owner feedback. The typography candidate and the initial P0/P1 visual gate
+  are now approved for styleguide-only scope; the Motion System v1 proof and
+  four flow-based Patterns are also approved for styleguide-only use. The
+  revised Foundation Visual Proof is approved for this named styleguide scope;
+  the scoped product-screen proof for `/` and `/project-brief` is authorized but
+  still pending visual acceptance. Checkout/admin, Creative/Decorative, and
+  bulk propagation remain separate gates.
 
 ## Language & locale
 

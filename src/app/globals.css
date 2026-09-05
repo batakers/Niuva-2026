@@ -4,13 +4,15 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Niuva UI Foundation — approved after Visual Proof.
+ * Niuva UI Foundation — baseline tokens retained; revised styleguide proof
+ * approved for styleguide-only use on 2026-09-03.
  *
  * Evidence: Niuva Logo System v1.0 locks --brand-500 (#6390BB), the light
  * wordmark foreground, and light-first usage. The surrounding scale, semantic
  * mapping, spacing, radius, elevation, typography roles, and motion values were
- * accepted in the isolated Visual Proof. Component usage contracts are defined
- * separately before product screens are propagated.
+ * accepted in the isolated Visual Proof. Product-screen propagation remains a
+ * separate gate. Human-facing UI is sans-first, while technical type is opt-in
+ * for genuinely machine-readable values.
  */
 :root {
   /* Brand scale: --brand-500 is the locked Niuva Blue identity value. */
@@ -46,8 +48,10 @@
   --card-foreground: var(--neutral-900);
   --popover: #ffffff;
   --popover-foreground: var(--neutral-900);
-  --primary: var(--brand-500);
-  --primary-foreground: var(--neutral-900);
+  /* Keep brand-500 as the identity accent; actions use a darker blue so white
+   * labels remain WCAG AA at normal text sizes. */
+  --primary: var(--brand-700);
+  --primary-foreground: #ffffff;
   --secondary: var(--brand-100);
   --secondary-foreground: var(--brand-900);
   --muted: var(--neutral-100);
@@ -97,6 +101,7 @@
   --duration-normal-token: 220ms;
   --ease-standard-token: cubic-bezier(0.2, 0, 0, 1);
   --ease-emphasis-token: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* Human-facing UI is sans-first; technical type is an explicit exception. */
   --font-display-token: var(--font-geist-sans);
   --font-body-token: var(--font-geist-sans);
   --font-technical-token: var(--font-geist-mono);
@@ -120,8 +125,8 @@
   --card-foreground: var(--neutral-50);
   --popover: var(--neutral-800);
   --popover-foreground: var(--neutral-50);
-  --primary: var(--brand-500);
-  --primary-foreground: var(--neutral-900);
+  --primary: var(--brand-700);
+  --primary-foreground: #ffffff;
   --secondary: var(--neutral-700);
   --secondary-foreground: var(--neutral-50);
   --muted: var(--neutral-800);
@@ -258,7 +263,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+    font-family: var(--font-body-token), Arial, Helvetica, sans-serif;
   }
 }
 

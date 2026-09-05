@@ -9,7 +9,7 @@ const surfaceProofs = [
   {
     key: "public",
     label: "Public",
-    eyebrow: "PUBLIC / DARK STAGE + LIGHT CONTENT",
+    eyebrow: "Public · dark stage + light content",
     headline: "Bukti yang membuat ide terasa nyata.",
     description:
       "Narasi editorial, bukti proses, dan aksen terkontrol untuk membantu calon klien memahami cara Niuva bekerja.",
@@ -24,12 +24,12 @@ const surfaceProofs = [
   {
     key: "checkout",
     label: "Checkout",
-    eyebrow: "CHECKOUT / LIGHT-FIRST",
+    eyebrow: "Checkout · light-first",
     headline: "Tenang saat menyelesaikan pesanan.",
     description:
       "Permukaan terang, hierarki jelas, dan status yang membantu customer menyelesaikan langkah berikutnya.",
     canvasClass: "border-neutral-200 bg-neutral-50 text-neutral-900",
-    panelClass: "border-neutral-200 bg-white",
+    panelClass: "border-border bg-card",
     mutedClass: "text-neutral-600",
     accentClass: "text-brand-700",
     secondaryClass: "border-neutral-500 text-neutral-900 hover:bg-neutral-100",
@@ -39,12 +39,12 @@ const surfaceProofs = [
   {
     key: "admin",
     label: "Admin",
-    eyebrow: "ADMIN / DENSE OPERATIONAL SURFACE",
+    eyebrow: "Admin · dense operational surface",
     headline: "Padat untuk keputusan operasional.",
     description:
       "Kontras yang dapat dipindai, metadata teknis, dan tindakan yang menjaga operator tetap memahami konteks.",
     canvasClass: "border-neutral-300 bg-neutral-100 text-neutral-900",
-    panelClass: "border-neutral-300 bg-white",
+    panelClass: "border-border bg-card",
     mutedClass: "text-neutral-600",
     accentClass: "text-brand-700",
     secondaryClass: "border-neutral-500 text-neutral-900 hover:bg-neutral-100",
@@ -56,7 +56,7 @@ const surfaceProofs = [
 const semanticProofs = [
   {
     key: "success",
-    label: "SUCCESS",
+    label: "Berhasil",
     symbol: "✓",
     title: "Berkas siap ditinjau",
     description: "File sudah diterima dan operator dapat melanjutkan pemeriksaan.",
@@ -67,7 +67,7 @@ const semanticProofs = [
   },
   {
     key: "warning",
-    label: "WARNING",
+    label: "Perlu perhatian",
     symbol: "!",
     title: "Perlu pemeriksaan operator",
     description: "Geometri belum menghasilkan harga final secara otomatis.",
@@ -78,7 +78,7 @@ const semanticProofs = [
   },
   {
     key: "error",
-    label: "ERROR",
+    label: "Terjadi kendala",
     symbol: "×",
     title: "Pesanan belum dapat dilanjutkan",
     description: "Stok berubah. Periksa kembali pilihan produk sebelum mencoba lagi.",
@@ -89,7 +89,7 @@ const semanticProofs = [
   },
   {
     key: "info",
-    label: "INFO",
+    label: "Informasi",
     symbol: "i",
     title: "Quote akan dikirim operator",
     description: "Custom 3D Print membutuhkan verifikasi berat dan durasi slicer.",
@@ -106,17 +106,17 @@ function PublicDetail({ proof }: { proof: SurfaceProof }) {
   return (
     <div className={`mt-7 overflow-hidden rounded-xl border ${proof.panelClass}`}>
       <div className="flex items-center justify-between border-b border-inherit px-4 py-3">
-        <span className={`font-mono text-[0.68rem] uppercase tracking-[0.14em] ${proof.accentClass}`}>
-          NIUVA / 01
+        <span className={`text-xs font-medium ${proof.accentClass}`}>
+          Niuva · 01
         </span>
-        <span className={`font-mono text-[0.68rem] uppercase tracking-[0.14em] ${proof.mutedClass}`}>
-          IDEA → PRODUCT
+        <span className={`text-xs ${proof.mutedClass}`}>
+          Ide ke produk
         </span>
       </div>
       <div className="grid gap-3 p-4 sm:grid-cols-3">
         {["Riset", "Engineering", "Prototype"].map((step, index) => (
           <div className="min-w-0 space-y-2" key={step}>
-            <span className={`font-mono text-xs ${proof.mutedClass}`}>0{index + 1}</span>
+            <span className={`text-xs tabular-nums ${proof.mutedClass}`}>0{index + 1}</span>
             <p className="break-words text-xs font-medium">{step}</p>
             <div className={`h-1.5 rounded-full ${index === 1 ? "bg-brand-500" : "bg-neutral-600"}`} />
           </div>
@@ -131,8 +131,8 @@ function CheckoutDetail({ proof }: { proof: SurfaceProof }) {
     <div className={`mt-7 space-y-4 rounded-xl border p-4 ${proof.panelClass}`}>
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className={`font-mono text-[0.68rem] uppercase tracking-[0.14em] ${proof.accentClass}`}>
-            READY-MADE / CHECKOUT
+          <p className={`text-xs font-medium ${proof.accentClass}`}>
+            Ready-made · checkout
           </p>
           <p className="mt-1 text-sm font-medium">Desk Organizer — Blue</p>
         </div>
@@ -154,24 +154,24 @@ function AdminDetail({ proof }: { proof: SurfaceProof }) {
   return (
     <div className={`mt-7 overflow-hidden rounded-xl border ${proof.panelClass}`}>
       <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3">
-        <span className={`font-mono text-[0.68rem] uppercase tracking-[0.14em] ${proof.accentClass}`}>
-          OPERATOR QUEUE
+        <span className={`text-xs font-medium ${proof.accentClass}`}>
+          Antrian operator
         </span>
         <Badge variant="outline">3 item</Badge>
       </div>
       <div className="divide-y divide-neutral-200">
         {[
-          ["NIUVA-026", "Quote required", "warning"],
-          ["NIUVA-025", "Ready to review", "success"],
-          ["NIUVA-024", "Payment pending", "info"],
+            ["NIUVA-026", "Menunggu quote", "warning"],
+            ["NIUVA-025", "Siap direview", "success"],
+            ["NIUVA-024", "Pembayaran menunggu konfirmasi", "info"],
         ].map(([reference, status, tone]) => (
           <div className="grid grid-cols-[1fr_auto] gap-3 px-4 py-3 text-sm" key={reference}>
             <div>
               <p className="font-mono text-xs font-medium">{reference}</p>
               <p className={proof.mutedClass}>{status}</p>
             </div>
-            <span className={`font-mono text-[0.68rem] uppercase ${tone === "warning" ? "text-warning" : tone === "success" ? "text-success" : "text-info"}`}>
-              {tone}
+            <span className={`text-xs font-medium ${tone === "warning" ? "text-warning" : tone === "success" ? "text-success" : "text-info"}`}>
+              {tone === "warning" ? "Perlu perhatian" : tone === "success" ? "Berhasil" : "Informasi"}
             </span>
           </div>
         ))}
@@ -201,15 +201,15 @@ function SurfaceCard({ proof }: { proof: SurfaceProof }) {
     >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className={`font-mono text-[0.68rem] font-medium uppercase tracking-[0.14em] ${proof.accentClass}`}>
+          <p className={`text-xs font-medium ${proof.accentClass}`}>
             {proof.eyebrow}
           </p>
           <h3 className="mt-2 text-lg font-semibold" id={`surface-proof-${proof.key}`}>
             {proof.label}
           </h3>
         </div>
-        <span className={`rounded-full border px-2 py-1 font-mono text-[0.65rem] uppercase tracking-[0.12em] ${proof.secondaryClass}`}>
-          Foundation approved
+          <span className={`rounded-full border px-2 py-1 text-xs font-medium ${proof.secondaryClass}`}>
+          Review visual
         </span>
       </div>
 
@@ -241,11 +241,11 @@ function SemanticProof() {
             key={proof.key}
           >
             <div className="flex items-start gap-3">
-              <span className={`grid size-8 shrink-0 place-items-center rounded-full border-2 font-mono font-semibold ${proof.iconClass}`}>
+              <span className={`grid size-8 shrink-0 place-items-center rounded-full border-2 font-semibold ${proof.iconClass}`}>
                 <span aria-hidden="true">{proof.symbol}</span>
               </span>
               <div className="min-w-0">
-                <p className={`font-mono text-[0.68rem] font-medium uppercase tracking-[0.14em] ${proof.textClass}`}>
+                <p className={`text-xs font-medium ${proof.textClass}`}>
                   {proof.label}
                 </p>
                 <h3 className="mt-1 text-sm font-semibold">{proof.title}</h3>
@@ -262,19 +262,19 @@ function SemanticProof() {
       <div className="dark rounded-2xl border border-neutral-700 bg-background p-4 text-foreground">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-brand-300">
-              DARK MAPPING
+            <p className="text-xs font-medium text-brand-300">
+              Pemetaan dark mode
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               Semantic state mempertahankan label, simbol, dan recovery action di dark surface.
             </p>
           </div>
-          <Badge variant="outline">Explicit</Badge>
+          <Badge variant="outline">Pemetaan eksplisit</Badge>
         </div>
         <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {semanticProofs.map((proof) => (
             <div className={`rounded-lg border p-3 ${proof.surfaceClass}`} key={`dark-${proof.key}`}>
-              <p className={`font-mono text-xs font-medium ${proof.textClass}`}>{proof.label}</p>
+              <p className={`text-xs font-medium ${proof.textClass}`}>{proof.label}</p>
               <p className="mt-1 text-xs text-current/80">Label + action</p>
             </div>
           ))}
@@ -289,8 +289,8 @@ function MotionProof() {
     <div className="space-y-4" data-proof-motion-group>
       <div className="grid gap-3 md:grid-cols-3">
         <article className="group rounded-xl border border-border bg-card p-4 shadow-card" data-proof-motion="fast">
-          <p className="font-mono text-[0.68rem] font-medium uppercase tracking-[0.14em] text-brand-700">
-            FAST / 150MS
+          <p className="text-xs font-medium text-brand-700">
+            Respons cepat · 150 ms
           </p>
           <h3 className="mt-2 text-sm font-semibold">Feedback kecil</h3>
           <div className="mt-5 overflow-hidden rounded-full bg-muted p-1">
@@ -308,8 +308,8 @@ function MotionProof() {
         </article>
 
         <article className="group rounded-xl border border-border bg-card p-4 shadow-card" data-proof-motion="standard">
-          <p className="font-mono text-[0.68rem] font-medium uppercase tracking-[0.14em] text-brand-700">
-            STANDARD / 220MS
+          <p className="text-xs font-medium text-brand-700">
+            Gerak standar · 220 ms
           </p>
           <h3 className="mt-2 text-sm font-semibold">Perubahan posisi</h3>
           <button
@@ -328,8 +328,8 @@ function MotionProof() {
         </article>
 
         <article className="rounded-xl border border-border bg-muted/50 p-4" data-proof-motion="reduced">
-          <p className="font-mono text-[0.68rem] font-medium uppercase tracking-[0.14em] text-brand-700">
-            REDUCED MOTION
+          <p className="text-xs font-medium text-brand-700">
+            Gerak dikurangi
           </p>
           <h3 className="mt-2 text-sm font-semibold">Tetap dapat dipahami</h3>
           <div className="mt-5 flex items-center gap-2">
@@ -359,11 +359,11 @@ function MotionProof() {
 function ContrastProof() {
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card shadow-card">
-      <div className="grid gap-3 border-b border-border bg-muted/50 px-4 py-3 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground sm:grid-cols-[minmax(0,1fr)_7rem_7rem_5rem]">
-        <span>Pair</span>
-        <span>Foreground</span>
-        <span>Background</span>
-        <span>Ratio</span>
+      <div className="grid gap-3 border-b border-border bg-muted/50 px-4 py-3 text-xs font-medium text-muted-foreground sm:grid-cols-[minmax(0,1fr)_7rem_7rem_5rem]">
+        <span>Pasangan</span>
+        <span>Teks</span>
+        <span>Latar</span>
+        <span>Rasio</span>
       </div>
       {contrastTokens.map((token) => (
         <div className="grid items-center gap-3 border-b border-border px-4 py-3 last:border-0 sm:grid-cols-[minmax(0,1fr)_7rem_7rem_5rem]" key={token.label}>
@@ -386,8 +386,8 @@ export function VisualProof() {
     <div className="space-y-10" data-visual-proof>
       <section className="scroll-mt-8 space-y-6" id="surface-proof">
         <div className="space-y-2">
-          <p className="text-sm font-medium uppercase tracking-[0.12em] text-brand-700">
-            Visual Proof / surfaces
+          <p className="text-sm font-medium text-brand-700">
+            Visual proof · surface
           </p>
           <h2 className="text-2xl font-semibold tracking-tight">Satu identitas, tiga kebutuhan kerja</h2>
           <p className="max-w-3xl leading-7 text-muted-foreground">
@@ -404,8 +404,8 @@ export function VisualProof() {
 
       <section className="scroll-mt-8 space-y-6" id="motion-proof">
         <div className="space-y-2">
-          <p className="text-sm font-medium uppercase tracking-[0.12em] text-brand-700">
-            Visual Proof / motion
+          <p className="text-sm font-medium text-brand-700">
+            Visual proof · motion
           </p>
           <h2 className="text-2xl font-semibold tracking-tight">Gerak singkat untuk memberi feedback</h2>
           <p className="max-w-3xl leading-7 text-muted-foreground">
@@ -419,8 +419,8 @@ export function VisualProof() {
 
       <section className="scroll-mt-8 space-y-6" id="semantic-proof">
         <div className="space-y-2">
-          <p className="text-sm font-medium uppercase tracking-[0.12em] text-brand-700">
-            Visual Proof / states
+          <p className="text-sm font-medium text-brand-700">
+            Visual proof · state
           </p>
           <h2 className="text-2xl font-semibold tracking-tight">Status menjelaskan keadaan dan tindakan berikutnya</h2>
           <p className="max-w-3xl leading-7 text-muted-foreground">
@@ -433,8 +433,8 @@ export function VisualProof() {
 
       <section className="scroll-mt-8 space-y-6" id="contrast-proof">
         <div className="space-y-2">
-          <p className="text-sm font-medium uppercase tracking-[0.12em] text-brand-700">
-            Visual Proof / accessibility
+          <p className="text-sm font-medium text-brand-700">
+            Visual proof · accessibility
           </p>
           <h2 className="text-2xl font-semibold tracking-tight">Pasangan kontras utama</h2>
           <p className="max-w-3xl leading-7 text-muted-foreground">

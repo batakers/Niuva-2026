@@ -1,19 +1,98 @@
 # Niuva Design System Component Contracts
 
-Status: **P0/P1 APPROVED — implementation ready for Design System review**  
-Foundation status: **APPROVED** after Visual Proof acceptance on 2026-08-28.  
-Implementation status: **P0/P1 components are implemented in the styleguide;
-product-screen propagation is not.**
+Status: **P0/P1 visual implementation approved for styleguide-only scope**
+Foundation status: **Foundation visual proof approved for styleguide-only on
+2026-09-03; global product-screen propagation remains separately blocked.**
+Implementation status: **P0/P1 components are visually approved for the
+styleguide; global product-screen propagation remains separately blocked.**
 
-This document turns the accepted UI Foundation into a controlled component
-boundary. The owner approved the four P0 and four P1 contracts on 2026-08-28.
-The implementation is available for visual and technical Design System review;
-product-screen propagation stays gated by that checkpoint.
+This document turns the UI Foundation into a controlled component boundary. The
+owner approved the four P0 and four P1 contracts on 2026-08-28. The visual
+implementation review was reopened on 2026-08-29 after feedback that repeated
+uppercase and monospace treatment made the system feel generic. The owner then
+approved Typography System v1.0 on 2026-08-29 without authorizing global-token,
+shared-component, or product-screen propagation. The renewed P0/P1 visual gate
+was approved for the styleguide on 2026-09-02. The revised Foundation visual
+proof was approved for styleguide-only use on 2026-09-03. Motion System v1 and
+the four Pattern proofs were also approved for styleguide-only usage on
+2026-09-03.
+
+## Architecture v1
+
+The architecture registry is recorded in
+`src/app/auis/styleguide/registry/design-system.ts` and summarized in
+`components.json`. It defines eight layers:
+
+| Layer | Responsibility | Source/boundary | Status |
+| --- | --- | --- | --- |
+| `01 Foundation` | Visual tokens, typography, iconography, density, and semantic states. | AUiS foundation and Typography System v1.0; accepted within the named styleguide proof. | Approved for styleguide-only |
+| `02 Primitives` | Native semantics, accessibility, focus, keyboard, and state behavior. | Native HTML first; Base UI primary; Radix exception-only. | Implemented |
+| `03 Core Components` | Source-owned controls and Niuva composites. | shadcn source distribution + Base UI + custom Niuva. | Approved for styleguide-only |
+| `04 Motion System` | Duration, easing, spring-like fallback, enter/exit, hover, press, scroll, and layout recipes. | CSS-first Motion System v1 is implemented in the styleguide; a runtime Motion engine remains candidate and is not installed. | Approved proof for styleguide-only |
+| `05 Creative Components` | Selective interactions that clarify real Niuva evidence. | React Bits, Animate UI, Cult UI, Aceternity, and custom code are reference sources. | Candidate |
+| `06 Decorative Effects` | Optional atmosphere with static fallback. | SVG/CSS/noise/grid references require visual and performance review. | Restricted |
+| `07 Patterns` | Repeatable journey compositions. | Compose official components; no new tokens, primitives, or domain rules. | Approved proofs for styleguide-only |
+| `08 Governance` | Provenance, promotion, accessibility, visual proof, performance, changelog, and deprecation. | Typed registry, JSON summary, and contract documentation. | Implemented |
+
+The promotion path is `reference → candidate → proof → approved → official`.
+`Official` is a separate product-screen authorization state; Architecture v1
+does not grant it.
+
+### Scoped Foundation + Primitive/Core audit
+
+The 2026-09-03 styleguide-only audit retained the existing palette and contrast
+values: the recorded semantic pairs already pass the contrast proof. It closed
+implementation gaps in the proof surface by aligning Dialog, DropdownMenu,
+Select, and Tooltip popups to `shadow-floating`, requiring explicit human-facing
+Select labels for internal values, restoring the DropdownMenu group context,
+and normalizing the core/P0 proof layout. The owner accepted the revised
+Foundation proof for styleguide-only use on 2026-09-03. This hardening does not
+promote any component to product-screen usage; Creative and Decorative review
+remain separate gates.
+
+### Scoped product-screen proof
+
+The owner authorized a propagation proof on 2026-09-03 for `/` and
+`/project-brief` only. It uses the approved Foundation and existing component
+contracts, excludes checkout/admin and Creative/Decorative layers, and remains
+pending visual acceptance. The global product-screen propagation guard stays
+blocked until that acceptance is recorded; the project brief remains a
+proof-only surface until its functional submission flow is implemented
+separately.
+
+### Motion System v1 boundary
+
+The CSS-first Motion System v1 proof lives at
+`/auis/styleguide#motion-system` and is recorded in
+`foundation/motion.ts`. It defines the existing `150ms` fast and `220ms`
+standard durations, a styleguide-only `320ms` deliberate duration, standard and
+emphasis easing, and a CSS-only spring-like fallback. The proof covers enter,
+exit, hover, press, scroll, and layout recipes.
+
+Motion is purpose-driven: transform and opacity are preferred, reduced motion
+keeps a static result and restores automatic scroll, and no state, price,
+recovery action, or workflow meaning depends on animation. No runtime motion
+dependency was added. Owner visual acceptance was recorded on 2026-09-03, so
+the proof is approved for styleguide-only use; the separate product and
+runtime-engine gates remain closed.
+
+### Pattern proof boundary
+
+The styleguide proof at `/auis/styleguide#patterns` contains four route-owned
+compositions: Hero / case-study opener, Product discovery, Checkout Summary, and
+Admin Action Queue. They compose official Niuva components and fixture context
+only; domain authority stays in the server/domain layers. Owner visual
+acceptance was recorded on 2026-09-03, so these Patterns are approved for
+styleguide-only use. They are not official product-screen building blocks until
+a separate page/route task authorizes their use.
 
 ## 1. Contract principles
 
-- `src/app/globals.css` is the canonical token source. `foundation/tokens.ts`
-  exposes the same decisions for the styleguide proof.
+- `src/app/globals.css` remains the canonical source for the currently
+  propagated baseline. `foundation/typography-proof.ts` is the approved
+  Typography System v1.0 contract and is loaded only by the styleguide until a
+  separate propagation task is authorized. `foundation/tokens.ts` exposes its
+  styleguide compatibility view.
 - Existing Base UI/shadcn primitives in `src/components/ui` are the bridge.
   They should be extended only when a Niuva requirement cannot be expressed by
   their existing API.
@@ -33,7 +112,7 @@ product-screen propagation stays gated by that checkpoint.
 | --- | --- |
 | Identity | Niuva Blue `#6390BB` is the locked identity accent. The logo uses the official logo-system assets. |
 | Surfaces | Public: dark stage plus light content; checkout: light-first and calm; admin: neutral, dense, and operational. |
-| Typography | Geist Sans for display/body; Geist Mono for technical labels, metadata, and statuses. Display uses the approved responsive `4xl → 5xl` scale; body uses readable `base/7`; labels use `sm/medium`. |
+| Typography | Typography System v1.0 uses Space Grotesk for display, heading, subheading, body, UI, and data. Fraunces is a restrained 5–10% editorial accent at weight `500`, Roman style, optical sizing `auto`, with only the `opsz` axis loaded; `SOFT`, `WONK`, and core italic are excluded. The scale uses a `16px` anchor, `1.25` ratio, compact `0–639px`, standard `640–1279px`, and wide `>=1280px` steps. Core weights are `400/500/600`; `700` is exceptional and `300` is excluded. There is no mono family in v1.0. A technical micro-label exception uses Space Grotesk `12/18`, weight `500`, `0.05em`, and uppercase only for 1–3 words. |
 | Shape | Control `8px`; card `12px`; media `16px`; pill only for compact status/chip affordances. |
 | Elevation | Quiet card separation `0 1px 2px rgb(15 23 42 / 0.06)`; floating UI uses the approved layered shadow token. |
 | Motion | Fast `150ms` for micro feedback; standard `220ms` for short movement; standard and emphasis easing from the foundation tokens; all motion honors `prefers-reduced-motion`. |
@@ -60,28 +139,39 @@ instruction to duplicate them in a Niuva namespace.
 | `Input` | Single-line value entry; field control with optional file affordance. | Default control size; field-specific width comes from layout, not a new visual size. | Empty, filled, focus-visible, disabled, invalid, and upload/error feedback through a surrounding field contract; label must be associated. | Native input props; `--input`, `--ring`, and semantic destructive tokens; show in checkout and project-brief examples. |
 | `Label` | Names a form control and its required context. | Default and required/optional content treatment. | Default, disabled context, and invalid context; uses `htmlFor`/`id`. | Native label props; body/label typography; show with `FormField`. |
 | `Alert` | Communicates a non-inline state or recovery message; icon, title, description, and optional action. | Neutral plus semantic tone contract: success, warning, info, error. | `role="status"` for non-urgent updates and `role="alert"` for blocking/error states; action remains keyboard reachable. | Title, description, action, tone; semantic background/border/icon/text tokens; show in semantic proof. |
-| `Badge` | Compact non-interactive status or category label. | `default`, `secondary`, `outline`, `destructive`; pill shape only. | Read-only, optional icon, no hover-only meaning; status text must be present. | Children plus variant; use semantic tokens and mono only for technical statuses; show in admin queue and proof. |
+| `Badge` | Compact non-interactive status or category label. | `default`, `secondary`, `outline`, `destructive`; pill shape only. | Read-only, optional icon, no hover-only meaning; status text must be present. | Children plus variant; use semantic tokens, sentence case, and technical type only for machine-readable values; show in admin queue and proof. |
 | `Card` | Groups related content on a surface; header, title, description, content, action, footer. | Default and compact density; surface treatment is contextual. | Static, linked/focusable composition only when the whole card has a clear target; no nested interactive ambiguity. | Children and size; `--radius-card`, border, and card shadow; show public evidence, checkout summary, and admin item. |
-| `Dialog` | Focus-contained modal task or confirmation. | Default and destructive/confirmation content treatment. | Closed/open, focus trap, escape, outside interaction policy, pending, and error; restores focus to trigger. | Title, description, body, actions, open state; floating shadow and semantic surface tokens; show only for a bounded task. |
-| `DropdownMenu` | Short action menu attached to a trigger. | Default and destructive item treatment. | Closed/open, keyboard roving focus, disabled item, and selection feedback; never hides the only path to a critical action. | Trigger, items, labels, separators; semantic focus and surface tokens; show in admin action context. |
-| `Select` | Selects one value from a bounded list. | Default control size; option groups where needed. | Empty, selected, open, disabled, invalid, and loading options; keyboard and screen-reader selection must work. | Value, options, placeholder, disabled, invalid; `--input`, `--ring`, and surface tokens; show checkout and admin filters. |
+| `Dialog` | Focus-contained modal task or confirmation. | Default and destructive/confirmation content treatment. | Closed/open, focus trap, escape, outside interaction policy, pending, and error; restores focus to trigger. | Title, description, body, actions, open state; `shadow-floating` and semantic surface tokens; show only for a bounded task. |
+| `DropdownMenu` | Short action menu attached to a trigger. | Default and destructive item treatment. | Closed/open, keyboard roving focus, disabled item, and selection feedback; never hides the only path to a critical action. | Trigger, items, labels, separators; `shadow-floating`, semantic focus, and surface tokens; grouped labels require the menu group context. |
+| `Select` | Selects one value from a bounded list. | Default control size; option groups where needed. | Empty, selected, open, disabled, invalid, and loading options; keyboard and screen-reader selection must work. | Value, options, placeholder, disabled, invalid; selected internal values must resolve to explicit human-facing labels; popup uses `shadow-floating`; show checkout and admin filters. |
 | `RadioGroup` | Chooses one mutually exclusive option when comparison matters. | Default and compact option density. | Unselected, selected, disabled, invalid, and keyboard navigation; group has an accessible label. | Value, options, orientation, disabled; semantic accent/focus tokens; show variant/material selection. |
 | `Separator` | Makes a meaningful grouping boundary visible. | Horizontal or vertical. | Decorative only when explicitly marked; semantic when it separates labelled regions. | Orientation and decorative state; border token; show in summaries and dense admin groups. |
 | `Switch` | Toggles a persistent boolean preference. | Default control size. | On, off, focus-visible, disabled, and pending; label describes the setting, not only “on/off”. | Checked, change handler, disabled, label relation; semantic accent and ring; show only for real preferences. |
 | `Tabs` | Switches between related views without changing the route meaning. | Default and compact density. | Active, inactive, focus-visible, disabled, and keyboard arrow navigation; panels have correct relationships. | Value, tab list, panels, orientation; border/accent/focus tokens; show in admin detail or product detail when justified. |
-| `Tooltip` | Adds non-critical context to an unfamiliar control or technical label. | Default placement and delay from shared behavior. | Hover/focus, dismissed, and touch-safe fallback; never contains required instructions or the only status meaning. | Trigger and description; surface/floating tokens; show for technical metadata only. |
+| `Tooltip` | Adds non-critical context to an unfamiliar control or technical label. | Default placement and delay from shared behavior. | Hover/focus, dismissed, and touch-safe fallback; never contains required instructions or the only status meaning. | Trigger and description; `shadow-floating`, surface tokens, and a keyboard-reachable trigger; show for technical metadata only. |
+| `AuLink` | Provides navigational intent using the shared link/button visual contract. | Inherits `Button` variants and sizes; must remain a real link. | Focus-visible and disabled-looking states must not remove link semantics; the destination remains explicit. | `href`, native anchor props, and `Button` variant/size; source: `src/components/ui/AuLink.tsx`; showcase on the core primitive proof. |
+| `Icon` | Provides the single named interface-icon boundary for Lucide icons. | 24px base grid; XS `12–16px`, S `20px`, M `24px`, L `32px`, XL `48px+`; stroke follows Lucide defaults. | Every icon is either `aria-hidden` or labelled; critical actions pair the icon with text; icon-only controls own a `44px` minimum touch target. | `name` is a typed semantic name; source: `src/components/ui/Icon.tsx`; existing names remain stable, while new names follow `icon-[category]-[name]-[variant]`. |
+
+The exact runtime IDs in `components.json` are the canonical coverage entries.
+The `Niuva Button`, `Niuva Input`, `Niuva Select`, `Niuva Card`, `Niuva
+Dialog`, `Niuva Tabs`, and `Niuva Navigation` labels are contract-only
+aliases for a future source-owned layer. They are marked `planned` until a
+real module, export, showcase, and review record exist; do not import these
+names or create duplicate wrappers merely to satisfy the registry.
 
 ## 5. Initial Niuva composite candidates
 
 These are the first components derived from the product journeys. All eight
-contracts below are approved for implementation. P0 means the component
-supports a core journey and P1 means it is a later reusable boundary.
+contracts below are implemented and visually approved for the styleguide-only
+proof; new visual defaults still require a separate review.
+P0 means the component supports a core journey and P1 means it is a later
+reusable boundary.
 
-### `EvidenceCard` — P0 / approved
+### `EvidenceCard` — P0 / approved for styleguide-only
 
 - **Purpose:** Make a real Niuva project, product, process, or material proof
   understandable on public surfaces.
-- **Anatomy:** Eyebrow/technical label, title, short outcome description,
+- **Anatomy:** Optional human-facing eyebrow in sans sentence case, title, short outcome description,
   evidence media or process marker, optional metadata, and one directional CTA.
 - **Variants and sizes:** `project`, `process`, `capability`; `default` and
   `compact`. No decorative variant without evidence.
@@ -97,7 +187,7 @@ supports a core journey and P1 means it is a later reusable boundary.
 - **Tokens/showcase:** Public surface tokens, display/body roles, card/media
   radius, quiet card shadow; showcase with real Niuva evidence only.
 
-### `FormField` — P0 / approved
+### `FormField` — P0 / approved for styleguide-only
 
 - **Purpose:** Standardize label, control, helper text, required context, and
   recovery copy across B2B, checkout, and custom-print forms.
@@ -116,7 +206,7 @@ supports a core journey and P1 means it is a later reusable boundary.
 - **Tokens/showcase:** Label/body typography, input/ring/destructive tokens,
   spacing roles; showcase project brief and checkout address.
 
-### `StatusNotice` — P0 / approved
+### `StatusNotice` — P0 / approved for styleguide-only
 
 - **Purpose:** Explain a user-visible state and the next action for customer or
   operator workflows.
@@ -134,7 +224,7 @@ supports a core journey and P1 means it is a later reusable boundary.
 - **Tokens/showcase:** Semantic background/border/icon/text roles and motion
   only for action feedback; showcase semantic proof and checkout recovery.
 
-### `ActionQueueItem` — P0 / approved
+### `ActionQueueItem` — P0 / approved for styleguide-only
 
 - **Purpose:** Present the next operator decision in the admin Action Queue,
   rather than exposing a raw database row.
@@ -150,11 +240,11 @@ supports a core journey and P1 means it is a later reusable boundary.
 - **Accessibility:** Uses a list/item structure with a heading; status is text;
   action names include the object/reference where ambiguity is possible; focus
   order follows the work decision.
-- **Tokens/showcase:** Admin density, mono metadata, neutral surface, semantic
+- **Tokens/showcase:** Admin density, technical reference metadata, neutral surface, semantic
   states, minimal motion; showcase the proof queue with fictional references
   only, never fake production records.
 
-### `MoneySummary` — P1 / approved
+### `MoneySummary` — P1 / approved for styleguide-only
 
 - **Purpose:** Show an authoritative price or quote breakdown without taking
   ownership of the calculation.
@@ -168,10 +258,10 @@ supports a core journey and P1 means it is a later reusable boundary.
   authority lives here.
 - **Accessibility:** Uses labelled rows or a description list; total is exposed
   as text; currency is not conveyed by symbol alone.
-- **Tokens/showcase:** Body/label/mono roles, border/card/elevation tokens; show
+- **Tokens/showcase:** Body/label/tabular numeric roles, border/card/elevation tokens; show
   ready-made checkout and accepted custom quote.
 
-### `FileUploadField` — P1 / approved
+### `FileUploadField` — P1 / approved for styleguide-only
 
 - **Purpose:** Explain and represent the private custom-print file upload
   lifecycle.
@@ -191,7 +281,7 @@ supports a core journey and P1 means it is a later reusable boundary.
 - **Tokens/showcase:** Input/focus/destructive/success tokens, no decorative
   upload animation; showcase custom-print request with safe fixture metadata.
 
-### `OrderStatusTimeline` — P1 / approved
+### `OrderStatusTimeline` — P1 / approved for styleguide-only
 
 - **Purpose:** Give customers a human-readable view of an order or quote state
   without exposing internal notes or provider internals.
@@ -206,10 +296,10 @@ supports a core journey and P1 means it is a later reusable boundary.
   authority.
 - **Accessibility:** Ordered list with current step exposed; connectors are
   decorative; text remains understandable without color or motion.
-- **Tokens/showcase:** Semantic status, border, mono metadata, reduced-motion
+- **Tokens/showcase:** Semantic status, border, technical timestamps, reduced-motion
   behavior; showcase retail and custom-print status fixtures.
 
-### `VariantSelector` — P1 / approved
+### `VariantSelector` — P1 / approved for styleguide-only
 
 - **Purpose:** Help a retail customer choose a product variant while making
   stock and unavailable options understandable.
@@ -244,22 +334,32 @@ reusable boundary:
 They compose the contracts above but do not become components merely because
 they contain several children.
 
-## 7. Review gate for Task 4
+## 7. Visual gate record
 
-Task 4 is complete after the owner reviewed and approved:
+The prior Task 4 contract approval remains historical. The renewed P0/P1 visual
+gate was closed for the styleguide on 2026-09-02 after review of:
 
 - the primitive bridge boundary;
 - the P0/P1 names and priorities;
 - each P0/P1 candidate's anatomy, states, props/data boundary, accessibility, and
   showcase requirement; and
-- the rule that no official component implementation or product-screen
-  propagation starts before this contract review.
+- the rule that product-screen propagation remains a separate authorization.
 
-Approval records: **`setujui component contracts P0`** and
-**`setujui component contracts P1`** on 2026-08-28. These authorize
-implementation of all eight contracts. Visual acceptance of the implementation
-and product-screen propagation remain separately controlled by the Design
-System checkpoint.
+The accepted proof covered desktop and mobile layout, default and semantic
+states, visible focus and keyboard paths, recovery copy/actions, CTA contrast,
+and equal bottom alignment for the compact `MoneySummary` states. This approval
+is limited to the current eight-component P0/P1 set and the retained foundation
+baseline; new components or visual defaults require a new proof.
+
+Historical approval records: **`setujui component contracts P0`**, **`setujui
+component contracts P1`**, and **`setujui Design System implementation`** on
+2026-08-28. The first two authorized implementation of all eight contracts; the
+last accepted the previous visual/technical implementation. Owner feedback on
+2026-08-29 reopened the visual review; the revised proof closed it on 2026-09-02
+for styleguide-only usage and keeps scoped product-page work paused.
+Typography approval record: **`Setujui Candidate v2 sebagai Typography System
+v1.0, tetap tanpa propagasi product screens.`** on 2026-08-29. This remains a
+separate foundation approval and does not authorize product-screen propagation.
 
 ## 8. Implementation boundary
 
@@ -269,5 +369,7 @@ System checkpoint.
 - Fixture values are clearly preview-only. No pricing calculation, stock
   authority, upload authorization, payment handoff, or order transition lives
   in these components.
-- Product screens remain out of scope until the owner accepts the Design System
-  implementation review.
+- Other product screens may proceed only through a separate scoped page/route
+  task after the applicable visual review and explicit authorization; no global
+  or bulk propagation, shared-component restyling, or domain integration is
+  authorized by this revision.

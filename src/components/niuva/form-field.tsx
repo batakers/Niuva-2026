@@ -1,5 +1,6 @@
 import * as React from "react";
 
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 type FieldControlProps = {
@@ -7,7 +8,20 @@ type FieldControlProps = {
   "aria-describedby"?: string;
   "aria-invalid"?: boolean;
   disabled?: boolean;
+  readOnly?: boolean;
 };
+
+export type FormFieldVariant = "default" | "compact" | "readOnly";
+
+type FormFieldControlProps =
+  | {
+      control: React.ReactElement;
+      children?: never;
+    }
+  | {
+      control?: never;
+      children: React.ReactElement;
+    };
 
 export type FormFieldProps = {
   id: string;
@@ -17,9 +31,9 @@ export type FormFieldProps = {
   required?: boolean;
   disabled?: boolean;
   action?: React.ReactNode;
-  children: React.ReactElement;
+  variant?: FormFieldVariant;
   className?: string;
-};
+} & FormFieldControlProps;
 
 export function FormField({
   id,
@@ -29,26 +43,39 @@ export function FormField({
   required = false,
   disabled = false,
   action,
+  control,
   children,
+  variant = "default",
   className,
 }: FormFieldProps) {
   const descriptionId = description ? `${id}-description` : undefined;
   const errorId = error ? `${id}-error` : undefined;
   const describedBy = [descriptionId, errorId].filter(Boolean).join(" ") || undefined;
-  const control = React.cloneElement(
-    children as React.ReactElement<FieldControlProps>,
+  const fieldControl = control ?? children;
+
+  if (!fieldControl) {
+    return null;
+  }
+
+  const enhancedControl = React.cloneElement(
+    fieldControl as React.ReactElement<FieldControlProps>,
     {
       id,
       "aria-describedby": describedBy,
       "aria-invalid": error ? true : undefined,
       disabled: disabled || undefined,
+      readOnly: variant === "readOnly" || undefined,
     },
   );
 
   return (
-    <div className={cn("space-y-2", className)} data-component="form-field">
+    <div
+      className={cn("space-y-2", variant === "compact" && "space-y-1.5", className)}
+      data-component="form-field"
+      data-variant={variant}
+    >
       <div className="flex items-baseline justify-between gap-3">
-        <label
+        <Label
           className={cn(
             "text-sm font-medium",
             disabled && "cursor-not-allowed opacity-60",
@@ -64,10 +91,10 @@ export function FormField({
               <span className="sr-only"> wajib</span>
             </>
           ) : null}
-        </label>
+        </Label>
         {action ? <div className="shrink-0">{action}</div> : null}
       </div>
-      {control}
+      {enhancedControl}
       {description ? (
         <p className="text-xs leading-5 text-muted-foreground" id={descriptionId}>
           {description}

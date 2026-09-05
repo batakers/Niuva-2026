@@ -153,7 +153,7 @@ export function VariantSelector({
                 <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                   <span className="text-sm font-medium text-foreground">{option.label}</span>
                   {option.price ? (
-                    <span className="font-mono text-xs text-foreground">{option.price}</span>
+                    <span className="font-body text-xs tabular-nums text-foreground">{option.price}</span>
                   ) : null}
                 </span>
                 {option.detail ? (

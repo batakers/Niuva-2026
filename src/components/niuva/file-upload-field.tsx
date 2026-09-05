@@ -1,11 +1,9 @@
 "use client";
 
 import { useId, useRef, type ChangeEvent } from "react";
-import { AlertCircle, FileCheck2, RefreshCw, UploadCloud, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Icon } from "@/components/ui/Icon";
 import { cn } from "@/lib/utils";
 
 export type FileUploadStatus =
@@ -99,6 +97,7 @@ export function FileUploadField({
 }: FileUploadFieldProps) {
   const generatedId = useId().replace(/:/g, "");
   const inputId = id ?? `file-upload-${generatedId}`;
+  const labelId = `${inputId}-label`;
   const statusId = `${inputId}-status`;
   const descriptionId = description ? `${inputId}-description` : undefined;
   const inputRef = useRef<HTMLInputElement>(null);
@@ -121,7 +120,7 @@ export function FileUploadField({
     status === "failed" || status === "expired" ? (
       onRetry ? (
         <Button onClick={onRetry} size="sm" type="button" variant="outline">
-          <RefreshCw aria-hidden="true" />
+          <Icon aria-hidden="true" name="refresh-cw" />
           Coba lagi
         </Button>
       ) : null
@@ -140,11 +139,17 @@ export function FileUploadField({
       data-variant={variant}
     >
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <Label className={cn(disabled && "cursor-not-allowed opacity-60")} htmlFor={inputId}>
+        <span
+          className={cn(
+            "text-sm font-medium leading-none",
+            disabled && "cursor-not-allowed opacity-60",
+          )}
+          id={labelId}
+        >
           {label}
-        </Label>
-        <span className="font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-foreground">
-          Private file
+        </span>
+        <span className="text-xs font-medium text-muted-foreground">
+          Berkas privat
         </span>
       </div>
 
@@ -154,22 +159,22 @@ export function FileUploadField({
         </p>
       ) : null}
 
-      <Input
+      <input
         accept={acceptedAttribute}
         aria-describedby={describedBy}
         aria-invalid={errorState || undefined}
-        aria-label={label}
+        aria-labelledby={labelId}
+        className="peer sr-only"
         disabled={disabled || busy}
         id={inputId}
         onChange={handleChange}
         ref={inputRef}
         type="file"
-        className="sr-only"
       />
 
       <label
         className={cn(
-          "flex min-h-28 cursor-pointer items-center gap-3 rounded-xl border border-dashed border-border bg-muted/40 p-4 transition-colors hover:border-brand-300 hover:bg-brand-50 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50",
+          "flex min-h-28 cursor-pointer items-center gap-3 rounded-xl border border-dashed border-border bg-muted/40 p-4 transition-colors hover:border-brand-300 hover:bg-brand-50 peer-focus-visible:border-ring peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50",
           size === "compact" && "min-h-20 p-3",
           (disabled || busy) && "cursor-not-allowed opacity-70",
           errorState && "border-destructive-border bg-destructive-background/40",
@@ -186,7 +191,13 @@ export function FileUploadField({
             status === "accepted" && "text-success",
           )}
         >
-          {errorState ? <AlertCircle /> : status === "accepted" ? <FileCheck2 /> : <UploadCloud />}
+          {errorState ? (
+            <Icon aria-hidden="true" name="alert-circle" />
+          ) : status === "accepted" ? (
+            <Icon aria-hidden="true" name="file-check-2" />
+          ) : (
+            <Icon aria-hidden="true" name="upload-cloud" />
+          )}
         </span>
         <span className="min-w-0 space-y-1">
           <span className="block text-sm font-medium text-foreground">{statusCopy[status]}</span>
@@ -204,17 +215,17 @@ export function FileUploadField({
       {fileName ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card p-3">
           <div className="flex min-w-0 items-center gap-3">
-            <FileCheck2 aria-hidden="true" className="size-5 shrink-0 text-success" />
+            <Icon aria-hidden="true" className="size-5 shrink-0 text-success" name="file-check-2" />
             <div className="min-w-0">
               <p className="truncate text-sm font-medium">{fileName}</p>
-              <p className="font-mono text-xs text-muted-foreground">
+              <p className="font-technical text-xs text-muted-foreground">
                 {fileMeta ?? "Metadata menunggu validasi server"}
               </p>
             </div>
           </div>
           {onRemove ? (
             <Button onClick={onRemove} size="sm" type="button" variant="ghost">
-              <X aria-hidden="true" />
+              <Icon aria-hidden="true" name="x" />
               Hapus
             </Button>
           ) : null}
@@ -228,7 +239,7 @@ export function FileUploadField({
           role="alert"
         >
           <p className="font-medium text-destructive">{statusLabels[status]}</p>
-          <p className="text-destructive/80">{error ?? errorDefaults[status]}</p>
+          <p className="text-destructive">{error ?? errorDefaults[status]}</p>
           {recoveryAction ? <div className="flex flex-wrap gap-2">{recoveryAction}</div> : null}
         </div>
       ) : null}

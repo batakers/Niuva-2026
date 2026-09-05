@@ -12,7 +12,7 @@
 
 - **What this is:** Website operasional responsif yang menyatukan company profile dan project brief B2B, retail ready-made, serta custom 3D print berbasis review operator.
 - **Who it is for:** Calon klien B2B, customer retail/B2C, serta Owner/Admin Niuva yang bukan pengguna teknis.
-- **Current phase:** Foundation / baseline scaffold and verification harness complete. UI Foundation / Visual Proof and the P0/P1 component contracts were accepted on 2026-08-28; P0/P1 implementation is available for Design System review, while product screen propagation remains gated.
+- **Current phase:** Foundation / baseline scaffold and verification harness complete. The revised UI Foundation Visual Proof is approved for styleguide-only scope as of 2026-09-03; P0/P1 Design System implementation is approved for styleguide-only use; the scoped product-screen proof for `/` and `/project-brief` is authorized but pending visual acceptance; checkout/admin, Creative/Decorative, and bulk product screen propagation remain gated.
 
 ## Commands
 

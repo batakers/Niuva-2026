@@ -2,6 +2,10 @@
 
 import { type FormEvent, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 type BrandRuntime = {
   name: string;
   tagline: string;
@@ -77,11 +81,10 @@ export default function BrandIntakeForm({ initial }: BrandIntakeFormProps) {
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
       <div className="space-y-2">
-        <label className="block text-sm font-medium" htmlFor="brand-name">
+        <Label htmlFor="brand-name">
           Nama produk
-        </label>
-        <input
-          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-base outline-none focus-visible:border-zinc-900 focus-visible:ring-2 focus-visible:ring-zinc-300"
+        </Label>
+        <Input
           id="brand-name"
           maxLength={80}
           onChange={(event) => setName(event.target.value)}
@@ -91,11 +94,11 @@ export default function BrandIntakeForm({ initial }: BrandIntakeFormProps) {
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium" htmlFor="brand-tagline">
+        <Label htmlFor="brand-tagline">
           Positioning satu kalimat
-        </label>
+        </Label>
         <textarea
-          className="min-h-32 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-base leading-7 outline-none focus-visible:border-zinc-900 focus-visible:ring-2 focus-visible:ring-zinc-300"
+          className="min-h-32 w-full rounded-lg border border-input bg-background px-2.5 py-2 text-base leading-7 outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           id="brand-tagline"
           maxLength={500}
           onChange={(event) => setTagline(event.target.value)}
@@ -105,11 +108,11 @@ export default function BrandIntakeForm({ initial }: BrandIntakeFormProps) {
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium" htmlFor="brand-logo">
+        <Label htmlFor="brand-logo">
           Path logo publik
-        </label>
-        <input
-          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 font-mono text-sm outline-none focus-visible:border-zinc-900 focus-visible:ring-2 focus-visible:ring-zinc-300"
+        </Label>
+        <Input
+          className="font-mono text-sm"
           id="brand-logo"
           maxLength={200}
           onChange={(event) => setLogo(event.target.value)}
@@ -117,27 +120,26 @@ export default function BrandIntakeForm({ initial }: BrandIntakeFormProps) {
           required
           value={logo}
         />
-        <p className="text-sm leading-6 text-zinc-600">
+        <p className="text-sm leading-6 text-muted-foreground">
           Route setup lokal hanya menerima path di bawah <code>/assets/brand/</code>.
         </p>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <button
-          className="inline-flex min-h-11 items-center justify-center rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white outline-none transition hover:bg-zinc-700 focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60"
+        <Button
           disabled={status.kind === "saving"}
           type="submit"
         >
           {status.kind === "saving" ? "Menyimpan..." : "Simpan perubahan"}
-        </button>
+        </Button>
         <p
           aria-live="polite"
           className={
             status.kind === "error"
-              ? "text-sm text-red-700"
+              ? "text-sm text-destructive"
               : status.kind === "success"
-                ? "text-sm text-green-700"
-                : "text-sm text-zinc-600"
+                ? "text-sm text-success"
+                : "text-sm text-muted-foreground"
           }
           role="status"
         >
