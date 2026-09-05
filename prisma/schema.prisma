@@ -1,0 +1,630 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AdminRole {
+  OWNER
+  ADMIN
+}
+
+enum AuditActorType {
+  ADMIN
+  SYSTEM
+  WEBHOOK
+}
+
+enum InquiryStage {
+  IDEA
+  SKETCH
+  CAD
+  PROTOTYPE
+  EXISTING_PRODUCT
+}
+
+enum InquiryStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  QUOTED
+  WON
+  LOST
+  CLOSED
+}
+
+enum OrderItemType {
+  PRODUCT
+  CUSTOM_PRINT
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PROCESSING
+  READY_TO_SHIP
+  SHIPPED
+  COMPLETED
+  CANCELLED
+  SUBMITTED
+  UNDER_REVIEW
+  WAITING_FOR_APPROVAL
+  WAITING_PAYMENT
+  IN_PRODUCTION
+  FINISHING_QC
+  WAITING_SHIPPING_PAYMENT
+}
+
+enum OrderType {
+  RETAIL
+  CUSTOM_PRINT
+}
+
+enum PaymentAttemptStatus {
+  PENDING
+  SETTLED
+  FAILED
+  EXPIRED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentPurpose {
+  ORDER_TOTAL
+  CUSTOM_SHIPPING
+}
+
+enum PricingRuleStatus {
+  DRAFT
+  ACTIVE
+  RETIRED
+}
+
+enum ShipmentStatus {
+  PENDING
+  SHIPPED
+  DELIVERED
+  EXCEPTION
+}
+
+enum StockReservationStatus {
+  ACTIVE
+  CONSUMED
+  RELEASED
+}
+
+enum StorageBucketScope {
+  PRIVATE_CUSTOMER
+  PUBLIC_MEDIA
+}
+
+enum StoredFileStatus {
+  PENDING
+  UPLOADED
+  VERIFIED
+  REJECTED
+  DELETED
+}
+
+enum CustomPrintRequestStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  QUOTE_READY
+  QUOTE_SENT
+  APPROVED
+  DECLINED
+  CANCELLED
+}
+
+enum CustomPrintQuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+enum IdempotencyStatus {
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+model AdminProfile {
+  id                   String               @id @default(uuid()) @db.Uuid
+  clerkUserId          String               @unique @map("clerk_user_id")
+  displayName          String?              @map("display_name")
+  role                 AdminRole            @default(ADMIN)
+  isActive             Boolean              @default(false) @map("is_active")
+  createdAt            DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdQuotes        CustomPrintQuote[]   @relation("CustomPrintQuoteCreatedBy")
+  customPrintReviews   CustomPrintReview[]  @relation("CustomPrintReviewAdmin")
+  approvedPricingRules PricingRuleVersion[] @relation("PricingRuleApprovedBy")
+
+  @@index([isActive, role])
+  @@map("admin_profiles")
+}
+
+model Service {
+  id          String   @id @default(uuid()) @db.Uuid
+  slug        String   @unique
+  title       String
+  summary     String
+  body        String
+  sortOrder   Int      @default(0) @map("sort_order")
+  isPublished Boolean  @default(false) @map("is_published")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([isPublished, sortOrder])
+  @@map("services")
+}
+
+model PortfolioProject {
+  id           String           @id @default(uuid()) @db.Uuid
+  slug         String           @unique
+  title        String
+  summary      String
+  challenge    String
+  process      String
+  result       String
+  serviceLabel String           @map("service_label")
+  clientName   String?          @map("client_name")
+  isFeatured   Boolean          @default(false) @map("is_featured")
+  isPublished  Boolean          @default(false) @map("is_published")
+  publishedAt  DateTime?        @map("published_at") @db.Timestamptz(6)
+  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  media        PortfolioMedia[]
+
+  @@index([isPublished, isFeatured, publishedAt])
+  @@map("portfolio_projects")
+}
+
+model PortfolioMedia {
+  id         String           @id @default(uuid()) @db.Uuid
+  projectId  String           @map("project_id") @db.Uuid
+  storageKey String           @map("storage_key")
+  altText    String           @map("alt_text")
+  sortOrder  Int              @default(0) @map("sort_order")
+  createdAt  DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  project    PortfolioProject @relation(fields: [projectId], references: [id], onDelete: Restrict)
+
+  @@unique([projectId, sortOrder])
+  @@index([projectId, sortOrder])
+  @@map("portfolio_media")
+}
+
+model Category {
+  id        String    @id @default(uuid()) @db.Uuid
+  slug      String    @unique
+  name      String
+  sortOrder Int       @default(0) @map("sort_order")
+  isActive  Boolean   @default(true) @map("is_active")
+  products  Product[]
+
+  @@index([isActive, sortOrder])
+  @@map("categories")
+}
+
+model Product {
+  id          String           @id @default(uuid()) @db.Uuid
+  categoryId  String?          @map("category_id") @db.Uuid
+  slug        String           @unique
+  name        String
+  description String
+  isPublished Boolean          @default(false) @map("is_published")
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  category    Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  media       ProductMedia[]
+  variants    ProductVariant[]
+
+  @@index([isPublished, createdAt])
+  @@index([categoryId, isPublished])
+  @@map("products")
+}
+
+model ProductVariant {
+  id           String              @id @default(uuid()) @db.Uuid
+  productId    String              @map("product_id") @db.Uuid
+  sku          String              @unique
+  name         String
+  priceRp      Decimal             @map("price_rp") @db.Decimal(18, 0)
+  stockOnHand  Int                 @default(0) @map("stock_on_hand")
+  weightGrams  Decimal             @map("weight_grams") @db.Decimal(12, 3)
+  lengthCm     Decimal?            @map("length_cm") @db.Decimal(12, 3)
+  widthCm      Decimal?            @map("width_cm") @db.Decimal(12, 3)
+  heightCm     Decimal?            @map("height_cm") @db.Decimal(12, 3)
+  isActive     Boolean             @default(true) @map("is_active")
+  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  product      Product             @relation(fields: [productId], references: [id], onDelete: Restrict)
+  orderItems   OrderItem[]
+  reservations StockReservation[]
+
+  @@index([productId, isActive])
+  @@map("product_variants")
+}
+
+model ProductMedia {
+  id         String   @id @default(uuid()) @db.Uuid
+  productId  String   @map("product_id") @db.Uuid
+  storageKey String   @map("storage_key")
+  altText    String   @map("alt_text")
+  sortOrder  Int      @default(0) @map("sort_order")
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([productId, sortOrder])
+  @@index([productId, sortOrder])
+  @@map("product_media")
+}
+
+model Order {
+  id              String                  @id @default(uuid()) @db.Uuid
+  orderNumber     String                  @unique @map("order_number")
+  orderType       OrderType               @map("order_type")
+  status          OrderStatus             @default(PENDING_PAYMENT)
+  customerName    String                  @map("customer_name")
+  customerEmail   String                  @map("customer_email")
+  customerPhone   String                  @map("customer_phone")
+  currency        String                  @default("IDR") @db.Char(3)
+  itemsSubtotalRp Decimal                 @map("items_subtotal_rp") @db.Decimal(18, 0)
+  shippingTotalRp Decimal                 @map("shipping_total_rp") @db.Decimal(18, 0)
+  grandTotalRp    Decimal                 @map("grand_total_rp") @db.Decimal(18, 0)
+  publicTokenHash String                  @unique @map("public_token_hash")
+  createdAt       DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime                @updatedAt @map("updated_at") @db.Timestamptz(6)
+  paidAt          DateTime?               @map("paid_at") @db.Timestamptz(6)
+  completedAt     DateTime?               @map("completed_at") @db.Timestamptz(6)
+  cancelledAt     DateTime?               @map("cancelled_at") @db.Timestamptz(6)
+  address         OrderAddress?
+  items           OrderItem[]
+  paymentAttempts PaymentAttempt[]
+  reservations    StockReservation[]
+  shipmentRates   ShipmentRateSnapshot[]
+  shipments       Shipment[]
+
+  @@index([status, createdAt])
+  @@index([customerEmail, createdAt])
+  @@index([orderType, status, createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id                String            @id @default(uuid()) @db.Uuid
+  orderId           String            @map("order_id") @db.Uuid
+  variantId         String?           @map("variant_id") @db.Uuid
+  customQuoteId     String?           @map("custom_quote_id") @db.Uuid
+  itemType          OrderItemType     @map("item_type")
+  nameSnapshot      String            @map("name_snapshot")
+  skuSnapshot       String?           @map("sku_snapshot")
+  unitPriceRp       Decimal           @map("unit_price_rp") @db.Decimal(18, 0)
+  quantity          Int
+  lineTotalRp       Decimal           @map("line_total_rp") @db.Decimal(18, 0)
+  configurationJson Json?             @map("configuration_json")
+  order             Order             @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  variant           ProductVariant?   @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  customQuote       CustomPrintQuote? @relation(fields: [customQuoteId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([variantId])
+  @@index([customQuoteId])
+  @@map("order_items")
+}
+
+model OrderAddress {
+  id             String   @id @default(uuid()) @db.Uuid
+  orderId        String   @unique @map("order_id") @db.Uuid
+  recipientName  String   @map("recipient_name")
+  phone          String
+  addressLine    String   @map("address_line")
+  district       String?
+  city           String
+  province       String
+  postalCode     String   @map("postal_code")
+  countryCode    String   @default("ID") @map("country_code") @db.Char(2)
+  biteshipAreaId String?  @map("biteship_area_id")
+  latitude       Decimal? @db.Decimal(10, 7)
+  longitude      Decimal? @db.Decimal(10, 7)
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@map("order_addresses")
+}
+
+model StockReservation {
+  id        String                 @id @default(uuid()) @db.Uuid
+  variantId String                 @map("variant_id") @db.Uuid
+  orderId   String                 @map("order_id") @db.Uuid
+  quantity  Int
+  status    StockReservationStatus @default(ACTIVE)
+  expiresAt DateTime               @map("expires_at") @db.Timestamptz(6)
+  createdAt DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+  order     Order                  @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  variant   ProductVariant         @relation(fields: [variantId], references: [id], onDelete: Restrict)
+
+  @@index([variantId, status, expiresAt])
+  @@index([orderId])
+  @@map("stock_reservations")
+}
+
+model ShipmentRateSnapshot {
+  id                  String   @id @default(uuid()) @db.Uuid
+  orderId             String   @map("order_id") @db.Uuid
+  provider            String   @default("BITESHIP")
+  courierCode         String   @map("courier_code")
+  serviceCode         String   @map("service_code")
+  courierName         String   @map("courier_name")
+  serviceName         String   @map("service_name")
+  priceRp             Decimal  @map("price_rp") @db.Decimal(18, 0)
+  etaText             String?  @map("eta_text")
+  providerPayloadJson Json     @map("provider_payload_json")
+  selectedAt          DateTime @default(now()) @map("selected_at") @db.Timestamptz(6)
+  order               Order    @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@index([orderId, selectedAt])
+  @@map("shipment_rate_snapshots")
+}
+
+model Shipment {
+  id                String         @id @default(uuid()) @db.Uuid
+  orderId           String         @map("order_id") @db.Uuid
+  status            ShipmentStatus @default(PENDING)
+  courierCode       String?        @map("courier_code")
+  serviceCode       String?        @map("service_code")
+  trackingNumber    String?        @map("tracking_number")
+  finalWeightGrams  Decimal?       @map("final_weight_grams") @db.Decimal(12, 3)
+  finalLengthCm     Decimal?       @map("final_length_cm") @db.Decimal(12, 3)
+  finalWidthCm      Decimal?       @map("final_width_cm") @db.Decimal(12, 3)
+  finalHeightCm     Decimal?       @map("final_height_cm") @db.Decimal(12, 3)
+  shippingAmountRp  Decimal?       @map("shipping_amount_rp") @db.Decimal(18, 0)
+  createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  order             Order          @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@index([orderId, status])
+  @@map("shipments")
+}
+
+model PaymentAttempt {
+  id                    String               @id @default(uuid()) @db.Uuid
+  orderId               String               @map("order_id") @db.Uuid
+  purpose               PaymentPurpose
+  provider              String               @default("MIDTRANS")
+  providerOrderId       String               @unique @map("provider_order_id")
+  amountRp              Decimal              @map("amount_rp") @db.Decimal(18, 0)
+  status                PaymentAttemptStatus @default(PENDING)
+  expiresAt             DateTime             @map("expires_at") @db.Timestamptz(6)
+  snapToken             String?              @map("snap_token")
+  redirectUrl           String?              @map("redirect_url")
+  providerTransactionId String?              @unique @map("provider_transaction_id")
+  createdAt             DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
+  settledAt             DateTime?            @map("settled_at") @db.Timestamptz(6)
+  order                 Order                @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  events                PaymentEvent[]
+
+  @@index([orderId, status])
+  @@index([status, expiresAt])
+  @@map("payment_attempts")
+}
+
+model PaymentEvent {
+  id                    String          @id @default(uuid()) @db.Uuid
+  paymentAttemptId      String?         @map("payment_attempt_id") @db.Uuid
+  provider              String
+  eventFingerprint      String          @unique @map("event_fingerprint")
+  providerTransactionId String?         @map("provider_transaction_id")
+  providerOrderId       String          @map("provider_order_id")
+  payloadJson           Json?           @map("payload_json")
+  receivedAt            DateTime        @default(now()) @map("received_at") @db.Timestamptz(6)
+  processedAt           DateTime?       @map("processed_at") @db.Timestamptz(6)
+  processingResult      String?         @map("processing_result")
+  paymentAttempt        PaymentAttempt? @relation(fields: [paymentAttemptId], references: [id], onDelete: SetNull)
+
+  @@index([paymentAttemptId])
+  @@index([providerOrderId])
+  @@map("payment_events")
+}
+
+model B2BInquiry {
+  id                 String           @id @default(uuid()) @db.Uuid
+  referenceNumber    String           @unique @map("reference_number")
+  name               String
+  email              String
+  phone              String
+  company            String?
+  referenceLink      String?          @map("reference_link")
+  projectGoal        String           @map("project_goal")
+  currentStage       InquiryStage     @map("current_stage")
+  description        String
+  targetQuantity     String           @map("target_quantity")
+  targetDeadline     DateTime?        @map("target_deadline") @db.Date
+  budgetRange        String?          @map("budget_range")
+  preferredService   String?          @map("preferred_service")
+  confidentialityAck Boolean          @map("confidentiality_ack")
+  status             InquiryStatus    @default(NEW)
+  publicTokenHash    String           @unique @map("public_token_hash")
+  createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  files              B2BInquiryFile[]
+
+  @@index([status, createdAt])
+  @@map("b2b_inquiries")
+}
+
+model StoredFile {
+  id                      String                    @id @default(uuid()) @db.Uuid
+  storageKey              String                    @unique @map("storage_key")
+  bucketScope             StorageBucketScope        @map("bucket_scope")
+  originalName            String                    @map("original_name")
+  extension               String
+  mimeType                String                    @map("mime_type")
+  sizeBytes               BigInt                    @map("size_bytes")
+  sha256                  String?
+  uploadTokenHash         String?                   @unique @map("upload_token_hash")
+  uploadExpiresAt         DateTime?                 @map("upload_expires_at") @db.Timestamptz(6)
+  uploadedAt              DateTime?                 @map("uploaded_at") @db.Timestamptz(6)
+  uploadStatus            StoredFileStatus          @default(PENDING) @map("upload_status")
+  createdAt               DateTime                  @default(now()) @map("created_at") @db.Timestamptz(6)
+  verifiedAt              DateTime?                 @map("verified_at") @db.Timestamptz(6)
+  deletedAt               DateTime?                 @map("deleted_at") @db.Timestamptz(6)
+  b2bInquiryLinks         B2BInquiryFile[]
+  customPrintRequestLinks CustomPrintRequestFile[]
+
+  @@index([uploadStatus, createdAt])
+  @@index([uploadStatus, uploadExpiresAt])
+  @@map("stored_files")
+}
+
+model B2BInquiryFile {
+  inquiryId String     @map("inquiry_id") @db.Uuid
+  fileId    String     @unique @map("file_id") @db.Uuid
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  inquiry   B2BInquiry @relation(fields: [inquiryId], references: [id], onDelete: Restrict)
+  file      StoredFile @relation(fields: [fileId], references: [id], onDelete: Restrict)
+
+  @@id([inquiryId, fileId])
+  @@map("b2b_inquiry_files")
+}
+
+model CustomPrintRequest {
+  id                String                   @id @default(uuid()) @db.Uuid
+  referenceNumber   String                   @unique @map("reference_number")
+  customerName      String                   @map("customer_name")
+  customerEmail     String                   @map("customer_email")
+  customerPhone     String                   @map("customer_phone")
+  materialRequested String                   @map("material_requested")
+  colorRequested    String?                  @map("color_requested")
+  quantity          Int
+  notes             String?
+  unitConfirmation  String?                  @map("unit_confirmation")
+  status            CustomPrintRequestStatus @default(SUBMITTED)
+  publicTokenHash   String                   @unique @map("public_token_hash")
+  createdAt         DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(6)
+  files             CustomPrintRequestFile[]
+  quotes            CustomPrintQuote[]
+  review            CustomPrintReview?
+
+  @@index([status, createdAt])
+  @@map("custom_print_requests")
+}
+
+model CustomPrintReview {
+  id                   String             @id @default(uuid()) @db.Uuid
+  requestId            String             @unique @map("request_id") @db.Uuid
+  reviewedByAdminId    String             @map("reviewed_by_admin_id") @db.Uuid
+  verifiedWeightG      Decimal            @map("verified_weight_g") @db.Decimal(12, 6)
+  printDurationSeconds Int                @map("print_duration_seconds")
+  materialCode         String             @map("material_code")
+  quantity             Int
+  configurationJson    Json?              @map("configuration_json")
+  notes                String?
+  reviewedAt           DateTime           @map("reviewed_at") @db.Timestamptz(6)
+  createdAt            DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  request              CustomPrintRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  reviewedByAdmin      AdminProfile       @relation("CustomPrintReviewAdmin", fields: [reviewedByAdminId], references: [id], onDelete: Restrict)
+
+  @@index([reviewedByAdminId, reviewedAt])
+  @@map("custom_print_reviews")
+}
+
+model CustomPrintRequestFile {
+  requestId String             @map("request_id") @db.Uuid
+  fileId    String             @unique @map("file_id") @db.Uuid
+  createdAt DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  request   CustomPrintRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  file      StoredFile         @relation(fields: [fileId], references: [id], onDelete: Restrict)
+
+  @@id([requestId, fileId])
+  @@map("custom_print_request_files")
+}
+
+model PricingRuleVersion {
+  id                String             @id @default(uuid()) @db.Uuid
+  code              String
+  version           Int
+  definitionJson    Json               @map("definition_json")
+  status            PricingRuleStatus  @default(DRAFT)
+  approvedByAdminId String?            @map("approved_by_admin_id") @db.Uuid
+  approvedAt        DateTime?          @map("approved_at") @db.Timestamptz(6)
+  createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  approvedByAdmin   AdminProfile?      @relation("PricingRuleApprovedBy", fields: [approvedByAdminId], references: [id], onDelete: SetNull)
+  quotes            CustomPrintQuote[]
+
+  @@unique([code, version])
+  @@index([status, createdAt])
+  @@map("pricing_rule_versions")
+}
+
+model CustomPrintQuote {
+  id                   String                 @id @default(uuid()) @db.Uuid
+  requestId            String                 @map("request_id") @db.Uuid
+  quoteNumber          String                 @unique @map("quote_number")
+  version              Int                    @default(1)
+  pricingRuleVersionId String                 @map("pricing_rule_version_id") @db.Uuid
+  verifiedWeightG      Decimal                @map("verified_weight_g") @db.Decimal(12, 6)
+  printDurationSeconds Int                    @map("print_duration_seconds")
+  materialCode         String                 @map("material_code")
+  quantity             Int
+  materialSubtotalRp   Decimal                @map("material_subtotal_rp") @db.Decimal(18, 6)
+  machineSubtotalRp    Decimal                @map("machine_subtotal_rp") @db.Decimal(18, 6)
+  unroundedTotalRp     Decimal                @map("unrounded_total_rp") @db.Decimal(18, 6)
+  finalTotalRp         Decimal                @map("final_total_rp") @db.Decimal(18, 0)
+  calculationSnapshot  Json                   @map("calculation_snapshot")
+  status               CustomPrintQuoteStatus @default(DRAFT)
+  publicTokenHash      String                 @unique @map("public_token_hash")
+  expiresAt            DateTime?              @map("expires_at") @db.Timestamptz(6)
+  createdByAdminId     String                 @map("created_by_admin_id") @db.Uuid
+  createdAt            DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+  sentAt               DateTime?              @map("sent_at") @db.Timestamptz(6)
+  acceptedAt           DateTime?              @map("accepted_at") @db.Timestamptz(6)
+  request              CustomPrintRequest     @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  pricingRuleVersion   PricingRuleVersion     @relation(fields: [pricingRuleVersionId], references: [id], onDelete: Restrict)
+  createdByAdmin       AdminProfile           @relation("CustomPrintQuoteCreatedBy", fields: [createdByAdminId], references: [id], onDelete: Restrict)
+  orderItems           OrderItem[]
+
+  @@unique([requestId, version])
+  @@index([requestId, status])
+  @@map("custom_print_quotes")
+}
+
+model AuditLog {
+  id           String         @id @default(uuid()) @db.Uuid
+  actorType    AuditActorType @map("actor_type")
+  actorId      String?        @map("actor_id")
+  entityType   String         @map("entity_type")
+  entityId     String         @map("entity_id") @db.Uuid
+  action       String
+  beforeJson   Json?          @map("before_json")
+  afterJson    Json?          @map("after_json")
+  metadataJson Json?          @map("metadata_json")
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([entityType, entityId, createdAt])
+  @@map("audit_logs")
+}
+
+model IdempotencyRecord {
+  id             String            @id @default(uuid()) @db.Uuid
+  scope          String
+  idempotencyKey String            @map("idempotency_key")
+  requestHash    String            @map("request_hash")
+  status         IdempotencyStatus @default(IN_PROGRESS)
+  responseStatus Int?              @map("response_status")
+  responseJson   Json?             @map("response_json")
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  completedAt    DateTime?         @map("completed_at") @db.Timestamptz(6)
+  expiresAt      DateTime          @map("expires_at") @db.Timestamptz(6)
+
+  @@unique([scope, idempotencyKey])
+  @@index([scope, status, expiresAt])
+  @@map("idempotency_records")
+}
