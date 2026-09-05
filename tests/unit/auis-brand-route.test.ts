@@ -29,9 +29,14 @@ const brand = {
 };
 
 function createRequest(configured?: boolean) {
-  return new Request("http://localhost/api/auis/brand", {
+  const url = "http://localhost/api/auis/brand";
+
+  return new Request(url, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: {
+      "content-type": "application/json",
+      origin: new URL(url).origin,
+    },
     body: JSON.stringify({ ...brand, configured }),
   });
 }
@@ -46,7 +51,13 @@ describe("AUiS brand route", () => {
     const response = await POST(createRequest(true));
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ ok: true, configured: true });
+    await expect(response.json()).resolves.toMatchObject({
+      configured: true,
+      ok: true,
+    });
+    expect(response.headers.get("x-correlation-id")).toMatch(
+      /^[0-9a-f-]{36}$/,
+    );
     expect(writeFileMock).toHaveBeenCalledWith(
       expect.stringContaining("brand.runtime.json"),
       expect.stringContaining('"configured": true'),
@@ -58,7 +69,10 @@ describe("AUiS brand route", () => {
     const response = await POST(createRequest(false));
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ ok: true, configured: false });
+    await expect(response.json()).resolves.toMatchObject({
+      configured: false,
+      ok: true,
+    });
     expect(writeFileMock).toHaveBeenCalledWith(
       expect.stringContaining("brand.runtime.json"),
       expect.stringContaining('"configured": false'),
