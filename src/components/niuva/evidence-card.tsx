@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { ArrowUpRight } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -9,6 +8,7 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
+import { Icon } from "@/components/ui/Icon";
 import { cn } from "@/lib/utils";
 
 export type EvidenceCardVariant = "project" | "process" | "capability";
@@ -24,6 +24,8 @@ export type EvidenceCardProps = {
   actionLabel?: string;
   meta?: readonly string[];
   media?: ReactNode;
+  mediaAlt?: string;
+  /** @deprecated Use mediaAlt for the accessible media description. */
   mediaLabel?: string;
   className?: string;
 };
@@ -44,10 +46,12 @@ export function EvidenceCard({
   actionLabel,
   meta,
   media,
+  mediaAlt,
   mediaLabel,
   className,
 }: EvidenceCardProps) {
   const showAction = Boolean(href && actionLabel);
+  const resolvedMediaAlt = mediaAlt ?? mediaLabel ?? `Bukti ${title}`;
 
   return (
     <Card
@@ -59,7 +63,7 @@ export function EvidenceCard({
     >
       {media ? (
         <div
-          aria-label={mediaLabel ?? `Bukti ${title}`}
+          aria-label={resolvedMediaAlt}
           className="overflow-hidden rounded-t-xl border-b border-border bg-muted"
           role="img"
         >
@@ -68,10 +72,12 @@ export function EvidenceCard({
       ) : null}
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
-          <p className="font-mono text-[0.68rem] font-medium uppercase tracking-[0.14em] text-brand-700">
+          <p className="min-w-0 font-body text-xs font-medium text-brand-700">
             {eyebrow}
           </p>
-          <Badge variant="outline">{variantLabels[variant]}</Badge>
+          {variant !== "capability" ? (
+            <Badge variant="outline">{variantLabels[variant]}</Badge>
+          ) : null}
         </div>
         <h3 className="text-base leading-snug font-medium">{title}</h3>
         <CardDescription>{description}</CardDescription>
@@ -81,7 +87,7 @@ export function EvidenceCard({
           <ul className="flex flex-wrap gap-2" aria-label="Metadata bukti">
             {meta.map((item) => (
               <li
-                className="rounded-lg border border-border bg-muted px-2 py-1 font-mono text-xs text-muted-foreground"
+                className="rounded-lg border border-border bg-muted px-2 py-1 font-body text-xs text-muted-foreground"
                 key={item}
               >
                 {item}
@@ -97,7 +103,7 @@ export function EvidenceCard({
             href={href}
           >
             {actionLabel}
-            <ArrowUpRight aria-hidden="true" className="size-4" />
+            <Icon aria-hidden="true" className="size-4" name="arrow-up-right" />
           </a>
         </CardFooter>
       ) : null}

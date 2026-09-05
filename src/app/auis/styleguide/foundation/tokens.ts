@@ -1,3 +1,10 @@
+import {
+  formatResponsiveSpec,
+  formatResponsiveTracking,
+  typographyCoreRoleOrder,
+  typographySystemTokens,
+} from "./typography-proof";
+
 export type TokenStatus = "locked" | "approved";
 
 export type TokenSwatch = {
@@ -38,8 +45,8 @@ export const neutralScale = [
 export const semanticTokens = [
   { label: "Background", token: "--background", value: "var(--neutral-50)", status: "approved" },
   { label: "Foreground", token: "--foreground", value: "var(--neutral-900)", status: "approved" },
-  { label: "Primary", token: "--primary", value: "var(--brand-500)", status: "approved" },
-  { label: "Primary foreground", token: "--primary-foreground", value: "var(--neutral-900)", status: "approved" },
+  { label: "Primary", token: "--primary", value: "var(--brand-700)", status: "approved" },
+  { label: "Primary foreground", token: "--primary-foreground", value: "#ffffff", status: "approved" },
   { label: "Secondary", token: "--secondary", value: "var(--brand-100)", status: "approved" },
   { label: "Muted", token: "--muted", value: "var(--neutral-100)", status: "approved" },
   { label: "Border", token: "--border", value: "var(--neutral-200)", status: "approved" },
@@ -75,65 +82,37 @@ export const contrastTokens = [
     ratio: "6.58:1",
   },
   {
-    label: "Button text / Niuva Blue",
-    foreground: "#0f172a",
-    background: "#6390bb",
-    ratio: "5.30:1",
+    label: "Button text / primary action",
+    foreground: "#ffffff",
+    background: "#3f607f",
+    ratio: "6.58:1",
   },
 ] as const;
 
-export const typographyTokens = [
-  {
-    role: "Display",
-    className: "font-display text-4xl font-semibold leading-tight tracking-tight sm:text-5xl",
-    familyToken: "--font-display-token",
-    size: "2.25rem → 3rem",
-    lineHeight: "1.1",
-    weight: "600",
-    tracking: "-0.025em",
-    usage: "Hero or page-level proof heading",
-  },
-  {
-    role: "Heading",
-    className: "font-display text-2xl font-semibold leading-tight tracking-tight",
-    familyToken: "--font-display-token",
-    size: "1.5rem",
-    lineHeight: "1.25",
-    weight: "600",
-    tracking: "-0.025em",
-    usage: "Section heading",
-  },
-  {
-    role: "Body",
-    className: "font-body text-base leading-7",
-    familyToken: "--font-body-token",
-    size: "1rem",
-    lineHeight: "1.75",
-    weight: "400",
-    tracking: "0",
-    usage: "Reading and explanatory copy",
-  },
-  {
-    role: "Label",
-    className: "font-body text-sm font-medium",
-    familyToken: "--font-body-token",
-    size: "0.875rem",
-    lineHeight: "1.25",
-    weight: "500",
-    tracking: "0",
-    usage: "Form and metadata labels",
-  },
-  {
-    role: "Mono",
-    className: "font-technical text-sm",
-    familyToken: "--font-technical-token",
-    size: "0.875rem",
-    lineHeight: "1.25",
-    weight: "400",
-    tracking: "0.02em",
-    usage: "Technical labels, token names, and status values",
-  },
+const typographyRoleOrder = [
+  ...typographyCoreRoleOrder,
+  "editorial-accent",
 ] as const;
+
+/** Compatibility view for styleguide consumers; values come from the approved v1.0 contract. */
+export const typographyTokens = typographyRoleOrder.map((role) => {
+  const token = typographySystemTokens[role];
+
+  return {
+    className: token.className,
+    familyToken:
+      token.family === "Fraunces"
+        ? "--font-auis-proof-serif"
+        : "--font-auis-proof-sans",
+    lineHeight: `${token.lineHeight.compact} → ${token.lineHeight.standard} → ${token.lineHeight.wide}`,
+    role: token.label,
+    size: formatResponsiveSpec(token),
+    status: "approved" as const,
+    tracking: formatResponsiveTracking(token),
+    usage: token.usage,
+    weight: String(token.weight),
+  };
+});
 
 export const rhythmTokens = [
   { label: "Section gap", token: "--section-gap-token", value: "4rem", usage: "Large page sections" },
@@ -146,7 +125,7 @@ export const rhythmTokens = [
 
 export const shadowTokens = [
   { label: "Card", token: "--shadow-card-token", value: "0 1px 2px rgb(15 23 42 / 0.06)", usage: "Quiet separation from the surface" },
-  { label: "Floating", token: "--shadow-floating-token", value: "0 16px 32px / 0 2px 8px", usage: "Temporary overlays and elevated UI" },
+  { label: "Floating", token: "--shadow-floating-token", value: "0 16px 32px rgb(15 23 42 / 0.12), 0 2px 8px rgb(15 23 42 / 0.08)", usage: "Temporary overlays and elevated UI" },
 ] as const;
 
 export const motionTokens = [

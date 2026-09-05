@@ -59,6 +59,48 @@ describe("Niuva P0 components", () => {
     );
   });
 
+  it("accepts the canonical control and StatusNotice action contracts", () => {
+    const onAction = vi.fn();
+
+    render(
+      <div>
+        <FormField
+          control={<Input />}
+          id="canonical-reference"
+          label="Referensi proyek"
+          variant="readOnly"
+        />
+        <StatusNotice
+          actionLabel="Coba lagi"
+          ariaLive="assertive"
+          description="Quote perlu divalidasi ulang."
+          onAction={onAction}
+          secondaryActionLabel="Buka detail"
+          size="compact"
+          title="Perlu pemeriksaan"
+          tone="warning"
+        />
+      </div>,
+    );
+
+    expect(screen.getByRole("textbox", { name: "Referensi proyek" })).toHaveAttribute(
+      "id",
+      "canonical-reference",
+    );
+    expect(screen.getByRole("textbox", { name: "Referensi proyek" })).toHaveAttribute(
+      "readonly",
+    );
+    const notice = screen.getByRole("status");
+    expect(notice).toHaveAttribute("aria-live", "assertive");
+    expect(notice).toHaveAttribute("data-size", "compact");
+    expect(screen.getByText("Perlu perhatian")).toBeInTheDocument();
+    expect(screen.getByText("Quote perlu divalidasi ulang.")).toHaveClass("text-current");
+    expect(screen.getByText("Quote perlu divalidasi ulang.")).not.toHaveClass("text-current/80");
+
+    fireEvent.click(screen.getByRole("button", { name: "Coba lagi" }));
+    expect(onAction).toHaveBeenCalledOnce();
+  });
+
   it("renders every semantic StatusNotice tone with a next action", () => {
     const tones = ["success", "warning", "info", "error"] as const;
 
@@ -98,6 +140,24 @@ describe("Niuva P0 components", () => {
     expect(screen.getByText("Terblokir")).toBeInTheDocument();
     expect(screen.getByText("DEMO-025")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Mulai review" })).toBeInTheDocument();
+  });
+
+  it("exposes the action-pending operator state", () => {
+    render(
+      <ActionQueueItem
+        kind="order"
+        reference="DEMO-027"
+        status="action-pending"
+        summary="Menunggu konfirmasi operator"
+        updatedAt="sekarang"
+      />,
+    );
+
+    expect(screen.getByRole("listitem", { name: "Order DEMO-027" })).toHaveAttribute(
+      "data-status",
+      "action-pending",
+    );
+    expect(screen.getByText("Tindakan menunggu konfirmasi")).toBeInTheDocument();
   });
 });
 
@@ -145,6 +205,13 @@ describe("Niuva P1 components", () => {
     const input = screen.getByLabelText("Berkas custom print");
     expect(input).toHaveAttribute("accept", ".stl,.3mf");
     expect(input).toHaveAttribute("aria-describedby", "custom-file-description custom-file-status");
+    expect(input).toHaveAttribute("aria-labelledby", "custom-file-label");
+    expect(input).toHaveClass("peer", "sr-only");
+    expect(document.querySelectorAll('label[for="custom-file"]')).toHaveLength(1);
+    expect(document.querySelector('label[for="custom-file"]')).toHaveClass(
+      "peer-focus-visible:ring-3",
+    );
+    expect(screen.getByText("Berkas privat")).toBeInTheDocument();
 
     fireEvent.change(input, { target: { files: [selectedFile] } });
     expect(onSelect).toHaveBeenCalledWith(selectedFile);
@@ -161,6 +228,10 @@ describe("Niuva P1 components", () => {
     );
 
     expect(screen.getByRole("alert")).toHaveTextContent("Format berkas tidak didukung.");
+    expect(screen.getByText("Format berkas tidak didukung.")).toHaveClass("text-destructive");
+    expect(screen.getByText("Format berkas tidak didukung.")).not.toHaveClass(
+      "text-destructive/80",
+    );
     expect(screen.getByRole("button", { name: "Pilih berkas lain" })).toBeInTheDocument();
   });
 

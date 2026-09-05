@@ -7,10 +7,12 @@ export {
 export {
   FormField,
   type FormFieldProps,
+  type FormFieldVariant,
 } from "./form-field";
 export {
   StatusNotice,
   type StatusNoticeProps,
+  type StatusNoticeSize,
   type StatusNoticeTone,
 } from "./status-notice";
 export {

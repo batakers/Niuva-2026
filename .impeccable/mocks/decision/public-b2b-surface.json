@@ -1,0 +1,51 @@
+{
+  "title": "Choose the Public B2B proof composition",
+  "question": "Which structure should govern the Public B2B higher-fidelity proof? Keep Niuva identity fixed; choose the composition.",
+  "options": [
+    {
+      "id": "brief-runway",
+      "label": "Brief-to-Build Runway",
+      "kicker": "THE ROLL",
+      "lineage": "Niuva product-development flow",
+      "thesis": "The visitor sees one brief move across a measured runway from idea to product.",
+      "palette": ["#0F172A", "#F8FAFC", "#6390BB", "#E8F1F8"],
+      "materials": ["cool paper", "working slate", "real project evidence"],
+      "viewport": "Asymmetric dark opener: positioning left, a four-step process runway right, then one project proof and the brief CTA.",
+      "risk": "Can become a process diagram if project evidence does not carry physical weight.",
+      "comp": ".impeccable/mocks/decision/public-b2b-brief-runway.png"
+    },
+    {
+      "id": "project-dossier",
+      "label": "Project Dossier",
+      "kicker": "ALTERNATE",
+      "lineage": "B2B case-study reading room",
+      "thesis": "The B2B conversation starts with the work, then opens the service and brief path around it.",
+      "palette": ["#F8FAFC", "#FFFFFF", "#1F2E3B", "#6390BB"],
+      "materials": ["paper white", "blue ink", "captioned project media"],
+      "viewport": "Evidence-led opener with a large project plate, a context rail, challenge/process notes, and a directional brief CTA.",
+      "risk": "One project may dominate before visitors understand Niuva's broader capability.",
+      "comp": ".impeccable/mocks/decision/public-b2b-project-dossier.png"
+    },
+    {
+      "id": "workshop-rail",
+      "label": "Workshop Rail",
+      "kicker": "ALTERNATE",
+      "lineage": "Visible product-development workbench",
+      "thesis": "Capability, proof, process, and the first brief input stay connected on one working rail.",
+      "palette": ["#1E293B", "#F8FAFC", "#B4CFE0", "#3F607F"],
+      "materials": ["cool paper", "dark line", "measured annotation"],
+      "viewport": "A light workspace holds a vertical evidence strip, an annotated capability rail, process decisions, and a brief preview.",
+      "risk": "Operational clarity may feel like an internal tool if the first proof lacks human context.",
+      "comp": ".impeccable/mocks/decision/public-b2b-workshop-rail.png"
+    }
+  ],
+  "reroll": {
+    "registers": ["safer", "bolder"]
+  },
+  "buildPath": {
+    "value": "comp",
+    "toggle": true
+  },
+  "canon": false,
+  "steer": true
+}

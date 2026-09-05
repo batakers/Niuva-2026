@@ -1,13 +1,4 @@
 import type { ReactNode } from "react";
-import {
-  AlertCircle,
-  CheckCircle2,
-  Circle,
-  Clock3,
-  LockKeyhole,
-  XCircle,
-  type LucideIcon,
-} from "lucide-react";
 
 import {
   Card,
@@ -15,6 +6,7 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
+import { Icon, type IconName } from "@/components/ui/Icon";
 import { cn } from "@/lib/utils";
 
 export type OrderStatusTimelineVariant = "retail-order" | "custom-quote";
@@ -62,14 +54,14 @@ const stateLabels: Record<OrderStatusStepState, string> = {
   "access-expired": "Akses berakhir",
 };
 
-const stateIcons: Record<OrderStatusStepState, LucideIcon> = {
-  pending: Circle,
-  current: Clock3,
-  completed: CheckCircle2,
-  delayed: Clock3,
-  failed: AlertCircle,
-  cancelled: XCircle,
-  "access-expired": LockKeyhole,
+const stateIcons: Record<OrderStatusStepState, IconName> = {
+  pending: "circle",
+  current: "clock-3",
+  completed: "check-circle-2",
+  delayed: "clock-3",
+  failed: "alert-circle",
+  cancelled: "x-circle",
+  "access-expired": "lock-keyhole",
 };
 
 const stateClasses: Record<OrderStatusStepState, string> = {
@@ -101,7 +93,7 @@ export function OrderStatusTimeline({
       size={size === "compact" ? "sm" : "default"}
     >
       <CardHeader>
-        <p className="font-mono text-[0.68rem] font-medium uppercase tracking-[0.14em] text-brand-700">
+        <p className="font-body text-xs font-medium text-brand-700">
           {variantLabels[variant]}
         </p>
         <h3 className="text-base leading-snug font-semibold">{title ?? "Status proses"}</h3>
@@ -113,7 +105,7 @@ export function OrderStatusTimeline({
       <CardContent>
         <ol aria-label={`Tahapan ${variantLabels[variant]}`} className="space-y-0">
           {steps.map((step, index) => {
-            const Icon = stateIcons[step.state];
+            const iconName = stateIcons[step.state];
             const isCurrent = step.state === "current";
 
             return (
@@ -141,7 +133,7 @@ export function OrderStatusTimeline({
                       stateClasses[step.state],
                     )}
                   >
-                    <Icon className="size-4" />
+                    <Icon aria-hidden="true" className="size-4" name={iconName} />
                   </span>
                 </div>
                 <div className="min-w-0 flex-1 space-y-1 pt-0.5">
@@ -149,7 +141,7 @@ export function OrderStatusTimeline({
                     <p className="text-sm font-medium text-foreground">{step.label}</p>
                     <span
                       className={cn(
-                        "font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-foreground",
+                        "text-xs font-medium text-muted-foreground",
                         step.state === "failed" || step.state === "cancelled"
                           ? "text-destructive"
                           : step.state === "delayed" || step.state === "access-expired"

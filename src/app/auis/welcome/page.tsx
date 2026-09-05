@@ -11,21 +11,23 @@ export const metadata: Metadata = {
 
 export default function AuisWelcomePage() {
   return (
-    <main className="min-h-screen bg-zinc-50 px-6 py-12 text-zinc-950 sm:py-16">
+    <main className="min-h-screen bg-background px-6 py-12 text-foreground sm:py-16">
       <div className="mx-auto max-w-3xl space-y-10">
         <header className="space-y-5">
-          <AuLogo
-            className="h-auto w-60"
-            priority
-          />
-          <p className="text-sm font-medium uppercase tracking-[0.14em] text-zinc-600">
+          <div className="inline-flex rounded-lg bg-neutral-900 p-3">
+            <AuLogo
+              className="h-auto w-60"
+              priority
+            />
+          </div>
+          <p className="text-sm font-medium text-muted-foreground">
             Setup AUiS · Langkah 1 dari 3
           </p>
           <div className="space-y-3">
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
               Tinjau identitas brand Niuva
             </h1>
-            <p className="max-w-2xl text-lg leading-8 text-zinc-700">
+            <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
               {brandRuntime.tagline}
             </p>
           </div>
@@ -33,13 +35,13 @@ export default function AuisWelcomePage() {
 
         <section
           aria-labelledby="brand-intake-heading"
-          className="space-y-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8"
+          className="space-y-6 rounded-2xl border border-border bg-card p-6 shadow-card sm:p-8"
         >
           <div className="space-y-2">
             <h2 className="text-xl font-semibold" id="brand-intake-heading">
               Data brand Niuva
             </h2>
-            <p className="leading-7 text-zinc-600">
+            <p className="leading-7 text-muted-foreground">
               Data brand berasal dari wawancara dengan owner. Tinjau lalu simpan
               perubahan selama setup lokal.
             </p>
@@ -47,9 +49,9 @@ export default function AuisWelcomePage() {
           <BrandIntakeForm initial={brandRuntime} />
         </section>
 
-        <aside className="border-l-2 border-zinc-300 pl-4 text-sm leading-6 text-zinc-600">
+        <aside className="border-l-2 border-border pl-4 text-sm leading-6 text-muted-foreground">
           Brand, Foundation, dan Voice sudah tersedia. Form ini mempertahankan
-          <code className="mx-1 rounded bg-zinc-100 px-1 py-0.5">
+          <code className="mx-1 rounded bg-muted px-1 py-0.5">
             configured: {String(brandRuntime.configured)}
           </code>
           saat data brand disimpan.

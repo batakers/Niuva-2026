@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { Clock3 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -8,6 +7,7 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
+import { Icon } from "@/components/ui/Icon";
 import { cn } from "@/lib/utils";
 
 export type ActionQueueKind = "inquiry" | "custom-review" | "order" | "package";
@@ -16,7 +16,8 @@ export type ActionQueueStatus =
   | "waiting"
   | "in-progress"
   | "blocked"
-  | "completed";
+  | "completed"
+  | "action-pending";
 
 export type ActionQueueItemProps = {
   reference: string;
@@ -42,6 +43,7 @@ const statusLabels: Record<ActionQueueStatus, string> = {
   "in-progress": "Sedang dikerjakan",
   blocked: "Terblokir",
   completed: "Selesai",
+  "action-pending": "Tindakan menunggu konfirmasi",
 };
 
 const statusClasses: Record<ActionQueueStatus, string> = {
@@ -50,6 +52,7 @@ const statusClasses: Record<ActionQueueStatus, string> = {
   "in-progress": "border-info-border bg-info-background text-info",
   blocked: "border-destructive-border bg-destructive-background text-destructive",
   completed: "border-success-border bg-success-background text-success",
+  "action-pending": "border-warning-border bg-warning-background text-warning",
 };
 
 export function ActionQueueItem({
@@ -67,11 +70,13 @@ export function ActionQueueItem({
       className={cn("shadow-card", className)}
       data-component="action-queue-item"
       data-status={status}
+      role="listitem"
+      aria-label={`${kindLabels[kind]} ${reference}`}
     >
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="font-mono text-[0.68rem] font-medium uppercase tracking-[0.14em] text-brand-700">
+            <p className="font-body text-xs font-medium text-brand-700">
               {kindLabels[kind]}
             </p>
             <h3 className="mt-1 text-sm leading-snug font-semibold">{summary}</h3>
@@ -81,10 +86,10 @@ export function ActionQueueItem({
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="flex-1 space-y-3">
         <p className="font-mono text-xs font-medium text-foreground">{reference}</p>
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Clock3 aria-hidden="true" className="size-3.5" />
+          <Icon aria-hidden="true" className="size-3.5" name="clock-3" />
           Diperbarui {updatedAt}
         </p>
       </CardContent>

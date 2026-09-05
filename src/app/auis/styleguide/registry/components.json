@@ -1,16 +1,77 @@
 {
-  "status": "p0-p1-components-official-review-ready",
+  "schemaVersion": "1.0",
+  "status": "p0-p1-components-visual-approved-styleguide-only",
+  "architecture": {
+    "status": "architecture-approved",
+    "version": "1.0",
+    "approvedAt": "2026-09-02",
+    "scope": "styleguide-only",
+    "source": "src/app/auis/styleguide/registry/design-system.ts",
+    "productScreenPropagationAllowed": false,
+    "productScreenProof": {
+      "status": "authorized-proof",
+      "routes": ["/", "/project-brief"],
+      "visualAcceptance": "pending-owner-review",
+      "checkoutAdminIncluded": false,
+      "creativeDecorativeIncluded": false,
+      "screenPropagationAllowed": false
+    },
+    "layers": [
+      { "id": "foundation", "number": "01", "status": "approved" },
+      { "id": "primitives", "number": "02", "status": "implemented" },
+      { "id": "core-components", "number": "03", "status": "approved" },
+      { "id": "motion-system", "number": "04", "status": "approved" },
+      { "id": "creative-components", "number": "05", "status": "candidate" },
+      { "id": "decorative-effects", "number": "06", "status": "restricted" },
+      { "id": "patterns", "number": "07", "status": "approved" },
+      { "id": "governance", "number": "08", "status": "implemented" }
+    ],
+    "sourcePolicy": {
+      "primitive": "native-html-plus-base-ui",
+      "radix": "exception-only",
+      "coreComponents": "shadcn-source-distribution",
+      "icons": "lucide",
+      "customComponents": "src/components/niuva",
+      "motionEngine": "css-first; Motion candidate and not installed",
+      "creativeCatalog": "reference-only",
+      "decorativeEffects": "restricted-unless-proven"
+    },
+    "promotionStates": [
+      "reference",
+      "candidate",
+      "proof",
+      "approved",
+      "official"
+    ]
+  },
   "foundation": {
-    "status": "approved",
+    "status": "approved-styleguide-only",
     "acceptedAt": "2026-08-28",
+    "visualReviewReopenedAt": "2026-08-29",
+    "visualReviewApprovedAt": "2026-09-03",
+    "visualReviewScope": "styleguide-only",
     "source": "src/app/globals.css",
-    "proofRoute": "/auis/styleguide"
+    "proofRoute": "/auis/styleguide",
+    "screenPropagationAllowed": false,
+    "typography": {
+      "status": "approved",
+      "version": "1.0",
+      "approvedAt": "2026-08-29",
+      "scope": "foundation-styleguide-only",
+      "source": "src/app/auis/styleguide/foundation/typography-proof.ts",
+      "screenPropagationAllowed": false
+    }
   },
   "contract": {
-    "status": "p0-p1-approved",
+    "status": "p0-p1-visual-approved-styleguide-only",
     "source": "src/app/auis/styleguide/registry/component-contracts.md",
     "p0ApprovedAt": "2026-08-28",
     "p1ApprovedAt": "2026-08-28",
+    "visualReviewApprovedAt": "2026-09-02",
+    "visualReviewScope": "styleguide-only",
+    "implementationStatus": "approved-styleguide-only",
+    "implementationAcceptedAt": "2026-08-28",
+    "visualReviewReopenedAt": "2026-08-29",
     "componentImplementationAllowed": [
       "evidence-card",
       "form-field",
@@ -21,8 +82,56 @@
       "order-status-timeline",
       "variant-selector"
     ],
-    "screenPropagationAllowed": false
+    "screenPropagationAllowed": false,
+    "screenPropagationMode": "blocked-until-separate-page-authorization"
   },
+  "motionSystem": {
+    "status": "approved-styleguide-only",
+    "version": "1.0",
+    "scope": "styleguide-only",
+    "source": "src/app/auis/styleguide/foundation/motion.ts",
+    "proofRoute": "/auis/styleguide#motion-system",
+    "dependencyAdded": false,
+    "reducedMotion": "prefers-reduced-motion: reduce",
+    "visualAcceptance": "approved-styleguide-only",
+    "visualReviewApprovedAt": "2026-09-03"
+  },
+  "patternProof": {
+    "status": "approved-styleguide-only",
+    "scope": "styleguide-only",
+    "source": "src/app/auis/styleguide/components/patterns-showcase.tsx",
+    "proofRoute": "/auis/styleguide#patterns",
+    "visualReviewApprovedAt": "2026-09-03"
+  },
+  "componentGroups": [
+    {
+      "id": "primitive-bridge",
+      "layer": "primitives",
+      "status": "implemented",
+      "source": "native-html-plus-base-ui-plus-shadcn-source",
+      "components": ["button", "au-link", "input", "icon", "label", "select", "dialog", "tabs", "tooltip", "dropdown-menu"]
+    },
+    {
+      "id": "core-ui",
+      "layer": "core-components",
+      "status": "planned",
+      "source": "contract-only-aliases-without-runtime-modules",
+      "components": ["niuva-button", "niuva-input", "niuva-select", "niuva-card", "niuva-dialog", "niuva-tabs", "niuva-navigation"]
+    },
+    {
+      "id": "niuva-composites",
+      "layer": "core-components",
+      "status": "approved",
+      "source": "src/components/niuva",
+      "components": ["evidence-card", "form-field", "status-notice", "action-queue-item", "money-summary", "file-upload-field", "order-status-timeline", "variant-selector"]
+    }
+  ],
+  "patterns": [
+    { "id": "hero-case-study", "status": "approved", "proofRoute": "/auis/styleguide#patterns", "visualReviewApprovedAt": "2026-09-03" },
+    { "id": "product-discovery", "status": "approved", "proofRoute": "/auis/styleguide#patterns", "visualReviewApprovedAt": "2026-09-03" },
+    { "id": "checkout-summary", "status": "approved", "proofRoute": "/auis/styleguide#patterns", "visualReviewApprovedAt": "2026-09-03" },
+    { "id": "admin-action-queue", "status": "approved", "proofRoute": "/auis/styleguide#patterns", "visualReviewApprovedAt": "2026-09-03" }
+  ],
   "components": [
     "alert",
     "badge",
@@ -37,9 +146,22 @@
     "separator",
     "switch",
     "tabs",
-    "tooltip"
+    "tooltip",
+    "au-link",
+    "icon"
   ],
   "productComponents": ["au-logo"],
+  "iconSystem": {
+    "component": "icon",
+    "source": "src/components/ui/Icon.tsx",
+    "vocabulary": "lucide-react",
+    "grid": "24px",
+    "stroke": "Lucide default stroke width",
+    "sizes": ["xs (12-16px)", "sm (20px)", "md (24px)", "lg (32px)", "xl (48px+)"],
+    "naming": "Existing semantic names remain stable; new names follow icon-[category]-[name]-[variant]",
+    "categories": ["action", "navigation", "content", "communication", "social", "status", "file", "device"],
+    "accessibility": ["Every icon is aria-hidden or labelled", "Critical actions pair icons with text", "Icon-only controls provide a 44px minimum touch target"]
+  },
   "initialNiuvaComponents": [
     "evidence-card",
     "form-field",

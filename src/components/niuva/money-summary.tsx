@@ -122,7 +122,7 @@ export function MoneySummary({
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="font-mono text-[0.68rem] font-medium uppercase tracking-[0.14em] text-brand-700">
+            <p className="font-body text-xs font-medium text-brand-700">
               {variantLabels[variant]}
             </p>
             <h3 className="mt-1 text-base leading-snug font-semibold">
@@ -138,7 +138,7 @@ export function MoneySummary({
         ) : null}
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className="flex flex-1 flex-col gap-4">
         <dl className="divide-y divide-border border-y border-border">
           {lines.map((line, index) => (
             <div
@@ -149,21 +149,21 @@ export function MoneySummary({
                 <span className="block truncate text-foreground">{line.label}</span>
                 {line.detail ? <span className="block text-xs">{line.detail}</span> : null}
               </dt>
-              <dd className="font-mono text-sm font-medium text-foreground">{line.value}</dd>
+              <dd className="font-body text-sm font-medium tabular-nums text-foreground">{line.value}</dd>
             </div>
           ))}
           <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-4 py-4">
             <dt className="text-sm font-semibold text-foreground">
               Total
-              <span className="mt-1 block font-mono text-xs font-normal text-muted-foreground">
-                Mata uang: {currency}
+                <span className="mt-1 block text-xs font-normal text-muted-foreground">
+                  Mata uang: {currency}
               </span>
             </dt>
             <dd className="text-right">
               <span className="block text-xl font-semibold tracking-tight text-foreground">
                 {total}
               </span>
-              <span className="font-mono text-xs text-muted-foreground">{currency}</span>
+              <span className="font-body text-xs tabular-nums text-muted-foreground">{currency}</span>
             </dd>
           </div>
         </dl>
@@ -177,7 +177,7 @@ export function MoneySummary({
         {notice ? (
           <StatusNotice
             action={action}
-            className="p-3"
+            className="flex-1 p-3"
             description={notice.description}
             role={sourceStatus === "error" ? "alert" : "status"}
             title={notice.title}
