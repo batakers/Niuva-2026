@@ -1,4 +1,4 @@
-import type { Prisma, PrismaClient } from "@/generated/prisma/client";
+import { Prisma, type PrismaClient } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { appError } from "@/modules/shared/errors";
 
@@ -36,7 +36,9 @@ export type CustomShippingPreparation = Readonly<{
   amountRp: Prisma.Decimal;
   orderId: string;
   orderNumber: string;
+  payment?: Readonly<{ redirectUrl?: string; token?: string }>;
   paymentAttemptId: string;
+  paymentProviderOrderId?: string;
   shipmentId: string;
 }>;
 
@@ -137,6 +139,27 @@ export class ShippingRepository implements ShippingServiceRepository {
     now: Date;
   }>): Promise<CustomShippingPreparation> {
     return this.prisma.$transaction(async (transaction) => {
+      // Lock all payment attempts for this order before locking the order row.
+      // The webhook repository uses the same order (attempt, then order) lock
+      // order, which prevents two custom-shipping retries from creating a
+      // second pending attempt concurrently without introducing a deadlock.
+      await transaction.$queryRaw(
+        Prisma.sql`
+          SELECT "id"
+          FROM "payment_attempts"
+          WHERE "order_id" = ${input.orderId}::uuid
+          FOR UPDATE
+        `,
+      );
+      await transaction.$queryRaw(
+        Prisma.sql`
+          SELECT "id"
+          FROM "orders"
+          WHERE "id" = ${input.orderId}::uuid
+          FOR UPDATE
+        `,
+      );
+
       const order = await transaction.order.findUnique({
         where: { id: input.orderId },
         select: { orderNumber: true, orderType: true, status: true },
@@ -156,8 +179,22 @@ export class ShippingRepository implements ShippingServiceRepository {
         const existing = await transaction.paymentAttempt.findFirst({
           where: { orderId: input.orderId, purpose: "CUSTOM_SHIPPING" },
           orderBy: { createdAt: "desc" },
-          select: { amountRp: true, id: true },
+          select: {
+            amountRp: true,
+            id: true,
+            providerOrderId: true,
+            redirectUrl: true,
+            snapToken: true,
+            status: true,
+          },
         });
+
+        if (existing === null) {
+          throw appError("CONFLICT", {
+            message:
+              "Order menunggu pembayaran shipping custom tetapi attempt belum tersedia.",
+          });
+        }
 
         const shipment = await transaction.shipment.findFirst({
           where: { orderId: input.orderId },
@@ -165,18 +202,53 @@ export class ShippingRepository implements ShippingServiceRepository {
           select: { id: true },
         });
 
-        if (existing !== null && shipment !== null) {
+        if (existing !== null && existing.status === "PENDING") {
+          if (shipment === null) {
+            throw appError("CONFLICT", {
+              message:
+                "Payment shipping custom pending tidak memiliki snapshot shipment.",
+            });
+          }
+
+          const payment =
+            existing.snapToken === null && existing.redirectUrl === null
+              ? undefined
+              : {
+                  ...(existing.redirectUrl === null
+                    ? {}
+                    : { redirectUrl: existing.redirectUrl }),
+                  ...(existing.snapToken === null
+                    ? {}
+                    : { token: existing.snapToken }),
+                };
+
           return {
             amountRp: existing.amountRp,
             orderId: input.orderId,
             orderNumber: order.orderNumber,
+            ...(payment === undefined ? {} : { payment }),
             paymentAttemptId: existing.id,
+            paymentProviderOrderId: existing.providerOrderId,
             shipmentId: shipment.id,
           };
         }
+
+        if (
+          existing.status !== "EXPIRED" &&
+          existing.status !== "FAILED" &&
+          existing.status !== "CANCELLED"
+        ) {
+          throw appError("CONFLICT", {
+            message:
+              "Payment shipping custom tidak dapat diganti pada status saat ini.",
+          });
+        }
       }
 
-      if (order.status !== "FINISHING_QC") {
+      if (
+        order.status !== "FINISHING_QC" &&
+        order.status !== "WAITING_SHIPPING_PAYMENT"
+      ) {
         throw appError("INVALID_STATE_TRANSITION", {
           details: { from: order.status, to: "WAITING_SHIPPING_PAYMENT" },
         });
@@ -209,15 +281,17 @@ export class ShippingRepository implements ShippingServiceRepository {
         select: { id: true },
       });
 
-      const updated = await transaction.order.updateMany({
-        where: { id: input.orderId, status: "FINISHING_QC" },
-        data: { status: "WAITING_SHIPPING_PAYMENT" },
-      });
-
-      if (updated.count === 0) {
-        throw appError("CONFLICT", {
-          message: "Order berubah sebelum rate shipping custom disimpan.",
+      if (order.status === "FINISHING_QC") {
+        const updated = await transaction.order.updateMany({
+          where: { id: input.orderId, status: "FINISHING_QC" },
+          data: { status: "WAITING_SHIPPING_PAYMENT" },
         });
+
+        if (updated.count === 0) {
+          throw appError("CONFLICT", {
+            message: "Order berubah sebelum rate shipping custom disimpan.",
+          });
+        }
       }
 
       const paymentAttempt = await transaction.paymentAttempt.create({
@@ -236,6 +310,7 @@ export class ShippingRepository implements ShippingServiceRepository {
         orderId: input.orderId,
         orderNumber: order.orderNumber,
         paymentAttemptId: paymentAttempt.id,
+        paymentProviderOrderId: input.paymentProviderOrderId,
         shipmentId: shipment.id,
       };
     });

@@ -50,6 +50,9 @@ migration: `stored_files` uses `id`, while ownership link tables use `file_id`.
   `MIDTRANS_IS_PRODUCTION=false` and `NODE_ENV` is not production.
 - The server uses the persisted payment deadline. The Snap expiry duration is
   rounded down to minutes, so it cannot extend the 30-minute retail policy.
+- Custom-shipping payment retries reuse a still-pending attempt's provider
+  reference and stored token/redirect when available. Expired or failed
+  attempts are immutable; a new retry receives a new provider reference.
 - Webhooks validate schema and the classic SHA-512 signature, fingerprint the
   provider state, store only minimized scalar payload data, and serialise the
   payment attempt/order rows before applying a transition.

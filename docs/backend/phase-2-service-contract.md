@@ -85,8 +85,11 @@ Final custom shipping requires an authenticated operator, a custom order in
 `FINISHING_QC` (or an existing prepared `WAITING_SHIPPING_PAYMENT` payment),
 and final package measurements. The provider rate, shipment snapshot, second
 payment attempt, and order transition are persisted transactionally; provider
-payment creation remains outside the database transaction. Retail orders are
-rejected by this path.
+payment creation remains outside the database transaction. A still-pending
+custom-shipping attempt is replayed with its original provider reference (and
+stored provider result when available); an expired or failed attempt remains
+immutable and a retry creates a new attempt with a new provider reference.
+Retail orders are rejected by this path.
 
 ## Closure decisions
 

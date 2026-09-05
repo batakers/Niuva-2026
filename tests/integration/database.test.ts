@@ -6,6 +6,7 @@ import { InventoryRepository } from "@/modules/inventory/repository";
 import { B2BInquiryRepository } from "@/modules/inquiry/repository";
 import { PaymentWebhookRepository } from "@/modules/payment/webhook-repository";
 import { PaymentWebhookService } from "@/modules/payment/webhook-service";
+import { ShippingRepository } from "@/modules/shipping/repository";
 import { createHash } from "node:crypto";
 
 const prisma = getPrismaClient();
@@ -197,6 +198,95 @@ describe("isolated PostgreSQL integration harness", () => {
     });
   });
 
+  it("reuses pending custom shipping attempts and replaces only expired attempts", async () => {
+    const order = await prisma.order.create({
+      data: {
+        customerEmail: "custom@example.test",
+        customerName: "Custom client",
+        customerPhone: "+628000000000",
+        grandTotalRp: new Prisma.Decimal("0"),
+        itemsSubtotalRp: new Prisma.Decimal("0"),
+        orderNumber: "ORD-CUSTOM-SHIPPING-RETRY",
+        orderType: "CUSTOM_PRINT",
+        publicTokenHash: "custom-shipping-token",
+        shippingTotalRp: new Prisma.Decimal("0"),
+        status: "WAITING_SHIPPING_PAYMENT",
+      },
+    });
+    const shipment = await prisma.shipment.create({
+      data: {
+        courierCode: "JNE",
+        finalHeightCm: new Prisma.Decimal("10"),
+        finalLengthCm: new Prisma.Decimal("10"),
+        finalWeightGrams: new Prisma.Decimal("100"),
+        finalWidthCm: new Prisma.Decimal("10"),
+        orderId: order.id,
+        serviceCode: "REG",
+        shippingAmountRp: new Prisma.Decimal("25000"),
+      },
+    });
+    const attempt = await prisma.paymentAttempt.create({
+      data: {
+        amountRp: new Prisma.Decimal("25000"),
+        expiresAt: new Date("2026-09-06T00:00:00.000Z"),
+        orderId: order.id,
+        providerOrderId: "SHP-CUSTOM-ORIGINAL",
+        purpose: "CUSTOM_SHIPPING",
+        redirectUrl: "https://payment.example.test/original",
+        snapToken: "original-token",
+      },
+    });
+    const repository = new ShippingRepository(prisma);
+    const input = {
+      courierCode: "JNE",
+      courierName: "JNE",
+      etaText: "2-3 days",
+      finalHeightCm: new Prisma.Decimal("10"),
+      finalLengthCm: new Prisma.Decimal("10"),
+      finalWeightGrams: new Prisma.Decimal("100"),
+      finalWidthCm: new Prisma.Decimal("10"),
+      orderId: order.id,
+      paymentExpiresAt: new Date("2026-09-06T00:00:00.000Z"),
+      paymentProviderOrderId: "SHP-CUSTOM-UNUSED",
+      priceRp: new Prisma.Decimal("30000"),
+      providerPayload: { courierCode: "JNE", price: 30000 },
+      serviceCode: "REG",
+      serviceName: "Regular",
+      now: new Date("2026-09-05T00:00:00.000Z"),
+    };
+
+    await expect(repository.createCustomShippingPayment(input)).resolves.toMatchObject({
+      amountRp: new Prisma.Decimal("25000"),
+      payment: {
+        redirectUrl: "https://payment.example.test/original",
+        token: "original-token",
+      },
+      paymentAttemptId: attempt.id,
+      paymentProviderOrderId: "SHP-CUSTOM-ORIGINAL",
+      shipmentId: shipment.id,
+    });
+    await expect(prisma.paymentAttempt.count({ where: { orderId: order.id } })).resolves.toBe(1);
+    await expect(prisma.shipment.count({ where: { orderId: order.id } })).resolves.toBe(1);
+
+    await prisma.paymentAttempt.update({
+      where: { id: attempt.id },
+      data: { status: "EXPIRED" },
+    });
+
+    const replacement = await repository.createCustomShippingPayment(input);
+    expect(replacement).toMatchObject({
+      amountRp: new Prisma.Decimal("30000"),
+      paymentProviderOrderId: "SHP-CUSTOM-UNUSED",
+    });
+    expect(replacement.paymentAttemptId).not.toBe(attempt.id);
+    await expect(prisma.paymentAttempt.count({ where: { orderId: order.id } })).resolves.toBe(2);
+    await expect(prisma.shipment.count({ where: { orderId: order.id } })).resolves.toBe(2);
+    await expect(prisma.paymentAttempt.findUnique({ where: { id: attempt.id } })).resolves.toMatchObject({
+      providerOrderId: "SHP-CUSTOM-ORIGINAL",
+      status: "EXPIRED",
+    });
+  });
+
   it("settles a verified Midtrans event exactly once and cancels a late payment", async () => {
     const now = new Date("2026-09-05T08:00:00.000Z");
     const variant = await createWebhookFixtureVariant("WEBHOOK-SETTLED", 1);
@@ -342,6 +432,7 @@ async function createRetailPaymentFixture(input: Readonly<{
   const paymentAttempt = await prisma.paymentAttempt.create({
     data: {
       amountRp: new Prisma.Decimal("12500"),
+      createdAt: new Date(input.expiresAt.getTime() - 60_000),
       expiresAt: input.expiresAt,
       orderId: order.id,
       providerOrderId: input.providerOrderId,

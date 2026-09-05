@@ -183,16 +183,23 @@ export class ShippingService {
       serviceName: rate.serviceName,
       now,
     });
-    const payment = await this.paymentProvider.createPayment({
-      amountRp: preparation.amountRp.toString(),
-      orderId: preparation.orderId,
-      orderNumber: preparation.orderNumber,
-      providerOrderId: paymentProviderOrderId,
-    });
-    await repository.attachPaymentProviderResult(
-      preparation.paymentAttemptId,
-      payment,
-    );
+    const preparedProviderOrderId =
+      preparation.paymentProviderOrderId ?? paymentProviderOrderId;
+    const payment =
+      preparation.payment ??
+      (await this.paymentProvider.createPayment({
+        amountRp: preparation.amountRp.toString(),
+        orderId: preparation.orderId,
+        orderNumber: preparation.orderNumber,
+        providerOrderId: preparedProviderOrderId,
+      }));
+
+    if (preparation.payment === undefined) {
+      await repository.attachPaymentProviderResult(
+        preparation.paymentAttemptId,
+        payment,
+      );
+    }
 
     await recordAudit(this.audit, {
       action: "shipping.custom.rate.created",

@@ -315,6 +315,7 @@ describe("Phase 2 custom shipping guard", () => {
       },
     };
     const service = new ShippingService({
+      audit: async () => undefined,
       authorizeAdmin: async () => admin,
       repository,
       shippingProvider: {
@@ -334,5 +335,140 @@ describe("Phase 2 custom shipping guard", () => {
       }),
     ).rejects.toMatchObject({ code: "CONFLICT" });
     expect(providerCalls).toBe(0);
+  });
+
+  it("replays a pending custom-shipping payment without calling the provider again", async () => {
+    let paymentCalls = 0;
+    let attachCalls = 0;
+    const repository: ShippingServiceRepository = {
+      async attachPaymentProviderResult() {
+        attachCalls += 1;
+      },
+      async createCustomShippingPayment() {
+        return {
+          amountRp: new Decimal("25000"),
+          orderId: "order-1",
+          orderNumber: "ORD-CUSTOM-1",
+          payment: { token: "existing-token" },
+          paymentAttemptId: "payment-attempt-1",
+          paymentProviderOrderId: "SHP-existing",
+          shipmentId: "shipment-1",
+        };
+      },
+      async findCustomShippingContext() {
+        return {
+          address: null,
+          orderNumber: "ORD-CUSTOM-1",
+          orderType: "CUSTOM_PRINT",
+          status: "WAITING_SHIPPING_PAYMENT",
+        };
+      },
+      async paymentProviderOrderIdExists() {
+        return false;
+      },
+    };
+    const service = new ShippingService({
+      audit: async () => undefined,
+      authorizeAdmin: async () => admin,
+      now: () => now,
+      paymentProvider: {
+        async createPayment() {
+          paymentCalls += 1;
+          return { token: "new-token" };
+        },
+      },
+      repository,
+      shippingProvider: {
+        async getRate() {
+          return {
+            courierCode: "JNE",
+            courierName: "JNE",
+            priceRp: new Decimal("25000"),
+            providerPayload: {},
+            serviceCode: "REG",
+            serviceName: "Regular",
+          };
+        },
+      },
+    });
+
+    await expect(
+      service.createCustomShippingPayment("order-1", {
+        finalHeightCm: "1",
+        finalLengthCm: "1",
+        finalWeightGrams: "1",
+        finalWidthCm: "1",
+      }),
+    ).resolves.toMatchObject({
+      payment: { token: "existing-token" },
+      preparation: { paymentProviderOrderId: "SHP-existing" },
+    });
+    expect(paymentCalls).toBe(0);
+    expect(attachCalls).toBe(0);
+  });
+
+  it("retries a pending custom-shipping attempt with its original provider reference", async () => {
+    let providerOrderId: string | undefined;
+    let attachedToken: string | undefined;
+    const repository: ShippingServiceRepository = {
+      async attachPaymentProviderResult(_paymentAttemptId, result) {
+        attachedToken = result.token;
+      },
+      async createCustomShippingPayment() {
+        return {
+          amountRp: new Decimal("25000"),
+          orderId: "order-1",
+          orderNumber: "ORD-CUSTOM-1",
+          paymentAttemptId: "payment-attempt-1",
+          paymentProviderOrderId: "SHP-existing",
+          shipmentId: "shipment-1",
+        };
+      },
+      async findCustomShippingContext() {
+        return {
+          address: null,
+          orderNumber: "ORD-CUSTOM-1",
+          orderType: "CUSTOM_PRINT",
+          status: "WAITING_SHIPPING_PAYMENT",
+        };
+      },
+      async paymentProviderOrderIdExists() {
+        return false;
+      },
+    };
+    const service = new ShippingService({
+      audit: async () => undefined,
+      authorizeAdmin: async () => admin,
+      now: () => now,
+      paymentProvider: {
+        async createPayment(input) {
+          providerOrderId = input.providerOrderId;
+          return { token: "retried-token" };
+        },
+      },
+      repository,
+      shippingProvider: {
+        async getRate() {
+          return {
+            courierCode: "JNE",
+            courierName: "JNE",
+            priceRp: new Decimal("25000"),
+            providerPayload: {},
+            serviceCode: "REG",
+            serviceName: "Regular",
+          };
+        },
+      },
+    });
+
+    await service.createCustomShippingPayment("order-1", {
+      finalHeightCm: "1",
+      finalLengthCm: "1",
+      finalWeightGrams: "1",
+      finalWidthCm: "1",
+    });
+
+    expect(providerOrderId).toBe("SHP-existing");
+    expect(attachedToken).toBe("retried-token");
   });
 });
