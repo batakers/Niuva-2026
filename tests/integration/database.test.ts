@@ -7,6 +7,7 @@ import { B2BInquiryRepository } from "@/modules/inquiry/repository";
 import { PaymentWebhookRepository } from "@/modules/payment/webhook-repository";
 import { PaymentWebhookService } from "@/modules/payment/webhook-service";
 import { ShippingRepository } from "@/modules/shipping/repository";
+import { ShippingService } from "@/modules/shipping/service";
 import { createHash } from "node:crypto";
 
 const prisma = getPrismaClient();
@@ -199,6 +200,8 @@ describe("isolated PostgreSQL integration harness", () => {
   });
 
   it("reuses pending custom shipping attempts and replaces only expired attempts", async () => {
+    const shippingNow = new Date();
+    const shippingExpiry = new Date(shippingNow.getTime() + 86400000);
     const order = await prisma.order.create({
       data: {
         customerEmail: "custom@example.test",
@@ -228,7 +231,7 @@ describe("isolated PostgreSQL integration harness", () => {
     const attempt = await prisma.paymentAttempt.create({
       data: {
         amountRp: new Prisma.Decimal("25000"),
-        expiresAt: new Date("2026-09-06T00:00:00.000Z"),
+        expiresAt: shippingExpiry,
         orderId: order.id,
         providerOrderId: "SHP-CUSTOM-ORIGINAL",
         purpose: "CUSTOM_SHIPPING",
@@ -246,13 +249,13 @@ describe("isolated PostgreSQL integration harness", () => {
       finalWeightGrams: new Prisma.Decimal("100"),
       finalWidthCm: new Prisma.Decimal("10"),
       orderId: order.id,
-      paymentExpiresAt: new Date("2026-09-06T00:00:00.000Z"),
+      paymentExpiresAt: shippingExpiry,
       paymentProviderOrderId: "SHP-CUSTOM-UNUSED",
       priceRp: new Prisma.Decimal("30000"),
       providerPayload: { courierCode: "JNE", price: 30000 },
       serviceCode: "REG",
       serviceName: "Regular",
-      now: new Date("2026-09-05T00:00:00.000Z"),
+      now: shippingNow,
     };
 
     await expect(repository.createCustomShippingPayment(input)).resolves.toMatchObject({
@@ -268,15 +271,25 @@ describe("isolated PostgreSQL integration harness", () => {
     await expect(prisma.paymentAttempt.count({ where: { orderId: order.id } })).resolves.toBe(1);
     await expect(prisma.shipment.count({ where: { orderId: order.id } })).resolves.toBe(1);
 
+    await expect(repository.createCustomShippingPayment({
+      ...input, now: shippingExpiry,
+    })).rejects.toMatchObject({ code: "CONFLICT" });
+
     await prisma.paymentAttempt.update({
       where: { id: attempt.id },
       data: { status: "EXPIRED" },
     });
 
-    const replacement = await repository.createCustomShippingPayment(input);
+    const replacements = await Promise.all([
+      repository.createCustomShippingPayment(input),
+      repository.createCustomShippingPayment({ ...input, paymentProviderOrderId: "SHP-CONCURRENT" }),
+    ]);
+    const replacement = replacements[0];
+    expect(replacements[1].paymentAttemptId).toBe(replacement.paymentAttemptId);
+    expect(replacements.filter((result) => result.created)).toHaveLength(1);
     expect(replacement).toMatchObject({
       amountRp: new Prisma.Decimal("30000"),
-      paymentProviderOrderId: "SHP-CUSTOM-UNUSED",
+      paymentProviderOrderId: expect.stringMatching(/^SHP-(CUSTOM-UNUSED|CONCURRENT)$/),
     });
     expect(replacement.paymentAttemptId).not.toBe(attempt.id);
     await expect(prisma.paymentAttempt.count({ where: { orderId: order.id } })).resolves.toBe(2);
@@ -285,6 +298,36 @@ describe("isolated PostgreSQL integration harness", () => {
       providerOrderId: "SHP-CUSTOM-ORIGINAL",
       status: "EXPIRED",
     });
+    await prisma.paymentAttempt.update({
+      where: { id: replacement.paymentAttemptId }, data: { status: "FAILED" },
+    });
+    let providerCalls = 0;
+    const service = new ShippingService({
+      repository,
+      audit: async () => undefined,
+      authorizeAdmin: async () => ({
+        clerkUserId: "fixture-admin",
+        profile: { clerkUserId: "fixture-admin", id: "fixture-admin", isActive: true, role: "ADMIN" },
+      }),
+      shippingProvider: { async getRate() { return input; } },
+      paymentProvider: { async createPayment(payment) {
+        providerCalls += 1;
+        const stored = await prisma.paymentAttempt.findUniqueOrThrow({ where: { providerOrderId: payment.providerOrderId } });
+        expect(payment.expiresAt).toEqual(stored.expiresAt);
+        return { token: "fixture-provider-result" };
+      } },
+    });
+    const measurement = { finalHeightCm: "10", finalLengthCm: "10", finalWeightGrams: "100", finalWidthCm: "10" };
+    const calls = await Promise.allSettled([
+      service.createCustomShippingPayment(order.id, measurement),
+      service.createCustomShippingPayment(order.id, measurement),
+    ]);
+    expect(calls.some((result) => result.status === "fulfilled")).toBe(true);
+    for (const result of calls) {
+      if (result.status === "rejected") expect(result.reason).toMatchObject({ code: "CONFLICT" });
+    }
+    expect(providerCalls).toBe(1);
+    await expect(prisma.paymentAttempt.count({ where: { orderId: order.id, status: "PENDING" } })).resolves.toBe(1);
   });
 
   it("settles a verified Midtrans event exactly once and cancels a late payment", async () => {

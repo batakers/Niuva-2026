@@ -89,6 +89,8 @@ payment creation remains outside the database transaction. A still-pending
 custom-shipping attempt is replayed with its original provider reference (and
 stored provider result when available); an expired or failed attempt remains
 immutable and a retry creates a new attempt with a new provider reference.
+Pending attempts with missing provider results or elapsed deadlines conflict
+until reconciliation; automatic duplicate provider creation is prohibited.
 Retail orders are rejected by this path.
 
 ## Closure decisions

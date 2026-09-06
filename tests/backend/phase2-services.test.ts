@@ -350,6 +350,8 @@ describe("Phase 2 custom shipping guard", () => {
           orderId: "order-1",
           orderNumber: "ORD-CUSTOM-1",
           payment: { token: "existing-token" },
+          created: false,
+          paymentExpiresAt: new Date(now.getTime() + 86400000),
           paymentAttemptId: "payment-attempt-1",
           paymentProviderOrderId: "SHP-existing",
           shipmentId: "shipment-1",
@@ -407,7 +409,11 @@ describe("Phase 2 custom shipping guard", () => {
     expect(attachCalls).toBe(0);
   });
 
-  it("retries a pending custom-shipping attempt with its original provider reference", async () => {
+  it.each([
+    { created: false, expired: false, rejected: true },
+    { created: true, expired: true, rejected: true },
+    { created: true, expired: false, rejected: false },
+  ])("guards provider creation: %j", async ({ created, expired, rejected }) => {
     let providerOrderId: string | undefined;
     let attachedToken: string | undefined;
     const repository: ShippingServiceRepository = {
@@ -421,6 +427,8 @@ describe("Phase 2 custom shipping guard", () => {
           orderNumber: "ORD-CUSTOM-1",
           paymentAttemptId: "payment-attempt-1",
           paymentProviderOrderId: "SHP-existing",
+          created,
+          paymentExpiresAt: new Date(now.getTime() + (expired ? 0 : 86400000)),
           shipmentId: "shipment-1",
         };
       },
@@ -442,6 +450,7 @@ describe("Phase 2 custom shipping guard", () => {
       now: () => now,
       paymentProvider: {
         async createPayment(input) {
+          expect(input.expiresAt).toEqual(new Date(now.getTime() + 86400000));
           providerOrderId = input.providerOrderId;
           return { token: "retried-token" };
         },
@@ -461,14 +470,20 @@ describe("Phase 2 custom shipping guard", () => {
       },
     });
 
-    await service.createCustomShippingPayment("order-1", {
+    const result = service.createCustomShippingPayment("order-1", {
       finalHeightCm: "1",
       finalLengthCm: "1",
       finalWeightGrams: "1",
       finalWidthCm: "1",
     });
 
-    expect(providerOrderId).toBe("SHP-existing");
-    expect(attachedToken).toBe("retried-token");
+    if (rejected) {
+      await expect(result).rejects.toMatchObject({ code: "CONFLICT" });
+      expect(providerOrderId).toBeUndefined();
+      expect(attachedToken).toBeUndefined();
+    } else {
+      await expect(result).resolves.toMatchObject({ payment: { token: "retried-token" } });
+      expect(providerOrderId).toBe("SHP-existing");
+    }
   });
 });
