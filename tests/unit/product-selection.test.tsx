@@ -1,13 +1,16 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductSelection } from "@/app/shop/[slug]/product-selection";
+import { CART_STORAGE_KEY } from "@/features/cart/cart-state";
 import { exampleShopProducts } from "@/features/frontend-preview/fixtures";
 
 describe("product selection preview", () => {
+  beforeEach(() => window.localStorage.clear());
+
   it("requires an available variant before preparing a cart intent", () => {
     render(<ProductSelection product={exampleShopProducts[0]} />);
 
-    const prepare = screen.getByRole("button", { name: "Tambah ke cart (preview)" });
+    const prepare = screen.getByRole("button", { name: "Tambah ke cart" });
     expect(prepare).toBeDisabled();
     expect(screen.getByRole("radio", { name: /Hitam/ })).toHaveAttribute("aria-disabled", "true");
 
@@ -28,18 +31,16 @@ describe("product selection preview", () => {
     expect(screen.getByRole("button", { name: "Tambah jumlah" })).toBeDisabled();
   });
 
-  it("emits only a local preview result without fetch or storage", () => {
+  it("stores only variant ID and quantity without a network request", () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch");
-    const storageSpy = vi.spyOn(Storage.prototype, "setItem");
     render(<ProductSelection product={exampleShopProducts[0]} />);
 
     fireEvent.click(screen.getByRole("radio", { name: /Biru/ }));
-    fireEvent.click(screen.getByRole("button", { name: "Tambah ke cart (preview)" }));
-    expect(screen.getByText("Pilihan siap untuk cart.")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Tambah ke cart" }));
+    expect(screen.getByText("Pilihan ditambahkan ke cart.")).toBeVisible();
     expect(fetchSpy).not.toHaveBeenCalled();
-    expect(storageSpy).not.toHaveBeenCalled();
+    expect(window.localStorage.getItem(CART_STORAGE_KEY)).toBe('{"version":1,"items":[{"variantId":"example-dock-blue","quantity":1}]}');
     fetchSpy.mockRestore();
-    storageSpy.mockRestore();
   });
 
   it("keeps every option and action disabled when all variants are out of stock", () => {
@@ -49,6 +50,6 @@ describe("product selection preview", () => {
     for (const option of within(screen.getByRole("radiogroup")).getAllByRole("radio")) {
       expect(option).toHaveAttribute("aria-disabled", "true");
     }
-    expect(screen.getByRole("button", { name: "Tambah ke cart (preview)" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Tambah ke cart" })).toBeDisabled();
   });
 });

@@ -1,7 +1,7 @@
-# Frontend public batch — FE-00–09
+# Frontend public batch — FE-00–10
 
-Date: 2026-09-06. Status: **UI_IMPLEMENTED**, **VISUAL_ACCEPTANCE_PENDING**,
-**NOT_INTEGRATED**. User approved FE-00–02 followed by FE-03–07, FE-08, and FE-09.
+Started: 2026-09-06. Updated: 2026-09-07. Status: **UI_IMPLEMENTED**, **VISUAL_ACCEPTANCE_PENDING**,
+**NOT_INTEGRATED**. User approved FE-00–02 followed by FE-03–07, FE-08, FE-09, and FE-10.
 
 ## Scope and review paths
 
@@ -17,6 +17,7 @@ Date: 2026-09-06. Status: **UI_IMPLEMENTED**, **VISUAL_ACCEPTANCE_PENDING**,
 | FE-07 | PRD/schema fields, optional company, error summary focus, pending/error/retry/success simulation | `/project-brief` |
 | FE-08 | Browser-safe catalog projection, category/search filters, stock states and recovery without purchase actions | `/shop?preview=examples`, `empty`, `loading`, `error` |
 | FE-09 | Product detail shell, explicit media slots, variant/price/quantity selection, OOS guard and missing-slug recovery | `/shop/contoh-dock-modular-meja?preview=examples`, `/shop/contoh-stand-display-ringkas?preview=examples` |
+| FE-10 | Versioned local cart, add/update/remove, empty/recovery states, unavailable-product handling, and non-authoritative estimate ledger | `/cart?preview=examples`, `empty`, `loading`, `error` |
 
 Run `corepack pnpm dev`; open `http://localhost:3000`. Use fictional contact
 information for review. Preview data is not a factual client portfolio.
@@ -42,10 +43,15 @@ information for review. Preview data is not a factual client portfolio.
 - Shop media remains an explicit empty slot because launch photography, products,
   variants and publication permission are not yet approved. No generated product
   image is presented as factual inventory.
-- Product detail selection is local UI state only. Its preview action performs no
-  fetch, storage write, stock reservation, or transaction. Cart, custom-print
-  screens, checkout and admin remain FE-10 onward. This does not activate existing
-  backend/provider adapters or change auth.
+- Product detail writes a versioned local cart containing only variant ID and
+  integer quantity. Product name, SKU, price, stock, dimensions and totals are not
+  persisted. Cart updates and removals remain browser-local; corrupt or enriched
+  storage is rejected and cleared rather than trusted.
+- Cart display facts come from the same development-only browser-safe catalog
+  projection. Prices and stock are labelled as estimates; unavailable records
+  remain removable. Checkout stays disabled until FE-11 and no order, reservation,
+  shipping quote, provider call or payment is created. This does not activate
+  existing backend/provider adapters or change auth.
 - No new dependencies, global tokens, logo assets, migrations or environment changes
   were introduced by this frontend batch.
 
@@ -54,11 +60,12 @@ information for review. Preview data is not a factual client portfolio.
 - `corepack pnpm lint`: 0 errors, 147 pre-existing warnings; focused ESLint on the
   changed frontend/test files has no warnings or errors.
 - `corepack pnpm typecheck`: passed.
-- `corepack pnpm test`: 31 tests passed across 8 files.
-- `corepack pnpm exec playwright test --workers=4`: 23 tests passed, including existing styleguide/security
+- `corepack pnpm test`: 36 tests passed across 9 files.
+- `corepack pnpm exec playwright test --workers=4`: 28 tests passed, including existing styleguide/security
   regression tests. Covers mobile menu/Escape/skip link, real-route navigation,
   project and product filter/detail/404/retry, variant/quantity/OOS behavior,
-  form recovery and no inquiry API mutation.
+  cart add/update/remove/persistence/corrupt recovery, form recovery and no
+  inquiry API mutation.
 - Responsive matrix: seven public routes at 320, 390, 768, 1024, 1280 and 1440px;
   one main and H1 each, no horizontal overflow or page errors, reduced motion.
 - `corepack pnpm build`: production compilation and route generation passed.
@@ -70,11 +77,19 @@ information for review. Preview data is not a factual client portfolio.
   mobile collapse, disabled/selected variant states, quantity and success feedback
   were inspected without horizontal overflow. Owner visual acceptance and
   assistive-technology review remain separate from these automated results.
+- FE-10 was visually inspected with a populated cart at 1280x720 and 390x844.
+  The item editor and estimate ledger form an 8/4 desktop split and a single
+  mobile column; controls remain 44px minimum and the 390px capture has no
+  horizontal overflow.
+- Production runtime smoke for `/cart?preview=examples`: 200 response, preview
+  controls and synthetic product names absent, unknown stored variant is
+  recoverable, and checkout remains disabled.
 
 Local screenshot evidence (not committed):
 `C:/Users/FAIZ/.codex/visualizations/2026/09/05/01a07172-b3f5-77f2-b8e3-036ed4befe4c/frontend-{home,services,projects,detail,brief}-{390,1280}.png`.
 Shop evidence: `frontend-shop-{390,1280}.png` and `frontend-shop-error-1280.png`
 in the same local visualization folder.
+Cart evidence: `frontend-cart-390.png` in the same local visualization folder.
 
 Tests for the related public routes are grouped in
 `tests/e2e/public-pages.spec.ts`, rather than one test file per route.
@@ -91,7 +106,7 @@ documents in `docs/backend/`, and `scripts/local-dev-db.ps1`. The existing task-
 edits were extended, not replaced. Ignored local environment/database files were
 not changed. Do not stage this entire dirty working tree indiscriminately.
 
-Review the public screens before FE-10. Integrating actual published content and
+Review the public screens before FE-11. Integrating actual published content and
 submission requires a separate task and factual content/permission checks. To
 roll back this batch, reverse only its frontend/tests/contract/task-document edits;
 do not reset the worktree or remove unrelated sandbox files.

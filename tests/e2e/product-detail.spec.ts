@@ -3,16 +3,16 @@ import { expect, test } from "@playwright/test";
 test("product detail changes price and quantity from an available variant", async ({ page }) => {
   await page.goto("/shop/contoh-dock-modular-meja?preview=examples");
   await expect(page.getByRole("heading", { level: 1, name: "Dock modular meja" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Tambah ke cart (preview)" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Tambah ke cart" })).toBeDisabled();
   await expect(page.getByRole("radio", { name: /Hitam/ })).toBeDisabled();
 
   await page.getByRole("radio", { name: /Abu-abu/ }).click();
   await expect(page.locator('[aria-live="polite"]')).toContainText(/Rp\s?195\.000/);
   await page.getByRole("button", { name: "Tambah jumlah" }).click();
   await expect(page.getByRole("spinbutton", { name: "Jumlah" })).toHaveValue("2");
-  await page.getByRole("button", { name: "Tambah ke cart (preview)" }).click();
-  await expect(page.getByText("Pilihan siap untuk cart.")).toBeVisible();
-  await expect(page.getByText(/Belum ada cart, reservasi stok, atau transaksi/)).toBeVisible();
+  await page.getByRole("button", { name: "Tambah ke cart" }).click();
+  await expect(page.getByText("Pilihan ditambahkan ke cart.")).toBeVisible();
+  await expect(page.getByText(/Belum ada reservasi stok atau transaksi/)).toBeVisible();
 });
 
 test("out-of-stock product cannot prepare a cart intent", async ({ page }) => {
@@ -20,7 +20,7 @@ test("out-of-stock product cannot prepare a cart intent", async ({ page }) => {
   await expect(page.getByText("Semua varian sedang habis.")).toBeVisible();
   await expect(page.getByRole("radio")).toHaveCount(2);
   for (const radio of await page.getByRole("radio").all()) await expect(radio).toBeDisabled();
-  await expect(page.getByRole("button", { name: "Tambah ke cart (preview)" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Tambah ke cart" })).toBeDisabled();
 });
 
 test("invalid product slug has a clear recovery path", async ({ page }) => {

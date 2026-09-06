@@ -5,8 +5,10 @@ import { Minus, Plus } from "lucide-react";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { VariantSelector } from "@/components/niuva/variant-selector";
 import { useHydrated } from "@/components/niuva/use-hydrated";
+import { AuLink } from "@/components/ui/AuLink";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { addCartItem, readCart, writeCart } from "@/features/cart/cart-state";
 import type { PublicShopProduct } from "@/features/frontend-preview/types";
 
 const rupiah = new Intl.NumberFormat("id-ID", {
@@ -19,7 +21,7 @@ export function ProductSelection({ product }: { product: PublicShopProduct }) {
   const hydrated = useHydrated();
   const [selectedId, setSelectedId] = useState<string>();
   const [quantity, setQuantity] = useState(1);
-  const [prepared, setPrepared] = useState(false);
+  const [cartResult, setCartResult] = useState<"idle" | "added" | "recovered" | "error">("idle");
   const selected = product.variants.find(variant => variant.id === selectedId);
   const canPrepare = Boolean(hydrated && selected && selected.stockOnHand > 0 && quantity >= 1 && quantity <= selected.stockOnHand);
   const hasAvailableVariant = product.variants.some(variant => variant.stockOnHand > 0);
@@ -27,13 +29,33 @@ export function ProductSelection({ product }: { product: PublicShopProduct }) {
   function chooseVariant(optionId: string) {
     setSelectedId(optionId);
     setQuantity(1);
-    setPrepared(false);
+    setCartResult("idle");
   }
 
   function changeQuantity(next: number) {
     if (!selected) return;
     setQuantity(Math.min(Math.max(next, 1), selected.stockOnHand));
-    setPrepared(false);
+    setCartResult("idle");
+  }
+
+  function addSelectionToCart() {
+    if (!selected || !canPrepare) return;
+    const current = readCart(window.localStorage);
+    if (!current.storageAvailable) {
+      setCartResult("error");
+      return;
+    }
+
+    const next = addCartItem(
+      current.snapshot,
+      { variantId: selected.id, quantity },
+      selected.stockOnHand,
+    );
+    if (!writeCart(window.localStorage, next)) {
+      setCartResult("error");
+      return;
+    }
+    setCartResult(current.recovered ? "recovered" : "added");
   }
 
   return (
@@ -95,19 +117,27 @@ export function ProductSelection({ product }: { product: PublicShopProduct }) {
       </div>
 
       <Button type="button" size="lg" className="mt-6 min-h-11 w-full cursor-pointer" disabled={!canPrepare}
-        aria-describedby="selection-state cart-preview-note" onClick={() => setPrepared(true)}>
-        Tambah ke cart (preview)
+        aria-describedby="selection-state cart-preview-note" onClick={addSelectionToCart}>
+        Tambah ke cart
       </Button>
       <p id="cart-preview-note" className="mt-3 text-xs leading-5 text-muted-foreground">
-        FE-09 hanya menguji pilihan produk. Cart lokal baru akan dibuat pada FE-10, jadi pilihan ini belum disimpan.
+        Cart lokal hanya menyimpan ID varian dan jumlah. Harga, stok, ongkir, dan total final tidak disimpan sebagai otoritas browser.
       </p>
 
-      {prepared ? (
+      {cartResult === "added" || cartResult === "recovered" ? (
         <div className="mt-5">
-          <StatusNotice tone="success" title="Pilihan siap untuk cart." description={`${quantity} × ${selected?.name ?? "varian"} lolos pemeriksaan UI. Belum ada cart, reservasi stok, atau transaksi yang dibuat.`} />
+          <StatusNotice
+            tone="success"
+            title="Pilihan ditambahkan ke cart."
+            description={`${quantity} × ${selected?.name ?? "varian"} tersimpan lokal.${cartResult === "recovered" ? " Data cart lama yang tidak valid telah dibersihkan." : ""} Belum ada reservasi stok atau transaksi yang dibuat.`}
+            action={<AuLink href="/cart?preview=examples" variant="outline" className="min-h-11">Lihat cart</AuLink>}
+          />
         </div>
       ) : null}
-      <noscript><p className="mt-3 text-sm text-muted-foreground">Aktifkan JavaScript untuk memilih varian dan jumlah. Tidak ada cart yang dibuat dari halaman ini.</p></noscript>
+      {cartResult === "error" ? (
+        <div className="mt-5"><StatusNotice tone="error" title="Pilihan belum tersimpan." description="Browser menolak akses penyimpanan lokal. Periksa pengaturan browser lalu coba lagi." /></div>
+      ) : null}
+      <noscript><p className="mt-3 text-sm text-muted-foreground">Aktifkan JavaScript untuk memilih varian, mengatur jumlah, dan menyimpan cart lokal.</p></noscript>
     </section>
   );
 }
