@@ -19,10 +19,11 @@ the four Pattern proofs were also approved for styleguide-only usage on
 
 ## Architecture v1
 
-### Public frontend batch FE-00–10 — 2026-09-06
+### Public frontend batch FE-00–11 — 2026-09-06
 
-Owner approved implementation of FE-00–10: `/`, `/services`, `/projects`,
-`/projects/[slug]`, `/project-brief`, `/shop`, `/shop/[slug]`, and `/cart`, including a shared public shell.
+Owner approved implementation of FE-00–11: `/`, `/services`, `/projects`,
+`/projects/[slug]`, `/project-brief`, `/shop`, `/shop/[slug]`, `/cart`, and
+`/checkout`, including a shared public shell.
 This is scoped authorization to compose existing Foundation/Typography v1.0,
 AuLogo, AuLink/Button, FormField/Input, FileUploadField and StatusNotice.
 PublicNavigation/PublicShell are route-family compositions, not new tokens.
@@ -44,12 +45,15 @@ implementation restriction below, not its historical visual-review record.
 | Shop | Category/search filters, two-column product grid, StatusNotice | Examples, available/out of stock, empty, no results, loading, retry |
 | Product detail | Asymmetric gallery placeholder, VariantSelector, price/quantity controls, StatusNotice | Unselected, available, out of stock, loading, retry, missing slug, local-only cart intent |
 | Cart | Editable line items, quantity controls, StatusNotice, validation ledger | Loading, empty, ready, corrupt recovery, unavailable product, write failure, remove |
+| Checkout | Page-owned guest form, FormField/Input, native shipping radios, StatusNotice, authority ledger | Validation, rates loading/unavailable/stale, payment pending/error, ready review, production unavailable |
 
 Product detail composes the existing P1 VariantSelector under the owner-approved
 FE-09 route scope. FE-10 persists only variant ID and quantity in a strict,
 versioned browser record. Product facts and totals are display estimates from a
 browser-safe projection; the browser does not calculate authoritative price,
-reserve stock, create an order, or activate checkout.
+reserve stock, or create an order. FE-11 adds a development-only guest checkout
+preview. It validates contact/address input and simulates rate/payment recovery
+without calling provider or order boundaries.
 
 The architecture registry is recorded in
 `src/app/auis/styleguide/registry/design-system.ts` and summarized in

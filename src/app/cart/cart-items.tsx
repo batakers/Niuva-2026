@@ -236,10 +236,16 @@ export function CartItems({
           {unavailableCount > 0 || stockIssueCount > 0 ? (
             <p role="status" className="mt-6 text-sm font-medium text-warning">Periksa {unavailableCount + stockIssueCount} item sebelum checkout dapat dilanjutkan.</p>
           ) : null}
-          <Button type="button" size="lg" className="mt-6 min-h-11 w-full" disabled aria-describedby="checkout-availability-note">
-            Lanjut ke checkout
-          </Button>
-          <p id="checkout-availability-note" className="mt-3 text-xs leading-5 text-muted-foreground">Checkout akan diaktifkan pada FE-11. Tombol ini belum membuat order, reservasi, atau pembayaran.</p>
+          {previewEnabled && persistenceNotice !== "unavailable" && unavailableCount === 0 && stockIssueCount === 0 ? (
+            <AuLink href="/checkout?preview=examples&state=ready" size="lg" className="mt-6 min-h-11 w-full" aria-describedby="checkout-availability-note">
+              Lanjut ke checkout
+            </AuLink>
+          ) : (
+            <Button type="button" size="lg" className="mt-6 min-h-11 w-full" disabled aria-describedby="checkout-availability-note">
+              Lanjut ke checkout
+            </Button>
+          )}
+          <p id="checkout-availability-note" className="mt-3 text-xs leading-5 text-muted-foreground">{previewEnabled ? "Membuka preview checkout lokal. Belum ada order, reservasi, atau pembayaran yang dibuat." : "Checkout transaksi belum tersedia hingga produk dan provider siap."}</p>
         </aside>
       </div>
     </div>
