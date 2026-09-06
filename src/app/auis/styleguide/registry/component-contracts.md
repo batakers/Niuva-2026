@@ -46,6 +46,7 @@ implementation restriction below, not its historical visual-review record.
 | Product detail | Asymmetric gallery placeholder, VariantSelector, price/quantity controls, StatusNotice | Unselected, available, out of stock, loading, retry, missing slug, local-only cart intent |
 | Cart | Editable line items, quantity controls, StatusNotice, validation ledger | Loading, empty, ready, corrupt recovery, unavailable product, write failure, remove |
 | Checkout | Page-owned guest form, FormField/Input, native shipping radios, StatusNotice, authority ledger | Validation, rates loading/unavailable/stale, payment pending/error, ready review, production unavailable |
+| Custom Print landing | Route-owned dossier grid, operator verification rail, format checklist, StatusNotice | Informational, private-file expectation, manual review, request unavailable with real fallback |
 
 Product detail composes the existing P1 VariantSelector under the owner-approved
 FE-09 route scope. FE-10 persists only variant ID and quantity in a strict,
@@ -54,6 +55,10 @@ browser-safe projection; the browser does not calculate authoritative price,
 reserve stock, or create an order. FE-11 adds a development-only guest checkout
 preview. It validates contact/address input and simulates rate/payment recovery
 without calling provider or order boundaries.
+FE-12 adds a static custom-print explanation and composes the existing link,
+button and StatusNotice contracts. Its illustration is explicitly conceptual;
+the route does not upload a file, calculate price, create a request or introduce
+a reusable workflow component.
 
 The architecture registry is recorded in
 `src/app/auis/styleguide/registry/design-system.ts` and summarized in

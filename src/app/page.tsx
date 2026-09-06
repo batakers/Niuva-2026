@@ -234,7 +234,7 @@ export default function Home() {
               <div className="grid gap-4 sm:grid-cols-2 lg:col-span-5 lg:grid-cols-1">
                 <Link
                   className="group flex min-h-40 flex-col justify-between rounded-xl border border-border bg-background p-5 transition-colors hover:border-brand-400 hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                  href="/project-brief"
+                  href="/custom-print"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <span className="text-xs font-medium text-brand-700">
@@ -245,7 +245,7 @@ export default function Home() {
                   <div className="mt-8">
                     <h3 className={subheadingToken}>Sudah punya model 3D?</h3>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      Form custom print sedang disiapkan. Ceritakan kebutuhan model 3D melalui project brief.
+                      Pahami format file, review operator, quote, dan tahapan produksi sebelum menyiapkan request.
                     </p>
                   </div>
                 </Link>

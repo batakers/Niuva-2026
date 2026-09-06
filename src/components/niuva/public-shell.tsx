@@ -23,7 +23,7 @@ export function PublicShell({ children, scope }: { children: ReactNode; scope: s
       data-product-screen-proof-status="pending-owner-review" data-typography-version="1.0"
       data-homepage={scope === "homepage" ? "" : undefined}
       data-project-brief={scope === "project-brief" ? "" : undefined}
-      data-product-screen-functional={["cart", "checkout", "product-detail", "project-brief", "shop"].includes(scope) ? "frontend-preview" : undefined}>
+      data-product-screen-functional={["cart", "checkout", "custom-print", "product-detail", "project-brief", "shop"].includes(scope) ? "frontend-preview" : undefined}>
       <a href="#main-content" className="sr-only z-50 rounded-lg bg-background px-4 py-3 text-sm font-medium focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
         Lewati ke konten utama
       </a>
@@ -45,7 +45,7 @@ export function PublicShell({ children, scope }: { children: ReactNode; scope: s
             <p className="text-xs text-muted-foreground">Niuva Inovasi Utama</p>
           </div>
           <nav aria-label="Navigasi footer" className="flex flex-wrap items-start gap-x-6 gap-y-2 md:justify-end">
-            {[["/shop", "Shop"], ["/services", "Layanan"], ["/projects", "Projects"], ["/project-brief", "Diskusikan Proyek"]].map(([href, label]) => (
+            {[["/shop", "Shop"], ["/custom-print", "Custom Print"], ["/services", "Layanan"], ["/projects", "Projects"], ["/project-brief", "Diskusikan Proyek"]].map(([href, label]) => (
               <Link key={href} href={href} className="inline-flex min-h-11 items-center rounded-lg text-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">{label}</Link>
             ))}
           </nav>

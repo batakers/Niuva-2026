@@ -66,7 +66,7 @@
 ## Frontend-first execution backlog — 2026-09-06
 
 Rincian AC, paths, dependencies dan verification: [plan.md](plan.md#frontend-first-task-map--2026-09-06).
-Status: FE-00–11 UI_IMPLEMENTED; FE-12–27 proposed. Checkbox implementasi bukan
+Status: FE-00–12 UI_IMPLEMENTED; FE-13–27 proposed. Checkbox implementasi bukan
 visual acceptance atau tanda integrated MVP selesai. Checkpoint visual tetap terbuka.
 Handoff dan verifikasi: [public-batch.md](../docs/frontend/public-batch.md).
 
@@ -86,7 +86,7 @@ Handoff dan verifikasi: [public-batch.md](../docs/frontend/public-batch.md).
 - [x] FE-10 — Cart `/cart` (ID varian + qty saja, add/update/remove, empty/corrupt/unavailable states, checkout tetap nonaktif)
 - [x] FE-11 — Checkout `/checkout` (guest contact/address, rate selection dan recovery preview; tanpa order/provider call)
 - [ ] Checkpoint D — focused tests, static/build gates, dan review visual sesuai plan.
-- [ ] FE-12 — Custom print landing `/custom-print`
+- [x] FE-12 — Custom print landing `/custom-print` (operator-reviewed flow, format/readiness dossier, private-file and no-instant-price expectations; request remains disabled until FE-13)
 - [ ] FE-13 — Custom request `/custom-print/request`
 - [ ] FE-14 — Quote customer `/quote/[token]`
 - [ ] Checkpoint E — focused tests, static/build gates, dan review visual sesuai plan.

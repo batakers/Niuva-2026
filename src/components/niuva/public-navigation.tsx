@@ -9,6 +9,7 @@ import { useHydrated } from "./use-hydrated";
 
 const links = [
   { href: "/shop", label: "Shop" },
+  { href: "/custom-print", label: "Custom Print" },
   { href: "/services", label: "Layanan" },
   { href: "/projects", label: "Projects" },
   { href: "/#process", label: "Cara kerja" },
