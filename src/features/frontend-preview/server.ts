@@ -15,3 +15,11 @@ export async function getShopPreview(requested: unknown) {
     ? (await import("./fixtures")).exampleShopProducts : [];
   return { scenario, products };
 }
+
+export async function getShopProductPreview(slug: string, requested: unknown) {
+  const scenario = resolvePreviewScenario(process.env.NODE_ENV, requested);
+  const product = scenario === "examples"
+    ? (await import("./fixtures")).exampleShopProducts.find(item => item.slug === slug) ?? null
+    : null;
+  return { product, scenario };
+}

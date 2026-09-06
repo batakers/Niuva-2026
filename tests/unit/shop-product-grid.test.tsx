@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ProductGrid } from "@/app/shop/product-grid";
 import { exampleShopProducts } from "@/features/frontend-preview/fixtures";
@@ -25,12 +25,12 @@ describe("shop product grid", () => {
     expect(screen.getAllByRole("article")).toHaveLength(4);
   });
 
-  it("does not expose a premature product-detail action", () => {
-    render(<ProductGrid products={exampleShopProducts} />);
+  it("links each preview card to its product detail", () => {
+    render(<ProductGrid products={exampleShopProducts} previewEnabled />);
 
-    for (const article of screen.getAllByRole("article")) {
-      expect(within(article).queryByRole("link")).not.toBeInTheDocument();
-      expect(within(article).queryByRole("button")).not.toBeInTheDocument();
-    }
+    expect(screen.getByRole("link", { name: /Dock modular meja/ })).toHaveAttribute(
+      "href",
+      "/shop/contoh-dock-modular-meja?preview=examples",
+    );
   });
 });

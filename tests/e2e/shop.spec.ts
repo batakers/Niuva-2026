@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("shop preview filters products and communicates stock without purchase actions", async ({ page }) => {
+test("shop preview filters products and links to product detail", async ({ page }) => {
   await page.goto("/shop");
   await expect(page.getByText("Katalog ready-made belum dipublikasikan.")).toBeVisible();
   await page.getByRole("link", { name: "Contoh", exact: true }).click();
@@ -14,7 +14,9 @@ test("shop preview filters products and communicates stock without purchase acti
   await expect(page.getByRole("heading", { name: "Tidak ada produk yang cocok." })).toBeVisible();
   await page.getByRole("button", { name: "Hapus filter" }).click();
   await expect(page.locator("article")).toHaveCount(4);
-  await expect(page.locator("article a, article button")).toHaveCount(0);
+  await expect(page.locator("article a")).toHaveCount(4);
+  await page.getByRole("link", { name: /Dock modular meja/ }).click();
+  await expect(page).toHaveURL(/\/shop\/contoh-dock-modular-meja\?preview=examples$/);
 });
 
 test("shop preview exposes loading and error recovery", async ({ page }) => {

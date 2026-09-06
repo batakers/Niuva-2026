@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { ImageOff, SearchX } from "lucide-react";
+import Link from "next/link";
 import { useHydrated } from "@/components/niuva/use-hydrated";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +30,7 @@ function availability(product: PublicShopProduct) {
   return { label: available ? "Tersedia" : "Stok habis", available };
 }
 
-export function ProductGrid({ products }: { products: readonly PublicShopProduct[] }) {
+export function ProductGrid({ products, previewEnabled = false }: { products: readonly PublicShopProduct[]; previewEnabled?: boolean }) {
   const hydrated = useHydrated();
   const [category, setCategory] = useState("all");
   const [query, setQuery] = useState("");
@@ -74,29 +75,32 @@ export function ProductGrid({ products }: { products: readonly PublicShopProduct
           {filtered.map(product => {
             const stock = availability(product);
             const price = productPrice(product);
+            const href = `/shop/${product.slug}${previewEnabled ? "?preview=examples" : ""}`;
             return (
               <article key={product.id} className="min-w-0">
-                <div className="flex aspect-[4/3] items-center justify-center rounded-xl border border-border bg-muted text-muted-foreground">
-                  <div className="text-center">
-                    <ImageOff aria-hidden="true" className="mx-auto size-7" />
-                    <p className="mt-3 text-sm">Foto produk contoh belum disertakan</p>
+                <Link href={href} className="group block rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+                  <div className="flex aspect-[4/3] items-center justify-center rounded-xl border border-border bg-muted text-muted-foreground transition-colors duration-200 group-hover:border-brand-400 group-hover:bg-brand-50">
+                    <div className="text-center">
+                      <ImageOff aria-hidden="true" className="mx-auto size-7" />
+                      <p className="mt-3 text-sm">Foto produk contoh belum disertakan</p>
+                    </div>
                   </div>
-                </div>
-                <div className="mt-5 flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="text-sm text-brand-700">{product.category?.name ?? "Tanpa kategori"}</p>
-                    <h2 className={`${type.subheading.className} mt-2`}>{product.name}</h2>
+                  <div className="mt-5 flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="text-sm text-brand-700">{product.category?.name ?? "Tanpa kategori"}</p>
+                      <h2 className={`${type.subheading.className} mt-2 underline-offset-4 group-hover:underline`}>{product.name}</h2>
+                    </div>
+                    <span className={`shrink-0 rounded-md border px-2.5 py-1 text-xs font-medium ${stock.available ? "border-success-border bg-success-background text-success" : "border-warning-border bg-warning-background text-warning"}`}>{stock.label}</span>
                   </div>
-                  <span className={`shrink-0 rounded-md border px-2.5 py-1 text-xs font-medium ${stock.available ? "border-success-border bg-success-background text-success" : "border-warning-border bg-warning-background text-warning"}`}>{stock.label}</span>
-                </div>
-                <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">{product.description}</p>
-                <div className="mt-5 flex flex-wrap items-end justify-between gap-3 border-t border-border pt-4">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Mulai dari</p>
-                    <p className="mt-1 text-lg font-semibold tabular-nums">{price ?? "Harga belum tersedia"}</p>
+                  <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">{product.description}</p>
+                  <div className="mt-5 flex flex-wrap items-end justify-between gap-3 border-t border-border pt-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Mulai dari</p>
+                      <p className="mt-1 text-lg font-semibold tabular-nums">{price ?? "Harga belum tersedia"}</p>
+                    </div>
+                    <p className="max-w-48 text-right text-xs leading-5 text-muted-foreground">Buka detail untuk memilih varian dan jumlah.</p>
                   </div>
-                  <p className="max-w-48 text-right text-xs leading-5 text-muted-foreground">Pilihan varian tersedia pada halaman detail berikutnya.</p>
-                </div>
+                </Link>
               </article>
             );
           })}

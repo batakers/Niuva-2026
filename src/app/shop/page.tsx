@@ -48,7 +48,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
           ) : products.length === 0 ? (
             <StatusNotice tone="info" title="Katalog ready-made belum dipublikasikan." description="Produk, foto, varian, dan stok akan muncul setelah dataset launch mendapat persetujuan publikasi." action={<AuLink href="/services" variant="outline" className="min-h-11">Lihat layanan</AuLink>} />
           ) : (
-            <ProductGrid products={products} />
+            <ProductGrid products={products} previewEnabled={scenario === "examples"} />
           )}
         </div>
       </main>

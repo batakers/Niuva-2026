@@ -34,7 +34,8 @@ export const exampleShopProducts: readonly PublicShopProduct[] = [
     media: [],
     variants: [
       { id: "example-dock-blue", name: "Biru", priceRp: "185000", sku: "EX-DOCK-BLUE", stockOnHand: 8, weightGrams: "240" },
-      { id: "example-dock-grey", name: "Abu-abu", priceRp: "185000", sku: "EX-DOCK-GREY", stockOnHand: 3, weightGrams: "240" },
+      { id: "example-dock-grey", name: "Abu-abu", priceRp: "195000", sku: "EX-DOCK-GREY", stockOnHand: 3, weightGrams: "240" },
+      { id: "example-dock-black", name: "Hitam", priceRp: "195000", sku: "EX-DOCK-BLACK", stockOnHand: 0, weightGrams: "240" },
     ],
   },
   {

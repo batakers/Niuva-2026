@@ -1,7 +1,7 @@
-# Frontend public batch — FE-00–08
+# Frontend public batch — FE-00–09
 
 Date: 2026-09-06. Status: **UI_IMPLEMENTED**, **VISUAL_ACCEPTANCE_PENDING**,
-**NOT_INTEGRATED**. User approved FE-00–02 followed by FE-03–07 and FE-08.
+**NOT_INTEGRATED**. User approved FE-00–02 followed by FE-03–07, FE-08, and FE-09.
 
 ## Scope and review paths
 
@@ -16,6 +16,7 @@ Date: 2026-09-06. Status: **UI_IMPLEMENTED**, **VISUAL_ACCEPTANCE_PENDING**,
 | FE-06 | Challenge/process/result structure, explicit media placeholder, missing-slug recovery | `/projects/contoh-enclosure?preview=examples` |
 | FE-07 | PRD/schema fields, optional company, error summary focus, pending/error/retry/success simulation | `/project-brief` |
 | FE-08 | Browser-safe catalog projection, category/search filters, stock states and recovery without purchase actions | `/shop?preview=examples`, `empty`, `loading`, `error` |
+| FE-09 | Product detail shell, explicit media slots, variant/price/quantity selection, OOS guard and missing-slug recovery | `/shop/contoh-dock-modular-meja?preview=examples`, `/shop/contoh-stand-display-ringkas?preview=examples` |
 
 Run `corepack pnpm dev`; open `http://localhost:3000`. Use fictional contact
 information for review. Preview data is not a factual client portfolio.
@@ -35,14 +36,16 @@ information for review. Preview data is not a factual client portfolio.
   fictional project slugs. Production brief only checks completeness; it cannot
   display a simulated success.
 - Shop cards receive a browser-safe projection: Decimal values are serialized,
-  object storage keys are excluded, and SKUs are not rendered. The grid cannot
-  buy or navigate to a product detail before FE-09. Repository-level publication
+  object storage keys are excluded, and SKUs are not rendered. Development cards
+  link to the matching development-only detail route. Repository-level publication
   and active-variant filters remain the source contract for future integration.
 - Shop media remains an explicit empty slot because launch photography, products,
   variants and publication permission are not yet approved. No generated product
   image is presented as factual inventory.
-- Product detail, cart, custom-print screens, checkout and admin remain FE-09 onward.
-  This does not activate existing backend/provider adapters or change auth.
+- Product detail selection is local UI state only. Its preview action performs no
+  fetch, storage write, stock reservation, or transaction. Cart, custom-print
+  screens, checkout and admin remain FE-10 onward. This does not activate existing
+  backend/provider adapters or change auth.
 - No new dependencies, global tokens, logo assets, migrations or environment changes
   were introduced by this frontend batch.
 
@@ -51,20 +54,22 @@ information for review. Preview data is not a factual client portfolio.
 - `corepack pnpm lint`: 0 errors, 147 pre-existing warnings; focused ESLint on the
   changed frontend/test files has no warnings or errors.
 - `corepack pnpm typecheck`: passed.
-- `corepack pnpm test`: 27 tests passed across 7 files.
-- `corepack pnpm test:e2e`: 18 tests passed, including existing styleguide/security
+- `corepack pnpm test`: 31 tests passed across 8 files.
+- `corepack pnpm exec playwright test --workers=4`: 23 tests passed, including existing styleguide/security
   regression tests. Covers mobile menu/Escape/skip link, real-route navigation,
-  project filter/detail/404/retry, form recovery and no inquiry API mutation.
-- Responsive matrix: six public routes at 320, 390, 768, 1024, 1280 and 1440px;
+  project and product filter/detail/404/retry, variant/quantity/OOS behavior,
+  form recovery and no inquiry API mutation.
+- Responsive matrix: seven public routes at 320, 390, 768, 1024, 1280 and 1440px;
   one main and H1 each, no horizontal overflow or page errors, reduced motion.
 - `corepack pnpm build`: production compilation and route generation passed.
 - `git diff --check`: passed (normal Windows line-ending notices only).
-- Production browser smoke: synthetic portfolio/Shop and preview controls absent;
-  fictional detail 404; Shop keeps an honest empty state; brief exposes completeness
-  check, not simulated success.
-- Manual browser console pass on five routes: no console errors. Desktop/mobile
-  screenshots inspected; owner visual acceptance and assistive-technology review
-  remain separate from these automated results.
+- Production runtime smoke: synthetic portfolio/Shop and preview controls absent;
+  fictional product detail returns 404 with `noindex`; Shop keeps an honest empty
+  state; brief exposes completeness check, not simulated success.
+- Manual browser inspection includes FE-09 at 1280x900 and 390x844: desktop split,
+  mobile collapse, disabled/selected variant states, quantity and success feedback
+  were inspected without horizontal overflow. Owner visual acceptance and
+  assistive-technology review remain separate from these automated results.
 
 Local screenshot evidence (not committed):
 `C:/Users/FAIZ/.codex/visualizations/2026/09/05/01a07172-b3f5-77f2-b8e3-036ed4befe4c/frontend-{home,services,projects,detail,brief}-{390,1280}.png`.
@@ -86,7 +91,7 @@ documents in `docs/backend/`, and `scripts/local-dev-db.ps1`. The existing task-
 edits were extended, not replaced. Ignored local environment/database files were
 not changed. Do not stage this entire dirty working tree indiscriminately.
 
-Review the public screens before FE-09. Integrating actual published content and
+Review the public screens before FE-10. Integrating actual published content and
 submission requires a separate task and factual content/permission checks. To
 roll back this batch, reverse only its frontend/tests/contract/task-document edits;
 do not reset the worktree or remove unrelated sandbox files.

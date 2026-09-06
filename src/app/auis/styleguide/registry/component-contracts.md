@@ -19,10 +19,10 @@ the four Pattern proofs were also approved for styleguide-only usage on
 
 ## Architecture v1
 
-### Public frontend batch FE-00–08 — 2026-09-06
+### Public frontend batch FE-00–09 — 2026-09-06
 
-Owner approved implementation of FE-00–08: `/`, `/services`, `/projects`,
-`/projects/[slug]`, `/project-brief`, and `/shop`, including a shared public shell.
+Owner approved implementation of FE-00–09: `/`, `/services`, `/projects`,
+`/projects/[slug]`, `/project-brief`, `/shop`, and `/shop/[slug]`, including a shared public shell.
 This is scoped authorization to compose existing Foundation/Typography v1.0,
 AuLogo, AuLink/Button, FormField/Input, FileUploadField and StatusNotice.
 PublicNavigation/PublicShell are route-family compositions, not new tokens.
@@ -42,6 +42,11 @@ implementation restriction below, not its historical visual-review record.
 | Projects/detail | Filterable list, media placeholder, narrative sections | Examples, empty, no results, loading, retry, missing slug |
 | Project brief | FormField/Input/select/textarea, disabled upload, StatusNotice | Validation, pending, local success/error, provider unavailable |
 | Shop | Category/search filters, two-column product grid, StatusNotice | Examples, available/out of stock, empty, no results, loading, retry |
+| Product detail | Asymmetric gallery placeholder, VariantSelector, price/quantity controls, StatusNotice | Unselected, available, out of stock, loading, retry, missing slug, local-only cart intent |
+
+Product detail composes the existing P1 VariantSelector under the owner-approved
+FE-09 route scope. Browser state may express variant and quantity intent only;
+it does not calculate authoritative price, reserve stock, or persist a cart.
 
 The architecture registry is recorded in
 `src/app/auis/styleguide/registry/design-system.ts` and summarized in

@@ -82,7 +82,7 @@ Handoff dan verifikasi: [public-batch.md](../docs/frontend/public-batch.md).
 - [x] FE-07 — Project brief `/project-brief` (validasi dan simulasi, tanpa submission nyata)
 - [x] FE-08 — Shop `/shop` (preview katalog, filter dan stock state; tanpa detail atau pembelian)
 - [ ] Checkpoint C — technical gates lulus 2026-09-06; review visual owner masih pending.
-- [ ] FE-09 — Product detail `/shop/[slug]`
+- [x] FE-09 — Product detail `/shop/[slug]` (development-only product fixtures, variant/qty/OOS states, tanpa cart persistence)
 - [ ] FE-10 — Cart `/cart`
 - [ ] FE-11 — Checkout `/checkout`
 - [ ] Checkpoint D — focused tests, static/build gates, dan review visual sesuai plan.
