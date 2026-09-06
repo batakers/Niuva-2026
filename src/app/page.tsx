@@ -1,9 +1,9 @@
-import type { CSSProperties, ReactNode } from "react";
-import { Fraunces, Space_Grotesk } from "next/font/google";
+import Link from "next/link";
+import type { ReactNode } from "react";
+import { PublicShell } from "@/components/niuva/public-shell";
 
 import { typographySystemTokens } from "@/app/auis/styleguide/foundation/typography-proof";
 import { EvidenceCard } from "@/components/niuva";
-import AuLogo from "@/components/ui/AuLogo";
 import { AuLink } from "@/components/ui/AuLink";
 import { Icon } from "@/components/ui/Icon";
 import { cn } from "@/lib/utils";
@@ -62,35 +62,6 @@ const capabilities = [
   },
 ] as const;
 
-const spaceGrotesk = Space_Grotesk({
-  display: "swap",
-  subsets: ["latin"],
-  variable: "--font-public-sans",
-  weight: "variable",
-});
-
-const fraunces = Fraunces({
-  axes: ["opsz"],
-  display: "swap",
-  subsets: ["latin"],
-  variable: "--font-public-editorial",
-  weight: "variable",
-});
-
-const publicTypography = {
-  "--font-auis-proof-sans": "var(--font-public-sans)",
-  "--font-auis-proof-serif": "var(--font-public-editorial)",
-  "--font-body": "var(--font-public-sans)",
-  "--font-body-token": "var(--font-public-sans)",
-  "--font-display": "var(--font-public-sans)",
-  "--font-display-token": "var(--font-public-sans)",
-  "--font-mono": "var(--font-public-sans)",
-  "--font-sans": "var(--font-public-sans)",
-  "--font-technical": "var(--font-public-sans)",
-  "--font-technical-token": "var(--font-public-sans)",
-  fontFamily: "var(--font-public-sans), Arial, Helvetica, sans-serif",
-} as CSSProperties;
-
 const displayToken = typographySystemTokens.display.className;
 const headingToken = typographySystemTokens.heading.className;
 const subheadingToken = typographySystemTokens.subheading.className;
@@ -109,70 +80,7 @@ function PathArrow() {
 
 export default function Home() {
   return (
-    <div
-      className={`${spaceGrotesk.variable} ${fraunces.variable} min-h-full bg-background text-foreground`}
-      data-foundation-propagation="approved"
-      data-foundation-scope="homepage"
-      data-homepage
-      data-product-screen-proof-status="pending-owner-review"
-      data-typography-version="1.0"
-      style={publicTypography}
-    >
-      <a
-        className="sr-only z-50 rounded-lg bg-background px-4 py-3 text-sm font-medium focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-        href="#main-content"
-      >
-        Lewati ke konten utama
-      </a>
-
-      <header
-        className="dark border-b border-neutral-700 bg-background text-foreground"
-        data-home-section="header"
-      >
-        <div className="mx-auto flex max-w-public flex-wrap items-center gap-x-8 gap-y-4 px-5 py-4 sm:px-8">
-          <a
-            aria-label="Niuva, kembali ke halaman utama"
-            className="shrink-0 rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-            href="#hero"
-          >
-            <AuLogo className="h-8 w-auto" priority />
-          </a>
-
-          <nav
-            aria-label="Navigasi utama"
-            className="order-3 flex w-full items-center gap-5 overflow-x-auto md:order-none md:ml-auto md:w-auto"
-          >
-            <a
-              className="whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-              href="#capabilities"
-            >
-              Layanan
-            </a>
-            <a
-              className="whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-              href="#process"
-            >
-              Cara kerja
-            </a>
-            <a
-              className="whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-              href="#entry-paths"
-            >
-              Pilih jalur
-            </a>
-          </nav>
-
-          <AuLink
-            className="ml-auto gap-2 md:ml-0"
-            href="/project-brief"
-            size="sm"
-          >
-            Diskusikan Proyek
-            <PathArrow />
-          </AuLink>
-        </div>
-      </header>
-
+    <PublicShell scope="homepage">
       <main id="main-content">
         <section
           aria-labelledby="hero-title"
@@ -209,13 +117,13 @@ export default function Home() {
                     Diskusikan Proyek
                     <PathArrow />
                   </AuLink>
-                  <a
+                  <Link
                     className="inline-flex h-9 items-center gap-2 rounded-lg border border-neutral-600 px-3 text-sm font-medium text-neutral-50 transition-colors hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                     href="#process"
                   >
                     Lihat cara kerja
                     <Icon aria-hidden="true" className="size-4" name="arrow-right" />
-                  </a>
+                  </Link>
                 </div>
               </div>
 
@@ -298,7 +206,7 @@ export default function Home() {
             </div>
 
             <div className="mt-10 grid gap-4 lg:grid-cols-12">
-              <a
+              <Link
                 className="group flex min-h-72 flex-col justify-between rounded-xl border border-brand-300 bg-brand-100 p-6 transition-colors hover:border-brand-500 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:p-8 lg:col-span-7"
                 href="/project-brief"
               >
@@ -321,12 +229,12 @@ export default function Home() {
                   Diskusikan Proyek
                   <Icon aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-1" name="arrow-right" />
                 </span>
-              </a>
+              </Link>
 
               <div className="grid gap-4 sm:grid-cols-2 lg:col-span-5 lg:grid-cols-1">
-                <a
+                <Link
                   className="group flex min-h-40 flex-col justify-between rounded-xl border border-border bg-background p-5 transition-colors hover:border-brand-400 hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                  href="#next-step"
+                  href="/project-brief"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <span className="text-xs font-medium text-brand-700">
@@ -337,14 +245,14 @@ export default function Home() {
                   <div className="mt-8">
                     <h3 className={subheadingToken}>Sudah punya model 3D?</h3>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      Mulai dari STL, 3MF, OBJ, atau file/reference terkait.
+                      Form custom print sedang disiapkan. Ceritakan kebutuhan model 3D melalui project brief.
                     </p>
                   </div>
-                </a>
+                </Link>
 
-                <a
+                <Link
                   className="group flex min-h-40 flex-col justify-between rounded-xl border border-border bg-background p-5 transition-colors hover:border-brand-400 hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                  href="#next-step"
+                  href="/shop"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <span className="text-xs font-medium text-brand-700">
@@ -355,10 +263,14 @@ export default function Home() {
                   <div className="mt-8">
                     <h3 className={subheadingToken}>Mau produk siap beli?</h3>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      Masuk melalui jalur Shop untuk produk ready-made.
+                      Lihat katalog ready-made dan status ketersediaannya. Pembelian diaktifkan setelah detail produk dan cart selesai.
                     </p>
                   </div>
-                </a>
+                  <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold">
+                    Lihat katalog
+                    <Icon aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-1" name="arrow-right" />
+                  </span>
+                </Link>
               </div>
             </div>
           </div>
@@ -475,57 +387,33 @@ export default function Home() {
                   Mulai dari
                 </p>
                 <div className="mt-4 grid gap-2">
-                  <a
+                  <Link
                     className="inline-flex items-center justify-between gap-3 rounded-lg border border-brand-300 bg-background px-3 py-2.5 text-sm font-semibold text-brand-950 transition-colors hover:border-brand-500 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                     href="/project-brief"
                   >
                     Diskusikan Proyek
                     <PathArrow />
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     className="inline-flex items-center justify-between gap-3 rounded-lg border border-brand-300 bg-background px-3 py-2.5 text-sm font-semibold text-brand-950 transition-colors hover:border-brand-500 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                    href="#entry-paths"
+                    href="/services"
                   >
-                    Custom 3D Print
+                    Lihat layanan
                     <PathArrow />
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     className="inline-flex items-center justify-between gap-3 rounded-lg border border-brand-300 bg-background px-3 py-2.5 text-sm font-semibold text-brand-950 transition-colors hover:border-brand-500 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                    href="#entry-paths"
+                    href="/projects"
                   >
-                    Shop
+                    Lihat projects
                     <PathArrow />
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>
           </div>
         </section>
       </main>
-
-      <footer
-        className="dark border-t border-neutral-700 bg-background text-foreground"
-        data-home-section="footer"
-      >
-        <div className="mx-auto flex max-w-public flex-col gap-4 px-5 py-8 sm:flex-row sm:items-end sm:justify-between sm:px-8">
-          <div className="space-y-3">
-            <a
-              aria-label="Niuva, kembali ke halaman utama"
-              className="inline-flex rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-              href="#hero"
-            >
-              <AuLogo className="h-7 w-auto" />
-            </a>
-            <p className="max-w-sm text-sm leading-6 text-muted-foreground">
-              Dari ide menjadi produk nyata melalui riset, desain, engineering,
-              prototyping, dan dukungan manufaktur.
-            </p>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Niuva Inovasi Utama
-          </p>
-        </div>
-      </footer>
-    </div>
+    </PublicShell>
   );
 }

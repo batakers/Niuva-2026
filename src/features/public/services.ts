@@ -1,0 +1,23 @@
+// Service categories from PRD-Niuva-MVP.md. No invented prices or delivery promises.
+export const publicServices = [
+  { slug: "research-development", title: "Riset dan pengembangan", question: "Apa yang perlu dipahami sebelum mulai membuat?",
+    description: "Menyusun arah eksplorasi dari tujuan, kebutuhan pengguna, dan batasan teknis yang sudah diketahui.",
+    inputs: "Konteks masalah, asumsi awal, dan hal yang ingin diuji.",
+    outputs: "Arah eksplorasi dan pertanyaan yang perlu dijawab sebelum keputusan desain.",
+    tags: ["Konteks", "Eksplorasi", "Arah keputusan"] },
+  { slug: "consultation-workshop", title: "Konsultasi dan workshop", question: "Bagaimana menyamakan arah bersama tim?",
+    description: "Membawa kebutuhan, kendala, dan sudut pandang tim ke percakapan yang terstruktur.",
+    inputs: "Tujuan diskusi, pihak yang terlibat, dan keputusan yang perlu dibuat.",
+    outputs: "Pemahaman bersama dan langkah berikutnya yang dapat ditinjau.",
+    tags: ["Diskusi", "Prioritas", "Langkah berikutnya"] },
+  { slug: "design-prototyping", title: "Desain dan prototyping", question: "Bagaimana ide diterjemahkan menjadi bentuk?",
+    description: "Mengembangkan konsep, detail desain, dan prototype untuk meninjau bentuk serta kebutuhan pembuatannya.",
+    inputs: "Sketsa, CAD, referensi, atau prototype beserta tujuan penggunaannya.",
+    outputs: "Desain dan prototype sesuai ruang lingkup yang disepakati.",
+    tags: ["Desain", "Iterasi", "Prototype"] },
+  { slug: "apparel-merchandise", title: "Apparel dan merchandise", question: "Produk seperti apa yang mewakili kebutuhan Anda?",
+    description: "Mengembangkan kebutuhan apparel dan merchandise dari konteks penggunaan menuju persiapan produksi.",
+    inputs: "Konteks penggunaan, arah visual, perkiraan jumlah, dan batas waktu.",
+    outputs: "Arah produk dan kebutuhan produksi untuk dibahas bersama.",
+    tags: ["Konteks penggunaan", "Arah produk", "Produksi"] },
+] as const;

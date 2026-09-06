@@ -23,6 +23,7 @@ test("public homepage exposes the Niuva narrative and entry paths", async ({ pag
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();
   await expect(page.getByRole("heading", { level: 1, name: /dari ide menjadi produk nyata/i })).toBeVisible();
+  await page.getByRole("button", { name: "Buka menu" }).click();
   await expect(page.locator("nav").getByRole("link", { name: "Pilih jalur" })).toBeVisible();
 });
 
@@ -44,10 +45,10 @@ test("authorized Foundation proof remains pending owner review", async ({ page }
   const projectBrief = page.locator("[data-project-brief]");
   await expect(projectBrief).toHaveAttribute("data-foundation-propagation", "approved");
   await expect(projectBrief).toHaveAttribute("data-foundation-scope", "project-brief");
-  await expect(projectBrief).toHaveAttribute("data-product-screen-functional", "proof-only");
+  await expect(projectBrief).toHaveAttribute("data-product-screen-functional", "frontend-preview");
   await expect(projectBrief).toHaveAttribute("data-product-screen-proof-status", "pending-owner-review");
   await expect(page.getByRole("heading", { level: 1, name: "Buat langkah awal proyek jadi jelas." })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Kirim brief untuk ditinjau" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Uji brief (simulasi)" })).toBeVisible();
   await expect(page.locator("[data-project-brief-form]")).toBeVisible();
 
   const projectBriefFont = await projectBrief.evaluate(
@@ -58,7 +59,9 @@ test("authorized Foundation proof remains pending owner review", async ({ page }
     "font-family",
     /Fraunces/,
   );
-  await expect(page.locator("[data-project-brief-form] input, [data-project-brief-form] textarea, [data-project-brief-form] select")).toHaveCount(7);
+  await expect(page.getByLabel(/Perusahaan atau tim/)).not.toHaveAttribute("required");
+  await expect(page.getByLabel(/Nomor WhatsApp/)).toHaveAttribute("required");
+  await expect(page.getByLabel(/Target waktu/)).toHaveAttribute("required");
   await expect(page.locator("[data-motion-system]")).toHaveCount(0);
   await expect(page.locator("[data-pattern-showcase]")).toHaveCount(0);
 });

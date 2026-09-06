@@ -62,3 +62,51 @@
 
 - [ ] PRD Definition of Done and Tech Design success criteria are evidenced.
 - [ ] Remaining risks and open business decisions are approved.
+
+## Frontend-first execution backlog — 2026-09-06
+
+Rincian AC, paths, dependencies dan verification: [plan.md](plan.md#frontend-first-task-map--2026-09-06).
+Status: FE-00–08 UI_IMPLEMENTED; FE-09–27 proposed. Checkbox implementasi bukan
+visual acceptance atau tanda integrated MVP selesai. Checkpoint visual tetap terbuka.
+Handoff dan verifikasi: [public-batch.md](../docs/frontend/public-batch.md).
+
+- [x] FE-00 — Kontrak screen dan status visual
+- [x] FE-01 — Data contoh dan skenario preview
+- [x] FE-02 — Public shell dan navigasi
+- [ ] Checkpoint A — focused tests, static/build gates, dan review visual sesuai plan.
+- [x] FE-03 — Penyelesaian homepage `/` (Shop belum tersedia; custom sementara diarahkan ke brief)
+- [x] FE-04 — Services `/services`
+- [x] FE-05 — Projects `/projects`
+- [ ] Checkpoint B — focused tests, static/build gates, dan review visual sesuai plan.
+- [x] FE-06 — Project detail `/projects/[slug]`
+- [x] FE-07 — Project brief `/project-brief` (validasi dan simulasi, tanpa submission nyata)
+- [x] FE-08 — Shop `/shop` (preview katalog, filter dan stock state; tanpa detail atau pembelian)
+- [ ] Checkpoint C — technical gates lulus 2026-09-06; review visual owner masih pending.
+- [ ] FE-09 — Product detail `/shop/[slug]`
+- [ ] FE-10 — Cart `/cart`
+- [ ] FE-11 — Checkout `/checkout`
+- [ ] Checkpoint D — focused tests, static/build gates, dan review visual sesuai plan.
+- [ ] FE-12 — Custom print landing `/custom-print`
+- [ ] FE-13 — Custom request `/custom-print/request`
+- [ ] FE-14 — Quote customer `/quote/[token]`
+- [ ] Checkpoint E — focused tests, static/build gates, dan review visual sesuai plan.
+- [ ] FE-15 — Order status `/orders/[token]`
+- [ ] FE-16 — Admin shell dan sign-in
+- [ ] FE-17 — Admin Action Queue `/admin`
+- [ ] Checkpoint F — focused tests, static/build gates, dan review visual sesuai plan.
+- [ ] FE-18 — Admin inquiry detail dari Queue
+- [ ] FE-19 — Admin order list `/admin/orders`
+- [ ] FE-20 — Admin order detail dan fulfillment
+- [ ] Checkpoint G — focused tests, static/build gates, dan review visual sesuai plan.
+- [ ] FE-21 — Admin custom review `/admin/custom-print`
+- [ ] FE-22 — Admin quote draft/preview
+- [ ] FE-23 — Admin product list `/admin/products`
+- [ ] Checkpoint H — focused tests, static/build gates, dan review visual sesuai plan.
+- [ ] FE-24 — Admin product/variant/stock editor
+- [ ] FE-25 — Admin portfolio `/admin/portfolio`
+- [ ] FE-26 — Admin portfolio editor
+- [ ] Checkpoint I — focused tests, static/build gates, dan review visual sesuai plan.
+- [ ] FE-27 — Frontend acceptance dan handoff integrasi
+- [ ] Checkpoint J — focused tests, static/build gates, dan review visual sesuai plan.
+
+Provider onboarding tetap ditunda. Customer account bukan scope MVP.

@@ -408,3 +408,137 @@ src/app/auis/styleguide/*, dan tests terkait.
 - Permission for public client names/logos and quantitative case-study results.
 - Launch inventory, initial stock, and custom quote SLA.
 - Provider onboarding readiness and live pricing before production.
+
+## Frontend-first task map — 2026-09-06
+
+Status: **FE-00–08 UI_IMPLEMENTED**, sesuai persetujuan user untuk batch pertama
+dan FE-08. FE-09–27 tetap proposed. Ini merinci pekerjaan UI Tasks 6–10, bukan mengganti
+backlog backend/integrasi atau menyatakan seluruh MVP selesai. Visual acceptance
+owner dan integrasi tetap terpisah. Handoff: [public-batch.md](../docs/frontend/public-batch.md).
+
+### Scope dan batas selesai
+
+- Inventory wireframe: **19 layar MVP** (homepage dan brief sudah berupa proof,
+  17 layar belum menjadi halaman operasional); customer account /account deferred.
+  Detail/editor di bawah boleh berupa drawer pada layar induk, tidak wajib menambah
+  route. Tidak menambah layanan account, analytics dashboard, atau CMS besar.
+- Frontend-first berarti halaman dan interaksinya lengkap dengan data contoh serta
+  state loading/empty/error/success yang bisa direview. Integrasi API/DB/provider,
+  admin session nyata dan data launch merupakan gate lanjutan.
+- Reuse src/components/ui, src/components/niuva dan semantic tokens existing.
+  Tidak membangun ulang Design System atau memperluas Creative/Decorative.
+  FE-00 memetakan kontrak penggunaan per screen; owner visual review tetap terpisah
+  dari test/build. Persetujuan plan bukan klaim penerimaan visual seluruh layar.
+- Preview sintetis hanya development dan jelas ditandai sebagai contoh. Tidak ada
+  customer/client/logo/result bisnis rekaan yang dipublikasikan. Halaman publik
+  tanpa konten faktual memakai empty state, bukan fixture tersembunyi.
+- Bentuk data mengikuti schema/projection domain existing. State UI emit intent;
+  tidak menggandakan otoritas harga/stock/auth/token/payment ke browser.
+  Tidak menampilkan “terbayar”, “terkirim”, “tersimpan di server” sebagai hasil nyata
+  dari simulasi. Skenario sukses hanya ada di preview yang jelas terpisah.
+- Untuk admin tanpa Clerk, target route /admin tetap dilindungi. Komponen view
+  direview lewat **usulan development-only** /auis/proofs/frontend/admin dengan
+  fixture dan tanpa service/repository import. Tidak membuat fake login atau
+  membuka akses /admin dengan environment toggle.
+- R2 upload/download, Midtrans, Biteship, email, webhook publik dan onboarding
+  tetap tertunda. Tidak perlu akun provider untuk menyelesaikan review frontend.
+- Persiapan sandbox yang belum committed dipertahankan. Batch FE-00–08 memakai
+  branch `codex/frontend-public-pages`, base `542375db56f0a8313bf0596ac0c127b7368cad0f`.
+  Jangan ikut commit artefak sandbox tanpa scope yang jelas.
+- Scope task umumnya S–M, 2–5 file termasuk focused test. Paths di tabel adalah
+  perkiraan, bukan perintah membuat semua file. Shared state/page scaffolding
+  yang membuat task >5 file harus dipecah sebelum implementasi.
+
+### Verifikasi yang berlaku per task
+
+- **V1:** focused unit/component test untuk interaksi bermakna:
+  `corepack pnpm exec vitest run tests/unit/<file>.test.tsx`.
+- **V2:** focused Playwright `corepack pnpm exec playwright test tests/e2e/<file>.spec.ts`;
+  cek 390px mobile dan 1280px desktop, keyboard, focus, labels, reduced motion,
+  overflow serta applicable loading/empty/error/retry/success. Tidak menulis test
+  trivial yang hanya menyalin markup.
+- Pada checkpoint: `corepack pnpm lint`, `corepack pnpm typecheck`,
+  `corepack pnpm build`, dan `git diff --check`, lalu visual review owner.
+  Jangan menandai checkpoint accepted hanya karena build lulus.
+- **V3:** seluruh `corepack pnpm test` dan `corepack pnpm test:e2e`,
+  ditambah backend regression bila wiring/domain tersentuh.
+- Setiap task selesai hanya bila AC + verifikasi terpenuhi; status
+  UI_IMPLEMENTED, VISUAL_ACCEPTED dan INTEGRATED dilaporkan terpisah.
+
+### Backlog terurut
+
+Kolom Files memakai path relatif repo; “registry” berarti
+src/app/auis/styleguide/registry. Komponen admin di src/features/admin dirender
+melalui preview FE-16 sampai wiring autentikasi pada fase integrasi tersedia.
+
+| ID | Task / target screen | Depends on FE | Files likely touched | Acceptance criteria | Verification |
+| --- | --- | --- | --- | --- | --- |
+| FE-00 | Kontrak screen dan status visual | — | registry/component-contracts.md; tasks/plan.md; tests/e2e/home.spec.ts | Petakan 19 layar MVP ke route/preview dan komponen existing; catat approval lama versus review layar baru tanpa menandai approval visual otomatis. | Review route map dan kontrak |
+| FE-01 | Data contoh dan skenario preview | 00 | src/features/frontend-preview/{types,fixtures,scenarios}.ts; tests/unit/frontend-preview.test.tsx | Fixture sintetis bertipe mengikuti projection/schema backend; preview hanya development, tidak memuat PII/token/file asli dan tidak melakukan network mutation. | V1: fixture dan boundary preview |
+| FE-02 | Public shell dan navigasi | 00 | src/components/niuva/public-shell.tsx; src/components/niuva/public-navigation.tsx; tests/e2e/public-navigation.spec.ts | Header/footer responsive, skip-link, mobile menu dan focus; link hanya ke route tersedia, tanpa dead CTA. | V1 + V2: navigasi keyboard/mobile |
+| FE-03 | Penyelesaian homepage `/` | 01,02 | src/app/page.tsx; tests/e2e/home.spec.ts | Pertahankan direction yang ada; sambungkan Services/Projects/Shop/Custom Print ketika route tujuan tersedia dan gunakan empty/evidence placeholder jujur. | V2: CTA dan layout homepage |
+| FE-04 | Services `/services` | 01,02 | src/app/services/page.tsx; tests/e2e/services.spec.ts | Empat layanan sesuai PRD dengan output/use case dan CTA brief; tidak mengarang harga, SLA atau capability perusahaan. | V2: empat layanan dan jalur brief |
+| FE-05 | Projects `/projects` | 01,02 | src/app/projects/page.tsx; src/app/projects/project-list.tsx; tests/e2e/projects.spec.ts | Daftar dan filter client-side dengan empty/no-results; contoh case study hanya preview lokal, bukan klaim client publik. | V1 + V2: filter/empty/list |
+| FE-06 | Project detail `/projects/[slug]` | 05 | src/app/projects/[slug]/page.tsx; src/app/projects/[slug]/not-found.tsx; tests/e2e/project-detail.spec.ts | Susun challenge/process/result/media dengan alt text dan CTA brief; slug tidak ditemukan dan media belum tersedia memiliki recovery. | V2: detail, missing slug, back navigation |
+| FE-07 | Project brief `/project-brief` | 01,02 | src/app/project-brief/page.tsx; src/app/project-brief/brief-form.tsx; tests/unit/brief-form.test.tsx; tests/e2e/project-brief.spec.ts | Lengkapi field PRD termasuk company opsional; validation/pending/error/success preview dapat diuji tanpa mengirim inquiry nyata atau berpura-pura upload berhasil. | V1 + V2: field, focus error, cegah double submit |
+| FE-08 | Shop `/shop` | 01,02 | src/app/shop/page.tsx; src/app/shop/product-grid.tsx; tests/e2e/shop.spec.ts | Grid, filter kategori dan no-results; inactive/unpublished tidak tampil, out-of-stock jelas sesuai kontrak catalog. | V1 + V2: filter, stock, empty |
+| FE-09 | Product detail `/shop/[slug]` | 08 | src/app/shop/[slug]/page.tsx; src/app/shop/[slug]/product-selection.tsx; tests/unit/product-selection.test.tsx; tests/e2e/product-detail.spec.ts | Gallery, VariantSelector, harga display dan qty; varian belum dipilih/OOS mencegah add, slug invalid punya recovery. | V1 + V2: variant/qty/OOS |
+| FE-10 | Cart `/cart` | 09 | src/features/cart/cart-state.ts; src/app/cart/page.tsx; src/app/cart/cart-items.tsx; tests/unit/cart-state.test.tsx; tests/e2e/cart.spec.ts | Add/update/remove dan empty cart bekerja lokal; simpan ID/qty saja, tangani storage corrupt, display price/stock hanya estimasi dan tunduk revalidation server nanti. | V1 + V2: cart persistence dan edit |
+| FE-11 | Checkout `/checkout` | 10 | src/app/checkout/page.tsx; src/app/checkout/checkout-form.tsx; src/app/checkout/shipping-options.tsx; tests/unit/checkout-form.test.tsx; tests/e2e/checkout.spec.ts | Guest contact/address/rate/summary jelas; preview rates loading/unavailable/stale dan payment pending/error dapat diuji, provider belum siap ditampilkan jujur tanpa transaksi nyata. | V1 + V2: validasi, reselect rate, retry |
+| FE-12 | Custom print landing `/custom-print` | 01,02 | src/app/custom-print/page.tsx; tests/e2e/custom-print.spec.ts | Jelaskan review → slicing → quote → payment → production; format/file checklist dan CTA request tanpa janji harga final otomatis. | V2: alur dan ekspektasi |
+| FE-13 | Custom request `/custom-print/request` | 12 | src/app/custom-print/request/page.tsx; src/app/custom-print/request/request-form.tsx; tests/unit/custom-request-form.test.tsx; tests/e2e/custom-request.spec.ts | Material/qty/scale/contact dan FileUploadField; preview type/size/progress/retry tanpa upload biner atau menyebut file tersimpan saat R2 belum tersedia. | V1 + V2: file metadata dan form recovery |
+| FE-14 | Quote customer `/quote/[token]` | 01,13 | src/app/quote/[token]/page.tsx; src/app/quote/[token]/quote-review.tsx; tests/e2e/quote-review.spec.ts | Breakdown/scope/expiry immutable ditampilkan; preview accept/decline/expired/superseded/already accepted, route nyata tidak memakai fixture sebagai token authorization. | V1 + V2: state quote dan konfirmasi |
+| FE-15 | Order status `/orders/[token]` | 01,11,14 | src/app/orders/[token]/page.tsx; src/app/orders/[token]/order-status.tsx; tests/e2e/order-status.spec.ts | Timeline retail/custom dan next action mengikuti state; missing/revoked token dan late-payment exception ditampilkan tanpa internal notes/alamat lengkap atau klaim paid dari query browser. | V2: state timeline, projection aman |
+| FE-16 | Admin shell dan sign-in | 00,01 | src/components/niuva/admin-shell.tsx; src/features/admin/sign-in-view.tsx; src/app/auis/proofs/frontend/admin/page.tsx; tests/e2e/admin-preview.spec.ts | Shell untuk target `/admin` dan `/admin/sign-in`, nav responsive serta auth unavailable/forbidden; saat Clerk absent review komponen di development-only preview, tanpa bypass Proxy/requireAdmin. | V1 + V2: layout dan guard preview |
+| FE-17 | Admin Action Queue `/admin` | 16 | src/features/admin/action-queue.tsx; src/features/admin/queue-filters.tsx; tests/e2e/admin-queue.spec.ts | Prioritas brief/quote/order/measurement/stock, filter dan empty/stale; setiap row punya aksi jelas ke detail preview, bukan dashboard metrik hiasan. | V1 + V2: filter dan next action |
+| FE-18 | Admin inquiry detail dari Queue | 17 | src/features/admin/inquiry-detail.tsx; tests/unit/inquiry-detail.test.tsx; tests/e2e/admin-inquiry.spec.ts | Drawer list/detail inquiry dari Queue, company opsional dan status/history; preview follow-up tanpa mengirim email/WhatsApp atau memakai data client asli. | V1 + V2: detail dan perubahan status lokal |
+| FE-19 | Admin order list `/admin/orders` | 16 | src/features/admin/orders-list.tsx; src/features/admin/order-filters.tsx; tests/e2e/admin-orders.spec.ts | Search/type/status/exception filters, loading/empty dan mobile rows; pilih order membuka detail dengan URL/selection yang konsisten. | V1 + V2: search/filter |
+| FE-20 | Admin order detail dan fulfillment | 19,15 | src/features/admin/order-detail.tsx; src/features/admin/package-measurement.tsx; tests/unit/order-detail.test.tsx; tests/e2e/admin-fulfillment.spec.ts | Drawer detail, timeline/audit display dan final measurement; preview aksi hanya transisi valid, finance OWNER-only, shipping sebelum measurement ditolak. | V1 + V2: state/role/measurement |
+| FE-21 | Admin custom review `/admin/custom-print` | 16,13 | src/features/admin/custom-request-list.tsx; src/features/admin/custom-review.tsx; tests/unit/custom-review.test.tsx; tests/e2e/admin-custom-review.spec.ts | Request list dan review slicer weight/duration/config; file unavailable dan missing inputs terlihat, tidak menyediakan link file privat palsu. | V1 + V2: validasi review |
+| FE-22 | Admin quote draft/preview | 21,14 | src/features/admin/quote-editor.tsx; src/features/admin/quote-preview.tsx; tests/unit/quote-editor.test.tsx; tests/e2e/admin-quote.spec.ts | Draft/breakdown/expiry dan sent immutable; kalkulasi tampilan reuse Decimal/domain contract, missing active rule diblokir dan send hanya skenario preview. | V1 + V2: review wajib dan immutable sent |
+| FE-23 | Admin product list `/admin/products` | 16,08 | src/features/admin/products-list.tsx; tests/e2e/admin-products.spec.ts | Search SKU, stock dan publication filters; row memisahkan inactive, OOS dan unpublished dengan label jelas. | V1 + V2: filter catalog admin |
+| FE-24 | Admin product/variant/stock editor | 23,09 | src/features/admin/product-editor.tsx; src/features/admin/stock-editor.tsx; tests/unit/product-editor.test.tsx; tests/e2e/admin-product-editor.spec.ts | Identity/media/variant/price/weight/dimensions dan stock reason; unsaved changes, invalid values dan conflict dapat diuji; save/publish hanya state preview. | V1 + V2: validasi/unsaved/conflict |
+| FE-25 | Admin portfolio `/admin/portfolio` | 16,05 | src/features/admin/portfolio-list.tsx; tests/e2e/admin-portfolio.spec.ts | Draft/published list dan create/edit selection; status publication dan content missing terlihat pada viewport kecil. | V2: list dan selection |
+| FE-26 | Admin portfolio editor | 25,06 | src/features/admin/portfolio-editor.tsx; src/features/admin/portfolio-media-editor.tsx; tests/unit/portfolio-editor.test.tsx; tests/e2e/admin-portfolio-editor.spec.ts | Narrative/media ordering/alt text dan permission checklist; publication diblokir tanpa izin, preview tidak mempublikasikan client/logo contoh. | V1 + V2: media order dan permission |
+| FE-27 | Frontend acceptance dan handoff integrasi | 03,04,06,07,11,15,18,20,22,24,26 | tests/e2e/frontend-journeys.spec.ts; tasks/plan.md; tasks/todo.md; docs/backend/frontend-handoff.md | Review tiga journey customer dan lima modul admin beserta login; semua CTA punya hasil/recovery, catat API tersedia/missing dan pisahkan frontend complete dari integrated/production-ready. | V3: regression, visual review, handoff |
+
+### Checkpoints
+
+- A: FE-00–02 — kontrak, fixture isolation, public shell.
+- B: FE-03–05 — homepage, services, daftar projects.
+- C: FE-06–08 — detail project, brief, catalog.
+- D: FE-09–11 — detail produk → cart → checkout preview.
+- E: FE-12–14 — custom landing → request → quote preview.
+- F: FE-15–17 — order status, admin shell, queue.
+- G: FE-18–20 — inquiry handling dan order fulfillment preview.
+- H: FE-21–23 — custom review, quote editor, product list.
+- I: FE-24–26 — catalog editor dan portfolio.
+- J: FE-27 — acceptance seluruh frontend dan handoff.
+
+FE-03 menghubungkan link tujuan bertahap; route yang belum dibuat tidak diberi
+CTA aktif yang rusak. Homepage diperiksa ulang pada J setelah semua tujuan ada.
+Pada setiap checkpoint jalankan gate di atas, kumpulkan screenshot state utama
+dan minta review visual yang sesuai scope. Tidak perlu subagent untuk plan ini;
+penggunaan subagent kelak mengikuti keputusan user.
+
+### Risiko / dependency yang tidak boleh disamarkan
+
+| Risiko atau dependency | Perlakuan |
+| --- | --- |
+| Dataset produk, stock, media, izin client dan hasil project belum lengkap | Preview sintetis; publikasi factual dataset menjadi gate terpisah |
+| Clerk belum tersedia dan Proxy melindungi seluruh /admin termasuk sign-in | FE-16 membuat view/preview, login wiring + public sign-in exception direview pada fase auth; jangan melemahkan Proxy pada fase frontend |
+| Quote decline dan beberapa mutation admin belum mempunyai HTTP boundary | Preview intent saja; daftar endpoint missing masuk handoff FE-27 |
+| Pricing policy lama pada plan historis masih tertulis OPEN | Rujuk docs/backend/phase-3-pricing-biteship-contract.md dan policy aktif; jangan pilih rule baru atau menganggap rule sudah di-seed |
+| Form frontend berpotensi berbeda dari schema backend | FE-01/07/13 memakai field contract PRD + schema existing; perubahan domain bukan scope frontend |
+| Fixture tersangkut pada production build | Development-only boundary diuji; no real auth/data/provider imports pada preview |
+| Layar tampak siap tetapi integrasi belum ada | Laporkan status UI, visual acceptance, dan integrasi terpisah; simpan backlog Tasks 6–12 tetap terbuka |
+
+### Handoff setelah frontend
+
+Tahap integrasi berikutnya menghubungkan brief ke API, read catalog dan portfolio
+ke published repository, admin ke Clerk + active AdminProfile, lalu upload/payment/
+shipping setelah provider siap. Existing API: project-brief, custom-print/requests,
+uploads/intents, uploads/confirm, shipping/rates, checkout, webhooks/midtrans.
+Public catalog/portfolio/status/quote dan admin mutation boundaries perlu dicek/
+ditambahkan sesuai task integrasi; keberadaan service bukan berarti API sudah ada.
+Tidak ada commit, push, deployment, onboarding atau aktivasi provider pada task mapping.

@@ -19,6 +19,30 @@ the four Pattern proofs were also approved for styleguide-only usage on
 
 ## Architecture v1
 
+### Public frontend batch FE-00–08 — 2026-09-06
+
+Owner approved implementation of FE-00–08: `/`, `/services`, `/projects`,
+`/projects/[slug]`, `/project-brief`, and `/shop`, including a shared public shell.
+This is scoped authorization to compose existing Foundation/Typography v1.0,
+AuLogo, AuLink/Button, FormField/Input, FileUploadField and StatusNotice.
+PublicNavigation/PublicShell are route-family compositions, not new tokens.
+Use native select/textarea for brief controls; pass required to the control
+explicitly because FormField's required flag currently labels only.
+Project and Shop fixtures are development-only review surfaces. Brief submission
+is frontend simulation only. No new auth/payment/provider authority is granted.
+Screen visual acceptance remains pending owner review; styleguide approval
+and existing checkout/admin/Creative/Decorative restrictions are unchanged.
+This scoped authorization supersedes the older `/` + `/project-brief`-only
+implementation restriction below, not its historical visual-review record.
+
+| Screen | Composition | Primary review states |
+| --- | --- | --- |
+| Public shell/home | Existing fonts/tokens, AuLogo on dark surface, navigation | Mobile expanded/collapsed, active route, unavailable commerce |
+| Services | Editorial sections, numbered service outcomes, AuLink | Four factual service categories and brief CTA |
+| Projects/detail | Filterable list, media placeholder, narrative sections | Examples, empty, no results, loading, retry, missing slug |
+| Project brief | FormField/Input/select/textarea, disabled upload, StatusNotice | Validation, pending, local success/error, provider unavailable |
+| Shop | Category/search filters, two-column product grid, StatusNotice | Examples, available/out of stock, empty, no results, loading, retry |
+
 The architecture registry is recorded in
 `src/app/auis/styleguide/registry/design-system.ts` and summarized in
 `components.json`. It defines eight layers:
