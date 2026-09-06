@@ -6,3 +6,7 @@ allowBuilds:
   sharp: false
   unrs-resolver: false
   workerd: false
+overrides:
+  lodash@4.17.21: 4.18.1
+  prisma@7.10.0>mysql2: 3.24.3
+  '@prisma/config@7.10.0>deepmerge-ts': 8.0.2

@@ -81,10 +81,10 @@ route boundaries, sandbox refusal, signature validation, email idempotency,
 provider error mapping, Biteship normalization/timeout boundaries, catalog
 fingerprinting, and shipping response redaction.
 
-The production dependency audit still reports six pre-existing transitive
-Prisma CLI advisories (three high, three moderate). The reviewed AWS SDK
-addition has no reported advisory. No lockfile override or Prisma 8 release
-candidate upgrade was applied while those remediation paths remain unreviewed.
+The initial audit reported six transitive Prisma advisories. The subsequent
+[technical closure](phase-3-technical-closure.md) applies reviewed scoped
+overrides; production and full dependency audits now report no known
+vulnerabilities. Prisma remains at 7.10.0.
 
 Still deliberately outside this slice:
 

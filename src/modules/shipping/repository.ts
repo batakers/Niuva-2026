@@ -33,12 +33,14 @@ export type CustomShippingContext = Readonly<{
 }>;
 
 export type CustomShippingPreparation = Readonly<{
+  created: boolean;
+  paymentExpiresAt: Date;
   amountRp: Prisma.Decimal;
   orderId: string;
   orderNumber: string;
   payment?: Readonly<{ redirectUrl?: string; token?: string }>;
   paymentAttemptId: string;
-  paymentProviderOrderId?: string;
+  paymentProviderOrderId: string;
   shipmentId: string;
 }>;
 
@@ -139,15 +141,14 @@ export class ShippingRepository implements ShippingServiceRepository {
     now: Date;
   }>): Promise<CustomShippingPreparation> {
     return this.prisma.$transaction(async (transaction) => {
-      // Lock all payment attempts for this order before locking the order row.
-      // The webhook repository uses the same order (attempt, then order) lock
-      // order, which prevents two custom-shipping retries from creating a
-      // second pending attempt concurrently without introducing a deadlock.
+      // Match webhook lock order: attempts before order. Stable ordering also
+      // serializes retries that encounter multiple historical attempts.
       await transaction.$queryRaw(
         Prisma.sql`
           SELECT "id"
           FROM "payment_attempts"
           WHERE "order_id" = ${input.orderId}::uuid
+          ORDER BY "id"
           FOR UPDATE
         `,
       );
@@ -181,6 +182,7 @@ export class ShippingRepository implements ShippingServiceRepository {
           orderBy: { createdAt: "desc" },
           select: {
             amountRp: true,
+            expiresAt: true,
             id: true,
             providerOrderId: true,
             redirectUrl: true,
@@ -203,6 +205,11 @@ export class ShippingRepository implements ShippingServiceRepository {
         });
 
         if (existing !== null && existing.status === "PENDING") {
+          if (existing.expiresAt <= input.now) {
+            throw appError("CONFLICT", {
+              message: "Payment shipping kedaluwarsa; rekonsiliasi diperlukan sebelum retry.",
+            });
+          }
           if (shipment === null) {
             throw appError("CONFLICT", {
               message:
@@ -223,6 +230,8 @@ export class ShippingRepository implements ShippingServiceRepository {
                 };
 
           return {
+            created: false,
+            paymentExpiresAt: existing.expiresAt,
             amountRp: existing.amountRp,
             orderId: input.orderId,
             orderNumber: order.orderNumber,
@@ -306,6 +315,8 @@ export class ShippingRepository implements ShippingServiceRepository {
       });
 
       return {
+        created: true,
+        paymentExpiresAt: input.paymentExpiresAt,
         amountRp: input.priceRp,
         orderId: input.orderId,
         orderNumber: order.orderNumber,

@@ -54,6 +54,7 @@ export interface CustomShippingProvider {
 
 export interface CustomShippingPaymentProvider {
   createPayment(input: Readonly<{
+    expiresAt: Date;
     amountRp: string;
     orderId: string;
     orderNumber: string;
@@ -183,15 +184,22 @@ export class ShippingService {
       serviceName: rate.serviceName,
       now,
     });
-    const preparedProviderOrderId =
-      preparation.paymentProviderOrderId ?? paymentProviderOrderId;
+    if (
+      preparation.paymentExpiresAt <= now ||
+      (!preparation.created && preparation.payment === undefined)
+    ) {
+      throw appError("CONFLICT", {
+        message: "Payment shipping belum dapat diputar ulang; periksa status provider sebelum retry.",
+      });
+    }
     const payment =
       preparation.payment ??
       (await this.paymentProvider.createPayment({
         amountRp: preparation.amountRp.toString(),
+        expiresAt: preparation.paymentExpiresAt,
         orderId: preparation.orderId,
         orderNumber: preparation.orderNumber,
-        providerOrderId: preparedProviderOrderId,
+        providerOrderId: preparation.paymentProviderOrderId,
       }));
 
     if (preparation.payment === undefined) {
