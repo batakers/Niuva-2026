@@ -236,6 +236,15 @@ export function AdminActionQueue({ initialScenario }: AdminActionQueueProps) {
                           >
                             {item.actionLabel}
                           </Button>
+                        ) : item.kind === "custom-review" ? (
+                          <Button
+                            className="min-h-11 cursor-pointer"
+                            disabled={!hydrated}
+                            onClick={() => router.push(`/auis/proofs/frontend/admin?preview=examples&state=ready&module=custom-print&request=${item.reference}`)}
+                            type="button"
+                          >
+                            {item.actionLabel}
+                          </Button>
                         ) : (
                           <Button
                             className="min-h-11 cursor-pointer"

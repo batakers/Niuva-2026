@@ -66,7 +66,7 @@
 ## Frontend-first execution backlog — 2026-09-06
 
 Rincian AC, paths, dependencies dan verification: [plan.md](plan.md#frontend-first-task-map--2026-09-06).
-Status: FE-00–20 UI_IMPLEMENTED; FE-21–27 proposed. Checkbox implementasi bukan
+Status: FE-00–21 UI_IMPLEMENTED; FE-22–27 proposed. Checkbox implementasi bukan
 visual acceptance atau tanda integrated MVP selesai. Checkpoint visual tetap terbuka.
 Handoff dan verifikasi: [public-batch.md](../docs/frontend/public-batch.md).
 
@@ -98,7 +98,7 @@ Handoff dan verifikasi: [public-batch.md](../docs/frontend/public-batch.md).
 - [x] FE-19 — Admin order list `/admin/orders` (preview development-only, search/filter/exception, desktop table dan kartu mobile, selection URL lokal; tanpa data atau mutasi order nyata)
 - [x] FE-20 — Admin order detail dan fulfillment (drawer fixture aman, timeline/audit lokal, edge fulfillment valid, measurement paket custom dan finance Owner-only; tanpa mutasi order, rate, shipment, payment, atau refund nyata)
 - [ ] Checkpoint G — focused tests, static/build gates, dan review visual sesuai plan.
-- [ ] FE-21 — Admin custom review `/admin/custom-print`
+- [x] FE-21 — Admin custom review `/admin/custom-print` (development-only request list/review drawer, file privat unavailable, validasi slicer lokal, tanpa file access atau mutasi)
 - [ ] FE-22 — Admin quote draft/preview
 - [ ] FE-23 — Admin product list `/admin/products`
 - [ ] Checkpoint H — focused tests, static/build gates, dan review visual sesuai plan.

@@ -10,6 +10,10 @@ import {
   AdminOrdersList,
   type AdminOrdersScenario,
 } from "@/features/admin/orders-list";
+import {
+  AdminCustomRequestList,
+  type AdminCustomRequestScenario,
+} from "@/features/admin/custom-request-list";
 import type { AdminPreviewRole } from "@/features/admin/order-preview-data";
 import {
   getAdminPreviewAccessLabel,
@@ -27,7 +31,8 @@ export const metadata: Metadata = {
 const previewStates = ["auth-unavailable", "forbidden", "ready"] as const satisfies readonly AdminPreviewState[];
 const queueScenarios = ["populated", "loading", "empty", "stale"] as const satisfies readonly AdminQueueScenario[];
 const ordersScenarios = ["populated", "loading", "empty", "error"] as const satisfies readonly AdminOrdersScenario[];
-const previewModules = ["action-queue", "orders"] as const;
+const customRequestScenarios = ["populated", "loading", "empty", "error"] as const satisfies readonly AdminCustomRequestScenario[];
+const previewModules = ["action-queue", "orders", "custom-print"] as const;
 const previewRoles = ["OWNER", "ADMIN"] as const satisfies readonly AdminPreviewRole[];
 
 type AdminPreviewModule = (typeof previewModules)[number];
@@ -56,6 +61,14 @@ function getOrdersScenario(value: string | string[] | undefined): AdminOrdersSce
     : "populated";
 }
 
+function getCustomRequestScenario(value: string | string[] | undefined): AdminCustomRequestScenario {
+  const candidate = Array.isArray(value) ? undefined : value;
+
+  return customRequestScenarios.includes(candidate as AdminCustomRequestScenario)
+    ? (candidate as AdminCustomRequestScenario)
+    : "populated";
+}
+
 function getPreviewModule(value: string | string[] | undefined): AdminPreviewModule {
   const candidate = Array.isArray(value) ? undefined : value;
 
@@ -65,6 +78,10 @@ function getPreviewModule(value: string | string[] | undefined): AdminPreviewMod
 }
 
 function getSelectedOrderReference(value: string | string[] | undefined): string | null {
+  return Array.isArray(value) || typeof value !== "string" ? null : value;
+}
+
+function getSelectedCustomRequestReference(value: string | string[] | undefined): string | null {
   return Array.isArray(value) || typeof value !== "string" ? null : value;
 }
 
@@ -88,9 +105,11 @@ export default async function AdminPreviewPage({
   const state = getPreviewState(query.state);
   const queueScenario = getQueueScenario(query.queue);
   const ordersScenario = getOrdersScenario(query.orders);
+  const customRequestScenario = getCustomRequestScenario(query.custom);
   const activePreviewModule = getPreviewModule(query.module);
   const previewRole = getPreviewRole(query.role);
   const selectedOrderReference = getSelectedOrderReference(query.order);
+  const selectedCustomRequestReference = getSelectedCustomRequestReference(query.request);
 
   return (
     <AdminShell
@@ -105,6 +124,12 @@ export default async function AdminPreviewPage({
           initialRole={previewRole}
           initialScenario={ordersScenario}
           initialSelectedReference={selectedOrderReference}
+        />
+      ) : null}
+      {state === "ready" && activePreviewModule === "custom-print" ? (
+        <AdminCustomRequestList
+          initialScenario={customRequestScenario}
+          initialSelectedReference={selectedCustomRequestReference}
         />
       ) : null}
     </AdminShell>

@@ -1,7 +1,7 @@
-# Frontend review batch — FE-00–20
+# Frontend review batch — FE-00–21
 
 Started: 2026-09-06. Updated: 2026-09-08. Status: **UI_IMPLEMENTED**, **VISUAL_ACCEPTANCE_PENDING**,
-**NOT_INTEGRATED**. User approved FE-00–02 followed by FE-03–07, FE-08–15, the isolated FE-16 admin preview, FE-17 Action Queue, FE-18 Admin Inquiry Detail, FE-19 Admin Orders, and FE-20 Admin Order Fulfillment.
+**NOT_INTEGRATED**. User approved FE-00–02 followed by FE-03–07, FE-08–15, the isolated FE-16 admin preview, FE-17 Action Queue, FE-18 Admin Inquiry Detail, FE-19 Admin Orders, FE-20 Admin Order Fulfillment, and FE-21 Admin Custom Print Review.
 
 ## Scope and review paths
 
@@ -28,6 +28,7 @@ Started: 2026-09-06. Updated: 2026-09-08. Status: **UI_IMPLEMENTED**, **VISUAL_A
 | FE-18 | Inquiry detail drawer from the Queue, safe synthetic detail projection, optional company state, local status/history progression, and explicit non-sending follow-up preview | `/auis/proofs/frontend/admin?preview=examples&state=ready`, click `Buka brief preview` |
 | FE-19 | Admin Orders list with local reference search, type/status/exception filters, desktop headers, labeled mobile cards, recovery states, and stable selected-reference query | `/auis/proofs/frontend/admin?preview=examples&state=ready&module=orders`, `orders=populated`, `loading`, `empty`, `error` |
 | FE-20 | Admin fulfillment drawer with safe projection, timeline/audit preview, valid local operator edges, custom package measurement guard, and Owner-only finance message | `/auis/proofs/frontend/admin?preview=examples&state=ready&module=orders&order=ORD-EX-4072`, `role=OWNER`, `ADMIN` |
+| FE-21 | Admin custom-request list and slicer review drawer with explicit private-file unavailability, required material/weight/duration, optional configuration/notes, local-only review handoff, and recovery states | `/auis/proofs/frontend/admin?preview=examples&state=ready&module=custom-print&request=CPR-EX-2093`, `custom=loading`, `empty`, `error` |
 
 Run `corepack pnpm dev`; open `http://localhost:3000`. Use fictional contact
 information for review. Preview data is not a factual client portfolio.
@@ -114,6 +115,18 @@ information for review. Preview data is not a factual client portfolio.
   shipment, payment, refund, cancellation, audit event, provider payload, or
   customer detail is created. `role=OWNER|ADMIN` is an allowed development
   scenario only; it does not authorise an actual admin route or operation.
+- FE-21 uses the same development gate and a fixture-only custom-print projection.
+  The Action Queue custom-review row hands off only to the isolated
+  `module=custom-print&request=<fixture-reference>` query. Its request list and
+  review drawer import no service, repository, Clerk
+  projection, customer identity, filename, storage key, signed URL, token,
+  money, provider payload, or server audit. The browser displays the private-file
+  boundary instead of a fake file link. Material, Decimal-shaped weight, integer
+  seconds, and locked request quantity are validated locally before the visual
+  `SUBMITTED` to `UNDER_REVIEW` to `QUOTE_READY` handoff. Configuration and notes
+  remain optional. No review, quote, audit, file access, or status mutation is
+  created, and a later server integration remains responsible for permission,
+  ownership, current-status checks, Decimal parsing, audit, and pricing rules.
 - No new dependencies, global tokens, logo assets, migrations or environment changes
   were introduced by this frontend batch.
 
@@ -122,7 +135,7 @@ information for review. Preview data is not a factual client portfolio.
 - `corepack pnpm lint`: 0 errors, 147 pre-existing warnings; focused ESLint on the
   changed frontend/test files has no warnings or errors.
 - `corepack pnpm typecheck`: passed.
-- `corepack pnpm test`: 56 tests passed across 14 files.
+- `corepack pnpm test`: 59 tests passed across 15 files.
 - Focused FE-16 Playwright: 5 tests passed, covering unavailable and forbidden
   access states, the non-authoritative verified-shell composition, multi-value
   query fallback, mobile navigation/Escape/focus recovery, and the 320–1440px
@@ -148,6 +161,11 @@ information for review. Preview data is not a factual client portfolio.
   recovery, Owner/Admin finance visibility, no mutation request, and the
   320–1440px responsive matrix. The combined FE-19/20 focused Playwright suite
   has 8 tests passed.
+- Focused FE-21 unit: 3 tests passed, covering explicit review edges, missing
+  slicer input recovery, local-only handoff, and private-file link omission.
+  Focused FE-21 Playwright: 5 tests passed, covering local selection, private
+  file unavailability, Queue handoff, missing/valid review inputs, error recovery,
+  no mutation request, and the 320–1440px responsive matrix.
 - `corepack pnpm build` and `git diff --check`: passed. Production smoke confirms
   the explicit preview URL returns `404` with `noindex` and no Orders or
   fulfillment UI, while `/admin/orders` returns `503 AUTH_UNAVAILABLE` without
@@ -239,6 +257,11 @@ information for review. Preview data is not a factual client portfolio.
   hydration. The visible state gate, measurement precondition, and finance-role
   boundary are technical preview evidence only. Owner visual acceptance remains
   an explicit decision, separate from this implementation and automated checks.
+- FE-21 was inspected through the development-only custom review drawer after
+  hydration. The private-file boundary, request context, required slicer inputs,
+  optional configuration/notes, and local quote-ready handoff are technical
+  preview evidence only. Owner visual acceptance remains an explicit decision,
+  separate from this implementation and automated checks.
 - Production runtime smoke for `/cart?preview=examples`: 200 response, preview
   controls and synthetic product names absent, unknown stored variant is
   recoverable, and checkout remains disabled.
@@ -258,6 +281,9 @@ information for review. Preview data is not a factual client portfolio.
   404 response with `noindex`; queue fixtures and navigation fixture are absent.
   `/admin` and `/admin/sign-in` both return the existing 503
   `AUTH_UNAVAILABLE` response while Clerk credentials are absent.
+- Production runtime smoke for the explicit FE-21 preview URL returns 404 with
+  `noindex`; `/admin/custom-print` returns 503 without Clerk configuration and
+  does not expose the custom-review fixture reference.
 
 Local screenshot evidence (not committed):
 `C:/Users/FAIZ/.codex/visualizations/2026/09/05/01a07172-b3f5-77f2-b8e3-036ed4befe4c/frontend-{home,services,projects,detail,brief}-{390,1280}.png`.
@@ -280,7 +306,7 @@ Action Queue evidence: `frontend-admin-queue-{390,1280}.png` in the same local
 visualization folder. FE-18 awaits owner visual review before screenshot evidence
 is recorded.
 FE-19 awaits owner visual review before screenshot evidence is recorded.
-FE-20 awaits owner visual review before screenshot evidence is recorded.
+FE-20 and FE-21 await owner visual review before screenshot evidence is recorded.
 
 Shared public-route behavior remains in `tests/e2e/public-pages.spec.ts`.
 FE-12 through FE-15 keep workflow and responsive assertions in the dedicated
@@ -294,16 +320,16 @@ Branch: `codex/frontend-public-pages`.
 Base: `542375db56f0a8313bf0596ac0c127b7368cad0f`.
 FE-16 is recorded through commit `394f752`. FE-17 is recorded and pushed through
 commit `9456fc0`. FE-18 is recorded and pushed through commit `adc6e9a`. FE-19
-is recorded and pushed through commit `0cd2c5a`. FE-20 is an uncommitted review
-slice at this checkpoint. No merge or deployment is performed by this frontend
-batch.
+is recorded and pushed through commit `0cd2c5a`. FE-20 is recorded and pushed
+through commit `9f0a5d8`. FE-21 is an uncommitted review slice at this checkpoint.
+No merge or deployment is performed by this frontend batch.
 
 Pre-existing sandbox changes are preserved: `.env.example`, the two sandbox
 documents in `docs/backend/`, and `scripts/local-dev-db.ps1`. The existing task-map
 edits were extended, not replaced. Ignored local environment/database files were
 not changed. Do not stage this entire dirty working tree indiscriminately.
 
-Review the public screens through FE-15 and the isolated FE-16–20 admin proof.
+Review the public screens through FE-15 and the isolated FE-16–21 admin proof.
 Integrating actual published content, authentication, or submission requires a
 separate task and factual content/permission checks. To roll back this batch,
 reverse only its frontend/tests/contract/task-document edits; do not reset the

@@ -398,6 +398,14 @@ reusable boundary:
   projection, status timeline, audit rail, and local transition feedback. It is
   a review surface only: server-side authorization, current-state checks, audit,
   shipment, payment, cancellation, and refund remain outside this component.
+- `AdminCustomRequestList` and `AdminCustomReview`: development-only request
+  discovery and bounded slicer-review drawer. The fixture exposes no customer
+  identity, file metadata, private URL, storage key, token, money, provider
+  payload, or server audit. Required material, Decimal-shaped weight and integer
+  duration are local feedback only; request quantity is read-only while
+  configuration/notes stay optional. The visual status handoff does not authorize
+  or persist a review, file access, audit, quote, pricing calculation, or status
+  transition.
 - `PackageMeasurement`: custom-print final package precondition. It requires
   positive length, width, height, and weight before the visual shipping-payment
   edge is enabled. It does not calculate rates, persist measurement, create a
