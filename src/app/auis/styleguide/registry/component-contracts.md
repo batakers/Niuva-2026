@@ -386,6 +386,12 @@ reusable boundary:
 - `AdminActionQueueLayout`: queue grouping, filters, navigation, and detail
   handoff around `ActionQueueItem`.
 
+`AdminShell` in `src/components/niuva/admin-shell.tsx` is a provisional
+development-only composition created by FE-16 for reviewing the target
+`/admin` and `/admin/sign-in` shell. It exposes responsive structural navigation
+only, carries no Clerk/session/profile data, and does not authorize a route or
+operation. Its visual acceptance and real auth wiring remain separate gates.
+
 They compose the contracts above but do not become components merely because
 they contain several children.
 
