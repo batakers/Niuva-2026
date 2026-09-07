@@ -1,7 +1,7 @@
-# Frontend public batch — FE-00–13
+# Frontend public batch — FE-00–14
 
 Started: 2026-09-06. Updated: 2026-09-07. Status: **UI_IMPLEMENTED**, **VISUAL_ACCEPTANCE_PENDING**,
-**NOT_INTEGRATED**. User approved FE-00–02 followed by FE-03–07, FE-08, FE-09, FE-10, FE-11, FE-12, and FE-13.
+**NOT_INTEGRATED**. User approved FE-00–02 followed by FE-03–07 and FE-08–14.
 
 ## Scope and review paths
 
@@ -21,6 +21,7 @@ Started: 2026-09-06. Updated: 2026-09-07. Status: **UI_IMPLEMENTED**, **VISUAL_A
 | FE-11 | Guest contact/address form, synthetic shipping selection, authority ledger, validation and explicit rate/payment recovery states | `/checkout?preview=examples&state=ready`, `rates-loading`, `rates-unavailable`, `rate-stale`, `payment-pending`, `payment-error` |
 | FE-12 | Custom-print expectations, operator-reviewed workflow, file checklist, privacy/price/shipping boundaries and honest request handoff | `/custom-print` |
 | FE-13 | Metadata-only file preview, progress/retry/expiry states, configuration/contact validation and production fail-closed request form | `/custom-print/request` |
+| FE-14 | Immutable quote dossier, scope/assumptions/breakdown, seven-day expiry, local confirmation states and invalid-access recovery | `/quote/preview-quote?preview=examples`, `valid`, `loading`, `expired`, `superseded`, `accepted`, `declined` |
 
 Run `corepack pnpm dev`; open `http://localhost:3000`. Use fictional contact
 information for review. Preview data is not a factual client portfolio.
@@ -69,6 +70,11 @@ information for review. Preview data is not a factual client portfolio.
   failed and expired simulations with progress and retry. Production disables the
   form while R2 remains unavailable. The 100 MiB preview limit comes from the
   approved runtime policy, but browser validation is not server authority.
+- Customer Quote loads its synthetic snapshot only when development runtime,
+  explicit preview query, and the dedicated preview sentinel all match. The
+  sentinel is not authorization and production never loads the fixture. Scope,
+  assumptions, expiry and formatted money arrive as immutable display values;
+  accept/decline confirmations change local UI only and make no API request.
 - No new dependencies, global tokens, logo assets, migrations or environment changes
   were introduced by this frontend batch.
 
@@ -78,7 +84,7 @@ information for review. Preview data is not a factual client portfolio.
   changed frontend/test files has no warnings or errors.
 - `corepack pnpm typecheck`: passed.
 - `corepack pnpm test`: 49 tests passed across 11 files.
-- `corepack pnpm exec playwright test --workers=4`: 39 tests passed, including existing styleguide/security
+- `corepack pnpm exec playwright test --workers=4`: 47 tests passed, including existing styleguide/security
   regression tests. Covers mobile menu/Escape/skip link, real-route navigation,
   project and product filter/detail/404/retry, variant/quantity/OOS behavior,
   cart add/update/remove/persistence/corrupt recovery, form recovery and no
@@ -88,8 +94,10 @@ information for review. Preview data is not a factual client portfolio.
   operator-reviewed workflow, file-format boundary, conceptual-evidence label,
   working request-route navigation, and Project Brief fallback. FE-13 adds local
   metadata progress, invalid/failure/expiry retry, required-field focus, and
-  assertions that no upload or custom-request API mutation occurs.
-- Existing public routes and the dedicated FE-12 and FE-13 routes were checked at 320, 390,
+  assertions that no upload or custom-request API mutation occurs. FE-14 adds
+  immutable scope/breakdown display, accept/decline confirmation, loading and
+  terminal quote states, invalid-token 404, and no quote/payment API mutation.
+- Existing public routes and the dedicated FE-12, FE-13 and FE-14 routes were checked at 320, 390,
   768, 1024, 1280 and 1440px; one main and H1 each, with no horizontal overflow
   or page errors. The existing public matrix also runs under reduced motion.
 - `corepack pnpm build`: production compilation and route generation passed.
@@ -115,6 +123,9 @@ information for review. Preview data is not a factual client portfolio.
 - FE-13 was visually inspected after hydration at 1280x900 and 390x844. Its
   workshop-intake dossier keeps metadata safety and operator review prominent,
   while the 4/8 desktop split becomes one readable mobile sequence without overflow.
+- FE-14 was visually inspected after hydration at 1280x900 and 390x844. Scope
+  and verified assumptions precede the price/decision rail, the desktop 7/5
+  composition collapses in the same reading order on mobile, and actions remain visible.
 - Production runtime smoke for `/cart?preview=examples`: 200 response, preview
   controls and synthetic product names absent, unknown stored variant is
   recoverable, and checkout remains disabled.
@@ -124,6 +135,9 @@ information for review. Preview data is not a factual client portfolio.
 - Production runtime smoke for `/custom-print/request`: 200 response, headline
   and explicit R2-unavailable notice present, scenario preview absent, controls
   disabled, and no API form action. The landing page now links to this fail-closed route.
+- Production runtime smoke for `/quote/preview-quote?preview=examples&state=accepted`:
+  404 response with safe recovery and `noindex`; quote number, total, and decision
+  controls are absent. Development preview state never authorizes production access.
 
 Local screenshot evidence (not committed):
 `C:/Users/FAIZ/.codex/visualizations/2026/09/05/01a07172-b3f5-77f2-b8e3-036ed4befe4c/frontend-{home,services,projects,detail,brief}-{390,1280}.png`.
@@ -136,25 +150,28 @@ Custom Print evidence: `frontend-custom-print-{390,1280}.png` in the same local
 visualization folder.
 Custom Request evidence: `frontend-custom-request-{390,1280}.png` in the same
 local visualization folder.
+Quote Review evidence: `frontend-quote-review-{390,1280}.png` in the same local
+visualization folder.
 
 Shared public-route behavior remains in `tests/e2e/public-pages.spec.ts`.
-FE-12 and FE-13 keep workflow and responsive assertions in the dedicated
-`tests/e2e/custom-print.spec.ts` and `tests/e2e/custom-request.spec.ts` files
-requested by the task map.
+FE-12 through FE-14 keep workflow and responsive assertions in the dedicated
+`tests/e2e/custom-print.spec.ts`, `tests/e2e/custom-request.spec.ts`, and
+`tests/e2e/quote-review.spec.ts` files requested by the task map.
 
 ## Git and handoff
 
 Branch: `codex/frontend-public-pages`.
 Base: `542375db56f0a8313bf0596ac0c127b7368cad0f`.
-Commit and push are recorded in Git history after this review checkpoint. No
-merge or deployment is performed by this frontend batch.
+FE-13 and the preceding frontend slices are recorded through commit `499f161` and
+are pushed to the branch. FE-14 remains an uncommitted review slice at this
+checkpoint. No merge or deployment is performed by this frontend batch.
 
 Pre-existing sandbox changes are preserved: `.env.example`, the two sandbox
 documents in `docs/backend/`, and `scripts/local-dev-db.ps1`. The existing task-map
 edits were extended, not replaced. Ignored local environment/database files were
 not changed. Do not stage this entire dirty working tree indiscriminately.
 
-Review the public screens through FE-13. Integrating actual published content and
+Review the public screens through FE-14. Integrating actual published content and
 submission requires a separate task and factual content/permission checks. To
 roll back this batch, reverse only its frontend/tests/contract/task-document edits;
 do not reset the worktree or remove unrelated sandbox files.

@@ -19,11 +19,12 @@ the four Pattern proofs were also approved for styleguide-only usage on
 
 ## Architecture v1
 
-### Public frontend batch FE-00–11 — 2026-09-06
+### Public frontend batch FE-00–14 — 2026-09-06
 
-Owner approved implementation of FE-00–11: `/`, `/services`, `/projects`,
+Owner approved implementation of FE-00–14: `/`, `/services`, `/projects`,
 `/projects/[slug]`, `/project-brief`, `/shop`, `/shop/[slug]`, `/cart`, and
-`/checkout`, including a shared public shell.
+`/checkout`, `/custom-print`, `/custom-print/request`, and `/quote/[token]`,
+including a shared public shell.
 This is scoped authorization to compose existing Foundation/Typography v1.0,
 AuLogo, AuLink/Button, FormField/Input, FileUploadField and StatusNotice.
 PublicNavigation/PublicShell are route-family compositions, not new tokens.
@@ -48,6 +49,7 @@ implementation restriction below, not its historical visual-review record.
 | Checkout | Page-owned guest form, FormField/Input, native shipping radios, StatusNotice, authority ledger | Validation, rates loading/unavailable/stale, payment pending/error, ready review, production unavailable |
 | Custom Print landing | Route-owned dossier grid, operator verification rail, format checklist, StatusNotice | Informational, private-file expectation, manual review, request unavailable with real fallback |
 | Custom Print request | FormField/Input/select/textarea, FileUploadField preview mode, StatusNotice | Hydration guard, metadata progress, invalid/failed/expired/retry, validation summary, production unavailable |
+| Customer quote | Route-owned immutable dossier, MoneySummary, StatusNotice, confirmation panel | Valid, loading, expired, superseded, accepted, declined, invalid access, local accept/decline confirmation |
 
 Product detail composes the existing P1 VariantSelector under the owner-approved
 FE-09 route scope. FE-10 persists only variant ID and quantity in a strict,
@@ -60,6 +62,10 @@ FE-12 adds a static custom-print explanation and composes the existing link,
 button and StatusNotice contracts. Its illustration is explicitly conceptual;
 the route does not upload a file, calculate price, create a request or introduce
 a reusable workflow component.
+FE-14 composes MoneySummary and StatusNotice into a development-only quote
+review dossier. The server route admits only an explicit preview sentinel and
+never treats fixture data, query state, or the browser as token, pricing, expiry,
+or transition authority. Accept and decline confirmations remain local UI states.
 
 The architecture registry is recorded in
 `src/app/auis/styleguide/registry/design-system.ts` and summarized in
