@@ -19,6 +19,7 @@ export type FileUploadStatus =
 
 export type FileUploadSize = "default" | "compact";
 export type FileUploadVariant = "single-private-file";
+export type FileUploadMode = "live" | "preview";
 
 export type FileUploadFieldProps = {
   label: string;
@@ -29,6 +30,8 @@ export type FileUploadFieldProps = {
   fileMeta?: string;
   status?: FileUploadStatus;
   error?: string;
+  mode?: FileUploadMode;
+  progress?: number;
   onSelect?: (file: File | null) => void;
   onRetry?: () => void;
   onRemove?: () => void;
@@ -63,10 +66,40 @@ const statusCopy: Record<FileUploadStatus, string> = {
   retrying: "Percobaan upload baru sedang dimulai.",
 };
 
+const previewStatusLabels: Record<FileUploadStatus, string> = {
+  idle: "Belum ada berkas",
+  selecting: "Memilih berkas",
+  uploading: "Menyiapkan preview",
+  validating: "Memeriksa metadata lokal",
+  accepted: "Metadata sesuai untuk preview",
+  invalid: "Berkas perlu diperbaiki",
+  failed: "Simulasi mengalami kendala",
+  expired: "Sesi preview berakhir",
+  retrying: "Mencoba kembali",
+};
+
+const previewStatusCopy: Record<FileUploadStatus, string> = {
+  idle: "Pilih satu berkas untuk memulai pemeriksaan lokal.",
+  selecting: "Pilih berkas dari perangkat Anda.",
+  uploading: "Simulasi progres lokal berjalan. Tidak ada byte yang dikirim.",
+  validating: "Nama, ekstensi, dan ukuran diperiksa di browser. Belum ada validasi server.",
+  accepted: "Metadata lolos preview lokal. Berkas belum diunggah atau disimpan.",
+  invalid: "Periksa alasan di bawah, lalu pilih berkas lain.",
+  failed: "Simulasi dihentikan. Berkas belum diunggah atau disimpan.",
+  expired: "Sesi preview berakhir tanpa mengunggah atau menyimpan berkas.",
+  retrying: "Simulasi baru dimulai. Tidak ada byte yang dikirim.",
+};
+
 const errorDefaults: Record<"invalid" | "failed" | "expired", string> = {
   invalid: "Berkas tidak memenuhi format atau kebijakan ukuran yang berlaku.",
   failed: "Berkas belum tersimpan karena proses upload mengalami kendala.",
   expired: "Akses sesi upload berakhir. Mulai kembali untuk mendapatkan sesi baru.",
+};
+
+const previewErrorDefaults: Record<"invalid" | "failed" | "expired", string> = {
+  invalid: "Metadata tidak memenuhi format atau kebijakan ukuran yang berlaku.",
+  failed: "Simulasi gagal. Berkas belum diunggah atau disimpan.",
+  expired: "Sesi preview berakhir. Mulai kembali untuk menguji alur pemulihan.",
 };
 
 function isBusyStatus(status: FileUploadStatus) {
@@ -86,6 +119,8 @@ export function FileUploadField({
   fileMeta,
   status = "idle",
   error,
+  mode = "live",
+  progress,
   onSelect,
   onRetry,
   onRemove,
@@ -103,6 +138,12 @@ export function FileUploadField({
   const inputRef = useRef<HTMLInputElement>(null);
   const busy = isBusyStatus(status);
   const errorState = isErrorStatus(status);
+  const resolvedStatusLabels = mode === "preview" ? previewStatusLabels : statusLabels;
+  const resolvedStatusCopy = mode === "preview" ? previewStatusCopy : statusCopy;
+  const resolvedErrorDefaults = mode === "preview" ? previewErrorDefaults : errorDefaults;
+  const resolvedProgress = progress === undefined
+    ? undefined
+    : Math.min(100, Math.max(0, Math.round(progress)));
   const acceptedAttribute = acceptedExtensions
     .map((extension) => (extension.startsWith(".") ? extension : `.${extension}`))
     .join(",");
@@ -113,7 +154,17 @@ export function FileUploadField({
   }
 
   function openFilePicker() {
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
     inputRef.current?.click();
+  }
+
+  function removeFile() {
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+    onRemove?.();
   }
 
   const recoveryAction =
@@ -200,7 +251,7 @@ export function FileUploadField({
           )}
         </span>
         <span className="min-w-0 space-y-1">
-          <span className="block text-sm font-medium text-foreground">{statusCopy[status]}</span>
+          <span className="block text-sm font-medium text-foreground">{resolvedStatusCopy[status]}</span>
           <span className="block text-xs leading-5 text-muted-foreground">
             {acceptedExtensions.join(", ")} · {maxSizeLabel}
           </span>
@@ -208,9 +259,24 @@ export function FileUploadField({
       </label>
 
       <div aria-live="polite" className="text-xs text-muted-foreground" id={statusId}>
-        <span className="sr-only">Status: {statusLabels[status]}</span>
-        {!errorState && status !== "idle" ? statusCopy[status] : null}
+        <span className="sr-only">Status: {resolvedStatusLabels[status]}</span>
+        {!errorState && status !== "idle" ? resolvedStatusCopy[status] : null}
       </div>
+
+      {resolvedProgress !== undefined ? (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+            <span>{mode === "preview" ? "Progress preview lokal" : "Progress upload"}</span>
+            <span className="tabular-nums">{resolvedProgress}%</span>
+          </div>
+          <progress
+            aria-label={mode === "preview" ? "Progress preview berkas" : "Progress upload berkas"}
+            className="h-2 w-full accent-primary"
+            max={100}
+            value={resolvedProgress}
+          />
+        </div>
+      ) : null}
 
       {fileName ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card p-3">
@@ -224,7 +290,7 @@ export function FileUploadField({
             </div>
           </div>
           {onRemove ? (
-            <Button onClick={onRemove} size="sm" type="button" variant="ghost">
+            <Button onClick={removeFile} size="sm" type="button" variant="ghost">
               <Icon aria-hidden="true" name="x" />
               Hapus
             </Button>
@@ -238,8 +304,8 @@ export function FileUploadField({
           className="space-y-2 rounded-lg border border-destructive-border bg-destructive-background p-3 text-sm"
           role="alert"
         >
-          <p className="font-medium text-destructive">{statusLabels[status]}</p>
-          <p className="text-destructive">{error ?? errorDefaults[status]}</p>
+          <p className="font-medium text-destructive">{resolvedStatusLabels[status]}</p>
+          <p className="text-destructive">{error ?? resolvedErrorDefaults[status]}</p>
           {recoveryAction ? <div className="flex flex-wrap gap-2">{recoveryAction}</div> : null}
         </div>
       ) : null}

@@ -15,8 +15,9 @@ test("custom print landing explains the operator-reviewed path without instant-p
   await expect(page.getByRole("img", { name: /ilustrasi konseptual model 3D/i })).toBeVisible();
   await expect(page.getByText("Bukan hasil produksi Niuva.", { exact: false })).toBeVisible();
 
-  const requestButton = page.getByRole("button", { name: "Mulai request" });
-  await expect(requestButton).toBeDisabled();
+  await page.getByRole("link", { name: "Mulai request" }).click();
+  await expect(page).toHaveURL(/\/custom-print\/request$/);
+  await page.goBack();
   await page.getByRole("link", { name: "Diskusikan kebutuhan khusus" }).click();
   await expect(page).toHaveURL(/\/project-brief$/);
 });

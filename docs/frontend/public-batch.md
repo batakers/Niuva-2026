@@ -1,7 +1,7 @@
-# Frontend public batch — FE-00–12
+# Frontend public batch — FE-00–13
 
 Started: 2026-09-06. Updated: 2026-09-07. Status: **UI_IMPLEMENTED**, **VISUAL_ACCEPTANCE_PENDING**,
-**NOT_INTEGRATED**. User approved FE-00–02 followed by FE-03–07, FE-08, FE-09, FE-10, FE-11, and FE-12.
+**NOT_INTEGRATED**. User approved FE-00–02 followed by FE-03–07, FE-08, FE-09, FE-10, FE-11, FE-12, and FE-13.
 
 ## Scope and review paths
 
@@ -20,6 +20,7 @@ Started: 2026-09-06. Updated: 2026-09-07. Status: **UI_IMPLEMENTED**, **VISUAL_A
 | FE-10 | Versioned local cart, add/update/remove, empty/recovery states, unavailable-product handling, and non-authoritative estimate ledger | `/cart?preview=examples`, `empty`, `loading`, `error` |
 | FE-11 | Guest contact/address form, synthetic shipping selection, authority ledger, validation and explicit rate/payment recovery states | `/checkout?preview=examples&state=ready`, `rates-loading`, `rates-unavailable`, `rate-stale`, `payment-pending`, `payment-error` |
 | FE-12 | Custom-print expectations, operator-reviewed workflow, file checklist, privacy/price/shipping boundaries and honest request handoff | `/custom-print` |
+| FE-13 | Metadata-only file preview, progress/retry/expiry states, configuration/contact validation and production fail-closed request form | `/custom-print/request` |
 
 Run `corepack pnpm dev`; open `http://localhost:3000`. Use fictional contact
 information for review. Preview data is not a factual client portfolio.
@@ -61,8 +62,13 @@ information for review. Preview data is not a factual client portfolio.
   explicitly labelled as a conceptual illustration, not Niuva production evidence.
   It supports STL, 3MF and OBJ as the initial model formats; STEP/STP remains a
   manual-review attachment. No geometry analysis, file persistence or instant
-  final price is implied. The request button remains disabled until FE-13, with
-  Project Brief as the currently available fallback.
+  final price is implied. Its request CTA now opens the FE-13 preview route.
+- Custom Request reads only the selected file name, extension and size in the
+  browser. It never reads the binary payload, calls upload/request APIs, receives
+  a file ID, or claims persistence. Development exposes deterministic accepted,
+  failed and expired simulations with progress and retry. Production disables the
+  form while R2 remains unavailable. The 100 MiB preview limit comes from the
+  approved runtime policy, but browser validation is not server authority.
 - No new dependencies, global tokens, logo assets, migrations or environment changes
   were introduced by this frontend batch.
 
@@ -71,8 +77,8 @@ information for review. Preview data is not a factual client portfolio.
 - `corepack pnpm lint`: 0 errors, 147 pre-existing warnings; focused ESLint on the
   changed frontend/test files has no warnings or errors.
 - `corepack pnpm typecheck`: passed.
-- `corepack pnpm test`: 44 tests passed across 10 files.
-- `corepack pnpm exec playwright test --workers=4`: 36 tests passed, including existing styleguide/security
+- `corepack pnpm test`: 49 tests passed across 11 files.
+- `corepack pnpm exec playwright test --workers=4`: 39 tests passed, including existing styleguide/security
   regression tests. Covers mobile menu/Escape/skip link, real-route navigation,
   project and product filter/detail/404/retry, variant/quantity/OOS behavior,
   cart add/update/remove/persistence/corrupt recovery, form recovery and no
@@ -80,8 +86,10 @@ information for review. Preview data is not a factual client portfolio.
   loading/unavailable/stale recovery, payment pending/error, and an assertion
   that the preview makes no shipping or checkout API request. FE-12 adds the
   operator-reviewed workflow, file-format boundary, conceptual-evidence label,
-  disabled request action, and Project Brief fallback.
-- Existing public routes and the dedicated FE-12 route were checked at 320, 390,
+  working request-route navigation, and Project Brief fallback. FE-13 adds local
+  metadata progress, invalid/failure/expiry retry, required-field focus, and
+  assertions that no upload or custom-request API mutation occurs.
+- Existing public routes and the dedicated FE-12 and FE-13 routes were checked at 320, 390,
   768, 1024, 1280 and 1440px; one main and H1 each, with no horizontal overflow
   or page errors. The existing public matrix also runs under reduced motion.
 - `corepack pnpm build`: production compilation and route generation passed.
@@ -104,15 +112,18 @@ information for review. Preview data is not a factual client portfolio.
 - FE-12 was visually inspected at 1280x900 and 390x844. The dossier grid and
   operator rail collapse into a readable mobile sequence, the hero remains
   unclipped, and conceptual artwork is labelled separately from production proof.
+- FE-13 was visually inspected after hydration at 1280x900 and 390x844. Its
+  workshop-intake dossier keeps metadata safety and operator review prominent,
+  while the 4/8 desktop split becomes one readable mobile sequence without overflow.
 - Production runtime smoke for `/cart?preview=examples`: 200 response, preview
   controls and synthetic product names absent, unknown stored variant is
   recoverable, and checkout remains disabled.
 - Production runtime smoke for `/checkout?preview=examples&state=ready`: 200
   response, preview controls/form and synthetic items absent, with an explicit
   unavailable notice and no provider or transaction path.
-- Production runtime smoke for `/custom-print`: 200 response, static headline
-  and conceptual-evidence label present, request action disabled, and no link to
-  the unimplemented `/custom-print/request` route. The hero asset returns 200.
+- Production runtime smoke for `/custom-print/request`: 200 response, headline
+  and explicit R2-unavailable notice present, scenario preview absent, controls
+  disabled, and no API form action. The landing page now links to this fail-closed route.
 
 Local screenshot evidence (not committed):
 `C:/Users/FAIZ/.codex/visualizations/2026/09/05/01a07172-b3f5-77f2-b8e3-036ed4befe4c/frontend-{home,services,projects,detail,brief}-{390,1280}.png`.
@@ -123,10 +134,13 @@ Checkout evidence: `frontend-checkout-{390,1280}.png` in the same local
 visualization folder.
 Custom Print evidence: `frontend-custom-print-{390,1280}.png` in the same local
 visualization folder.
+Custom Request evidence: `frontend-custom-request-{390,1280}.png` in the same
+local visualization folder.
 
 Shared public-route behavior remains in `tests/e2e/public-pages.spec.ts`.
-FE-12 keeps its workflow and responsive assertions in the dedicated
-`tests/e2e/custom-print.spec.ts` requested by the task map.
+FE-12 and FE-13 keep workflow and responsive assertions in the dedicated
+`tests/e2e/custom-print.spec.ts` and `tests/e2e/custom-request.spec.ts` files
+requested by the task map.
 
 ## Git and handoff
 
@@ -140,7 +154,7 @@ documents in `docs/backend/`, and `scripts/local-dev-db.ps1`. The existing task-
 edits were extended, not replaced. Ignored local environment/database files were
 not changed. Do not stage this entire dirty working tree indiscriminately.
 
-Review the public screens through FE-12. Integrating actual published content and
+Review the public screens through FE-13. Integrating actual published content and
 submission requires a separate task and factual content/permission checks. To
 roll back this batch, reverse only its frontend/tests/contract/task-document edits;
 do not reset the worktree or remove unrelated sandbox files.

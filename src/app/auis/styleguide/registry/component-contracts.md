@@ -47,6 +47,7 @@ implementation restriction below, not its historical visual-review record.
 | Cart | Editable line items, quantity controls, StatusNotice, validation ledger | Loading, empty, ready, corrupt recovery, unavailable product, write failure, remove |
 | Checkout | Page-owned guest form, FormField/Input, native shipping radios, StatusNotice, authority ledger | Validation, rates loading/unavailable/stale, payment pending/error, ready review, production unavailable |
 | Custom Print landing | Route-owned dossier grid, operator verification rail, format checklist, StatusNotice | Informational, private-file expectation, manual review, request unavailable with real fallback |
+| Custom Print request | FormField/Input/select/textarea, FileUploadField preview mode, StatusNotice | Hydration guard, metadata progress, invalid/failed/expired/retry, validation summary, production unavailable |
 
 Product detail composes the existing P1 VariantSelector under the owner-approved
 FE-09 route scope. FE-10 persists only variant ID and quantity in a strict,
@@ -314,7 +315,8 @@ reusable boundary.
 - **States:** Idle, selecting, uploading, validating, accepted, invalid,
   failed, expired, and retrying.
 - **Props/data:** Accepted extensions, server-provided max size, file metadata,
-  upload state, `onSelect`, `onRetry`, and `onRemove`. It never displays a
+  upload state, optional bounded progress, `live` or explicitly non-persistent
+  `preview` copy mode, `onSelect`, `onRetry`, and `onRemove`. It never displays a
   signed URL as public content or authorizes access.
 - **Accessibility:** Keyboard and screen-reader equivalent to file selection;
   progress/status is announced appropriately; invalid files include reason and

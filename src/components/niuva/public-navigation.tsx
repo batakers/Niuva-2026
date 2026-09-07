@@ -37,13 +37,16 @@ export function PublicNavigation() {
       </Button>
       <nav id="public-navigation" aria-label="Navigasi utama"
         className={`${open ? "flex" : "hidden"} order-last w-full flex-col gap-1 border-t border-border pt-3 md:order-none md:ml-auto md:flex md:w-auto md:flex-row md:items-center md:gap-1 md:border-0 md:pt-0`}>
-        {links.map(({ href, label }) => (
-          <Link key={href} href={href} aria-current={pathname === href ? "page" : undefined}
-            className={`inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=page]:text-foreground ${href === "/project-brief" ? "md:hidden" : ""}`}
-            onClick={() => setOpen(false)}>
-            {label}
-          </Link>
-        ))}
+        {links.map(({ href, label }) => {
+          const current = pathname === href || (href === "/custom-print" && pathname?.startsWith("/custom-print/"));
+          return (
+            <Link key={href} href={href} aria-current={current ? "page" : undefined}
+              className={`inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=page]:text-foreground ${href === "/project-brief" ? "md:hidden" : ""}`}
+              onClick={() => setOpen(false)}>
+              {label}
+            </Link>
+          );
+        })}
       </nav>
     </div>
   );

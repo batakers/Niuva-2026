@@ -14,7 +14,6 @@ import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation
 import { PublicShell } from "@/components/niuva/public-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { AuLink } from "@/components/ui/AuLink";
-import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "Custom 3D Print · Niuva",
@@ -208,9 +207,9 @@ export default function CustomPrintPage() {
             </div>
             <StatusNotice
               tone="info"
-              title="Form custom print belum diaktifkan."
-              description="FE-12 menjelaskan proses dan kesiapan file. Pengiriman request privat hadir pada tahap frontend berikutnya."
-              action={<Button className="min-h-11" disabled type="button">Mulai request</Button>}
+              title="Form request siap untuk preview."
+              description="Anda dapat menguji metadata, konfigurasi, progres, dan pemulihan secara lokal. Tidak ada file atau request yang dikirim."
+              action={<AuLink className="min-h-11" href="/custom-print/request">Mulai request</AuLink>}
               secondaryAction={<AuLink className="min-h-11" href="/project-brief" variant="outline">Diskusikan kebutuhan khusus</AuLink>}
             />
           </div>
