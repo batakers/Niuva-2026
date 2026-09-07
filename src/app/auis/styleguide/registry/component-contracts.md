@@ -19,11 +19,11 @@ the four Pattern proofs were also approved for styleguide-only usage on
 
 ## Architecture v1
 
-### Public frontend batch FE-00–14 — 2026-09-06
+### Public frontend batch FE-00–15 — 2026-09-06
 
-Owner approved implementation of FE-00–14: `/`, `/services`, `/projects`,
+Owner approved implementation of FE-00–15: `/`, `/services`, `/projects`,
 `/projects/[slug]`, `/project-brief`, `/shop`, `/shop/[slug]`, `/cart`, and
-`/checkout`, `/custom-print`, `/custom-print/request`, and `/quote/[token]`,
+`/checkout`, `/custom-print`, `/custom-print/request`, `/quote/[token]`, and `/orders/[token]`,
 including a shared public shell.
 This is scoped authorization to compose existing Foundation/Typography v1.0,
 AuLogo, AuLink/Button, FormField/Input, FileUploadField and StatusNotice.
@@ -66,6 +66,12 @@ FE-14 composes MoneySummary and StatusNotice into a development-only quote
 review dossier. The server route admits only an explicit preview sentinel and
 never treats fixture data, query state, or the browser as token, pricing, expiry,
 or transition authority. Accept and decline confirmations remain local UI states.
+
+FE-15 composes the approved OrderStatusTimeline and StatusNotice contracts into
+a development-only retail/custom status dossier. It exposes only synthetic safe
+projection fields, keeps invalid, expired, and revoked access free of order data,
+and represents late payment as a refund exception without reopening fulfilment.
+Query scenarios never become payment, shipment, cancellation, or state authority.
 
 The architecture registry is recorded in
 `src/app/auis/styleguide/registry/design-system.ts` and summarized in
