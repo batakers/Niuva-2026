@@ -17,9 +17,9 @@ test("Queue handoff opens the Orders preview with a stable selected reference", 
   await page.getByRole("button", { name: "Buka order preview" }).click();
 
   await expect(page).toHaveURL(/module=orders.*order=ORD-EX-4072/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Order yang perlu dikelola.");
-  await expect(page.getByText("Order preview dipilih: ORD-EX-4072")).toBeVisible();
-  await expect(page.locator("[data-admin-shell] [aria-current=page]")).toContainText("Orders");
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByRole("heading", { name: "Detail fulfillment order" })).toBeVisible();
+  await expect(dialog.getByText("ORD-EX-4072")).toBeVisible();
   expect(mutationRequests).toEqual([]);
 });
 

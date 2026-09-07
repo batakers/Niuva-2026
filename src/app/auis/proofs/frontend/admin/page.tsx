@@ -10,6 +10,7 @@ import {
   AdminOrdersList,
   type AdminOrdersScenario,
 } from "@/features/admin/orders-list";
+import type { AdminPreviewRole } from "@/features/admin/order-preview-data";
 import {
   getAdminPreviewAccessLabel,
   getAdminPreviewRouteTarget,
@@ -27,6 +28,7 @@ const previewStates = ["auth-unavailable", "forbidden", "ready"] as const satisf
 const queueScenarios = ["populated", "loading", "empty", "stale"] as const satisfies readonly AdminQueueScenario[];
 const ordersScenarios = ["populated", "loading", "empty", "error"] as const satisfies readonly AdminOrdersScenario[];
 const previewModules = ["action-queue", "orders"] as const;
+const previewRoles = ["OWNER", "ADMIN"] as const satisfies readonly AdminPreviewRole[];
 
 type AdminPreviewModule = (typeof previewModules)[number];
 
@@ -66,6 +68,14 @@ function getSelectedOrderReference(value: string | string[] | undefined): string
   return Array.isArray(value) || typeof value !== "string" ? null : value;
 }
 
+function getPreviewRole(value: string | string[] | undefined): AdminPreviewRole {
+  const candidate = Array.isArray(value) ? undefined : value;
+
+  return previewRoles.includes(candidate as AdminPreviewRole)
+    ? (candidate as AdminPreviewRole)
+    : "OWNER";
+}
+
 export default async function AdminPreviewPage({
   searchParams,
 }: PageProps<"/auis/proofs/frontend/admin">) {
@@ -79,6 +89,7 @@ export default async function AdminPreviewPage({
   const queueScenario = getQueueScenario(query.queue);
   const ordersScenario = getOrdersScenario(query.orders);
   const activePreviewModule = getPreviewModule(query.module);
+  const previewRole = getPreviewRole(query.role);
   const selectedOrderReference = getSelectedOrderReference(query.order);
 
   return (
@@ -90,7 +101,11 @@ export default async function AdminPreviewPage({
       {state !== "ready" ? <SignInView state={state} /> : null}
       {state === "ready" && activePreviewModule === "action-queue" ? <AdminActionQueue initialScenario={queueScenario} /> : null}
       {state === "ready" && activePreviewModule === "orders" ? (
-        <AdminOrdersList initialScenario={ordersScenario} initialSelectedReference={selectedOrderReference} />
+        <AdminOrdersList
+          initialRole={previewRole}
+          initialScenario={ordersScenario}
+          initialSelectedReference={selectedOrderReference}
+        />
       ) : null}
     </AdminShell>
   );

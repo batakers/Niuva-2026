@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { useHydrated } from "@/components/niuva/use-hydrated";
@@ -13,106 +13,24 @@ import {
   type AdminOrderStatusFilter,
   type AdminOrderTypeFilter,
 } from "@/features/admin/order-filters";
+import { AdminOrderDetail } from "@/features/admin/order-detail";
+import {
+  getPreviewOrder,
+  orderPreviewFixture,
+  orderStatusConfig,
+  orderTypeLabel,
+  type AdminPreviewRole,
+  type PreviewOrderFixture,
+  type PreviewOrderStatus,
+} from "@/features/admin/order-preview-data";
 
 export type AdminOrdersScenario = "populated" | "loading" | "empty" | "error";
 
-type PreviewOrderStatus =
-  | "PENDING_PAYMENT"
-  | "PAID"
-  | "PROCESSING"
-  | "READY_TO_SHIP"
-  | "IN_PRODUCTION"
-  | "WAITING_SHIPPING_PAYMENT";
-
-type OrderFixture = Readonly<{
-  exceptionReason: string | null;
-  orderType: "RETAIL" | "CUSTOM_PRINT";
-  paymentLabel: string;
-  reference: string;
-  shipmentLabel: string;
-  status: PreviewOrderStatus;
-  updatedAt: string;
-}>;
-
 type AdminOrdersListProps = Readonly<{
+  initialRole?: AdminPreviewRole;
   initialScenario: AdminOrdersScenario;
   initialSelectedReference: string | null;
 }>;
-
-const orderFixture = [
-  {
-    exceptionReason: null,
-    orderType: "RETAIL",
-    paymentLabel: "Terverifikasi pada fixture",
-    reference: "ORD-EX-4072",
-    shipmentLabel: "Menunggu proses fulfillment",
-    status: "PAID",
-    updatedAt: "4 jam lalu",
-  },
-  {
-    exceptionReason: null,
-    orderType: "RETAIL",
-    paymentLabel: "Terverifikasi pada fixture",
-    reference: "ORD-EX-4137",
-    shipmentLabel: "Siap diserahkan ke kurir",
-    status: "READY_TO_SHIP",
-    updatedAt: "5 jam lalu",
-  },
-  {
-    exceptionReason: null,
-    orderType: "CUSTOM_PRINT",
-    paymentLabel: "Terverifikasi pada fixture",
-    reference: "ORD-EX-4265",
-    shipmentLabel: "Menunggu quality control",
-    status: "IN_PRODUCTION",
-    updatedAt: "1 hari lalu",
-  },
-  {
-    exceptionReason: "Pembayaran pengiriman kedua belum diselesaikan pada fixture.",
-    orderType: "CUSTOM_PRINT",
-    paymentLabel: "Pembayaran utama terverifikasi pada fixture",
-    reference: "ORD-EX-4351",
-    shipmentLabel: "Menunggu pembayaran pengiriman",
-    status: "WAITING_SHIPPING_PAYMENT",
-    updatedAt: "1 hari lalu",
-  },
-  {
-    exceptionReason: "Masa pembayaran fixture perlu ditinjau sebelum order berubah status.",
-    orderType: "RETAIL",
-    paymentLabel: "Belum terverifikasi pada fixture",
-    reference: "ORD-EX-4420",
-    shipmentLabel: "Belum tersedia sebelum pembayaran",
-    status: "PENDING_PAYMENT",
-    updatedAt: "2 hari lalu",
-  },
-] as const satisfies readonly OrderFixture[];
-
-const orderStatusConfig: Record<PreviewOrderStatus, Readonly<{ className: string; label: string }>> = {
-  PENDING_PAYMENT: {
-    className: "border-warning-border bg-warning-background text-warning",
-    label: "Menunggu pembayaran",
-  },
-  PAID: {
-    className: "border-info-border bg-info-background text-info",
-    label: "Berbayar, perlu diproses",
-  },
-  PROCESSING: {
-    className: "border-info-border bg-info-background text-info",
-    label: "Sedang diproses",
-  },
-  READY_TO_SHIP: {
-    className: "border-success-border bg-success-background text-success",
-    label: "Siap dikirim",
-  },
-  IN_PRODUCTION: {
-    className: "border-info-border bg-info-background text-info",
-    label: "Dalam produksi",
-  },
-  WAITING_SHIPPING_PAYMENT: {
-    className: "border-warning-border bg-warning-background text-warning",
-    label: "Menunggu pembayaran pengiriman",
-  },
-};
 
 const statusMatches: Record<AdminOrderStatusFilter, readonly PreviewOrderStatus[] | null> = {
   all: null,
@@ -120,10 +38,6 @@ const statusMatches: Record<AdminOrderStatusFilter, readonly PreviewOrderStatus[
   production: ["PROCESSING", "IN_PRODUCTION"],
   shipping: ["READY_TO_SHIP", "WAITING_SHIPPING_PAYMENT"],
 };
-
-function typeLabel(orderType: OrderFixture["orderType"]) {
-  return orderType === "CUSTOM_PRINT" ? "Custom print" : "Ready-made";
-}
 
 function OrderStatusBadge({ status }: Readonly<{ status: PreviewOrderStatus }>) {
   const config = orderStatusConfig[status];
@@ -148,8 +62,8 @@ function OrderTable({
   onSelect,
   selectionDisabled,
 }: Readonly<{
-  onSelect: (order: OrderFixture) => void;
-  orders: readonly OrderFixture[];
+  onSelect: (order: PreviewOrderFixture) => void;
+  orders: readonly PreviewOrderFixture[];
   selectedReference: string | null;
   selectionDisabled: boolean;
 }>) {
@@ -176,7 +90,7 @@ function OrderTable({
                 <p className="mt-1 text-xs text-muted-foreground">Diperbarui {order.updatedAt}</p>
               </td>
               <td className="border-b border-border px-4 py-4">
-                <p className="text-sm font-medium">{typeLabel(order.orderType)}</p>
+                <p className="text-sm font-medium">{orderTypeLabel(order.orderType)}</p>
                 <div className="mt-2"><OrderStatusBadge status={order.status} /></div>
               </td>
               <td className="border-b border-border px-4 py-4 text-sm leading-6 text-muted-foreground">{order.paymentLabel}</td>
@@ -210,8 +124,8 @@ function OrderCards({
   onSelect,
   selectionDisabled,
 }: Readonly<{
-  onSelect: (order: OrderFixture) => void;
-  orders: readonly OrderFixture[];
+  onSelect: (order: PreviewOrderFixture) => void;
+  orders: readonly PreviewOrderFixture[];
   selectedReference: string | null;
   selectionDisabled: boolean;
 }>) {
@@ -222,7 +136,7 @@ function OrderCards({
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="font-mono text-xs font-medium text-brand-700">{order.reference}</p>
-              <p className="mt-2 text-sm font-medium">{typeLabel(order.orderType)}</p>
+              <p className="mt-2 text-sm font-medium">{orderTypeLabel(order.orderType)}</p>
             </div>
             <OrderStatusBadge status={order.status} />
           </div>
@@ -262,8 +176,13 @@ function OrderCards({
   );
 }
 
-export function AdminOrdersList({ initialScenario, initialSelectedReference }: AdminOrdersListProps) {
+export function AdminOrdersList({
+  initialRole = "OWNER",
+  initialScenario,
+  initialSelectedReference,
+}: AdminOrdersListProps) {
   const hydrated = useHydrated();
+  const lastSelectionRef = useRef<HTMLElement | null>(null);
   const [exceptionFilter, setExceptionFilter] = useState<AdminOrderExceptionFilter>("all");
   const [scenario, setScenario] = useState<AdminOrdersScenario>(initialScenario);
   const [search, setSearch] = useState("");
@@ -277,7 +196,7 @@ export function AdminOrdersList({ initialScenario, initialSelectedReference }: A
     const normalizedSearch = search.trim().toLocaleLowerCase("id-ID");
     const allowedStatuses = statusMatches[statusFilter];
 
-    return orderFixture.filter((order) => {
+    return orderPreviewFixture.filter((order) => {
       const typeMatches = typeFilter === "all" || order.orderType === typeFilter;
       const statusMatchesFilter = allowedStatuses === null || allowedStatuses.includes(order.status);
       const exceptionMatches = exceptionFilter === "all" || order.exceptionReason !== null;
@@ -287,7 +206,7 @@ export function AdminOrdersList({ initialScenario, initialSelectedReference }: A
     });
   }, [exceptionFilter, scenario, search, statusFilter, typeFilter]);
 
-  const selectedOrder = orderFixture.find((order) => order.reference === selectedReference) ?? null;
+  const selectedOrder = getPreviewOrder(selectedReference);
   const hasAppliedFilters = search.length > 0 || typeFilter !== "all" || statusFilter !== "all" || exceptionFilter !== "all";
 
   function resetFilters() {
@@ -297,13 +216,23 @@ export function AdminOrdersList({ initialScenario, initialSelectedReference }: A
     setTypeFilter("all");
   }
 
-  function selectOrder(order: OrderFixture) {
+  function selectOrder(order: PreviewOrderFixture) {
+    lastSelectionRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setSelectedReference(order.reference);
 
     const previewUrl = new URL(window.location.href);
     previewUrl.searchParams.set("module", "orders");
     previewUrl.searchParams.set("order", order.reference);
     window.history.replaceState(window.history.state, "", `${previewUrl.pathname}${previewUrl.search}${previewUrl.hash}`);
+  }
+
+  function closeSelectedOrder() {
+    setSelectedReference(null);
+
+    const previewUrl = new URL(window.location.href);
+    previewUrl.searchParams.delete("order");
+    window.history.replaceState(window.history.state, "", `${previewUrl.pathname}${previewUrl.search}${previewUrl.hash}`);
+    window.requestAnimationFrame(() => lastSelectionRef.current?.focus());
   }
 
   return (
@@ -327,7 +256,7 @@ export function AdminOrdersList({ initialScenario, initialSelectedReference }: A
               Temukan tahap operasional dan exception terlebih dahulu. Detail fulfillment tetap berada pada langkah berikutnya.
             </p>
             <p className="mt-5 text-sm font-medium text-foreground" role="status">
-              {orderFixture.length} order contoh, {orderFixture.filter((order) => order.exceptionReason !== null).length} exception perlu perhatian
+              {orderPreviewFixture.length} order contoh, {orderPreviewFixture.filter((order) => order.exceptionReason !== null).length} exception perlu perhatian
             </p>
           </header>
 
@@ -352,7 +281,7 @@ export function AdminOrdersList({ initialScenario, initialSelectedReference }: A
           {selectedOrder ? (
             <StatusNotice
               className="mt-6"
-              description={`Selection ${selectedOrder.reference} tersimpan pada URL preview. FE-20 akan memiliki detail, audit, dan tindakan transition yang tetap diverifikasi server.`}
+              description={`Selection ${selectedOrder.reference} tersimpan pada URL preview. Drawer fulfillment hanya mengubah fixture lokal dan server tetap memverifikasi setiap tindakan nyata.`}
               title={`Order preview dipilih: ${selectedOrder.reference}`}
               tone="info"
             />
@@ -447,6 +376,14 @@ export function AdminOrdersList({ initialScenario, initialSelectedReference }: A
           </Card>
         </aside>
       </div>
+      {selectedOrder ? (
+        <AdminOrderDetail
+          key={`${selectedOrder.reference}-${initialRole}`}
+          onClose={closeSelectedOrder}
+          order={selectedOrder}
+          role={initialRole}
+        />
+      ) : null}
     </main>
   );
 }

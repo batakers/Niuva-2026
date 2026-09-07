@@ -393,7 +393,15 @@ reusable boundary:
 - `AdminOrdersList`: operational order discovery with labeled filters, wide-table
   headers, mobile label/value cards, exception visibility, and selected-reference
   handoff. FE-19 uses fixture-only browser state; it does not imply a repository
-  query, an order detail contract, or permission to transition an order.
+  query or permission to transition an order.
+- `AdminOrderDetail`: controlled order-detail drawer with a safe fixture
+  projection, status timeline, audit rail, and local transition feedback. It is
+  a review surface only: server-side authorization, current-state checks, audit,
+  shipment, payment, cancellation, and refund remain outside this component.
+- `PackageMeasurement`: custom-print final package precondition. It requires
+  positive length, width, height, and weight before the visual shipping-payment
+  edge is enabled. It does not calculate rates, persist measurement, create a
+  shipment, or start payment.
 
 `AdminShell` in `src/components/niuva/admin-shell.tsx` is a provisional
 development-only composition created by FE-16 for reviewing the target
