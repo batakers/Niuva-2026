@@ -386,7 +386,10 @@ reusable boundary:
 - `CustomPrintReviewWorkspace`: file context, operator verification, quote
   inputs, and review actions.
 - `AdminActionQueueLayout`: queue grouping, filters, navigation, and detail
-  handoff around `ActionQueueItem`.
+  handoff around `ActionQueueItem`. FE-18 adds a bounded inquiry drawer using
+  the existing `Dialog` primitive: safe detail projection, local status/history,
+  explicit follow-up preview, and focus return to its queue trigger. This remains
+  development-only presentation, not an admin mutation contract.
 
 `AdminShell` in `src/components/niuva/admin-shell.tsx` is a provisional
 development-only composition created by FE-16 for reviewing the target

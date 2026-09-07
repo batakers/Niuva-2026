@@ -8,6 +8,7 @@ import { useHydrated } from "@/components/niuva/use-hydrated";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminInquiryDetail } from "@/features/admin/inquiry-detail";
 import { QueueFilters, type QueueFilter } from "@/features/admin/queue-filters";
 
 export type AdminQueueScenario = "populated" | "loading" | "empty" | "stale";
@@ -216,14 +217,24 @@ export function AdminActionQueue({ initialScenario }: AdminActionQueueProps) {
                       key={item.reference}
                       kind={item.kind}
                       primaryAction={
-                        <Button
-                          className="min-h-11 cursor-pointer"
-                          disabled={!hydrated}
-                          onClick={() => selectDetail(item)}
-                          type="button"
-                        >
-                          {item.actionLabel}
-                        </Button>
+                        item.kind === "inquiry" ? (
+                          <AdminInquiryDetail
+                            trigger={
+                              <Button className="min-h-11 cursor-pointer" disabled={!hydrated} type="button">
+                                {item.actionLabel}
+                              </Button>
+                            }
+                          />
+                        ) : (
+                          <Button
+                            className="min-h-11 cursor-pointer"
+                            disabled={!hydrated}
+                            onClick={() => selectDetail(item)}
+                            type="button"
+                          >
+                            {item.actionLabel}
+                          </Button>
+                        )
                       }
                       reference={item.reference}
                       status={item.status}

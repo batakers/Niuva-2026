@@ -1,7 +1,7 @@
-# Frontend review batch — FE-00–17
+# Frontend review batch — FE-00–18
 
 Started: 2026-09-06. Updated: 2026-09-07. Status: **UI_IMPLEMENTED**, **VISUAL_ACCEPTANCE_PENDING**,
-**NOT_INTEGRATED**. User approved FE-00–02 followed by FE-03–07, FE-08–15, the isolated FE-16 admin preview, and FE-17 Action Queue.
+**NOT_INTEGRATED**. User approved FE-00–02 followed by FE-03–07, FE-08–15, the isolated FE-16 admin preview, FE-17 Action Queue, and FE-18 Admin Inquiry Detail.
 
 ## Scope and review paths
 
@@ -25,6 +25,7 @@ Started: 2026-09-06. Updated: 2026-09-07. Status: **UI_IMPLEMENTED**, **VISUAL_A
 | FE-15 | Safe retail/custom order projection, public timeline, next action, token recovery, service failure and late-payment refund exception | `/orders/preview-order?preview=examples`, `retail-*`, `custom-*`, `cancelled`, `late-payment`, `loading`, `service-error`, `expired-token`, `revoked-token` |
 | FE-16 | Development-only admin shell and sign-in/access states, responsive navigation, no Clerk/session bypass | `/auis/proofs/frontend/admin?preview=examples`, `auth-unavailable`, `forbidden`, `ready` |
 | FE-17 | Decision-first Action Queue with brief/custom/quote/order/package/stock fixture, segmented filters, populated/loading/empty/stale recovery, and local detail handoff | `/auis/proofs/frontend/admin?preview=examples&state=ready`, `queue=populated`, `loading`, `empty`, `stale` |
+| FE-18 | Inquiry detail drawer from the Queue, safe synthetic detail projection, optional company state, local status/history progression, and explicit non-sending follow-up preview | `/auis/proofs/frontend/admin?preview=examples&state=ready`, click `Buka brief preview` |
 
 Run `corepack pnpm dev`; open `http://localhost:3000`. Use fictional contact
 information for review. Preview data is not a factual client portfolio.
@@ -88,12 +89,15 @@ information for review. Preview data is not a factual client portfolio.
 - `/admin` and `/admin/sign-in` remain targets, not preview aliases. The existing
   Proxy and `requireAdmin` server guard are unchanged, and no public registration,
   fake credential form, session, or profile can be created by FE-16.
-- FE-17 renders only after the same development preview gate and only for the
-  synthetic ready scenario. Its references, status ages, exception panel, filters,
-  and selected detail handoff are local presentation data. It imports no service,
-  repository, Clerk projection, file metadata, customer identity, money, token, or
-  provider payload. Buttons never navigate to `/admin` or change a transition,
-  audit record, stock, payment, or order.
+- FE-17 and FE-18 render only after the same development preview gate and only
+  for the synthetic ready scenario. Their references, status ages, exception panel,
+  filters, queue detail, safe inquiry projection, status/history and follow-up
+  feedback are local presentation data. They import no service, repository, Clerk
+  projection, file metadata, customer identity, money, token, or provider payload.
+  The inquiry drawer hides contact and private-reference data, treats company as
+  optional, and permits only local `NEW` → `CONTACTED` → `QUALIFIED` UI state.
+  Buttons never navigate to `/admin` or change a server transition, audit record,
+  stock, payment, order, email, or WhatsApp delivery.
 - No new dependencies, global tokens, logo assets, migrations or environment changes
   were introduced by this frontend batch.
 
@@ -110,6 +114,12 @@ information for review. Preview data is not a factual client portfolio.
 - Focused FE-17 Playwright: 5 tests passed, covering all six queue types,
   no-mutation presentation boundary, segmented local filters, local detail
   handoff, empty/stale/loading recovery, and the 320–1440px responsive matrix.
+- Focused FE-18 unit: 2 tests passed, covering safe fixture detail, optional
+  company treatment, local status/history progression, local follow-up feedback,
+  and no `fetch` call. Focused FE-18 Playwright: 3 tests passed, covering the
+  Queue-to-drawer detail handoff, privacy projection, local-only progression and
+  follow-up, close-to-trigger focus return, no mutation request, and the 320–1440px
+  responsive matrix. The updated FE-17/18 focused Playwright suite has 8 tests passed.
 - Focused FE-15 Playwright: 7 tests passed, covering retail/custom timelines,
   quote and payment handoffs, shipment projection, loading/access/service
   failures, late-payment refund reconciliation, and the responsive matrix.
@@ -134,7 +144,9 @@ information for review. Preview data is not a factual client portfolio.
   cancelled order closed. FE-16 adds an isolated admin shell, explicit access
   boundaries, and keyboard-safe mobile navigation. FE-17 adds all queue fixture
   types, local filters, action-selection handoff, and explicit stale/empty/loading
-  states with no service request or mutation.
+  states with no service request or mutation. FE-18 adds a bounded inquiry drawer
+  with privacy-safe fixture fields, local status/history, a non-sending follow-up
+  confirmation, and restored focus on close.
 - Existing public routes and the dedicated FE-12 through FE-17 routes were checked at 320, 390,
   768, 1024, 1280 and 1440px; one main and H1 each, with no horizontal overflow
   or page errors. The existing public matrix also runs under reduced motion.
@@ -176,6 +188,11 @@ information for review. Preview data is not a factual client portfolio.
   mobile sequence keeps urgent count before horizontally scrollable filters and
   turns every queue item into a readable stacked card. Visual acceptance remains
   an owner decision, separate from these captures and automated checks.
+- FE-18 automated responsive checks open the development-only drawer at 320,
+  390, 768, 1024, 1280 and 1440px. The right-side dossier preserves Queue
+  context, keeps private fields unavailable, and maintains one readable action
+  sequence on mobile. Owner visual acceptance remains an explicit decision,
+  separate from this implementation and automated checks.
 - Production runtime smoke for `/cart?preview=examples`: 200 response, preview
   controls and synthetic product names absent, unknown stored variant is
   recoverable, and checkout remains disabled.
@@ -214,7 +231,8 @@ visualization folder.
 Admin preview evidence: `frontend-admin-preview-{390,1280}.png` in the same local
 visualization folder.
 Action Queue evidence: `frontend-admin-queue-{390,1280}.png` in the same local
-visualization folder.
+visualization folder. FE-18 awaits owner visual review before screenshot evidence
+is recorded.
 
 Shared public-route behavior remains in `tests/e2e/public-pages.spec.ts`.
 FE-12 through FE-15 keep workflow and responsive assertions in the dedicated
@@ -226,16 +244,16 @@ requested by the task map.
 
 Branch: `codex/frontend-public-pages`.
 Base: `542375db56f0a8313bf0596ac0c127b7368cad0f`.
-FE-16 is recorded and pushed through commit `394f752`. FE-17 is an uncommitted
-review slice at this checkpoint. No merge or deployment is performed by this
-frontend batch.
+FE-16 is recorded through commit `394f752`. FE-17 is recorded and pushed through
+commit `9456fc0`. FE-18 is an uncommitted review slice at this checkpoint. No
+merge or deployment is performed by this frontend batch.
 
 Pre-existing sandbox changes are preserved: `.env.example`, the two sandbox
 documents in `docs/backend/`, and `scripts/local-dev-db.ps1`. The existing task-map
 edits were extended, not replaced. Ignored local environment/database files were
 not changed. Do not stage this entire dirty working tree indiscriminately.
 
-Review the public screens through FE-15 and the isolated FE-16–17 admin proof.
+Review the public screens through FE-15 and the isolated FE-16–18 admin proof.
 Integrating actual published content, authentication, or submission requires a
 separate task and factual content/permission checks. To roll back this batch,
 reverse only its frontend/tests/contract/task-document edits; do not reset the

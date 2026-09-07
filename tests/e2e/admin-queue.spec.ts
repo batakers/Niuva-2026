@@ -42,7 +42,7 @@ test("Action Queue filters work locally and keep the priority count visible", as
   await expect(queueRows(page)).toHaveCount(6);
 });
 
-test("a queue action selects only a local detail-preview handoff", async ({ page }) => {
+test("a non-inquiry queue action selects only a local detail-preview handoff", async ({ page }) => {
   const mutationRequests: string[] = [];
 
   page.on("request", (request) => {
@@ -50,10 +50,10 @@ test("a queue action selects only a local detail-preview handoff", async ({ page
   });
 
   await page.goto(previewUrl);
-  await page.getByRole("button", { name: "Buka brief preview" }).click();
+  await page.getByRole("button", { name: "Buka quote preview" }).click();
 
-  await expect(page.getByRole("status").filter({ hasText: "Detail preview dipilih: BRF-EX-1049" })).toBeVisible();
-  await expect(page.getByText("FE-18 · detail inquiry")).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "Detail preview dipilih: QTE-EX-3028" })).toBeVisible();
+  await expect(page.getByText("FE-22 · editor quote")).toBeVisible();
   await expect(page.getByText("Tidak ada status, audit, atau data server yang diubah.")).toBeVisible();
   expect(mutationRequests).toEqual([]);
 });
