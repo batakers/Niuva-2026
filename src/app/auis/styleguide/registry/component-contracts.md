@@ -390,6 +390,10 @@ reusable boundary:
   the existing `Dialog` primitive: safe detail projection, local status/history,
   explicit follow-up preview, and focus return to its queue trigger. This remains
   development-only presentation, not an admin mutation contract.
+- `AdminOrdersList`: operational order discovery with labeled filters, wide-table
+  headers, mobile label/value cards, exception visibility, and selected-reference
+  handoff. FE-19 uses fixture-only browser state; it does not imply a repository
+  query, an order detail contract, or permission to transition an order.
 
 `AdminShell` in `src/components/niuva/admin-shell.tsx` is a provisional
 development-only composition created by FE-16 for reviewing the target

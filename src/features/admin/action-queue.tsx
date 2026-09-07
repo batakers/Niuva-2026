@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { ActionQueueItem, type ActionQueueKind, type ActionQueueStatus } from "@/components/niuva/action-queue-item";
 import { StatusNotice } from "@/components/niuva/status-notice";
@@ -115,6 +116,7 @@ function QueueEmptyState({ filter }: Readonly<{ filter: QueueFilter }>) {
 
 export function AdminActionQueue({ initialScenario }: AdminActionQueueProps) {
   const hydrated = useHydrated();
+  const router = useRouter();
   const [filter, setFilter] = useState<QueueFilter>("all");
   const [scenario, setScenario] = useState<AdminQueueScenario>(initialScenario);
   const [selectedItem, setSelectedItem] = useState<QueueFixture | null>(null);
@@ -225,6 +227,15 @@ export function AdminActionQueue({ initialScenario }: AdminActionQueueProps) {
                               </Button>
                             }
                           />
+                        ) : item.kind === "order" ? (
+                          <Button
+                            className="min-h-11 cursor-pointer"
+                            disabled={!hydrated}
+                            onClick={() => router.push(`/auis/proofs/frontend/admin?preview=examples&state=ready&module=orders&order=${item.reference}`)}
+                            type="button"
+                          >
+                            {item.actionLabel}
+                          </Button>
                         ) : (
                           <Button
                             className="min-h-11 cursor-pointer"

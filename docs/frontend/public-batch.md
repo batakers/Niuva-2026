@@ -1,7 +1,7 @@
-# Frontend review batch — FE-00–18
+# Frontend review batch — FE-00–19
 
 Started: 2026-09-06. Updated: 2026-09-07. Status: **UI_IMPLEMENTED**, **VISUAL_ACCEPTANCE_PENDING**,
-**NOT_INTEGRATED**. User approved FE-00–02 followed by FE-03–07, FE-08–15, the isolated FE-16 admin preview, FE-17 Action Queue, and FE-18 Admin Inquiry Detail.
+**NOT_INTEGRATED**. User approved FE-00–02 followed by FE-03–07, FE-08–15, the isolated FE-16 admin preview, FE-17 Action Queue, FE-18 Admin Inquiry Detail, and FE-19 Admin Orders.
 
 ## Scope and review paths
 
@@ -26,6 +26,7 @@ Started: 2026-09-06. Updated: 2026-09-07. Status: **UI_IMPLEMENTED**, **VISUAL_A
 | FE-16 | Development-only admin shell and sign-in/access states, responsive navigation, no Clerk/session bypass | `/auis/proofs/frontend/admin?preview=examples`, `auth-unavailable`, `forbidden`, `ready` |
 | FE-17 | Decision-first Action Queue with brief/custom/quote/order/package/stock fixture, segmented filters, populated/loading/empty/stale recovery, and local detail handoff | `/auis/proofs/frontend/admin?preview=examples&state=ready`, `queue=populated`, `loading`, `empty`, `stale` |
 | FE-18 | Inquiry detail drawer from the Queue, safe synthetic detail projection, optional company state, local status/history progression, and explicit non-sending follow-up preview | `/auis/proofs/frontend/admin?preview=examples&state=ready`, click `Buka brief preview` |
+| FE-19 | Admin Orders list with local reference search, type/status/exception filters, desktop headers, labeled mobile cards, recovery states, and stable selected-reference query | `/auis/proofs/frontend/admin?preview=examples&state=ready&module=orders`, `orders=populated`, `loading`, `empty`, `error` |
 
 Run `corepack pnpm dev`; open `http://localhost:3000`. Use fictional contact
 information for review. Preview data is not a factual client portfolio.
@@ -98,6 +99,14 @@ information for review. Preview data is not a factual client portfolio.
   optional, and permits only local `NEW` → `CONTACTED` → `QUALIFIED` UI state.
   Buttons never navigate to `/admin` or change a server transition, audit record,
   stock, payment, order, email, or WhatsApp delivery.
+- FE-19 uses the same development gate. The Queue hands off only to the isolated
+  preview query `module=orders&order=<fixture-reference>`. Search, type, status,
+  exception, recovery, and selected-reference behaviors stay in browser state.
+  The list never imports a service, repository, Clerk projection, address,
+  customer contact, item detail, money, public token, provider payload, or
+  internal note. FE-20 remains responsible for any detail and valid transition
+  preview; a later server integration remains responsible for authorization and
+  every actual mutation.
 - No new dependencies, global tokens, logo assets, migrations or environment changes
   were introduced by this frontend batch.
 
@@ -106,7 +115,7 @@ information for review. Preview data is not a factual client portfolio.
 - `corepack pnpm lint`: 0 errors, 147 pre-existing warnings; focused ESLint on the
   changed frontend/test files has no warnings or errors.
 - `corepack pnpm typecheck`: passed.
-- `corepack pnpm test`: 49 tests passed across 11 files.
+- `corepack pnpm test`: 53 tests passed across 13 files.
 - Focused FE-16 Playwright: 5 tests passed, covering unavailable and forbidden
   access states, the non-authoritative verified-shell composition, multi-value
   query fallback, mobile navigation/Escape/focus recovery, and the 320–1440px
@@ -120,6 +129,14 @@ information for review. Preview data is not a factual client portfolio.
   Queue-to-drawer detail handoff, privacy projection, local-only progression and
   follow-up, close-to-trigger focus return, no mutation request, and the 320–1440px
   responsive matrix. The updated FE-17/18 focused Playwright suite has 8 tests passed.
+- Focused FE-19 unit: 2 tests passed, covering local type, exception and reference
+  filtering, no-match recovery, and selected fixture reference in the preview URL.
+  Focused FE-19 Playwright: 4 tests passed, covering Queue handoff, query-stable
+  selection, type/exception filters, loading/empty/error/no-match recovery,
+  no application mutation request, and the 320–1440px responsive matrix.
+- `corepack pnpm build` and `git diff --check`: passed. Production smoke confirms
+  the explicit preview URL returns `404` with `noindex` and no Orders UI, while
+  `/admin/orders` returns `503 AUTH_UNAVAILABLE` without Clerk configuration.
 - Focused FE-15 Playwright: 7 tests passed, covering retail/custom timelines,
   quote and payment handoffs, shipment projection, loading/access/service
   failures, late-payment refund reconciliation, and the responsive matrix.
@@ -147,6 +164,9 @@ information for review. Preview data is not a factual client portfolio.
   states with no service request or mutation. FE-18 adds a bounded inquiry drawer
   with privacy-safe fixture fields, local status/history, a non-sending follow-up
   confirmation, and restored focus on close.
+  FE-19 adds the Orders preview, table headers at wide width, labeled summary cards
+  on mobile, local filtering and selection URL recovery without an order detail or
+  server read.
 - Existing public routes and the dedicated FE-12 through FE-17 routes were checked at 320, 390,
   768, 1024, 1280 and 1440px; one main and H1 each, with no horizontal overflow
   or page errors. The existing public matrix also runs under reduced motion.
@@ -193,6 +213,10 @@ information for review. Preview data is not a factual client portfolio.
   context, keeps private fields unavailable, and maintains one readable action
   sequence on mobile. Owner visual acceptance remains an explicit decision,
   separate from this implementation and automated checks.
+- FE-19 was reviewed through the development-only Orders preview after hydration.
+  It exposes explicit search/filter labels, safe customer suppression, selected
+  reference feedback, and mobile label/value cards. Owner visual acceptance remains
+  an explicit decision, separate from the technical checks.
 - Production runtime smoke for `/cart?preview=examples`: 200 response, preview
   controls and synthetic product names absent, unknown stored variant is
   recoverable, and checkout remains disabled.
@@ -233,6 +257,7 @@ visualization folder.
 Action Queue evidence: `frontend-admin-queue-{390,1280}.png` in the same local
 visualization folder. FE-18 awaits owner visual review before screenshot evidence
 is recorded.
+FE-19 awaits owner visual review before screenshot evidence is recorded.
 
 Shared public-route behavior remains in `tests/e2e/public-pages.spec.ts`.
 FE-12 through FE-15 keep workflow and responsive assertions in the dedicated
@@ -245,15 +270,16 @@ requested by the task map.
 Branch: `codex/frontend-public-pages`.
 Base: `542375db56f0a8313bf0596ac0c127b7368cad0f`.
 FE-16 is recorded through commit `394f752`. FE-17 is recorded and pushed through
-commit `9456fc0`. FE-18 is an uncommitted review slice at this checkpoint. No
-merge or deployment is performed by this frontend batch.
+commit `9456fc0`. FE-18 is recorded and pushed through commit `adc6e9a`. FE-19
+is an uncommitted review slice at this checkpoint. No merge or deployment is
+performed by this frontend batch.
 
 Pre-existing sandbox changes are preserved: `.env.example`, the two sandbox
 documents in `docs/backend/`, and `scripts/local-dev-db.ps1`. The existing task-map
 edits were extended, not replaced. Ignored local environment/database files were
 not changed. Do not stage this entire dirty working tree indiscriminately.
 
-Review the public screens through FE-15 and the isolated FE-16–18 admin proof.
+Review the public screens through FE-15 and the isolated FE-16–19 admin proof.
 Integrating actual published content, authentication, or submission requires a
 separate task and factual content/permission checks. To roll back this batch,
 reverse only its frontend/tests/contract/task-document edits; do not reset the
