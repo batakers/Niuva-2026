@@ -3,6 +3,10 @@ import { notFound } from "next/navigation";
 
 import { AdminShell } from "@/components/niuva/admin-shell";
 import {
+  AdminActionQueue,
+  type AdminQueueScenario,
+} from "@/features/admin/action-queue";
+import {
   getAdminPreviewAccessLabel,
   getAdminPreviewRouteTarget,
   SignInView,
@@ -16,6 +20,7 @@ export const metadata: Metadata = {
 };
 
 const previewStates = ["auth-unavailable", "forbidden", "ready"] as const satisfies readonly AdminPreviewState[];
+const queueScenarios = ["populated", "loading", "empty", "stale"] as const satisfies readonly AdminQueueScenario[];
 
 function getPreviewState(value: string | string[] | undefined): AdminPreviewState {
   const candidate = Array.isArray(value) ? undefined : value;
@@ -23,6 +28,14 @@ function getPreviewState(value: string | string[] | undefined): AdminPreviewStat
   return previewStates.includes(candidate as AdminPreviewState)
     ? (candidate as AdminPreviewState)
     : "auth-unavailable";
+}
+
+function getQueueScenario(value: string | string[] | undefined): AdminQueueScenario {
+  const candidate = Array.isArray(value) ? undefined : value;
+
+  return queueScenarios.includes(candidate as AdminQueueScenario)
+    ? (candidate as AdminQueueScenario)
+    : "populated";
 }
 
 export default async function AdminPreviewPage({
@@ -35,6 +48,7 @@ export default async function AdminPreviewPage({
   }
 
   const state = getPreviewState(query.state);
+  const queueScenario = getQueueScenario(query.queue);
 
   return (
     <AdminShell
@@ -42,7 +56,7 @@ export default async function AdminPreviewPage({
       activeModule={state === "ready" ? "action-queue" : null}
       routeTarget={getAdminPreviewRouteTarget(state)}
     >
-      <SignInView state={state} />
+      {state === "ready" ? <AdminActionQueue initialScenario={queueScenario} /> : <SignInView state={state} />}
     </AdminShell>
   );
 }

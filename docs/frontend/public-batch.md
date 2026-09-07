@@ -1,7 +1,7 @@
-# Frontend review batch — FE-00–16
+# Frontend review batch — FE-00–17
 
 Started: 2026-09-06. Updated: 2026-09-07. Status: **UI_IMPLEMENTED**, **VISUAL_ACCEPTANCE_PENDING**,
-**NOT_INTEGRATED**. User approved FE-00–02 followed by FE-03–07, FE-08–15, and the isolated FE-16 admin preview.
+**NOT_INTEGRATED**. User approved FE-00–02 followed by FE-03–07, FE-08–15, the isolated FE-16 admin preview, and FE-17 Action Queue.
 
 ## Scope and review paths
 
@@ -24,6 +24,7 @@ Started: 2026-09-06. Updated: 2026-09-07. Status: **UI_IMPLEMENTED**, **VISUAL_A
 | FE-14 | Immutable quote dossier, scope/assumptions/breakdown, seven-day expiry, local confirmation states and invalid-access recovery | `/quote/preview-quote?preview=examples`, `valid`, `loading`, `expired`, `superseded`, `accepted`, `declined` |
 | FE-15 | Safe retail/custom order projection, public timeline, next action, token recovery, service failure and late-payment refund exception | `/orders/preview-order?preview=examples`, `retail-*`, `custom-*`, `cancelled`, `late-payment`, `loading`, `service-error`, `expired-token`, `revoked-token` |
 | FE-16 | Development-only admin shell and sign-in/access states, responsive navigation, no Clerk/session bypass | `/auis/proofs/frontend/admin?preview=examples`, `auth-unavailable`, `forbidden`, `ready` |
+| FE-17 | Decision-first Action Queue with brief/custom/quote/order/package/stock fixture, segmented filters, populated/loading/empty/stale recovery, and local detail handoff | `/auis/proofs/frontend/admin?preview=examples&state=ready`, `queue=populated`, `loading`, `empty`, `stale` |
 
 Run `corepack pnpm dev`; open `http://localhost:3000`. Use fictional contact
 information for review. Preview data is not a factual client portfolio.
@@ -87,6 +88,12 @@ information for review. Preview data is not a factual client portfolio.
 - `/admin` and `/admin/sign-in` remain targets, not preview aliases. The existing
   Proxy and `requireAdmin` server guard are unchanged, and no public registration,
   fake credential form, session, or profile can be created by FE-16.
+- FE-17 renders only after the same development preview gate and only for the
+  synthetic ready scenario. Its references, status ages, exception panel, filters,
+  and selected detail handoff are local presentation data. It imports no service,
+  repository, Clerk projection, file metadata, customer identity, money, token, or
+  provider payload. Buttons never navigate to `/admin` or change a transition,
+  audit record, stock, payment, or order.
 - No new dependencies, global tokens, logo assets, migrations or environment changes
   were introduced by this frontend batch.
 
@@ -100,13 +107,16 @@ information for review. Preview data is not a factual client portfolio.
   access states, the non-authoritative verified-shell composition, multi-value
   query fallback, mobile navigation/Escape/focus recovery, and the 320–1440px
   responsive matrix. Focused ESLint has no warning or error.
+- Focused FE-17 Playwright: 5 tests passed, covering all six queue types,
+  no-mutation presentation boundary, segmented local filters, local detail
+  handoff, empty/stale/loading recovery, and the 320–1440px responsive matrix.
 - Focused FE-15 Playwright: 7 tests passed, covering retail/custom timelines,
   quote and payment handoffs, shipment projection, loading/access/service
   failures, late-payment refund reconciliation, and the responsive matrix.
-- `corepack pnpm exec playwright test --workers=4`: 58 of 59 tests passed. All
-  FE-16, styleguide, security, and other frontend tests passed. The public-page
-  responsive matrix timed out once only under parallel load; its bounded
-  single-worker retry passed 4 of 4 tests. Covers
+- `corepack pnpm exec playwright test --workers=4`: 63 of 64 tests passed. All
+  FE-16/17, styleguide, security, and other frontend tests passed. The existing
+  project-example navigation assertion failed once only under parallel load; its
+  bounded single-worker retry passed. Covers
   mobile menu/Escape/skip link, real-route navigation,
   project and product filter/detail/404/retry, variant/quantity/OOS behavior,
   cart add/update/remove/persistence/corrupt recovery, form recovery and no
@@ -122,8 +132,10 @@ information for review. Preview data is not a factual client portfolio.
   FE-15 adds safe retail/custom projections, public timelines, shipment and next
   action display, access recovery, and late-payment handling that keeps the
   cancelled order closed. FE-16 adds an isolated admin shell, explicit access
-  boundaries, and keyboard-safe mobile navigation.
-- Existing public routes and the dedicated FE-12 through FE-16 routes were checked at 320, 390,
+  boundaries, and keyboard-safe mobile navigation. FE-17 adds all queue fixture
+  types, local filters, action-selection handoff, and explicit stale/empty/loading
+  states with no service request or mutation.
+- Existing public routes and the dedicated FE-12 through FE-17 routes were checked at 320, 390,
   768, 1024, 1280 and 1440px; one main and H1 each, with no horizontal overflow
   or page errors. The existing public matrix also runs under reduced motion.
 - `corepack pnpm build`: production compilation and route generation passed.
@@ -159,6 +171,11 @@ information for review. Preview data is not a factual client portfolio.
   The operations rail remains secondary to access status, target routes are not
   impersonated, and the mobile access surface has one readable column with no
   horizontal overflow.
+- FE-17 was visually inspected at 1280x900 and 390x844 (`ready`). The desktop
+  priority rail and exception panel remain subordinate to the action list; the
+  mobile sequence keeps urgent count before horizontally scrollable filters and
+  turns every queue item into a readable stacked card. Visual acceptance remains
+  an owner decision, separate from these captures and automated checks.
 - Production runtime smoke for `/cart?preview=examples`: 200 response, preview
   controls and synthetic product names absent, unknown stored variant is
   recoverable, and checkout remains disabled.
@@ -175,8 +192,8 @@ information for review. Preview data is not a factual client portfolio.
   404 response with `noindex`; synthetic order references, tracking number, and
   quote/payment actions are absent.
 - Production runtime smoke for `/auis/proofs/frontend/admin?preview=examples&state=ready`:
-  404 response with `noindex`; verified-shell copy and navigation fixture are
-  absent. `/admin` and `/admin/sign-in` both return the existing 503
+  404 response with `noindex`; queue fixtures and navigation fixture are absent.
+  `/admin` and `/admin/sign-in` both return the existing 503
   `AUTH_UNAVAILABLE` response while Clerk credentials are absent.
 
 Local screenshot evidence (not committed):
@@ -196,6 +213,8 @@ Order Status evidence: `frontend-order-status-{390,1280}.png` in the same local
 visualization folder.
 Admin preview evidence: `frontend-admin-preview-{390,1280}.png` in the same local
 visualization folder.
+Action Queue evidence: `frontend-admin-queue-{390,1280}.png` in the same local
+visualization folder.
 
 Shared public-route behavior remains in `tests/e2e/public-pages.spec.ts`.
 FE-12 through FE-15 keep workflow and responsive assertions in the dedicated
@@ -207,16 +226,16 @@ requested by the task map.
 
 Branch: `codex/frontend-public-pages`.
 Base: `542375db56f0a8313bf0596ac0c127b7368cad0f`.
-FE-15 is recorded and pushed through commit `4d7d974`. FE-16 remains an
-uncommitted review slice at this checkpoint. No merge or deployment is performed
-by this frontend batch.
+FE-16 is recorded and pushed through commit `394f752`. FE-17 is an uncommitted
+review slice at this checkpoint. No merge or deployment is performed by this
+frontend batch.
 
 Pre-existing sandbox changes are preserved: `.env.example`, the two sandbox
 documents in `docs/backend/`, and `scripts/local-dev-db.ps1`. The existing task-map
 edits were extended, not replaced. Ignored local environment/database files were
 not changed. Do not stage this entire dirty working tree indiscriminately.
 
-Review the public screens through FE-15 and the isolated FE-16 admin proof.
+Review the public screens through FE-15 and the isolated FE-16–17 admin proof.
 Integrating actual published content, authentication, or submission requires a
 separate task and factual content/permission checks. To roll back this batch,
 reverse only its frontend/tests/contract/task-document edits; do not reset the

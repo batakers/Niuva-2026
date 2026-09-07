@@ -33,13 +33,13 @@ test("forbidden state describes active profile requirements without revealing an
   await expect(page.getByText(/clerk_user_id|@/i)).toHaveCount(0);
 });
 
-test("verified-shell scenario remains a presentation fixture", async ({ page }) => {
+test("verified queue scenario remains a presentation fixture", async ({ page }) => {
   await page.goto(`${previewUrl}&state=ready`);
 
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Ruang kerja operasi siap ditinjau.");
-  await expect(page.getByText("Preview shell tanpa data operasional")).toBeVisible();
-  await expect(page.getByText("Action Queue menjadi halaman pertama")).toBeVisible();
-  await expect(page.getByText("Skenario ini bukan session Clerk dan tidak memberi akses ke route atau operasi nyata.")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Tindakan yang perlu ditinjau.");
+  await expect(page.getByText("Development-only preview")).toBeVisible();
+  await expect(page.getByText("Referensi, status, dan usia di halaman ini hanya fixture development.")).toBeVisible();
+  await expect(page.getByText("Tidak ada status, audit, atau data server yang diubah.")).toHaveCount(0);
   await expect(page.getByText("Tindakan operasional berikutnya")).toBeVisible();
 });
 

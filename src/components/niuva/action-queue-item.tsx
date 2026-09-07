@@ -10,7 +10,13 @@ import {
 import { Icon } from "@/components/ui/Icon";
 import { cn } from "@/lib/utils";
 
-export type ActionQueueKind = "inquiry" | "custom-review" | "order" | "package";
+export type ActionQueueKind =
+  | "inquiry"
+  | "custom-review"
+  | "quote"
+  | "order"
+  | "package"
+  | "stock";
 export type ActionQueueStatus =
   | "new"
   | "waiting"
@@ -33,8 +39,10 @@ export type ActionQueueItemProps = {
 const kindLabels: Record<ActionQueueKind, string> = {
   inquiry: "Project brief",
   "custom-review": "Custom 3D Print",
+  quote: "Quote",
   order: "Order",
   package: "Package",
+  stock: "Stok",
 };
 
 const statusLabels: Record<ActionQueueStatus, string> = {

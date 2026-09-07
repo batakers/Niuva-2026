@@ -284,8 +284,10 @@ reusable boundary.
   rather than exposing a raw database row.
 - **Anatomy:** Reference number, work type, status label, concise context,
   age/updated metadata, primary next action, and optional overflow actions.
-- **Variants and sizes:** `inquiry`, `custom-review`, `order`, `package`; one
-  dense operational size with an optional expanded detail composition.
+- **Variants and sizes:** `inquiry`, `custom-review`, `quote`, `order`,
+  `package`, `stock`; one dense operational size with an optional expanded
+  detail composition. FE-17 expands the fixture vocabulary for all queue types,
+  not the authority or mutation surface behind them.
 - **States:** New, waiting-for-operator, in-progress, blocked, completed, and
   action-pending. Status transitions remain domain-owned.
 - **Props/data:** `reference`, `kind`, `status`, `summary`, `updatedAt`,
