@@ -434,6 +434,15 @@ reusable boundary:
   event. The integrated server boundary remains responsible for active
   AdminProfile, schema validation, SKU uniqueness, Decimal persistence,
   reservation-aware stock checks, concurrency, publication, and audit.
+- `AdminPortfolioList`: development-only portfolio publication workspace with
+  fixture-only draft and published-preview labels, separate content-readiness
+  labels, and local create/edit selection. Missing media and unconfirmed
+  publication permission remain explicit, including in the mobile cards. It
+  neither reads nor writes portfolio projects/media, names a client, displays a
+  logo, treats a fixture as public proof, creates a slug, or changes publication.
+  The later server boundary must authorize the active AdminProfile, validate the
+  complete project/media/alt-text/permission contract, persist allowed content,
+  publish only after checks, and emit audit information.
 - `PackageMeasurement`: custom-print final package precondition. It requires
   positive length, width, height, and weight before the visual shipping-payment
   edge is enabled. It does not calculate rates, persist measurement, create a

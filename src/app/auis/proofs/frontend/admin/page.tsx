@@ -15,6 +15,10 @@ import {
   type AdminProductsScenario,
 } from "@/features/admin/products-list";
 import {
+  AdminPortfolioList,
+  type AdminPortfolioScenario,
+} from "@/features/admin/portfolio-list";
+import {
   AdminProductEditor,
 } from "@/features/admin/product-editor";
 import type { AdminProductEditorScenario } from "@/features/admin/product-editor-data";
@@ -44,10 +48,11 @@ const previewStates = ["auth-unavailable", "forbidden", "ready"] as const satisf
 const queueScenarios = ["populated", "loading", "empty", "stale"] as const satisfies readonly AdminQueueScenario[];
 const ordersScenarios = ["populated", "loading", "empty", "error"] as const satisfies readonly AdminOrdersScenario[];
 const productsScenarios = ["populated", "loading", "empty", "error"] as const satisfies readonly AdminProductsScenario[];
+const portfolioScenarios = ["populated", "loading", "empty", "error"] as const satisfies readonly AdminPortfolioScenario[];
 const productEditorScenarios = ["ready", "loading", "empty", "error", "conflict"] as const satisfies readonly AdminProductEditorScenario[];
 const customRequestScenarios = ["populated", "loading", "empty", "error"] as const satisfies readonly AdminCustomRequestScenario[];
 const quoteScenarios = ["ready", "rule-missing", "loading", "empty", "error"] as const satisfies readonly AdminQuoteScenario[];
-const previewModules = ["action-queue", "orders", "custom-print", "quotes", "products"] as const;
+const previewModules = ["action-queue", "orders", "custom-print", "quotes", "products", "portfolio"] as const;
 const previewRoles = ["OWNER", "ADMIN"] as const satisfies readonly AdminPreviewRole[];
 
 type AdminPreviewModule = (typeof previewModules)[number];
@@ -82,6 +87,14 @@ function getProductsScenario(value: string | string[] | undefined): AdminProduct
 
   return productsScenarios.includes(candidate as AdminProductsScenario)
     ? (candidate as AdminProductsScenario)
+    : "populated";
+}
+
+function getPortfolioScenario(value: string | string[] | undefined): AdminPortfolioScenario {
+  const candidate = Array.isArray(value) ? undefined : value;
+
+  return portfolioScenarios.includes(candidate as AdminPortfolioScenario)
+    ? (candidate as AdminPortfolioScenario)
     : "populated";
 }
 
@@ -160,6 +173,7 @@ export default async function AdminPreviewPage({
   const queueScenario = getQueueScenario(query.queue);
   const ordersScenario = getOrdersScenario(query.orders);
   const productsScenario = getProductsScenario(query.products);
+  const portfolioScenario = getPortfolioScenario(query.portfolio);
   const productEditorScenario = getProductEditorScenario(query.editor);
   const productPreviewView = getProductPreviewView(query.view);
   const customRequestScenario = getCustomRequestScenario(query.custom);
@@ -211,6 +225,7 @@ export default async function AdminPreviewPage({
           />
         )
       ) : null}
+      {state === "ready" && activePreviewModule === "portfolio" ? <AdminPortfolioList initialScenario={portfolioScenario} /> : null}
     </AdminShell>
   );
 }

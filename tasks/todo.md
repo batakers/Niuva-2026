@@ -103,7 +103,7 @@ Handoff dan verifikasi: [public-batch.md](../docs/frontend/public-batch.md).
 - [x] FE-23 — Admin product list `/admin/products` (development-only SKU search, publication/active-stock filters, explicit inactive/OOS/unpublished states, desktop table dan kartu mobile; tanpa query atau mutasi katalog nyata)
 - [ ] Checkpoint H — focused tests, static/build gates, dan review visual sesuai plan.
 - [x] FE-24 — Admin product/variant/stock editor (development-only identity/media state, selected variant Decimal-shaped fields, stock reason, unsaved/invalid/conflict recovery, and local-only save/publish; tanpa query atau mutasi katalog nyata)
-- [ ] FE-25 — Admin portfolio `/admin/portfolio`
+- [x] FE-25 — Admin portfolio `/admin/portfolio` (development-only draft/published fixture list, content-readiness filter, create/edit selection lokal, dan status media/izin eksplisit; tanpa project, media, client, atau publikasi nyata)
 - [ ] FE-26 — Admin portfolio editor
 - [ ] Checkpoint I — focused tests, static/build gates, dan review visual sesuai plan.
 - [ ] FE-27 — Frontend acceptance dan handoff integrasi

@@ -192,6 +192,11 @@ information for review. Preview data is not a factual client portfolio.
   invalid-stock focus recovery, unsaved/reason/save feedback, loading/empty/
   error/conflict/missing-fixture recovery, no mutation request, and the
   320-1440px responsive matrix.
+- Focused FE-25 Playwright: 3 tests passed, covering publication/readiness
+  separation, draft and published-preview filters, local create/edit selection,
+  loading/empty/error/filter-empty recovery, no mutation request, and the
+  320-1440px responsive matrix. Published-preview is a fixture label only;
+  no portfolio project, media, client, logo, or public page is read or changed.
 - Full unit suite: 17 files and 65 tests passed. `corepack pnpm typecheck`,
   `corepack pnpm build`, and `git diff --check` passed. `corepack pnpm lint`
   exits successfully with the existing 147 warnings limited to bundled
@@ -349,9 +354,17 @@ visualization folder. FE-18 awaits owner visual review before screenshot evidenc
 is recorded.
 FE-24 local review evidence: `admin-product-editor-{390,1280}.png` under
 `C:/Users/FAIZ/.codex/visualizations/2026/09/08/fe24/`; it is not committed and
+does not constitute owner visual acceptance. FE-25 local review evidence will
+be recorded at `admin-portfolio-{mobile,desktop}.png` under
+`C:/Users/FAIZ/.codex/visualizations/2026/09/09/fe25/`; it is not committed and
 does not constitute owner visual acceptance.
 FE-19 awaits owner visual review before screenshot evidence is recorded.
 FE-20, FE-21, FE-22, FE-23, and FE-24 await owner visual review before screenshot evidence is recorded.
+FE-25 was inspected at 1280x900 and 390x844. The desktop workspace separates
+the selection rail from publication/readiness decisions, while the mobile cards
+keep draft, published-preview, missing-media, and missing-permission labels in
+the reading order. The captures are technical preview evidence only; owner
+visual acceptance remains separate.
 
 Shared public-route behavior remains in `tests/e2e/public-pages.spec.ts`.
 FE-12 through FE-15 keep workflow and responsive assertions in the dedicated
@@ -368,8 +381,8 @@ commit `9456fc0`. FE-18 is recorded and pushed through commit `adc6e9a`. FE-19
 is recorded and pushed through commit `0cd2c5a`. FE-20 is recorded and pushed
 through commit `9f0a5d8`. FE-21 is recorded and pushed through commit `c5dbb5a`.
 FE-22 is recorded and pushed through commit `cfd19a7`. FE-23 is recorded and
-pushed through commit `01346c9`. FE-24 is an uncommitted review slice at this
-checkpoint.
+pushed through commit `01346c9`. FE-24 is recorded and pushed through commit
+`a1d695f`. FE-25 is an uncommitted review slice at this checkpoint.
 No merge or deployment is performed by this frontend batch.
 
 Pre-existing sandbox changes are preserved: `.env.example`, the two sandbox
@@ -377,7 +390,7 @@ documents in `docs/backend/`, and `scripts/local-dev-db.ps1`. The existing task-
 edits were extended, not replaced. Ignored local environment/database files were
 not changed. Do not stage this entire dirty working tree indiscriminately.
 
-Review the public screens through FE-15 and the isolated FE-16–24 admin proof.
+Review the public screens through FE-15 and the isolated FE-16–25 admin proof.
 Integrating actual published content, authentication, or submission requires a
 separate task and factual content/permission checks. To roll back this batch,
 reverse only its frontend/tests/contract/task-document edits; do not reset the
