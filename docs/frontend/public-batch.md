@@ -182,6 +182,10 @@ information for review. Preview data is not a factual client portfolio.
   Focused FE-22 plus Action Queue Playwright: 10 tests passed, covering Queue
   handoff, rule-missing block, local send/lock, loading/empty/error/invalid
   fixture recovery, no mutation request, and the 320-1440px responsive matrix.
+- Focused FE-23 plus Action Queue Playwright: 9 tests passed, covering the
+  Queue-to-SKU handoff, local SKU search, publication and active-stock filters,
+  explicit inactive/OOS/unpublished labels, loading/empty/error recovery, no
+  mutation request, and the 320-1440px responsive matrix.
 - Full unit suite: 16 files and 62 tests passed. `corepack pnpm build` and
   `git diff --check` passed.
 - `corepack pnpm build` and `git diff --check`: passed. Production smoke confirms
@@ -310,6 +314,10 @@ information for review. Preview data is not a factual client portfolio.
   `noindex`; its synthetic request reference and quote-editor copy are absent.
   `/admin` still returns 503 without Clerk configuration and does not expose
   the quote fixture.
+- Production runtime smoke for the explicit FE-23 preview URL returns 404 with
+  `noindex`; a second synthetic SKU, product-list copy, and target admin route
+  are absent. `/admin` remains a 503 `AUTH_UNAVAILABLE` boundary without Clerk
+  configuration and does not expose the stock fixture.
 
 Local screenshot evidence (not committed):
 `C:/Users/FAIZ/.codex/visualizations/2026/09/05/01a07172-b3f5-77f2-b8e3-036ed4befe4c/frontend-{home,services,projects,detail,brief}-{390,1280}.png`.
@@ -332,7 +340,7 @@ Action Queue evidence: `frontend-admin-queue-{390,1280}.png` in the same local
 visualization folder. FE-18 awaits owner visual review before screenshot evidence
 is recorded.
 FE-19 awaits owner visual review before screenshot evidence is recorded.
-FE-20, FE-21, and FE-22 await owner visual review before screenshot evidence is recorded.
+FE-20, FE-21, FE-22, and FE-23 await owner visual review before screenshot evidence is recorded.
 
 Shared public-route behavior remains in `tests/e2e/public-pages.spec.ts`.
 FE-12 through FE-15 keep workflow and responsive assertions in the dedicated
@@ -348,7 +356,8 @@ FE-16 is recorded through commit `394f752`. FE-17 is recorded and pushed through
 commit `9456fc0`. FE-18 is recorded and pushed through commit `adc6e9a`. FE-19
 is recorded and pushed through commit `0cd2c5a`. FE-20 is recorded and pushed
 through commit `9f0a5d8`. FE-21 is recorded and pushed through commit `c5dbb5a`.
-FE-22 is an uncommitted review slice at this checkpoint.
+FE-22 is recorded and pushed through commit `cfd19a7`. FE-23 is an uncommitted
+review slice at this checkpoint.
 No merge or deployment is performed by this frontend batch.
 
 Pre-existing sandbox changes are preserved: `.env.example`, the two sandbox
@@ -356,7 +365,7 @@ documents in `docs/backend/`, and `scripts/local-dev-db.ps1`. The existing task-
 edits were extended, not replaced. Ignored local environment/database files were
 not changed. Do not stage this entire dirty working tree indiscriminately.
 
-Review the public screens through FE-15 and the isolated FE-16–21 admin proof.
+Review the public screens through FE-15 and the isolated FE-16–23 admin proof.
 Integrating actual published content, authentication, or submission requires a
 separate task and factual content/permission checks. To roll back this batch,
 reverse only its frontend/tests/contract/task-document edits; do not reset the

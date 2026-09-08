@@ -100,7 +100,7 @@ Handoff dan verifikasi: [public-batch.md](../docs/frontend/public-batch.md).
 - [ ] Checkpoint G — focused tests, static/build gates, dan review visual sesuai plan.
 - [x] FE-21 — Admin custom review `/admin/custom-print` (development-only request list/review drawer, file privat unavailable, validasi slicer lokal, tanpa file access atau mutasi)
 - [x] FE-22 — Admin quote draft/preview (development-only Decimal-contract breakdown, missing-active-rule block, and immutable local sent snapshot; no real quote/rule/token/audit/provider mutation)
-- [ ] FE-23 — Admin product list `/admin/products`
+- [x] FE-23 — Admin product list `/admin/products` (development-only SKU search, publication/active-stock filters, explicit inactive/OOS/unpublished states, desktop table dan kartu mobile; tanpa query atau mutasi katalog nyata)
 - [ ] Checkpoint H — focused tests, static/build gates, dan review visual sesuai plan.
 - [ ] FE-24 — Admin product/variant/stock editor
 - [ ] FE-25 — Admin portfolio `/admin/portfolio`

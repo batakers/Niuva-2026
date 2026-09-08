@@ -416,6 +416,13 @@ reusable boundary:
   token, audit event, notification, payable order, or provider interaction.
   Server-side active-rule lookup, authorization, snapshot creation, transition,
   expiry, token, and audit remain outside these components.
+- `AdminProductsList`: development-only catalog discovery with SKU-or-name
+  search, publication and active-stock filters, a semantic wide table, and
+  mobile label/value cards. Product publication, variant activity, and active
+  stock are displayed as separate fixture states so an inactive variant is not
+  mistaken for an unpublished product or an out-of-stock checkout result. It
+  does not query a catalog repository, expose launch inventory, calculate a
+  purchasable price, reserve stock, or save a product or stock adjustment.
 - `PackageMeasurement`: custom-print final package precondition. It requires
   positive length, width, height, and weight before the visual shipping-payment
   edge is enabled. It does not calculate rates, persist measurement, create a
