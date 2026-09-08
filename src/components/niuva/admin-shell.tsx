@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export type AdminModule = "action-queue" | "orders" | "custom-print" | "products" | "portfolio";
+export type AdminModule = "action-queue" | "orders" | "custom-print" | "quotes" | "products" | "portfolio";
 
 type AdminShellProps = Readonly<{
   accessLabel: string;
@@ -36,6 +36,11 @@ const modules: readonly Readonly<{
     id: "custom-print",
     label: "Custom Print",
     description: "Review file dan quote",
+  },
+  {
+    id: "quotes",
+    label: "Quotes",
+    description: "Draft dan snapshot quote",
   },
   {
     id: "products",

@@ -406,6 +406,16 @@ reusable boundary:
   configuration/notes stay optional. The visual status handoff does not authorize
   or persist a review, file access, audit, quote, pricing calculation, or status
   transition.
+- `AdminQuoteEditor` and `AdminQuotePreview`: development-only quote workspace
+  with read-only reviewed inputs, fixture-only filament-source selection, and
+  a separate breakdown/snapshot ledger. The displayed fixture calculation
+  reuses the Decimal Pricing v1 contract only after its fixture rule is
+  declared valid. Missing-rule state has no fallback calculation or send
+  action. The local sent state freezes the displayed source and scope note with
+  a seven-day example expiry; it cannot create or mutate a real quote, rule,
+  token, audit event, notification, payable order, or provider interaction.
+  Server-side active-rule lookup, authorization, snapshot creation, transition,
+  expiry, token, and audit remain outside these components.
 - `PackageMeasurement`: custom-print final package precondition. It requires
   positive length, width, height, and weight before the visual shipping-payment
   edge is enabled. It does not calculate rates, persist measurement, create a

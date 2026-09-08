@@ -245,6 +245,15 @@ export function AdminActionQueue({ initialScenario }: AdminActionQueueProps) {
                           >
                             {item.actionLabel}
                           </Button>
+                        ) : item.kind === "quote" ? (
+                          <Button
+                            className="min-h-11 cursor-pointer"
+                            disabled={!hydrated}
+                            onClick={() => router.push(`/auis/proofs/frontend/admin?preview=examples&state=ready&module=quotes&quote=${item.reference}`)}
+                            type="button"
+                          >
+                            {item.actionLabel}
+                          </Button>
                         ) : (
                           <Button
                             className="min-h-11 cursor-pointer"

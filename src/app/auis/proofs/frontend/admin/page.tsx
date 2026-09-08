@@ -14,6 +14,10 @@ import {
   AdminCustomRequestList,
   type AdminCustomRequestScenario,
 } from "@/features/admin/custom-request-list";
+import {
+  AdminQuoteEditor,
+} from "@/features/admin/quote-editor";
+import type { AdminQuoteScenario } from "@/features/admin/quote-preview-data";
 import type { AdminPreviewRole } from "@/features/admin/order-preview-data";
 import {
   getAdminPreviewAccessLabel,
@@ -32,7 +36,8 @@ const previewStates = ["auth-unavailable", "forbidden", "ready"] as const satisf
 const queueScenarios = ["populated", "loading", "empty", "stale"] as const satisfies readonly AdminQueueScenario[];
 const ordersScenarios = ["populated", "loading", "empty", "error"] as const satisfies readonly AdminOrdersScenario[];
 const customRequestScenarios = ["populated", "loading", "empty", "error"] as const satisfies readonly AdminCustomRequestScenario[];
-const previewModules = ["action-queue", "orders", "custom-print"] as const;
+const quoteScenarios = ["ready", "rule-missing", "loading", "empty", "error"] as const satisfies readonly AdminQuoteScenario[];
+const previewModules = ["action-queue", "orders", "custom-print", "quotes"] as const;
 const previewRoles = ["OWNER", "ADMIN"] as const satisfies readonly AdminPreviewRole[];
 
 type AdminPreviewModule = (typeof previewModules)[number];
@@ -69,6 +74,14 @@ function getCustomRequestScenario(value: string | string[] | undefined): AdminCu
     : "populated";
 }
 
+function getQuoteScenario(value: string | string[] | undefined): AdminQuoteScenario {
+  const candidate = Array.isArray(value) ? undefined : value;
+
+  return quoteScenarios.includes(candidate as AdminQuoteScenario)
+    ? (candidate as AdminQuoteScenario)
+    : "ready";
+}
+
 function getPreviewModule(value: string | string[] | undefined): AdminPreviewModule {
   const candidate = Array.isArray(value) ? undefined : value;
 
@@ -82,6 +95,10 @@ function getSelectedOrderReference(value: string | string[] | undefined): string
 }
 
 function getSelectedCustomRequestReference(value: string | string[] | undefined): string | null {
+  return Array.isArray(value) || typeof value !== "string" ? null : value;
+}
+
+function getSelectedQuoteReference(value: string | string[] | undefined): string | null {
   return Array.isArray(value) || typeof value !== "string" ? null : value;
 }
 
@@ -106,10 +123,12 @@ export default async function AdminPreviewPage({
   const queueScenario = getQueueScenario(query.queue);
   const ordersScenario = getOrdersScenario(query.orders);
   const customRequestScenario = getCustomRequestScenario(query.custom);
+  const quoteScenario = getQuoteScenario(query.quoteState);
   const activePreviewModule = getPreviewModule(query.module);
   const previewRole = getPreviewRole(query.role);
   const selectedOrderReference = getSelectedOrderReference(query.order);
   const selectedCustomRequestReference = getSelectedCustomRequestReference(query.request);
+  const selectedQuoteReference = getSelectedQuoteReference(query.quote);
 
   return (
     <AdminShell
@@ -130,6 +149,12 @@ export default async function AdminPreviewPage({
         <AdminCustomRequestList
           initialScenario={customRequestScenario}
           initialSelectedReference={selectedCustomRequestReference}
+        />
+      ) : null}
+      {state === "ready" && activePreviewModule === "quotes" ? (
+        <AdminQuoteEditor
+          initialScenario={quoteScenario}
+          initialSelectedReference={selectedQuoteReference}
         />
       ) : null}
     </AdminShell>

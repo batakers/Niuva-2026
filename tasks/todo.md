@@ -99,7 +99,7 @@ Handoff dan verifikasi: [public-batch.md](../docs/frontend/public-batch.md).
 - [x] FE-20 — Admin order detail dan fulfillment (drawer fixture aman, timeline/audit lokal, edge fulfillment valid, measurement paket custom dan finance Owner-only; tanpa mutasi order, rate, shipment, payment, atau refund nyata)
 - [ ] Checkpoint G — focused tests, static/build gates, dan review visual sesuai plan.
 - [x] FE-21 — Admin custom review `/admin/custom-print` (development-only request list/review drawer, file privat unavailable, validasi slicer lokal, tanpa file access atau mutasi)
-- [ ] FE-22 — Admin quote draft/preview
+- [x] FE-22 — Admin quote draft/preview (development-only Decimal-contract breakdown, missing-active-rule block, and immutable local sent snapshot; no real quote/rule/token/audit/provider mutation)
 - [ ] FE-23 — Admin product list `/admin/products`
 - [ ] Checkpoint H — focused tests, static/build gates, dan review visual sesuai plan.
 - [ ] FE-24 — Admin product/variant/stock editor
