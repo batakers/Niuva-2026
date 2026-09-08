@@ -15,6 +15,10 @@ import {
   type AdminProductsScenario,
 } from "@/features/admin/products-list";
 import {
+  AdminProductEditor,
+} from "@/features/admin/product-editor";
+import type { AdminProductEditorScenario } from "@/features/admin/product-editor-data";
+import {
   AdminCustomRequestList,
   type AdminCustomRequestScenario,
 } from "@/features/admin/custom-request-list";
@@ -40,12 +44,14 @@ const previewStates = ["auth-unavailable", "forbidden", "ready"] as const satisf
 const queueScenarios = ["populated", "loading", "empty", "stale"] as const satisfies readonly AdminQueueScenario[];
 const ordersScenarios = ["populated", "loading", "empty", "error"] as const satisfies readonly AdminOrdersScenario[];
 const productsScenarios = ["populated", "loading", "empty", "error"] as const satisfies readonly AdminProductsScenario[];
+const productEditorScenarios = ["ready", "loading", "empty", "error", "conflict"] as const satisfies readonly AdminProductEditorScenario[];
 const customRequestScenarios = ["populated", "loading", "empty", "error"] as const satisfies readonly AdminCustomRequestScenario[];
 const quoteScenarios = ["ready", "rule-missing", "loading", "empty", "error"] as const satisfies readonly AdminQuoteScenario[];
 const previewModules = ["action-queue", "orders", "custom-print", "quotes", "products"] as const;
 const previewRoles = ["OWNER", "ADMIN"] as const satisfies readonly AdminPreviewRole[];
 
 type AdminPreviewModule = (typeof previewModules)[number];
+type ProductPreviewView = "list" | "editor";
 
 function getPreviewState(value: string | string[] | undefined): AdminPreviewState {
   const candidate = Array.isArray(value) ? undefined : value;
@@ -77,6 +83,18 @@ function getProductsScenario(value: string | string[] | undefined): AdminProduct
   return productsScenarios.includes(candidate as AdminProductsScenario)
     ? (candidate as AdminProductsScenario)
     : "populated";
+}
+
+function getProductEditorScenario(value: string | string[] | undefined): AdminProductEditorScenario {
+  const candidate = Array.isArray(value) ? undefined : value;
+
+  return productEditorScenarios.includes(candidate as AdminProductEditorScenario)
+    ? (candidate as AdminProductEditorScenario)
+    : "ready";
+}
+
+function getProductPreviewView(value: string | string[] | undefined): ProductPreviewView {
+  return !Array.isArray(value) && value === "editor" ? "editor" : "list";
 }
 
 function getCustomRequestScenario(value: string | string[] | undefined): AdminCustomRequestScenario {
@@ -142,6 +160,8 @@ export default async function AdminPreviewPage({
   const queueScenario = getQueueScenario(query.queue);
   const ordersScenario = getOrdersScenario(query.orders);
   const productsScenario = getProductsScenario(query.products);
+  const productEditorScenario = getProductEditorScenario(query.editor);
+  const productPreviewView = getProductPreviewView(query.view);
   const customRequestScenario = getCustomRequestScenario(query.custom);
   const quoteScenario = getQuoteScenario(query.quoteState);
   const activePreviewModule = getPreviewModule(query.module);
@@ -179,10 +199,17 @@ export default async function AdminPreviewPage({
         />
       ) : null}
       {state === "ready" && activePreviewModule === "products" ? (
-        <AdminProductsList
-          initialScenario={productsScenario}
-          initialSearch={initialProductSearch}
-        />
+        productPreviewView === "editor" ? (
+          <AdminProductEditor
+            initialScenario={productEditorScenario}
+            initialSelectedSku={initialProductSearch || null}
+          />
+        ) : (
+          <AdminProductsList
+            initialScenario={productsScenario}
+            initialSearch={initialProductSearch}
+          />
+        )
       ) : null}
     </AdminShell>
   );

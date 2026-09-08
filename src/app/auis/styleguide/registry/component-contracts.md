@@ -420,9 +420,20 @@ reusable boundary:
   search, publication and active-stock filters, a semantic wide table, and
   mobile label/value cards. Product publication, variant activity, and active
   stock are displayed as separate fixture states so an inactive variant is not
-  mistaken for an unpublished product or an out-of-stock checkout result. It
-  does not query a catalog repository, expose launch inventory, calculate a
-  purchasable price, reserve stock, or save a product or stock adjustment.
+  mistaken for an unpublished product or an out-of-stock checkout result. Its
+  per-variant handoff opens only the local FE-24 editor fixture. It does not
+  query a catalog repository, expose launch inventory, calculate a purchasable
+  price, reserve stock, or save a product or stock adjustment.
+- `AdminProductEditor` and `StockEditor`: development-only identity, media
+  availability, selected-variant, Decimal-shaped price/weight/dimension, and
+  stock-reason workspace. Its local change ledger distinguishes unsaved product,
+  variant, and stock intent; validation requires a reason when the fixture stock
+  changes and conflict recovery reloads only that fixture. Local save/publish
+  never queries a catalog, writes a product/media/variant, reserves stock,
+  activates public content, overwrites a conflicting record, or emits an audit
+  event. The integrated server boundary remains responsible for active
+  AdminProfile, schema validation, SKU uniqueness, Decimal persistence,
+  reservation-aware stock checks, concurrency, publication, and audit.
 - `PackageMeasurement`: custom-print final package precondition. It requires
   positive length, width, height, and weight before the visual shipping-payment
   edge is enabled. It does not calculate rates, persist measurement, create a

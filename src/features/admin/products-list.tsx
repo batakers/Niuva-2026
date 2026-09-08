@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { useHydrated } from "@/components/niuva/use-hydrated";
@@ -148,7 +149,15 @@ function ProductLoadingState() {
   );
 }
 
-function ProductVariants({ product }: Readonly<{ product: PreviewProduct }>) {
+function ProductVariants({
+  controlsDisabled,
+  onEdit,
+  product,
+}: Readonly<{
+  controlsDisabled: boolean;
+  onEdit: (sku: string) => void;
+  product: PreviewProduct;
+}>) {
   return (
     <ul className="space-y-2" aria-label={`SKU dan varian ${product.name}`}>
       {product.variants.map((variant) => (
@@ -156,13 +165,24 @@ function ProductVariants({ product }: Readonly<{ product: PreviewProduct }>) {
           <span className="font-mono text-xs font-medium text-brand-700">{variant.sku}</span>
           <span className="text-xs text-muted-foreground">{variant.label}</span>
           <span className="text-xs text-muted-foreground">{variant.isActive ? "Aktif" : "Inactive"}</span>
+          <Button className="min-h-11 cursor-pointer" disabled={controlsDisabled} onClick={() => onEdit(variant.sku)} size="sm" type="button" variant="ghost">
+            Edit varian
+          </Button>
         </li>
       ))}
     </ul>
   );
 }
 
-function ProductTable({ products }: Readonly<{ products: readonly PreviewProduct[] }>) {
+function ProductTable({
+  controlsDisabled,
+  onEdit,
+  products,
+}: Readonly<{
+  controlsDisabled: boolean;
+  onEdit: (sku: string) => void;
+  products: readonly PreviewProduct[];
+}>) {
   return (
     <div className="hidden overflow-x-auto lg:block">
       <table className="w-full min-w-[66rem] border-separate border-spacing-0 text-left text-sm" data-admin-products-table>
@@ -184,7 +204,7 @@ function ProductTable({ products }: Readonly<{ products: readonly PreviewProduct
                 <p className="mt-1 text-xs text-muted-foreground">{product.categoryLabel}</p>
                 <p className="mt-3 text-xs leading-5 text-muted-foreground">{product.updatedAt}</p>
               </td>
-              <td className="border-b border-border px-4 py-4"><ProductVariants product={product} /></td>
+              <td className="border-b border-border px-4 py-4"><ProductVariants controlsDisabled={controlsDisabled} onEdit={onEdit} product={product} /></td>
               <td className="border-b border-border px-4 py-4"><PublicationBadge product={product} /></td>
               <td className="border-b border-border px-4 py-4"><ActivityBadge product={product} /></td>
               <td className="border-b border-border px-4 py-4"><StockBadge product={product} /></td>
@@ -196,7 +216,15 @@ function ProductTable({ products }: Readonly<{ products: readonly PreviewProduct
   );
 }
 
-function ProductCards({ products }: Readonly<{ products: readonly PreviewProduct[] }>) {
+function ProductCards({
+  controlsDisabled,
+  onEdit,
+  products,
+}: Readonly<{
+  controlsDisabled: boolean;
+  onEdit: (sku: string) => void;
+  products: readonly PreviewProduct[];
+}>) {
   return (
     <ol aria-label="Daftar produk contoh" className="grid gap-3 lg:hidden" data-admin-products-cards>
       {products.map((product) => (
@@ -211,7 +239,7 @@ function ProductCards({ products }: Readonly<{ products: readonly PreviewProduct
           <dl className="mt-5 grid gap-4 text-sm">
             <div>
               <dt className="text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground">SKU dan varian</dt>
-              <dd className="mt-2"><ProductVariants product={product} /></dd>
+              <dd className="mt-2"><ProductVariants controlsDisabled={controlsDisabled} onEdit={onEdit} product={product} /></dd>
             </div>
             <div>
               <dt className="text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground">Aktivitas varian</dt>
@@ -231,6 +259,7 @@ function ProductCards({ products }: Readonly<{ products: readonly PreviewProduct
 
 export function AdminProductsList({ initialScenario, initialSearch }: AdminProductsListProps) {
   const hydrated = useHydrated();
+  const router = useRouter();
   const [publicationFilter, setPublicationFilter] = useState<PublicationFilter>("all");
   const [scenario, setScenario] = useState<AdminProductsScenario>(initialScenario);
   const [search, setSearch] = useState(initialSearch);
@@ -266,6 +295,10 @@ export function AdminProductsList({ initialScenario, initialSearch }: AdminProdu
     setPublicationFilter("all");
     setSearch("");
     setStockFilter("all");
+  }
+
+  function openEditor(sku: string) {
+    router.push(`/auis/proofs/frontend/admin?preview=examples&state=ready&module=products&view=editor&sku=${encodeURIComponent(sku)}`);
   }
 
   return (
@@ -385,7 +418,7 @@ export function AdminProductsList({ initialScenario, initialSearch }: AdminProdu
                   tone="info"
                 />
               ) : null}
-              {scenario === "populated" && visibleProducts.length > 0 ? <><ProductTable products={visibleProducts} /><ProductCards products={visibleProducts} /></> : null}
+              {scenario === "populated" && visibleProducts.length > 0 ? <><ProductTable controlsDisabled={controlsDisabled} onEdit={openEditor} products={visibleProducts} /><ProductCards controlsDisabled={controlsDisabled} onEdit={openEditor} products={visibleProducts} /></> : null}
             </div>
           </section>
         </div>
@@ -403,8 +436,9 @@ export function AdminProductsList({ initialScenario, initialSearch }: AdminProdu
             </CardContent>
           </Card>
           <StatusNotice
-            description="FE-24 akan menambahkan editor produk, varian, dan alasan penyesuaian stok. Halaman ini tidak menyimpan perubahan."
-            title="Edit katalog belum tersedia"
+            action={<Button className="min-h-11 cursor-pointer" disabled={controlsDisabled} onClick={() => openEditor("STK-EX-6024")} type="button" variant="outline">Buka editor contoh</Button>}
+            description="Editor memakai fixture lokal dan meminta alasan jika jumlah stok berubah. Tidak ada produk, varian, atau stok nyata yang disimpan."
+            title="Editor katalog tersedia untuk review"
             tone="info"
           />
         </aside>

@@ -102,7 +102,7 @@ Handoff dan verifikasi: [public-batch.md](../docs/frontend/public-batch.md).
 - [x] FE-22 — Admin quote draft/preview (development-only Decimal-contract breakdown, missing-active-rule block, and immutable local sent snapshot; no real quote/rule/token/audit/provider mutation)
 - [x] FE-23 — Admin product list `/admin/products` (development-only SKU search, publication/active-stock filters, explicit inactive/OOS/unpublished states, desktop table dan kartu mobile; tanpa query atau mutasi katalog nyata)
 - [ ] Checkpoint H — focused tests, static/build gates, dan review visual sesuai plan.
-- [ ] FE-24 — Admin product/variant/stock editor
+- [x] FE-24 — Admin product/variant/stock editor (development-only identity/media state, selected variant Decimal-shaped fields, stock reason, unsaved/invalid/conflict recovery, and local-only save/publish; tanpa query atau mutasi katalog nyata)
 - [ ] FE-25 — Admin portfolio `/admin/portfolio`
 - [ ] FE-26 — Admin portfolio editor
 - [ ] Checkpoint I — focused tests, static/build gates, dan review visual sesuai plan.

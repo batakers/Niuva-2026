@@ -186,12 +186,16 @@ information for review. Preview data is not a factual client portfolio.
   Queue-to-SKU handoff, local SKU search, publication and active-stock filters,
   explicit inactive/OOS/unpublished labels, loading/empty/error recovery, no
   mutation request, and the 320-1440px responsive matrix.
-- Full unit suite: 16 files and 62 tests passed. `corepack pnpm build` and
-  `git diff --check` passed.
-- `corepack pnpm build` and `git diff --check`: passed. Production smoke confirms
-  the explicit preview URL returns `404` with `noindex` and no Orders or
-  fulfillment UI, while `/admin/orders` returns `503 AUTH_UNAVAILABLE` without
-  Clerk configuration.
+- Focused FE-24 unit: 3 tests passed, covering catalog-compatible local
+  validation, required stock-reason intent, local-only draft save, and conflict
+  recovery. Focused FE-24 Playwright: 4 tests passed, covering variant handoff,
+  invalid-stock focus recovery, unsaved/reason/save feedback, loading/empty/
+  error/conflict/missing-fixture recovery, no mutation request, and the
+  320-1440px responsive matrix.
+- Full unit suite: 17 files and 65 tests passed. `corepack pnpm typecheck`,
+  `corepack pnpm build`, and `git diff --check` passed. `corepack pnpm lint`
+  exits successfully with the existing 147 warnings limited to bundled
+  `.agents/skills/impeccable` scripts and `src/modules/shipping/retail-rate-service.ts`.
 - Focused FE-15 Playwright: 7 tests passed, covering retail/custom timelines,
   quote and payment handoffs, shipment projection, loading/access/service
   failures, late-payment refund reconciliation, and the responsive matrix.
@@ -318,6 +322,10 @@ information for review. Preview data is not a factual client portfolio.
   `noindex`; a second synthetic SKU, product-list copy, and target admin route
   are absent. `/admin` remains a 503 `AUTH_UNAVAILABLE` boundary without Clerk
   configuration and does not expose the stock fixture.
+- Production runtime smoke for the explicit FE-24 preview URL returns 404 with
+  `noindex`; editor copy, its example product name, and media-placeholder copy
+  are absent. `/admin` remains a 503 `AUTH_UNAVAILABLE` boundary without Clerk
+  configuration and does not expose the editor fixture.
 
 Local screenshot evidence (not committed):
 `C:/Users/FAIZ/.codex/visualizations/2026/09/05/01a07172-b3f5-77f2-b8e3-036ed4befe4c/frontend-{home,services,projects,detail,brief}-{390,1280}.png`.
@@ -339,8 +347,11 @@ visualization folder.
 Action Queue evidence: `frontend-admin-queue-{390,1280}.png` in the same local
 visualization folder. FE-18 awaits owner visual review before screenshot evidence
 is recorded.
+FE-24 local review evidence: `admin-product-editor-{390,1280}.png` under
+`C:/Users/FAIZ/.codex/visualizations/2026/09/08/fe24/`; it is not committed and
+does not constitute owner visual acceptance.
 FE-19 awaits owner visual review before screenshot evidence is recorded.
-FE-20, FE-21, FE-22, and FE-23 await owner visual review before screenshot evidence is recorded.
+FE-20, FE-21, FE-22, FE-23, and FE-24 await owner visual review before screenshot evidence is recorded.
 
 Shared public-route behavior remains in `tests/e2e/public-pages.spec.ts`.
 FE-12 through FE-15 keep workflow and responsive assertions in the dedicated
@@ -356,8 +367,9 @@ FE-16 is recorded through commit `394f752`. FE-17 is recorded and pushed through
 commit `9456fc0`. FE-18 is recorded and pushed through commit `adc6e9a`. FE-19
 is recorded and pushed through commit `0cd2c5a`. FE-20 is recorded and pushed
 through commit `9f0a5d8`. FE-21 is recorded and pushed through commit `c5dbb5a`.
-FE-22 is recorded and pushed through commit `cfd19a7`. FE-23 is an uncommitted
-review slice at this checkpoint.
+FE-22 is recorded and pushed through commit `cfd19a7`. FE-23 is recorded and
+pushed through commit `01346c9`. FE-24 is an uncommitted review slice at this
+checkpoint.
 No merge or deployment is performed by this frontend batch.
 
 Pre-existing sandbox changes are preserved: `.env.example`, the two sandbox
@@ -365,7 +377,7 @@ documents in `docs/backend/`, and `scripts/local-dev-db.ps1`. The existing task-
 edits were extended, not replaced. Ignored local environment/database files were
 not changed. Do not stage this entire dirty working tree indiscriminately.
 
-Review the public screens through FE-15 and the isolated FE-16–23 admin proof.
+Review the public screens through FE-15 and the isolated FE-16–24 admin proof.
 Integrating actual published content, authentication, or submission requires a
 separate task and factual content/permission checks. To roll back this batch,
 reverse only its frontend/tests/contract/task-document edits; do not reset the
