@@ -104,7 +104,7 @@ Handoff dan verifikasi: [public-batch.md](../docs/frontend/public-batch.md).
 - [ ] Checkpoint H — focused tests, static/build gates, dan review visual sesuai plan.
 - [x] FE-24 — Admin product/variant/stock editor (development-only identity/media state, selected variant Decimal-shaped fields, stock reason, unsaved/invalid/conflict recovery, and local-only save/publish; tanpa query atau mutasi katalog nyata)
 - [x] FE-25 — Admin portfolio `/admin/portfolio` (development-only draft/published fixture list, content-readiness filter, create/edit selection lokal, dan status media/izin eksplisit; tanpa project, media, client, atau publikasi nyata)
-- [ ] FE-26 — Admin portfolio editor
+- [x] FE-26 — Admin portfolio editor (development-only narasi, urutan media, alt text, dan gate tiga izin; intent publikasi fixture diblokir tanpa izin lengkap dan tidak pernah mempublikasikan project/client/logo/media nyata)
 - [ ] Checkpoint I — focused tests, static/build gates, dan review visual sesuai plan.
 - [ ] FE-27 — Frontend acceptance dan handoff integrasi
 - [ ] Checkpoint J — focused tests, static/build gates, dan review visual sesuai plan.

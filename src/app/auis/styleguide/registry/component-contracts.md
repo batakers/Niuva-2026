@@ -443,6 +443,14 @@ reusable boundary:
   The later server boundary must authorize the active AdminProfile, validate the
   complete project/media/alt-text/permission contract, persist allowed content,
   publish only after checks, and emit audit information.
+- `AdminPortfolioEditor` and `PortfolioMediaEditor`: development-only narrative,
+  fixture-media order, alt-text, and three-part permission-checklist workspace.
+  It can save a local draft and test a local publication intent only after every
+  fixture confirmation is selected. Neither action creates a portfolio record,
+  storage object, client name/logo, factual outcome, publication state, or audit
+  event. The integrated server boundary remains responsible for factual evidence,
+  permission verification, AdminProfile authorization, schema validation, media
+  persistence/order, publication, and audit.
 - `PackageMeasurement`: custom-print final package precondition. It requires
   positive length, width, height, and weight before the visual shipping-payment
   edge is enabled. It does not calculate rates, persist measurement, create a

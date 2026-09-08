@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { useHydrated } from "@/components/niuva/use-hydrated";
@@ -101,8 +102,12 @@ function PortfolioLoadingState() {
 }
 
 function SelectionPanel({
+  controlsDisabled,
+  onOpenEditor,
   selection,
 }: Readonly<{
+  controlsDisabled: boolean;
+  onOpenEditor: (projectId: string) => void;
   selection: PortfolioSelection;
 }>) {
   const selectedProject = selection.kind === "existing"
@@ -141,6 +146,9 @@ function SelectionPanel({
             title="Editor belum dihubungkan"
             tone="info"
           />
+          <Button className="min-h-11 w-full cursor-pointer" disabled={controlsDisabled} onClick={() => onOpenEditor(selection.kind === "create" ? "new" : selection.id)} type="button" variant="outline">
+            Buka editor preview
+          </Button>
         </CardContent>
       </Card>
       <StatusNotice
@@ -241,6 +249,7 @@ function PortfolioCards({
 
 export function AdminPortfolioList({ initialScenario }: AdminPortfolioListProps) {
   const hydrated = useHydrated();
+  const router = useRouter();
   const [scenario, setScenario] = useState<AdminPortfolioScenario>(initialScenario);
   const [publicationFilter, setPublicationFilter] = useState<PublicationStatus | "all">("all");
   const [readinessFilter, setReadinessFilter] = useState<ContentReadiness | "all">("all");
@@ -261,6 +270,10 @@ export function AdminPortfolioList({ initialScenario }: AdminPortfolioListProps)
   function resetFilters() {
     setPublicationFilter("all");
     setReadinessFilter("all");
+  }
+
+  function openEditor(projectId: string) {
+    router.push(`/auis/proofs/frontend/admin?preview=examples&state=ready&module=portfolio&view=editor&project=${encodeURIComponent(projectId)}`);
   }
 
   return (
@@ -328,7 +341,7 @@ export function AdminPortfolioList({ initialScenario }: AdminPortfolioListProps)
           </section>
         </div>
 
-        <SelectionPanel selection={selection} />
+        <SelectionPanel controlsDisabled={controlsDisabled} onOpenEditor={openEditor} selection={selection} />
       </div>
     </main>
   );

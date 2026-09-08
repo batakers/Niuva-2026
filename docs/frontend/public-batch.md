@@ -197,6 +197,10 @@ information for review. Preview data is not a factual client portfolio.
   loading/empty/error/filter-empty recovery, no mutation request, and the
   320-1440px responsive matrix. Published-preview is a fixture label only;
   no portfolio project, media, client, logo, or public page is read or changed.
+- Focused FE-26 unit: 1 test passed, covering the three-part permission gate
+  and a local-only publication intent. Focused FE-26 Playwright: 3 tests passed,
+  covering FE-25 editor handoff, narrative/media validation, loading/empty/error
+  recovery, permission blocking, no mutation request, and the 320-1440px matrix.
 - Full unit suite: 17 files and 65 tests passed. `corepack pnpm typecheck`,
   `corepack pnpm build`, and `git diff --check` passed. `corepack pnpm lint`
   exits successfully with the existing 147 warnings limited to bundled
@@ -382,7 +386,8 @@ is recorded and pushed through commit `0cd2c5a`. FE-20 is recorded and pushed
 through commit `9f0a5d8`. FE-21 is recorded and pushed through commit `c5dbb5a`.
 FE-22 is recorded and pushed through commit `cfd19a7`. FE-23 is recorded and
 pushed through commit `01346c9`. FE-24 is recorded and pushed through commit
-`a1d695f`. FE-25 is an uncommitted review slice at this checkpoint.
+`a1d695f`. FE-25 is recorded and pushed through commit `f274ca8`. FE-26 is an
+uncommitted review slice at this checkpoint.
 No merge or deployment is performed by this frontend batch.
 
 Pre-existing sandbox changes are preserved: `.env.example`, the two sandbox
@@ -390,7 +395,7 @@ documents in `docs/backend/`, and `scripts/local-dev-db.ps1`. The existing task-
 edits were extended, not replaced. Ignored local environment/database files were
 not changed. Do not stage this entire dirty working tree indiscriminately.
 
-Review the public screens through FE-15 and the isolated FE-16–25 admin proof.
+Review the public screens through FE-15 and the isolated FE-16–26 admin proof.
 Integrating actual published content, authentication, or submission requires a
 separate task and factual content/permission checks. To roll back this batch,
 reverse only its frontend/tests/contract/task-document edits; do not reset the

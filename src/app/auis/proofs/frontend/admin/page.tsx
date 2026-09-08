@@ -19,6 +19,10 @@ import {
   type AdminPortfolioScenario,
 } from "@/features/admin/portfolio-list";
 import {
+  AdminPortfolioEditor,
+  type AdminPortfolioEditorScenario,
+} from "@/features/admin/portfolio-editor";
+import {
   AdminProductEditor,
 } from "@/features/admin/product-editor";
 import type { AdminProductEditorScenario } from "@/features/admin/product-editor-data";
@@ -49,6 +53,7 @@ const queueScenarios = ["populated", "loading", "empty", "stale"] as const satis
 const ordersScenarios = ["populated", "loading", "empty", "error"] as const satisfies readonly AdminOrdersScenario[];
 const productsScenarios = ["populated", "loading", "empty", "error"] as const satisfies readonly AdminProductsScenario[];
 const portfolioScenarios = ["populated", "loading", "empty", "error"] as const satisfies readonly AdminPortfolioScenario[];
+const portfolioEditorScenarios = ["ready", "loading", "empty", "error"] as const satisfies readonly AdminPortfolioEditorScenario[];
 const productEditorScenarios = ["ready", "loading", "empty", "error", "conflict"] as const satisfies readonly AdminProductEditorScenario[];
 const customRequestScenarios = ["populated", "loading", "empty", "error"] as const satisfies readonly AdminCustomRequestScenario[];
 const quoteScenarios = ["ready", "rule-missing", "loading", "empty", "error"] as const satisfies readonly AdminQuoteScenario[];
@@ -56,7 +61,7 @@ const previewModules = ["action-queue", "orders", "custom-print", "quotes", "pro
 const previewRoles = ["OWNER", "ADMIN"] as const satisfies readonly AdminPreviewRole[];
 
 type AdminPreviewModule = (typeof previewModules)[number];
-type ProductPreviewView = "list" | "editor";
+type PreviewView = "list" | "editor";
 
 function getPreviewState(value: string | string[] | undefined): AdminPreviewState {
   const candidate = Array.isArray(value) ? undefined : value;
@@ -98,6 +103,11 @@ function getPortfolioScenario(value: string | string[] | undefined): AdminPortfo
     : "populated";
 }
 
+function getPortfolioEditorScenario(value: string | string[] | undefined): AdminPortfolioEditorScenario {
+  const candidate = Array.isArray(value) ? undefined : value;
+  return portfolioEditorScenarios.includes(candidate as AdminPortfolioEditorScenario) ? (candidate as AdminPortfolioEditorScenario) : "ready";
+}
+
 function getProductEditorScenario(value: string | string[] | undefined): AdminProductEditorScenario {
   const candidate = Array.isArray(value) ? undefined : value;
 
@@ -106,7 +116,7 @@ function getProductEditorScenario(value: string | string[] | undefined): AdminPr
     : "ready";
 }
 
-function getProductPreviewView(value: string | string[] | undefined): ProductPreviewView {
+function getPreviewView(value: string | string[] | undefined): PreviewView {
   return !Array.isArray(value) && value === "editor" ? "editor" : "list";
 }
 
@@ -174,8 +184,9 @@ export default async function AdminPreviewPage({
   const ordersScenario = getOrdersScenario(query.orders);
   const productsScenario = getProductsScenario(query.products);
   const portfolioScenario = getPortfolioScenario(query.portfolio);
+  const portfolioEditorScenario = getPortfolioEditorScenario(query.portfolioEditor);
   const productEditorScenario = getProductEditorScenario(query.editor);
-  const productPreviewView = getProductPreviewView(query.view);
+  const previewView = getPreviewView(query.view);
   const customRequestScenario = getCustomRequestScenario(query.custom);
   const quoteScenario = getQuoteScenario(query.quoteState);
   const activePreviewModule = getPreviewModule(query.module);
@@ -213,7 +224,7 @@ export default async function AdminPreviewPage({
         />
       ) : null}
       {state === "ready" && activePreviewModule === "products" ? (
-        productPreviewView === "editor" ? (
+        previewView === "editor" ? (
           <AdminProductEditor
             initialScenario={productEditorScenario}
             initialSelectedSku={initialProductSearch || null}
@@ -225,7 +236,9 @@ export default async function AdminPreviewPage({
           />
         )
       ) : null}
-      {state === "ready" && activePreviewModule === "portfolio" ? <AdminPortfolioList initialScenario={portfolioScenario} /> : null}
+      {state === "ready" && activePreviewModule === "portfolio" ? (
+        previewView === "editor" ? <AdminPortfolioEditor initialScenario={portfolioEditorScenario} initialSelectedProject={getInitialProductSearch(query.project) || null} /> : <AdminPortfolioList initialScenario={portfolioScenario} />
+      ) : null}
     </AdminShell>
   );
 }
