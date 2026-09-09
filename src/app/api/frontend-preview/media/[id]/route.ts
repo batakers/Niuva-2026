@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { isAbsolute, relative, resolve } from "node:path";
+import { basename, isAbsolute, relative, resolve } from "node:path";
 import { resolveCuratedMediaPath } from "@/features/frontend-preview/media";
 
 export const runtime = "nodejs";
@@ -20,7 +20,7 @@ export async function GET(
   if (!assetPath) return notFoundResponse();
 
   const proofRoot = resolve(process.cwd(), "docs/content/media-proofs/featured-covers");
-  const absolutePath = resolve(process.cwd(), assetPath);
+  const absolutePath = resolve(proofRoot, basename(assetPath));
   const pathWithinRoot = relative(proofRoot, absolutePath);
   if (pathWithinRoot.startsWith("..") || isAbsolute(pathWithinRoot)) return notFoundResponse();
 
