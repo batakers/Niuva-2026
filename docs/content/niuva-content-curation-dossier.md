@@ -123,15 +123,22 @@ without replacing the category, for example `Mobility`, `Engineering`,
 
 | Field | Draft |
 | --- | --- |
-| Status | `CANDIDATE` featured case study |
+| Status | `CONFIRMED` owner-approved editorial draft v1 on 2026-09-09; remains non-public |
 | Primary category | Design & Prototyping |
-| Tags | Product Development; Industrial Design; Concept Development |
+| Tags | Product Development; Industrial Design; Plastic Collection; Sustainability Program |
 | Sources | `SRC-PORT-001` page 5; `SRC-PDS-001` page 13 |
-| Confirmed evidence | The materials identify the work as Smart Drop Box for P&G and show sketches, development drawings, product visualizations, a physical/documentation photograph, and a presentation/handover photograph. |
-| Candidate summary | Niuva developed a Smart Drop Box concept through visual exploration, form development, and product-detail documentation for review with P&G. |
-| Safe output statement | The documented outputs include sketches, dimensional/detail drawings, visualizations, and presentation material. |
+| Confirmed public year | **2018**. The source basis is the **27 September 2018** date printed in both visible technical-drawing title blocks; public copy uses the year only and does not infer a project date range. |
+| Confirmed Niuva role | Industrial/product design, technical detailing, and design support toward fabrication. Electronics, software, fabrication execution, and manufacturing are not included in the approved public claim. |
+| Confirmed attribution | Attribute the work publicly to **the Niuva team** at company level. Do not identify people shown in the photograph or assign individual responsibilities without a confirmed team record. |
+| Confirmed brief context | The Smart Drop Box was intended to support the collection of used plastic packaging or bottles in a P&G/Head & Shoulders sustainability program. |
+| Approved context boundary | Public copy may identify the P&G sustainability-program context but must omit intended placement and target-user details until those facts are confirmed. |
+| Confirmed evidence | The materials identify the work as Smart Drop Box for P&G and show concept sketches, dimensioned technical drawings, a component/material visualization, and a photograph of a fabricated P&G/Head & Shoulders-branded unit with four people. |
+| Confirmed object details | The source labels a fiberglass body and lid, waste-entry cover, rubber entry component, user and operator indicators, LED, sensor, locking bolt, hook, and power supply. These are visible design-document labels, not evidence of tested performance. |
+| Confirmed physical stage | At least one **physical prototype presented to stakeholders** is documented photographically. It must not be described as a pilot, deployed installation, or production unit. |
+| Approved draft summary | In 2018, Niuva developed the industrial/product design of a P&G/Head & Shoulders Smart Drop Box intended to support plastic-packaging collection, from form exploration and technical detailing through visualization, design support toward fabrication, and a presented physical prototype. |
+| Safe output statement | The documented outputs include concept sketches, dimensioned drawings, component/material callouts, product visualizations, and a presented physical prototype. |
 | Prohibited inference | Do not claim deployment, manufacturing volume, technical performance, adoption, or business impact. |
-| Open facts | Project year; project brief; Niuva's exact responsibility; team; prototype status; selected concept rationale; technical components; next stage; verified outcome. |
+| Open facts | Intended placement and users; individual team members and responsibilities; selection rationale; third-party electronics/software scope; third-party fabrication/manufacturing responsibility; any later pilot/deployment; validation; and verified outcome. Placement, target users, individual attribution, and a more precise project date range are intentionally omitted from public copy. |
 
 Recommended media sequence after original assets are supplied:
 
@@ -140,6 +147,46 @@ Recommended media sequence after original assets are supplied:
 3. dimensional/detail drawings;
 4. alternative views;
 5. documented presentation or handover photograph.
+
+External corroboration was reviewed but is not yet used to expand Niuva's
+claim. A [Solusi Hijau Indonesia/Smash portfolio
+page](https://sites.google.com/view/solusihijauindonesia/portofolio/smash-id)
+associates P&G Indonesia with a Smart Drop Box collaboration intended to
+reduce plastic waste. Other Telkom University publications describe Smart Drop
+Box projects for different programs and recipients. Those projects must not be
+assumed to be this P&G engagement without Owner confirmation.
+
+#### Owner-approved public-copy draft v1 — non-public
+
+**Overview**
+
+Pada 2018, tim Niuva mengembangkan industrial/product design Smart Drop Box
+untuk P&G/Head & Shoulders dalam konteks program keberlanjutan yang mendukung
+pengumpulan kemasan plastik bekas.
+
+**Challenge**
+
+Kebutuhan program diterjemahkan menjadi sebuah titik pengumpulan fisik yang
+memadukan area masuk kemasan, identitas brand, serta ruang bagi indikator,
+sensor, pencahayaan, dan komponen daya. Narasi ini menjelaskan kebutuhan desain
+yang terlihat pada dokumen; ia tidak menyatakan performa komponen.
+
+**Process**
+
+Tim Niuva mengeksplorasi bentuk melalui sketsa, menyusun gambar teknik
+berdimensi, memetakan komponen dan material, lalu menyiapkan visualisasi serta
+dukungan desain menuju fabrikasi prototype.
+
+**Output**
+
+Dokumentasi memperlihatkan paket desain berupa sketsa konsep, gambar teknik,
+callout komponen/material, visualisasi produk, dan sebuah prototype fisik yang
+dipresentasikan kepada stakeholder.
+
+**Evidence boundary**
+
+Case study tidak menyatakan deployment, produksi massal, performa teknis,
+jumlah sampah terkumpul, perubahan perilaku, atau dampak lingkungan/bisnis.
 
 ### CS-02 — Pengembangan Motor EV — PT Pindad
 
