@@ -30,6 +30,10 @@ development-only frontend fixtures.
   evidence is supplied.
 - `CONFIRMED` — Six projects will be developed as featured case studies. Other
   suitable projects may appear as compact **Selected Works** entries.
+- `CONFIRMED` — The Selected Works gallery is curated into **11 public cards**.
+  Arei Smart Bag V1 remains public supporting evidence inside CS-05 rather
+  than a separate card, while the 2-phase and 3-phase sterilizer-tunnel
+  variants share one card.
 - `CONFIRMED` — Each project has one primary service category and may have
   multiple descriptive tags.
 - `CONFIRMED` — Standard custom-print material and time rates may be presented
@@ -329,28 +333,114 @@ Recommended media sequence after original assets are supplied:
 ## 6. Selected Works inventory
 
 These entries show breadth without pretending that a full narrative is already
-available.
+available. The 11-card structure, metadata, and conservative card summaries
+were approved by the Owner on 2026-09-09, but remain non-public.
 
-| Work | Source | Proposed category | Proposed tags | Evidence status and next need |
-| --- | --- | --- | --- | --- |
-| Waste-based Product | `SRC-PORT-001` p.1 | Research & Development | Circular Design; Material Exploration | `CONFIRMED` title and visual board; `OPEN_FACT` brief, material sources, Niuva role, process, output status, and result |
-| Elips Tandem Bike | `SRC-PORT-001` p.2 | Design & Prototyping | Mobility; Family Product; Industrial Design | `CONFIRMED` title and child-parent tandem framing; `OPEN_FACT` year, brief, prototype status, decisions, and result |
-| Screen Printing Workstation | `SRC-PORT-001` p.4 | Design & Prototyping | Workstation; Industrial Design; IP Documentation | `CONFIRMED` title, design views, and source-printed certificate number; official registry verification remains `OPEN_FACT` |
-| Portable Handwash Station | `SRC-PORT-001` p.7 | Design & Prototyping | Public Hygiene; Portable Product; Prototype | `CONFIRMED` title and visual artifacts; `OPEN_FACT` use context, mechanism, production, and result |
-| 3 Phase Sterilizer Tunnel | `SRC-PORT-001` p.8 | Design & Prototyping | Public Hygiene; System Design; Prototype | `CONFIRMED` title and visual documentation; `OPEN_FACT` scope, specification, validation, and deployment |
-| 2 Phase Sterilizer Tunnel | `SRC-PORT-001` p.9 | Design & Prototyping | Public Hygiene; System Design; Prototype | `CONFIRMED` title and visual documentation; `OPEN_FACT` scope, specification, validation, and deployment |
-| Arei Smart Bag V1 | `SRC-PORT-001` p.10 | Apparel & Merchandise | Bag Development; Prototype; Product Iteration | `CONFIRMED` title and prototype/detail photographs; use primarily as V2 process evidence unless a separate brief is supplied |
-| Military Model Mock-up scale 1:10 — PT Pindad | `SRC-PDS-001` p.8 | Design & Prototyping | Scale Model; Mobility; Defense | `CONFIRMED` title, partner, scale, and photographs; `OPEN_FACT` project purpose, Niuva role, sensitivity review, deliverables, and result |
-| Ganilla Field Kitchen Truck — PT Bhimasena R&D | `SRC-PDS-001` p.9 | Research & Development | Special Vehicle; Scale Model; Defense | `CONFIRMED` source title and visual artifacts; `OPEN_FACT` spelling, brief, Niuva role, confidentiality boundary, and result |
-| Leather Bag Development — D.I. Yogyakarta industry/trade office | `SRC-PDS-001` pp.10–11 | Apparel & Merchandise | Leather Product; Workshop; Product Development | `CONFIRMED` institution text and product/event photographs; `OPEN_FACT` formal institution name, program scope, Niuva role, participants, and output |
-| Electric Car — Telkom University | `SRC-PDS-001` p.12 | Design & Prototyping | Mobility; Electric Vehicle; Prototype | `CONFIRMED` title, institution, process photographs, and visualization; `OPEN_FACT` year, brief, Niuva role, vehicle stage, and outcome |
-| Redesain Motor Xeon | `SRC-COMPANY-001` p.9 | Design & Prototyping | Mobility; Electric Conversion; Body Engineering | `CONFIRMED` source description and before/after visual context; `OPEN_FACT` year, Niuva scope, engineering detail, prototype state, and test results |
-| Bicycle Arcade — Agate | `SRC-COMPANY-001` p.11 | Design & Prototyping | Interactive Product; Bicycle; Entertainment | `CONFIRMED` collaboration framing and Stranger Things release context; `OPEN_FACT` year, Niuva role, interaction design, delivery, and usage outcome |
+| ID | Work | Source | Approved category | Approved tags | Evidence status and next need |
+| --- | --- | --- | --- | --- | --- |
+| `SW-01` | Waste-Based Product | `SRC-PORT-001` p.1 | Research & Development | Waste-Based Material; Material Exploration; Design Exploration | `CONFIRMED` Owner-approved metadata, source title, and visual board; `OPEN_FACT` brief, material sources, detailed Niuva role, process, output status, and result |
+| `SW-02` | Elips Tandem Bike | `SRC-PORT-001` p.2 | Design & Prototyping | Mobility; Tandem Bicycle; Family Mobility; Industrial Design | `CONFIRMED` Owner-approved metadata, source title, and child-parent tandem framing; `OPEN_FACT` year, brief, detailed Niuva role, prototype status, design decisions, and result |
+| `SW-03` | Screen Printing Workstation | `SRC-PORT-001` p.4 | Design & Prototyping | Workstation; Industrial Design; Product Visualization; Detail Development | `CONFIRMED` Owner-approved metadata, source title, and design views; the source-printed certificate reference, its ownership, and official registry status remain `OPEN_FACT` |
+| `SW-04` | Portable Handwash Station | `SRC-PORT-001` p.7 | Design & Prototyping | Public Hygiene; Handwashing Station; Portable Product; Product Visualization | `CONFIRMED` Owner-approved metadata, source title, and visual artifacts; `OPEN_FACT` use context, mechanism, technical specification, physical stage, production, and result |
+| `SW-05` | Konsep Sterilizer Tunnel — Varian 2 Fase dan 3 Fase | `SRC-PORT-001` pp.8–9 | Design & Prototyping | Public Hygiene; System Concept; Variant Development; Product Visualization | `CONFIRMED` Owner-approved combined-card structure, both source titles, and visual documentation; `OPEN_FACT` relationship between variants, mechanism, specification, physical stage, safety, efficacy, validation, and deployment |
+| `SW-06` | Mock-up Model Militer Skala 1:10 — PT Pindad | `SRC-PDS-001` p.8 | Design & Prototyping | Scale Model; Model Making; Mobility; Defense | `CONFIRMED` Owner-approved metadata, public use of the supplied project image, PT Pindad context, and 1:10 scale label; `OPEN_FACT` exact model identity, project purpose, detailed Niuva role, vehicle-design ownership, fabrication responsibility, deliverables, and result |
+| `SW-07` | Field Kitchen Truck — PT Bhimasena R&D | `SRC-PDS-001` p.9 | Design & Prototyping | Special Vehicle; Scale Model; Model Making; Product Visualization | `CONFIRMED` Owner-approved public metadata and source visual artifacts; `OPEN_FACT` source-printed “Ganilla” naming, project brief, exact scale, detailed Niuva role, vehicle-design ownership, fabrication responsibility, operational context, and result |
+| `SW-08` | Pengembangan Tas Kulit — D.I. Yogyakarta | `SRC-PDS-001` pp.10–11 | Apparel & Merchandise | Leather Product; Product Development; Workshop Documentation | `CONFIRMED` Owner-approved public metadata, D.I. Yogyakarta context, and product/event photographs; `OPEN_FACT` formal institution name, program scope, detailed Niuva role, participant identities and count, product ownership, delivered output, and result |
+| `SW-09` | Konsep Mobil Listrik — Telkom University | `SRC-PDS-001` p.12 | Design & Prototyping | Mobility; Electric Vehicle; Concept Development; Product Visualization | `CONFIRMED` Owner-approved public metadata, institution context, process photographs, and visualization; `OPEN_FACT` year, brief, detailed Niuva role, design ownership, powertrain and battery scope, vehicle stage, testing, and outcome |
+| `SW-10` | Redesain Motor Xeon untuk Konversi Listrik | `SRC-COMPANY-001` p.9 | Design & Prototyping | Mobility; Electric Conversion; Exterior Design; Product Redesign | `CONFIRMED` Owner-approved public metadata, source description, and before/after visual context; `OPEN_FACT` year, detailed Niuva role, powertrain and electrical scope, body engineering, physical stage, testing, road legality, production, and result |
+| `SW-11` | Bicycle Arcade — Agate | `SRC-COMPANY-001` p.11 | Design & Prototyping | Interactive Product; Bicycle Interface; Entertainment; Physical Interaction | `CONFIRMED` Owner-approved public metadata, source collaboration framing, and Stranger Things release context; `OPEN_FACT` year, relationship structure, detailed Niuva role, hardware and software ownership, interaction mechanism, delivery stage, deployment, and usage outcome |
+
+### Selected Works approved card copy
+
+These short summaries are Owner-approved editorial copy, but remain internal
+and disconnected from public routes until the dataset and media gates are
+separately approved.
+
+#### SW-01 — Waste-Based Product
+
+> Waste-Based Product menampilkan eksplorasi visual produk dengan pendekatan
+> material berbasis limbah. Jenis dan sumber material, proses pengolahan,
+> fungsi produk, tahap realisasi, serta hasilnya belum dinyatakan dalam
+> dokumentasi yang tersedia.
+
+#### SW-02 — Elips Tandem Bike
+
+> Elips Tandem Bike menampilkan konsep sepeda tandem untuk mobilitas bersama
+> anak dan pendamping. Dokumentasi yang tersedia memperlihatkan arah desain
+> produk serta hubungan posisi kedua pengguna, tanpa menyatakan status
+> purwarupa, pengujian keselamatan, produksi, atau hasil penggunaan.
+
+#### SW-03 — Screen Printing Workstation
+
+> Screen Printing Workstation menampilkan studi desain stasiun kerja untuk
+> aktivitas sablon melalui beberapa pandangan produk dan visualisasi detail.
+> Dokumentasi yang tersedia belum membuktikan validasi ergonomi, purwarupa
+> fisik, proses manufaktur, status kekayaan intelektual, atau penggunaan
+> operasional.
+
+#### SW-04 — Portable Handwash Station
+
+> Portable Handwash Station menampilkan visualisasi desain stasiun cuci tangan
+> portabel untuk konteks kebersihan publik. Dokumentasi yang tersedia belum
+> menjelaskan mekanisme air, spesifikasi sanitasi, tahap fisik, proses produksi,
+> penerapan, atau hasil penggunaan.
+
+#### SW-05 — Konsep Sterilizer Tunnel — Varian 2 Fase dan 3 Fase
+
+> Dokumentasi proyek menampilkan eksplorasi visual konsep Sterilizer Tunnel
+> dalam varian 2 fase dan 3 fase untuk konteks kebersihan publik. Materi yang
+> tersedia tidak membuktikan mekanisme, keamanan, efektivitas sterilisasi,
+> validasi, realisasi fisik, ataupun penerapannya.
+
+#### SW-06 — Mock-up Model Militer Skala 1:10 — PT Pindad
+
+> Dokumentasi proyek menampilkan mock-up model militer skala 1:10 dalam konteks
+> PT Pindad. Kartu ini membatasi klaim pada artefak model yang terlihat dan
+> tidak menyatakan bahwa Niuva merancang kendaraan asli, mengembangkan sistem
+> militer, melakukan rekayasa kendaraan, atau memproduksi unit skala penuh.
+
+#### SW-07 — Field Kitchen Truck — PT Bhimasena R&D
+
+> Dokumentasi Field Kitchen Truck menampilkan artefak model dan visualisasi
+> kendaraan khusus dalam konteks PT Bhimasena R&D. Kartu ini tidak menetapkan
+> nama “Ganilla”, skala model, tujuan operasional, kepemilikan desain kendaraan,
+> tanggung jawab fabrikasi, ataupun hasil penerapannya.
+
+#### SW-08 — Pengembangan Tas Kulit — D.I. Yogyakarta
+
+> Dokumentasi proyek menampilkan produk tas kulit dan suasana kegiatan
+> pengembangan di D.I. Yogyakarta. Kartu ini tidak menetapkan nama resmi
+> instansi, bentuk program, identitas atau peran peserta, kepemilikan desain
+> produk, keluaran final, maupun hasil kegiatan.
+
+#### SW-09 — Konsep Mobil Listrik — Telkom University
+
+> Dokumentasi proyek menampilkan proses dan visualisasi konsep mobil listrik
+> dalam konteks Telkom University. Kartu ini tidak menetapkan kepemilikan desain
+> kendaraan, ruang lingkup motor listrik atau baterai, tahap purwarupa,
+> pengujian, kelayakan jalan, produksi, ataupun hasil proyek.
+
+#### SW-10 — Redesain Motor Xeon untuk Konversi Listrik
+
+> Dokumentasi proyek memperlihatkan konteks sebelum–sesudah redesain Motor Xeon
+> untuk konversi listrik. Kartu ini menampilkan arah perubahan desain eksterior
+> tanpa menyatakan bahwa Niuva mengerjakan motor listrik, baterai, kontroler,
+> rekayasa bodi, purwarupa fungsional, pengujian, kelayakan jalan, atau produksi
+> kendaraan.
+
+#### SW-11 — Bicycle Arcade — Agate
+
+> Bicycle Arcade menampilkan perangkat interaktif berbasis sepeda dalam proyek
+> yang melibatkan Agate dan dikaitkan oleh sumber dengan konteks rilis Stranger
+> Things. Dokumentasi tidak menetapkan struktur hubungan para pihak, kepemilikan
+> perangkat keras atau perangkat lunak, mekanisme interaksi, tahap penyerahan,
+> penerapan, maupun hasil penggunaan.
 
 ### Supporting evidence rather than separate public projects
 
 | Material | Source | Proposed use |
 | --- | --- | --- |
+| Arei Smart Bag V1 | `SRC-PORT-001` p.10 | Public V1-to-V2 process evidence inside CS-05, not a separate Selected Works card |
 | PDS initiation with PPM Telkom University, September–October 2018 | `SRC-PDS-001` p.1 | Company/process timeline or workshop context after the activity and Niuva role are clarified |
 | PDS exhibition documentation | `SRC-PDS-001` p.2 | Supporting process/community media, not a standalone case study |
 
@@ -444,7 +534,8 @@ sellable items merely because they appear in a source PDF.
 | People/project-photo permission | `CONFIRMED` | Preserve context and write accurate captions |
 | Six featured-project selection | `CONFIRMED` | Confirm final ordering and cover image during visual review |
 | Featured summaries CS-01 through CS-06 | `CONFIRMED` | Owner-approved conservative copy v1 remains non-public; CS-02 through CS-06 need additional evidence before expansion into full challenge/process/output stories |
-| Primary service categories | `CONFIRMED` | Preserve approved featured-project mappings; review Selected Works mappings separately |
+| Selected Works structure and card copy | `CONFIRMED` | Eleven Owner-approved cards remain non-public; preserve their approved metadata, summaries, and evidence boundaries during dataset preparation |
+| Primary service categories | `CONFIRMED` | Preserve all approved featured-project and Selected Works mappings during dataset preparation |
 | Outcome-claim policy | `CONFIRMED` | Supply evidence before any performance or impact statement |
 | Original project media | `OPEN_FACT` | Not present in the repo; supply originals or approve reviewed PDF-derived exports later |
 | Current contact information | `OPEN_FACT` | Verify the page-13 company-profile details before public use |
@@ -453,7 +544,7 @@ sellable items merely because they appear in a source PDF.
 | Detailed challenge/process/output | `CANDIDATE` / `OPEN_FACT` | CS-01 has a fuller approved draft; expand CS-02 through CS-06 only when supporting evidence is supplied |
 | Verified project results | `OPEN_FACT` | Provide documentary or Owner-confirmed factual evidence |
 | Ready-made Shop catalog | `OPEN_FACT` | Separate commercial dataset required |
-| Public content integration | **BLOCKED** | Requires Selected Works review, media approval, typed-dataset preview, and explicit integration approval |
+| Public content integration | **BLOCKED** | Requires media approval, final ordering and cover review, typed-dataset preview, and explicit integration approval |
 | Production publication | **BLOCKED** | Requires final assets, current facts, server integration, and explicit publication approval |
 
 ## 11. Recommended remaining review order
@@ -462,16 +553,14 @@ The conservative copy review for CS-01 through CS-06 was completed on
 2026-09-09. Remaining work should proceed in this order:
 
 1. Review company positioning and current contact facts.
-2. Approve which Selected Works entries receive compact public cards and
-   review their proposed categories and tags.
-3. Confirm final featured-case-study ordering and cover-image direction.
-4. Supply original media or approve specific PDF-derived crops for a visual
+2. Confirm final featured-case-study ordering and cover-image direction.
+3. Supply original media or approve specific PDF-derived crops for a visual
    proof only.
-5. Convert approved content into a typed, non-production dataset.
-6. Review `/`, `/services`, `/projects`, and `/projects/[slug]` with the curated
+4. Convert approved content into a typed, non-production dataset.
+5. Review `/`, `/services`, `/projects`, and `/projects/[slug]` with the curated
    dataset in development preview.
-7. Run accessibility, responsive, regression, and visual checks.
-8. Request a separate explicit approval before connecting the content to
+6. Run accessibility, responsive, regression, and visual checks.
+7. Request a separate explicit approval before connecting the content to
    production reads or marking anything published.
 
 ## 12. Non-public integration boundary
