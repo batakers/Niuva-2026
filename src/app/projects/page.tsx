@@ -18,12 +18,13 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
           <p className="max-w-lg text-lg leading-8 text-muted-foreground md:pl-8">Dari konteks awal, pilihan yang dipertimbangkan, hingga hasil yang bisa ditinjau. Kenali cara kami mendekati sebuah proyek.</p>
         </section>
         {process.env.NODE_ENV === "development" && <aside aria-label="Preview frontend" className="mb-8 rounded-lg border border-info-border bg-info-background p-4 text-info">
-          <p className="text-sm font-semibold">Preview lokal · data sintetis, bukan portfolio client</p>
-          <div className="mt-3 flex flex-wrap gap-2">{[["examples","Contoh"],["empty","Kosong"],["loading","Memuat"],["error","Gagal"]].map(([value,label]) => <AuLink className="min-h-11" key={value} href={`/projects?preview=${value}`} variant="outline" size="sm" aria-current={scenario === value ? "page" : undefined}>{label}</AuLink>)}</div>
+          <p className="text-sm font-semibold">Preview lokal · tidak terhubung ke pembacaan produksi</p>
+          <p className="mt-1 text-sm">Konten Niuva memakai copy dan crop yang telah ditinjau, tetapi belum merupakan persetujuan publikasi produksi.</p>
+          <div className="mt-3 flex flex-wrap gap-2">{[["curated","Konten Niuva"],["examples","Contoh sintetis"],["empty","Kosong"],["loading","Memuat"],["error","Gagal"]].map(([value,label]) => <AuLink className="min-h-11" key={value} href={`/projects?preview=${value}`} variant="outline" size="sm" aria-current={scenario === value ? "page" : undefined}>{label}</AuLink>)}</div>
         </aside>}
         {scenario === "loading" ? <div role="status" className="space-y-5 py-8"><p>Memuat daftar project… (preview)</p><div className="h-40 rounded-lg bg-muted motion-safe:animate-pulse" /></div> :
           scenario === "error" ? <StatusNotice tone="error" title="Daftar project belum dapat dimuat." description="Coba muat kembali. Informasi yang Anda masukkan tidak berubah." action={<AuLink className="min-h-11" href="/projects?preview=examples" variant="outline">Coba lagi</AuLink>} /> :
-          <ProjectList projects={projects} preview={scenario === "examples"} />}
+          <ProjectList projects={projects} previewMode={scenario} />}
         <section className="mt-16 flex flex-col gap-6 border-t border-border pt-8 sm:flex-row sm:items-center sm:justify-between">
           <div><h2 className={type.subheading.className}>Punya konteks yang ingin dibahas?</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Mulai dari tujuan, bukan dari jawaban yang sudah lengkap.</p></div><AuLink className="min-h-11" href="/project-brief">Diskusikan Proyek</AuLink>
         </section>

@@ -5,3 +5,7 @@ export function resolvePreviewScenario(runtime: string | undefined, requested: u
   return requested === "examples" || requested === "empty" || requested === "loading" || requested === "error"
     ? requested : null;
 }
+
+export function isCuratedPreview(runtime: string | undefined, requested: unknown): boolean {
+  return runtime === "development" && requested === "curated";
+}

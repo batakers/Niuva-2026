@@ -1,11 +1,12 @@
-import type { PublicProject, PublicShopProduct } from "./types";
+import type { ProjectPreviewItem, PublicShopProduct } from "./types";
 
 // Fictional design-review content. Loaded only by the development server boundary.
-export const exampleProjects: readonly PublicProject[] = [
+export const exampleProjects: readonly ProjectPreviewItem[] = [
   {
     id: "example-enclosure", slug: "contoh-enclosure", title: "Dari sketsa ke enclosure yang dapat ditinjau.",
     summary: "Contoh susunan studi kasus untuk memperlihatkan hubungan kebutuhan, desain, dan prototype.",
     serviceLabel: "Desain dan prototyping", clientName: null,
+    year: null, tags: [], detailReadiness: "full-conservative-draft",
     challenge: "Skenario contoh: merancang ruang bagi komponen dan akses perakitan dalam satu enclosure.",
     process: "Kebutuhan dirangkum, alternatif bentuk dibandingkan, lalu prototype digunakan untuk meninjau akses dan sambungan.",
     result: "Pada contoh ini, hasil ditampilkan sebagai bahan diskusi iterasi berikutnya. Tidak ada klaim pengujian atau hasil client.",
@@ -15,6 +16,7 @@ export const exampleProjects: readonly PublicProject[] = [
     id: "example-workshop", slug: "contoh-workshop", title: "Menyamakan arah sebelum membuat prototype.",
     summary: "Contoh dokumentasi keputusan tim, pertanyaan terbuka, dan langkah eksplorasi.",
     serviceLabel: "Konsultasi dan workshop", clientName: null,
+    year: null, tags: [], detailReadiness: "full-conservative-draft",
     challenge: "Skenario contoh: beberapa ide perlu dipetakan sebelum memilih hal pertama yang akan diuji.",
     process: "Konteks dan batasan dikumpulkan, asumsi dipisahkan dari bukti, kemudian agenda eksplorasi disusun.",
     result: "Contoh keluaran berupa arah diskusi. Ini bukan dokumentasi workshop yang pernah dilaksanakan.",

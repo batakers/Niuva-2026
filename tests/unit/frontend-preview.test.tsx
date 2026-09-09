@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { resolvePreviewScenario } from "@/features/frontend-preview/scenarios";
+import { resolveCuratedMediaPath } from "@/features/frontend-preview/media";
+import { isCuratedPreview, resolvePreviewScenario } from "@/features/frontend-preview/scenarios";
 
 describe("frontend preview boundary", () => {
   it.each(["production", "test", undefined, ""])("rejects fixture access in %s", runtime => {
@@ -8,5 +9,23 @@ describe("frontend preview boundary", () => {
   it("accepts only known scenarios in development", () => {
     expect(resolvePreviewScenario("development", "examples")).toBe("examples");
     for (const value of ["unknown", ["examples"], { preview: "examples" }, null]) expect(resolvePreviewScenario("development", value)).toBeNull();
+  });
+
+  it("enables curated content only in development", () => {
+    expect(isCuratedPreview("development", "curated")).toBe(true);
+    for (const runtime of ["production", "test", undefined, ""]) {
+      expect(isCuratedPreview(runtime, "curated")).toBe(false);
+    }
+    for (const value of ["examples", ["curated"], { preview: "curated" }, null]) {
+      expect(isCuratedPreview("development", value)).toBe(false);
+    }
+  });
+
+  it("resolves only allowlisted curated proof media in development", () => {
+    expect(resolveCuratedMediaPath("development", "cs-01")).toBe(
+      "docs/content/media-proofs/featured-covers/cs-01-smart-drop-box.png",
+    );
+    expect(resolveCuratedMediaPath("development", "../../.env")).toBeNull();
+    expect(resolveCuratedMediaPath("production", "cs-01")).toBeNull();
   });
 });

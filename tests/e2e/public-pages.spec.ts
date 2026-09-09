@@ -45,6 +45,43 @@ test("project examples filter and navigate, with empty, retry and missing-slug r
   await expect(page.getByRole("status")).toContainText("Memuat daftar project");
 });
 
+test("curated project preview keeps real content and proof media development-only", async ({ page, request }) => {
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/projects?preview=curated");
+  await expect(page.getByText("17 project terkurasi")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Enam cerita utama untuk ditinjau." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Dokumentasi lain yang menunjukkan keluasan karya." })).toBeVisible();
+  await expect(page.getByRole("article")).toHaveCount(17);
+  await expect(page.locator('img[src*="/api/frontend-preview/media/"]')).toHaveCount(6);
+
+  await page.getByLabel("Layanan", { exact: true }).selectOption("Apparel & Merchandise");
+  await expect(page.getByRole("article")).toHaveCount(3);
+  await page.getByLabel("Cari project").fill("Bagit");
+  await expect(page.getByRole("article")).toHaveCount(1);
+  await page.getByLabel("Layanan", { exact: true }).selectOption("");
+  await page.getByLabel("Cari project").fill("");
+
+  await page.getByRole("link", { name: /Smart Drop Box/ }).click();
+  await expect(page).toHaveURL(/smart-drop-box-pg\?preview=curated$/);
+  await expect(page.getByRole("heading", { name: "Konteks dan tantangan" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Proses dan keputusan" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Output yang terdokumentasi" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Batas bukti" })).toBeVisible();
+
+  await page.goto("/projects/bagit-arei-smart-bag-v2?preview=curated");
+  await expect(page.getByRole("heading", { name: "Konteks dan tantangan" })).toHaveCount(0);
+  await expect(page.getByText("Challenge dan process rinci sengaja tidak ditampilkan")).toBeVisible();
+
+  const proof = await request.get("/api/frontend-preview/media/cs-01");
+  expect(proof.status()).toBe(200);
+  expect(proof.headers()["content-type"]).toBe("image/png");
+  expect((await proof.body()).byteLength).toBeGreaterThan(100_000);
+  expect((await request.get("/api/frontend-preview/media/unknown")).status()).toBe(404);
+  expect((await request.get("/api/frontend-preview/media/..%2F..%2F.env")).status()).toBe(404);
+  expect(errors).toEqual([]);
+});
+
 test("brief preview validates, recovers and never posts an inquiry", async ({ page }) => {
   const mutations: string[] = [];
   page.on("request", request => { if (request.method() === "POST" && request.url().includes("/api/")) mutations.push(request.url()); });
