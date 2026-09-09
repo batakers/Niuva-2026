@@ -48,6 +48,9 @@ development-only frontend fixtures.
 - `CONFIRMED` — Source copy may be conservatively paraphrased for the website,
   while every unsupported statement remains marked `CANDIDATE` or
   `OPEN_FACT`.
+- `CONFIRMED` — The page-13 business contact details remain current and may be
+  displayed publicly. Use the normalized phone format
+  **+62 851-1767-8901**.
 
 ## 2. Source register
 
@@ -85,6 +88,32 @@ without replacing the category, for example `Mobility`, `Engineering`,
 | Supporting evidence | Add process or company context without presenting a separate project | Service-page or case-study media with a precise caption |
 | Internal source only | Preserve incomplete or uncertain material | Not rendered publicly until facts and media are ready |
 
+### Approved featured case-study order
+
+The Owner approved the following public editorial order on 2026-09-09. This is
+a curated presentation sequence, not a chronological claim:
+
+1. Smart Drop Box — P&G;
+2. Konsep dan Desain Eksterior Motor EV — PT Pindad;
+3. Bagit — Arei Smart Bag V2;
+4. Simulator Keselamatan Berkendara — Agate / PT DENSO;
+5. Savero — Identitas Visual dan Aksesori Produk;
+6. BeVenTU — Konsep Sistem Ventilator Darurat.
+
+### Approved featured cover direction
+
+These directions define the editorial role of each cover. They do not approve
+a particular file, PDF crop, resolution, or final publication asset.
+
+| Featured project | Approved cover direction | Supporting-media boundary |
+| --- | --- | --- |
+| Smart Drop Box — P&G | Primary product visualization | Use the presentation photograph only as supporting evidence with an accurate stakeholder-presentation caption |
+| Konsep dan Desain Eksterior Motor EV — PT Pindad | Exterior-design visualization | Physical-motorcycle photographs remain development context and must not be labeled as the realized Niuva design |
+| Bagit — Arei Smart Bag V2 | Product-focused V2 image | Use outdoor-use and V1 imagery as supporting context without performance claims |
+| Simulator Keselamatan Berkendara — Agate / PT DENSO | Complete simulator setup | Internal-component imagery requires neutral ownership wording |
+| Savero — Identitas Visual dan Aksesori Produk | Combined accessory composition | Classify every supporting image precisely as a render, drawing, or photographed artifact |
+| BeVenTU — Konsep Sistem Ventilator Darurat | Primary product visualization | Exclude specification panels and IP-reference text from the cover until independently verified |
+
 ## 4. Company and service content
 
 ### Company positioning
@@ -94,9 +123,14 @@ without replacing the category, for example `Mobility`, `Engineering`,
   support toward realization.
 - `CONFIRMED` — The supplied profile positions Niuva beyond a standalone 3D
   printing service.
-- `CANDIDATE` — Website summary: **Niuva membantu organisasi mengembangkan ide
-  menjadi produk yang dapat ditinjau dan diwujudkan melalui riset, desain,
-  prototyping, serta dukungan manufaktur.**
+- `CONFIRMED` — Owner-approved public positioning headline v1: **Mitra
+  pengembangan produk dari riset hingga prototipe.**
+- `CONFIRMED` — Owner-approved supporting copy v1: **Melalui riset, konsultasi,
+  desain, dan prototyping, Niuva membantu organisasi mengubah kebutuhan menjadi
+  arah produk yang dapat ditinjau sebelum realisasi.**
+- `CONFIRMED` — Public positioning must not repeat unsupported promises from
+  the source such as guaranteed competitive advantage, best manufacturing
+  quality, or guaranteed precision.
 - `OPEN_FACT` — Year founded, formal company-registration facts intended for
   public display, geographic service coverage, team size, production capacity,
   named equipment, and verified turnaround promises.
@@ -117,9 +151,11 @@ without replacing the category, for example `Mobility`, `Engineering`,
 - `CANDIDATE` — Use the introduction as source material rather than copying the
   long formal paragraph verbatim. Public copy should be shorter and route users
   to Services, Projects, Project Brief, Custom Print, or Shop.
-- `OPEN_FACT` — Confirm that the phone number, email address, and Bandung
-  Techno Park location in `SRC-COMPANY-001` page 13 are still current before
-  replacing existing contact UI.
+- `CONFIRMED` — Owner-approved public contact details:
+  - **Location:** Bandung Techno Park — Gedung D Lt. 1 (Ruang Makerspace),
+    Jl. Telekomunikasi No. 1, Sukapura;
+  - **Email:** `niuvamakerspace@gmail.com`;
+  - **Phone:** `+62 851-1767-8901`.
 
 ## 5. Featured case-study dossiers
 
@@ -530,37 +566,38 @@ sellable items merely because they appear in a source PDF.
 | Area | Status | Next evidence or decision |
 | --- | --- | --- |
 | Portfolio ownership claim | `CONFIRMED` | None for draft curation |
+| Company positioning v1 | `CONFIRMED` | Preserve the approved headline, supporting copy, and excluded-claim boundary during preview integration |
 | Client/partner name and logo permission | `CONFIRMED` | Preserve decision provenance during publication review |
 | People/project-photo permission | `CONFIRMED` | Preserve context and write accurate captions |
-| Six featured-project selection | `CONFIRMED` | Confirm final ordering and cover image during visual review |
+| Six featured-project selection and order | `CONFIRMED` | Preserve the approved non-chronological sequence; select specific cover assets during visual review |
+| Featured cover direction | `CONFIRMED` | Preserve the approved visual roles; no specific file or PDF crop is approved yet |
 | Featured summaries CS-01 through CS-06 | `CONFIRMED` | Owner-approved conservative copy v1 remains non-public; CS-02 through CS-06 need additional evidence before expansion into full challenge/process/output stories |
 | Selected Works structure and card copy | `CONFIRMED` | Eleven Owner-approved cards remain non-public; preserve their approved metadata, summaries, and evidence boundaries during dataset preparation |
 | Primary service categories | `CONFIRMED` | Preserve all approved featured-project and Selected Works mappings during dataset preparation |
 | Outcome-claim policy | `CONFIRMED` | Supply evidence before any performance or impact statement |
 | Original project media | `OPEN_FACT` | Not present in the repo; supply originals or approve reviewed PDF-derived exports later |
-| Current contact information | `OPEN_FACT` | Verify the page-13 company-profile details before public use |
+| Current contact information | `CONFIRMED` | Use the Owner-approved location, email, and normalized international phone format |
 | Project years and timelines | `OPEN_FACT` | Confirm per project |
 | Niuva's detailed role and team | `OPEN_FACT` | Project-specific responsibilities beyond the approved public boundaries still require evidence |
 | Detailed challenge/process/output | `CANDIDATE` / `OPEN_FACT` | CS-01 has a fuller approved draft; expand CS-02 through CS-06 only when supporting evidence is supplied |
 | Verified project results | `OPEN_FACT` | Provide documentary or Owner-confirmed factual evidence |
 | Ready-made Shop catalog | `OPEN_FACT` | Separate commercial dataset required |
-| Public content integration | **BLOCKED** | Requires media approval, final ordering and cover review, typed-dataset preview, and explicit integration approval |
+| Public content integration | **BLOCKED** | Requires media asset or crop approval, typed-dataset preview, and explicit integration approval |
 | Production publication | **BLOCKED** | Requires final assets, current facts, server integration, and explicit publication approval |
 
 ## 11. Recommended remaining review order
 
-The conservative copy review for CS-01 through CS-06 was completed on
+The conservative content review for company positioning, current contact
+details, CS-01 through CS-06, and all 11 Selected Works cards was completed on
 2026-09-09. Remaining work should proceed in this order:
 
-1. Review company positioning and current contact facts.
-2. Confirm final featured-case-study ordering and cover-image direction.
-3. Supply original media or approve specific PDF-derived crops for a visual
+1. Supply original media or approve specific PDF-derived crops for a visual
    proof only.
-4. Convert approved content into a typed, non-production dataset.
-5. Review `/`, `/services`, `/projects`, and `/projects/[slug]` with the curated
+2. Convert approved content into a typed, non-production dataset.
+3. Review `/`, `/services`, `/projects`, and `/projects/[slug]` with the curated
    dataset in development preview.
-6. Run accessibility, responsive, regression, and visual checks.
-7. Request a separate explicit approval before connecting the content to
+4. Run accessibility, responsive, regression, and visual checks.
+5. Request a separate explicit approval before connecting the content to
    production reads or marking anything published.
 
 ## 12. Non-public integration boundary
