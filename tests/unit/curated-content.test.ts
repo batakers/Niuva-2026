@@ -22,7 +22,7 @@ describe("curated non-production content", () => {
       productionPublicationApproved: false,
     });
 
-    for (const item of [...curatedFeaturedProjects, ...curatedSelectedWorks]) {
+    for (const item of [...curatedFeaturedProjects, ...curatedSelectedWorks, ...curatedServices]) {
       expect(item.publication.publicIntegrationApproved).toBe(false);
       expect(item.publication.productionPublicationApproved).toBe(false);
     }
@@ -66,9 +66,9 @@ describe("curated non-production content", () => {
     }
   });
 
-  it("contains four service candidates and eleven approved card-only works", () => {
+  it("contains four owner-approved preview services and eleven approved card-only works", () => {
     expect(curatedServices).toHaveLength(4);
-    expect(curatedServices.every(service => service.reviewStatus === "candidate")).toBe(true);
+    expect(curatedServices.every(service => service.reviewStatus === "owner-approved")).toBe(true);
     expect(curatedSelectedWorks.map(work => work.id)).toEqual(
       Array.from({ length: 11 }, (_, index) => `SW-${String(index + 1).padStart(2, "0")}`),
     );

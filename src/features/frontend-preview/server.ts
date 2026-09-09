@@ -2,6 +2,17 @@ import "server-only";
 import { isCuratedPreview, resolvePreviewScenario } from "./scenarios";
 import type { ProjectPreviewItem, PublicShopProduct } from "./types";
 
+export async function getCuratedPublicContentPreview(requested: unknown) {
+  if (!isCuratedPreview(process.env.NODE_ENV, requested)) return null;
+
+  const { curatedCompanyProfile, curatedServices } = await import("./curated-content");
+  return {
+    company: curatedCompanyProfile,
+    scenario: "curated" as const,
+    services: curatedServices,
+  };
+}
+
 async function getCuratedProjects(): Promise<readonly ProjectPreviewItem[]> {
   const { curatedFeaturedProjects, curatedSelectedWorks } = await import("./curated-content");
   const featured: readonly ProjectPreviewItem[] = curatedFeaturedProjects.map(project => ({

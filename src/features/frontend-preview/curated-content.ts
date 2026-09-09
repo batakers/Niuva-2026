@@ -111,7 +111,8 @@ export const curatedServices = [
       "Systematic product and technology development intended to support company innovation.",
     websiteFraming:
       "Explore needs, constraints, and technical direction before a product decision is finalized.",
-    reviewStatus: "candidate",
+    reviewStatus: "owner-approved",
+    publication: previewOnly,
   },
   {
     slug: "consultant-workshop",
@@ -120,7 +121,8 @@ export const curatedServices = [
       "Design recommendations from vision toward manufacturing, plus interactive training for skills and collaboration.",
     websiteFraming:
       "Structured consultation and practical workshops that help teams align decisions and build capability.",
-    reviewStatus: "candidate",
+    reviewStatus: "owner-approved",
+    publication: previewOnly,
   },
   {
     slug: "design-prototyping",
@@ -129,7 +131,8 @@ export const curatedServices = [
       "Visual-idea development through design and rapid prototyping for concept review and functional testing.",
     websiteFraming:
       "Translate an idea into design artifacts and prototypes that can be reviewed and iterated.",
-    reviewStatus: "candidate",
+    reviewStatus: "owner-approved",
+    publication: previewOnly,
   },
   {
     slug: "apparel-merchandise",
@@ -138,7 +141,8 @@ export const curatedServices = [
       "Product design intended to reflect brand identity and market relevance.",
     websiteFraming:
       "Develop branded apparel, merchandise, and accessories from visual direction toward production preparation.",
-    reviewStatus: "candidate",
+    reviewStatus: "owner-approved",
+    publication: previewOnly,
   },
 ] as const satisfies readonly Readonly<{
   slug: string;
@@ -146,6 +150,7 @@ export const curatedServices = [
   sourceScope: string;
   websiteFraming: string;
   reviewStatus: ContentReviewStatus;
+  publication: CuratedPublicationBoundary;
 }>[];
 
 /** Editorial order approved by the Owner; it is not a chronological claim. */

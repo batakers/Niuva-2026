@@ -82,6 +82,49 @@ test("curated project preview keeps real content and proof media development-onl
   expect(errors).toEqual([]);
 });
 
+test("curated company and service preview separates confirmed facts from approved preview framing", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+
+  await page.goto("/?preview=curated");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Mitra pengembangan produk dari riset hingga prototipe.",
+  );
+  await expect(page.getByText("Melalui riset, konsultasi, desain, dan prototyping")).toBeVisible();
+  await expect(page.getByText("niuvamakerspace@gmail.com")).toBeVisible();
+  await expect(page.getByText("+62 851-1767-8901")).toBeVisible();
+  await expect(page.getByText(/Bandung Techno Park/)).toBeVisible();
+  await expect(page.getByText("Framing web disetujui")).toHaveCount(4);
+
+  await page.getByRole("link", { name: "Lihat layanan" }).click();
+  await expect(page).toHaveURL(/\/services\?preview=curated$/);
+  await expect(page.locator("section[id]")).toHaveCount(4);
+  await expect(page.getByRole("heading", { name: "Research & Development" })).toBeVisible();
+  await expect(page.getByText("Systematic product and technology development")).toBeVisible();
+  await expect(page.getByText(/Metode, deliverable, durasi, kapasitas/)).toHaveCount(4);
+  await page.getByRole("link", { name: "Lihat proyek terkurasi" }).click();
+  await expect(page).toHaveURL(/\/projects\?preview=curated$/);
+
+  for (const width of [320, 390, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const path of ["/?preview=curated", "/services?preview=curated"]) {
+      await page.goto(path);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+        `${path} at ${width}px`,
+      ).toBe(true);
+    }
+  }
+
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Dari ide menjadi");
+  await expect(page.getByText("niuvamakerspace@gmail.com")).toHaveCount(0);
+  await page.goto("/services");
+  await expect(page.getByRole("heading", { name: "Research & Development" })).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
 test("brief preview validates, recovers and never posts an inquiry", async ({ page }) => {
   const mutations: string[] = [];
   page.on("request", request => { if (request.method() === "POST" && request.url().includes("/api/")) mutations.push(request.url()); });

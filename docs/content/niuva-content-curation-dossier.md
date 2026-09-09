@@ -137,7 +137,11 @@ a particular file, PDF crop, resolution, or final publication asset.
 
 ### Four service summaries
 
-| Service | Confirmed source scope | Candidate website framing | Open facts |
+The Owner approved the website framing below for the development preview on
+2026-09-10. This editorial approval does not fill the open operational facts or
+authorize production publication.
+
+| Service | Confirmed source scope | Owner-approved preview framing | Open facts |
 | --- | --- | --- | --- |
 | Research & Development | Systematic product and technology development intended to support company innovation | Explore needs, constraints, and technical direction before a product decision is finalized | Research methods, standard deliverables, typical duration, and named facilities |
 | Consultant & Workshop | Design recommendations from vision toward manufacturing, plus interactive training for skills and collaboration | Structured consultation and practical workshops that help teams align decisions and build capability | Workshop formats, participant limits, modules, duration, and availability |
@@ -573,8 +577,10 @@ sellable items merely because they appear in a source PDF.
 | Featured cover direction | `CONFIRMED` | PDF-derived crop directions in `docs/content/media-proofs/featured-covers/` were approved by the Owner on 2026-09-10 for non-production preview only; production use still requires a separate publication gate |
 | Featured summaries CS-01 through CS-06 | `CONFIRMED` | Owner-approved conservative copy v1 remains non-public; CS-02 through CS-06 need additional evidence before expansion into full challenge/process/output stories |
 | Selected Works structure and card copy | `CONFIRMED` | Eleven Owner-approved cards remain non-public; preserve their approved metadata, summaries, and evidence boundaries during dataset preparation |
-| Typed non-production dataset | `CANDIDATE` | `src/features/frontend-preview/curated-content.ts` preserves the approved editorial order, stable IDs, evidence readiness, proof provenance, and fail-closed publication flags; it is loaded only through the development-only curated preview boundary |
-| Curated project preview | `CANDIDATE` | Development-only `/projects?preview=curated` and matching detail routes render the typed dataset through an allowlisted proof-media boundary; Owner visual/content review remains required |
+| Typed non-production dataset | `CONFIRMED` | `src/features/frontend-preview/curated-content.ts` preserves the approved editorial order, stable IDs, evidence readiness, proof provenance, and fail-closed publication flags; it is loaded only through the development-only curated preview boundary |
+| Curated project preview | `CONFIRMED` | Owner approved the visual/content preview on 2026-09-10; development-only `/projects?preview=curated` and matching detail routes render the typed dataset through an allowlisted proof-media boundary |
+| Curated company and services preview | `CONFIRMED` | Owner approved the visual/content preview on 2026-09-10; development-only `/?preview=curated` renders confirmed positioning/contact facts and `/services?preview=curated` keeps source scope separate from approved editorial framing; neither replaces normal or production reads |
+| Curated preview verification | `CONFIRMED` | Unit, E2E, responsive overflow, lint, typecheck, production build, and desktop visual checks passed on 2026-09-10; browser-extension hydration attributes were excluded as external noise after clean-browser verification |
 | Primary service categories | `CONFIRMED` | Preserve all approved featured-project and Selected Works mappings during dataset preparation |
 | Outcome-claim policy | `CONFIRMED` | Supply evidence before any performance or impact statement |
 | Original project media | `OPEN_FACT` | Not present in the repo; supply originals or approve reviewed PDF-derived exports later |
@@ -591,17 +597,14 @@ sellable items merely because they appear in a source PDF.
 
 The conservative content review for company positioning, current contact
 details, CS-01 through CS-06, and all 11 Selected Works cards was completed on
-2026-09-09. Remaining work should proceed in this order:
+2026-09-09. The combined curated preview was approved on 2026-09-10. Remaining
+work should proceed in this order:
 
-1. Review `/projects?preview=curated` and its six featured detail pages with the
-   Owner; record any content, crop, or hierarchy revisions.
-2. Connect the approved company and candidate service content to development-only
-   previews of `/` and `/services` without replacing production reads.
-3. Prefer original media when supplied and retain the approved crop directions
+1. Prefer original media when supplied and retain the approved crop directions
    as the fallback visual reference.
-4. Review the combined curated development preview with the Owner.
-5. Run accessibility, responsive, regression, and visual checks.
-6. Request a separate explicit approval before connecting the content to
+2. Decide whether the reviewed PDF-derived cover proofs may be promoted from
+   non-production evidence to production assets if originals remain unavailable.
+3. Request a separate explicit approval before connecting the content to
    production reads or marking anything published.
 
 ## 12. Non-public integration boundary
