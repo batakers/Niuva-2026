@@ -188,61 +188,88 @@ dipresentasikan kepada stakeholder.
 Case study tidak menyatakan deployment, produksi massal, performa teknis,
 jumlah sampah terkumpul, perubahan perilaku, atau dampak lingkungan/bisnis.
 
-### CS-02 — Pengembangan Motor EV — PT Pindad
+### CS-02 — Konsep dan Desain Eksterior Motor EV — PT Pindad
 
 | Field | Draft |
 | --- | --- |
-| Status | `CANDIDATE` featured case study |
-| Primary category | Research & Development |
-| Tags | Mobility; Electric Vehicle; Engineering; Prototype |
+| Status | `CANDIDATE` featured case study; conservative public narrative v1 approved on 2026-09-09; exact project identity, date, and physical-design realization remain unverified and omitted from public copy |
+| Primary category | Design & Prototyping |
+| Tags | Mobility; Electric Vehicle; Exterior Design; Concept Development |
 | Sources | `SRC-COMPANY-001` page 10 |
+| Approved identity/date boundary | Do not identify this engagement as the 2021 Mandalika MotoEV or publish **2021** as its project year without a later explicit confirmation. The public project year remains omitted. |
+| Confirmed Niuva role | Product-concept development and exterior/body-form design. Do not attribute the electric motor, powertrain, battery, controller, vehicle engineering, fabrication, testing, or manufacturing to Niuva. |
+| Approved media-attribution boundary | Treat the design visualization as evidence of Niuva's approved exterior/body-form scope. The physical-motorcycle photograph may be shown only as development context; do not describe it as the realized or final Niuva design unless later project evidence confirms that relationship. |
+| Approved public context | Describe the project neutrally as work for adaptable, functional **operational mobility**. Keep the source's TNI context in the internal evidence record, but do not foreground military use or imply deployment, testing, or operational adoption in public copy. |
 | Confirmed evidence | The company profile describes a collaboration on a tactical electric motorcycle intended for TNI operational needs and frames the project around adaptable, functional mobility. The page shows motorcycle photographs and a rendered design. |
-| Candidate summary | Niuva contributed to the development of a tactical electric-motorcycle concept with PT Pindad, connecting mobility requirements with product and engineering considerations. |
-| Safe output statement | The supplied material documents a motorcycle design and physical-development context. |
+| Approved public narrative v1 | Dalam konteks pengembangan motor listrik PT Pindad, Niuva berkontribusi pada pengembangan konsep produk dan desain bentuk bodi/eksterior untuk kebutuhan mobilitas operasional yang adaptif dan fungsional. Materi proyek menampilkan visualisasi desain serta konteks pengembangan motor fisik, tanpa menyatakan desain tersebut sebagai produk final atau telah digunakan secara operasional. |
+| Safe output statement | The supplied material documents an exterior/body design visualization alongside physical-motorcycle development context, without asserting that the photographed body is the final realization of Niuva's design and while keeping Pindad's vehicle technology and engineering ownership separate. |
 | Prohibited inference | Do not claim military deployment, field validation, performance specifications, certification, production status, or operational use. |
-| Open facts | Year; exact Niuva scope; engineering disciplines; design constraints; prototype stage; partner responsibilities; testing evidence; final deliverables. |
+| Open facts | Year; detailed design brief and constraints; concept-selection rationale; whether the visualized body direction was realized on the photographed motorcycle; prototype stage; partner responsibilities; testing evidence; and final design deliverables. |
 
 Recommended media sequence after original assets are supplied:
 
-1. strongest complete motorcycle image;
-2. alternate physical view;
-3. design visualization;
-4. process or engineering detail if later supplied.
+1. design visualization as the primary evidence of Niuva's approved scope;
+2. strongest complete motorcycle image, captioned as development context;
+3. alternate physical view, with the same attribution boundary;
+4. process detail only if later supplied and attributed.
 
-### CS-03 — Motorcycle Simulator — Agate / PT DENSO (DMIA)
+#### External primary-source conflict — clarification required
+
+PT Pindad's official 2021 MotoEV publication describes a prototype introduced
+at the World Superbike event in Mandalika on 19–21 November 2021. It attributes
+the MotoEV to Pindad, states that its electric drive motor was made by Pindad,
+and says the displayed prototype still used a universal frame and body while
+future frame/body development and partner collaboration remained open. The
+official page does not identify Niuva.
+
+The motorcycle shown in `SRC-COMPANY-001` page 10 appears consistent with the
+Pindad MotoEV imagery, but the dossier must not equate the two engagements or
+adopt the 2021 date. The Owner approved this conservative boundary on
+2026-09-09 without confirming that the two are the same engagement. If a later
+confirmation establishes that identity, public copy must distinguish Pindad's
+product ownership from Niuva's specific contribution.
+
+Primary source reviewed:
+[PT Pindad — Pindad Pamerkan Maung, MV2 dan Perkenalkan Prototipe MotoEV di
+Mandalika](https://pindad.com/pindad-pamerkan-maung-mv2-dan-perkenalkan-prototipe-motoev-di-mandalika).
+
+### CS-03 — Simulator Keselamatan Berkendara — Agate / PT DENSO
 
 | Field | Draft |
 | --- | --- |
-| Status | `CANDIDATE` featured case study |
+| Status | `CANDIDATE` featured case study; conservative public narrative v1 approved on 2026-09-09; detailed technical responsibilities, delivery stage, and outcomes remain unverified and omitted from public copy |
 | Primary category | Design & Prototyping |
-| Tags | Training Simulator; Safety Riding; Interactive Product; Prototype |
+| Tags | Training Simulator; Safety Riding; Interactive Product; Product Development |
 | Sources | `SRC-COMPANY-001` page 12 |
+| Approved relationship boundary | Describe this as a project involving Agate and PT DENSO/DMIA. Do not identify either party as the primary client, commissioning party, lead contractor, or integrator until project records confirm the relationship. |
+| Approved Niuva role boundary | State only that Niuva was involved in developing a motorcycle-based riding simulator. Do not attribute industrial design, mechanical engineering, hardware, electronics, software, fabrication, integration, or testing to Niuva until supporting project evidence confirms the specific responsibility. |
 | Confirmed evidence | The company profile describes development of a riding-safety training simulator for PT DENSO employees and identifies Agate in the project title. The page shows a motorcycle-based apparatus and internal/electronic documentation. |
-| Candidate summary | Niuva participated in developing a motorcycle-based training simulator intended to support a safer, controlled safety-riding learning experience. |
+| Approved public narrative v1 | Niuva terlibat dalam pengembangan simulator berkendara berbasis sepeda motor untuk mendukung pelatihan keselamatan berkendara bagi karyawan PT DENSO, dalam proyek yang melibatkan Agate. Dokumentasi yang tersedia memperlihatkan konfigurasi fisik simulator dan bagian internal perangkat, tanpa menetapkan pembagian tanggung jawab teknis atau mengklaim hasil penerapannya. |
 | Safe output statement | The supplied source documents the physical simulator setup and an internal component view. |
 | Prohibited inference | Do not claim deployment, learner outcomes, incident reduction, software ownership, validation, or usage scale. |
-| Open facts | Relationship between Niuva, Agate, and DENSO; year; Niuva's exact role; hardware/software scope; interaction model; testing; delivery stage; verified outcome. |
+| Open facts | Relationship between Niuva, Agate, and DENSO; exact DENSO legal-entity naming; year; responsibilities beyond the approved conservative role boundary; hardware/software scope; interaction model; testing; delivery stage; verified outcome. |
 
 Recommended media sequence after original assets are supplied:
 
 1. complete simulator setup;
-2. rider/interface context;
-3. internal hardware/electronics detail;
+2. rider/interface context if supplied and accurately captioned;
+3. source-documented internal component view with neutral ownership wording;
 4. workshop or testing documentation if later supplied.
 
-### CS-04 — BeVenTU Emergency Ventilator System
+### CS-04 — BeVenTU — Konsep Sistem Ventilator Darurat
 
 | Field | Draft |
 | --- | --- |
-| Status | `CANDIDATE` featured case study |
-| Primary category | Research & Development |
-| Tags | Healthcare Product; Industrial Design; Product Engineering; IP Documentation |
+| Status | `CANDIDATE` featured case study; conservative public narrative v1 approved on 2026-09-09; functional, clinical, regulatory, and production status remain unverified and omitted from public copy |
+| Primary category | Design & Prototyping |
+| Tags | Healthcare Product; Industrial Design; Concept Development; Form Exploration |
 | Sources | `SRC-PORT-001` page 6 |
-| Confirmed evidence | The portfolio labels the work as BeVenTU emergency ventilator system, shows form alternatives and product visualizations, and prints an industrial-design certificate number plus a patent-registration number. |
-| Candidate summary | BeVenTU documents the development of an emergency-ventilator product concept through alternative forms, system layout, and industrial-design presentation. |
+| Approved Niuva role boundary | Attribute only product-concept development, alternative-form exploration, system-layout visualization, and industrial-design presentation to Niuva. Do not attribute medical-device design, ventilation-function engineering, fabrication, testing, clinical validation, certification, production, or patient use without supporting evidence. |
+| Confirmed evidence | The portfolio labels the work as BeVenTU emergency ventilator system, shows form alternatives and product visualizations, and prints text presented as an industrial-design certificate number plus a patent-registration number. The registry status and ownership of those references are not yet verified. |
+| Approved public narrative v1 | BeVenTU mendokumentasikan pengembangan konsep sistem ventilator darurat melalui eksplorasi alternatif bentuk, visualisasi tata letak sistem, dan presentasi desain industri. Materi yang tersedia menunjukkan proses desain produk dan artefak visual, tanpa menyatakan bahwa perangkat telah dibuat, diuji, disertifikasi, diproduksi, atau digunakan secara klinis. |
 | Safe output statement | The documented outputs include alternative designs, product views, a specification panel, and IP-reference text. |
 | Prohibited inference | Do not make medical-efficacy, clinical, regulatory-approval, production, hospital-use, or patient-outcome claims. |
-| Open facts | Project year; Niuva's role; engineering partners; functional prototype status; testing context; intended use; official verification of `IDD0000059674` and `S00202010344`; public-safe specification text. |
+| Open facts | Project year; responsibilities beyond the approved design-output boundary; engineering partners; functional prototype status; testing context; intended use; official verification and ownership of `IDD0000059674` and `S00202010344`; public-safe specification text. |
 
 Recommended media sequence after original assets are supplied:
 
@@ -251,19 +278,20 @@ Recommended media sequence after original assets are supplied:
 3. internal/system view;
 4. specification or IP detail only after verification.
 
-### CS-05 — “Bagit” Arei Smart Bag V2
+### CS-05 — Bagit — Arei Smart Bag V2
 
 | Field | Draft |
 | --- | --- |
-| Status | `CANDIDATE` featured case study |
+| Status | `CANDIDATE` featured case study; conservative public narrative v1 approved on 2026-09-09; feature, material, manufacturing, testing, and commercial status remain unverified and omitted from public copy |
 | Primary category | Apparel & Merchandise |
-| Tags | Bag Development; Smart Product; Product Iteration; Outdoor Equipment |
+| Tags | Bag Development; Product Iteration; Outdoor Equipment; Detail Development |
 | Sources | `SRC-PORT-001` page 11; V1 comparison material on page 10 |
+| Approved Niuva role boundary | Attribute only iterative bag-concept development from V1 to V2 and exploration of form and component details to Niuva. Do not attribute electronics or smart-feature engineering, material specification, fabrication, field testing, mass production, or retail launch without supporting evidence. |
 | Confirmed evidence | The portfolio identifies “Bagit” as Arei Smart Bag V2 and shows the bag, outdoor-use photographs, a V1 predecessor on the previous page, and selected component/detail callouts. |
-| Candidate summary | The Arei Smart Bag documentation shows an iterative product-development path from an earlier prototype toward a refined outdoor bag concept with integrated feature considerations. |
+| Approved public narrative v1 | Bagit — Arei Smart Bag V2 menunjukkan proses pengembangan iteratif konsep tas dari V1 menuju V2. Dokumentasi proyek menampilkan eksplorasi bentuk, detail komponen, dan konteks penggunaan luar ruang, tanpa mengklaim fungsi pintar tertentu, spesifikasi material, status produksi, atau hasil pengujian. |
 | Safe output statement | The source supports a visual V1-to-V2 development story and shows the V2 product in use. |
 | Prohibited inference | Do not claim feature performance, production volume, retail launch, field-test results, durability, or sales impact. |
-| Open facts | Year; Niuva scope; Arei brief; confirmed feature list; V1 feedback; design decisions; prototype/manufacturing status; material specifications; verified outcome. |
+| Open facts | Year; responsibilities beyond the approved concept-and-detail boundary; Arei brief; confirmed feature list; V1 feedback; design decisions; prototype/manufacturing status; material specifications; verified outcome. |
 
 Recommended media sequence after original assets are supplied:
 
@@ -273,19 +301,20 @@ Recommended media sequence after original assets are supplied:
 4. component/detail views;
 5. confirmed feature explanation.
 
-### CS-06 — Savero Product & Brand Accessories
+### CS-06 — Savero — Identitas Visual dan Aksesori Produk
 
 | Field | Draft |
 | --- | --- |
-| Status | `CANDIDATE` featured case study |
+| Status | `CANDIDATE` featured case study; conservative public narrative v1 approved on 2026-09-09; material, engineering, manufacturing, launch, and commercial status remain unverified and omitted from public copy |
 | Primary category | Apparel & Merchandise |
 | Tags | Brand Identity; Product Accessories; Industrial Design; Detail Development |
 | Sources | `SRC-PORT-001` page 3; `SRC-PDS-001` pages 3–7 |
+| Approved Niuva role boundary | Attribute only visual-identity applications, accessory concepts, component-detail design, dimensional drawings, and product visualization to Niuva. Do not attribute comprehensive brand strategy, material selection, production engineering, fabrication, manufacturing volume, market launch, or commercial performance without supporting evidence. |
 | Confirmed evidence | The sources identify Savero Group and show a visual identity system, accessory concepts, logos, front-lid and back-system studies, zipper concepts, dimensional drawings, renders, and physical-looking product views. |
-| Candidate summary | Niuva developed a connected visual and physical accessory language for Savero, carrying brand identity into detailed product components and presentation artifacts. |
+| Approved public narrative v1 | Untuk Savero, Niuva mengembangkan aplikasi identitas visual dan konsep aksesori produk melalui studi sistem penutup depan dan belakang, ritsleting, logo, detail komponen, gambar berdimensi, serta visualisasi produk. Dokumentasi ini memperlihatkan penerjemahan elemen identitas ke dalam detail produk, tanpa mengklaim material, proses manufaktur, status peluncuran, atau performa komersial. |
 | Safe output statement | The documented outputs span identity applications, dimensional design studies, and accessory visualizations. |
 | Prohibited inference | Do not claim manufacturing volume, market launch, sales, durability, or commercial performance. |
-| Open facts | Project year; Niuva role; product range; design brief; selected directions; manufacturing involvement; materials; delivered assets; verified outcome. |
+| Open facts | Project year; responsibilities beyond the approved design-output boundary; product range; design brief; selected directions; manufacturing involvement; materials; delivered assets; verified outcome. |
 
 Recommended media sequence after original assets are supplied:
 
@@ -294,7 +323,8 @@ Recommended media sequence after original assets are supplied:
 3. front-lid/back-system development;
 4. zipper alternatives;
 5. logo/detail drawings;
-6. selected physical or rendered outcome.
+6. selected source image, captioned precisely as a render or photographed
+   artifact only after classification.
 
 ## 6. Selected Works inventory
 
@@ -413,31 +443,35 @@ sellable items merely because they appear in a source PDF.
 | Client/partner name and logo permission | `CONFIRMED` | Preserve decision provenance during publication review |
 | People/project-photo permission | `CONFIRMED` | Preserve context and write accurate captions |
 | Six featured-project selection | `CONFIRMED` | Confirm final ordering and cover image during visual review |
-| Primary service categories | `CONFIRMED` | Assign projects during dataset preparation |
+| Featured summaries CS-01 through CS-06 | `CONFIRMED` | Owner-approved conservative copy v1 remains non-public; CS-02 through CS-06 need additional evidence before expansion into full challenge/process/output stories |
+| Primary service categories | `CONFIRMED` | Preserve approved featured-project mappings; review Selected Works mappings separately |
 | Outcome-claim policy | `CONFIRMED` | Supply evidence before any performance or impact statement |
 | Original project media | `OPEN_FACT` | Not present in the repo; supply originals or approve reviewed PDF-derived exports later |
 | Current contact information | `OPEN_FACT` | Verify the page-13 company-profile details before public use |
 | Project years and timelines | `OPEN_FACT` | Confirm per project |
-| Niuva's exact role and team | `OPEN_FACT` | Confirm per project |
-| Detailed challenge/process/output | `CANDIDATE` / `OPEN_FACT` | Review one featured case study at a time |
+| Niuva's detailed role and team | `OPEN_FACT` | Project-specific responsibilities beyond the approved public boundaries still require evidence |
+| Detailed challenge/process/output | `CANDIDATE` / `OPEN_FACT` | CS-01 has a fuller approved draft; expand CS-02 through CS-06 only when supporting evidence is supplied |
 | Verified project results | `OPEN_FACT` | Provide documentary or Owner-confirmed factual evidence |
 | Ready-made Shop catalog | `OPEN_FACT` | Separate commercial dataset required |
-| Public content integration | **BLOCKED** | Requires Owner review of the curated copy and media |
+| Public content integration | **BLOCKED** | Requires Selected Works review, media approval, typed-dataset preview, and explicit integration approval |
 | Production publication | **BLOCKED** | Requires final assets, current facts, server integration, and explicit publication approval |
 
-## 11. Recommended review order
+## 11. Recommended remaining review order
+
+The conservative copy review for CS-01 through CS-06 was completed on
+2026-09-09. Remaining work should proceed in this order:
 
 1. Review company positioning and current contact facts.
-2. Review CS-01 Smart Drop Box field by field.
-3. Repeat the factual interview for CS-02 through CS-06.
-4. Approve which Selected Works entries receive compact public cards.
-5. Supply original media or approve specific PDF-derived crops for a visual
+2. Approve which Selected Works entries receive compact public cards and
+   review their proposed categories and tags.
+3. Confirm final featured-case-study ordering and cover-image direction.
+4. Supply original media or approve specific PDF-derived crops for a visual
    proof only.
-6. Convert approved content into a typed, non-production dataset.
-7. Review `/`, `/services`, `/projects`, and `/projects/[slug]` with the curated
+5. Convert approved content into a typed, non-production dataset.
+6. Review `/`, `/services`, `/projects`, and `/projects/[slug]` with the curated
    dataset in development preview.
-8. Run accessibility, responsive, regression, and visual checks.
-9. Request a separate explicit approval before connecting the content to
+7. Run accessibility, responsive, regression, and visual checks.
+8. Request a separate explicit approval before connecting the content to
    production reads or marking anything published.
 
 ## 12. Non-public integration boundary
