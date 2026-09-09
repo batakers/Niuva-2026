@@ -570,9 +570,10 @@ sellable items merely because they appear in a source PDF.
 | Client/partner name and logo permission | `CONFIRMED` | Preserve decision provenance during publication review |
 | People/project-photo permission | `CONFIRMED` | Preserve context and write accurate captions |
 | Six featured-project selection and order | `CONFIRMED` | Preserve the approved non-chronological sequence; select specific cover assets during visual review |
-| Featured cover direction | `CONFIRMED` | Preserve the approved visual roles; no specific file or PDF crop is approved yet |
+| Featured cover direction | `CONFIRMED` | PDF-derived crop directions in `docs/content/media-proofs/featured-covers/` were approved by the Owner on 2026-09-10 for non-production preview only; production use still requires a separate publication gate |
 | Featured summaries CS-01 through CS-06 | `CONFIRMED` | Owner-approved conservative copy v1 remains non-public; CS-02 through CS-06 need additional evidence before expansion into full challenge/process/output stories |
 | Selected Works structure and card copy | `CONFIRMED` | Eleven Owner-approved cards remain non-public; preserve their approved metadata, summaries, and evidence boundaries during dataset preparation |
+| Typed non-production dataset | `CANDIDATE` | `src/features/frontend-preview/curated-content.ts` preserves the approved editorial order, stable IDs, evidence readiness, proof provenance, and fail-closed publication flags; it is not loaded by a route yet |
 | Primary service categories | `CONFIRMED` | Preserve all approved featured-project and Selected Works mappings during dataset preparation |
 | Outcome-claim policy | `CONFIRMED` | Supply evidence before any performance or impact statement |
 | Original project media | `OPEN_FACT` | Not present in the repo; supply originals or approve reviewed PDF-derived exports later |
@@ -591,11 +592,11 @@ The conservative content review for company positioning, current contact
 details, CS-01 through CS-06, and all 11 Selected Works cards was completed on
 2026-09-09. Remaining work should proceed in this order:
 
-1. Supply original media or approve specific PDF-derived crops for a visual
-   proof only.
-2. Convert approved content into a typed, non-production dataset.
-3. Review `/`, `/services`, `/projects`, and `/projects/[slug]` with the curated
-   dataset in development preview.
+1. Connect the typed dataset to a development-only preview of `/`, `/services`,
+   `/projects`, and `/projects/[slug]` without replacing production reads.
+2. Prefer original media when supplied and retain the approved crop directions
+   as the fallback visual reference.
+3. Review the curated development preview with the Owner.
 4. Run accessibility, responsive, regression, and visual checks.
 5. Request a separate explicit approval before connecting the content to
    production reads or marking anything published.
@@ -606,7 +607,7 @@ This dossier does **not**:
 
 - change any current public route;
 - replace synthetic fixtures;
-- extract or commit PDF images;
+- connect extracted proof images to public routes or treat them as production assets;
 - seed Prisma or another database;
 - publish a client, project, logo, person, product, price, or contact detail;
 - activate Shop products, pricing rules, providers, uploads, or payments;
