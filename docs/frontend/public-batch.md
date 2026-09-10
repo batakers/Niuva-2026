@@ -3,6 +3,10 @@
 Started: 2026-09-06. Updated: 2026-09-08. Status: **UI_IMPLEMENTED**, **VISUAL_ACCEPTANCE_PENDING**,
 **NOT_INTEGRATED**. User approved FE-00–02 followed by FE-03–07, FE-08–15, the isolated FE-16 admin preview, FE-17 Action Queue, FE-18 Admin Inquiry Detail, FE-19 Admin Orders, FE-20 Admin Order Fulfillment, FE-21 Admin Custom Print Review, and FE-22 Admin Quote Draft Preview.
 
+> Historical note — on 2026-09-10, the fixture-only FE-16–26 source, route, and
+> tests were retired during repository complexity cleanup. The references and
+> verification below remain an archival record; they do not describe live routes.
+
 ## Scope and review paths
 
 | Task | Result | Local review |

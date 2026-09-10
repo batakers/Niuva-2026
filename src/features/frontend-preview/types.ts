@@ -1,10 +1,7 @@
-import type { PortfolioRepository } from "@/modules/portfolio/repository";
 import type { PublicCatalogProduct } from "@/modules/catalog/repository";
 
-// Same public projection as the repository; no admin/private fields added.
-export type PublicProject = NonNullable<Awaited<ReturnType<PortfolioRepository["findPublishedProjectBySlug"]>>>;
 export type PreviewScenario = "examples" | "empty" | "loading" | "error";
-export type ProjectPreviewMode = PreviewScenario | "curated";
+export type ProjectPreviewMode = PreviewScenario;
 
 export type ProjectPreviewItem = Readonly<{
   id: string;

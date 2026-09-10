@@ -43,7 +43,6 @@ export default async function ProjectDetail({ params, searchParams }: {
   const { project, scenario } = await getProjectPreviewBySlug(slug, preview);
   if (!project || project.detailReadiness === "card-only") notFound();
 
-  const isCurated = scenario === "curated";
   const isPreview = scenario !== null;
   const isEvidenceBounded = Boolean(project.evidenceBoundary);
   const previewSuffix = scenario ? `?preview=${scenario}` : "";
@@ -64,9 +63,7 @@ export default async function ProjectDetail({ params, searchParams }: {
 
         {isPreview && (
           <p className="mt-8 rounded-lg border border-info-border bg-info-background p-4 text-sm text-info">
-            {isCurated
-              ? "Preview lokal · tampilan pembanding untuk konten publik yang sama. Parameter preview tidak dapat diindeks."
-              : "Preview lokal · skenario sintetis untuk review desain. Bukan proyek atau hasil client Niuva."}
+            Preview lokal · skenario sintetis untuk review desain. Bukan proyek atau hasil client Niuva.
           </p>
         )}
 

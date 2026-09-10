@@ -40,9 +40,6 @@ importers:
       decimal.js:
         specifier: ^10.6.0
         version: 10.6.0
-      dotenv:
-        specifier: ^17.4.2
-        version: 17.4.2
       lucide-react:
         specifier: ^1.34.0
         version: 1.34.0(react@19.2.8)

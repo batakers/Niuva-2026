@@ -1,10 +1,9 @@
 import { PrismaPg } from "@prisma/adapter-pg";
-import { config } from "dotenv";
 
 import { PrismaClient } from "../src/generated/prisma/client";
 import { seedApprovedPublicContent } from "../src/modules/portfolio/seed-approved-public-content";
 
-config({ path: ".env.test.local" });
+process.loadEnvFile(".env.test.local");
 
 function getSafeTestDatabaseUrl(): string {
   const candidate = process.env.TEST_DATABASE_URL?.trim();

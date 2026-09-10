@@ -436,10 +436,12 @@ owner dan integrasi tetap terpisah. Handoff: [public-batch.md](../docs/frontend/
   tidak menggandakan otoritas harga/stock/auth/token/payment ke browser.
   Tidak menampilkan “terbayar”, “terkirim”, “tersimpan di server” sebagai hasil nyata
   dari simulasi. Skenario sukses hanya ada di preview yang jelas terpisah.
-- Untuk admin tanpa Clerk, target route /admin tetap dilindungi. Komponen view
-  direview lewat **usulan development-only** /auis/proofs/frontend/admin dengan
-  fixture dan tanpa service/repository import. Tidak membuat fake login atau
-  membuka akses /admin dengan environment toggle.
+- Untuk admin tanpa Clerk, target route /admin tetap dilindungi. Preview
+  development-only FE-16–26 dipensiunkan pada 2026-09-10 untuk menghindari
+  fixture-only implementation yang tidak memiliki consumer operasional.
+  Implementasi berikutnya dimulai dari slice server-backed setelah Clerk dan
+  boundary service yang relevan siap; tidak membuat fake login atau membuka
+  akses /admin dengan environment toggle.
 - R2 upload/download, Midtrans, Biteship, email, webhook publik dan onboarding
   tetap tertunda. Tidak perlu akun provider untuk menyelesaikan review frontend.
 - Persiapan sandbox yang belum committed dipertahankan. Batch FE-00–08 memakai
@@ -468,8 +470,10 @@ owner dan integrasi tetap terpisah. Handoff: [public-batch.md](../docs/frontend/
 ### Backlog terurut
 
 Kolom Files memakai path relatif repo; “registry” berarti
-src/app/auis/styleguide/registry. Komponen admin di src/features/admin dirender
-melalui preview FE-16 sampai wiring autentikasi pada fase integrasi tersedia.
+src/app/auis/styleguide/registry. Catatan FE-16–26 di bawah adalah bukti
+historis preview yang dipensiunkan pada 2026-09-10; path implementation dan
+test-nya sudah tidak dipertahankan. Rebuild admin dimulai per slice setelah
+wiring autentikasi pada fase integrasi tersedia.
 
 | ID | Task / target screen | Depends on FE | Files likely touched | Acceptance criteria | Verification |
 | --- | --- | --- | --- | --- | --- |
@@ -509,10 +513,10 @@ melalui preview FE-16 sampai wiring autentikasi pada fase integrasi tersedia.
 - C: FE-06–08 — detail project, brief, catalog.
 - D: FE-09–11 — detail produk → cart → checkout preview.
 - E: FE-12–14 — custom landing → request → quote preview.
-- F: FE-15–17 — order status, admin shell, queue.
-- G: FE-18–20 — inquiry handling dan order fulfillment preview.
-- H: FE-21–23 — custom review, quote editor, product list.
-- I: FE-24–26 — catalog editor dan portfolio.
+- F: FE-15 — order status; admin proof FE-16–17 retired.
+- G: Admin preview FE-18–20 retired; requirement kembali ke fase integrasi.
+- H: Admin preview FE-21–23 retired; requirement kembali ke fase integrasi.
+- I: Admin preview FE-24–26 retired; requirement kembali ke fase integrasi.
 - J: FE-27 — acceptance seluruh frontend dan handoff.
 
 FE-03 menghubungkan link tujuan bertahap; route yang belum dibuat tidak diberi
@@ -526,7 +530,7 @@ penggunaan subagent kelak mengikuti keputusan user.
 | Risiko atau dependency | Perlakuan |
 | --- | --- |
 | Dataset produk, stock, media, izin client dan hasil project belum lengkap | Preview sintetis; publikasi factual dataset menjadi gate terpisah |
-| Clerk belum tersedia dan Proxy melindungi seluruh /admin termasuk sign-in | FE-16 membuat view/preview, login wiring + public sign-in exception direview pada fase auth; jangan melemahkan Proxy pada fase frontend |
+| Clerk belum tersedia dan Proxy melindungi seluruh /admin termasuk sign-in | Preview FE-16–26 sudah retired; mulai dari slice server-backed saat auth siap dan jangan melemahkan Proxy pada fase frontend |
 | Quote decline dan beberapa mutation admin belum mempunyai HTTP boundary | Preview intent saja; daftar endpoint missing masuk handoff FE-27 |
 | Pricing policy lama pada plan historis masih tertulis OPEN | Rujuk docs/backend/phase-3-pricing-biteship-contract.md dan policy aktif; jangan pilih rule baru atau menganggap rule sudah di-seed |
 | Form frontend berpotensi berbeda dari schema backend | FE-01/07/13 memakai field contract PRD + schema existing; perubahan domain bukan scope frontend |

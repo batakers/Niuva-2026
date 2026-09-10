@@ -6,10 +6,6 @@ import {
   parseServerEnvironment,
   validateStartupEnvironment,
 } from "@/lib/env/server";
-import {
-  getPublicEnvironment,
-  PublicEnvironmentValidationError,
-} from "@/lib/env/public";
 
 describe("server environment contract", () => {
   it("keeps every provider capability disabled when no values are configured", () => {
@@ -75,29 +71,5 @@ describe("server environment contract", () => {
 
     expect(capabilities.objectStorage).toBe(true);
     expect(capabilities.customUploads).toBe(true);
-  });
-});
-
-describe("public environment contract", () => {
-  it("returns an explicit public allow-list without server-only values", () => {
-    const environment = getPublicEnvironment({
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_123",
-      NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: "client-key",
-      NEXT_PUBLIC_SENTRY_DSN: "https://public@example.ingest.sentry.io/1",
-      SERVER_ONLY_VALUE: "must-not-escape",
-    });
-
-    expect(environment).toEqual({
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_123",
-      NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: "client-key",
-      NEXT_PUBLIC_SENTRY_DSN: "https://public@example.ingest.sentry.io/1",
-    });
-    expect(environment).not.toHaveProperty("SERVER_ONLY_VALUE");
-  });
-
-  it("rejects malformed public URLs", () => {
-    expect(() =>
-      getPublicEnvironment({ NEXT_PUBLIC_SENTRY_DSN: "not-a-url" }),
-    ).toThrow(PublicEnvironmentValidationError);
   });
 });

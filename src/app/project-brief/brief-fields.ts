@@ -1,5 +1,5 @@
 import type { B2BInquiryInput } from "@/modules/inquiry/schema";
-import { publicServices } from "@/features/public/services";
+import { publicServices } from "@/features/public/company-content";
 
 type BriefField = {
   name: keyof B2BInquiryInput; label: string; required?: boolean; type?: "text" | "email" | "tel" | "date" | "url" | "textarea" | "select";

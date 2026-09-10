@@ -4,24 +4,13 @@ import { PublicShell } from "@/components/niuva/public-shell";
 import { AuLink } from "@/components/ui/AuLink";
 import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
 import { publicServices } from "@/features/public/company-content";
-import { isPreviewParameter } from "@/features/frontend-preview/scenarios";
-import { getCuratedPublicContentPreview } from "@/features/frontend-preview/server";
 
-export async function generateMetadata({
-  searchParams,
-}: {
-  searchParams: Promise<{ preview?: string }>;
-}): Promise<Metadata> {
-  const { preview } = await searchParams;
-  const isPreview = isPreviewParameter(preview);
-
-  return {
-    title: "Layanan · Niuva",
-    description:
-      "Research & Development, Consultant & Workshop, Design & Prototyping, serta Apparel & Merchandise dari Niuva.",
-    robots: isPreview ? { follow: false, index: false } : { follow: true, index: true },
-  };
-}
+export const metadata: Metadata = {
+  title: "Layanan · Niuva",
+  description:
+    "Research & Development, Consultant & Workshop, Design & Prototyping, serta Apparel & Merchandise dari Niuva.",
+  robots: { follow: true, index: true },
+};
 
 type ServicePageItem = Readonly<{
   description: string;
@@ -33,15 +22,8 @@ type ServicePageItem = Readonly<{
   title: string;
 }>;
 
-export default async function ServicesPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ preview?: string }>;
-}) {
-  const { preview } = await searchParams;
-  const curated = await getCuratedPublicContentPreview(preview);
-  const sourceServices = curated?.services ?? publicServices;
-  const services: readonly ServicePageItem[] = sourceServices.map((service) => ({
+export default function ServicesPage() {
+  const services: readonly ServicePageItem[] = publicServices.map((service) => ({
     description: service.sourceScope,
     inputs: service.inputs,
     outputs: service.outputs,
@@ -54,21 +36,6 @@ export default async function ServicesPage({
   return (
     <PublicShell scope="services">
       <main id="main-content">
-        {curated && (
-          <aside
-            aria-label="Status preview layanan Niuva"
-            className="border-b border-info-border bg-info-background text-info"
-          >
-            <div className="mx-auto flex max-w-public flex-col gap-2 px-5 py-4 text-sm sm:px-8 lg:flex-row lg:items-center lg:justify-between">
-              <p>
-                Preview lokal · tampilan pembanding untuk konten layanan publik; parameter preview tidak dapat diindeks.
-              </p>
-              <AuLink href="/?preview=curated" size="sm" variant="outline">
-                Kembali ke Homepage
-              </AuLink>
-            </div>
-          </aside>
-        )}
         <section className="border-b border-border bg-card">
           <div className="mx-auto grid max-w-public gap-8 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-2 lg:items-end">
             <div><p className="text-sm font-medium text-brand-700">Layanan Niuva</p>
@@ -101,7 +68,7 @@ export default async function ServicesPage({
           ))}
           <section className="grid gap-6 py-16 md:grid-cols-2 md:items-center">
             <h2 className={type.heading.className}>Belum tahu harus mulai dari mana?</h2>
-            <div><p className="mb-5 text-base leading-7 text-muted-foreground">Tidak perlu menentukan semua detail sekarang. Tujuan dan batasan awal membantu kita memilih pembahasan yang relevan.</p><div className="flex flex-wrap gap-3"><AuLink className="min-h-11" href="/project-brief">Ceritakan konteks proyek</AuLink><AuLink className="min-h-11" href={curated ? "/projects?preview=curated" : "/projects"} variant="outline">Lihat projects</AuLink></div></div>
+            <div><p className="mb-5 text-base leading-7 text-muted-foreground">Tidak perlu menentukan semua detail sekarang. Tujuan dan batasan awal membantu kita memilih pembahasan yang relevan.</p><div className="flex flex-wrap gap-3"><AuLink className="min-h-11" href="/project-brief">Ceritakan konteks proyek</AuLink><AuLink className="min-h-11" href="/projects" variant="outline">Lihat projects</AuLink></div></div>
           </section>
         </div>
       </main>

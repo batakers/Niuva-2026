@@ -1,20 +1,15 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
-import { vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next/image", () => ({
   default: () => null,
-}));
-
-vi.mock("@/features/frontend-preview/server", () => ({
-  getCuratedPublicContentPreview: vi.fn().mockResolvedValue(null),
 }));
 
 import Home from "@/app/page";
 
 describe("public homepage", () => {
   it("renders Niuva positioning, entry paths, capabilities, and process", async () => {
-    render(await Home({ searchParams: Promise.resolve({}) }));
+    render(<Home />);
 
     expect(screen.getByRole("heading", { level: 1, name: /mitra pengembangan produk dari riset hingga prototipe/i })).toBeInTheDocument();
     expect(screen.getAllByText(/melalui riset, konsultasi, desain, dan prototyping/i).length).toBeGreaterThan(0);

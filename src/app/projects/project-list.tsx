@@ -65,7 +65,6 @@ export function ProjectList({ projects, previewMode = null }: ProjectListProps) 
   });
   const featuredProjects = filtered.filter(project => project.detailReadiness !== "card-only");
   const selectedWorks = filtered.filter(project => project.detailReadiness === "card-only");
-  const isCurated = previewMode === "curated";
   const isPreview = previewMode !== null;
   const previewSuffix = previewMode ? `?preview=${previewMode}` : "";
 
@@ -108,7 +107,7 @@ export function ProjectList({ projects, previewMode = null }: ProjectListProps) 
       </fieldset>
 
       <p className="py-5 text-sm text-muted-foreground" role="status">
-        {filtered.length} project{previewMode === "examples" ? " contoh" : isCurated ? " terkurasi" : ""}
+        {filtered.length} project{previewMode === "examples" ? " contoh" : ""}
       </p>
 
       {filtered.length === 0 ? (

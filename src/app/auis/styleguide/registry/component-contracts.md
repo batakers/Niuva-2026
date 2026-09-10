@@ -456,11 +456,11 @@ reusable boundary:
   edge is enabled. It does not calculate rates, persist measurement, create a
   shipment, or start payment.
 
-`AdminShell` in `src/components/niuva/admin-shell.tsx` is a provisional
-development-only composition created by FE-16 for reviewing the target
-`/admin` and `/admin/sign-in` shell. It exposes responsive structural navigation
-only, carries no Clerk/session/profile data, and does not authorize a route or
-operation. Its visual acceptance and real auth wiring remain separate gates.
+The provisional `AdminShell` proof created by FE-16 was retired on 2026-09-10
+during repository complexity cleanup. A future `/admin` shell must be rebuilt
+from the retained component contracts only after Clerk/session/profile wiring
+is available; it must not recreate a fixture-only route or authorize an
+operation in the browser.
 
 They compose the contracts above but do not become components merely because
 they contain several children.

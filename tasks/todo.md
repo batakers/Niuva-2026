@@ -69,6 +69,8 @@ Rincian AC, paths, dependencies dan verification: [plan.md](plan.md#frontend-fir
 Status: FE-00–21 UI_IMPLEMENTED; FE-22–27 proposed. Checkbox implementasi bukan
 visual acceptance atau tanda integrated MVP selesai. Checkpoint visual tetap terbuka.
 Handoff dan verifikasi: [public-batch.md](../docs/frontend/public-batch.md).
+Preview implementation FE-16–26 dipensiunkan pada 2026-09-10; checkbox terkait
+tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan.
 
 - [x] FE-00 — Kontrak screen dan status visual
 - [x] FE-01 — Data contoh dan skenario preview

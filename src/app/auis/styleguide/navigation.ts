@@ -29,7 +29,6 @@ export const navigation: NavSection[] = [
       { name: "Motion System v1", href: "/auis/styleguide#motion-system" },
       { name: "Patterns", href: "/auis/styleguide#patterns" },
       { name: "Component contracts", href: "/auis/styleguide#registry" },
-      { name: "MVP wireframes", href: "/auis/wireframes" },
     ],
   },
   {

@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { resolveCuratedMediaPath } from "@/features/frontend-preview/media";
 import {
-  isCuratedPreview,
   isPreviewParameter,
   resolvePreviewScenario,
 } from "@/features/frontend-preview/scenarios";
@@ -15,21 +14,11 @@ describe("frontend preview boundary", () => {
     for (const value of ["unknown", ["examples"], { preview: "examples" }, null]) expect(resolvePreviewScenario("development", value)).toBeNull();
   });
 
-  it("enables curated content only in development", () => {
-    expect(isCuratedPreview("development", "curated")).toBe(true);
-    for (const runtime of ["production", "test", undefined, ""]) {
-      expect(isCuratedPreview(runtime, "curated")).toBe(false);
-    }
-    for (const value of ["examples", ["curated"], { preview: "curated" }, null]) {
-      expect(isCuratedPreview("development", value)).toBe(false);
-    }
-  });
-
   it("marks known preview query values noindex regardless of runtime", () => {
-    for (const value of ["curated", "examples", "empty", "loading", "error"]) {
+    for (const value of ["examples", "empty", "loading", "error"]) {
       expect(isPreviewParameter(value)).toBe(true);
     }
-    for (const value of ["unknown", ["curated"], { preview: "curated" }, null]) {
+    for (const value of ["unknown", "curated", ["curated"], { preview: "curated" }, null]) {
       expect(isPreviewParameter(value)).toBe(false);
     }
   });

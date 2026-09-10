@@ -10,19 +10,8 @@ import {
   listPublishedPortfolioProjects,
 } from "@/modules/portfolio/public-service";
 
-import { isCuratedPreview, resolvePreviewScenario } from "./scenarios";
+import { resolvePreviewScenario } from "./scenarios";
 import type { ProjectPreviewItem, PublicShopProduct } from "./types";
-
-export async function getCuratedPublicContentPreview(requested: unknown) {
-  if (!isCuratedPreview(process.env.NODE_ENV, requested)) return null;
-
-  const { curatedCompanyProfile, curatedServices } = await import("./curated-content");
-  return {
-    company: curatedCompanyProfile,
-    scenario: "curated" as const,
-    services: curatedServices,
-  };
-}
 
 function toProjectPreviewItem(project: ApprovedPortfolioProject): ProjectPreviewItem {
   return {
@@ -57,9 +46,6 @@ function getApprovedProjectReferenceBySlug(slug: string): ProjectPreviewItem | n
 }
 
 export async function getProjectPreview(requested: unknown) {
-  if (isCuratedPreview(process.env.NODE_ENV, requested)) {
-    return { scenario: "curated" as const, projects: getApprovedProjectReference() };
-  }
   const scenario = resolvePreviewScenario(process.env.NODE_ENV, requested);
   if (scenario !== null) {
     const projects: readonly ProjectPreviewItem[] = scenario === "examples"
@@ -78,13 +64,6 @@ export async function getProjectPreview(requested: unknown) {
 }
 
 export async function getProjectPreviewBySlug(slug: string, requested: unknown) {
-  if (isCuratedPreview(process.env.NODE_ENV, requested)) {
-    return {
-      project: getApprovedProjectReferenceBySlug(slug),
-      scenario: "curated" as const,
-    };
-  }
-
   const scenario = resolvePreviewScenario(process.env.NODE_ENV, requested);
   if (scenario !== null) {
     const project = scenario === "examples"

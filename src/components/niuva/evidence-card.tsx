@@ -25,8 +25,6 @@ export type EvidenceCardProps = {
   meta?: readonly string[];
   media?: ReactNode;
   mediaAlt?: string;
-  /** @deprecated Use mediaAlt for the accessible media description. */
-  mediaLabel?: string;
   className?: string;
 };
 
@@ -47,11 +45,10 @@ export function EvidenceCard({
   meta,
   media,
   mediaAlt,
-  mediaLabel,
   className,
 }: EvidenceCardProps) {
   const showAction = Boolean(href && actionLabel);
-  const resolvedMediaAlt = mediaAlt ?? mediaLabel ?? `Bukti ${title}`;
+  const resolvedMediaAlt = mediaAlt ?? `Bukti ${title}`;
 
   return (
     <Card

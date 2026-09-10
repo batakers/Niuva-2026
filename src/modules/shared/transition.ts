@@ -26,18 +26,6 @@ export function isTransitionAllowed<Status extends string>(
   return (map[current] ?? []).includes(next);
 }
 
-export function assertTransition<Status extends string>(
-  map: TransitionMap<Status>,
-  current: Status,
-  next: Status,
-): void {
-  if (!isTransitionAllowed(map, current, next)) {
-    throw appError("INVALID_STATE_TRANSITION", {
-      details: { from: current, to: next },
-    });
-  }
-}
-
 export async function transitionStatus<Status extends string>(
   map: TransitionMap<Status>,
   input: Readonly<{

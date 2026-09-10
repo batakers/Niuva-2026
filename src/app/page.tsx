@@ -8,8 +8,6 @@ import { EvidenceCard } from "@/components/niuva";
 import { AuLink } from "@/components/ui/AuLink";
 import { Icon } from "@/components/ui/Icon";
 import { publicCompanyProfile, publicServices } from "@/features/public/company-content";
-import { isPreviewParameter } from "@/features/frontend-preview/scenarios";
-import { getCuratedPublicContentPreview } from "@/features/frontend-preview/server";
 import { cn } from "@/lib/utils";
 
 const processSteps = [
@@ -51,38 +49,18 @@ function PathArrow() {
   return <Icon aria-hidden="true" className="size-4" name="arrow-up-right" />;
 }
 
-export async function generateMetadata({
-  searchParams,
-}: {
-  searchParams: Promise<{ preview?: string }>;
-}): Promise<Metadata> {
-  const { preview } = await searchParams;
-  const isPreview = isPreviewParameter(preview);
+export const metadata: Metadata = {
+  title: "Niuva",
+  description: publicCompanyProfile.supportingCopy,
+  robots: { follow: true, index: true },
+};
 
-  return {
-    title: "Niuva",
-    description: publicCompanyProfile.supportingCopy,
-    robots: isPreview ? { follow: false, index: false } : { follow: true, index: true },
-  };
-}
-
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<{ preview?: string }>;
-}) {
-  const { preview } = await searchParams;
-  const curated = await getCuratedPublicContentPreview(preview);
-  const content = curated ?? {
-    company: publicCompanyProfile,
-    services: publicServices,
-  };
-  const previewSuffix = curated ? "?preview=curated" : "";
-  const capabilityCards = content.services.map((service, index) => ({
+export default function Home() {
+  const capabilityCards = publicServices.map((service, index) => ({
     actionLabel: "Tinjau layanan",
     description: service.websiteFraming,
-    eyebrow: `Layanan ${index + 1} / ${content.services.length}`,
-    href: `/services${previewSuffix}#${service.slug}`,
+    eyebrow: `Layanan ${index + 1} / ${publicServices.length}`,
+    href: `/services#${service.slug}`,
     meta: service.tags,
     title: service.title,
   }));
@@ -90,21 +68,6 @@ export default async function Home({
   return (
     <PublicShell scope="homepage">
       <main id="main-content">
-        {curated && (
-          <aside
-            aria-label="Status preview konten Niuva"
-            className="border-b border-info-border bg-info-background text-info"
-          >
-            <div className="mx-auto flex max-w-public flex-col gap-2 px-5 py-4 text-sm sm:px-8 lg:flex-row lg:items-center lg:justify-between">
-              <p>
-                Preview lokal · tampilan pembanding untuk konten publik yang sama; parameter preview tidak dapat diindeks.
-              </p>
-              <AuLink href="/projects?preview=curated" size="sm" variant="outline">
-                Tinjau Projects
-              </AuLink>
-            </div>
-          </aside>
-        )}
         <section
           aria-labelledby="hero-title"
           className="dark scroll-mt-6 overflow-hidden bg-background text-foreground"
@@ -121,10 +84,10 @@ export default async function Home({
                   className={`${displayToken} mt-5 max-w-4xl text-neutral-50`}
                   id="hero-title"
                 >
-                  {content.company.headline}
+                  {publicCompanyProfile.headline}
                 </h1>
                 <p className="mt-6 max-w-2xl text-base leading-7 text-neutral-300 sm:text-lg sm:leading-8">
-                  {content.company.supportingCopy}
+                  {publicCompanyProfile.supportingCopy}
                 </p>
                 <div className="mt-8 flex flex-wrap items-center gap-3">
                   <AuLink
@@ -416,27 +379,27 @@ export default async function Home({
                   </Link>
                   <Link
                     className="inline-flex items-center justify-between gap-3 rounded-lg border border-brand-300 bg-background px-3 py-2.5 text-sm font-semibold text-brand-950 transition-colors hover:border-brand-500 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                    href={`/services${previewSuffix}`}
+                    href="/services"
                   >
                     Lihat layanan
                     <PathArrow />
                   </Link>
                   <Link
                     className="inline-flex items-center justify-between gap-3 rounded-lg border border-brand-300 bg-background px-3 py-2.5 text-sm font-semibold text-brand-950 transition-colors hover:border-brand-500 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                    href={`/projects${previewSuffix}`}
+                    href="/projects"
                   >
                     Lihat projects
                     <PathArrow />
                   </Link>
                 </div>
                 <address className="mt-6 border-t border-brand-300 pt-5 text-sm not-italic leading-6 text-brand-900">
-                  <p>{content.company.contact.location}</p>
+                  <p>{publicCompanyProfile.contact.location}</p>
                   <div className="mt-3 flex flex-col gap-1">
-                    <a className="underline underline-offset-4" href={`mailto:${content.company.contact.email}`}>
-                      {content.company.contact.email}
+                    <a className="underline underline-offset-4" href={`mailto:${publicCompanyProfile.contact.email}`}>
+                      {publicCompanyProfile.contact.email}
                     </a>
-                    <a className="underline underline-offset-4" href={content.company.contact.phoneHref}>
-                      {content.company.contact.phone}
+                    <a className="underline underline-offset-4" href={publicCompanyProfile.contact.phoneHref}>
+                      {publicCompanyProfile.contact.phone}
                     </a>
                   </div>
                 </address>

@@ -4,7 +4,7 @@ test("public homepage exposes the Niuva narrative and entry paths", async ({ pag
   await page.goto("/");
 
   await expect(page).toHaveTitle("Niuva");
-  await expect(page.getByRole("heading", { level: 1, name: /dari ide menjadi produk nyata/i })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Mitra pengembangan produk dari riset hingga prototipe." })).toBeVisible();
   await expect(page.locator("[data-home-section='entry-paths']")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Kompetensi yang menghubungkan ide dengan bentuk." })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Satu alur kerja untuk keputusan yang lebih jelas." })).toBeVisible();
@@ -22,7 +22,7 @@ test("public homepage exposes the Niuva narrative and entry paths", async ({ pag
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();
-  await expect(page.getByRole("heading", { level: 1, name: /dari ide menjadi produk nyata/i })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Mitra pengembangan produk dari riset hingga prototipe." })).toBeVisible();
   await page.getByRole("button", { name: "Buka menu" }).click();
   await expect(page.locator("nav").getByRole("link", { name: "Pilih jalur" })).toBeVisible();
 });

@@ -8,7 +8,8 @@ Date: 2026-09-03
 
 Primary sources: docs/PRD-Niuva-MVP.md and docs/TechDesign-Niuva-MVP.md
 
-Visual board: http://localhost:3000/auis/wireframes
+Live visual board: retired on 2026-09-10 during repository complexity cleanup.
+This document remains the approved wireframe architecture record.
 
 Approval scope: 20-surface inventory, MVP/deferred boundary, journeys, screen
 responsibilities, required states, responsive order, and accessibility

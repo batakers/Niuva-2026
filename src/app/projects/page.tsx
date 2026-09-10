@@ -34,7 +34,7 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
         {process.env.NODE_ENV === "development" && <aside aria-label="Preview frontend" className="mb-8 rounded-lg border border-info-border bg-info-background p-4 text-info">
           <p className="text-sm font-semibold">Preview lokal · mode pembanding</p>
           <p className="mt-1 text-sm">Rute normal memakai sumber konten yang disetujui untuk verifikasi lokal; runtime produksi akan membaca record Prisma yang telah di-seed.</p>
-          <div className="mt-3 flex flex-wrap gap-2">{[["curated","Konten Niuva"],["examples","Contoh sintetis"],["empty","Kosong"],["loading","Memuat"],["error","Gagal"]].map(([value,label]) => <AuLink className="min-h-11" key={value} href={`/projects?preview=${value}`} variant="outline" size="sm" aria-current={scenario === value ? "page" : undefined}>{label}</AuLink>)}</div>
+          <div className="mt-3 flex flex-wrap gap-2">{[["examples","Contoh sintetis"],["empty","Kosong"],["loading","Memuat"],["error","Gagal"]].map(([value,label]) => <AuLink className="min-h-11" key={value} href={`/projects?preview=${value}`} variant="outline" size="sm" aria-current={scenario === value ? "page" : undefined}>{label}</AuLink>)}</div>
         </aside>}
         {scenario === "loading" ? <div role="status" className="space-y-5 py-8"><p>Memuat daftar project… (preview)</p><div className="h-40 rounded-lg bg-muted motion-safe:animate-pulse" /></div> :
           scenario === "error" ? <StatusNotice tone="error" title="Daftar project belum dapat dimuat." description="Coba muat kembali. Informasi yang Anda masukkan tidak berubah." action={<AuLink className="min-h-11" href="/projects?preview=examples" variant="outline">Coba lagi</AuLink>} /> :
