@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Fraunces, Space_Grotesk } from "next/font/google";
 import AuLogo from "@/components/ui/AuLogo";
 import { AuLink } from "@/components/ui/AuLink";
+import { publicCompanyProfile } from "@/features/public/company-content";
 import { PublicNavigation } from "./public-navigation";
 
 const sans = Space_Grotesk({ display: "swap", subsets: ["latin"], variable: "--font-public-sans", weight: "variable" });
@@ -38,17 +39,28 @@ export function PublicShell({ children, scope }: { children: ReactNode; scope: s
       </header>
       {children}
       <footer className="dark border-t border-border bg-background text-foreground" data-home-section="footer">
-        <div className="mx-auto grid max-w-public gap-8 px-5 py-10 sm:px-8 md:grid-cols-2">
+        <div className="mx-auto grid max-w-public gap-8 px-5 py-10 sm:px-8 md:grid-cols-[minmax(0,1fr)_minmax(15rem,0.7fr)]">
           <div className="space-y-4">
             <Link href="/" aria-label="Niuva, kembali ke halaman utama" className="inline-flex rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"><AuLogo className="h-7 w-auto" /></Link>
-            <p className="max-w-md text-sm leading-6 text-muted-foreground">Dari ide menjadi produk nyata melalui riset, desain, prototyping, dan dukungan manufaktur.</p>
+            <p className="max-w-md text-sm leading-6 text-muted-foreground">{publicCompanyProfile.supportingCopy}</p>
             <p className="text-xs text-muted-foreground">Niuva Inovasi Utama</p>
           </div>
-          <nav aria-label="Navigasi footer" className="flex flex-wrap items-start gap-x-6 gap-y-2 md:justify-end">
-            {[["/shop", "Shop"], ["/custom-print", "Custom Print"], ["/services", "Layanan"], ["/projects", "Projects"], ["/project-brief", "Diskusikan Proyek"]].map(([href, label]) => (
-              <Link key={href} href={href} className="inline-flex min-h-11 items-center rounded-lg text-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">{label}</Link>
-            ))}
-          </nav>
+          <div className="space-y-6 md:justify-self-end">
+            <address className="max-w-sm text-sm not-italic leading-6 text-muted-foreground">
+              <p>{publicCompanyProfile.contact.location}</p>
+              <a className="mt-3 block underline underline-offset-4 hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`mailto:${publicCompanyProfile.contact.email}`}>
+                {publicCompanyProfile.contact.email}
+              </a>
+              <a className="mt-1 block underline underline-offset-4 hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={publicCompanyProfile.contact.phoneHref}>
+                {publicCompanyProfile.contact.phone}
+              </a>
+            </address>
+            <nav aria-label="Navigasi footer" className="flex flex-wrap items-start gap-x-6 gap-y-2">
+              {[["/shop", "Shop"], ["/custom-print", "Custom Print"], ["/services", "Layanan"], ["/projects", "Projects"], ["/project-brief", "Diskusikan Proyek"]].map(([href, label]) => (
+                <Link key={href} href={href} className="inline-flex min-h-11 items-center rounded-lg text-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">{label}</Link>
+              ))}
+            </nav>
+          </div>
         </div>
       </footer>
     </div>

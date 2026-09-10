@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { PublicShell } from "@/components/niuva/public-shell";
 
@@ -6,6 +7,8 @@ import { typographySystemTokens } from "@/app/auis/styleguide/foundation/typogra
 import { EvidenceCard } from "@/components/niuva";
 import { AuLink } from "@/components/ui/AuLink";
 import { Icon } from "@/components/ui/Icon";
+import { publicCompanyProfile, publicServices } from "@/features/public/company-content";
+import { isPreviewParameter } from "@/features/frontend-preview/scenarios";
 import { getCuratedPublicContentPreview } from "@/features/frontend-preview/server";
 import { cn } from "@/lib/utils";
 
@@ -32,37 +35,6 @@ const processSteps = [
   },
 ] as const;
 
-const capabilities = [
-  {
-    eyebrow: "Riset dan pengembangan",
-    title: "Riset dan pengembangan",
-    description:
-      "Menyusun arah eksplorasi dan keputusan awal agar ide memiliki dasar yang dapat diuji.",
-    meta: ["Riset", "Arah keputusan"],
-  },
-  {
-    eyebrow: "Konsultasi dan workshop",
-    title: "Konsultasi dan workshop",
-    description:
-      "Menyamakan konteks, kebutuhan, dan prioritas bersama tim yang akan membawa produk maju.",
-    meta: ["Konsultasi", "Workshop"],
-  },
-  {
-    eyebrow: "Desain dan prototyping",
-    title: "Desain dan prototyping",
-    description:
-      "Menerjemahkan konsep menjadi bentuk, detail, dan prototype yang dapat ditinjau bersama.",
-    meta: ["Desain", "Prototype"],
-  },
-  {
-    eyebrow: "Apparel dan merchandise",
-    title: "Apparel dan merchandise",
-    description:
-      "Mengembangkan kebutuhan apparel dan merchandise sebagai produk yang siap dipertimbangkan untuk produksi.",
-    meta: ["Apparel", "Merchandise"],
-  },
-] as const;
-
 const displayToken = typographySystemTokens.display.className;
 const headingToken = typographySystemTokens.heading.className;
 const subheadingToken = typographySystemTokens.subheading.className;
@@ -79,6 +51,21 @@ function PathArrow() {
   return <Icon aria-hidden="true" className="size-4" name="arrow-up-right" />;
 }
 
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ preview?: string }>;
+}): Promise<Metadata> {
+  const { preview } = await searchParams;
+  const isPreview = isPreviewParameter(preview);
+
+  return {
+    title: "Niuva",
+    description: publicCompanyProfile.supportingCopy,
+    robots: isPreview ? { follow: false, index: false } : { follow: true, index: true },
+  };
+}
+
 export default async function Home({
   searchParams,
 }: {
@@ -86,17 +73,19 @@ export default async function Home({
 }) {
   const { preview } = await searchParams;
   const curated = await getCuratedPublicContentPreview(preview);
+  const content = curated ?? {
+    company: publicCompanyProfile,
+    services: publicServices,
+  };
   const previewSuffix = curated ? "?preview=curated" : "";
-  const capabilityCards = curated
-    ? curated.services.map((service, index) => ({
-        actionLabel: "Tinjau framing layanan",
-        description: service.websiteFraming,
-        eyebrow: `Layanan ${index + 1} / ${curated.services.length}`,
-        href: `/services?preview=curated#${service.slug}`,
-        meta: ["Ruang lingkup terkonfirmasi", "Framing web disetujui"],
-        title: service.title,
-      }))
-    : capabilities;
+  const capabilityCards = content.services.map((service, index) => ({
+    actionLabel: "Tinjau layanan",
+    description: service.websiteFraming,
+    eyebrow: `Layanan ${index + 1} / ${content.services.length}`,
+    href: `/services${previewSuffix}#${service.slug}`,
+    meta: service.tags,
+    title: service.title,
+  }));
 
   return (
     <PublicShell scope="homepage">
@@ -108,7 +97,7 @@ export default async function Home({
           >
             <div className="mx-auto flex max-w-public flex-col gap-2 px-5 py-4 text-sm sm:px-8 lg:flex-row lg:items-center lg:justify-between">
               <p>
-                Preview lokal · positioning, kontak, dan framing empat layanan sudah disetujui untuk preview; belum untuk production.
+                Preview lokal · tampilan pembanding untuk konten publik yang sama; parameter preview tidak dapat diindeks.
               </p>
               <AuLink href="/projects?preview=curated" size="sm" variant="outline">
                 Tinjau Projects
@@ -132,20 +121,10 @@ export default async function Home({
                   className={`${displayToken} mt-5 max-w-4xl text-neutral-50`}
                   id="hero-title"
                 >
-                  {curated ? (
-                    curated.company.headline
-                  ) : (
-                    <>
-                      Dari ide menjadi
-                      {" "}
-                      <span className="block text-brand-300">produk nyata.</span>
-                    </>
-                  )}
+                  {content.company.headline}
                 </h1>
                 <p className="mt-6 max-w-2xl text-base leading-7 text-neutral-300 sm:text-lg sm:leading-8">
-                  {curated
-                    ? curated.company.supportingCopy
-                    : "Niuva Inovasi Utama adalah mitra inovasi dan pengembangan produk end-to-end yang membantu perusahaan mengubah ide menjadi solusi teknologi dan produk kreatif bernilai tinggi melalui riset, desain, engineering, prototyping, hingga dukungan manufaktur."}
+                  {content.company.supportingCopy}
                 </p>
                 <div className="mt-8 flex flex-wrap items-center gap-3">
                   <AuLink
@@ -450,19 +429,17 @@ export default async function Home({
                     <PathArrow />
                   </Link>
                 </div>
-                {curated && (
-                  <address className="mt-6 border-t border-brand-300 pt-5 text-sm not-italic leading-6 text-brand-900">
-                    <p>{curated.company.contact.location}</p>
-                    <div className="mt-3 flex flex-col gap-1">
-                      <a className="underline underline-offset-4" href={`mailto:${curated.company.contact.email}`}>
-                        {curated.company.contact.email}
-                      </a>
-                      <a className="underline underline-offset-4" href="tel:+6285117678901">
-                        {curated.company.contact.phone}
-                      </a>
-                    </div>
-                  </address>
-                )}
+                <address className="mt-6 border-t border-brand-300 pt-5 text-sm not-italic leading-6 text-brand-900">
+                  <p>{content.company.contact.location}</p>
+                  <div className="mt-3 flex flex-col gap-1">
+                    <a className="underline underline-offset-4" href={`mailto:${content.company.contact.email}`}>
+                      {content.company.contact.email}
+                    </a>
+                    <a className="underline underline-offset-4" href={content.company.contact.phoneHref}>
+                      {content.company.contact.phone}
+                    </a>
+                  </div>
+                </address>
               </div>
             </div>
           </div>

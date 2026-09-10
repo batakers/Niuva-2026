@@ -1,4 +1,15 @@
 import "server-only";
+
+import {
+  getApprovedPortfolioProjectBySlug,
+  getApprovedPortfolioProjects,
+  type ApprovedPortfolioProject,
+} from "@/modules/portfolio/public-content";
+import {
+  findPublishedPortfolioProjectBySlug,
+  listPublishedPortfolioProjects,
+} from "@/modules/portfolio/public-service";
+
 import { isCuratedPreview, resolvePreviewScenario } from "./scenarios";
 import type { ProjectPreviewItem, PublicShopProduct } from "./types";
 
@@ -13,51 +24,83 @@ export async function getCuratedPublicContentPreview(requested: unknown) {
   };
 }
 
-async function getCuratedProjects(): Promise<readonly ProjectPreviewItem[]> {
-  const { curatedFeaturedProjects, curatedSelectedWorks } = await import("./curated-content");
-  const featured: readonly ProjectPreviewItem[] = curatedFeaturedProjects.map(project => ({
-    challenge: "challenge" in project.story ? project.story.challenge : undefined,
-    clientName: project.clientOrPartnerLabel,
+function toProjectPreviewItem(project: ApprovedPortfolioProject): ProjectPreviewItem {
+  return {
+    challenge: project.challenge,
+    clientName: project.clientName,
     detailReadiness: project.detailReadiness,
-    evidenceBoundary: project.story.evidenceBoundary,
+    evidenceBoundary: project.evidenceBoundary,
     id: project.id,
-    media: [{
-      altText: project.cover.altText,
-      previewUrl: `/api/frontend-preview/media/${project.id.toLowerCase()}`,
-      sortOrder: 0,
-    }],
-    process: "process" in project.story ? project.story.process : undefined,
-    result: project.story.output,
-    serviceLabel: project.service,
+    media: project.media.map((media) => ({
+      altText: media.altText,
+      sortOrder: media.sortOrder,
+      url: media.publicPath,
+    })),
+    process: project.process,
+    result: project.result,
+    serviceLabel: project.serviceLabel,
     slug: project.slug,
     summary: project.summary,
     tags: project.tags,
     title: project.title,
     year: project.year,
-  }));
-  const selected: readonly ProjectPreviewItem[] = curatedSelectedWorks.map(work => ({
-    clientName: null,
-    detailReadiness: work.detailReadiness,
-    id: work.id,
-    media: [],
-    serviceLabel: work.service,
-    slug: work.slug,
-    summary: work.summary,
-    tags: work.tags,
-    title: work.title,
-    year: null,
-  }));
-  return [...featured, ...selected];
+  };
+}
+
+function getApprovedProjectReference(): readonly ProjectPreviewItem[] {
+  return getApprovedPortfolioProjects().map(toProjectPreviewItem);
+}
+
+function getApprovedProjectReferenceBySlug(slug: string): ProjectPreviewItem | null {
+  const project = getApprovedPortfolioProjectBySlug(slug);
+  return project === null ? null : toProjectPreviewItem(project);
 }
 
 export async function getProjectPreview(requested: unknown) {
   if (isCuratedPreview(process.env.NODE_ENV, requested)) {
-    return { scenario: "curated" as const, projects: await getCuratedProjects() };
+    return { scenario: "curated" as const, projects: getApprovedProjectReference() };
   }
   const scenario = resolvePreviewScenario(process.env.NODE_ENV, requested);
-  const projects: readonly ProjectPreviewItem[] = scenario === "examples"
-    ? (await import("./fixtures")).exampleProjects : [];
-  return { scenario, projects };
+  if (scenario !== null) {
+    const projects: readonly ProjectPreviewItem[] = scenario === "examples"
+      ? (await import("./fixtures")).exampleProjects
+      : [];
+    return { scenario, projects };
+  }
+
+  // The local reference lets visual and browser checks exercise the normal
+  // public route without making a development server depend on a live DB.
+  if (process.env.NODE_ENV === "development") {
+    return { scenario: null, projects: getApprovedProjectReference() };
+  }
+
+  return { scenario: null, projects: await listPublishedPortfolioProjects() };
+}
+
+export async function getProjectPreviewBySlug(slug: string, requested: unknown) {
+  if (isCuratedPreview(process.env.NODE_ENV, requested)) {
+    return {
+      project: getApprovedProjectReferenceBySlug(slug),
+      scenario: "curated" as const,
+    };
+  }
+
+  const scenario = resolvePreviewScenario(process.env.NODE_ENV, requested);
+  if (scenario !== null) {
+    const project = scenario === "examples"
+      ? (await import("./fixtures")).exampleProjects.find((item) => item.slug === slug) ?? null
+      : null;
+    return { project, scenario };
+  }
+
+  if (process.env.NODE_ENV === "development") {
+    return { project: getApprovedProjectReferenceBySlug(slug), scenario: null };
+  }
+
+  return {
+    project: await findPublishedPortfolioProjectBySlug(slug),
+    scenario: null,
+  };
 }
 
 export async function getShopPreview(requested: unknown) {

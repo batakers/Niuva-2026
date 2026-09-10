@@ -9,22 +9,22 @@ import {
   curatedServices,
 } from "@/features/frontend-preview/curated-content";
 
-describe("curated non-production content", () => {
-  it("keeps the dataset fail-closed for public and production integration", () => {
+describe("approved public content source", () => {
+  it("records the Owner approval while keeping the reference preview separate", () => {
     expect(curatedPreviewMetadata).toMatchObject({
-      environment: "development-preview",
-      publicIntegrationApproved: false,
-      productionPublicationApproved: false,
+      environment: "development-reference-preview",
+      publicIntegrationApproved: true,
+      productionPublicationApproved: true,
     });
     expect(curatedCompanyProfile.publication).toEqual({
-      environment: "development-preview",
-      publicIntegrationApproved: false,
-      productionPublicationApproved: false,
+      contentVersion: "2026-09-10",
+      publicIntegrationApproved: true,
+      productionPublicationApproved: true,
     });
 
     for (const item of [...curatedFeaturedProjects, ...curatedSelectedWorks, ...curatedServices]) {
-      expect(item.publication.publicIntegrationApproved).toBe(false);
-      expect(item.publication.productionPublicationApproved).toBe(false);
+      expect(item.publication.publicIntegrationApproved).toBe(true);
+      expect(item.publication.productionPublicationApproved).toBe(true);
     }
   });
 
@@ -43,12 +43,13 @@ describe("curated non-production content", () => {
     ]);
   });
 
-  it("references only reviewed internal cover proofs and keeps them non-production", () => {
+  it("references only reviewed cover proofs approved as production fallbacks", () => {
     for (const project of curatedFeaturedProjects) {
       expect(project.cover.internalPath).toContain(`/featured-covers/${project.id.toLowerCase()}-`);
       expect(project.cover.reviewStatus).toBe("owner-approved-proof");
-      expect(project.cover.productionReady).toBe(false);
+      expect(project.cover.productionReady).toBe(true);
       expect(existsSync(resolve(process.cwd(), project.cover.internalPath))).toBe(true);
+      expect(project.cover.publicPath).toMatch(/^\/media\/portfolio\/cs-0\d-/);
     }
   });
 

@@ -1,27 +1,32 @@
 /**
- * Owner-reviewed Niuva content prepared for development preview.
+ * Owner-approved Niuva portfolio source.
  *
- * This module deliberately contains no runtime/environment switch. Consumers
- * must import it through the server-only preview boundary so production reads
- * cannot load these records by accident.
+ * The development-only curated preview imports this source through its
+ * server-only boundary. The same approved records are also transformed into
+ * a guarded Prisma seed and normal public portfolio reads.
  */
 
-export const portfolioServiceCategories = [
-  "Research & Development",
-  "Consultant & Workshop",
-  "Design & Prototyping",
-  "Apparel & Merchandise",
-] as const;
+import {
+  publicCompanyProfile,
+  publicContentPublication,
+  publicContentVersion,
+  publicServices,
+  portfolioServiceCategories,
+  type PortfolioServiceCategory,
+} from "../public/company-content";
 
-export type PortfolioServiceCategory = (typeof portfolioServiceCategories)[number];
+export { portfolioServiceCategories };
+export type { PortfolioServiceCategory };
+
 export type ContentReviewStatus = "owner-approved" | "candidate";
 export type DetailReadiness = "full-conservative-draft" | "summary-only" | "card-only";
 export type InternalProofPath = `docs/content/media-proofs/featured-covers/${string}.png`;
+export type PublicPortfolioMediaPath = `/media/portfolio/${string}.png`;
 
 export type CuratedPublicationBoundary = Readonly<{
-  environment: "development-preview";
-  publicIntegrationApproved: false;
-  productionPublicationApproved: false;
+  contentVersion: typeof publicContentVersion;
+  publicIntegrationApproved: true;
+  productionPublicationApproved: true;
 }>;
 
 export type CuratedCoverProof = Readonly<{
@@ -29,7 +34,8 @@ export type CuratedCoverProof = Readonly<{
   altText: string;
   sourceReference: string;
   reviewStatus: "owner-approved-proof";
-  productionReady: false;
+  productionReady: true;
+  publicPath: PublicPortfolioMediaPath;
 }>;
 
 export type CuratedFeaturedProject = Readonly<{
@@ -68,87 +74,42 @@ export type CuratedSelectedWork = Readonly<{
   publication: CuratedPublicationBoundary;
 }>;
 
-const previewOnly = {
-  environment: "development-preview",
-  publicIntegrationApproved: false,
-  productionPublicationApproved: false,
+const approvedForPublic = {
+  ...publicContentPublication,
 } as const satisfies CuratedPublicationBoundary;
 
 export const curatedPreviewMetadata = {
   datasetId: "niuva-portfolio-curation-v1",
   dossierPath: "docs/content/niuva-content-curation-dossier.md",
   ownerReviewDate: "2026-09-10",
-  environment: "development-preview",
-  publicIntegrationApproved: false,
-  productionPublicationApproved: false,
+  environment: "development-reference-preview",
+  ...approvedForPublic,
 } as const;
 
 export const curatedCompanyProfile = {
   reviewStatus: "owner-approved",
-  headline: "Mitra pengembangan produk dari riset hingga prototipe.",
-  supportingCopy:
-    "Melalui riset, konsultasi, desain, dan prototyping, Niuva membantu organisasi mengubah kebutuhan menjadi arah produk yang dapat ditinjau sebelum realisasi.",
-  contact: {
-    location:
-      "Bandung Techno Park — Gedung D Lt. 1 (Ruang Makerspace), Jl. Telekomunikasi No. 1, Sukapura",
-    email: "niuvamakerspace@gmail.com",
-    phone: "+62 851-1767-8901",
-  },
-  publication: previewOnly,
+  ...publicCompanyProfile,
+  publication: approvedForPublic,
 } as const satisfies Readonly<{
   reviewStatus: "owner-approved";
   headline: string;
   supportingCopy: string;
-  contact: Readonly<{ location: string; email: string; phone: string }>;
+  contact: Readonly<{ location: string; email: string; phone: string; phoneHref: string }>;
   publication: CuratedPublicationBoundary;
 }>;
 
-export const curatedServices = [
-  {
-    slug: "research-development",
-    title: "Research & Development",
-    sourceScope:
-      "Systematic product and technology development intended to support company innovation.",
-    websiteFraming:
-      "Explore needs, constraints, and technical direction before a product decision is finalized.",
-    reviewStatus: "owner-approved",
-    publication: previewOnly,
-  },
-  {
-    slug: "consultant-workshop",
-    title: "Consultant & Workshop",
-    sourceScope:
-      "Design recommendations from vision toward manufacturing, plus interactive training for skills and collaboration.",
-    websiteFraming:
-      "Structured consultation and practical workshops that help teams align decisions and build capability.",
-    reviewStatus: "owner-approved",
-    publication: previewOnly,
-  },
-  {
-    slug: "design-prototyping",
-    title: "Design & Prototyping",
-    sourceScope:
-      "Visual-idea development through design and rapid prototyping for concept review and functional testing.",
-    websiteFraming:
-      "Translate an idea into design artifacts and prototypes that can be reviewed and iterated.",
-    reviewStatus: "owner-approved",
-    publication: previewOnly,
-  },
-  {
-    slug: "apparel-merchandise",
-    title: "Apparel & Merchandise",
-    sourceScope:
-      "Product design intended to reflect brand identity and market relevance.",
-    websiteFraming:
-      "Develop branded apparel, merchandise, and accessories from visual direction toward production preparation.",
-    reviewStatus: "owner-approved",
-    publication: previewOnly,
-  },
-] as const satisfies readonly Readonly<{
+export const curatedServices = publicServices.map((service) => ({
+  ...service,
+  reviewStatus: "owner-approved" as const,
+  publication: approvedForPublic,
+})) satisfies readonly Readonly<{
   slug: string;
   title: PortfolioServiceCategory;
   sourceScope: string;
   websiteFraming: string;
+  inputs: string;
+  outputs: string;
+  tags: readonly string[];
   reviewStatus: ContentReviewStatus;
   publication: CuratedPublicationBoundary;
 }>[];
@@ -185,10 +146,11 @@ export const curatedFeaturedProjects = [
         "Visualisasi Smart Drop Box berwarna putih dan biru dengan beberapa pandangan komponen.",
       sourceReference: "SRC-PDS-001 p.13",
       reviewStatus: "owner-approved-proof",
-      productionReady: false,
+      productionReady: true,
+      publicPath: "/media/portfolio/cs-01-smart-drop-box.png",
     },
     copyReviewStatus: "owner-approved",
-    publication: previewOnly,
+    publication: approvedForPublic,
   },
   {
     id: "CS-02",
@@ -215,10 +177,11 @@ export const curatedFeaturedProjects = [
       altText: "Visualisasi samping konsep motor listrik berwarna hijau.",
       sourceReference: "SRC-COMPANY-001 p.10",
       reviewStatus: "owner-approved-proof",
-      productionReady: false,
+      productionReady: true,
+      publicPath: "/media/portfolio/cs-02-motor-ev.png",
     },
     copyReviewStatus: "owner-approved",
-    publication: previewOnly,
+    publication: approvedForPublic,
   },
   {
     id: "CS-05",
@@ -245,10 +208,11 @@ export const curatedFeaturedProjects = [
       altText: "Tampilan depan tas ransel hijau Bagit Arei Smart Bag V2.",
       sourceReference: "SRC-PORT-001 p.11",
       reviewStatus: "owner-approved-proof",
-      productionReady: false,
+      productionReady: true,
+      publicPath: "/media/portfolio/cs-05-bagit.png",
     },
     copyReviewStatus: "owner-approved",
-    publication: previewOnly,
+    publication: approvedForPublic,
   },
   {
     id: "CS-03",
@@ -276,10 +240,11 @@ export const curatedFeaturedProjects = [
         "Sepeda motor pada rangka penyangga di area kerja sebagai konteks perangkat simulator.",
       sourceReference: "SRC-COMPANY-001 p.12",
       reviewStatus: "owner-approved-proof",
-      productionReady: false,
+      productionReady: true,
+      publicPath: "/media/portfolio/cs-03-simulator.png",
     },
     copyReviewStatus: "owner-approved",
-    publication: previewOnly,
+    publication: approvedForPublic,
   },
   {
     id: "CS-06",
@@ -307,10 +272,11 @@ export const curatedFeaturedProjects = [
         "Komposisi visual beberapa konsep aksesori produk Savero berwarna hitam dan merah.",
       sourceReference: "SRC-PORT-001 p.3",
       reviewStatus: "owner-approved-proof",
-      productionReady: false,
+      productionReady: true,
+      publicPath: "/media/portfolio/cs-06-savero.png",
     },
     copyReviewStatus: "owner-approved",
-    publication: previewOnly,
+    publication: approvedForPublic,
   },
   {
     id: "CS-04",
@@ -337,10 +303,11 @@ export const curatedFeaturedProjects = [
       altText: "Visualisasi konsep perangkat BeVenTU berwarna putih dengan panel depan.",
       sourceReference: "SRC-PORT-001 p.6",
       reviewStatus: "owner-approved-proof",
-      productionReady: false,
+      productionReady: true,
+      publicPath: "/media/portfolio/cs-04-beventu.png",
     },
     copyReviewStatus: "owner-approved",
-    publication: previewOnly,
+    publication: approvedForPublic,
   },
 ] as const satisfies readonly CuratedFeaturedProject[];
 
@@ -356,7 +323,7 @@ export const curatedSelectedWorks = [
     sources: ["SRC-PORT-001 p.1"],
     detailReadiness: "card-only",
     copyReviewStatus: "owner-approved",
-    publication: previewOnly,
+    publication: approvedForPublic,
   },
   {
     id: "SW-02",
@@ -369,7 +336,7 @@ export const curatedSelectedWorks = [
     sources: ["SRC-PORT-001 p.2"],
     detailReadiness: "card-only",
     copyReviewStatus: "owner-approved",
-    publication: previewOnly,
+    publication: approvedForPublic,
   },
   {
     id: "SW-03",
@@ -382,7 +349,7 @@ export const curatedSelectedWorks = [
     sources: ["SRC-PORT-001 p.4"],
     detailReadiness: "card-only",
     copyReviewStatus: "owner-approved",
-    publication: previewOnly,
+    publication: approvedForPublic,
   },
   {
     id: "SW-04",
@@ -395,7 +362,7 @@ export const curatedSelectedWorks = [
     sources: ["SRC-PORT-001 p.7"],
     detailReadiness: "card-only",
     copyReviewStatus: "owner-approved",
-    publication: previewOnly,
+    publication: approvedForPublic,
   },
   {
     id: "SW-05",
@@ -408,7 +375,7 @@ export const curatedSelectedWorks = [
     sources: ["SRC-PORT-001 pp.8–9"],
     detailReadiness: "card-only",
     copyReviewStatus: "owner-approved",
-    publication: previewOnly,
+    publication: approvedForPublic,
   },
   {
     id: "SW-06",
@@ -421,7 +388,7 @@ export const curatedSelectedWorks = [
     sources: ["SRC-PDS-001 p.8"],
     detailReadiness: "card-only",
     copyReviewStatus: "owner-approved",
-    publication: previewOnly,
+    publication: approvedForPublic,
   },
   {
     id: "SW-07",
@@ -434,7 +401,7 @@ export const curatedSelectedWorks = [
     sources: ["SRC-PDS-001 p.9"],
     detailReadiness: "card-only",
     copyReviewStatus: "owner-approved",
-    publication: previewOnly,
+    publication: approvedForPublic,
   },
   {
     id: "SW-08",
@@ -447,7 +414,7 @@ export const curatedSelectedWorks = [
     sources: ["SRC-PDS-001 pp.10–11"],
     detailReadiness: "card-only",
     copyReviewStatus: "owner-approved",
-    publication: previewOnly,
+    publication: approvedForPublic,
   },
   {
     id: "SW-09",
@@ -460,7 +427,7 @@ export const curatedSelectedWorks = [
     sources: ["SRC-PDS-001 p.12"],
     detailReadiness: "card-only",
     copyReviewStatus: "owner-approved",
-    publication: previewOnly,
+    publication: approvedForPublic,
   },
   {
     id: "SW-10",
@@ -473,7 +440,7 @@ export const curatedSelectedWorks = [
     sources: ["SRC-COMPANY-001 p.9"],
     detailReadiness: "card-only",
     copyReviewStatus: "owner-approved",
-    publication: previewOnly,
+    publication: approvedForPublic,
   },
   {
     id: "SW-11",
@@ -486,6 +453,6 @@ export const curatedSelectedWorks = [
     sources: ["SRC-COMPANY-001 p.11"],
     detailReadiness: "card-only",
     copyReviewStatus: "owner-approved",
-    publication: previewOnly,
+    publication: approvedForPublic,
   },
 ] as const satisfies readonly CuratedSelectedWork[];

@@ -23,7 +23,7 @@ export type ProjectPreviewItem = Readonly<{
   media: readonly Readonly<{
     altText: string;
     sortOrder: number;
-    previewUrl?: string;
+    url?: string;
   }>[];
 }>;
 

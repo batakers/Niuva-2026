@@ -1,6 +1,6 @@
 # Featured case-study cover proof
 
-Status: **CONFIRMED — Owner-approved internal visual proof direction, 2026-09-10**. Persetujuan mencakup arah crop untuk preview non-production; seluruh gambar di folder ini belum merupakan media produksi dan belum terhubung ke route publik.
+Status: **CONFIRMED — Owner-approved public fallback assets, 2026-09-10**. Enam crop individual di folder ini boleh digunakan sebagai aset publik apabila file foto/render original belum tersedia. Integrasi route publik telah disetujui; deployment dan database production tetap merupakan operasi terpisah.
 
 Proof ini menerjemahkan arah cover enam featured case study di `docs/content/niuva-content-curation-dossier.md` ke slot media 16:9. Output dinormalisasi ke 1600 × 900 px agar komposisinya dapat dibandingkan pada rasio yang sama.
 
@@ -11,7 +11,7 @@ Proof ini menerjemahkan arah cover enam featured case study di `docs/content/niu
 - Resolusi 1600 × 900 adalah ukuran output proof, bukan jaminan resolusi asli. Beberapa sumber PDF beresolusi rendah dan mengalami upscale.
 - Teks, label, logo, atau angka yang masih terlihat di dalam gambar merupakan bagian dari dokumentasi sumber. Elemen tersebut tidak otomatis menjadi klaim faktual website.
 - Klaim performa, dampak bisnis, status produksi, spesifikasi teknis, dan kepemilikan IP tetap tidak boleh ditambahkan tanpa bukti pendukung.
-- Sebelum produksi, prioritaskan file foto/render asli bila tersedia dan lakukan review crop desktop, tablet, serta mobile.
+- File foto/render asli tetap diprioritaskan bila tersedia. Enam crop individual ini adalah fallback production yang telah direview pada desktop dan viewport responsif.
 
 ## Contact sheet
 
@@ -75,4 +75,4 @@ Proof ini menerjemahkan arah cover enam featured case study di `docs/content/niu
 
 ## Gate berikutnya
 
-Proof ini dapat dipakai pada typed dataset dan route preview development setelah boundary development-only diverifikasi. Persetujuan proof tidak otomatis mengizinkan pemasangan pada pembacaan produksi; media asli tetap diprioritaskan sebelum publikasi final.
+Enam crop individual telah lolos asset gate dan dipasang sebagai salinan publik byte-identik di `public/media/portfolio/`. Seed konten hanya dapat berjalan terhadap database test loopback; media asli tetap diprioritaskan bila tersedia.

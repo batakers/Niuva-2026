@@ -1,11 +1,12 @@
 # Niuva Content Curation Dossier
 
-Status: **INTERNAL DRAFT — NOT CONNECTED TO PUBLIC ROUTES**
+Status: **APPROVED FOR PUBLIC CONTENT INTEGRATION — deployment and database seeding remain separate operations**
 
-Decision date: **2026-09-09**
-Purpose: turn the supplied Niuva business sources into a reviewable content
-inventory without publishing them, seeding production data, or replacing the
-development-only frontend fixtures.
+Decision date: **2026-09-10**
+Purpose: turn the supplied Niuva business sources into a reviewable, versioned
+public-content source. The approved portfolio records can be rendered through
+normal public routes and seeded only into the guarded local test database;
+deployment and any production database write remain separate operations.
 
 ## 1. Editorial contract
 
@@ -100,10 +101,14 @@ a curated presentation sequence, not a chronological claim:
 5. Savero — Identitas Visual dan Aksesori Produk;
 6. BeVenTU — Konsep Sistem Ventilator Darurat.
 
-### Approved featured cover direction
+### Approved featured cover direction and fallback assets
 
-These directions define the editorial role of each cover. They do not approve
-a particular file, PDF crop, resolution, or final publication asset.
+These directions define the editorial role of each cover. On 2026-09-10, the
+Owner approved the six reviewed individual PDF-derived crops under
+`docs/content/media-proofs/featured-covers/` as production fallback assets when
+original files are unavailable. The Owner subsequently approved public route
+integration for those six individual files only. This does not approve the
+contact sheet or any other crop.
 
 | Featured project | Approved cover direction | Supporting-media boundary |
 | --- | --- | --- |
@@ -167,7 +172,7 @@ authorize production publication.
 
 | Field | Draft |
 | --- | --- |
-| Status | `CONFIRMED` owner-approved editorial draft v1 on 2026-09-09; remains non-public |
+| Status | `CONFIRMED` owner-approved editorial draft v1 on 2026-09-09; public integration approved on 2026-09-10 |
 | Primary category | Design & Prototyping |
 | Tags | Product Development; Industrial Design; Plastic Collection; Sustainability Program |
 | Sources | `SRC-PORT-001` page 5; `SRC-PDS-001` page 13 |
@@ -200,7 +205,7 @@ reduce plastic waste. Other Telkom University publications describe Smart Drop
 Box projects for different programs and recipients. Those projects must not be
 assumed to be this P&G engagement without Owner confirmation.
 
-#### Owner-approved public-copy draft v1 — non-public
+#### Owner-approved public-copy draft v1
 
 **Overview**
 
@@ -374,7 +379,8 @@ Recommended media sequence after original assets are supplied:
 
 These entries show breadth without pretending that a full narrative is already
 available. The 11-card structure, metadata, and conservative card summaries
-were approved by the Owner on 2026-09-09, but remain non-public.
+were approved by the Owner on 2026-09-09 and approved for public card-only
+publication on 2026-09-10.
 
 | ID | Work | Source | Approved category | Approved tags | Evidence status and next need |
 | --- | --- | --- | --- | --- | --- |
@@ -574,24 +580,24 @@ sellable items merely because they appear in a source PDF.
 | Client/partner name and logo permission | `CONFIRMED` | Preserve decision provenance during publication review |
 | People/project-photo permission | `CONFIRMED` | Preserve context and write accurate captions |
 | Six featured-project selection and order | `CONFIRMED` | Preserve the approved non-chronological sequence; select specific cover assets during visual review |
-| Featured cover direction | `CONFIRMED` | PDF-derived crop directions in `docs/content/media-proofs/featured-covers/` were approved by the Owner on 2026-09-10 for non-production preview only; production use still requires a separate publication gate |
-| Featured summaries CS-01 through CS-06 | `CONFIRMED` | Owner-approved conservative copy v1 remains non-public; CS-02 through CS-06 need additional evidence before expansion into full challenge/process/output stories |
-| Selected Works structure and card copy | `CONFIRMED` | Eleven Owner-approved cards remain non-public; preserve their approved metadata, summaries, and evidence boundaries during dataset preparation |
-| Typed non-production dataset | `CONFIRMED` | `src/features/frontend-preview/curated-content.ts` preserves the approved editorial order, stable IDs, evidence readiness, proof provenance, and fail-closed publication flags; it is loaded only through the development-only curated preview boundary |
-| Curated project preview | `CONFIRMED` | Owner approved the visual/content preview on 2026-09-10; development-only `/projects?preview=curated` and matching detail routes render the typed dataset through an allowlisted proof-media boundary |
-| Curated company and services preview | `CONFIRMED` | Owner approved the visual/content preview on 2026-09-10; development-only `/?preview=curated` renders confirmed positioning/contact facts and `/services?preview=curated` keeps source scope separate from approved editorial framing; neither replaces normal or production reads |
+| Featured cover direction and fallback assets | `CONFIRMED` | The six reviewed PDF-derived individual crops in `docs/content/media-proofs/featured-covers/` were approved by the Owner on 2026-09-10 as production fallbacks when originals are unavailable; the contact sheet remains review-only |
+| Featured summaries CS-01 through CS-06 | `CONFIRMED` | Owner-approved conservative copy v1 is approved for public publication; CS-02 through CS-06 remain summary-only until additional evidence supports fuller challenge/process/output stories |
+| Selected Works structure and card copy | `CONFIRMED` | Eleven Owner-approved cards are approved for public Selected Works publication; preserve their approved metadata, summaries, and evidence boundaries |
+| Typed public-content source | `CONFIRMED` | `src/features/frontend-preview/curated-content.ts` preserves approved editorial order, stable IDs, evidence readiness, proof provenance, and publication approval; `src/features/public/company-content.ts` holds the approved company/service copy used by normal public routes |
+| Curated project preview | `CONFIRMED` | The Owner-approved development-only `/projects?preview=curated` and matching detail routes remain as a noindex reference view; normal development reads use the same approved source while production reads use published Prisma records |
+| Curated company and services preview | `CONFIRMED` | The Owner-approved development-only `/?preview=curated` and `/services?preview=curated` remain noindex reference views; the same approved company/service content now replaces generic normal-route copy |
 | Curated preview verification | `CONFIRMED` | Unit, E2E, responsive overflow, lint, typecheck, production build, and desktop visual checks passed on 2026-09-10; browser-extension hydration attributes were excluded as external noise after clean-browser verification |
 | Primary service categories | `CONFIRMED` | Preserve all approved featured-project and Selected Works mappings during dataset preparation |
 | Outcome-claim policy | `CONFIRMED` | Supply evidence before any performance or impact statement |
-| Original project media | `OPEN_FACT` | Not present in the repo; supply originals or approve reviewed PDF-derived exports later |
+| Original project media | `OPEN_FACT` | Not present in the repo; originals remain preferred, but the six reviewed PDF-derived covers are approved production fallbacks |
 | Current contact information | `CONFIRMED` | Use the Owner-approved location, email, and normalized international phone format |
 | Project years and timelines | `OPEN_FACT` | Confirm per project |
 | Niuva's detailed role and team | `OPEN_FACT` | Project-specific responsibilities beyond the approved public boundaries still require evidence |
 | Detailed challenge/process/output | `CANDIDATE` / `OPEN_FACT` | CS-01 has a fuller approved draft; expand CS-02 through CS-06 only when supporting evidence is supplied |
 | Verified project results | `OPEN_FACT` | Provide documentary or Owner-confirmed factual evidence |
 | Ready-made Shop catalog | `OPEN_FACT` | Separate commercial dataset required |
-| Public content integration | **BLOCKED** | Requires media asset or crop approval, typed-dataset preview, and explicit integration approval |
-| Production publication | **BLOCKED** | Requires final assets, current facts, server integration, and explicit publication approval |
+| Public content integration | `CONFIRMED` | Owner approved normal-route integration for company, services, six Featured Projects, and eleven Selected Works; no commerce data is activated |
+| Content publication approval | `CONFIRMED` | Owner approved the public content and six fallback cover assets; this approval is distinct from deployment, live database seeding, provider activation, and launch readiness |
 
 ## 11. Recommended remaining review order
 
@@ -600,24 +606,27 @@ details, CS-01 through CS-06, and all 11 Selected Works cards was completed on
 2026-09-09. The combined curated preview was approved on 2026-09-10. Remaining
 work should proceed in this order:
 
-1. Prefer original media when supplied and retain the approved crop directions
-   as the fallback visual reference.
-2. Decide whether the reviewed PDF-derived cover proofs may be promoted from
-   non-production evidence to production assets if originals remain unavailable.
-3. Request a separate explicit approval before connecting the content to
-   production reads or marking anything published.
+1. Prefer original media when supplied; otherwise use only the six approved
+   fallback crops and retain their provenance and caption boundaries.
+2. Seed and verify the approved service/project records only in the dedicated
+   test database through `db:test:seed:public-content`; it is intentionally
+   blocked from production and shared databases.
+3. Before a future deployment, prepare a reviewed operational procedure for
+   the production database and media storage. This is a separate release
+   decision, not implied by the content approval.
 
-## 12. Non-public integration boundary
+## 12. Integration and operational boundary
 
-This dossier does **not**:
+This approved content integration does **not**:
 
-- change any current public route;
-- replace synthetic fixtures;
-- connect extracted proof images to public routes or treat them as production assets;
-- seed Prisma or another database;
-- publish a client, project, logo, person, product, price, or contact detail;
-- activate Shop products, pricing rules, providers, uploads, or payments;
-- assert that frontend completion means content or production readiness.
+- deploy the application or change DNS, hosting, providers, or credentials;
+- write to a production, shared, or otherwise unverified database;
+- activate Shop products, prices, variants, stock, payments, shipping, uploads,
+  or other provider-backed flows;
+- add client outcomes, performance figures, certification, production status,
+  or other unsupported project claims;
+- use the contact sheet or an unreviewed crop as public media;
+- assert that content publication approval means launch readiness.
 
 Any subsequent implementation must keep source evidence, editorial candidates,
-and open facts separate and must retain an explicit publication gate.
+and open facts separate and must retain an explicit operational release gate.

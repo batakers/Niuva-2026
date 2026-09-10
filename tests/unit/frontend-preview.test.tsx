@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { resolveCuratedMediaPath } from "@/features/frontend-preview/media";
-import { isCuratedPreview, resolvePreviewScenario } from "@/features/frontend-preview/scenarios";
+import {
+  isCuratedPreview,
+  isPreviewParameter,
+  resolvePreviewScenario,
+} from "@/features/frontend-preview/scenarios";
 
 describe("frontend preview boundary", () => {
   it.each(["production", "test", undefined, ""])("rejects fixture access in %s", runtime => {
@@ -18,6 +22,15 @@ describe("frontend preview boundary", () => {
     }
     for (const value of ["examples", ["curated"], { preview: "curated" }, null]) {
       expect(isCuratedPreview("development", value)).toBe(false);
+    }
+  });
+
+  it("marks known preview query values noindex regardless of runtime", () => {
+    for (const value of ["curated", "examples", "empty", "loading", "error"]) {
+      expect(isPreviewParameter(value)).toBe(true);
+    }
+    for (const value of ["unknown", ["curated"], { preview: "curated" }, null]) {
+      expect(isPreviewParameter(value)).toBe(false);
     }
   });
 

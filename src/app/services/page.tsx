@@ -3,14 +3,28 @@ import { ArrowUpRight } from "lucide-react";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { AuLink } from "@/components/ui/AuLink";
 import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
+import { publicServices } from "@/features/public/company-content";
+import { isPreviewParameter } from "@/features/frontend-preview/scenarios";
 import { getCuratedPublicContentPreview } from "@/features/frontend-preview/server";
-import { publicServices } from "@/features/public/services";
 
-export const metadata: Metadata = { title: "Layanan · Niuva", description: "Riset, konsultasi, desain dan prototyping, serta apparel dan merchandise. Mulai dari konteks yang Anda punya." };
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ preview?: string }>;
+}): Promise<Metadata> {
+  const { preview } = await searchParams;
+  const isPreview = isPreviewParameter(preview);
+
+  return {
+    title: "Layanan · Niuva",
+    description:
+      "Research & Development, Consultant & Workshop, Design & Prototyping, serta Apparel & Merchandise dari Niuva.",
+    robots: isPreview ? { follow: false, index: false } : { follow: true, index: true },
+  };
+}
 
 type ServicePageItem = Readonly<{
   description: string;
-  editorialStatus: "owner-approved-preview" | "current";
   inputs: string;
   outputs: string;
   question: string;
@@ -26,23 +40,16 @@ export default async function ServicesPage({
 }) {
   const { preview } = await searchParams;
   const curated = await getCuratedPublicContentPreview(preview);
-  const services: readonly ServicePageItem[] = curated
-    ? curated.services.map(service => ({
-        description: service.sourceScope,
-        editorialStatus: "owner-approved-preview",
-        inputs:
-          "Nama kategori dan ruang lingkup berasal dari company profile Niuva.",
-        outputs:
-          "Framing website sudah disetujui Owner untuk preview ini. Metode, deliverable, durasi, kapasitas, dan janji produksi tidak diasumsikan.",
-        question: service.websiteFraming,
-        slug: service.slug,
-        tags: ["Ruang lingkup terkonfirmasi", "Framing web disetujui"],
-        title: service.title,
-      }))
-    : publicServices.map(service => ({
-        ...service,
-        editorialStatus: "current",
-      }));
+  const sourceServices = curated?.services ?? publicServices;
+  const services: readonly ServicePageItem[] = sourceServices.map((service) => ({
+    description: service.sourceScope,
+    inputs: service.inputs,
+    outputs: service.outputs,
+    question: service.websiteFraming,
+    slug: service.slug,
+    tags: service.tags,
+    title: service.title,
+  }));
 
   return (
     <PublicShell scope="services">
@@ -54,7 +61,7 @@ export default async function ServicesPage({
           >
             <div className="mx-auto flex max-w-public flex-col gap-2 px-5 py-4 text-sm sm:px-8 lg:flex-row lg:items-center lg:justify-between">
               <p>
-                Preview lokal · kategori, ruang lingkup, dan framing web sudah ditinjau; publication production tetap tertutup.
+                Preview lokal · tampilan pembanding untuk konten layanan publik; parameter preview tidak dapat diindeks.
               </p>
               <AuLink href="/?preview=curated" size="sm" variant="outline">
                 Kembali ke Homepage
@@ -85,8 +92,8 @@ export default async function ServicesPage({
               <div className="space-y-6">
                 <p className="text-base leading-7">{service.description}</p>
                 <dl className="divide-y divide-border border-y border-border">
-                  <div className="py-4"><dt className="text-sm font-semibold">{service.editorialStatus === "owner-approved-preview" ? "Dasar sumber" : "Yang bisa Anda bawa"}</dt><dd className="mt-2 text-sm leading-6 text-muted-foreground">{service.inputs}</dd></div>
-                  <div className="py-4"><dt className="text-sm font-semibold">{service.editorialStatus === "owner-approved-preview" ? "Batas editorial" : "Arah pembahasan"}</dt><dd className="mt-2 text-sm leading-6 text-muted-foreground">{service.outputs}</dd></div>
+                  <div className="py-4"><dt className="text-sm font-semibold">Yang bisa Anda bawa</dt><dd className="mt-2 text-sm leading-6 text-muted-foreground">{service.inputs}</dd></div>
+                  <div className="py-4"><dt className="text-sm font-semibold">Arah pembahasan</dt><dd className="mt-2 text-sm leading-6 text-muted-foreground">{service.outputs}</dd></div>
                 </dl>
                 <AuLink className="min-h-11" href="/project-brief" variant="outline" aria-label={`Buat brief untuk ${service.title.toLowerCase()}`}>Buat brief layanan ini</AuLink>
               </div>
@@ -94,7 +101,7 @@ export default async function ServicesPage({
           ))}
           <section className="grid gap-6 py-16 md:grid-cols-2 md:items-center">
             <h2 className={type.heading.className}>Belum tahu harus mulai dari mana?</h2>
-            <div><p className="mb-5 text-base leading-7 text-muted-foreground">Tidak perlu menentukan semua detail sekarang. Tujuan dan batasan awal membantu kita memilih pembahasan yang relevan.</p><div className="flex flex-wrap gap-3"><AuLink className="min-h-11" href="/project-brief">Ceritakan konteks proyek</AuLink>{curated && <AuLink className="min-h-11" href="/projects?preview=curated" variant="outline">Lihat proyek terkurasi</AuLink>}</div></div>
+            <div><p className="mb-5 text-base leading-7 text-muted-foreground">Tidak perlu menentukan semua detail sekarang. Tujuan dan batasan awal membantu kita memilih pembahasan yang relevan.</p><div className="flex flex-wrap gap-3"><AuLink className="min-h-11" href="/project-brief">Ceritakan konteks proyek</AuLink><AuLink className="min-h-11" href={curated ? "/projects?preview=curated" : "/projects"} variant="outline">Lihat projects</AuLink></div></div>
           </section>
         </div>
       </main>

@@ -16,9 +16,15 @@ type ProjectListProps = {
   previewMode?: ProjectPreviewMode | null;
 };
 
-function ProjectMedia({ project }: { project: ProjectPreviewItem }) {
+function ProjectMedia({
+  isPreview,
+  project,
+}: {
+  isPreview: boolean;
+  project: ProjectPreviewItem;
+}) {
   const cover = project.media[0];
-  if (cover?.previewUrl) {
+  if (cover?.url) {
     return (
       <div className="relative aspect-video overflow-hidden rounded-lg border border-border bg-muted">
         <Image
@@ -26,8 +32,8 @@ function ProjectMedia({ project }: { project: ProjectPreviewItem }) {
           className="object-cover"
           fill
           sizes="(min-width: 768px) 50vw, 100vw"
-          src={cover.previewUrl}
-          unoptimized
+          src={cover.url}
+          unoptimized={isPreview}
         />
       </div>
     );
@@ -39,7 +45,7 @@ function ProjectMedia({ project }: { project: ProjectPreviewItem }) {
       <span className="text-sm">
         {project.detailReadiness === "card-only"
           ? "Media Selected Works belum dikurasi"
-          : "Media contoh belum disertakan"}
+          : "Media project belum tersedia"}
       </span>
     </div>
   );
@@ -60,6 +66,7 @@ export function ProjectList({ projects, previewMode = null }: ProjectListProps) 
   const featuredProjects = filtered.filter(project => project.detailReadiness !== "card-only");
   const selectedWorks = filtered.filter(project => project.detailReadiness === "card-only");
   const isCurated = previewMode === "curated";
+  const isPreview = previewMode !== null;
   const previewSuffix = previewMode ? `?preview=${previewMode}` : "";
 
   return (
@@ -127,19 +134,15 @@ export function ProjectList({ projects, previewMode = null }: ProjectListProps) 
         <div className="space-y-16">
           {featuredProjects.length > 0 && (
             <section aria-labelledby="featured-projects-title">
-              {isCurated ? (
-                <div className="mb-8 max-w-2xl">
-                  <p className="text-sm font-medium text-brand-700">Featured case studies</p>
-                  <h2 className={`${type.heading.className} mt-3`} id="featured-projects-title">
-                    Enam cerita utama untuk ditinjau.
-                  </h2>
-                  <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                    Urutan ini bersifat editorial, bukan kronologis. Detail hanya ditampilkan sejauh bukti yang tersedia.
-                  </p>
-                </div>
-              ) : (
-                <h2 className="sr-only" id="featured-projects-title">Daftar project</h2>
-              )}
+              <div className="mb-8 max-w-2xl">
+                <p className="text-sm font-medium text-brand-700">Featured case studies</p>
+                <h2 className={`${type.heading.className} mt-3`} id="featured-projects-title">
+                  Enam cerita utama untuk ditinjau.
+                </h2>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                  Urutan ini bersifat editorial, bukan kronologis. Detail hanya ditampilkan sejauh bukti yang tersedia.
+                </p>
+              </div>
               <div className="grid gap-x-10 gap-y-12 md:grid-cols-2">
                 {featuredProjects.map(project => (
                   <article className="min-w-0" key={project.id}>
@@ -147,7 +150,7 @@ export function ProjectList({ projects, previewMode = null }: ProjectListProps) 
                       className="group block rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                       href={`/projects/${project.slug}${previewSuffix}`}
                     >
-                      <ProjectMedia project={project} />
+                      <ProjectMedia isPreview={isPreview} project={project} />
                       <p className="mt-5 text-sm text-brand-700">{project.serviceLabel}</p>
                       <h3 className={`${type.subheading.className} mt-2 flex items-start justify-between gap-4`}>
                         {project.title}
