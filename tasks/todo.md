@@ -112,3 +112,238 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
 - [ ] Checkpoint J — focused tests, static/build gates, dan review visual sesuai plan.
 
 Provider onboarding tetap ditunda. Customer account bukan scope MVP.
+
+## Admin rebuild — `admin-access` task list (2026-09-10)
+
+Status: `IMPLEMENTED_WITH_BUILD_BLOCKER` on 2026-09-10. Implements the approved
+[`admin-access` plan](plan.md#admin-rebuild--admin-access-plan-2026-09-10),
+not the later Action Queue or any admin mutation.
+
+### Task AA-01: Harden the server availability boundary
+
+**Description:** Make `requireAdmin()` fail closed when the database capability
+needed for `AdminProfile` authorization is absent, before it can construct a
+Prisma repository.
+
+**Acceptance criteria:**
+
+- [x] Clerk-only configuration without a database cannot reach an admin profile
+  read and returns the existing unavailable-admin error contract.
+- [x] Anonymous, unprovisioned, inactive, active `ADMIN`, and active `OWNER`
+  behavior remains covered by backend authorization tests.
+- [x] No dependency, migration, provider configuration, or role policy is added.
+
+**Verification:**
+
+- [x] Focused backend authorization test and the full backend suite pass.
+- [x] Typecheck passes.
+
+**Dependencies:** None.
+
+**Files likely touched:**
+
+- `src/lib/auth/clerk.ts`
+- `tests/backend/admin-auth.test.ts`
+
+**Estimated scope:** S (2 files).
+
+### Task AA-02: Add the minimal protected admin entry route
+
+**Description:** Add a Server Component `/admin` route that independently calls
+the hardened authorization boundary and renders a minimal, server-derived entry
+state for an active profile. Unprovisioned or unavailable access produces no
+protected content and no fixture fallback.
+
+**Acceptance criteria:**
+
+- [x] `/admin` independently awaits `requireAdmin()` before rendering any
+  admin-facing content.
+- [x] The successful view contains only safe, server-derived role context and
+  states clearly that Action Queue is a later module.
+- [x] Authorization failures do not render operational data, a fake login, or
+  mutation controls.
+
+**Verification:**
+
+- [x] Focused route/view unit test and the full unit suite pass.
+- [x] Typecheck passes.
+
+**Dependencies:** AA-01.
+
+**Files likely touched:**
+
+- `src/app/admin/page.tsx`
+- `src/app/admin/admin-access-view.tsx`
+- `tests/unit/admin-access-view.test.tsx`
+
+**Estimated scope:** M (3 files).
+
+### Task AA-03: Prove the route fails closed in the browser
+
+**Description:** Add a browser test for the existing no-Clerk-credential
+environment, proving `/admin` returns the unavailable response and does not
+expose retired preview or operational content.
+
+**Acceptance criteria:**
+
+- [x] `/admin` has a fail-closed unavailable response when Clerk credentials
+  are not configured.
+- [x] The browser test asserts no retired fixture marker or protected admin text
+  appears in that response.
+- [x] The test neither supplies a credential nor depends on a live Clerk tenant.
+
+**Verification:**
+
+- [x] Focused Playwright browser test passes with one worker.
+- [x] Full lint error gate passes.
+
+**Dependencies:** AA-01, AA-02.
+
+**Files likely touched:**
+
+- `tests/e2e/admin-access.spec.ts`
+
+**Estimated scope:** S (1 file).
+
+### Checkpoint: `admin-access`
+
+- [x] AA-01 through AA-03 meet their acceptance criteria.
+- [ ] Full `corepack pnpm build` remains blocked before source compilation:
+  `prisma.config.ts` imports `dotenv/config`, while `dotenv` is not a direct
+  installed dependency. Direct `next build` passes and marks `/admin` dynamic;
+  no config or dependency change was made in this scope.
+- [x] `git diff --check` passes.
+- [x] No Clerk credential, database migration, provisioning policy, fixture
+  fallback, admin mutation, commit, or push is added without separate approval.
+- [x] Action Queue remains a separate module; its owner-approved specification
+  and implementation-plan draft are tracked below.
+
+## Admin rebuild — action-queue task list (2026-09-10)
+
+Status: COMPLETE_WITH_ENVIRONMENT_BLOCKER (2026-09-11). The action-queue
+specification and plan were owner-approved on 2026-09-10. The source slice is
+implemented and verified; official Prisma-wrapped gates remain blocked by the
+existing missing `dotenv/config` dependency.
+
+### Task AQ-01: Build the server-owned Action Queue projection
+
+**Description:** Add the safe queue contract, minimal Prisma reads, source
+status mapping, quote de-duplication, candidate ordering, and bounded result.
+Payment-event rows and stock exceptions remain deferred under the approved
+specification decisions.
+
+**Acceptance criteria:**
+
+- [x] Safe items exist for new inquiry, submitted custom request, quote
+  preparation without a draft, draft quote, paid order, custom package
+  measurement, and shipment exception.
+- [x] The repository selects only allowlisted references, statuses, and
+  timestamps; no PII, private-file data, payment payload/amount, or provider
+  identifier reaches the list projection.
+- [x] A request with a current draft quote produces only the specific
+  send-quote item, with stable de-duplication identity.
+- [x] Candidate ordering and the maximum of 50 items are deterministic and
+  covered by tests.
+
+**Verification:**
+
+- [x] Direct focused backend Vitest passes (3 tests).
+- [x] Direct TypeScript check passes.
+- [x] Confirm no schema migration, dependency, provider, or Clerk configuration
+  diff.
+- [ ] Official `corepack pnpm test:backend` and `corepack pnpm typecheck` are
+  blocked before test/compile by the existing missing `dotenv/config` module.
+
+**Dependencies:** Approved action-queue spec and completed admin-access.
+
+**Files likely touched:**
+
+- src/modules/admin/action-queue.ts
+- src/modules/admin/action-queue-repository.ts
+- src/modules/admin/action-queue-service.ts
+- tests/backend/admin-action-queue.test.ts
+
+**Estimated scope:** M (4 files).
+
+### Task AQ-02: Wire the projection into the protected admin page
+
+**Description:** Replace the minimal post-access placeholder with the real
+server projection and an accessible Action Queue view. Preserve the current
+authorization fallback and add a safe query-error state.
+
+**Acceptance criteria:**
+
+- [x] /admin calls requireAdmin() before the queue service and renders no
+  operational content for unavailable, unauthenticated, inactive, or forbidden
+  access.
+- [x] Authorized populated and empty results render server-derived references,
+  next-action labels, exception text, and generation time without fixture copy
+  or browser-owned status.
+- [x] Query failure is recoverable and non-sensitive; the view remains
+  keyboard-readable, responsive, and not color-dependent.
+
+**Verification:**
+
+- [x] Focused admin unit Vitest passes (7 tests across route/view coverage).
+- [x] Direct TypeScript check passes.
+- [x] Manual review confirms no buttons, local transitions, detail hand-off, or
+  private/provider fields were added.
+- [ ] Official `corepack pnpm typecheck` remains blocked by the existing
+  missing `dotenv/config` module.
+
+**Dependencies:** AQ-01.
+
+**Files likely touched:**
+
+- src/app/admin/page.tsx
+- src/app/admin/action-queue-view.tsx
+- tests/unit/admin-action-queue-view.test.tsx
+
+**Estimated scope:** M (3 files).
+
+### Task AQ-03: Prove the route boundary in the browser
+
+**Description:** Add a focused Playwright smoke for the real route without
+Clerk credentials, proving that no legacy fixture or protected queue content is
+exposed.
+
+**Acceptance criteria:**
+
+- [x] Missing Clerk configuration still fails closed with the existing safe
+  response and no queue data.
+- [x] The browser test asserts that retired preview markers and operational
+  references do not appear in the unavailable response.
+- [x] The test supplies no credentials, mutates no data, and does not depend on
+  a development query-string role.
+
+**Verification:**
+
+- [x] Focused Playwright smoke passes (1 test).
+- [x] `corepack pnpm lint` passes with existing warnings only.
+- [x] `git diff --check` passes.
+
+**Dependencies:** AQ-01, AQ-02.
+
+**Files likely touched:**
+
+- tests/e2e/admin-action-queue.spec.ts
+
+**Estimated scope:** S (1 file).
+
+### Checkpoint: action-queue
+
+- [x] AQ-01 through AQ-03 meet their acceptance criteria.
+- [x] Focused backend, unit, and browser checks pass.
+- [x] Lint, direct TypeScript, and diff checks pass. Official typecheck/build
+  wrappers were attempted and remain blocked by missing `dotenv/config`; direct
+  `next build` passes and marks `/admin` dynamic.
+- [x] Full unit/backend regression passes (66 unit, 103 backend); full E2E's two parallel public-pages
+  flakes pass on isolated rerun (6/6).
+- [x] Technical result, visual acceptance, and live integration readiness are
+  reported separately.
+- [ ] Owner runs the later non-production smoke only after provisioning an
+  active AdminProfile in the Clerk tenant through a separate approved action.
+
+**Implementation boundary:** The plan is approved and this slice is implemented.
+Clerk provisioning, provider activation, schema migration, dependency changes,
+commit, and push remain separate approvals and were not performed.

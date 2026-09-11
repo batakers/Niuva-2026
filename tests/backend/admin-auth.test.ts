@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
 
-import { requireAdminForSession } from "@/lib/auth/clerk";
+import {
+  assertAdminAccessAvailable,
+  requireAdminForSession,
+} from "@/lib/auth/clerk";
 import {
   config,
   createAdminAuthUnavailableResponse,
@@ -38,6 +41,25 @@ function reader(
 }
 
 describe("admin authorization", () => {
+  it("requires database capability before an AdminProfile read", () => {
+    expect(() =>
+      assertAdminAccessAvailable({ clerkAdmin: true, database: false }),
+    ).toThrowError(AppError);
+
+    try {
+      assertAdminAccessAvailable({ clerkAdmin: true, database: false });
+    } catch (error) {
+      expect(error).toMatchObject({
+        code: "AUTH_UNAVAILABLE",
+        status: 503,
+      } satisfies Partial<AppError>);
+    }
+
+    expect(() =>
+      assertAdminAccessAvailable({ clerkAdmin: true, database: true }),
+    ).not.toThrow();
+  });
+
   it("rejects anonymous and expired Clerk sessions", async () => {
     await expect(requireAdminForSession({ userId: null }, reader(profile()))).rejects.toMatchObject({
       code: "UNAUTHORIZED",

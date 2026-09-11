@@ -546,3 +546,286 @@ uploads/intents, uploads/confirm, shipping/rates, checkout, webhooks/midtrans.
 Public catalog/portfolio/status/quote dan admin mutation boundaries perlu dicek/
 ditambahkan sesuai task integrasi; keberadaan service bukan berarti API sudah ada.
 Tidak ada commit, push, deployment, onboarding atau aktivasi provider pada task mapping.
+
+## Admin rebuild — `admin-access` plan (2026-09-10)
+
+Status: `PLAN_APPROVED` by owner on 2026-09-10. Scope and specification are approved in
+[CAPABILITY-MAP-admin-rebuild.md](../docs/backend/CAPABILITY-MAP-admin-rebuild.md)
+and [SPEC-admin-access.md](../docs/backend/SPEC-admin-access.md). This plan
+covers only the first module; the server-backed Action Queue is specified after
+the access boundary is accepted.
+
+### Architecture decisions
+
+- Keep the existing Clerk proxy as a route pre-filter, then independently call
+  `requireAdmin()` in the server page before any protected read or render.
+- Continue using the active `AdminProfile` role from Prisma as the Niuva
+  authorization authority. A Clerk session alone is never sufficient.
+- Treat a missing database capability the same as unavailable admin auth at the
+  server boundary; do not let a partially configured runtime attempt a Prisma
+  read or expose an implementation error.
+- Use a route-local, non-data fallback for an unprovisioned or inactive profile.
+  Do not enable experimental Next auth interrupts or add configuration in this
+  slice.
+- Render only a minimal, server-derived admin entry state. There is no fixture,
+  list, metric, mutation control, or automatic profile creation in this module.
+
+### Dependency graph and sequence
+
+```text
+Clerk proxy + Clerk session
+        + active Prisma AdminProfile
+                  |
+                  v
+        admin-access server boundary
+                  |
+                  v
+     minimal protected /admin entry route
+                  |
+                  v
+    later action-queue read projection
+```
+
+1. Harden the existing `requireAdmin()` capability check so a missing database
+   capability fails closed before repository construction.
+2. Add the `/admin` Server Component and a small, no-fixture entry view. Map
+   authorization failures to a route-local safe fallback without leaking profile
+   or operational data.
+3. Extend backend authorization tests and add one browser route test for the
+   unavailable configuration boundary.
+4. Run the focused checks, then the applicable repository gates. A real Clerk
+   tenant/manual active-profile smoke test remains a separate owner action.
+
+### Risks and mitigations
+
+| Risk | Impact | Mitigation |
+| --- | --- | --- |
+| Clerk is configured but `DATABASE_URL` is absent | High | Fail closed before constructing Prisma; cover the capability branch in a focused test. |
+| A valid Clerk user has no active Niuva profile | High | Preserve server-side `FORBIDDEN`; render no protected content and never create a profile implicitly. |
+| Browser test cannot use a live Clerk tenant | Medium | Test the 503 unavailable boundary plus backend session/profile cases; record live smoke as manual owner evidence. |
+| Reintroducing a visual admin preview | High | Page has no fixture import and no operational controls until `action-queue` is separately specified. |
+
+### Verification checkpoint
+
+- Focused backend auth tests cover anonymous, unprovisioned, inactive, active
+  Owner/Admin, and absent database capability cases.
+- Browser test verifies `/admin` fails closed without Clerk configuration and
+  reveals no fixture or protected text.
+- `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm build`, and
+  `git diff --check` pass. Any local package-store limitation is reported rather
+  than worked around by changing dependencies or configuration.
+- Owner runs a later manual smoke only after configuring a non-production Clerk
+  tenant and explicitly provisioning an active profile.
+
+## Admin rebuild — `action-queue` plan (2026-09-10)
+
+Status: `PLAN_DRAFT_FOR_OWNER_REVIEW`. The approved module specification is
+[`SPEC-action-queue.md`](../docs/backend/SPEC-action-queue.md). This plan
+covers the first real, read-only queue projection only; it does not authorize
+Clerk tenant provisioning, admin mutations, schema changes, provider changes,
+dependency changes, a commit, or a push.
+
+### Overview
+
+Build one vertical slice that reads current operational signals through a
+server-owned projection and renders them on the already protected `/admin`
+route. The slice covers project briefs, custom-print review/preparation, draft
+quotes, paid orders, custom package measurement, and current shipping
+exceptions. Payment-event rows remain deferred until `admin-operations` has a
+server-authoritative open/resolved lifecycle; stock exceptions remain outside
+this slice until their threshold policy is approved.
+
+### Architecture decisions
+
+- Preserve the existing Clerk proxy plus `requireAdmin()` boundary. The route
+  must authorize before creating or querying the queue repository.
+- Add an admin-owned read repository rather than teaching a UI component to
+  query Prisma or stitching raw rows in the page. Select only fields needed by
+  the safe projection.
+- Keep pure mapping and de-duplication in an admin service/contract layer.
+  Use a stable `kind + entity id` key and prevent `QUOTE_READY` from duplicating
+  a current draft quote for the same request.
+- Reuse the existing status enums and domain references. Do not add a migration
+  or invent a queue table for the first read slice.
+- Carry forward the approved candidate defaults: shipping exceptions first,
+  then oldest outstanding work, at most 50 items, and context-only rows with
+  no detail links or mutations.
+- Treat empty, access-unavailable, and query-failure states as separate safe
+  states. Never use the retired preview fixtures as fallback data.
+
+### Dependency graph and implementation sequence
+
+```text
+Existing Prisma status records
+  ├─ B2BInquiry / CustomPrintRequest / CustomPrintQuote
+  ├─ Order / Shipment
+  └─ AdminProfile + Clerk capability boundary
+             │
+             v
+ActionQueueRepository.listSignals()
+             │
+             v
+ActionQueueService: allowlist → map → deduplicate → order → cap
+             │
+             v
+protected /admin Server Component
+             │
+             v
+accessible ActionQueueView
+```
+
+Implementation must proceed in this order:
+
+1. Create and test the server projection contract and repository.
+2. Wire the projection into `/admin` and add genuine UI recovery states.
+3. Add the browser fail-closed smoke and run the repository checkpoints.
+
+### Task list
+
+Implementation status: COMPLETE_WITH_ENVIRONMENT_BLOCKER (2026-09-11). The
+source slice is implemented and verified; the official Prisma-wrapped
+`typecheck`, `test:backend`, and `build` scripts remain blocked by the existing
+missing `dotenv/config` dependency described at the checkpoint below.
+
+#### Task AQ-01: Build the server-owned Action Queue projection
+
+Implement the safe queue contract, minimal Prisma reads, source-status mapping,
+quote de-duplication, candidate ordering, and bounded result. Exclude payment
+events and stock until their unresolved policy decisions are available.
+
+Acceptance criteria:
+
+- [x] The service emits safe items for every approved initial source signal:
+  new inquiry, submitted custom request, quote preparation without a draft,
+  draft quote, paid order, custom package measurement, and shipment exception.
+- [x] Queries select only allowlisted references/status/timestamps and never
+  return customer contact/address data, private-file data, payment payloads,
+  amounts, or provider identifiers to the list projection.
+- [x] `QUOTE_READY` with a current draft produces only the specific send-quote
+  item; every source signal has a stable de-duplication identity.
+- [x] The candidate server order and maximum of 50 items are deterministic and
+  are covered as implementation assumptions in the test.
+
+Verification:
+
+- [x] Direct equivalent `corepack pnpm exec vitest run --config
+  vitest.backend.config.mts tests/backend/admin-action-queue.test.ts` (3 passed).
+- [x] Direct `node node_modules/typescript/bin/tsc --noEmit` (passed).
+- [x] No schema migration, dependency, provider, or Clerk configuration diff.
+- [ ] Official `corepack pnpm test:backend` and `corepack pnpm typecheck` remain
+  blocked before tests/compile by the existing `dotenv/config` Prisma config
+  dependency; no workaround was added.
+
+Dependencies: Approved `action-queue` spec and completed `admin-access` boundary.
+
+Files likely touched:
+
+- `src/modules/admin/action-queue.ts`
+- `src/modules/admin/action-queue-repository.ts`
+- `src/modules/admin/action-queue-service.ts`
+- `tests/backend/admin-action-queue.test.ts`
+
+Estimated scope: M (4 files).
+
+#### Task AQ-02: Wire the projection into the protected admin page
+
+Replace the minimal post-access placeholder with the real server projection and
+an accessible Action Queue view. Keep the current authorization fallback intact
+and add a safe query-error state without leaking internal error details.
+
+Acceptance criteria:
+
+- [x] `/admin` calls `requireAdmin()` before the queue service and renders no
+  operational content for unavailable, unauthenticated, inactive, or forbidden
+  access.
+- [x] Authorized populated and empty results render server-derived references,
+  next-action labels, exception text, and generation time; no fixture copy or
+  browser-owned status appears.
+- [x] Query failure has a recoverable, non-sensitive state. The view remains
+  keyboard-readable, responsive, and does not rely on color alone.
+
+Verification:
+
+- [x] `corepack pnpm exec vitest run --config vitest.config.mts
+  tests/unit/admin-access-view.test.tsx tests/unit/admin-action-queue-view.test.tsx`
+  (7 passed).
+- [x] Direct `node node_modules/typescript/bin/tsc --noEmit` (passed).
+- [x] Manual review confirms no buttons, local transitions, detail hand-off, or
+  private/provider fields were added.
+- [ ] Official `corepack pnpm typecheck` remains blocked by the existing
+  `dotenv/config` Prisma config dependency; no workaround was added.
+
+Dependencies: AQ-01.
+
+Files likely touched:
+
+- `src/app/admin/page.tsx`
+- `src/app/admin/action-queue-view.tsx`
+- `tests/unit/admin-action-queue-view.test.tsx`
+
+Estimated scope: M (3 files).
+
+#### Task AQ-03: Prove the route boundary in the browser
+
+Add a focused Playwright smoke for the real route in an environment without
+Clerk credentials. Keep the test independent from a live tenant while proving
+that no legacy fixture or protected queue content is exposed.
+
+Acceptance criteria:
+
+- [x] Missing Clerk configuration still fails closed with the existing safe
+  response and no queue data.
+- [x] The browser test asserts that retired preview markers and operational
+  references do not appear in the unavailable response.
+- [x] The test does not provide credentials, mutate data, or depend on a
+  development query-string role.
+
+Verification:
+
+- [x] `corepack pnpm exec playwright test tests/e2e/admin-action-queue.spec.ts
+  --workers=1` (1 passed).
+- [x] `corepack pnpm lint` (0 errors; existing warnings only).
+- [x] `git diff --check`.
+
+Dependencies: AQ-01, AQ-02.
+
+Files likely touched:
+
+- `tests/e2e/admin-action-queue.spec.ts`
+
+Estimated scope: S (1 file).
+
+### Verification checkpoint: `action-queue`
+
+- [x] AQ-01 through AQ-03 meet their acceptance criteria.
+- [x] Focused backend, unit, and browser checks pass.
+- [x] `corepack pnpm lint`, direct TypeScript check, and `git diff --check`
+  pass. The official `corepack pnpm typecheck` and `corepack pnpm build` gates
+  were attempted; both stop in Prisma config loading because `dotenv/config`
+  is unavailable. Direct `next build` passes and marks `/admin` dynamic.
+- [x] Full regression is run: `corepack pnpm test` passes (66 tests), direct
+  full backend Vitest passes (103 tests), and full E2E passes 55/57 on the
+  parallel runner; the two public-pages failures pass when rerun isolated
+  with one worker (6/6).
+- [x] Technical result, visual acceptance, and live integration readiness are
+  reported separately.
+- [ ] Owner completes a later non-production smoke only after separately
+  provisioning an active AdminProfile in the Clerk tenant.
+
+### Risks and mitigations
+
+| Risk | Impact | Mitigation |
+| --- | --- | --- |
+| Historic payment events have no universal resolved marker | High | Defer payment rows; define lifecycle in `admin-operations` before surfacing them. |
+| A list projection leaks PII or provider payloads | High | Explicit Prisma `select`, safe DTO, redaction tests, and no raw-row props. |
+| Quote preparation and sending appear twice | Medium | Anti-join current draft quotes and test the specific de-duplication rule. |
+| Source state changes during viewing | Medium | Keep this slice read-only; future mutations revalidate state server-side. |
+| Missing active Clerk tenant/profile for live smoke | High | Record as an Owner prerequisite; never create a profile implicitly. |
+| Existing `corepack pnpm build` dotenv prebuild blocker | Medium | Report separately; do not add an unapproved dependency in this slice. |
+
+### Plan review gate
+
+Owner approved this plan on 2026-09-10. The implementation is complete within
+the approved Action Queue scope. Clerk provisioning, provider activation,
+schema migration, dependency changes, commit, and push remain separate actions
+and were not performed in this slice.

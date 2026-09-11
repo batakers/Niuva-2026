@@ -17,6 +17,19 @@ export type AdminAccess = Readonly<{
   profile: AdminProfileAccessRecord;
 }>;
 
+export type AdminAccessCapabilities = Pick<
+  ReturnType<typeof getServerCapabilities>,
+  "clerkAdmin" | "database"
+>;
+
+export function assertAdminAccessAvailable(
+  capabilities: AdminAccessCapabilities,
+): void {
+  if (!capabilities.clerkAdmin || !capabilities.database) {
+    throw appError("AUTH_UNAVAILABLE");
+  }
+}
+
 export async function requireAdminForSession(
   session: ClerkSession,
   profiles: AdminProfileReader,
@@ -38,9 +51,7 @@ export async function requireAdminForSession(
 }
 
 export async function requireAdmin(): Promise<AdminAccess> {
-  if (!getServerCapabilities().clerkAdmin) {
-    throw appError("AUTH_UNAVAILABLE");
-  }
+  assertAdminAccessAvailable(getServerCapabilities());
 
   const session = await auth();
 
