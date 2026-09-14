@@ -1,7 +1,7 @@
 # Frontend review batch — FE-00–22
 
-Started: 2026-09-06. Updated: 2026-09-13. Status: **UI_IMPLEMENTED**, **VISUAL_ACCEPTANCE_PENDING**,
-**PARTIALLY_INTEGRATED (FE-07)**. User approved FE-00–02 followed by FE-03–07, FE-08–15, the isolated FE-16 admin preview, FE-17 Action Queue, FE-18 Admin Inquiry Detail, FE-19 Admin Orders, FE-20 Admin Order Fulfillment, FE-21 Admin Custom Print Review, and FE-22 Admin Quote Draft Preview.
+Started: 2026-09-06. Updated: 2026-09-14. Status: **UI_IMPLEMENTED**, **VISUAL_ACCEPTANCE_PENDING**,
+**PARTIALLY_INTEGRATED (FE-07, NG-02, NG-05 local path)**. User approved FE-00–02 followed by FE-03–07, FE-08–15, the isolated FE-16 admin preview, FE-17 Action Queue, FE-18 Admin Inquiry Detail, FE-19 Admin Orders, FE-20 Admin Order Fulfillment, FE-21 Admin Custom Print Review, and FE-22 Admin Quote Draft Preview.
 
 > Integration update — on 2026-09-13, FE-07 was promoted to the link-based
 > server-backed Project Brief slice. The no-mutation statements below remain
@@ -11,6 +11,12 @@ Started: 2026-09-06. Updated: 2026-09-13. Status: **UI_IMPLEMENTED**, **VISUAL_A
 > Historical note — on 2026-09-10, the fixture-only FE-16–26 source, route, and
 > tests were retired during repository complexity cleanup. The references and
 > verification below remain an archival record; they do not describe live routes.
+
+> Integration update — on 2026-09-14, the custom-request upload orchestration
+> (R2 capability-gated) and Shop → Product → Cart → Checkout server-backed path
+> were added locally. Provider smokes, launch catalog/pricing seed, and Owner
+> visual acceptance remain separate gates; the preview rows below continue to
+> describe only explicit `?preview=examples` behavior.
 
 ## Scope and review paths
 

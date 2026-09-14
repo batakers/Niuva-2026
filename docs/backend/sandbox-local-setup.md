@@ -111,7 +111,22 @@ Prasyarat dan urutan smoke:
    source control dan jangan mencetak nilai key.
 4. Owner memprovisikan satu `AdminProfile` aktif untuk exact Clerk user ID
    melalui prosedur terjaga, dengan role yang disetujui. Aplikasi tidak membuat
-   profile secara otomatis.
+   profile secara otomatis. Untuk database development loopback, prosedur
+   repeatable tersedia melalui perintah berikut; seluruh nilai identity/role
+   harus diisi Owner secara eksplisit dan tidak boleh menyertakan secret Clerk:
+
+   ```powershell
+   $env:ADMIN_PROFILE_CLERK_USER_ID = "user_<exact-development-id>"
+   $env:ADMIN_PROFILE_ROLE = "OWNER"
+   $env:ADMIN_PROFILE_DISPLAY_NAME = "Owner Smoke"
+   $env:ADMIN_PROFILE_CONFIRMATION = "I_UNDERSTAND_NON_PRODUCTION"
+   corepack pnpm db:provision:admin
+   ```
+
+   Jika profil sudah ada tetapi nonaktif/berbeda role, tambahkan
+   `$env:ADMIN_PROFILE_ALLOW_UPDATE = "YES"` hanya untuk perubahan Owner yang
+   disengaja. Script menolak host database non-loopback, database tanpa marker
+   development, dan konfirmasi yang tidak tepat.
 5. Jalankan server development, login dengan user test, lalu buka `/admin`.
    Verifikasi role berasal dari `AdminProfile`, Action Queue dapat dibaca, dan
    user tanpa profile aktif tetap ditolak.
@@ -122,3 +137,37 @@ Automated Playwright tetap menjalankan web server dengan kedua Clerk key kosong
 dan memverifikasi respons `AUTH_UNAVAILABLE` 503. Itu adalah guard test, bukan
 pengganti login pada tenant nyata. Jangan menjalankan live smoke terhadap
 database integration `niuva_test`; gunakan database development yang terpisah.
+
+## Persiapan R2 private non-production
+
+Status: **READY_FOR_OWNER_SETUP**. Runtime sudah memiliki intent → signed PUT →
+HEAD/confirm → ownership verification, tetapi capability R2 belum tersedia pada
+environment lokal.
+
+1. Buat resource development terpisah dengan satu bucket customer privat dan
+   satu bucket media publik yang tidak dipakai untuk file customer. Jangan
+   mengaktifkan public access pada bucket customer.
+2. Buat R2 API token dengan izin minimum **Object Read & Write** yang dibatasi
+   ke bucket customer. Adapter membutuhkan PUT, HEAD, dan DELETE; izin admin
+   akun atau bucket lain tidak diperlukan. Cloudflare menjelaskan scope token
+   dan endpoint S3 pada [R2 authentication docs](https://developers.cloudflare.com/r2/api/tokens/).
+3. Set `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`,
+   `R2_PRIVATE_BUCKET`, `R2_PUBLIC_BUCKET`, dan
+   `R2_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com` hanya pada
+   environment development lokal. Tambahkan
+   `CUSTOM_FILE_MAX_BYTES=104857600` setelah keenam field R2 lengkap; validasi
+   startup memang menolak group parsial.
+4. Pada bucket customer, tambahkan CORS dengan origin yang sama persis dengan
+   `APP_URL` (misalnya `http://127.0.0.1:3000`), method `PUT`, dan header
+   `Content-Type`. Jangan gunakan wildcard origin. Presigned URL tetap bearer
+   token sementara dan tidak boleh masuk log, screenshot, atau audit payload.
+   Lihat [R2 CORS guidance](https://developers.cloudflare.com/r2/buckets/cors/)
+   dan [presigned URL guidance](https://developers.cloudflare.com/r2/api/s3/presigned-urls/).
+5. Restart server development, buka `/custom-print/request`, pilih fixture
+   sintetis kecil dengan ekstensi/MIME yang cocok, lalu amati urutan intent →
+   PUT langsung → confirm. Verifikasi hanya metadata non-secret: row berubah
+   `PENDING → UPLOADED`, request berikutnya mengubah ownership file menjadi
+   `VERIFIED`, dan tidak ada public URL yang diberikan.
+6. Setelah smoke, hapus object fixture, cabut/rotasi token bila diperlukan, dan
+   kosongkan group R2 sebelum mengubah runtime kembali ke preview. Legal dan
+   accounting retention tetap keputusan terpisah.

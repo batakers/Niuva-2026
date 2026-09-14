@@ -62,7 +62,7 @@ export function ProductGrid({ products, previewEnabled = false }: { products: re
         </div>
       </fieldset>
 
-      <p role="status" className="py-5 text-sm text-muted-foreground">{filtered.length} produk contoh</p>
+      <p role="status" className="py-5 text-sm text-muted-foreground">{filtered.length} {previewEnabled ? "produk contoh" : "produk"}</p>
       {filtered.length === 0 ? (
         <div className="flex min-h-72 flex-col items-start justify-center border-y border-border py-10">
           <SearchX aria-hidden="true" className="size-7 text-muted-foreground" />
@@ -82,7 +82,7 @@ export function ProductGrid({ products, previewEnabled = false }: { products: re
                   <div className="flex aspect-[4/3] items-center justify-center rounded-xl border border-border bg-muted text-muted-foreground transition-colors duration-200 group-hover:border-brand-400 group-hover:bg-brand-50">
                     <div className="text-center">
                       <ImageOff aria-hidden="true" className="mx-auto size-7" />
-                      <p className="mt-3 text-sm">Foto produk contoh belum disertakan</p>
+                      <p className="mt-3 text-sm">Foto produk belum disertakan</p>
                     </div>
                   </div>
                   <div className="mt-5 flex items-start justify-between gap-4">

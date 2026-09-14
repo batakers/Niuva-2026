@@ -10,6 +10,11 @@ Run `corepack pnpm test:integration`; the helper starts the isolated cluster,
 applies reviewed migrations through `migrate deploy`, runs migration and
 concurrency smoke tests, verifies the Project Brief route through persistence
 and the server-owned Action Queue, and cleans domain tables deterministically.
+The same suite now also exercises the retail rate and checkout routes against
+real PostgreSQL with non-production provider adapters, including order
+snapshots, stock reservations, payment attempts, and idempotent replay. Those
+adapters are test doubles; this result is not a Biteship or Midtrans sandbox
+transaction.
 The same suite checks database-owned `AdminProfile` resolution for an exact
 Clerk test identity; it does not call a live Clerk tenant. Do not substitute a
 production or shared database.

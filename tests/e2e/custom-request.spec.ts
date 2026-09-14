@@ -9,6 +9,7 @@ test("custom request previews file progress and validates without API mutations"
   });
 
   await page.goto("/custom-print/request");
+  await expect(page.locator("[data-product-screen-functional]")).toHaveAttribute("data-product-screen-functional", "frontend-preview");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Siapkan file untuk review operator.");
   const fileInput = page.getByLabel("File model 3D *");
   await expect(fileInput).toBeEnabled();

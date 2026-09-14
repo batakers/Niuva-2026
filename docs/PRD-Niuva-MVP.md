@@ -271,12 +271,14 @@ System:
 **Implementation status (2026-09-14):** jalur berbasis link sudah terhubung dari
 form publik ke `/api/project-brief`, persistence `B2BInquiry`, reference
 confirmation, dan signal `B2B_INQUIRY` pada server-owned Action Queue. Handoff
-WhatsApp memakai reference number. Private binary attachment, active Clerk
-tenant login, dan visual/production acceptance tetap merupakan gate terpisah.
-Route-to-test-database smoke untuk persistence, audit, queue projection, dan
-database-owned `AdminProfile` mapping sudah diverifikasi pada integration
-harness; live tenant smoke tetap membutuhkan environment non-production yang
-disiapkan Owner.
+WhatsApp memakai reference number. Capability-aware private binary attachment
+dan Shop → Product → Cart → Checkout server flow sudah diimplementasikan pada
+jalur lokal, tetapi live R2 object smoke, active Clerk tenant login, sandbox
+payment/shipping, dan visual/production acceptance tetap merupakan gate
+terpisah. Route-to-test-database smoke untuk persistence, audit, queue
+projection, dan database-owned `AdminProfile` mapping sudah diverifikasi pada
+integration harness; live tenant/provider smoke tetap membutuhkan environment
+non-production yang disiapkan Owner.
 
 ---
 
@@ -1197,6 +1199,13 @@ Karena itu solution harus:
 8. **Custom quotation SLA**
    - Berapa lama customer dijanjikan mendapatkan review/quote?
    - **TBD.**
+
+9. **Official company biodata**
+   - Data resmi identitas legal, alamat, kontak, dan detail usaha belum
+     tersedia.
+   - **DEFERRED.** Jangan mempublikasikan company profile/legal claims atau
+     mengisi identitas bisnis provider dengan nilai sintetis; fixture yang jelas
+     non-production tetap boleh dipakai untuk pengujian teknis.
 
 ---
 

@@ -43,7 +43,8 @@
 ## Phase 3: Core vertical slices
 
 - [ ] Task 6 — Public content and B2B project brief (link-based submission
-  slice implemented; full private attachment/admin live acceptance remains).
+  slice implemented; company profile copy is deferred pending official biodata;
+  full private attachment/admin live acceptance remains).
 - [ ] Task 7 — Ready-made catalog, stock, cart, and guest checkout.
 - [ ] Task 8 — Biteship shipping and authoritative Midtrans payment.
 - [ ] Task 9 — Private custom print upload, operator review, quote, and Pricing v1.
@@ -371,9 +372,10 @@ exposed.
 - [x] Focused backend, unit, and browser checks pass.
 - [x] Lint, official TypeScript, official build, and diff checks pass after the
   approved direct `dotenv@17.4.2` development dependency fix.
-- [x] Full unit/backend regression passes (68 unit, 103 backend); full E2E
-  passes 57/57 with `--workers=1`. The parallel runner is resource-sensitive
-  on this Windows checkout; serial execution is the reproducible browser gate.
+- [x] Current serial unit/backend regression passes (73 unit, 106 backend).
+  The CI-mode one-worker E2E run completes 57 tests; one public-page navigation
+  flake passed on retry. The parallel runner is resource-sensitive on this
+  Windows checkout; serial execution is the reproducible browser gate.
 - [x] Technical result, visual acceptance, and live integration readiness are
   reported separately.
 - [ ] Owner runs the later non-production smoke only after provisioning an
@@ -383,3 +385,105 @@ exposed.
 The approved `dotenv@17.4.2` development dependency fix is complete. Clerk
 provisioning, provider activation, schema migration, and live tenant changes
 remain separate approvals.
+
+## Next Goal — Live Clerk, private files, messaging, visual acceptance, and retail checkout (2026-09-14)
+
+Status: `LOCAL_IMPLEMENTATION_GATES_PASSED_EXTERNAL_SMOKES_PENDING`. Previous
+Project Brief integration gates are committed and pushed in `1d5b870`.
+
+### Company biodata dependency — deferred
+
+- [ ] **DEFERRED/OPEN:** Biodata resmi perusahaan belum tersedia. Jangan
+  mengisi company profile, legal claims, identitas sender WhatsApp, atau
+  metadata provider/invoice dengan data sintetis.
+- [x] Pekerjaan teknis independen tetap dilanjutkan memakai fixture
+  non-production: boundary Clerk lokal, R2/checkout integration harness, dan
+  audit teknis visual.
+- [ ] Acceptance publik/Owner, onboarding provider, dan smoke live yang
+  membutuhkan identitas bisnis ditinjau ulang setelah biodata resmi tersedia.
+
+### NG-01 — Live non-production Clerk smoke
+
+- [x] Anonymous `/admin` locally redirects to the paired development tenant
+  sign-in without exposing protected data.
+- [x] Add guarded Owner provisioning command requiring explicit Clerk user ID,
+  role, display name, confirmation, and a loopback development database.
+- [ ] Owner records the exact development Clerk user ID and provisions an active
+  database-owned `AdminProfile` with the approved role.
+- [ ] One-worker browser smoke signs in at `/admin`, reads the Action Queue, and
+  confirms unknown/inactive profiles remain forbidden.
+- [ ] Record only non-secret tenant/profile references; do not store or print
+  Clerk keys.
+
+### NG-02 — Private R2 binary vertical slice
+
+- [x] Connect custom request upload to intent → direct signed private PUT →
+  confirm; tokens stay out of rendered state.
+- [x] Submit the custom request only with a verified file ID; retain preview
+  fallback when R2 is unavailable.
+- [x] Handle failure, expiry, metadata mismatch, retry/remove, and no-public-URL
+  states at client/service boundaries; real object smoke remains open.
+- [x] Document the non-production R2 setup contract: private bucket, minimum
+  object permissions, exact-origin CORS, and secret-safe smoke/cleanup steps.
+- [ ] Run a non-production R2 smoke proving `PENDING → UPLOADED` and private
+  object access.
+
+### Checkpoint A — private-file slice
+
+- [x] Unit/backend/integration/browser gates pass (73 unit, 106 backend, 11
+  integration, 18 focused browser tests).
+- [x] Test DB is stopped after smoke; no signed URL or private object key is
+  retained in logs or browser-visible state.
+- [ ] Owner confirms whether legal/accounting retention remains TBD.
+
+### NG-03 — Visual acceptance
+
+- [x] Run bounded Impeccable/browser review for `/project-brief`,
+  `/custom-print/request`, and `/checkout` at compact and wide viewports.
+- [x] Confirm primary action, recovery states, keyboard focus, contrast,
+  responsive behavior, evidence boundaries, and no horizontal overflow.
+- [x] Screen metadata now separates `server-backed`, explicit
+  `frontend-preview`, and `capability-gated` states.
+- [ ] Owner records acceptance or explicit defects for each product surface;
+  styleguide-only tokens are not silently propagated.
+
+### NG-04 — Automatic WhatsApp
+
+- [ ] **BLOCKED_DECISION:** Owner selects provider/API, sender identity,
+  template/consent, retry/idempotency policy, and non-production recipient.
+- [x] Record non-binding candidates for review: direct Meta Cloud API or
+  managed Twilio WhatsApp; no provider or credential is selected silently.
+- [ ] Implement server-owned post-commit notification only after that decision.
+- [ ] Add sandbox success/failure/retry smoke without changing committed domain
+  state.
+
+### NG-05 — Retail checkout vertical slice
+
+- [x] Wire server-backed catalog into Shop → Product → Cart → Checkout with a
+  live-capability guard, server-rate loading, and idempotent checkout response
+  handling; preview remains explicit.
+- [x] PostgreSQL integration smoke covers both the real checkout route and
+  service path: published catalog → server shipping rate → authoritative
+  order/reservation/snapshots → payment attempt and idempotent replay with
+  non-production provider adapters.
+- [ ] Owner-approved product/SKU/media/stock dataset and active pricing seed are
+  available in the development database.
+- [ ] Connect real server rates → idempotent guest checkout → Midtrans sandbox
+  handoff → verified order state; browser totals/callbacks remain advisory.
+- [ ] Add integration and one-worker browser coverage for success, duplicate,
+  and failure-recovery transactions (minimum three synthetic flows).
+
+### Goal blockers / explicit boundaries
+
+- [ ] Clerk live smoke requires Owner dashboard access and a development DB;
+  paired non-production keys are present and the anonymous redirect is proven.
+- [ ] R2 live smoke requires a complete non-production capability group and CORS
+  policy; no R2 values or approved upload-limit value are present locally.
+- [ ] Biteship/Midtrans live checkout requires provider accounts, sandbox keys,
+  callback reachability, and an Owner-approved catalog/pricing seed; none are
+  present locally.
+- [ ] Automatic WhatsApp remains `BLOCKED_DECISION` until provider approval.
+- [ ] Official company biodata remains `DEFERRED/OPEN` for public claims,
+  business sender identity, and provider/invoice identity; no synthetic value
+  may be promoted to production.
+- [ ] Admin mutations and production provider activation remain deferred.

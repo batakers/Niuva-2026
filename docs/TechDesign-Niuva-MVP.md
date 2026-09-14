@@ -987,7 +987,11 @@ Required controls:
 - expired signed URL test;
 - 3MF ZIP safety checks.
 
-**File-size limit: TBD before production.** Implement as `CUSTOM_FILE_MAX_BYTES` config; do not silently choose a permanent limit.
+**File-size limit:** closed at 100 MiB for the MVP by
+`docs/backend/phase-2-closure-decisions.md`. Runtime configuration must use
+`CUSTOM_FILE_MAX_BYTES=104857600`; the binary 14/60/90-day lifecycle follows
+the same decision. Legal/accounting record retention outside that lifecycle
+remains TBD.
 
 ---
 
@@ -1188,11 +1192,17 @@ POST /api/custom-print/requests
 POST /api/uploads/intents
 POST /api/uploads/confirm
 POST /api/shipping/rates
-POST /api/checkout/orders
-POST /api/payments/:orderId/create
-GET  /api/order-status/:token
-GET  /api/quote/:token
+POST /api/checkout                 # creates the pending order and payment handoff
+GET  /orders/[token]                # server-rendered order status
+GET  /quote/[token]                 # server-rendered quote review
 ```
+
+The first six mutation paths above are the current runtime surface. The
+checkout route composes order creation and the sandbox payment handoff in one
+server-owned transaction boundary; the older split `/api/checkout/orders` and
+`/api/payments/:orderId/create` names are not implemented routes. Order and
+quote status are page routes rather than JSON APIs so their token-bound server
+components own the public projection.
 
 Webhook:
 
@@ -1864,6 +1874,10 @@ Boundary tests, integration failures, E2E #1–#3, mobile QA, accessibility, own
 6. Initial launch inventory dataset — **TBD**.
 7. Custom quote SLA — **TBD**.
 8. Payment production onboarding — start immediately.
+9. Official company biodata and provider-facing business identity —
+   **DEFERRED** until the Owner supplies an authoritative source; required for
+   public company-profile claims, WhatsApp sender identity, and provider/invoice
+   onboarding. Non-production tests may use clearly labelled fixtures only.
 
 ---
 

@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Check, FileSearch, ShieldCheck } from "lucide-react";
+import { connection } from "next/server";
 
 import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { AuLink } from "@/components/ui/AuLink";
+import { getServerCapabilities } from "@/lib/env/server";
 import { RequestForm } from "./request-form";
 
 export const metadata: Metadata = {
@@ -18,9 +20,24 @@ const readinessItems = [
   "Kontak yang dapat dipakai untuk pembahasan operator.",
 ] as const;
 
-export default function CustomPrintRequestPage() {
+export default async function CustomPrintRequestPage() {
+  await connection();
+
+  let liveEnabled = false;
+  try {
+    liveEnabled = getServerCapabilities().customUploads;
+  } catch {
+    // Incomplete provider configuration fails closed at the page boundary.
+  }
+  const previewEnabled = process.env.NODE_ENV === "development" && !liveEnabled;
+  const functionalStatus = liveEnabled
+    ? "server-backed" as const
+    : previewEnabled
+      ? "frontend-preview" as const
+      : "capability-gated" as const;
+
   return (
-    <PublicShell scope="custom-request">
+    <PublicShell functionalStatus={functionalStatus} scope="custom-request">
       <main id="main-content" data-custom-request>
         <section className="border-b border-border bg-card">
           <div className="mx-auto grid max-w-public gap-8 px-5 py-12 sm:px-8 sm:py-16 lg:grid-cols-12 lg:items-end">
@@ -30,7 +47,9 @@ export default function CustomPrintRequestPage() {
                 Siapkan file untuk review operator.
               </h1>
               <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground">
-                Preview ini memeriksa metadata dan konfigurasi tanpa mengunggah isi file atau membuat request nyata.
+                {liveEnabled
+                  ? "Upload privat meneruskan file ke ruang penyimpanan tertutup untuk diperiksa operator sebelum estimasi dan produksi."
+                  : "Preview ini memeriksa metadata dan konfigurasi tanpa mengunggah isi file atau membuat request nyata."}
               </p>
             </div>
 
@@ -55,24 +74,28 @@ export default function CustomPrintRequestPage() {
           <div className="mx-auto grid max-w-public gap-10 px-5 py-12 sm:px-8 sm:py-16 lg:grid-cols-12 lg:gap-12">
             <aside className="space-y-8 lg:col-span-4 lg:sticky lg:top-8 lg:self-start">
               <div>
-                <p className="text-sm font-medium text-brand-700">Batas preview</p>
-                <h2 className={`${type.heading.className} mt-3`}>Metadata terlihat. Isi file tetap di perangkat.</h2>
+                <p className="text-sm font-medium text-brand-700">{liveEnabled ? "Ruang privat" : "Batas preview"}</p>
+                <h2 className={`${type.heading.className} mt-3`}>{liveEnabled ? "File diteruskan untuk review." : "Metadata terlihat. Isi file tetap di perangkat."}</h2>
                 <p className="mt-5 text-sm leading-6 text-muted-foreground">
-                  Browser hanya memakai nama, ekstensi, dan ukuran untuk simulasi. Tidak ada file ID, storage key, atau signed URL yang dibuat.
+                  {liveEnabled
+                    ? "File dikirim langsung ke storage privat. Server hanya menerima metadata terverifikasi dan file ID setelah pemeriksaan selesai."
+                    : "Browser hanya memakai nama, ekstensi, dan ukuran untuk simulasi. Tidak ada file ID, storage key, atau signed URL yang dibuat."}
                 </p>
               </div>
               <div className="rounded-xl border border-border bg-card p-5">
                 <ShieldCheck aria-hidden="true" className="size-6 text-brand-700" />
                 <h3 className="mt-4 text-base font-semibold">Review manusia tetap wajib</h3>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Status preview tidak menentukan kelayakan cetak, harga final, atau jadwal produksi.
+                  {liveEnabled
+                    ? "Status upload tidak menentukan kelayakan cetak, harga final, atau jadwal produksi."
+                    : "Status preview tidak menentukan kelayakan cetak, harga final, atau jadwal produksi."}
                 </p>
               </div>
               <AuLink className="min-h-11" href="/custom-print" variant="outline">Kembali ke penjelasan proses</AuLink>
             </aside>
 
             <div className="lg:col-span-8">
-              <RequestForm previewEnabled={process.env.NODE_ENV === "development"} />
+              <RequestForm liveEnabled={liveEnabled} previewEnabled={previewEnabled} />
             </div>
           </div>
         </section>

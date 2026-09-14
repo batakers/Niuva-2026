@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { AuLink } from "@/components/ui/AuLink";
-import { getShopPreview } from "@/features/frontend-preview/server";
+import { getLiveShopProducts, getShopPreview } from "@/features/frontend-preview/server";
+import { getServerCapabilities } from "@/lib/env/server";
 import { CartItems } from "./cart-items";
 
 export const metadata: Metadata = {
@@ -15,12 +17,33 @@ type CartPageProps = {
 };
 
 export default async function CartPage({ searchParams }: CartPageProps) {
+  await connection();
   const { preview } = await searchParams;
-  const { scenario, products } = await getShopPreview(preview);
+  const { scenario, products: previewProducts } = await getShopPreview(preview);
+  let products = previewProducts;
+  let liveEnabled = false;
+  if (scenario === null && process.env.DATABASE_URL !== undefined) {
+    try {
+      products = await getLiveShopProducts();
+    } catch {
+      products = [];
+    }
+    try {
+      const capabilities = getServerCapabilities();
+      liveEnabled = products.length > 0 && capabilities.biteship && capabilities.midtrans;
+    } catch {
+      liveEnabled = false;
+    }
+  }
   const previewEnabled = scenario === "examples";
+  const functionalStatus = liveEnabled
+    ? "server-backed" as const
+    : scenario === null
+      ? "capability-gated" as const
+      : "frontend-preview" as const;
 
   return (
-    <PublicShell scope="cart">
+    <PublicShell functionalStatus={functionalStatus} scope="cart">
       <main id="main-content">
         <section className="border-b border-border bg-card">
           <div className="mx-auto max-w-public px-5 py-12 sm:px-8 sm:py-16">
@@ -33,7 +56,7 @@ export default async function CartPage({ searchParams }: CartPageProps) {
         </section>
 
         <div className="mx-auto max-w-public px-5 py-10 sm:px-8 sm:py-14">
-          {process.env.NODE_ENV === "development" ? (
+          {process.env.NODE_ENV === "development" && !liveEnabled ? (
             <aside aria-label="Preview cart" className="mb-8 rounded-lg border border-info-border bg-info-background p-4 text-info">
               <p className="text-sm font-semibold">Preview lokal, data produk sintetis dan bukan inventory Niuva</p>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -44,7 +67,7 @@ export default async function CartPage({ searchParams }: CartPageProps) {
             </aside>
           ) : null}
 
-          <CartItems products={products} catalogStatus={scenario} previewEnabled={previewEnabled} />
+          <CartItems products={products} catalogStatus={scenario} liveEnabled={liveEnabled} previewEnabled={previewEnabled} />
         </div>
       </main>
     </PublicShell>

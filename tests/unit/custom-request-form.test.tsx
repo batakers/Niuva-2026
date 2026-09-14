@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { RequestForm } from "@/app/custom-print/request/request-form";
@@ -90,5 +90,91 @@ describe("custom request frontend preview", () => {
     expect(screen.getByText("Preview request siap ditinjau.")).toBeVisible();
     expect(screen.getByText(/Tidak ada file, request, nomor referensi, atau pesan yang dikirim/)).toBeVisible();
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe("custom request live private upload", () => {
+  it("uploads directly to the private URL, confirms metadata, then submits only the file ID", async () => {
+    const calls: Array<{ body?: BodyInit | null; headers?: HeadersInit; method?: string; url: string }> = [];
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      calls.push({ body: init?.body, headers: init?.headers, method: init?.method, url });
+
+      if (url.endsWith("/api/uploads/intents")) {
+        return Response.json({
+          expiresAt: "2026-09-14T01:00:00.000Z",
+          fileId: "2b7f3c1a-18f7-4d91-8b86-8d98fcd0f7f4",
+          requiredHeaders: { "content-type": "model/stl" },
+          uploadToken: "upload-token-that-never-renders",
+          uploadUrl: "https://r2.example.test/private/upload",
+        }, { status: 201 });
+      }
+
+      if (url === "https://r2.example.test/private/upload") {
+        return new Response(null, { status: 200 });
+      }
+
+      if (url.endsWith("/api/uploads/confirm")) {
+        return Response.json({
+          fileId: "2b7f3c1a-18f7-4d91-8b86-8d98fcd0f7f4",
+          status: "UPLOADED",
+        });
+      }
+
+      if (url.endsWith("/api/custom-print/requests")) {
+        return Response.json({
+          accessToken: "request-token-that-never-renders",
+          referenceNumber: "CPR-20260914-ABCDEFGH",
+        }, { status: 201 });
+      }
+
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    });
+
+    render(<RequestForm liveEnabled />);
+    chooseFile();
+
+    await waitFor(() => expect(document.querySelector("[data-component='file-upload-field']"))?.toHaveAttribute("data-status", "accepted"));
+    fillRequiredFields();
+    fireEvent.submit(screen.getByRole("form", { name: "Form request custom print" }));
+
+    await waitFor(() => expect(screen.getByText("Request tersimpan untuk review operator.")).toBeVisible());
+    expect(screen.getByRole("link", { name: "Lanjutkan melalui WhatsApp" })).toHaveAttribute(
+      "href",
+      expect.stringContaining("wa.me"),
+    );
+    expect(screen.queryByText("request-token-that-never-renders")).not.toBeInTheDocument();
+    expect(screen.queryByText("upload-token-that-never-renders")).not.toBeInTheDocument();
+
+    expect(calls.map(({ method, url }) => `${method ?? "GET"} ${url}`)).toEqual([
+      "POST /api/uploads/intents",
+      "PUT https://r2.example.test/private/upload",
+      "POST /api/uploads/confirm",
+      "POST /api/custom-print/requests",
+    ]);
+    const submitCall = calls[3];
+    expect(JSON.parse(String(submitCall?.body))).toMatchObject({
+      fileIds: ["2b7f3c1a-18f7-4d91-8b86-8d98fcd0f7f4"],
+      materialRequested: "PLA",
+      quantity: 2,
+    });
+    expect(fetchSpy).toHaveBeenCalledTimes(4);
+  });
+
+  it("keeps the request blocked when the direct private upload fails", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(Response.json({
+      expiresAt: "2026-09-14T01:00:00.000Z",
+      fileId: "2b7f3c1a-18f7-4d91-8b86-8d98fcd0f7f4",
+      requiredHeaders: { "content-type": "model/stl" },
+      uploadToken: "upload-token",
+      uploadUrl: "https://r2.example.test/private/upload",
+    }, { status: 201 })).mockResolvedValueOnce(new Response(null, { status: 503 }));
+
+    render(<RequestForm liveEnabled />);
+    chooseFile();
+
+    await waitFor(() => expect(document.querySelector("[data-component='file-upload-field']"))?.toHaveAttribute("data-status", "failed"));
+    expect(screen.getByText("Coba upload kembali.")).toBeVisible();
+    expect(screen.queryByText("Request tersimpan untuk review operator.")).not.toBeInTheDocument();
   });
 });

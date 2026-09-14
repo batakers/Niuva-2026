@@ -81,6 +81,9 @@ export default async function AdminPage() {
 
 ## Open Questions
 
-- `BLOCKED_DECISION`: how an Owner provisions and activates the first
-  `AdminProfile`. This module assumes the profile already exists and does not
-  add an implicit bootstrap mechanism.
+- Owner provisioning is now a guarded, explicit development procedure via
+  `corepack pnpm db:provision:admin`. It requires the exact Clerk user ID, role,
+  display name, and non-production confirmation, and only accepts a loopback
+  development database. The application still assumes the profile exists
+  and never creates or promotes one implicitly. The live tenant login remains a
+  separate Owner smoke.

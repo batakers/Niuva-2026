@@ -17,7 +17,7 @@ const rupiah = new Intl.NumberFormat("id-ID", {
   style: "currency",
 });
 
-export function ProductSelection({ product }: { product: PublicShopProduct }) {
+export function ProductSelection({ product, previewEnabled = true }: { product: PublicShopProduct; previewEnabled?: boolean }) {
   const hydrated = useHydrated();
   const [selectedId, setSelectedId] = useState<string>();
   const [quantity, setQuantity] = useState(1);
@@ -78,7 +78,7 @@ export function ProductSelection({ product }: { product: PublicShopProduct }) {
         onChange={chooseVariant}
         options={product.variants.map(variant => ({
           availability: variant.stockOnHand > 0 ? "available" : "out-of-stock",
-          detail: variant.stockOnHand > 0 ? `${variant.stockOnHand} tersedia pada data contoh` : undefined,
+          detail: variant.stockOnHand > 0 ? `${variant.stockOnHand} tersedia${previewEnabled ? " pada data contoh" : ""}` : undefined,
           id: variant.id,
           label: variant.name,
           price: rupiah.format(BigInt(variant.priceRp)),
@@ -94,7 +94,7 @@ export function ProductSelection({ product }: { product: PublicShopProduct }) {
             {selected ? rupiah.format(BigInt(selected.priceRp)) : "Pilih varian"}
           </p>
           <p id="selection-state" className="mt-2 text-xs leading-5 text-muted-foreground">
-            {selected ? `${selected.name}, maksimum ${selected.stockOnHand} pada data contoh.` : "Pilih satu varian yang tersedia untuk mengatur jumlah."}
+            {selected ? `${selected.name}, maksimum ${selected.stockOnHand}${previewEnabled ? " pada data contoh" : " tersedia saat ini"}.` : "Pilih satu varian yang tersedia untuk mengatur jumlah."}
           </p>
         </div>
 
@@ -130,7 +130,7 @@ export function ProductSelection({ product }: { product: PublicShopProduct }) {
             tone="success"
             title="Pilihan ditambahkan ke cart."
             description={`${quantity} × ${selected?.name ?? "varian"} tersimpan lokal.${cartResult === "recovered" ? " Data cart lama yang tidak valid telah dibersihkan." : ""} Belum ada reservasi stok atau transaksi yang dibuat.`}
-            action={<AuLink href="/cart?preview=examples" variant="outline" className="min-h-11">Lihat cart</AuLink>}
+            action={<AuLink href={previewEnabled ? "/cart?preview=examples" : "/cart"} variant="outline" className="min-h-11">Lihat cart</AuLink>}
           />
         </div>
       ) : null}

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EMPTY_CART, readCart, type CartSnapshot } from "@/features/cart/cart-state";
 import type { PreviewScenario, PublicShopProduct } from "@/features/frontend-preview/types";
-import { ShippingOptions, type ShippingPreviewOption, type ShippingPreviewStatus } from "./shipping-options";
+import { ShippingOptions, type ShippingOptionsMode, type ShippingPreviewOption, type ShippingPreviewStatus } from "./shipping-options";
 
 export type CheckoutPreviewScenario =
   | "ready"
@@ -79,13 +79,70 @@ const checkoutPreviewSchema = z.object({
   postalCode: z.string().trim().regex(/^\d{5}$/),
 });
 
-const shippingOptions: readonly ShippingPreviewOption[] = [
+const shippingRatesResponseSchema = z.object({
+  expiresAt: z.string().min(1),
+  options: z.array(z.object({
+    courierCode: z.string().min(1),
+    courierName: z.string().min(1),
+    etaText: z.string().min(1).optional(),
+    optionId: z.string().min(1),
+    priceRp: z.string().regex(/^\d+$/),
+    serviceCode: z.string().min(1),
+    serviceName: z.string().min(1),
+  })).min(1),
+});
+
+const checkoutCreatedResponseSchema = z.object({
+  accessToken: z.string().min(1),
+  kind: z.literal("CREATED"),
+  orderId: z.uuid(),
+  orderNumber: z.string().min(1),
+  payment: z.object({
+    redirectUrl: z.url({ protocol: /^https?$/ }).optional(),
+    token: z.string().min(1).optional(),
+  }),
+  paymentAttemptId: z.uuid(),
+  totalRp: z.string().regex(/^\d+$/),
+});
+
+const checkoutReplayResponseSchema = z.object({
+  grandTotalRp: z.string().regex(/^\d+$/),
+  kind: z.literal("REPLAY"),
+  orderId: z.uuid(),
+  orderNumber: z.string().min(1),
+  paymentAttemptId: z.uuid(),
+  status: z.literal("PENDING_PAYMENT"),
+});
+
+const checkoutResponseSchema = z.discriminatedUnion("kind", [
+  checkoutCreatedResponseSchema,
+  checkoutReplayResponseSchema,
+]);
+
+const previewShippingOptions: readonly ShippingPreviewOption[] = [
   { id: "preview-regular", carrier: "Kurir contoh", service: "Regular", eta: "2 sampai 4 hari", priceRp: "24000" },
   { id: "preview-economy", carrier: "Kurir contoh", service: "Ekonomi", eta: "4 sampai 7 hari", priceRp: "17000" },
 ];
 
 const controlClass = "min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 py-2 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 const rupiah = new Intl.NumberFormat("id-ID", { currency: "IDR", maximumFractionDigits: 0, style: "currency" });
+
+class CheckoutClientError extends Error {}
+
+async function readCheckoutResponse<T>(response: Response, schema: z.ZodType<T>, fallbackMessage: string): Promise<T> {
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    throw new CheckoutClientError(fallbackMessage);
+  }
+
+  if (!response.ok) throw new CheckoutClientError(fallbackMessage);
+
+  const parsed = schema.safeParse(payload);
+  if (!parsed.success) throw new CheckoutClientError(fallbackMessage);
+  return parsed.data;
+}
 
 function resolveScenario(requested: unknown): CheckoutPreviewScenario {
   return typeof requested === "string" && scenarios.includes(requested as CheckoutPreviewScenario)
@@ -117,14 +174,18 @@ function clearShippingError(current: Partial<Record<CheckoutField, string>>) {
 export function CheckoutForm({
   catalogStatus,
   initialScenario,
+  liveEnabled = false,
   previewEnabled,
   products,
 }: {
   catalogStatus: PreviewScenario | null;
   initialScenario?: string | string[];
+  liveEnabled?: boolean;
   previewEnabled: boolean;
   products: readonly PublicShopProduct[];
 }) {
+  const mode: ShippingOptionsMode = liveEnabled ? "live" : previewEnabled ? "preview" : "preview";
+  const isLive = liveEnabled;
   const hydrated = useHydrated();
   const [snapshot, setSnapshot] = useState<CartSnapshot>(EMPTY_CART);
   const [loadState, setLoadState] = useState<"loading" | "ready">("loading");
@@ -132,11 +193,19 @@ export function CheckoutForm({
   const [errors, setErrors] = useState<Partial<Record<CheckoutField, string>>>({});
   const [scenario, setScenario] = useState<CheckoutPreviewScenario>(() => resolveScenario(initialScenario));
   const [shippingStatus, setShippingStatus] = useState<ShippingPreviewStatus>("idle");
+  const [shippingOptions, setShippingOptions] = useState<readonly ShippingPreviewOption[]>(previewShippingOptions);
+  const [shippingExpiresAt, setShippingExpiresAt] = useState<string>();
   const [selectedShippingId, setSelectedShippingId] = useState<string | null>(null);
   const [result, setResult] = useState<CheckoutResult>("idle");
+  const [serverError, setServerError] = useState<string>();
+  const [orderNumber, setOrderNumber] = useState<string>();
+  const [orderStatusToken, setOrderStatusToken] = useState<string>();
+  const [paymentRedirectUrl, setPaymentRedirectUrl] = useState<string>();
+  const [reviewingRates, setReviewingRates] = useState(false);
   const statusRef = useRef<HTMLDivElement>(null);
   const pending = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const idempotencyKeyRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     const loadTimer = window.setTimeout(() => {
@@ -193,23 +262,102 @@ export function CheckoutForm({
     return false;
   }
 
-  function reviewRates(event: React.MouseEvent<HTMLButtonElement>) {
+  async function reviewRates(event: React.MouseEvent<HTMLButtonElement>) {
     const form = event.currentTarget.form;
     if (!form || !validate(form)) return;
     setResult("idle");
+    setServerError(undefined);
     setSelectedShippingId(null);
     setErrors(clearShippingError);
-    if (scenario === "rates-loading") setShippingStatus("loading");
-    else if (scenario === "rates-unavailable") setShippingStatus("unavailable");
-    else setShippingStatus("ready");
+    if (!isLive) {
+      if (scenario === "rates-loading") setShippingStatus("loading");
+      else if (scenario === "rates-unavailable") setShippingStatus("unavailable");
+      else setShippingStatus("ready");
+      return;
+    }
+
+    const formData = new FormData(form);
+    const items = snapshot.items.map((item) => ({
+      quantity: item.quantity,
+      variantId: item.variantId,
+    }));
+    setReviewingRates(true);
+    setShippingStatus("loading");
+    try {
+      const response = await fetch("/api/shipping/rates", {
+        body: JSON.stringify({
+          destination: {
+            countryCode: "ID",
+            postalCode: String(formData.get("postalCode") ?? ""),
+          },
+          items,
+        }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
+      });
+      const payload = await readCheckoutResponse(response, shippingRatesResponseSchema, "Opsi pengiriman belum tersedia. Coba lagi.");
+      setShippingOptions(payload.options.map((option) => ({
+        carrier: option.courierName,
+        eta: option.etaText ?? "Estimasi dari provider",
+        id: option.optionId,
+        priceRp: option.priceRp,
+        service: option.serviceName,
+      })));
+      setShippingExpiresAt(payload.expiresAt);
+      setShippingStatus("ready");
+    } catch (error) {
+      setShippingStatus("unavailable");
+      setServerError(error instanceof CheckoutClientError ? error.message : "Opsi pengiriman belum tersedia. Coba lagi.");
+    } finally {
+      setReviewingRates(false);
+    }
   }
 
   function retryRates() {
     setScenario("ready");
-    setShippingStatus("ready");
     setSelectedShippingId(null);
     setErrors(clearShippingError);
     setResult("idle");
+    setServerError(undefined);
+    if (isLive) {
+      setShippingOptions([]);
+      setShippingExpiresAt(undefined);
+      setShippingStatus("idle");
+    } else {
+      setShippingStatus("ready");
+    }
+  }
+
+  async function submitLiveCheckout(form: HTMLFormElement) {
+    const formData = new FormData(form);
+    const idempotencyKey = idempotencyKeyRef.current ?? crypto.randomUUID();
+    idempotencyKeyRef.current = idempotencyKey;
+    const response = await fetch("/api/checkout", {
+      body: JSON.stringify({
+        address: {
+          addressLine: String(formData.get("addressLine") ?? ""),
+          city: String(formData.get("city") ?? ""),
+          countryCode: "ID",
+          district: String(formData.get("district") ?? "").trim() || undefined,
+          phone: String(formData.get("addressPhone") ?? ""),
+          postalCode: String(formData.get("postalCode") ?? ""),
+          province: String(formData.get("province") ?? ""),
+          recipientName: String(formData.get("recipientName") ?? ""),
+        },
+        customerEmail: String(formData.get("customerEmail") ?? ""),
+        customerName: String(formData.get("customerName") ?? ""),
+        customerPhone: String(formData.get("customerPhone") ?? ""),
+        idempotencyKey,
+        items: snapshot.items.map((item) => ({
+          quantity: item.quantity,
+          variantId: item.variantId,
+        })),
+        shippingOptionId: selectedShippingId,
+      }),
+      headers: { "content-type": "application/json" },
+      method: "POST",
+    });
+    return readCheckoutResponse(response, checkoutResponseSchema, "Checkout belum dapat dibuat. Periksa data dan coba lagi.");
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -226,9 +374,40 @@ export function CheckoutForm({
       return;
     }
 
+    if (isLive && shippingExpiresAt !== undefined && Date.parse(shippingExpiresAt) <= Date.now()) {
+      setSelectedShippingId(null);
+      setShippingStatus("stale");
+      setErrors({ shippingOption: "Muat dan pilih ulang opsi pengiriman yang masih berlaku." });
+      return;
+    }
+
     pending.current = true;
     setErrors({});
     setResult("submitting");
+    setServerError(undefined);
+    if (isLive) {
+      void submitLiveCheckout(event.currentTarget)
+        .then((response) => {
+          pending.current = false;
+          if (response.kind === "CREATED") {
+            setOrderNumber(response.orderNumber);
+            setOrderStatusToken(response.accessToken);
+            setPaymentRedirectUrl(response.payment.redirectUrl);
+          } else {
+            setOrderNumber(response.orderNumber);
+            setOrderStatusToken(undefined);
+            setPaymentRedirectUrl(undefined);
+          }
+          setResult("payment-pending");
+        })
+        .catch((error) => {
+          pending.current = false;
+          setServerError(error instanceof CheckoutClientError ? error.message : "Checkout belum dapat dibuat. Coba lagi.");
+          setResult("payment-error");
+        });
+      return;
+    }
+
     timer.current = setTimeout(() => {
       pending.current = false;
       if (scenario === "payment-pending") setResult("payment-pending");
@@ -242,6 +421,16 @@ export function CheckoutForm({
     clearTimeout(timer.current);
     setScenario("ready");
     setResult("idle");
+    setServerError(undefined);
+    setOrderNumber(undefined);
+    setOrderStatusToken(undefined);
+    setPaymentRedirectUrl(undefined);
+    if (isLive) {
+      idempotencyKeyRef.current = undefined;
+      setSelectedShippingId(null);
+      setShippingStatus("idle");
+      setShippingOptions([]);
+    }
   }
 
   if (loadState === "loading") {
@@ -253,7 +442,7 @@ export function CheckoutForm({
     );
   }
 
-  if (!previewEnabled || catalogStatus !== "examples") {
+  if ((!previewEnabled || catalogStatus !== "examples") && !isLive) {
     return (
       <StatusNotice
         tone="info"
@@ -276,30 +465,37 @@ export function CheckoutForm({
     return <StatusNotice tone="warning" title="Cart perlu ditinjau kembali." description="Ada item yang tidak dikenali atau jumlahnya melebihi stok tampilan. Perbaiki Cart sebelum melanjutkan." action={<AuLink href="/cart?preview=examples" variant="outline" className="min-h-11">Tinjau Cart</AuLink>} />;
   }
 
-  const busy = result === "submitting";
+  const busy = result === "submitting" || reviewingRates;
 
   return (
     <form noValidate onSubmit={submit} aria-label="Form checkout tamu" aria-busy={busy} className="grid gap-8 md:grid-cols-12 md:items-start">
       <div className="min-w-0 space-y-8 md:col-span-8">
-        <aside aria-label="Kontrol preview checkout" className="rounded-lg border border-info-border bg-info-background p-4 text-info">
-          <p className="text-sm font-semibold">Preview lokal · tidak membuat transaksi</p>
-          <FormField id="checkout-preview-scenario" label="Skenario checkout" className="mt-3">
-            <select
-              className={controlClass}
-              value={scenario}
-              disabled={busy}
-              onChange={event => {
-                setScenario(resolveScenario(event.target.value));
-                setShippingStatus("idle");
-                setSelectedShippingId(null);
-                setErrors({});
-                setResult("idle");
-              }}
-            >
-              {scenarios.map(value => <option key={value} value={value}>{scenarioLabels[value]}</option>)}
-            </select>
-          </FormField>
-        </aside>
+        {isLive ? (
+          <aside aria-label="Checkout transaksi" className="rounded-lg border border-success-border bg-success-background p-4 text-success">
+            <p className="text-sm font-semibold">Checkout transaksi aktif</p>
+            <p className="mt-2 text-sm leading-6">Server akan memuat ulang katalog, stok, ongkir, total, dan membuat satu order idempotent sebelum membuka pembayaran sandbox.</p>
+          </aside>
+        ) : (
+          <aside aria-label="Kontrol preview checkout" className="rounded-lg border border-info-border bg-info-background p-4 text-info">
+            <p className="text-sm font-semibold">Preview lokal · tidak membuat transaksi</p>
+            <FormField id="checkout-preview-scenario" label="Skenario checkout" className="mt-3">
+              <select
+                className={controlClass}
+                value={scenario}
+                disabled={busy}
+                onChange={event => {
+                  setScenario(resolveScenario(event.target.value));
+                  setShippingStatus("idle");
+                  setSelectedShippingId(null);
+                  setErrors({});
+                  setResult("idle");
+                }}
+              >
+                {scenarios.map(value => <option key={value} value={value}>{scenarioLabels[value]}</option>)}
+              </select>
+            </FormField>
+          </aside>
+        )}
 
         <div ref={statusRef} tabIndex={-1} className="rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
           {Object.keys(errors).length > 0 ? (
@@ -316,10 +512,18 @@ export function CheckoutForm({
               </ul>
             </div>
           ) : null}
-          {result === "submitting" ? <p role="status" className="text-sm text-muted-foreground">Memeriksa simulasi checkout… Data tidak dikirim.</p> : null}
+          {result === "submitting" ? <p role="status" className="text-sm text-muted-foreground">{isLive ? "Membuat order dan membuka pembayaran sandbox…" : "Memeriksa simulasi checkout… Data tidak dikirim."}</p> : null}
           {result === "reviewed" ? <StatusNotice tone="success" title="Preview checkout siap ditinjau." description="Kontak, alamat, dan opsi pengiriman lolos validasi lokal. Belum ada order, reservasi, token pembayaran, atau data yang dikirim." /> : null}
-          {result === "payment-pending" ? <StatusNotice tone="info" title="Simulasi pembayaran masih menunggu." description="Browser tidak menyimpulkan status pembayaran. Pada integrasi nyata, status hanya berubah setelah notifikasi provider diverifikasi server." action={<Button type="button" variant="outline" className="min-h-11" onClick={resetOutcome}>Kembali ke ringkasan</Button>} /> : null}
-          {result === "payment-error" ? <StatusNotice tone="error" title="Simulasi pembayaran gagal." description="Isian checkout tetap tersedia dan tidak ada transaksi nyata. Kembali ke skenario siap untuk mencoba alur pemulihan." action={<Button type="button" variant="outline" className="min-h-11" onClick={resetOutcome}>Coba lagi</Button>} /> : null}
+          {result === "payment-pending" && isLive ? (
+            <StatusNotice
+              action={paymentRedirectUrl ? <a className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={paymentRedirectUrl} rel="noreferrer" target="_blank">Buka pembayaran sandbox</a> : orderStatusToken ? <AuLink className="min-h-11" href={`/orders/${orderStatusToken}`} variant="outline">Lihat status order</AuLink> : undefined}
+              description={orderNumber ? `Order ${orderNumber} sudah dibuat dan menunggu pembayaran. Status PAID hanya dapat ditetapkan setelah webhook provider diverifikasi server.` : "Order sudah dibuat dan menunggu pembayaran. Status PAID hanya dapat ditetapkan setelah webhook provider diverifikasi server."}
+              title="Checkout tersimpan, pembayaran menunggu."
+              tone="info"
+            />
+          ) : null}
+          {result === "payment-pending" && !isLive ? <StatusNotice tone="info" title="Simulasi pembayaran masih menunggu." description="Browser tidak menyimpulkan status pembayaran. Pada integrasi nyata, status hanya berubah setelah notifikasi provider diverifikasi server." action={<Button type="button" variant="outline" className="min-h-11" onClick={resetOutcome}>Kembali ke ringkasan</Button>} /> : null}
+          {result === "payment-error" ? <StatusNotice tone="error" title={isLive ? "Checkout belum dapat dibuat." : "Simulasi pembayaran gagal."} description={isLive ? serverError ?? "Periksa data dan coba lagi." : "Isian checkout tetap tersedia dan tidak ada transaksi nyata. Kembali ke skenario siap untuk mencoba alur pemulihan."} action={<Button type="button" variant="outline" className="min-h-11" onClick={resetOutcome}>{isLive ? "Coba lagi" : "Coba lagi"}</Button>} /> : null}
         </div>
 
         <fieldset disabled={busy} className="min-w-0 space-y-5 rounded-xl border border-border bg-card p-5 shadow-card sm:p-6">
@@ -344,10 +548,10 @@ export function CheckoutForm({
             <FormField id="checkout-postalCode" label="Kode pos" required error={errors.postalCode}><Input name="postalCode" inputMode="numeric" autoComplete="shipping postal-code" required maxLength={5} className={controlClass} /></FormField>
             <FormField id="checkout-country" label="Negara" variant="readOnly" className="sm:col-span-2"><Input value="Indonesia" readOnly className={controlClass} /></FormField>
           </div>
-          <Button type="button" variant="outline" className="min-h-11" onClick={reviewRates}>Tinjau opsi pengiriman</Button>
+          <Button type="button" variant="outline" className="min-h-11" disabled={reviewingRates} onClick={reviewRates}>{reviewingRates ? "Memuat opsi pengiriman…" : "Tinjau opsi pengiriman"}</Button>
         </fieldset>
 
-        <ShippingOptions status={shippingStatus} options={shippingOptions} selectedId={selectedShippingId} error={errors.shippingOption} onChange={value => { setSelectedShippingId(value); setErrors(clearShippingError); setResult("idle"); }} onRetry={retryRates} />
+        <ShippingOptions mode={mode} status={shippingStatus} options={shippingOptions} selectedId={selectedShippingId} error={errors.shippingOption} onChange={value => { setSelectedShippingId(value); setErrors(clearShippingError); setResult("idle"); }} onRetry={retryRates} />
       </div>
 
       <aside aria-labelledby="checkout-summary-title" className="rounded-xl border border-border bg-card p-5 shadow-card md:sticky md:top-6 md:col-span-4 sm:p-6">
@@ -368,14 +572,14 @@ export function CheckoutForm({
         <div className="mt-6 space-y-3 border-l-2 border-brand-300 pl-4 text-sm leading-6 text-muted-foreground">
           <p><span className="font-medium text-foreground">Browser:</span> mengumpulkan input dan menampilkan estimasi.</p>
           <p><span className="font-medium text-foreground">Server:</span> memuat ulang produk, stok, harga, ongkir, dan total.</p>
-          <p><span className="font-medium text-foreground">Provider:</span> baru dihubungi setelah data server valid.</p>
+          <p><span className="font-medium text-foreground">Provider:</span> {isLive ? "dihubungi setelah data server valid; callback tetap diverifikasi." : "baru dihubungi setelah data server valid."}</p>
         </div>
 
         <Button type="submit" size="lg" disabled={!hydrated || busy || shippingStatus !== "ready" || !selectedShippingId} className="mt-6 min-h-11 w-full">
-          {busy ? "Memeriksa preview…" : "Tinjau checkout"}
+          {busy ? (isLive ? "Membuat order…" : "Memeriksa preview…") : isLive ? "Buat order dan lanjutkan pembayaran" : "Tinjau checkout"}
         </Button>
-        <p className="mt-3 text-xs leading-5 text-muted-foreground">Tombol ini hanya menguji alur frontend. Tidak ada order, reservasi, tarif provider, atau pembayaran yang dibuat.</p>
-        <noscript><p className="mt-3 text-sm text-destructive">Aktifkan JavaScript untuk membaca Cart lokal. Checkout transaksi tetap belum tersedia.</p></noscript>
+        <p className="mt-3 text-xs leading-5 text-muted-foreground">{isLive ? "Server akan memvalidasi ulang seluruh harga, stok, ongkir, dan total. Jangan anggap pembayaran berhasil dari browser." : "Tombol ini hanya menguji alur frontend. Tidak ada order, reservasi, tarif provider, atau pembayaran yang dibuat."}</p>
+        <noscript><p className="mt-3 text-sm text-destructive">Aktifkan JavaScript untuk membaca Cart lokal dan meninjau checkout.</p></noscript>
       </aside>
     </form>
   );

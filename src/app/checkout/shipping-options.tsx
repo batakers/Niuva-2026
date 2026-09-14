@@ -12,6 +12,7 @@ export type ShippingPreviewOption = Readonly<{
 }>;
 
 export type ShippingPreviewStatus = "idle" | "loading" | "ready" | "unavailable" | "stale";
+export type ShippingOptionsMode = "live" | "preview";
 
 const rupiah = new Intl.NumberFormat("id-ID", {
   currency: "IDR",
@@ -26,6 +27,7 @@ export function ShippingOptions({
   options,
   selectedId,
   status,
+  mode,
 }: {
   error?: string;
   onChange: (optionId: string) => void;
@@ -33,7 +35,9 @@ export function ShippingOptions({
   options: readonly ShippingPreviewOption[];
   selectedId: string | null;
   status: ShippingPreviewStatus;
+  mode?: ShippingOptionsMode;
 }) {
+  const isLive = mode === "live";
   return (
     <fieldset
       id="checkout-shippingOption"
@@ -44,7 +48,9 @@ export function ShippingOptions({
     >
       <legend className="px-2 text-base font-semibold">Opsi pengiriman</legend>
       <p id="checkout-shipping-help" className="mb-4 text-sm leading-6 text-muted-foreground">
-        Opsi berikut hanya data simulasi untuk meninjau alur. Server akan meminta dan memeriksa ulang tarif nyata sebelum membuat order.
+        {isLive
+          ? "Tarif dimuat dari provider untuk alamat ini dan tetap akan diperiksa ulang server sebelum order dibuat."
+          : "Opsi berikut hanya data simulasi untuk meninjau alur. Server akan meminta dan memeriksa ulang tarif nyata sebelum membuat order."}
       </p>
 
       {status === "idle" ? (
@@ -55,7 +61,7 @@ export function ShippingOptions({
 
       {status === "loading" ? (
         <div role="status" aria-busy="true" className="space-y-3">
-          <p className="text-sm font-medium">Memuat simulasi opsi pengiriman…</p>
+          <p className="text-sm font-medium">{isLive ? "Memuat opsi pengiriman…" : "Memuat simulasi opsi pengiriman…"}</p>
           <div className="h-20 rounded-lg bg-muted motion-safe:animate-pulse" />
           <div className="h-20 rounded-lg bg-muted motion-safe:animate-pulse" />
           <Button type="button" variant="outline" className="min-h-11" onClick={onRetry}>Coba lagi</Button>

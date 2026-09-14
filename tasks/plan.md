@@ -333,6 +333,8 @@ src/app/auis/styleguide/*, dan tests terkait.
 
 - Services, portfolio, project detail, dan process content menggunakan data
   yang dapat dilacak ke sumber Niuva.
+- Company profile resmi dan klaim identitas bisnis tetap `DEFERRED/OPEN` sampai
+  biodata perusahaan dari sumber resmi tersedia; jangan mengisi data sintetis.
 - Project brief server-validated, menghasilkan reference ID, menyimpan
   inquiry berbasis link, masuk Action Queue, dan menyediakan WhatsApp
   continuation. Private attachment binding tetap mengikuti upload/provider
@@ -825,10 +827,10 @@ Estimated scope: S (1 file).
 - [x] `corepack pnpm lint`, official `corepack pnpm typecheck`, official
   `corepack pnpm build`, and `git diff --check` pass after the approved direct
   `dotenv@17.4.2` development dependency fix. `/admin` remains dynamic.
-- [x] Full regression is run: `corepack pnpm test` passes (68 tests), direct
-  full backend Vitest passes (103 tests), and full E2E passes 57/57 with
-  `--workers=1`. The parallel runner remains resource-sensitive on this
-  Windows checkout; the serial result is the reproducible browser gate.
+- [x] Current serial regression is run: `corepack pnpm test` passes (73 tests),
+  direct full backend Vitest passes (106 tests), and the CI-mode one-worker
+  E2E run completes 57 tests; one public-page navigation flake passed on retry.
+  The parallel runner remains resource-sensitive on this Windows checkout.
 - [x] Technical result, visual acceptance, and live integration readiness are
   reported separately.
 - [ ] Owner completes a later non-production smoke only after separately
@@ -851,3 +853,263 @@ Owner approved this plan on 2026-09-10. The implementation is complete within
 the approved Action Queue scope. The approved `dotenv@17.4.2` development
 dependency fix is complete. Clerk provisioning, provider activation, schema
 migration, and live tenant changes remain separate actions.
+
+## Next Goal — Live Clerk, private files, messaging, visual acceptance, and retail checkout (2026-09-14)
+
+Status: `LOCAL_IMPLEMENTATION_GATES_PASSED_EXTERNAL_SMOKES_PENDING`. The previous
+Project Brief integration gate is committed and pushed as `1d5b870`. This Goal advances only through evidence-backed,
+non-production slices; provider activation, Owner dashboard actions, and live
+credential use remain explicit gates rather than assumptions.
+
+### Company biodata dependency — deferred
+
+`DEFERRED/OPEN`: Biodata resmi perusahaan (identitas legal, alamat, kontak,
+detail usaha, dan klaim yang boleh dipublikasikan) belum tersedia. Ini tidak
+menghalangi implementasi atau pengujian teknis yang memakai fixture
+non-production. Sampai sumber resmi diberikan, jangan memfinalkan atau
+mempublikasikan company profile/legal claims, identitas bisnis untuk sender
+WhatsApp, atau metadata provider/invoice yang bergantung pada biodata.
+
+Pekerjaan yang tetap dapat berjalan: boundary Clerk lokal dan prosedur guarded,
+kode serta integration harness R2/checkout, dan audit teknis visual. Acceptance
+owner atas layar publik, provider onboarding, dan smoke live yang membutuhkan
+identitas bisnis tetap dicatat terpisah dan akan dievaluasi ulang setelah
+biodata tersedia. Tidak ada nilai yang diisi diam-diam dari data sintetis.
+
+### Dependency order
+
+```text
+Non-production Clerk tenant + active AdminProfile
+                         │
+                         ├── live admin smoke
+                         │
+R2 capability ───────────┼── private upload UI → intent → PUT → confirm → request
+                         │
+                         ├── visual acceptance of the public/product surfaces
+                         │
+Messaging provider decision + sandbox credentials
+                         │
+                         └── automatic WhatsApp notification
+
+Published catalog + active pricing/stock + sandbox Biteship/Midtrans
+                         │
+                         └── guest retail checkout → payment → verified order state
+```
+
+### Task NG-01: Complete the non-production Clerk smoke
+
+**Description:** Use the paired Clerk development keys already present in the
+local environment only to sign in with an Owner-created test user, then verify
+that the exact Clerk user ID resolves through an active database-owned
+`AdminProfile` and can read the Action Queue. Provisioning must be an explicit
+Owner operation; the application must never create or promote a profile.
+
+**Acceptance criteria:**
+
+- [ ] Owner records the exact non-production Clerk user ID and provisions an
+  active `AdminProfile` with the approved role in the development database.
+- [ ] Browser smoke signs in at `/admin`, reads the server-owned queue, and
+  verifies an unknown or inactive profile remains forbidden.
+- [ ] The smoke evidence records environment/tenant and non-secret references
+  only; no credential values enter the repository or logs.
+
+**Verification:**
+
+- [x] Local boundary check with the paired development Clerk keys redirects an
+  anonymous `/admin` request to the development tenant sign-in without exposing
+  protected data.
+- [x] Guarded Owner procedure is available as
+  `corepack pnpm db:provision:admin`; unit tests prove it rejects non-loopback
+  or non-development databases and requires explicit identity/role/confirmation.
+- [ ] Run the guarded profile-provisioning procedure and record the profile ID.
+- [ ] Run a one-worker Playwright login smoke against the development tenant.
+- [ ] Deactivate/remove the test profile after the smoke unless the Owner asks
+  to retain it for the next sandbox slice.
+
+**Dependencies:** None, but requires Owner access to the Clerk development
+dashboard and a separate development database.
+
+**Files touched:** `docs/backend/sandbox-local-setup.md`,
+`docs/backend/SPEC-admin-access.md`, `scripts/provision-admin-profile.ts`,
+`src/modules/admin/provisioning.ts`, and the focused backend test. The command
+is guarded for repeatable Owner use; it does not auto-provision at runtime.
+
+**Estimated scope:** M (manual setup plus a guarded command and focused tests).
+
+### Task NG-02: Connect the private R2 binary vertical slice
+
+**Description:** Replace the custom-print request's preview-only upload path
+with a capability-aware live path: create intent, upload directly to the
+private R2 URL, confirm server-side metadata, then submit the request with the
+verified file ID. Keep the preview fallback when R2 is unavailable and preserve
+the 100 MiB, extension/MIME, short-lived token, random-key, and rejection
+cleanup rules.
+
+**Acceptance criteria:**
+
+- [x] Live UI reaches `/api/uploads/intents`, uploads bytes directly to the
+  signed private URL, calls `/api/uploads/confirm`, and only submits a verified
+  file ID. Focused tests prove the request sequence and keep upload tokens out
+  of rendered state.
+- [x] Failure, expiry, metadata mismatch, retry, remove, and unavailable-R2
+  states preserve inputs and expose a recoverable next action at the client and
+  service boundaries; a real provider smoke is still required.
+- [x] Non-production R2 setup/runbook records private-bucket scope, minimum
+  object permissions, exact-origin CORS, and secret-safe smoke/cleanup steps.
+- [ ] A non-production R2 smoke proves the object remains private and the
+  database row transitions `PENDING → UPLOADED`; no public URL is rendered.
+
+**Verification:**
+
+- [x] Focused unit/API tests cover the live orchestration and safe response
+  boundaries.
+- [x] Integration harness covers request persistence with a verified file ID;
+  live R2 object verification remains an Owner/provider smoke.
+- [x] Responsive browser checks pass for custom request at compact and wide
+  viewports.
+
+**Dependencies:** NG-01 is not required for public upload, but the development
+  R2 capability group must be complete before the live smoke.
+
+**Files likely touched:** `src/app/custom-print/request/request-form.tsx`,
+`src/app/custom-print/request/page.tsx`, `src/components/niuva/file-upload-field.tsx`,
+and focused tests.
+
+**Estimated scope:** L; split implementation from provider smoke if it exceeds
+one focused session.
+
+### Checkpoint A — private-file slice
+
+- [x] Unit/backend/integration/browser gates pass (serial unit 73/73,
+  backend 106/106, integration 11/11, focused browser 18/18).
+- [x] Test DB is stopped after smoke and no private object URL is retained in
+  logs, fixtures, or browser-visible state.
+- [ ] Owner confirms whether legal/accounting record retention remains TBD.
+
+### Task NG-03: Perform visual acceptance for the named product surfaces
+
+**Description:** Inspect the actual `/project-brief`, `/custom-print/request`,
+and `/checkout` surfaces against the incumbent Niuva Foundation and evidence
+rules at compact and wide viewports. Record visual acceptance separately from
+automated tests; fix only scoped defects found in one bounded review pass.
+
+**Acceptance criteria:**
+
+- [ ] Desktop/mobile screenshots show one clear primary action, readable error/
+  success/recovery states, visible keyboard focus, no horizontal overflow, and
+  no unsupported evidence or claims.
+- [ ] Product-screen propagation is explicitly accepted or the remaining
+  defects are recorded as owner decisions; styleguide-only tokens are not
+  silently promoted.
+
+**Verification:**
+
+- [x] Run the Impeccable bounded audit and browser screenshot pass at 1280×900
+  and 390×844; the technical review found no horizontal overflow or blocked
+  primary states. Screenshots are retained under ignored `.local/visual-acceptance/`.
+- [x] Product-screen metadata distinguishes `server-backed`, explicit
+  `frontend-preview`, and `capability-gated` states so a provider-unavailable
+  route does not claim to be a completed preview or live transaction surface.
+- [ ] Owner records visual acceptance for each named surface.
+
+**Dependencies:** NG-02 for the final custom-request state set.
+
+**Estimated scope:** M (review plus only the fixes accepted by the Owner).
+
+### Task NG-04: Decide and implement automatic WhatsApp delivery
+
+**Description:** Resolve the provider and messaging policy before adding any
+outbound send. The current reference-based deep link is not automatic delivery.
+The decision must name the provider/API, sender identity, template/consent
+requirements, retry/idempotency policy, and non-production recipient.
+
+**Acceptance criteria:**
+
+- [ ] Owner approves a provider, template, sender, recipient, data minimization,
+  and sandbox/live boundary.
+- [ ] A server-owned notification adapter sends only after the inquiry or
+  custom request transaction commits, with idempotency and auditable failure.
+- [ ] A sandbox smoke proves success, provider failure, and retry without
+  changing the committed domain state.
+
+**Verification:**
+
+- [ ] Provider contract and tests are added after the decision; no provider is
+  selected silently.
+
+**Dependencies:** Owner/provider decision; Resend is currently absent from the
+local environment and is email-only, not a WhatsApp implementation.
+
+**Non-binding candidates for Owner review (2026-09-14):**
+
+- **Meta WhatsApp Cloud API (direct):** requires a Meta business portfolio,
+  WhatsApp Business Account, registered business number, messaging permission,
+  approved template where applicable, and a webhook subscription. See the
+  [Meta WhatsApp Cloud API collection](https://www.postman.com/meta/whatsapp-business-platform/documentation/wlk6lh4/whatsapp-cloud-api).
+- **Twilio WhatsApp:** provides a managed sender/API and sandbox, but business-
+  initiated notifications still use approved templates and inbound delivery
+  depends on a configured webhook. See [Twilio's WhatsApp API overview](https://www.twilio.com/docs/whatsapp/api)
+  and [WhatsApp quickstart](https://www.twilio.com/docs/whatsapp/quickstart).
+
+These are candidates only; no provider, sender, template, recipient, or
+credential is selected by this plan. Owner must choose one before runtime
+implementation.
+
+**Estimated scope:** L after decision; currently `BLOCKED_DECISION`.
+
+### Task NG-05: Connect the retail checkout vertical slice
+
+**Description:** Move the shop/cart/checkout path from development preview to
+server-backed catalog, shipping, checkout, Midtrans sandbox payment, and
+verified order status. Reuse the existing authoritative services and keep
+guest checkout; do not trust browser totals, stock, shipping, or payment
+callbacks.
+
+**Acceptance criteria:**
+
+- [ ] Owner-approved published product/variant/stock and active pricing seed are
+  available in the development database.
+- [ ] Browser requests real server rates, creates one idempotent pending order,
+  opens the sandbox payment handoff, and never renders a browser-authoritative
+  paid state.
+- [ ] Verified sandbox webhook updates the correct order exactly once; at least
+  three synthetic end-to-end transactions cover success, duplicate, and failure
+  recovery.
+
+**Verification:**
+
+- [x] Integration/backend tests cover catalog/stock/reservation/order/payment
+  state, and focused unit tests cover server-rate and idempotent checkout UI
+  orchestration.
+- [x] PostgreSQL integration smoke covers both the real checkout route and
+  service path: published catalog → server shipping rate → authoritative
+  order/reservation/snapshots → payment attempt and idempotent replay with
+  non-production provider adapters.
+- [ ] One-worker browser smoke covers rates → checkout → sandbox payment →
+  verified order state with real providers.
+- [ ] Provider, seed, legal, and accounting evidence are recorded separately
+  from code/test acceptance.
+
+**Dependencies:** NG-03; active catalog/pricing seed; non-production Biteship
+and Midtrans capabilities; no production activation.
+
+**Estimated scope:** XL; split into catalog seed, shipping/checkout UI, and
+payment/order smoke before implementation.
+
+### Open decisions and blockers
+
+- `OPEN`: exact Clerk development tenant/user/profile to use for the live smoke;
+  paired non-production keys are present locally and the anonymous redirect was
+  verified, but no live sign-in/profile provisioning was performed.
+- `OPEN`: R2 development bucket/prefix, CORS policy, and provider credentials.
+  Presence-only inspection on 2026-09-14 found the complete R2 group and
+  `CUSTOM_FILE_MAX_BYTES` absent locally.
+- `BLOCKED_DECISION`: automatic WhatsApp provider, template, sender, and consent.
+- `OPEN`: final product/SKU/media/stock dataset and active pricing-rule seed;
+  Biteship and Midtrans capability groups are also absent locally.
+- `OPEN`: legal/accounting retention outside the approved binary lifecycle.
+- `DEFERRED/OPEN`: official company biodata required for public company-profile
+  claims, business sender identity, and provider/invoice identity; no synthetic
+  value is approved for production or public copy.
+- `DEFERRED`: admin mutations and production checkout/provider activation remain
+  outside this Goal until their own acceptance evidence exists.

@@ -1,6 +1,10 @@
 import "server-only";
 
 import {
+  CatalogRepository,
+  type PublicCatalogProduct,
+} from "@/modules/catalog/repository";
+import {
   getApprovedPortfolioProjectBySlug,
   getApprovedPortfolioProjects,
   type ApprovedPortfolioProject,
@@ -87,6 +91,36 @@ export async function getShopPreview(requested: unknown) {
   const products: readonly PublicShopProduct[] = scenario === "examples"
     ? (await import("./fixtures")).exampleShopProducts : [];
   return { scenario, products };
+}
+
+export async function getLiveShopProducts(): Promise<readonly PublicShopProduct[]> {
+  return serializeShopProducts(await new CatalogRepository().findPublishedProducts());
+}
+
+export async function getLiveShopProduct(slug: string): Promise<PublicShopProduct | null> {
+  const product = await new CatalogRepository().findPublishedProductBySlug(slug);
+  return product === null ? null : serializeShopProducts([product])[0] ?? null;
+}
+
+function serializeShopProducts(
+  products: readonly PublicCatalogProduct[],
+): readonly PublicShopProduct[] {
+  return products.map((product) => ({
+    category: product.category,
+    description: product.description,
+    id: product.id,
+    media: product.media.map(({ altText, sortOrder }) => ({ altText, sortOrder })),
+    name: product.name,
+    slug: product.slug,
+    variants: product.variants.map((variant) => ({
+      id: variant.id,
+      name: variant.name,
+      priceRp: variant.priceRp.toString(),
+      sku: variant.sku,
+      stockOnHand: variant.stockOnHand,
+      weightGrams: variant.weightGrams.toString(),
+    })),
+  }));
 }
 
 export async function getShopProductPreview(slug: string, requested: unknown) {

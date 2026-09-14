@@ -81,6 +81,13 @@ route boundaries, sandbox refusal, signature validation, email idempotency,
 provider error mapping, Biteship normalization/timeout boundaries, catalog
 fingerprinting, and shipping response redaction.
 
+Pada 2026-09-14, integration harness juga menjalankan `POST /api/shipping/rates`
+dan `POST /api/checkout` terhadap PostgreSQL nyata dengan adapter provider
+non-production: katalog published, rate opaque, order/address/item/rate
+snapshot, reservasi stok, payment attempt, dan replay idempotency semuanya
+terverifikasi. Adapter tersebut adalah test double; hasil ini bukan bukti
+transaksi Biteship/Midtrans sandbox atau callback publik yang sudah aktif.
+
 The initial audit reported six transitive Prisma advisories. The subsequent
 [technical closure](phase-3-technical-closure.md) applies reviewed scoped
 overrides; production and full dependency audits now report no known

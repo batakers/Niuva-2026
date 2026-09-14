@@ -1,13 +1,22 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import Decimal from "decimal.js";
 
 import { Prisma } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
+import { CheckoutRepository } from "@/modules/checkout/repository";
+import { CheckoutService } from "@/modules/checkout/service";
+import { IdempotencyRepository } from "@/modules/idempotency/repository";
 import { InventoryRepository } from "@/modules/inventory/repository";
 import { B2BInquiryRepository } from "@/modules/inquiry/repository";
 import { PaymentWebhookRepository } from "@/modules/payment/webhook-repository";
 import { PaymentWebhookService } from "@/modules/payment/webhook-service";
 import { ShippingRepository } from "@/modules/shipping/repository";
 import { ShippingService } from "@/modules/shipping/service";
+import type { BiteshipRateRequest } from "@/modules/shipping/biteship";
+import {
+  PrismaRetailShippingCatalogRepository,
+  RetailShippingRateService,
+} from "@/modules/shipping/retail-rate-service";
 import { createHash } from "node:crypto";
 
 const prisma = getPrismaClient();
@@ -411,6 +420,213 @@ describe("isolated PostgreSQL integration harness", () => {
     await expect(
       prisma.productVariant.findUnique({ where: { id: lateVariant.id } }),
     ).resolves.toMatchObject({ stockOnHand: 1 });
+  });
+
+  it("persists a retail checkout vertical slice and replays it idempotently", async () => {
+    const now = new Date();
+    const product = await prisma.product.create({
+      data: {
+        description: "Retail checkout fixture",
+        isPublished: true,
+        name: "Desk Organiser",
+        slug: "desk-organiser-integration",
+        variants: {
+          create: {
+            heightCm: new Prisma.Decimal("4"),
+            isActive: true,
+            lengthCm: new Prisma.Decimal("12"),
+            name: "Charcoal",
+            priceRp: new Prisma.Decimal("12500"),
+            sku: "RETAIL-INTEGRATION-CHARCOAL",
+            stockOnHand: 5,
+            weightGrams: new Prisma.Decimal("250"),
+            widthCm: new Prisma.Decimal("8"),
+          },
+        },
+      },
+      include: { variants: true },
+    });
+    const variant = product.variants[0];
+    if (variant === undefined) {
+      throw new Error("Variant fixture retail checkout gagal dibuat.");
+    }
+
+    const shippingRequests: BiteshipRateRequest[] = [];
+    const shipping = new RetailShippingRateService({
+      now: () => now,
+      provider: {
+        async getRates(input) {
+          shippingRequests.push(input);
+          return [
+            {
+              courierCode: "JNE",
+              courierName: "Jalur Nugraha Ekakurir",
+              etaText: "2-3 hari",
+              priceRp: new Decimal("15000"),
+              providerPayload: {
+                courierCode: "JNE",
+                serviceCode: "REG",
+                providerRequestId: "fixture-request",
+              },
+              serviceCode: "REG",
+              serviceName: "Regular",
+            },
+          ];
+        },
+      },
+      repository: new PrismaRetailShippingCatalogRepository(prisma),
+    });
+    const paymentCalls: string[] = [];
+    const checkout = new CheckoutService({
+      idempotency: new IdempotencyRepository(prisma),
+      now: () => now,
+      paymentProvider: {
+        async createPayment(input) {
+          paymentCalls.push(input.providerOrderId);
+          return {
+            redirectUrl: "https://app.sandbox.example.test/payment/fixture",
+            token: "fixture-snap-token",
+          };
+        },
+      },
+      randomBytes: (size) => new Uint8Array(size).fill(7),
+      repository: new CheckoutRepository(prisma),
+      shippingProvider: shipping,
+    });
+    const rateResponse = await shipping.getRates({
+      destination: {
+        biteshipAreaId: "ID-AREA-FIXTURE",
+        countryCode: "ID",
+        postalCode: "40111",
+      },
+      items: [{ quantity: 2, variantId: variant.id }],
+    });
+    const selectedRate = rateResponse.options[0];
+    if (selectedRate === undefined) {
+      throw new Error("Rate fixture retail checkout tidak tersedia.");
+    }
+    const input = {
+      address: {
+        addressLine: "Jl. Integrasi No. 1",
+        biteshipAreaId: "ID-AREA-FIXTURE",
+        city: "Bandung",
+        countryCode: "ID",
+        district: "Coblong",
+        phone: "+628000000000",
+        postalCode: "40111",
+        province: "Jawa Barat",
+        recipientName: "Retail Client",
+      },
+      customerEmail: "retail@example.test",
+      customerName: "Retail Client",
+      customerPhone: "+628000000000",
+      idempotencyKey: "checkout-integration-1",
+      items: [{ quantity: 2, variantId: variant.id }],
+      shippingOptionId: selectedRate.optionId,
+    };
+
+    const created = await checkout.create(input);
+    expect(created.kind).toBe("CREATED");
+    if (created.kind !== "CREATED") {
+      throw new Error("Checkout fixture tidak membuat order.");
+    }
+
+    expect(created.totalRp).toBe("40000");
+    expect(created.payment).toEqual({
+      redirectUrl: "https://app.sandbox.example.test/payment/fixture",
+      token: "fixture-snap-token",
+    });
+    expect(paymentCalls).toHaveLength(1);
+    expect(shippingRequests).toHaveLength(2);
+    expect(shippingRequests[0]?.items).toEqual([
+      expect.objectContaining({
+        heightCm: 4,
+        lengthCm: 12,
+        quantity: 2,
+        sku: "RETAIL-INTEGRATION-CHARCOAL",
+        valueRp: 12500,
+        weightGrams: 250,
+        widthCm: 8,
+      }),
+    ]);
+
+    await expect(
+      prisma.order.findUnique({
+        include: {
+          address: true,
+          items: true,
+          paymentAttempts: true,
+          reservations: true,
+          shipmentRates: true,
+        },
+        where: { id: created.orderId },
+      }),
+    ).resolves.toMatchObject({
+      address: {
+        city: "Bandung",
+        postalCode: "40111",
+        recipientName: "Retail Client",
+      },
+      grandTotalRp: new Prisma.Decimal("40000"),
+      items: [
+        {
+          itemType: "PRODUCT",
+          lineTotalRp: new Prisma.Decimal("25000"),
+          nameSnapshot: "Desk Organiser — Charcoal",
+          quantity: 2,
+          skuSnapshot: "RETAIL-INTEGRATION-CHARCOAL",
+          unitPriceRp: new Prisma.Decimal("12500"),
+        },
+      ],
+      orderNumber: created.orderNumber,
+      orderType: "RETAIL",
+      paymentAttempts: [
+        {
+          amountRp: new Prisma.Decimal("40000"),
+          providerOrderId: paymentCalls[0],
+          snapToken: "fixture-snap-token",
+          status: "PENDING",
+        },
+      ],
+      reservations: [
+        {
+          quantity: 2,
+          status: "ACTIVE",
+          variantId: variant.id,
+        },
+      ],
+      shipmentRates: [
+        {
+          courierCode: "JNE",
+          priceRp: new Prisma.Decimal("15000"),
+          providerPayloadJson: {
+            courierCode: "JNE",
+            serviceCode: "REG",
+          },
+          serviceCode: "REG",
+        },
+      ],
+      status: "PENDING_PAYMENT",
+    });
+    await expect(
+      prisma.productVariant.findUnique({ where: { id: variant.id } }),
+    ).resolves.toMatchObject({ stockOnHand: 5 });
+
+    await expect(checkout.create(input)).resolves.toMatchObject({
+      kind: "REPLAY",
+      response: {
+        grandTotalRp: "40000",
+        orderId: created.orderId,
+        orderNumber: created.orderNumber,
+        paymentAttemptId: created.paymentAttemptId,
+        status: "PENDING_PAYMENT",
+      },
+    });
+    expect(paymentCalls).toHaveLength(1);
+    expect(shippingRequests).toHaveLength(2);
+    await expect(prisma.order.count()).resolves.toBe(1);
+    await expect(prisma.paymentAttempt.count()).resolves.toBe(1);
+    await expect(prisma.stockReservation.count()).resolves.toBe(1);
   });
 });
 

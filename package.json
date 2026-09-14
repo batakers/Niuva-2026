@@ -25,6 +25,7 @@
     "db:test:stop": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/local-test-db.ps1 stop",
     "db:test:migrate": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/local-test-db.ps1 migrate",
     "db:test:seed:public-content": "jiti scripts/seed-approved-public-content.ts",
+    "db:provision:admin": "jiti scripts/provision-admin-profile.ts",
     "test:integration": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/local-test-db.ps1 test"
   },
   "dependencies": {

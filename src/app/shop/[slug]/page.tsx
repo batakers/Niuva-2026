@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { ImageOff } from "lucide-react";
 import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { AuLink } from "@/components/ui/AuLink";
-import { getShopProductPreview } from "@/features/frontend-preview/server";
+import { getLiveShopProduct, getShopProductPreview } from "@/features/frontend-preview/server";
 import { ProductSelection } from "./product-selection";
 
 export const metadata: Metadata = {
@@ -20,7 +21,7 @@ type ProductPageProps = {
 
 function ProductLoading() {
   return (
-    <PublicShell scope="product-detail">
+    <PublicShell functionalStatus="frontend-preview" scope="product-detail">
       <main id="main-content" className="mx-auto max-w-public px-5 py-10 sm:px-8 sm:py-14">
         <h1 className="sr-only">Memuat detail produk</h1>
         <div role="status" aria-label="Memuat detail produk" className="grid gap-10 lg:grid-cols-12">
@@ -33,13 +34,22 @@ function ProductLoading() {
 }
 
 export default async function ProductPage({ params, searchParams }: ProductPageProps) {
+  await connection();
   const [{ slug }, { preview }] = await Promise.all([params, searchParams]);
-  const { product, scenario } = await getShopProductPreview(slug, preview);
+  const { product: previewProduct, scenario } = await getShopProductPreview(slug, preview);
+  let product = previewProduct;
+  if (scenario === null && product === null && process.env.DATABASE_URL !== undefined) {
+    try {
+      product = await getLiveShopProduct(slug);
+    } catch {
+      product = null;
+    }
+  }
 
   if (scenario === "loading") return <ProductLoading />;
   if (scenario === "error") {
     return (
-      <PublicShell scope="product-detail">
+      <PublicShell functionalStatus="frontend-preview" scope="product-detail">
         <main id="main-content" className="mx-auto max-w-public px-5 py-14 sm:px-8 sm:py-20">
           <h1 className={`${type.heading.className} max-w-3xl`}>Detail produk belum dapat dimuat.</h1>
           <div className="mt-8 max-w-2xl">
@@ -52,10 +62,10 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   if (!product) notFound();
 
   return (
-    <PublicShell scope="product-detail">
+    <PublicShell functionalStatus={scenario === "examples" ? "frontend-preview" : "server-backed"} scope="product-detail">
       <main id="main-content" className="overflow-x-hidden">
         <div className="mx-auto max-w-public px-5 py-8 sm:px-8 sm:py-12">
-          <AuLink href="/shop?preview=examples" variant="link" className="min-h-11 px-0">Kembali ke Shop</AuLink>
+          <AuLink href={scenario === "examples" ? "/shop?preview=examples" : "/shop"} variant="link" className="min-h-11 px-0">Kembali ke Shop</AuLink>
 
           <div className="mt-5 grid gap-10 lg:grid-cols-12 lg:gap-12">
             <section aria-label="Gallery produk" className="min-w-0 lg:col-span-7">
@@ -78,13 +88,13 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
               <h1 className={`${type.heading.className} mt-3 max-w-3xl`}>{product.name}</h1>
               <p className="mt-5 text-base leading-7 text-muted-foreground">{product.description}</p>
 
-              <ProductSelection product={product} />
+              <ProductSelection product={product} previewEnabled={scenario === "examples"} />
 
               <section aria-labelledby="important-information" className="mt-9 border-t border-border pt-7">
                 <h2 id="important-information" className="text-lg font-semibold">Informasi penting</h2>
                 <div className="mt-4 space-y-4 text-sm leading-6 text-muted-foreground">
                   <p>Harga ditampilkan per varian. Browser tidak menentukan harga final, stok, ongkir, atau reservasi.</p>
-                  <p>Ketersediaan akhir akan diperiksa kembali saat checkout. Produk contoh ini tidak dapat dibeli dan tidak mewakili inventory launch.</p>
+                  <p>{scenario === "examples" ? "Ketersediaan akhir akan diperiksa kembali saat checkout. Produk contoh ini tidak dapat dibeli dan tidak mewakili inventory launch." : "Ketersediaan akhir akan diperiksa kembali saat checkout. Order hanya dibuat setelah seluruh data server dan provider tervalidasi."}</p>
                 </div>
               </section>
             </article>

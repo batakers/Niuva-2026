@@ -9,6 +9,7 @@ import { StatusNotice } from "@/components/niuva/status-notice";
 import { useHydrated } from "@/components/niuva/use-hydrated";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { createPublicWhatsAppHref } from "@/features/public/company-content";
 import { CUSTOM_FILE_MAX_BYTES } from "@/modules/policy/privacy";
 
 const acceptedExtensions = [".stl", ".3mf", ".obj", ".step", ".stp"] as const;
@@ -34,7 +35,44 @@ const requestPreviewSchema = z.object({
 type PreviewFieldName = keyof z.infer<typeof requestPreviewSchema> | "file" | "rightsAck";
 type PreviewErrors = Partial<Record<PreviewFieldName, string>>;
 type UploadScenario = "accepted" | "failed" | "expired";
-type SubmitResult = "idle" | "pending" | "ready" | "unavailable";
+type SubmitResult = "idle" | "pending" | "ready" | "unavailable" | "error";
+type RequestFormMode = "live" | "preview" | "unavailable";
+
+const uploadIntentResponseSchema = z.object({
+  expiresAt: z.string().min(1),
+  fileId: z.uuid(),
+  requiredHeaders: z.object({ "content-type": z.string().min(1) }),
+  uploadToken: z.string().min(1),
+  uploadUrl: z.url({ protocol: /^https?$/ }),
+});
+
+const uploadConfirmationResponseSchema = z.object({
+  fileId: z.uuid(),
+  status: z.literal("UPLOADED"),
+});
+
+const customRequestResponseSchema = z.object({
+  accessToken: z.string().min(1),
+  referenceNumber: z.string().min(1),
+});
+
+const supportedMimeTypes: Record<string, readonly string[]> = {
+  ".3mf": ["model/3mf", "application/vnd.ms-3mfdocument"],
+  ".obj": ["model/obj", "text/plain"],
+  ".step": ["model/step", "application/step"],
+  ".stl": ["model/stl", "application/sla", "application/vnd.ms-pki.stl"],
+  ".stp": ["model/step", "application/step"],
+};
+
+class ClientRequestError extends Error {
+  readonly expired: boolean;
+
+  constructor(message: string, { expired = false }: { expired?: boolean } = {}) {
+    super(message);
+    this.name = "ClientRequestError";
+    this.expired = expired;
+  }
+}
 
 const fieldLabels: Record<PreviewFieldName, string> = {
   colorRequested: "Warna",
@@ -66,19 +104,37 @@ function fileMetadata(file: File) {
   return `${reviewType} · ${formatBytes(file.size)}`;
 }
 
-export function RequestForm({ previewEnabled = false }: { previewEnabled?: boolean }) {
+export function RequestForm({
+  liveEnabled = false,
+  previewEnabled = false,
+}: {
+  liveEnabled?: boolean;
+  previewEnabled?: boolean;
+}) {
+  const mode: RequestFormMode = liveEnabled
+    ? "live"
+    : previewEnabled
+      ? "preview"
+      : "unavailable";
+  const isLive = mode === "live";
+  const isPreview = mode === "preview";
   const hydrated = useHydrated();
   const [errors, setErrors] = useState<PreviewErrors>({});
   const [file, setFile] = useState<File | null>(null);
+  const [uploadedFileId, setUploadedFileId] = useState<string>();
   const [fileError, setFileError] = useState<string>();
   const [fileStatus, setFileStatus] = useState<FileUploadStatus>("idle");
   const [progress, setProgress] = useState<number>();
   const [scenario, setScenario] = useState<UploadScenario>("accepted");
   const [result, setResult] = useState<SubmitResult>("idle");
+  const [referenceNumber, setReferenceNumber] = useState<string>();
+  const [serverError, setServerError] = useState<string>();
   const pending = useRef(false);
   const scenarioRef = useRef<UploadScenario>("accepted");
   const statusRef = useRef<HTMLDivElement>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const uploadOperationRef = useRef(0);
+  const uploadAbortRef = useRef<AbortController | null>(null);
 
   function clearTimers() {
     for (const timer of timers.current) clearTimeout(timer);
@@ -87,16 +143,83 @@ export function RequestForm({ previewEnabled = false }: { previewEnabled?: boole
 
   useEffect(() => () => {
     for (const timer of timers.current) clearTimeout(timer);
+    uploadAbortRef.current?.abort();
+    uploadOperationRef.current += 1;
   }, []);
 
   useEffect(() => {
-    if (Object.keys(errors).length > 0 || result === "ready" || result === "unavailable") {
+    if (Object.keys(errors).length > 0 || result === "ready" || result === "unavailable" || result === "error") {
       statusRef.current?.focus();
     }
   }, [errors, result]);
 
   function schedule(callback: () => void, delay: number) {
     timers.current.push(setTimeout(callback, delay));
+  }
+
+  function resetLiveUpload() {
+    uploadAbortRef.current?.abort();
+    uploadAbortRef.current = null;
+    uploadOperationRef.current += 1;
+    setUploadedFileId(undefined);
+  }
+
+  function isCurrentUpload(operationId: number) {
+    return uploadOperationRef.current === operationId;
+  }
+
+  async function readApiResponse<T>(
+    response: Response,
+    schema: z.ZodType<T>,
+    fallbackMessage: string,
+  ): Promise<T> {
+    let payload: unknown;
+    try {
+      payload = await response.json();
+    } catch {
+      throw new ClientRequestError(fallbackMessage);
+    }
+
+    if (!response.ok) {
+      throw new ClientRequestError(
+        response.status === 401 ? "Sesi upload berakhir. Pilih file untuk memulai kembali." : fallbackMessage,
+        { expired: response.status === 401 },
+      );
+    }
+
+    const parsed = schema.safeParse(payload);
+    if (!parsed.success) {
+      throw new ClientRequestError(fallbackMessage);
+    }
+
+    return parsed.data;
+  }
+
+  function declaredMimeType(nextFile: File): string | undefined {
+    const extension = fileExtension(nextFile.name);
+    const supported = supportedMimeTypes[extension];
+    if (supported === undefined) return undefined;
+
+    const browserMime = nextFile.type.trim().toLowerCase();
+    if (browserMime === "" || browserMime === "application/octet-stream") {
+      return supported[0];
+    }
+
+    return supported.includes(browserMime) ? browserMime : undefined;
+  }
+
+  function validateSelectedFile(nextFile: File): string | undefined {
+    const extension = fileExtension(nextFile.name);
+    if (!acceptedExtensions.includes(extension as (typeof acceptedExtensions)[number])) {
+      return `Gunakan STL, 3MF, OBJ, STEP, atau STP untuk ${isPreview ? "preview ini" : "upload privat ini"}.`;
+    }
+    if (nextFile.size <= 0 || nextFile.size > CUSTOM_FILE_MAX_BYTES) {
+      return `Ukuran file harus lebih dari 0 B dan tidak melebihi ${maxFileSizeLabel}.`;
+    }
+    if (isLive && declaredMimeType(nextFile) === undefined) {
+      return "Tipe file tidak cocok dengan ekstensi. Pilih file model yang sesuai.";
+    }
+    return undefined;
   }
 
   function simulateFile(nextFile: File, nextScenario: UploadScenario = scenarioRef.current) {
@@ -110,17 +233,11 @@ export function RequestForm({ previewEnabled = false }: { previewEnabled?: boole
       return next;
     });
 
-    const extension = fileExtension(nextFile.name);
-    if (!acceptedExtensions.includes(extension as (typeof acceptedExtensions)[number])) {
+    const validationError = validateSelectedFile(nextFile);
+    if (validationError !== undefined) {
       setFileStatus("invalid");
       setProgress(undefined);
-      setFileError("Gunakan STL, 3MF, OBJ, STEP, atau STP untuk preview ini.");
-      return;
-    }
-    if (nextFile.size <= 0 || nextFile.size > CUSTOM_FILE_MAX_BYTES) {
-      setFileStatus("invalid");
-      setProgress(undefined);
-      setFileError(`Ukuran file harus lebih dari 0 B dan tidak melebihi ${maxFileSizeLabel}.`);
+      setFileError(validationError);
       return;
     }
 
@@ -147,14 +264,131 @@ export function RequestForm({ previewEnabled = false }: { previewEnabled?: boole
     }, 520);
   }
 
+  async function uploadFile(nextFile: File) {
+    resetLiveUpload();
+    clearTimers();
+    setFile(nextFile);
+    setFileError(undefined);
+    setResult("idle");
+    setReferenceNumber(undefined);
+    setServerError(undefined);
+    setErrors((current) => {
+      const next = { ...current };
+      delete next.file;
+      return next;
+    });
+
+    const validationError = validateSelectedFile(nextFile);
+    if (validationError !== undefined) {
+      setFileStatus("invalid");
+      setProgress(undefined);
+      setFileError(validationError);
+      return;
+    }
+
+    const controller = new AbortController();
+    const operationId = uploadOperationRef.current + 1;
+    uploadOperationRef.current = operationId;
+    uploadAbortRef.current = controller;
+    setFileStatus("uploading");
+    setProgress(12);
+
+    try {
+      const mimeType = declaredMimeType(nextFile);
+      if (mimeType === undefined) {
+        throw new ClientRequestError("Tipe file tidak cocok dengan ekstensi. Pilih file model yang sesuai.");
+      }
+
+      const intentResponse = await fetch("/api/uploads/intents", {
+        body: JSON.stringify({
+          mimeType,
+          originalName: nextFile.name,
+          sizeBytes: nextFile.size,
+        }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
+        signal: controller.signal,
+      });
+      const intent = await readApiResponse(
+        intentResponse,
+        uploadIntentResponseSchema,
+        "Sesi upload privat belum dapat dibuat. Coba lagi.",
+      );
+      if (!isCurrentUpload(operationId)) return;
+
+      setProgress(28);
+      const objectResponse = await fetch(intent.uploadUrl, {
+        body: nextFile,
+        headers: intent.requiredHeaders,
+        method: "PUT",
+        signal: controller.signal,
+      });
+      if (!objectResponse.ok) {
+        throw new ClientRequestError("Coba upload kembali.");
+      }
+      if (!isCurrentUpload(operationId)) return;
+
+      setFileStatus("validating");
+      setProgress(82);
+      const confirmationResponse = await fetch("/api/uploads/confirm", {
+        body: JSON.stringify({ fileId: intent.fileId, uploadToken: intent.uploadToken }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
+        signal: controller.signal,
+      });
+      const confirmation = await readApiResponse(
+        confirmationResponse,
+        uploadConfirmationResponseSchema,
+        "File belum lolos pemeriksaan server. Coba upload kembali.",
+      );
+      if (!isCurrentUpload(operationId)) return;
+
+      setUploadedFileId(confirmation.fileId);
+      setFileStatus("accepted");
+      setProgress(100);
+      uploadAbortRef.current = null;
+    } catch (error) {
+      if (!isCurrentUpload(operationId)) return;
+      uploadAbortRef.current = null;
+      if (error instanceof DOMException && error.name === "AbortError") return;
+
+      setUploadedFileId(undefined);
+      setFileStatus(error instanceof ClientRequestError && error.expired ? "expired" : "failed");
+      setProgress(undefined);
+      setFileError(
+        error instanceof ClientRequestError && error.expired
+          ? error.message
+          : error instanceof ClientRequestError
+            ? error.message
+            : "Coba upload kembali.",
+      );
+    }
+  }
+
   function removeFile() {
     clearTimers();
+    resetLiveUpload();
     setFile(null);
     setFileError(undefined);
     setFileStatus("idle");
     setProgress(undefined);
     setResult("idle");
+    setReferenceNumber(undefined);
+    setServerError(undefined);
     pending.current = false;
+  }
+
+  async function submitLiveRequest(parsed: z.infer<typeof requestPreviewSchema>, fileId: string) {
+    const response = await fetch("/api/custom-print/requests", {
+      body: JSON.stringify({ ...parsed, fileIds: [fileId] }),
+      headers: { "content-type": "application/json" },
+      method: "POST",
+    });
+    return readApiResponse(
+      response,
+      customRequestResponseSchema,
+      "Request belum tersimpan. Coba lagi setelah koneksi pulih.",
+    );
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -164,6 +398,7 @@ export function RequestForm({ previewEnabled = false }: { previewEnabled?: boole
     const formData = new FormData(event.currentTarget);
     const parsed = requestPreviewSchema.safeParse(Object.fromEntries(formData));
     const nextErrors: PreviewErrors = {};
+    const fileIdForSubmit = uploadedFileId;
 
     if (!parsed.success) {
       for (const issue of parsed.error.issues) {
@@ -179,8 +414,11 @@ export function RequestForm({ previewEnabled = false }: { previewEnabled?: boole
       nextErrors.file = "Selesaikan pemeriksaan metadata file sebelum melanjutkan.";
       if (!file) {
         setFileStatus("invalid");
-        setFileError("Pilih satu file model untuk melengkapi preview request.");
+        setFileError(`Pilih satu file model untuk melengkapi ${isPreview ? "preview request" : "request ini"}.`);
       }
+    }
+    if (isLive && fileIdForSubmit === undefined) {
+      nextErrors.file = "Tunggu sampai file selesai diunggah dan diverifikasi.";
     }
     if (formData.get("rightsAck") !== "on") {
       nextErrors.rightsAck = "Persetujuan diperlukan sebelum melanjutkan.";
@@ -188,19 +426,36 @@ export function RequestForm({ previewEnabled = false }: { previewEnabled?: boole
 
     setResult("idle");
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    if (!parsed.success || Object.keys(nextErrors).length > 0) return;
 
-    if (!previewEnabled) {
+    if (mode === "unavailable") {
       setResult("unavailable");
       return;
     }
 
     pending.current = true;
     setResult("pending");
-    schedule(() => {
-      pending.current = false;
-      setResult("ready");
-    }, 500);
+    if (isPreview) {
+      schedule(() => {
+        pending.current = false;
+        setResult("ready");
+      }, 500);
+      return;
+    }
+
+    if (fileIdForSubmit === undefined) return;
+
+    void submitLiveRequest(parsed.data, fileIdForSubmit)
+      .then((response) => {
+        pending.current = false;
+        setReferenceNumber(response.referenceNumber);
+        setResult("ready");
+      })
+      .catch((error) => {
+        pending.current = false;
+        setServerError(error instanceof ClientRequestError ? error.message : "Request belum tersimpan. Coba lagi.");
+        setResult("error");
+      });
   }
 
   const fileBusy = fileStatus === "uploading" || fileStatus === "validating" || fileStatus === "retrying";
@@ -220,11 +475,15 @@ export function RequestForm({ previewEnabled = false }: { previewEnabled?: boole
           Tanda * menunjukkan field wajib. Nilai yang belum pasti dapat dijelaskan melalui catatan.
         </p>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          Isian dan file hanya berada di halaman ini. Tidak ada data yang dikirim atau disimpan.
+          {isLive
+            ? "File dikirim langsung ke ruang privat dan request diteruskan ke review operator setelah metadata dikonfirmasi."
+            : isPreview
+              ? "Isian dan file hanya berada di halaman ini. Tidak ada data yang dikirim atau disimpan."
+              : "Ruang privat belum tersedia pada runtime ini. Tidak ada data yang dikirim atau disimpan."}
         </p>
       </div>
 
-      {previewEnabled ? (
+      {isPreview ? (
         <div className="my-6 rounded-lg border border-info-border bg-info-background p-4 text-info">
           <p className="text-sm font-semibold">Preview lokal dengan file contoh</p>
           <label className="mb-2 mt-3 block text-sm" htmlFor="custom-upload-scenario">Hasil simulasi file</label>
@@ -244,6 +503,13 @@ export function RequestForm({ previewEnabled = false }: { previewEnabled?: boole
             <option value="failed">Simulasi gagal</option>
             <option value="expired">Sesi berakhir</option>
           </select>
+        </div>
+      ) : isLive ? (
+        <div className="my-6 rounded-lg border border-success-border bg-success-background p-4 text-success">
+          <p className="text-sm font-semibold">Upload privat aktif</p>
+          <p className="mt-2 text-sm leading-6">
+            File dikirim langsung ke storage privat dan hanya metadata yang diteruskan ke server untuk pemeriksaan.
+          </p>
         </div>
       ) : (
         <div className="my-6">
@@ -277,11 +543,30 @@ export function RequestForm({ previewEnabled = false }: { previewEnabled?: boole
             </ul>
           </div>
         ) : null}
-        {result === "pending" ? <p className="text-sm text-muted-foreground" role="status">Memeriksa preview request. Data tidak dikirim.</p> : null}
-        {result === "ready" ? (
+        {result === "pending" ? (
+          <p className="text-sm text-muted-foreground" role="status">
+            {isPreview ? "Memeriksa preview request. Data tidak dikirim." : "Mengirim request ke review operator."}
+          </p>
+        ) : null}
+        {result === "ready" && isPreview ? (
           <StatusNotice
             description="Informasi dan metadata file lolos pemeriksaan lokal. Tidak ada file, request, nomor referensi, atau pesan yang dikirim."
             title="Preview request siap ditinjau."
+            tone="success"
+          />
+        ) : null}
+        {result === "ready" && isLive && referenceNumber ? (
+          <StatusNotice
+            action={
+              <a
+                className="inline-flex min-h-11 items-center rounded-lg border border-success-border bg-background px-4 py-2 text-sm font-semibold text-success underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                href={createPublicWhatsAppHref(referenceNumber)}
+              >
+                Lanjutkan melalui WhatsApp
+              </a>
+            }
+            description={`Referensi ${referenceNumber} sudah tercatat. Operator akan meninjau file dan konteks request Anda.`}
+            title="Request tersimpan untuk review operator."
             tone="success"
           />
         ) : null}
@@ -292,32 +577,50 @@ export function RequestForm({ previewEnabled = false }: { previewEnabled?: boole
             tone="info"
           />
         ) : null}
+        {result === "error" ? (
+          <StatusNotice
+            description={serverError ?? "Request belum tersimpan. Coba lagi."}
+            title="Request belum tersimpan."
+            tone="error"
+          />
+        ) : null}
       </div>
 
-      <fieldset className="min-w-0 space-y-8" disabled={!previewEnabled || result === "pending"}>
+      <fieldset className="min-w-0 space-y-8" disabled={mode === "unavailable" || result === "pending"}>
         <legend className="sr-only">Informasi request custom print</legend>
 
         <section className="space-y-5" aria-labelledby="file-section-title">
           <h3 className="border-b border-border pb-3 text-base font-semibold" id="file-section-title">File model</h3>
           <FileUploadField
             acceptedExtensions={acceptedExtensions}
-            description="STL, 3MF, dan OBJ untuk model awal. STEP/STP menjadi lampiran review manual. Preview tidak membaca isi biner."
-            disabled={!hydrated || !previewEnabled}
+            description={isPreview
+              ? "STL, 3MF, dan OBJ untuk model awal. STEP/STP menjadi lampiran review manual. Preview tidak membaca isi biner."
+              : "STL, 3MF, dan OBJ untuk model awal. STEP/STP menjadi lampiran review manual. File dikirim langsung ke ruang privat."}
+            disabled={!hydrated || mode === "unavailable"}
             error={fileError}
             fileMeta={file ? fileMetadata(file) : undefined}
             fileName={file?.name}
             id="custom-file"
             label="File model 3D *"
             maxSizeLabel={maxFileSizeLabel}
-            mode="preview"
+            mode={isPreview ? "preview" : "live"}
             onRemove={file ? removeFile : undefined}
             onRetry={file ? () => {
-              setFileStatus("retrying");
-              setProgress(8);
-              schedule(() => simulateFile(file), 120);
+              if (isPreview) {
+                setFileStatus("retrying");
+                setProgress(8);
+                schedule(() => simulateFile(file), 120);
+              } else {
+                void uploadFile(file);
+              }
             } : undefined}
             onSelect={(nextFile) => {
-              if (nextFile) simulateFile(nextFile);
+              if (!nextFile) return;
+              if (isPreview) {
+                simulateFile(nextFile);
+              } else {
+                void uploadFile(nextFile);
+              }
             }}
             progress={progress}
             status={fileStatus}
@@ -384,13 +687,15 @@ export function RequestForm({ previewEnabled = false }: { previewEnabled?: boole
       <div className="mt-8 border-t border-border pt-6">
         <Button
           className="min-h-11 w-full sm:w-auto"
-          disabled={!hydrated || !previewEnabled || fileBusy || result === "pending"}
+          disabled={!hydrated || mode === "unavailable" || fileBusy || result === "pending"}
           size="lg"
           type="submit"
         >
-          {result === "pending" ? "Memeriksa preview" : previewEnabled ? "Uji request tanpa mengirim" : "Pengiriman belum tersedia"}
+          {result === "pending"
+            ? isPreview ? "Memeriksa preview" : "Mengirim request"
+            : isPreview ? "Uji request tanpa mengirim" : isLive ? "Kirim untuk review operator" : "Pengiriman belum tersedia"}
         </Button>
-        <noscript><p className="mt-3 text-sm">Aktifkan JavaScript untuk menjalankan preview. Tidak ada file atau request yang dikirim.</p></noscript>
+        <noscript><p className="mt-3 text-sm">Aktifkan JavaScript untuk mengirim file dan request secara aman.</p></noscript>
       </div>
     </form>
   );

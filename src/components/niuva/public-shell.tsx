@@ -17,14 +17,41 @@ const typography = {
   fontFamily: "var(--font-public-sans), Arial, Helvetica, sans-serif",
 } as CSSProperties;
 
-export function PublicShell({ children, scope }: { children: ReactNode; scope: string }) {
+export type PublicScreenFunctionalStatus =
+  | "capability-gated"
+  | "frontend-preview"
+  | "server-backed";
+
+const defaultFunctionalStatusByScope: Readonly<Record<string, PublicScreenFunctionalStatus | undefined>> = {
+  cart: "frontend-preview",
+  checkout: "frontend-preview",
+  "custom-request": "frontend-preview",
+  "custom-print": "frontend-preview",
+  "order-status": "frontend-preview",
+  "product-detail": "frontend-preview",
+  "project-brief": "server-backed",
+  "quote-review": "frontend-preview",
+  shop: "frontend-preview",
+};
+
+export function PublicShell({
+  children,
+  functionalStatus,
+  scope,
+}: {
+  children: ReactNode;
+  functionalStatus?: PublicScreenFunctionalStatus;
+  scope: string;
+}) {
+  const resolvedFunctionalStatus = functionalStatus ?? defaultFunctionalStatusByScope[scope];
+
   return (
     <div className={`${sans.variable} ${editorial.variable} min-h-screen bg-background text-foreground`}
       style={typography} data-foundation-propagation="approved" data-foundation-scope={scope}
       data-product-screen-proof-status="pending-owner-review" data-typography-version="1.0"
       data-homepage={scope === "homepage" ? "" : undefined}
       data-project-brief={scope === "project-brief" ? "" : undefined}
-      data-product-screen-functional={scope === "project-brief" ? "server-backed" : ["cart", "checkout", "custom-print", "custom-request", "order-status", "product-detail", "quote-review", "shop"].includes(scope) ? "frontend-preview" : undefined}>
+      data-product-screen-functional={resolvedFunctionalStatus}>
       <a href="#main-content" className="sr-only z-50 rounded-lg bg-background px-4 py-3 text-sm font-medium focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
         Lewati ke konten utama
       </a>

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { AuLink } from "@/components/ui/AuLink";
 import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
-import { getShopPreview } from "@/features/frontend-preview/server";
+import { getLiveShopProducts, getShopPreview } from "@/features/frontend-preview/server";
 import { ProductGrid } from "./product-grid";
 
 export const metadata: Metadata = {
@@ -12,9 +13,26 @@ export const metadata: Metadata = {
 };
 
 export default async function ShopPage({ searchParams }: { searchParams: Promise<{ preview?: string }> }) {
-  const { scenario, products } = await getShopPreview((await searchParams).preview);
+  await connection();
+  const { scenario, products: previewProducts } = await getShopPreview((await searchParams).preview);
+  let products = previewProducts;
+  let liveEnabled = false;
+  if (scenario === null && process.env.DATABASE_URL !== undefined) {
+    try {
+      products = await getLiveShopProducts();
+      liveEnabled = products.length > 0;
+    } catch {
+      products = [];
+    }
+  }
+  const functionalStatus = liveEnabled
+    ? "server-backed" as const
+    : scenario === null
+      ? "capability-gated" as const
+      : "frontend-preview" as const;
+
   return (
-    <PublicShell scope="shop">
+    <PublicShell functionalStatus={functionalStatus} scope="shop">
       <main id="main-content">
         <section className="border-b border-border bg-card">
           <div className="mx-auto max-w-public px-5 py-14 sm:px-8 sm:py-20">
@@ -25,7 +43,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
         </section>
 
         <div className="mx-auto max-w-public px-5 py-10 sm:px-8 sm:py-14">
-          {process.env.NODE_ENV === "development" && (
+          {process.env.NODE_ENV === "development" && !liveEnabled && (
             <aside aria-label="Preview katalog" className="mb-8 rounded-lg border border-info-border bg-info-background p-4 text-info">
               <p className="text-sm font-semibold">Preview lokal, data sintetis dan bukan inventory Niuva</p>
               <div className="mt-3 flex flex-wrap gap-2">
