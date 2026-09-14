@@ -252,11 +252,11 @@ corepack pnpm build
 git diff --check
 ```
 
-Current environment note: the standard `corepack pnpm build` gate is already
-blocked before application compilation because `prisma.config.ts` imports
-`dotenv/config` while the root dependency is absent. That unrelated blocker
-must be diagnosed and approved separately; this Action Queue specification does
-not authorize a workaround.
+Current environment note: resolved on 2026-09-11. `prisma.config.ts` imports
+`dotenv/config`, so the root now declares `dotenv@17.4.2` as an approved
+development dependency. Official `corepack pnpm test:backend`,
+`corepack pnpm typecheck`, and `corepack pnpm build` now pass. This change does
+not provision Clerk, providers, or an AdminProfile.
 
 ## Acceptance criteria
 

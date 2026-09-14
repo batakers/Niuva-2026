@@ -334,8 +334,9 @@ src/app/auis/styleguide/*, dan tests terkait.
 - Services, portfolio, project detail, dan process content menggunakan data
   yang dapat dilacak ke sumber Niuva.
 - Project brief server-validated, menghasilkan reference ID, menyimpan
-  attachment secara privat, masuk Action Queue, dan menyediakan WhatsApp
-  continuation.
+  inquiry berbasis link, masuk Action Queue, dan menyediakan WhatsApp
+  continuation. Private attachment binding tetap mengikuti upload/provider
+  gate terpisah.
 
 #### Task 7: Ready-made catalog, stock, cart, and guest checkout
 
@@ -351,8 +352,9 @@ src/app/auis/styleguide/*, dan tests terkait.
 
 - Private STL/3MF/OBJ flow, operator review/slicer input, Decimal Pricing v1,
   immutable quote, approval, dan revalidation sebelum payment.
-- Pricing 1–49 g dan communal ABS berhenti sebagai blocker sampai owner
-  mengonfirmasi aturan.
+- Pricing 1–49 g dan communal ABS mengikuti keputusan owner yang tercatat di
+  `docs/backend/phase-3-pricing-biteship-contract.md`; quantity semantics dan
+  active-rule seed tetap menjadi gate runtime.
 
 #### Task 10: Order state, admin operations, email, and observability
 
@@ -403,8 +405,12 @@ src/app/auis/styleguide/*, dan tests terkait.
 - Next.js 16.3.2 dipilih sebagai baseline pada tanggal instalasi; upgrade tetap
   memerlukan verifikasi compatibility dan approval sesuai workflow.
 - Approval component inventory and contracts for the initial Design System.
-- Pricing 1–49 g and communal ABS rate.
-- Maximum upload size and retention policy.
+- Pricing 1–49 g and communal ABS rate — implementation decision closed by
+  `docs/backend/phase-3-pricing-biteship-contract.md`; active-rule seed and
+  provider activation remain open.
+- Binary upload limit/lifecycle — implementation decision closed at 100 MiB
+  and 14/60/90 days by `docs/backend/phase-2-closure-decisions.md`; broader
+  legal/accounting retention remains open.
 - Permission for public client names/logos and quantitative case-study results.
 - Launch inventory, initial stock, and custom quote SLA.
 - Provider onboarding readiness and live pricing before production.
@@ -484,7 +490,7 @@ wiring autentikasi pada fase integrasi tersedia.
 | FE-04 | Services `/services` | 01,02 | src/app/services/page.tsx; tests/e2e/services.spec.ts | Empat layanan sesuai PRD dengan output/use case dan CTA brief; tidak mengarang harga, SLA atau capability perusahaan. | V2: empat layanan dan jalur brief |
 | FE-05 | Projects `/projects` | 01,02 | src/app/projects/page.tsx; src/app/projects/project-list.tsx; tests/e2e/projects.spec.ts | Daftar dan filter client-side dengan empty/no-results; contoh case study hanya preview lokal, bukan klaim client publik. | V1 + V2: filter/empty/list |
 | FE-06 | Project detail `/projects/[slug]` | 05 | src/app/projects/[slug]/page.tsx; src/app/projects/[slug]/not-found.tsx; tests/e2e/project-detail.spec.ts | Susun challenge/process/result/media dengan alt text dan CTA brief; slug tidak ditemukan dan media belum tersedia memiliki recovery. | V2: detail, missing slug, back navigation |
-| FE-07 | Project brief `/project-brief` | 01,02 | src/app/project-brief/page.tsx; src/app/project-brief/brief-form.tsx; tests/unit/brief-form.test.tsx; tests/e2e/project-brief.spec.ts | Lengkapi field PRD termasuk company opsional; validation/pending/error/success preview dapat diuji tanpa mengirim inquiry nyata atau berpura-pura upload berhasil. | V1 + V2: field, focus error, cegah double submit |
+| FE-07 | Project brief `/project-brief` | 01,02 | src/app/project-brief/page.tsx; src/app/project-brief/brief-form.tsx; tests/unit/brief-form.test.tsx; tests/e2e/public-pages.spec.ts | Lengkapi field PRD termasuk company opsional; client validation lalu POST server nyata menghasilkan reference/confirmation dan WhatsApp handoff. Preview tetap hanya lewat `previewEnabled`; upload biner tidak berpura-pura berhasil. | V1 + V2: field, focus error, cegah double submit, API handoff |
 | FE-08 | Shop `/shop` | 01,02 | src/app/shop/page.tsx; src/app/shop/product-grid.tsx; tests/e2e/shop.spec.ts | Grid, filter kategori dan no-results; inactive/unpublished tidak tampil, out-of-stock jelas sesuai kontrak catalog. | V1 + V2: filter, stock, empty |
 | FE-09 | Product detail `/shop/[slug]` | 08 | src/app/shop/[slug]/page.tsx; src/app/shop/[slug]/product-selection.tsx; tests/unit/product-selection.test.tsx; tests/e2e/product-detail.spec.ts | Gallery, VariantSelector, harga display dan qty; varian belum dipilih/OOS mencegah add, slug invalid punya recovery. | V1 + V2: variant/qty/OOS |
 | FE-10 | Cart `/cart` | 09 | src/features/cart/cart-state.ts; src/app/cart/page.tsx; src/app/cart/cart-items.tsx; tests/unit/cart-state.test.tsx; tests/e2e/cart.spec.ts | Add/update/remove dan empty cart bekerja lokal; simpan ID/qty saja, tangani storage corrupt, display price/stock hanya estimasi dan tunduk revalidation server nanti. | V1 + V2: cart persistence dan edit |
@@ -539,13 +545,29 @@ penggunaan subagent kelak mengikuti keputusan user.
 
 ### Handoff setelah frontend
 
-Tahap integrasi berikutnya menghubungkan brief ke API, read catalog dan portfolio
-ke published repository, admin ke Clerk + active AdminProfile, lalu upload/payment/
-shipping setelah provider siap. Existing API: project-brief, custom-print/requests,
-uploads/intents, uploads/confirm, shipping/rates, checkout, webhooks/midtrans.
+Vertical slice Project Brief sekarang sudah menghubungkan form publik ke
+`/api/project-brief`, persistence inquiry, reference confirmation, dan
+WhatsApp handoff; `B2BInquiry` berstatus `NEW` otomatis menjadi signal Action
+Queue pada `/admin` setelah access boundary lolos. Tahap integrasi berikutnya
+menghubungkan read catalog dan portfolio ke published repository, lalu
+upload/payment/shipping setelah provider siap. Existing API:
+project-brief, custom-print/requests, uploads/intents, uploads/confirm,
+shipping/rates, checkout, webhooks/midtrans.
 Public catalog/portfolio/status/quote dan admin mutation boundaries perlu dicek/
 ditambahkan sesuai task integrasi; keberadaan service bukan berarti API sudah ada.
 Tidak ada commit, push, deployment, onboarding atau aktivasi provider pada task mapping.
+
+### Current vertical slice — Project Brief → persistence → Action Queue → WhatsApp
+
+Status: `TECHNICAL_GATES_PASSED_LIVE_SMOKE_PENDING` (2026-09-14). The public
+form now uses the existing server boundary and inquiry service; a committed
+`NEW` inquiry is read by the server-owned Action Queue, while the public
+confirmation exposes only the reference number and a WhatsApp handoff derived
+from approved contact content. The isolated integration smoke now exercises
+the route through PostgreSQL and the queue projection, and verifies the
+database-owned `AdminProfile` mapping for an exact Clerk test identity. Private
+binary attachment UI/provider wiring, live Clerk tenant login, and visual
+acceptance remain separate gates.
 
 ## Admin rebuild — `admin-access` plan (2026-09-10)
 
@@ -619,11 +641,12 @@ Clerk proxy + Clerk session
 
 ## Admin rebuild — `action-queue` plan (2026-09-10)
 
-Status: `PLAN_DRAFT_FOR_OWNER_REVIEW`. The approved module specification is
+Status: `TECHNICAL_GATES_PASSED_LIVE_SMOKE_PENDING`. The approved module specification is
 [`SPEC-action-queue.md`](../docs/backend/SPEC-action-queue.md). This plan
 covers the first real, read-only queue projection only; it does not authorize
 Clerk tenant provisioning, admin mutations, schema changes, provider changes,
-dependency changes, a commit, or a push.
+a commit, or a push. The approved direct `dotenv@17.4.2` development
+dependency fix is tracked separately in this worktree.
 
 ### Overview
 
@@ -682,10 +705,11 @@ Implementation must proceed in this order:
 
 ### Task list
 
-Implementation status: COMPLETE_WITH_ENVIRONMENT_BLOCKER (2026-09-11). The
-source slice is implemented and verified; the official Prisma-wrapped
-`typecheck`, `test:backend`, and `build` scripts remain blocked by the existing
-missing `dotenv/config` dependency described at the checkpoint below.
+Implementation status: TECHNICAL_GATES_PASSED_LIVE_SMOKE_PENDING (2026-09-11).
+The source slice is implemented and verified; the approved direct
+`dotenv@17.4.2` development dependency fix unblocks official Prisma-wrapped
+`typecheck`, `test:backend`, and `build` scripts. The live Clerk smoke remains
+an Owner prerequisite.
 
 #### Task AQ-01: Build the server-owned Action Queue projection
 
@@ -711,10 +735,9 @@ Verification:
 - [x] Direct equivalent `corepack pnpm exec vitest run --config
   vitest.backend.config.mts tests/backend/admin-action-queue.test.ts` (3 passed).
 - [x] Direct `node node_modules/typescript/bin/tsc --noEmit` (passed).
-- [x] No schema migration, dependency, provider, or Clerk configuration diff.
-- [ ] Official `corepack pnpm test:backend` and `corepack pnpm typecheck` remain
-  blocked before tests/compile by the existing `dotenv/config` Prisma config
-  dependency; no workaround was added.
+- [x] No schema migration, provider, or Clerk configuration diff. The approved
+  direct `dotenv@17.4.2` development dependency is the only dependency change.
+- [x] Official `corepack pnpm test:backend` and `corepack pnpm typecheck` pass.
 
 Dependencies: Approved `action-queue` spec and completed `admin-access` boundary.
 
@@ -752,8 +775,7 @@ Verification:
 - [x] Direct `node node_modules/typescript/bin/tsc --noEmit` (passed).
 - [x] Manual review confirms no buttons, local transitions, detail hand-off, or
   private/provider fields were added.
-- [ ] Official `corepack pnpm typecheck` remains blocked by the existing
-  `dotenv/config` Prisma config dependency; no workaround was added.
+- [x] Official `corepack pnpm typecheck` passes.
 
 Dependencies: AQ-01.
 
@@ -778,7 +800,8 @@ Acceptance criteria:
 - [x] The browser test asserts that retired preview markers and operational
   references do not appear in the unavailable response.
 - [x] The test does not provide credentials, mutate data, or depend on a
-  development query-string role.
+  development query-string role; `playwright.config.ts` explicitly blanks both
+  Clerk credentials for the spawned web server.
 
 Verification:
 
@@ -799,14 +822,13 @@ Estimated scope: S (1 file).
 
 - [x] AQ-01 through AQ-03 meet their acceptance criteria.
 - [x] Focused backend, unit, and browser checks pass.
-- [x] `corepack pnpm lint`, direct TypeScript check, and `git diff --check`
-  pass. The official `corepack pnpm typecheck` and `corepack pnpm build` gates
-  were attempted; both stop in Prisma config loading because `dotenv/config`
-  is unavailable. Direct `next build` passes and marks `/admin` dynamic.
-- [x] Full regression is run: `corepack pnpm test` passes (66 tests), direct
-  full backend Vitest passes (103 tests), and full E2E passes 55/57 on the
-  parallel runner; the two public-pages failures pass when rerun isolated
-  with one worker (6/6).
+- [x] `corepack pnpm lint`, official `corepack pnpm typecheck`, official
+  `corepack pnpm build`, and `git diff --check` pass after the approved direct
+  `dotenv@17.4.2` development dependency fix. `/admin` remains dynamic.
+- [x] Full regression is run: `corepack pnpm test` passes (68 tests), direct
+  full backend Vitest passes (103 tests), and full E2E passes 57/57 with
+  `--workers=1`. The parallel runner remains resource-sensitive on this
+  Windows checkout; the serial result is the reproducible browser gate.
 - [x] Technical result, visual acceptance, and live integration readiness are
   reported separately.
 - [ ] Owner completes a later non-production smoke only after separately
@@ -821,11 +843,11 @@ Estimated scope: S (1 file).
 | Quote preparation and sending appear twice | Medium | Anti-join current draft quotes and test the specific de-duplication rule. |
 | Source state changes during viewing | Medium | Keep this slice read-only; future mutations revalidate state server-side. |
 | Missing active Clerk tenant/profile for live smoke | High | Record as an Owner prerequisite; never create a profile implicitly. |
-| Existing `corepack pnpm build` dotenv prebuild blocker | Medium | Report separately; do not add an unapproved dependency in this slice. |
+| Prisma config could lose direct access to dotenv | Medium | Resolved on 2026-09-11 by the approved direct `dotenv@17.4.2` development dependency; retain official gate coverage. |
 
 ### Plan review gate
 
 Owner approved this plan on 2026-09-10. The implementation is complete within
-the approved Action Queue scope. Clerk provisioning, provider activation,
-schema migration, dependency changes, commit, and push remain separate actions
-and were not performed in this slice.
+the approved Action Queue scope. The approved `dotenv@17.4.2` development
+dependency fix is complete. Clerk provisioning, provider activation, schema
+migration, and live tenant changes remain separate actions.

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useHydrated } from "@/components/niuva/use-hydrated";
 import { b2bInquiryInputSchema } from "@/modules/inquiry/schema";
+import { createPublicWhatsAppHref } from "@/features/public/company-content";
 import { FormField } from "@/components/niuva/form-field";
 import { FileUploadField } from "@/components/niuva/file-upload-field";
 import { StatusNotice } from "@/components/niuva/status-notice";
@@ -11,22 +12,50 @@ import { Button } from "@/components/ui/button";
 import { briefFieldGroups } from "./brief-fields";
 
 const controlClass = "min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 py-2 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
-type Result = "idle" | "pending" | "success" | "error" | "unavailable";
+type Result = "idle" | "pending" | "success" | "error";
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function readReferenceNumber(value: unknown): string | null {
+  if (!isRecord(value) || typeof value.referenceNumber !== "string") return null;
+  const referenceNumber = value.referenceNumber.trim();
+  return referenceNumber.length > 0 ? referenceNumber : null;
+}
+
+function readServerFieldErrors(value: unknown): Record<string, string> {
+  if (!isRecord(value) || !isRecord(value.fields)) return {};
+
+  const supportedFieldNames = new Set([
+    ...briefFieldGroups.flatMap((group) => group.fields.map((field) => field.name)),
+    "confidentialityAck",
+  ]);
+  const fields: Record<string, string> = {};
+  for (const [rawName, message] of Object.entries(value.fields)) {
+    const name = rawName === "attachmentFileIds" ? "referenceLink" : rawName;
+    if (supportedFieldNames.has(name) && typeof message === "string" && message.length > 0) {
+      fields[name] = message;
+    }
+  }
+  return fields;
+}
 
 export function BriefForm({ previewEnabled = false }: { previewEnabled?: boolean }) {
   const hydrated = useHydrated();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [result, setResult] = useState<Result>("idle");
+  const [referenceNumber, setReferenceNumber] = useState<string | null>(null);
   const [scenario, setScenario] = useState<"success" | "error">("success");
   const statusRef = useRef<HTMLDivElement>(null);
   const pending = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
   useEffect(() => {
-    if (Object.keys(errors).length || ["success", "error", "unavailable"].includes(result)) statusRef.current?.focus();
+    if (Object.keys(errors).length || ["success", "error"].includes(result)) statusRef.current?.focus();
   }, [errors, result]);
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending.current) return;
     const formData = new FormData(event.currentTarget);
@@ -34,6 +63,7 @@ export function BriefForm({ previewEnabled = false }: { previewEnabled?: boolean
       ...Object.fromEntries(formData), confidentialityAck: formData.get("confidentialityAck") === "on",
     });
     setResult("idle");
+    setReferenceNumber(null);
     if (!parsed.success) {
       const fields: Record<string, string> = {};
       for (const issue of parsed.error.issues) {
@@ -53,13 +83,48 @@ export function BriefForm({ previewEnabled = false }: { previewEnabled?: boolean
       return;
     }
     setErrors({});
-    if (!previewEnabled) { setResult("unavailable"); return; }
     pending.current = true;
     setResult("pending");
-    timer.current = setTimeout(() => {
+    if (previewEnabled) {
+      timer.current = setTimeout(() => {
+        pending.current = false;
+        setResult(scenario);
+      }, 600);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/project-brief", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(parsed.data),
+      });
+      const payload: unknown = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const serverErrors = readServerFieldErrors(payload);
+        if (Object.keys(serverErrors).length > 0) {
+          setErrors(serverErrors);
+          setResult("idle");
+        } else {
+          setResult("error");
+        }
+        return;
+      }
+
+      const nextReferenceNumber = readReferenceNumber(payload);
+      if (nextReferenceNumber === null) {
+        setResult("error");
+        return;
+      }
+
+      setReferenceNumber(nextReferenceNumber);
+      setResult("success");
+    } catch {
+      setResult("error");
+    } finally {
       pending.current = false;
-      setResult(scenario);
-    }, 600);
+    }
   }
 
   return (
@@ -68,7 +133,7 @@ export function BriefForm({ previewEnabled = false }: { previewEnabled?: boolean
       <div className="mb-8 border-b border-border pb-6">
         <h2 className="text-xl font-semibold">Mulai dari informasi yang sudah tersedia.</h2>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">Tanda * menunjukkan field wajib. Perusahaan, anggaran, dan pilihan layanan boleh dikosongkan.</p>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">Form ini belum mengirim data ke Niuva. Informasi hanya berada di halaman ini dan tidak disimpan setelah Anda meninggalkannya.</p>
+        <p className="mt-3 text-sm leading-6 text-muted-foreground">Setelah Anda mengirim, data divalidasi di server, disimpan sebagai inquiry, dan diberi nomor referensi untuk tindak lanjut.</p>
       </div>
       {previewEnabled && <div className="mb-8 rounded-lg border border-info-border bg-info-background p-4 text-info">
         <p className="text-sm font-semibold">Preview lokal · gunakan informasi contoh</p>
@@ -87,10 +152,12 @@ export function BriefForm({ previewEnabled = false }: { previewEnabled?: boolean
             </a>
           </li>)}</ul>
         </div>}
-        {result === "pending" && <p role="status" className="text-sm text-muted-foreground">Menjalankan simulasi… Data tidak dikirim.</p>}
-        {result === "success" && <StatusNotice tone="success" title="Simulasi brief berhasil." description="Informasi lolos validasi. Ini hanya preview; belum ada inquiry, nomor referensi, atau pesan yang dikirim ke Niuva." />}
-        {result === "error" && <StatusNotice tone="error" title="Simulasi pengiriman gagal." description="Isian tetap tersedia. Pilih skenario berhasil lalu coba kembali untuk meninjau alur pemulihan." />}
-        {result === "unavailable" && <StatusNotice tone="info" title="Brief sudah lengkap, pengiriman belum tersedia." description="Belum ada data yang dikirim atau disimpan. Jangan tutup halaman jika Anda masih memerlukan isian ini." />}
+        {result === "pending" && <p role="status" className="text-sm text-muted-foreground">{previewEnabled ? "Menjalankan simulasi… Data tidak dikirim." : "Mengirim brief ke Niuva…"}</p>}
+        {previewEnabled && result === "success" && <StatusNotice tone="success" title="Simulasi brief berhasil." description="Informasi lolos validasi. Ini hanya preview; belum ada inquiry, nomor referensi, atau pesan yang dikirim ke Niuva." />}
+        {previewEnabled && result === "error" && <StatusNotice tone="error" title="Simulasi pengiriman gagal." description="Isian tetap tersedia. Pilih skenario berhasil lalu coba kembali untuk meninjau alur pemulihan." />}
+        {!previewEnabled && result === "success" && referenceNumber && <StatusNotice tone="success" title="Brief tersimpan." description={`Referensi ${referenceNumber} sudah tercatat. Tim Niuva dapat meninjau konteks ini sebelum percakapan lanjutan.`}
+          action={<a href={createPublicWhatsAppHref(referenceNumber)} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">Lanjutkan lewat WhatsApp</a>} />}
+        {!previewEnabled && result === "error" && <StatusNotice tone="error" title="Project brief belum terkirim." description="Isian tetap tersedia. Coba kirim lagi setelah layanan kembali tersedia." action={<Button type="button" variant="outline" className="min-h-11" onClick={() => setResult("idle")}>Coba lagi</Button>} />}
       </div>
       <fieldset disabled={result === "pending"} className="min-w-0 space-y-8">
         <legend className="sr-only">Informasi project brief</legend>
@@ -117,9 +184,9 @@ export function BriefForm({ previewEnabled = false }: { previewEnabled?: boolean
       </fieldset>
       <div className="mt-8 border-t border-border pt-6">
         <Button type="submit" size="lg" disabled={!hydrated || result === "pending"} className="min-h-11 w-full sm:w-auto">
-          {result === "pending" ? "Memproses simulasi…" : previewEnabled ? "Uji brief (simulasi)" : "Periksa kelengkapan brief"}
+          {result === "pending" ? (previewEnabled ? "Memproses simulasi…" : "Mengirim brief…") : previewEnabled ? "Uji brief (simulasi)" : "Kirim project brief"}
         </Button>
-        <noscript><p className="mt-3 text-sm">Aktifkan JavaScript untuk memeriksa formulir. Pengiriman belum tersedia.</p></noscript>
+        <noscript><p className="mt-3 text-sm">Aktifkan JavaScript untuk memeriksa dan mengirim formulir.</p></noscript>
       </div>
     </form>
   );

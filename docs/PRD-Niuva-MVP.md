@@ -268,6 +268,16 @@ System:
 4. memungkinkan customer melanjutkan komunikasi melalui WhatsApp menggunakan reference ID;
 5. menampilkan inquiry pada admin dashboard.
 
+**Implementation status (2026-09-14):** jalur berbasis link sudah terhubung dari
+form publik ke `/api/project-brief`, persistence `B2BInquiry`, reference
+confirmation, dan signal `B2B_INQUIRY` pada server-owned Action Queue. Handoff
+WhatsApp memakai reference number. Private binary attachment, active Clerk
+tenant login, dan visual/production acceptance tetap merupakan gate terpisah.
+Route-to-test-database smoke untuk persistence, audit, queue projection, dan
+database-owned `AdminProfile` mapping sudah diverifikasi pada integration
+harness; live tenant smoke tetap membutuhkan environment non-production yang
+disiapkan Owner.
+
 ---
 
 # User Journey 2 — Ready-Made Retail
@@ -1015,7 +1025,10 @@ Public site minimal membutuhkan:
 - Terms of Service;
 - Custom Manufacturing Terms.
 
-Final retention period masih membutuhkan konfirmasi Niuva.
+Binary upload limit/lifecycle sudah ditutup untuk implementasi melalui
+`docs/backend/phase-2-closure-decisions.md`: 100 MiB dengan handling 14/60/90
+hari. Retensi record finansial/order dan keputusan legal/accounting tetap
+membutuhkan konfirmasi Niuva.
 
 Draft dari research:
 
@@ -1024,7 +1037,8 @@ Draft dari research:
 - completed model: sekitar 90 hari kecuali ada kebutuhan retention lain;
 - financial/order records mengikuti kewajiban legal/accounting terpisah.
 
-Nilai final **TBD setelah konfirmasi owner/compliance**.
+Nilai final untuk retensi record di luar lifecycle binary tetap **TBD setelah
+konfirmasi owner/compliance**.
 
 ---
 
@@ -1147,12 +1161,16 @@ Karena itu solution harus:
 
 1. **Pricing 1–49 gram**
    - Research menemukan conflict antara spreadsheet yang menulis tier `50–200 g` dengan Pricing v1 yang menyatakan tidak ada minimum 50 g.
-   - **TBD — owner confirmation required.**
+   - Keputusan implementasi: tidak ada minimum 50 g; rujuk
+     `docs/backend/phase-3-pricing-biteship-contract.md`. Active-rule seed dan
+     aktivasi provider tetap menjadi gate.
 
 2. **Communal ABS pricing**
    - Pricing brief menyebut Rp700/g.
    - Spreadsheet belum sepenuhnya eksplisit.
-   - **TBD — owner confirmation required.**
+   - Keputusan implementasi: ABS communal Rp700/g tanpa machine charge; rujuk
+     `docs/backend/phase-3-pricing-biteship-contract.md`. Jangan memilih nilai
+     baru atau menganggap rule sudah aktif sebelum seed diverifikasi.
 
 3. **Client names/logos**
    - Apakah nama/logo seperti client pada portfolio existing boleh ditampilkan secara publik?
@@ -1168,8 +1186,9 @@ Karena itu solution harus:
    - **TBD berdasarkan kesiapan Niuva.**
 
 6. **Privacy retention**
-   - Final retention policy perlu approval.
-   - **TBD.**
+   - Lifecycle binary 100 MiB/14/60/90 hari mengikuti
+     `docs/backend/phase-2-closure-decisions.md`.
+   - Retensi record legal/accounting di luar binary lifecycle tetap **TBD**.
 
 7. **Exact launch inventory**
    - SKU, product, variant, image, stock awal yang akan dipublikasikan perlu final dataset.
@@ -1285,7 +1304,8 @@ Setelah PRD disetujui:
 1. Buat **Technical Design Document — Part 3**.
 2. Definisikan database schema final.
 3. Definisikan order/payment/production/shipping state machine.
-4. Finalisasi dua ambiguity Pricing v1 dengan Owner Niuva.
+4. Verifikasi active seed untuk keputusan Pricing v1 yang sudah tercatat;
+   jangan membuka kembali nilainya tanpa keputusan owner baru.
 5. Mulai onboarding payment gateway sejak awal development.
 6. Siapkan development/staging environment.
 7. Implementasi P0 secara vertical slice.

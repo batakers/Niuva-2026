@@ -54,10 +54,14 @@ user request and the authority order above.
 - Custom-print geometry does not produce an instant final price. An operator
   verifies slicer weight/duration, sends an immutable quote, and only an
   accepted/revalidated quote may become a payable order.
-- Pricing rules for 1–49 g and communal ABS remain owner-confirmation blockers.
-  Never pick a value silently.
+- Pricing v1 values for 1–49 g and communal ABS are recorded in the
+  owner-approved `docs/backend/phase-3-pricing-biteship-contract.md` addendum.
+  Quantity semantics, active-rule seeding, and provider activation remain
+  separate gates; never pick a new value silently.
 - Customer 3D/CAD files stay in private R2 storage with short-lived signed
-  access. Maximum file size and final retention policy remain TBD.
+  access. The approved binary limit/lifecycle is 100 MiB with 14/60/90-day
+  handling per `docs/backend/phase-2-closure-decisions.md`; legal/accounting
+  record retention remains TBD.
 - Custom-print shipping is priced only after final package measurement.
 - The approved logo system locks logo colors; the accepted UI Foundation tokens
   are recorded in `src/app/globals.css` and

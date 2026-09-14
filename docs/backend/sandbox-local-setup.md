@@ -93,3 +93,32 @@ publik menunggu pembuatan akun serta pemilihan jalur HTTPS development.
 Tidak ada transaksi, email, atau konfigurasi dashboard yang dijalankan.
 Laporan [audit sebelumnya](sandbox-readiness.md) adalah snapshot sebelum setup
 ini; status DATABASE_URL dan APP_URL pada laporan tersebut telah berubah.
+
+## Persiapan Clerk non-production
+
+Status: **READY_FOR_OWNER_SETUP**. Boundary source dan database test sudah
+tercover; live tenant smoke tetap membutuhkan setup owner yang terpisah.
+
+Prasyarat dan urutan smoke:
+
+1. Buat atau pilih satu Clerk Development instance. Gunakan pasangan
+   `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` dan `CLERK_SECRET_KEY` dari instance yang
+   sama; jangan gunakan key production.
+2. Buat satu user test dan catat exact Clerk user ID (`user_...`). Nilai ini
+   tidak perlu dikirim melalui chat atau dimasukkan ke repository.
+3. Set kedua key hanya pada environment lokal/non-production yang disepakati,
+   bersama `DATABASE_URL` development. Jangan mengubah `.env.local` melalui
+   source control dan jangan mencetak nilai key.
+4. Owner memprovisikan satu `AdminProfile` aktif untuk exact Clerk user ID
+   melalui prosedur terjaga, dengan role yang disetujui. Aplikasi tidak membuat
+   profile secara otomatis.
+5. Jalankan server development, login dengan user test, lalu buka `/admin`.
+   Verifikasi role berasal dari `AdminProfile`, Action Queue dapat dibaca, dan
+   user tanpa profile aktif tetap ditolak.
+6. Setelah smoke, hapus/nonaktifkan profile test dan cabut atau rotasi key
+   sesuai prosedur instance.
+
+Automated Playwright tetap menjalankan web server dengan kedua Clerk key kosong
+dan memverifikasi respons `AUTH_UNAVAILABLE` 503. Itu adalah guard test, bukan
+pengganti login pada tenant nyata. Jangan menjalankan live smoke terhadap
+database integration `niuva_test`; gunakan database development yang terpisah.

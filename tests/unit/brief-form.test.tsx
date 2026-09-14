@@ -2,6 +2,13 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { BriefForm } from "@/app/project-brief/brief-form";
 
+function response(body: unknown, status = 201) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
+}
+
 function fill() {
   for (const [name,value] of Object.entries({ name: "Kontak contoh", email: "example@example.test", phone: "+628000000000", projectGoal: "Meninjau prototype", currentStage: "SKETCH", description: "Contoh kebutuhan dan batasan.", targetQuantity: "1 prototype", targetDeadline: "2026-10-01", referenceLink: "https://example.test/reference" })) {
     fireEvent.change(document.querySelector(`[name="${name}"]`)!, { target: { value } });
@@ -47,11 +54,59 @@ describe("brief frontend", () => {
     expect(screen.getByText("Simulasi brief berhasil.")).toBeVisible();
     expect(fetchSpy).not.toHaveBeenCalled();
   });
-  it("does not enable simulated success on the public form", () => {
+
+  it("persists a validated brief, shows its reference, and offers WhatsApp follow-up", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      response({ accessToken: "opaque-access-token", referenceNumber: "INQ-20260913-ABCDEFGH" }),
+    );
+    render(<BriefForm />);
+    fill();
+    fireEvent.submit(screen.getByRole("form"));
+
+    expect(await screen.findByText("Brief tersimpan.")).toBeVisible();
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchSpy.mock.calls[0];
+    expect(url).toBe("/api/project-brief");
+    expect(init).toMatchObject({ method: "POST" });
+    const body = JSON.parse(String((init as RequestInit).body)) as Record<string, unknown>;
+    expect(body).toMatchObject({
+      name: "Kontak contoh",
+      email: "example@example.test",
+      projectGoal: "Meninjau prototype",
+      confidentialityAck: true,
+    });
+    expect(screen.getByRole("link", { name: "Lanjutkan lewat WhatsApp" })).toHaveAttribute(
+      "href",
+      expect.stringContaining("https://wa.me/6285117678901"),
+    );
+    expect(screen.getByRole("link", { name: "Lanjutkan lewat WhatsApp" })).toHaveAttribute(
+      "href",
+      expect.stringContaining(encodeURIComponent("INQ-20260913-ABCDEFGH")),
+    );
+    expect(screen.queryByText("opaque-access-token")).not.toBeInTheDocument();
+  });
+
+  it("keeps the form available when the persistence boundary fails", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      response({ code: "DATABASE_UNAVAILABLE", error: "Temporary failure" }, 503),
+    );
+    render(<BriefForm />);
+    fill();
+    fireEvent.submit(screen.getByRole("form"));
+
+    expect(await screen.findByText("Project brief belum terkirim.")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Kirim project brief" })).toBeEnabled();
+    expect(document.querySelector('[name="projectGoal"]')).toHaveValue("Meninjau prototype");
+  });
+
+  it("uses the API submission path on the public form", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      response({ accessToken: "opaque-access-token", referenceNumber: "INQ-20260913-ABCDE123" }),
+    );
     render(<BriefForm />);
     expect(screen.queryByLabelText("Hasil simulasi")).not.toBeInTheDocument();
     fill();
     fireEvent.submit(screen.getByRole("form"));
-    expect(screen.getByText("Brief sudah lengkap, pengiriman belum tersedia.")).toBeVisible();
+    expect(await screen.findByText("Brief tersimpan.")).toBeVisible();
   });
 });

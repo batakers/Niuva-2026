@@ -42,7 +42,8 @@
 
 ## Phase 3: Core vertical slices
 
-- [ ] Task 6 — Public content and B2B project brief.
+- [ ] Task 6 — Public content and B2B project brief (link-based submission
+  slice implemented; full private attachment/admin live acceptance remains).
 - [ ] Task 7 — Ready-made catalog, stock, cart, and guest checkout.
 - [ ] Task 8 — Biteship shipping and authoritative Midtrans payment.
 - [ ] Task 9 — Private custom print upload, operator review, quote, and Pricing v1.
@@ -81,7 +82,9 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
 - [x] FE-05 — Projects `/projects`
 - [ ] Checkpoint B — focused tests, static/build gates, dan review visual sesuai plan.
 - [x] FE-06 — Project detail `/projects/[slug]`
-- [x] FE-07 — Project brief `/project-brief` (validasi dan simulasi, tanpa submission nyata)
+- [x] FE-07 — Project brief `/project-brief` (validasi client/server, POST
+  persistence, reference confirmation, dan WhatsApp handoff; preview hanya
+  eksplisit lewat `previewEnabled`)
 - [x] FE-08 — Shop `/shop` (preview katalog, filter dan stock state; tanpa detail atau pembelian)
 - [ ] Checkpoint C — technical gates lulus 2026-09-06; review visual owner masih pending.
 - [x] FE-09 — Product detail `/shop/[slug]` (development-only product fixtures, variant/qty/OOS states, terhubung ke cart lokal FE-10)
@@ -113,11 +116,44 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
 
 Provider onboarding tetap ditunda. Customer account bukan scope MVP.
 
+## Current vertical slice — Project Brief → persistence → Action Queue → WhatsApp
+
+Status: `TECHNICAL_GATES_PASSED_LIVE_SMOKE_PENDING` (2026-09-14).
+
+- [x] Form publik memvalidasi field PRD dan mengirim JSON ke
+  `/api/project-brief`.
+- [x] `InquiryService` memvalidasi ulang, membuat reference/access token,
+  menyimpan inquiry, dan mencatat audit setelah commit.
+- [x] Inquiry `NEW` diproyeksikan sebagai `B2B_INQUIRY` pada server-owned Action
+  Queue; halaman `/admin` tetap dilindungi Clerk + active `AdminProfile`.
+- [x] Confirmation menampilkan reference number dan link WhatsApp yang dibangun
+  dari kontak publik yang sudah disetujui; token akses tidak dirender.
+- [x] Integration smoke mengeksekusi route nyata ke PostgreSQL test terisolasi,
+  memverifikasi `B2BInquiry` berstatus `NEW`, audit submission, dan item
+  `B2B_INQUIRY` pada Action Queue.
+- [x] Database-owned `AdminProfile` untuk exact Clerk test identity tervalidasi
+  di integration harness; live Clerk tenant login tetap manual.
+- [x] Focused unit, API-boundary, backend Action Queue, dan Playwright checks
+  lulus. E2E admin memakai `webServer.env` kosong untuk kedua Clerk key.
+- [ ] Private binary attachment UI/provider flow, active Clerk tenant login
+  smoke, dan visual acceptance product screen tetap gate terpisah.
+
+Decision sync:
+
+- Pricing 1–49 g dan communal ABS mengikuti
+  `docs/backend/phase-3-pricing-biteship-contract.md`; active-rule seed,
+  quantity semantics, dan provider activation belum dianggap selesai.
+- Binary upload 100 MiB serta lifecycle 14/60/90 hari mengikuti
+  `docs/backend/phase-2-closure-decisions.md`; legal/accounting retention tetap
+  terbuka.
+
 ## Admin rebuild — `admin-access` task list (2026-09-10)
 
-Status: `IMPLEMENTED_WITH_BUILD_BLOCKER` on 2026-09-10. Implements the approved
+Status: `TECHNICAL_GATES_PASSED_LIVE_SMOKE_PENDING` on 2026-09-13. Implements the approved
 [`admin-access` plan](plan.md#admin-rebuild--admin-access-plan-2026-09-10),
-not the later Action Queue or any admin mutation.
+not the later Action Queue or any admin mutation. The direct
+`dotenv@17.4.2` development dependency fix is now recorded; live Clerk tenant
+smoke remains an Owner prerequisite.
 
 ### Task AA-01: Harden the server availability boundary
 
@@ -131,7 +167,9 @@ Prisma repository.
   read and returns the existing unavailable-admin error contract.
 - [x] Anonymous, unprovisioned, inactive, active `ADMIN`, and active `OWNER`
   behavior remains covered by backend authorization tests.
-- [x] No dependency, migration, provider configuration, or role policy is added.
+- [x] No schema migration, provider configuration, or role policy is added;
+  the separately approved direct `dotenv@17.4.2` development dependency only
+  unblocks Prisma config loading.
 
 **Verification:**
 
@@ -208,10 +246,8 @@ expose retired preview or operational content.
 ### Checkpoint: `admin-access`
 
 - [x] AA-01 through AA-03 meet their acceptance criteria.
-- [ ] Full `corepack pnpm build` remains blocked before source compilation:
-  `prisma.config.ts` imports `dotenv/config`, while `dotenv` is not a direct
-  installed dependency. Direct `next build` passes and marks `/admin` dynamic;
-  no config or dependency change was made in this scope.
+- [x] Full `corepack pnpm build` passes after the approved direct
+  `dotenv@17.4.2` development dependency fix. `/admin` remains dynamic.
 - [x] `git diff --check` passes.
 - [x] No Clerk credential, database migration, provisioning policy, fixture
   fallback, admin mutation, commit, or push is added without separate approval.
@@ -220,10 +256,10 @@ expose retired preview or operational content.
 
 ## Admin rebuild — action-queue task list (2026-09-10)
 
-Status: COMPLETE_WITH_ENVIRONMENT_BLOCKER (2026-09-11). The action-queue
-specification and plan were owner-approved on 2026-09-10. The source slice is
-implemented and verified; official Prisma-wrapped gates remain blocked by the
-existing missing `dotenv/config` dependency.
+Status: TECHNICAL_GATES_PASSED_LIVE_SMOKE_PENDING (2026-09-11). The
+action-queue specification and plan were owner-approved on 2026-09-10. The
+approved direct `dotenv@17.4.2` development dependency fix unblocks the
+official Prisma-wrapped gates; the live Clerk smoke remains Owner work.
 
 ### Task AQ-01: Build the server-owned Action Queue projection
 
@@ -249,10 +285,10 @@ specification decisions.
 
 - [x] Direct focused backend Vitest passes (3 tests).
 - [x] Direct TypeScript check passes.
-- [x] Confirm no schema migration, dependency, provider, or Clerk configuration
-  diff.
-- [ ] Official `corepack pnpm test:backend` and `corepack pnpm typecheck` are
-  blocked before test/compile by the existing missing `dotenv/config` module.
+- [x] Confirm no schema migration, provider, or Clerk configuration diff.
+  The approved direct `dotenv@17.4.2` development dependency is the only
+  dependency change.
+- [x] Official `corepack pnpm test:backend` and `corepack pnpm typecheck` pass.
 
 **Dependencies:** Approved action-queue spec and completed admin-access.
 
@@ -288,8 +324,7 @@ authorization fallback and add a safe query-error state.
 - [x] Direct TypeScript check passes.
 - [x] Manual review confirms no buttons, local transitions, detail hand-off, or
   private/provider fields were added.
-- [ ] Official `corepack pnpm typecheck` remains blocked by the existing
-  missing `dotenv/config` module.
+- [x] Official `corepack pnpm typecheck` passes.
 
 **Dependencies:** AQ-01.
 
@@ -334,16 +369,17 @@ exposed.
 
 - [x] AQ-01 through AQ-03 meet their acceptance criteria.
 - [x] Focused backend, unit, and browser checks pass.
-- [x] Lint, direct TypeScript, and diff checks pass. Official typecheck/build
-  wrappers were attempted and remain blocked by missing `dotenv/config`; direct
-  `next build` passes and marks `/admin` dynamic.
-- [x] Full unit/backend regression passes (66 unit, 103 backend); full E2E's two parallel public-pages
-  flakes pass on isolated rerun (6/6).
+- [x] Lint, official TypeScript, official build, and diff checks pass after the
+  approved direct `dotenv@17.4.2` development dependency fix.
+- [x] Full unit/backend regression passes (68 unit, 103 backend); full E2E
+  passes 57/57 with `--workers=1`. The parallel runner is resource-sensitive
+  on this Windows checkout; serial execution is the reproducible browser gate.
 - [x] Technical result, visual acceptance, and live integration readiness are
   reported separately.
 - [ ] Owner runs the later non-production smoke only after provisioning an
   active AdminProfile in the Clerk tenant through a separate approved action.
 
 **Implementation boundary:** The plan is approved and this slice is implemented.
-Clerk provisioning, provider activation, schema migration, dependency changes,
-commit, and push remain separate approvals and were not performed.
+The approved `dotenv@17.4.2` development dependency fix is complete. Clerk
+provisioning, provider activation, schema migration, and live tenant changes
+remain separate approvals.

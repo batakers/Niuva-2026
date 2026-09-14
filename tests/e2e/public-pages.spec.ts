@@ -126,23 +126,38 @@ test("public company and service routes render approved content", async ({ page 
   expect(errors).toEqual([]);
 });
 
-test("brief preview validates, recovers and never posts an inquiry", async ({ page }) => {
-  const mutations: string[] = [];
-  page.on("request", request => { if (request.method() === "POST" && request.url().includes("/api/")) mutations.push(request.url()); });
+test("project brief persists through the API and offers a reference-based WhatsApp handoff", async ({ page }) => {
+  let capturedBody: Record<string, unknown> | undefined;
+  await page.route("**/api/project-brief", async route => {
+    const postData = route.request().postData();
+    capturedBody = postData ? JSON.parse(postData) as Record<string, unknown> : undefined;
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({ accessToken: "opaque-access-token", referenceNumber: "INQ-20260913-ABCDEFGH" }),
+    });
+  });
   await page.goto("/project-brief");
-  await page.getByRole("button", { name: "Uji brief (simulasi)" }).click();
+  await page.getByRole("button", { name: "Kirim project brief" }).click();
   await expect(page.getByRole("alert").filter({ hasText: "Periksa kembali brief Anda." })).toBeVisible();
   for (const [name,value] of Object.entries({ name: "Kontak contoh", email: "example@example.test", phone: "+628000000000", projectGoal: "Meninjau prototype", description: "Skenario pengujian frontend.", targetQuantity: "1 prototype", targetDeadline: "2026-10-01", referenceLink: "https://example.test/reference" })) await page.getByRole("form", { name: "Form project brief" }).locator(`[name="${name}"]`).fill(value);
   await page.locator('[name="currentStage"]').selectOption("CAD");
   await page.getByRole("checkbox").check();
-  await page.getByLabel("Hasil simulasi").selectOption("error");
-  await page.getByRole("button", { name: "Uji brief (simulasi)" }).click();
-  await expect(page.getByText("Simulasi pengiriman gagal.")).toBeVisible();
-  await page.getByLabel("Hasil simulasi").selectOption("success");
-  await page.getByRole("button", { name: "Uji brief (simulasi)" }).click();
-  await expect(page.getByText("Simulasi brief berhasil.")).toBeVisible();
+  await page.getByRole("button", { name: "Kirim project brief" }).click();
+  await expect(page.getByText("Brief tersimpan.")).toBeVisible();
   await expect(page.locator('[name="projectGoal"]')).toHaveValue("Meninjau prototype");
-  expect(mutations).toEqual([]);
+  await expect(page.getByRole("link", { name: "Lanjutkan lewat WhatsApp" })).toHaveAttribute(
+    "href",
+    /https:\/\/wa\.me\/6285117678901\?text=/,
+  );
+  await expect(page.getByText("opaque-access-token")).toHaveCount(0);
+  expect(capturedBody).toMatchObject({
+    name: "Kontak contoh",
+    email: "example@example.test",
+    projectGoal: "Meninjau prototype",
+    currentStage: "CAD",
+    confidentialityAck: true,
+  });
 });
 
 test("public pages keep one main heading and no horizontal overflow across viewports", async ({ page }) => {

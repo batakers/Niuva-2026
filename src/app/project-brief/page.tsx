@@ -27,13 +27,13 @@ export default function ProjectBriefPage() {
               </ul>
             </div>
           </div>
-          <BriefForm previewEnabled={process.env.NODE_ENV === "development"} />
+          <BriefForm />
         </section>
         <section className="border-t border-border bg-card">
           <div className="mx-auto grid max-w-public gap-8 px-5 py-12 sm:px-8 md:grid-cols-2">
-            <h2 className={type.heading.className}>Setelah pengiriman tersedia, apa langkah berikutnya?</h2>
+            <h2 className={type.heading.className}>Setelah pengiriman</h2>
             <ol className="divide-y divide-border">
-              {[["Review awal", "Tujuan, tahap, dan batasan membantu memahami kebutuhan yang sebenarnya."], ["Percakapan lanjutan", "Pembahasan diarahkan ke riset, desain, prototype, atau dukungan produksi yang relevan."], ["Ruang lingkup bersama", "Detail pekerjaan dan komersial dibahas setelah konteks cukup jelas."]].map(([title, text],index) => <li key={title} className="py-4 first:pt-0"><h3 className="text-base font-semibold">{index + 1}. {title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{text}</p></li>)}
+              {[["Brief tercatat", "Anda menerima nomor referensi untuk menandai konteks yang masuk ke Niuva."], ["Review di Action Queue", "Tim meninjau brief baru dan menentukan percakapan atau tindak lanjut yang relevan."], ["Konfirmasi via WhatsApp", "Gunakan nomor referensi saat melanjutkan percakapan agar konteks tetap tersambung."]].map(([title, text],index) => <li key={title} className="py-4 first:pt-0"><h3 className="text-base font-semibold">{index + 1}. {title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{text}</p></li>)}
             </ol>
           </div>
         </section>

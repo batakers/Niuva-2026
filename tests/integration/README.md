@@ -8,5 +8,8 @@ and any URL that resolves to the same logical database as `DATABASE_URL`.
 The worktree provides a local PostgreSQL 18 cluster on loopback port `55432`.
 Run `corepack pnpm test:integration`; the helper starts the isolated cluster,
 applies reviewed migrations through `migrate deploy`, runs migration and
-concurrency smoke tests, and cleans domain tables deterministically. Do not
-substitute a production or shared database.
+concurrency smoke tests, verifies the Project Brief route through persistence
+and the server-owned Action Queue, and cleans domain tables deterministically.
+The same suite checks database-owned `AdminProfile` resolution for an exact
+Clerk test identity; it does not call a live Clerk tenant. Do not substitute a
+production or shared database.

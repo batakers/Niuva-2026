@@ -1,7 +1,12 @@
 # Frontend review batch — FE-00–22
 
-Started: 2026-09-06. Updated: 2026-09-08. Status: **UI_IMPLEMENTED**, **VISUAL_ACCEPTANCE_PENDING**,
-**NOT_INTEGRATED**. User approved FE-00–02 followed by FE-03–07, FE-08–15, the isolated FE-16 admin preview, FE-17 Action Queue, FE-18 Admin Inquiry Detail, FE-19 Admin Orders, FE-20 Admin Order Fulfillment, FE-21 Admin Custom Print Review, and FE-22 Admin Quote Draft Preview.
+Started: 2026-09-06. Updated: 2026-09-13. Status: **UI_IMPLEMENTED**, **VISUAL_ACCEPTANCE_PENDING**,
+**PARTIALLY_INTEGRATED (FE-07)**. User approved FE-00–02 followed by FE-03–07, FE-08–15, the isolated FE-16 admin preview, FE-17 Action Queue, FE-18 Admin Inquiry Detail, FE-19 Admin Orders, FE-20 Admin Order Fulfillment, FE-21 Admin Custom Print Review, and FE-22 Admin Quote Draft Preview.
+
+> Integration update — on 2026-09-13, FE-07 was promoted to the link-based
+> server-backed Project Brief slice. The no-mutation statements below remain
+> archival for the other preview surfaces; see `tasks/plan.md` and
+> `tasks/todo.md` for the current boundary.
 
 > Historical note — on 2026-09-10, the fixture-only FE-16–26 source, route, and
 > tests were retired during repository complexity cleanup. The references and
@@ -18,7 +23,7 @@ Started: 2026-09-06. Updated: 2026-09-08. Status: **UI_IMPLEMENTED**, **VISUAL_A
 | FE-04 | Four PRD service categories, context/inputs/outputs, brief CTA | `/services` |
 | FE-05 | Search/service filter, empty/no-results/reset/loading/error recovery | `/projects` |
 | FE-06 | Challenge/process/result structure, explicit media placeholder, missing-slug recovery | `/projects/contoh-enclosure?preview=examples` |
-| FE-07 | PRD/schema fields, optional company, error summary focus, pending/error/retry/success simulation | `/project-brief` |
+| FE-07 | PRD/schema fields, optional company, error summary focus, and the historical local simulation; the current route posts the validated brief to `/api/project-brief` and shows reference/WhatsApp confirmation | `/project-brief` |
 | FE-08 | Browser-safe catalog projection, category/search filters, stock states and recovery without purchase actions | `/shop?preview=examples`, `empty`, `loading`, `error` |
 | FE-09 | Product detail shell, explicit media slots, variant/price/quantity selection, OOS guard and missing-slug recovery | `/shop/contoh-dock-modular-meja?preview=examples`, `/shop/contoh-stand-display-ringkas?preview=examples` |
 | FE-10 | Versioned local cart, add/update/remove, empty/recovery states, unavailable-product handling, and non-authoritative estimate ledger | `/cart?preview=examples`, `empty`, `loading`, `error` |
@@ -40,18 +45,20 @@ information for review. Preview data is not a factual client portfolio.
 
 ## Boundaries
 
-- No inquiry POST, email, database write, file upload or provider call is made by
-  these pages. Form values stay in page state/controls, without application storage.
+- Except for the current FE-07 server-backed route, no inquiry POST, email,
+  database write, file upload or provider call is made by these preview pages.
+  Preview form values stay in page state/controls, without application storage.
 - Required reference link substitutes for the unavailable attachment path. Disabled
   upload control never returns a fake file ID or claims successful storage.
 - Brief shares the existing B2B Zod input schema; company, budget and service are
-  optional. Client validation is not a substitute for future server validation.
+  optional. The current route performs client validation followed by the same
+  server validation; preview-only forms are not a substitute for that boundary.
 - Client-only menu/filter/submit controls wait for hydration so early interaction
   is not lost; submit is disabled in server-rendered HTML, including without JS.
 - Synthetic projects and products are loaded by a server-only development boundary. Production
   ignores preview parameters, shows an honest empty portfolio, and returns 404 for
-  fictional project slugs. Production brief only checks completeness; it cannot
-  display a simulated success.
+  fictional project slugs. The production brief uses the server-backed submission
+  path; only an explicit `previewEnabled` render can display a simulated success.
 - Shop cards receive a browser-safe projection: Decimal values are serialized,
   object storage keys are excluded, and SKUs are not rendered. Development cards
   link to the matching development-only detail route. Repository-level publication
@@ -219,7 +226,8 @@ information for review. Preview data is not a factual client portfolio.
   mobile menu/Escape/skip link, real-route navigation,
   project and product filter/detail/404/retry, variant/quantity/OOS behavior,
   cart add/update/remove/persistence/corrupt recovery, form recovery and no
-  inquiry API mutation. FE-11 adds guest validation, Cart handoff, shipping
+  inquiry API mutation (superseded for FE-07 by the 2026-09-13 server-backed
+  slice). FE-11 adds guest validation, Cart handoff, shipping
   loading/unavailable/stale recovery, payment pending/error, and an assertion
   that the preview makes no shipping or checkout API request. FE-12 adds the
   operator-reviewed workflow, file-format boundary, conceptual-evidence label,

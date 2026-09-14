@@ -19,5 +19,9 @@ export default defineConfig({
     timeout: 120_000,
     stdout: "ignore",
     stderr: "pipe",
+    env: {
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "",
+      CLERK_SECRET_KEY: "",
+    },
   },
 });

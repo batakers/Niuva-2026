@@ -1099,8 +1099,12 @@ Persist weight, duration seconds, material breakdown, machine breakdown, unround
 
 ### Production blockers
 
-- 1–49 g policy: **TBD owner confirmation**.
-- Communal ABS: **TBD owner confirmation**.
+- 1–49 g policy: implementation decision is closed as no 50 g minimum;
+  see `docs/backend/phase-3-pricing-biteship-contract.md`. Active-rule seed and
+  provider activation remain gates.
+- Communal ABS: implementation decision is closed as PLA Rp500/g and ABS
+  Rp700/g without machine charge; see the same addendum. Do not choose a new
+  value or assume the rule is active before seed verification.
 
 Application must not silently pick one.
 
@@ -1272,9 +1276,12 @@ Rules:
 - never log secrets or full presigned URLs;
 - redact/minimize Sentry PII;
 - admin notes never appear on customer status page;
-- retention values configurable.
+- retention values configurable; binary upload handling follows the approved
+  100 MiB and 14/60/90-day lifecycle in
+  `docs/backend/phase-2-closure-decisions.md`.
 
-Final retention policy: **TBD owner/compliance approval**.
+Final legal/accounting record retention outside that binary lifecycle remains
+**TBD owner/compliance approval**.
 
 ---
 
@@ -1844,10 +1851,15 @@ Boundary tests, integration failures, E2E #1–#3, mobile QA, accessibility, own
 
 # 53. Open Questions Before Production
 
-1. Pricing 1–49g — **TBD owner confirmation**.
-2. Communal ABS rate — **TBD owner confirmation**.
-3. Maximum customer file size — **TBD**.
-4. Customer-file retention — **TBD owner/compliance**.
+1. Pricing 1–49g — closed for implementation by
+   `docs/backend/phase-3-pricing-biteship-contract.md`; active seed and provider
+   activation remain open.
+2. Communal ABS rate — closed for implementation by the same addendum; verify
+   active seed before activation.
+3. Maximum customer file size — closed at 100 MiB by
+   `docs/backend/phase-2-closure-decisions.md`.
+4. Customer-file retention — binary lifecycle is 14/60/90 days by the same
+   closure decision; legal/accounting record retention remains **TBD**.
 5. Portfolio client names/logos permission — **TBD**.
 6. Initial launch inventory dataset — **TBD**.
 7. Custom quote SLA — **TBD**.

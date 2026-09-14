@@ -45,10 +45,10 @@ test("authorized Foundation proof remains pending owner review", async ({ page }
   const projectBrief = page.locator("[data-project-brief]");
   await expect(projectBrief).toHaveAttribute("data-foundation-propagation", "approved");
   await expect(projectBrief).toHaveAttribute("data-foundation-scope", "project-brief");
-  await expect(projectBrief).toHaveAttribute("data-product-screen-functional", "frontend-preview");
+  await expect(projectBrief).toHaveAttribute("data-product-screen-functional", "server-backed");
   await expect(projectBrief).toHaveAttribute("data-product-screen-proof-status", "pending-owner-review");
   await expect(page.getByRole("heading", { level: 1, name: "Buat langkah awal proyek jadi jelas." })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Uji brief (simulasi)" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Kirim project brief" })).toBeVisible();
   await expect(page.locator("[data-project-brief-form]")).toBeVisible();
 
   const projectBriefFont = await projectBrief.evaluate(
