@@ -92,8 +92,8 @@ berhasil. Kelengkapan nama environment saja belum memenuhi status tersebut.
   upload R2 nyata, email, WhatsApp, atau provisioning Owner; database test dan
   server development sudah stopped setelah verifikasi.
 
-Referensi source: `src/lib/env/server.ts`, `src/lib/env/public.ts`,
-`src/proxy.ts`, `src/lib/auth/clerk.ts`, `src/modules/providers/non-production.ts`,
+Referensi source: `src/lib/env/server.ts`, `src/proxy.ts`,
+`src/lib/auth/clerk.ts`, `src/modules/providers/non-production.ts`,
 `src/modules/payment/midtrans.ts`, `src/modules/shipping/biteship.ts`,
 `src/modules/files/r2.ts`, `src/modules/notifications/resend.ts`,
 `src/lib/security/headers.ts`, dan `tests/integration/database.test.ts`.
