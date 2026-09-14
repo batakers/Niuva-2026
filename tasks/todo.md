@@ -444,6 +444,8 @@ Project Brief integration gates are committed and pushed in `1d5b870`.
   responsive behavior, evidence boundaries, and no horizontal overflow.
 - [x] Screen metadata now separates `server-backed`, explicit
   `frontend-preview`, and `capability-gated` states.
+- [x] Fresh production-build screenshot pass at 390×900 and 1280×900 has no
+  development overlay; each surface has one `h1` and no horizontal overflow.
 - [ ] Owner records acceptance or explicit defects for each product surface;
   styleguide-only tokens are not silently propagated.
 

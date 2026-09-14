@@ -1010,6 +1010,9 @@ automated tests; fix only scoped defects found in one bounded review pass.
 - [x] Product-screen metadata distinguishes `server-backed`, explicit
   `frontend-preview`, and `capability-gated` states so a provider-unavailable
   route does not claim to be a completed preview or live transaction surface.
+- [x] Fresh `next start` production-build screenshots at 1280×900 and 390×900
+  show the same three surfaces without the development overlay; an automated
+  viewport check found one `h1` and no horizontal overflow on every surface.
 - [ ] Owner records visual acceptance for each named surface.
 
 **Dependencies:** NG-02 for the final custom-request state set.
