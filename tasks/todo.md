@@ -430,7 +430,7 @@ Project Brief integration gates are committed and pushed in `1d5b870`.
 
 ### Checkpoint A — private-file slice
 
-- [x] Unit/backend/integration/browser gates pass (73 unit, 106 backend, 12
+- [x] Unit/backend/integration/browser gates pass (73 unit, 106 backend, 13
   integration, 18 focused browser tests).
 - [x] Test DB is stopped after smoke; no signed URL or private object key is
   retained in logs or browser-visible state.

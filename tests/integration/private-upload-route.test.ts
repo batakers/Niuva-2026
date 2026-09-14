@@ -17,6 +17,7 @@ vi.mock("@/modules/files/r2", () => ({
 
 import { getPrismaClient } from "@/lib/db/prisma";
 import { POST as postCustomPrint } from "@/app/api/custom-print/requests/route";
+import { POST as postProjectBrief } from "@/app/api/project-brief/route";
 import { POST as postUploadConfirmation } from "@/app/api/uploads/confirm/route";
 import { POST as postUploadIntent } from "@/app/api/uploads/intents/route";
 
@@ -171,6 +172,91 @@ describe("Private upload route integration", () => {
     });
     await expect(prisma.customPrintRequestFile.count({ where: { fileId } })).resolves.toBe(1);
     expect(storageMock.headObject).toHaveBeenCalledWith(pending?.storageKey);
+    expect(storageMock.deleteObject).not.toHaveBeenCalled();
+  });
+
+  it("binds a confirmed private object to a Project Brief and verifies ownership", async () => {
+    const intentResponse = await postUploadIntent(
+      publicRequest("/api/uploads/intents", {
+        mimeType: "model/stl",
+        originalName: "brief-reference.stl",
+        sizeBytes: 3,
+      }),
+    );
+    expect(intentResponse.status).toBe(201);
+
+    const intent = (await intentResponse.json()) as Record<string, unknown>;
+    const fileId = intent.fileId;
+    const uploadToken = intent.uploadToken;
+    if (typeof fileId !== "string" || typeof uploadToken !== "string") {
+      throw new Error("Upload intent brief tidak mengembalikan identitas yang valid.");
+    }
+
+    const pending = await prisma.storedFile.findUnique({
+      select: { storageKey: true, uploadStatus: true },
+      where: { id: fileId },
+    });
+    expect(pending).toMatchObject({ uploadStatus: "PENDING" });
+    storageMock.headObject.mockResolvedValue({
+      contentLength: 3,
+      contentType: "model/stl",
+    });
+
+    const confirmationResponse = await postUploadConfirmation(
+      publicRequest("/api/uploads/confirm", { fileId, uploadToken }),
+    );
+    expect(confirmationResponse.status).toBe(200);
+    await expect(confirmationResponse.json()).resolves.toEqual({
+      fileId,
+      status: "UPLOADED",
+    });
+
+    const briefResponse = await postProjectBrief(
+      publicRequest("/api/project-brief", {
+        attachmentFileIds: [fileId],
+        confidentialityAck: true,
+        currentStage: "CAD",
+        description: "Brief dengan attachment privat untuk integration smoke.",
+        email: "brief-upload@example.test",
+        name: "Brief Upload",
+        phone: "+628000000000",
+        projectGoal: "Verify private file ownership binding",
+        targetDeadline: "2026-10-01",
+        targetQuantity: "1 prototype",
+      }),
+    );
+
+    expect(briefResponse.status).toBe(201);
+    const briefBody = (await briefResponse.json()) as Record<string, unknown>;
+    const referenceNumber = briefBody.referenceNumber;
+    expect(referenceNumber).toMatch(/^INQ-[0-9]{8}-[A-Z0-9]{8}$/);
+    if (typeof referenceNumber !== "string") {
+      throw new Error("Project Brief tidak mengembalikan reference number.");
+    }
+
+    await expect(
+      prisma.b2BInquiry.findUnique({
+        select: {
+          files: { select: { fileId: true } },
+          referenceNumber: true,
+          status: true,
+        },
+        where: { referenceNumber },
+      }),
+    ).resolves.toMatchObject({
+      files: [{ fileId }],
+      referenceNumber,
+      status: "NEW",
+    });
+    await expect(
+      prisma.storedFile.findUnique({
+        select: { storageKey: true, uploadStatus: true },
+        where: { id: fileId },
+      }),
+    ).resolves.toMatchObject({
+      storageKey: pending?.storageKey,
+      uploadStatus: "VERIFIED",
+    });
     expect(storageMock.deleteObject).not.toHaveBeenCalled();
   });
 });

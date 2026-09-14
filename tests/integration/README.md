@@ -21,4 +21,5 @@ production or shared database.
 The private-upload route test also runs the real intent → confirmation → custom
 request path against PostgreSQL with a deterministic in-memory object-storage
 double, proving `PENDING → UPLOADED → VERIFIED` without claiming a real R2
-provider smoke.
+provider smoke. A second scenario binds the verified file to a Project Brief and
+checks the inquiry link plus final `VERIFIED` ownership state.

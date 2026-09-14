@@ -83,7 +83,7 @@ berhasil. Kelengkapan nama environment saja belum memenuhi status tersebut.
 - Pemeriksaan source: env server/public, Proxy, Clerk guard, Midtrans, Biteship,
   R2, Resend, guard non-production, CSP, dan harness database integration.
 - `corepack pnpm test`: **73/73 lulus**; `corepack pnpm test:backend`:
-  **106/106 lulus**; `corepack pnpm test:integration`: **12/12 lulus** dengan
+  **106/106 lulus**; `corepack pnpm test:integration`: **13/13 lulus** dengan
   PostgreSQL loopback; focused browser gates: **11/11 lulus** pada checkout,
   custom request, dan admin fail-closed. Test memakai fixture/mock provider;
   tidak menghubungi provider nyata.
