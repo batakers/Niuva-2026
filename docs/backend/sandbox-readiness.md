@@ -86,7 +86,8 @@ berhasil. Kelengkapan nama environment saja belum memenuhi status tersebut.
   **106/106 lulus**; `corepack pnpm test:integration`: **16/16 lulus** dengan
   PostgreSQL loopback, termasuk smoke page `/admin` dari identity Clerk test
   melalui `AdminProfile` aktif ke Action Queue database-backed; focused browser
-  gates: **11/11 lulus** pada checkout, custom request, dan admin fail-closed.
+  gates: **11/11 lulus** pada checkout, custom request, dan admin fail-closed;
+  full `corepack pnpm test:e2e`: **57/57 lulus** pada empat worker lokal.
   Test memakai fixture/mock provider; tidak menghubungi provider nyata.
 - `corepack pnpm typecheck`, `corepack pnpm build`, `corepack pnpm db:validate`,
   dan `git diff --check` lulus. Audit ini tidak menjalankan transaksi provider,
