@@ -981,7 +981,9 @@ one focused session.
 ### Checkpoint A — private-file slice
 
 - [x] Unit/backend/integration/browser gates pass (serial unit 73/73,
-  backend 106/106, integration 14/14, focused browser 18/18).
+  backend 106/106, integration 16/16, focused browser 18/18). Integration
+  now also renders the protected `/admin` page from a Clerk test identity
+  through an active database-owned `AdminProfile` into the real Action Queue.
 - [x] Test DB is stopped after smoke and no private object URL is retained in
   logs, fixtures, or browser-visible state.
 - [ ] Owner confirms whether legal/accounting record retention remains TBD.

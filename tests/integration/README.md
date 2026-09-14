@@ -16,7 +16,9 @@ snapshots, stock reservations, payment attempts, and idempotent replay. Those
 adapters are test doubles; this result is not a Biteship or Midtrans sandbox
 transaction.
 The same suite checks database-owned `AdminProfile` resolution for an exact
-Clerk test identity; it does not call a live Clerk tenant. Do not substitute a
+Clerk test identity; the protected `/admin` page is also rendered against the
+database-backed Action Queue for an active profile and kept hidden for an
+unknown identity. It does not call a live Clerk tenant. Do not substitute a
 production or shared database.
 The private-upload route test also runs the real intent → confirmation → custom
 request path against PostgreSQL with a deterministic in-memory object-storage

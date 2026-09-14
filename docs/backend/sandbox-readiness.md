@@ -83,10 +83,11 @@ berhasil. Kelengkapan nama environment saja belum memenuhi status tersebut.
 - Pemeriksaan source: env server/public, Proxy, Clerk guard, Midtrans, Biteship,
   R2, Resend, guard non-production, CSP, dan harness database integration.
 - `corepack pnpm test`: **73/73 lulus**; `corepack pnpm test:backend`:
-  **106/106 lulus**; `corepack pnpm test:integration`: **14/14 lulus** dengan
-  PostgreSQL loopback; focused browser gates: **11/11 lulus** pada checkout,
-  custom request, dan admin fail-closed. Test memakai fixture/mock provider;
-  tidak menghubungi provider nyata.
+  **106/106 lulus**; `corepack pnpm test:integration`: **16/16 lulus** dengan
+  PostgreSQL loopback, termasuk smoke page `/admin` dari identity Clerk test
+  melalui `AdminProfile` aktif ke Action Queue database-backed; focused browser
+  gates: **11/11 lulus** pada checkout, custom request, dan admin fail-closed.
+  Test memakai fixture/mock provider; tidak menghubungi provider nyata.
 - `corepack pnpm typecheck`, `corepack pnpm build`, `corepack pnpm db:validate`,
   dan `git diff --check` lulus. Audit ini tidak menjalankan transaksi provider,
   upload R2 nyata, email, WhatsApp, atau provisioning Owner; database test dan

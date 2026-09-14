@@ -430,8 +430,10 @@ Project Brief integration gates are committed and pushed in `1d5b870`.
 
 ### Checkpoint A — private-file slice
 
-- [x] Unit/backend/integration/browser gates pass (73 unit, 106 backend, 14
-  integration, 18 focused browser tests).
+- [x] Unit/backend/integration/browser gates pass (73 unit, 106 backend, 16
+  integration, 18 focused browser tests). Integration also covers the
+  protected `/admin` page from a Clerk test identity through an active
+  database-owned `AdminProfile` into the real Action Queue.
 - [x] Test DB is stopped after smoke; no signed URL or private object key is
   retained in logs or browser-visible state.
 - [ ] Owner confirms whether legal/accounting retention remains TBD.
