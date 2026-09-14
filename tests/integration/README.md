@@ -18,3 +18,7 @@ transaction.
 The same suite checks database-owned `AdminProfile` resolution for an exact
 Clerk test identity; it does not call a live Clerk tenant. Do not substitute a
 production or shared database.
+The private-upload route test also runs the real intent → confirmation → custom
+request path against PostgreSQL with a deterministic in-memory object-storage
+double, proving `PENDING → UPLOADED → VERIFIED` without claiming a real R2
+provider smoke.
