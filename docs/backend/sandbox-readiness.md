@@ -1,6 +1,6 @@
 # Kesiapan sandbox provider
 
-Tanggal audit: 2026-09-14. Baseline: `2cb345de78cc925075180b8f7e557f17d7efb2c4`.
+Tanggal audit: 2026-09-14. Baseline: `480efd268942533650ffcc79278128894a33691a`.
 Scope: checkout `C:\Portfolio\NIUVA 2026`, konfigurasi proses saat audit,
 dan file environment lokal. Keberadaan akun di dashboard provider, secret
 di mesin lain, dan konfigurasi deployment belum diverifikasi.
