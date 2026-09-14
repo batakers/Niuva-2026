@@ -981,7 +981,7 @@ one focused session.
 ### Checkpoint A — private-file slice
 
 - [x] Unit/backend/integration/browser gates pass (serial unit 73/73,
-  backend 106/106, integration 13/13, focused browser 18/18).
+  backend 106/106, integration 14/14, focused browser 18/18).
 - [x] Test DB is stopped after smoke and no private object URL is retained in
   logs, fixtures, or browser-visible state.
 - [ ] Owner confirms whether legal/accounting record retention remains TBD.

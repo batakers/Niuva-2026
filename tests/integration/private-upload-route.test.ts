@@ -259,4 +259,58 @@ describe("Private upload route integration", () => {
     });
     expect(storageMock.deleteObject).not.toHaveBeenCalled();
   });
+
+  it("rejects mismatched object metadata and tombstones the pending row", async () => {
+    const intentResponse = await postUploadIntent(
+      publicRequest("/api/uploads/intents", {
+        mimeType: "model/stl",
+        originalName: "mismatch.stl",
+        sizeBytes: 3,
+      }),
+    );
+    expect(intentResponse.status).toBe(201);
+
+    const intent = (await intentResponse.json()) as Record<string, unknown>;
+    const fileId = intent.fileId;
+    const uploadToken = intent.uploadToken;
+    if (typeof fileId !== "string" || typeof uploadToken !== "string") {
+      throw new Error("Upload intent mismatch tidak mengembalikan identitas yang valid.");
+    }
+
+    const pending = await prisma.storedFile.findUnique({
+      select: { storageKey: true, uploadStatus: true },
+      where: { id: fileId },
+    });
+    expect(pending).toMatchObject({ uploadStatus: "PENDING" });
+    storageMock.headObject.mockResolvedValue({
+      contentLength: 4,
+      contentType: "model/stl",
+    });
+
+    const confirmationResponse = await postUploadConfirmation(
+      publicRequest("/api/uploads/confirm", { fileId, uploadToken }),
+    );
+
+    expect(confirmationResponse.status).toBe(422);
+    await expect(confirmationResponse.json()).resolves.toMatchObject({
+      code: "UPLOAD_REJECTED",
+    });
+    await expect(
+      prisma.storedFile.findUnique({
+        select: {
+          storageKey: true,
+          uploadExpiresAt: true,
+          uploadStatus: true,
+          uploadTokenHash: true,
+        },
+        where: { id: fileId },
+      }),
+    ).resolves.toMatchObject({
+      storageKey: pending?.storageKey,
+      uploadExpiresAt: null,
+      uploadStatus: "REJECTED",
+      uploadTokenHash: null,
+    });
+    expect(storageMock.deleteObject).toHaveBeenCalledWith(pending?.storageKey);
+  });
 });
