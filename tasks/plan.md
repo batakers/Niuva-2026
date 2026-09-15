@@ -927,8 +927,8 @@ Owner operation; the application must never create or promote a profile.
   server-owned Action Queue.
 - [x] Use an approved temporary local profile-state test for the unknown and
   inactive browser cases; restore the original profile state afterward.
-- [ ] Deactivate/remove the test profile after the smoke unless the Owner asks
-  to retain it for the next sandbox slice.
+- [x] Owner approved retaining the active test profile for the next
+  development-only admin smoke on 2026-09-16; no cleanup action runs.
 
 **Dependencies:** None, but requires Owner access to the Clerk development
 dashboard and a separate development database.
@@ -1227,7 +1227,7 @@ copy/interaction before a follow-up implementation Goal is opened.
 
 ## Goal — Clerk Non-production Smoke & AdminProfile Handoff (2026-09-15)
 
-Status: `CLERK_PROFILE_BOUNDARIES_VERIFIED_CLEANUP_DECISION_REMAINS`.
+Status: `OWNER_RETAINED_TEST_PROFILE_HANDOFF_COMPLETE`.
 This Goal records the explicit Owner provisioning and authenticated smoke. It
 does not create or promote a profile implicitly and does not claim production
 readiness.
@@ -1270,9 +1270,9 @@ readiness.
   server-owned Action Queue.
 - [x] Verify unknown and inactive profiles remain forbidden using the approved
   temporary local profile-state test; both states were restored afterward.
-- [ ] Deactivate/remove the temporary test profile after the smoke unless the
-  Owner explicitly asks to retain it.
+- [x] Owner explicitly approved retaining the active temporary test profile
+  for subsequent development-only admin smoke on 2026-09-16.
 
-Only the retention/cleanup decision for the active test profile remains.
-Company biodata is not required for this Goal. Temporary state changes were
-restored, leaving the authorized local `OWNER` profile active.
+This Goal is complete. Company biodata is not required; temporary state changes
+were restored, and the authorized local `OWNER` profile remains active solely
+for subsequent development-only admin smoke.

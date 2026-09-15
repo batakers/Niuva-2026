@@ -570,7 +570,7 @@ Biteship, Midtrans, or production acceptance evidence.
 
 ## Goal — Clerk Non-production Smoke & AdminProfile Handoff (2026-09-15)
 
-Status: `CLERK_PROFILE_BOUNDARIES_VERIFIED_CLEANUP_DECISION_REMAINS`.
+Status: `OWNER_RETAINED_TEST_PROFILE_HANDOFF_COMPLETE`.
 
 - [x] Verify paired Clerk development key presence without reading or printing
   secret values.
@@ -590,9 +590,9 @@ Status: `CLERK_PROFILE_BOUNDARIES_VERIFIED_CLEANUP_DECISION_REMAINS`.
   `Owner`, and renders 5 server-backed Action Queue jobs.
 - [x] Verify unknown and inactive `AdminProfile` cases with an approved
   temporary local profile-state test; both states are restored afterward.
-- [ ] Deactivate/remove the temporary test profile after the smoke unless the
-  Owner explicitly asks to retain it.
+- [x] Owner explicitly approved retaining the active temporary test profile
+  for subsequent development-only admin smoke on 2026-09-16.
 
-Only the retention/cleanup decision for the active test profile remains.
-Biodata is not a blocker for this Goal; temporary state changes were restored
-and the authorized local profile remains active.
+This Goal is complete. Biodata is not a blocker; temporary state changes were
+restored and the authorized local profile remains active solely for subsequent
+development-only admin smoke.
