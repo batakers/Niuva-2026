@@ -906,11 +906,11 @@ Owner operation; the application must never create or promote a profile.
 
 **Acceptance criteria:**
 
-- [ ] Owner records the exact non-production Clerk user ID and provisions an
+- [x] Owner records the exact non-production Clerk user ID and provisions an
   active `AdminProfile` with the approved role in the development database.
-- [ ] Browser smoke signs in at `/admin`, reads the server-owned queue, and
+- [x] Browser smoke signs in at `/admin`, reads the server-owned queue, and
   verifies an unknown or inactive profile remains forbidden.
-- [ ] The smoke evidence records environment/tenant and non-secret references
+- [x] The smoke evidence records environment/tenant and non-secret references
   only; no credential values enter the repository or logs.
 
 **Verification:**
@@ -921,8 +921,12 @@ Owner operation; the application must never create or promote a profile.
 - [x] Guarded Owner procedure is available as
   `corepack pnpm db:provision:admin`; unit tests prove it rejects non-loopback
   or non-development databases and requires explicit identity/role/confirmation.
-- [ ] Run the guarded profile-provisioning procedure and record the profile ID.
-- [ ] Run a one-worker Playwright login smoke against the development tenant.
+- [x] Run the guarded profile-provisioning procedure and record the profile ID.
+- [x] Run an authenticated one-worker browser smoke against the development
+  tenant for the active profile; the session survived reload and read the
+  server-owned Action Queue.
+- [x] Use an approved temporary local profile-state test for the unknown and
+  inactive browser cases; restore the original profile state afterward.
 - [ ] Deactivate/remove the test profile after the smoke unless the Owner asks
   to retain it for the next sandbox slice.
 
@@ -1220,3 +1224,55 @@ mobile viewport. Record one of `accepted`, `accepted with defect`, or `blocked`
 per route in the Owner checklist; do not use the demo badge as evidence of live
 provider readiness. Any defect should name the route, viewport, and expected
 copy/interaction before a follow-up implementation Goal is opened.
+
+## Goal — Clerk Non-production Smoke & AdminProfile Handoff (2026-09-15)
+
+Status: `CLERK_PROFILE_BOUNDARIES_VERIFIED_CLEANUP_DECISION_REMAINS`.
+This Goal records the explicit Owner provisioning and authenticated smoke. It
+does not create or promote a profile implicitly and does not claim production
+readiness.
+
+### Evidence completed
+
+- [x] Presence-only checks found both paired Clerk development keys in
+  `.env.local`; no key value was read, printed, or written.
+- [x] Blank-credential browser smoke passes (`1/1`) with HTTP `503` and
+  `AUTH_UNAVAILABLE`, proving the boundary fails closed.
+- [x] Configured anonymous `/admin` returns HTTP `307` to the non-production
+  Clerk sign-in host `flying-kodiak-8886.accounts.dev`; the protected page is
+  not exposed.
+- [x] Focused backend authorization tests pass (`7/7`), and the guarded
+  provisioning command rejects missing identity/role/display/confirmation
+  before database access (exit `1`).
+- [x] The pre-login Clerk sign-in surface renders `Sign in to NIUVA` and
+  `Development mode`; no credential value was exposed in the smoke evidence.
+- [x] Owner-created development user was provisioned as `OWNER` in the loopback
+  database; `AdminProfile` id `a6258b47-9d35-4a76-95c4-f8266c62069a` is active.
+- [x] Authenticated browser smoke remains on `/admin` after reload, renders
+  `Action Queue` as `Owner`, and shows 5 server-backed jobs; browser errors are
+  empty.
+- [x] With the same authenticated session, temporarily removing the matching
+  profile identity renders `Akses admin belum tersedia` (unknown identity),
+  then the original identity is restored.
+- [x] Temporarily setting the matching profile `isActive=false` renders
+  `Akses admin belum tersedia` (inactive profile), then the profile is restored
+  to active `OWNER`.
+
+### Owner handoff / remaining smoke
+
+- [x] Owner supplies the exact non-production Clerk user ID (`user_...`),
+  approved role (`OWNER` or `ADMIN`), display name, and the literal
+  confirmation `I_UNDERSTAND_NON_PRODUCTION`.
+- [x] Owner confirms the command targeted the loopback PostgreSQL development
+  database; `corepack pnpm db:provision:admin` completed and only the profile ID
+  and non-secret references were recorded.
+- [x] Authenticated browser smoke verifies the active profile can read the
+  server-owned Action Queue.
+- [x] Verify unknown and inactive profiles remain forbidden using the approved
+  temporary local profile-state test; both states were restored afterward.
+- [ ] Deactivate/remove the temporary test profile after the smoke unless the
+  Owner explicitly asks to retain it.
+
+Only the retention/cleanup decision for the active test profile remains.
+Company biodata is not required for this Goal. Temporary state changes were
+restored, leaving the authorized local `OWNER` profile active.

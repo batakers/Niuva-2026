@@ -408,12 +408,14 @@ Project Brief integration gates are committed and pushed in `1d5b870`.
   sign-in without exposing protected data.
 - [x] Add guarded Owner provisioning command requiring explicit Clerk user ID,
   role, display name, confirmation, and a loopback development database.
-- [ ] Owner records the exact development Clerk user ID and provisions an active
+- [x] Owner records the exact development Clerk user ID and provisions an active
   database-owned `AdminProfile` with the approved role.
-- [ ] One-worker browser smoke signs in at `/admin`, reads the Action Queue, and
-  confirms unknown/inactive profiles remain forbidden.
-- [ ] Record only non-secret tenant/profile references; do not store or print
-  Clerk keys.
+- [x] One-worker authenticated browser smoke signs in at `/admin`, reads the
+  Action Queue for the active profile, and survives reload.
+- [ ] Confirm unknown/inactive profiles remain forbidden with a second Clerk
+  identity or an approved temporary profile-state test.
+- [x] Record only non-secret tenant/profile references; no Clerk keys are stored
+  or printed.
 
 ### NG-02 — Private R2 binary vertical slice
 
@@ -565,3 +567,32 @@ Open these routes from the local server and review both viewports:
 The development-only Next.js button is tooling, not product UI. The demo badge
 and deterministic providers must not be presented as Clerk, R2, WhatsApp,
 Biteship, Midtrans, or production acceptance evidence.
+
+## Goal — Clerk Non-production Smoke & AdminProfile Handoff (2026-09-15)
+
+Status: `CLERK_PROFILE_BOUNDARIES_VERIFIED_CLEANUP_DECISION_REMAINS`.
+
+- [x] Verify paired Clerk development key presence without reading or printing
+  secret values.
+- [x] Blank-credential browser smoke returns `503 AUTH_UNAVAILABLE` (`1/1`).
+- [x] Configured anonymous `/admin` redirects (`307`) to the development
+  tenant sign-in host `flying-kodiak-8886.accounts.dev` without exposing admin
+  data.
+- [x] Focused backend authorization tests pass (`7/7`); provisioning guard
+  stops before database access when identity/role/confirmation are missing.
+- [x] Pre-login Clerk sign-in surface renders `Sign in to NIUVA` and
+  `Development mode`; no credential value is recorded.
+- [x] Owner provides the exact non-production Clerk user ID (`user_...`),
+  approved role, display name, and `I_UNDERSTAND_NON_PRODUCTION` confirmation.
+- [x] Run guarded provisioning against loopback `niuva_dev` and record only
+  profile `a6258b47-9d35-4a76-95c4-f8266c62069a` and non-secret references.
+- [x] Authenticated `/admin` smoke survives reload, identifies the session as
+  `Owner`, and renders 5 server-backed Action Queue jobs.
+- [x] Verify unknown and inactive `AdminProfile` cases with an approved
+  temporary local profile-state test; both states are restored afterward.
+- [ ] Deactivate/remove the temporary test profile after the smoke unless the
+  Owner explicitly asks to retain it.
+
+Only the retention/cleanup decision for the active test profile remains.
+Biodata is not a blocker for this Goal; temporary state changes were restored
+and the authorized local profile remains active.
