@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { PublicShell } from "@/components/niuva/public-shell";
+import { isLocalDemoMode } from "@/lib/env/server";
 import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
 import { BriefForm } from "./brief-form";
 
 export const metadata: Metadata = { title: "Project brief · Niuva", description: "Susun konteks, tujuan, dan referensi awal untuk percakapan proyek bersama Niuva." };
 
 export default function ProjectBriefPage() {
+  const demoMode = isLocalDemoMode();
+
   return (
     <PublicShell scope="project-brief">
       <main id="main-content">
@@ -27,7 +30,7 @@ export default function ProjectBriefPage() {
               </ul>
             </div>
           </div>
-          <BriefForm />
+          <BriefForm demoMode={demoMode} />
         </section>
         <section className="border-t border-border bg-card">
           <div className="mx-auto grid max-w-public gap-8 px-5 py-12 sm:px-8 md:grid-cols-2">

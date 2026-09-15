@@ -12,7 +12,7 @@ export type ShippingPreviewOption = Readonly<{
 }>;
 
 export type ShippingPreviewStatus = "idle" | "loading" | "ready" | "unavailable" | "stale";
-export type ShippingOptionsMode = "live" | "preview";
+export type ShippingOptionsMode = "demo" | "live" | "preview";
 
 const rupiah = new Intl.NumberFormat("id-ID", {
   currency: "IDR",
@@ -37,7 +37,8 @@ export function ShippingOptions({
   status: ShippingPreviewStatus;
   mode?: ShippingOptionsMode;
 }) {
-  const isLive = mode === "live";
+  const isDemo = mode === "demo";
+  const isServerBacked = mode === "live" || isDemo;
   return (
     <fieldset
       id="checkout-shippingOption"
@@ -48,8 +49,10 @@ export function ShippingOptions({
     >
       <legend className="px-2 text-base font-semibold">Opsi pengiriman</legend>
       <p id="checkout-shipping-help" className="mb-4 text-sm leading-6 text-muted-foreground">
-        {isLive
-          ? "Tarif dimuat dari provider untuk alamat ini dan tetap akan diperiksa ulang server sebelum order dibuat."
+        {isDemo
+          ? "Tarif deterministik demo dimuat dari adapter lokal dan tetap diperiksa ulang server sebelum order dibuat."
+          : isServerBacked
+            ? "Tarif dimuat dari provider untuk alamat ini dan tetap akan diperiksa ulang server sebelum order dibuat."
           : "Opsi berikut hanya data simulasi untuk meninjau alur. Server akan meminta dan memeriksa ulang tarif nyata sebelum membuat order."}
       </p>
 
@@ -61,7 +64,7 @@ export function ShippingOptions({
 
       {status === "loading" ? (
         <div role="status" aria-busy="true" className="space-y-3">
-          <p className="text-sm font-medium">{isLive ? "Memuat opsi pengiriman…" : "Memuat simulasi opsi pengiriman…"}</p>
+          <p className="text-sm font-medium">{isDemo ? "Memuat opsi pengiriman demo…" : isServerBacked ? "Memuat opsi pengiriman…" : "Memuat simulasi opsi pengiriman…"}</p>
           <div className="h-20 rounded-lg bg-muted motion-safe:animate-pulse" />
           <div className="h-20 rounded-lg bg-muted motion-safe:animate-pulse" />
           <Button type="button" variant="outline" className="min-h-11" onClick={onRetry}>Coba lagi</Button>

@@ -66,6 +66,7 @@ export type BiteshipRate = Readonly<{
   courierName: string;
   etaText?: string;
   priceRp: Decimal;
+  provider?: string;
   providerPayload: Readonly<Record<string, unknown>>;
   serviceCode: string;
   serviceName: string;

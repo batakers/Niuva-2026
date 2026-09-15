@@ -81,6 +81,7 @@ export type RetailShippingRateOption = Readonly<{
   etaText?: string;
   optionId: string;
   priceRp: Decimal;
+  provider?: string;
   serviceCode: string;
   serviceName: string;
 }>;
@@ -178,6 +179,7 @@ export class RetailShippingRateService {
       ...(selected.etaText === undefined ? {} : { etaText: selected.etaText }),
       expiresAt: resolved.expiresAt,
       priceRp: selected.priceRp,
+      ...(selected.provider === undefined ? {} : { provider: selected.provider }),
       providerPayload: selected.providerPayload,
       serviceCode: selected.serviceCode,
       serviceName: selected.serviceName,
@@ -330,6 +332,7 @@ function toRateOption(
       .update(`${rate.courierCode}\u0000${rate.serviceCode}`, "utf8")
       .digest("base64url"),
     priceRp: rate.priceRp,
+    ...(rate.provider === undefined ? {} : { provider: rate.provider }),
     providerPayload: rate.providerPayload,
     serviceCode: rate.serviceCode,
     serviceName: rate.serviceName,

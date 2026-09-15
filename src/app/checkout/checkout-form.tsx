@@ -173,18 +173,24 @@ function clearShippingError(current: Partial<Record<CheckoutField, string>>) {
 
 export function CheckoutForm({
   catalogStatus,
+  demoMode = false,
   initialScenario,
   liveEnabled = false,
   previewEnabled,
   products,
 }: {
   catalogStatus: PreviewScenario | null;
+  demoMode?: boolean;
   initialScenario?: string | string[];
   liveEnabled?: boolean;
   previewEnabled: boolean;
   products: readonly PublicShopProduct[];
 }) {
-  const mode: ShippingOptionsMode = liveEnabled ? "live" : previewEnabled ? "preview" : "preview";
+  const mode: ShippingOptionsMode = liveEnabled
+    ? demoMode
+      ? "demo"
+      : "live"
+    : "preview";
   const isLive = liveEnabled;
   const hydrated = useHydrated();
   const [snapshot, setSnapshot] = useState<CartSnapshot>(EMPTY_CART);
@@ -471,9 +477,9 @@ export function CheckoutForm({
     <form noValidate onSubmit={submit} aria-label="Form checkout tamu" aria-busy={busy} className="grid gap-8 md:grid-cols-12 md:items-start">
       <div className="min-w-0 space-y-8 md:col-span-8">
         {isLive ? (
-          <aside aria-label="Checkout transaksi" className="rounded-lg border border-success-border bg-success-background p-4 text-success">
-            <p className="text-sm font-semibold">Checkout transaksi aktif</p>
-            <p className="mt-2 text-sm leading-6">Server akan memuat ulang katalog, stok, ongkir, total, dan membuat satu order idempotent sebelum membuka pembayaran sandbox.</p>
+          <aside aria-label={demoMode ? "Checkout demo lokal" : "Checkout transaksi"} className="rounded-lg border border-success-border bg-success-background p-4 text-success">
+            <p className="text-sm font-semibold">{demoMode ? "Checkout demo lokal aktif" : "Checkout transaksi aktif"}</p>
+            <p className="mt-2 text-sm leading-6">{demoMode ? "Server akan memuat ulang katalog, stok, ongkir, total, dan membuat order idempotent di database lokal dengan adapter provider deterministik." : "Server akan memuat ulang katalog, stok, ongkir, total, dan membuat satu order idempotent sebelum membuka pembayaran sandbox."}</p>
           </aside>
         ) : (
           <aside aria-label="Kontrol preview checkout" className="rounded-lg border border-info-border bg-info-background p-4 text-info">
@@ -512,13 +518,15 @@ export function CheckoutForm({
               </ul>
             </div>
           ) : null}
-          {result === "submitting" ? <p role="status" className="text-sm text-muted-foreground">{isLive ? "Membuat order dan membuka pembayaran sandbox…" : "Memeriksa simulasi checkout… Data tidak dikirim."}</p> : null}
+          {result === "submitting" ? <p role="status" className="text-sm text-muted-foreground">{isLive ? demoMode ? "Membuat order demo lokal…" : "Membuat order dan membuka pembayaran sandbox…" : "Memeriksa simulasi checkout… Data tidak dikirim."}</p> : null}
           {result === "reviewed" ? <StatusNotice tone="success" title="Preview checkout siap ditinjau." description="Kontak, alamat, dan opsi pengiriman lolos validasi lokal. Belum ada order, reservasi, token pembayaran, atau data yang dikirim." /> : null}
           {result === "payment-pending" && isLive ? (
             <StatusNotice
-              action={paymentRedirectUrl ? <a className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={paymentRedirectUrl} rel="noreferrer" target="_blank">Buka pembayaran sandbox</a> : orderStatusToken ? <AuLink className="min-h-11" href={`/orders/${orderStatusToken}`} variant="outline">Lihat status order</AuLink> : undefined}
-              description={orderNumber ? `Order ${orderNumber} sudah dibuat dan menunggu pembayaran. Status PAID hanya dapat ditetapkan setelah webhook provider diverifikasi server.` : "Order sudah dibuat dan menunggu pembayaran. Status PAID hanya dapat ditetapkan setelah webhook provider diverifikasi server."}
-              title="Checkout tersimpan, pembayaran menunggu."
+              action={paymentRedirectUrl ? <a className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={paymentRedirectUrl} rel="noreferrer" target="_blank">{demoMode ? "Buka pembayaran demo" : "Buka pembayaran sandbox"}</a> : orderStatusToken ? <AuLink className="min-h-11" href={`/orders/${orderStatusToken}`} variant="outline">Lihat status order</AuLink> : undefined}
+              description={demoMode
+                ? orderNumber ? `Order ${orderNumber} tersimpan di database lokal dan menunggu simulasi pembayaran. Tidak ada provider eksternal yang dipanggil.` : "Order demo tersimpan di database lokal dan menunggu simulasi pembayaran."
+                : orderNumber ? `Order ${orderNumber} sudah dibuat dan menunggu pembayaran. Status PAID hanya dapat ditetapkan setelah webhook provider diverifikasi server.` : "Order sudah dibuat dan menunggu pembayaran. Status PAID hanya dapat ditetapkan setelah webhook provider diverifikasi server."}
+              title={demoMode ? "Order demo tersimpan." : "Checkout tersimpan, pembayaran menunggu."}
               tone="info"
             />
           ) : null}
@@ -572,13 +580,13 @@ export function CheckoutForm({
         <div className="mt-6 space-y-3 border-l-2 border-brand-300 pl-4 text-sm leading-6 text-muted-foreground">
           <p><span className="font-medium text-foreground">Browser:</span> mengumpulkan input dan menampilkan estimasi.</p>
           <p><span className="font-medium text-foreground">Server:</span> memuat ulang produk, stok, harga, ongkir, dan total.</p>
-          <p><span className="font-medium text-foreground">Provider:</span> {isLive ? "dihubungi setelah data server valid; callback tetap diverifikasi." : "baru dihubungi setelah data server valid."}</p>
+          <p><span className="font-medium text-foreground">Provider:</span> {demoMode ? "adapter demo deterministik; tidak ada network call." : isLive ? "dihubungi setelah data server valid; callback tetap diverifikasi." : "baru dihubungi setelah data server valid."}</p>
         </div>
 
         <Button type="submit" size="lg" disabled={!hydrated || busy || shippingStatus !== "ready" || !selectedShippingId} className="mt-6 min-h-11 w-full">
-          {busy ? (isLive ? "Membuat order…" : "Memeriksa preview…") : isLive ? "Buat order dan lanjutkan pembayaran" : "Tinjau checkout"}
+          {busy ? (isLive ? demoMode ? "Membuat order demo…" : "Membuat order…" : "Memeriksa preview…") : isLive ? demoMode ? "Buat order demo" : "Buat order dan lanjutkan pembayaran" : "Tinjau checkout"}
         </Button>
-        <p className="mt-3 text-xs leading-5 text-muted-foreground">{isLive ? "Server akan memvalidasi ulang seluruh harga, stok, ongkir, dan total. Jangan anggap pembayaran berhasil dari browser." : "Tombol ini hanya menguji alur frontend. Tidak ada order, reservasi, tarif provider, atau pembayaran yang dibuat."}</p>
+        <p className="mt-3 text-xs leading-5 text-muted-foreground">{demoMode ? "Mode demo: server memvalidasi ulang harga, stok, ongkir, total, dan menulis order ke database lokal. Tidak ada provider eksternal." : isLive ? "Server akan memvalidasi ulang seluruh harga, stok, ongkir, dan total. Jangan anggap pembayaran berhasil dari browser." : "Tombol ini hanya menguji alur frontend. Tidak ada order, reservasi, tarif provider, atau pembayaran yang dibuat."}</p>
         <noscript><p className="mt-3 text-sm text-destructive">Aktifkan JavaScript untuk membaca Cart lokal dan meninjau checkout.</p></noscript>
       </aside>
     </form>

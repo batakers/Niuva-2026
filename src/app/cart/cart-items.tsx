@@ -41,11 +41,13 @@ function resolveCartItem(products: readonly PublicShopProduct[], cart: CartSnaps
 }
 
 export function CartItems({
+  demoMode = false,
   liveEnabled,
   products,
   catalogStatus,
   previewEnabled,
 }: {
+  demoMode?: boolean;
   liveEnabled?: boolean;
   products: readonly PublicShopProduct[];
   catalogStatus: PreviewScenario | null;
@@ -248,7 +250,7 @@ export function CartItems({
               Lanjut ke checkout
             </Button>
           )}
-          <p id="checkout-availability-note" className="mt-3 text-xs leading-5 text-muted-foreground">{previewEnabled ? "Membuka preview checkout lokal. Belum ada order, reservasi, atau pembayaran yang dibuat." : liveEnabled ? "Membuka checkout transaksi. Server akan memuat ulang harga, stok, ongkir, dan total." : "Checkout transaksi belum tersedia hingga produk dan provider siap."}</p>
+          <p id="checkout-availability-note" className="mt-3 text-xs leading-5 text-muted-foreground">{previewEnabled ? "Membuka preview checkout lokal. Belum ada order, reservasi, atau pembayaran yang dibuat." : demoMode ? "Membuka checkout demo lokal. Order dan reservasi ditulis ke database lokal; provider eksternal tidak dipanggil." : liveEnabled ? "Membuka checkout transaksi. Server akan memuat ulang harga, stok, ongkir, dan total." : "Checkout transaksi belum tersedia hingga produk dan provider siap."}</p>
         </aside>
       </div>
     </div>

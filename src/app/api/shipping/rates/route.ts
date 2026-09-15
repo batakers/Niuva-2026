@@ -6,7 +6,7 @@ import {
   createCorrelationId,
 } from "@/lib/http/response";
 import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
-import { createBiteshipRateGatewayFromEnvironment } from "@/modules/shipping/biteship";
+import { createShippingProviderForRuntime } from "@/modules/providers/runtime";
 import { RetailShippingRateService } from "@/modules/shipping/retail-rate-service";
 
 export const runtime = "nodejs";
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
       maxBytes: SHIPPING_RATES_MAX_BODY_BYTES,
     });
     const service = new RetailShippingRateService({
-      provider: createBiteshipRateGatewayFromEnvironment(),
+      provider: createShippingProviderForRuntime(),
     });
     const rates = await service.getRates(payload);
 

@@ -7,8 +7,10 @@ import {
 } from "@/lib/http/response";
 import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
 import { CheckoutService } from "@/modules/checkout/service";
-import { createMidtransSnapGatewayFromEnvironment } from "@/modules/payment/midtrans";
-import { createBiteshipRateGatewayFromEnvironment } from "@/modules/shipping/biteship";
+import {
+  createPaymentProviderForRuntime,
+  createShippingProviderForRuntime,
+} from "@/modules/providers/runtime";
 import { RetailShippingRateService } from "@/modules/shipping/retail-rate-service";
 
 export const runtime = "nodejs";
@@ -29,10 +31,10 @@ export async function POST(request: Request) {
       maxBytes: CHECKOUT_MAX_BODY_BYTES,
     });
     const shippingProvider = new RetailShippingRateService({
-      provider: createBiteshipRateGatewayFromEnvironment(),
+      provider: createShippingProviderForRuntime(),
     });
     const service = new CheckoutService({
-      paymentProvider: createMidtransSnapGatewayFromEnvironment(),
+      paymentProvider: createPaymentProviderForRuntime(),
       shippingProvider,
     });
     const result = await service.create(payload);

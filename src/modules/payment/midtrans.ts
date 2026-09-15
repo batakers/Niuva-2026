@@ -71,6 +71,8 @@ export type MidtransSnapGatewayConfig = Readonly<{
 }>;
 
 export class MidtransSnapGateway implements CheckoutPaymentProvider {
+  readonly provider = "MIDTRANS";
+
   private readonly endpoint: string;
   private readonly fetchImplementation: typeof fetch;
   private readonly now: () => Date;

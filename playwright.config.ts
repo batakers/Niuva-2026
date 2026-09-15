@@ -2,6 +2,7 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  testIgnore: /local-demo\.spec\.ts/,
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
@@ -22,6 +23,9 @@ export default defineConfig({
     stdout: "ignore",
     stderr: "pipe",
     env: {
+      DATABASE_URL: "",
+      DEMO_DATABASE_URL: "",
+      NIUVA_RUNTIME_MODE: "",
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "",
       CLERK_SECRET_KEY: "",
     },

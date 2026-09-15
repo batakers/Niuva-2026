@@ -19,6 +19,7 @@ export type CheckoutShippingQuote = Readonly<{
   etaText?: string;
   expiresAt: Date;
   priceRp: Prisma.Decimal;
+  provider?: string;
   providerPayload: Readonly<Record<string, unknown>>;
   serviceCode: string;
   serviceName: string;
@@ -32,6 +33,7 @@ export type CheckoutTransactionResult = Readonly<{
 }>;
 
 export type PaymentProviderResult = Readonly<{
+  provider?: string;
   redirectUrl?: string;
   token?: string;
 }>;
@@ -52,6 +54,7 @@ export interface CheckoutRepositoryPort {
     orderNumber: string;
     orderPublicTokenHash: string;
     paymentProviderOrderId: string;
+    paymentProvider?: string;
     reservationExpiresAt: Date;
     shippingQuote: CheckoutShippingQuote;
   }>): Promise<CheckoutTransactionResult>;
@@ -107,6 +110,7 @@ export class CheckoutRepository implements CheckoutRepositoryPort {
     orderNumber: string;
     orderPublicTokenHash: string;
     paymentProviderOrderId: string;
+    paymentProvider?: string;
     reservationExpiresAt: Date;
     shippingQuote: CheckoutShippingQuote;
   }>): Promise<CheckoutTransactionResult> {
@@ -275,6 +279,9 @@ export class CheckoutRepository implements CheckoutRepositoryPort {
           etaText: input.shippingQuote.etaText,
           orderId: order.id,
           priceRp: shippingPrice,
+          ...(input.shippingQuote.provider === undefined
+            ? {}
+            : { provider: input.shippingQuote.provider }),
           providerPayloadJson: minimizeShippingRatePayload(
             input.shippingQuote.providerPayload,
           ),
@@ -320,6 +327,7 @@ export class CheckoutRepository implements CheckoutRepositoryPort {
           amountRp: grandTotal,
           expiresAt: input.reservationExpiresAt,
           orderId: order.id,
+          provider: input.paymentProvider ?? "MIDTRANS",
           providerOrderId: input.paymentProviderOrderId,
           purpose: "ORDER_TOTAL",
         },

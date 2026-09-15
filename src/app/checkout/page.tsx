@@ -3,7 +3,7 @@ import { connection } from "next/server";
 import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { getLiveShopProducts, getShopPreview } from "@/features/frontend-preview/server";
-import { getServerCapabilities } from "@/lib/env/server";
+import { getServerCapabilities, isLocalDemoMode } from "@/lib/env/server";
 import { CheckoutForm } from "./checkout-form";
 
 export const metadata: Metadata = {
@@ -23,13 +23,17 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
   const { preview, state } = await searchParams;
   const { scenario, products: previewProducts } = await getShopPreview(preview);
   const previewEnabled = process.env.NODE_ENV === "development" && scenario === "examples";
+  const demoMode = isLocalDemoMode();
   let liveEnabled = false;
   let products = previewProducts;
 
   if (!previewEnabled && scenario === null) {
     try {
       const capabilities = getServerCapabilities();
-      if (capabilities.database && capabilities.biteship && capabilities.midtrans) {
+      if (
+        capabilities.database &&
+        (demoMode || (capabilities.biteship && capabilities.midtrans))
+      ) {
         products = await getLiveShopProducts();
         liveEnabled = products.length > 0;
       }
@@ -59,7 +63,7 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
         </section>
 
         <div className="mx-auto max-w-public px-5 py-10 sm:px-8 sm:py-14">
-          <CheckoutForm products={products} catalogStatus={scenario} liveEnabled={liveEnabled} previewEnabled={previewEnabled} initialScenario={state} />
+          <CheckoutForm demoMode={demoMode} products={products} catalogStatus={scenario} liveEnabled={liveEnabled} previewEnabled={previewEnabled} initialScenario={state} />
         </div>
       </main>
     </PublicShell>

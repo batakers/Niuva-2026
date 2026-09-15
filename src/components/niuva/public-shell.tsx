@@ -4,6 +4,7 @@ import { Fraunces, Space_Grotesk } from "next/font/google";
 import AuLogo from "@/components/ui/AuLogo";
 import { AuLink } from "@/components/ui/AuLink";
 import { publicCompanyProfile } from "@/features/public/company-content";
+import { isLocalDemoMode } from "@/lib/env/server";
 import { PublicNavigation } from "./public-navigation";
 
 const sans = Space_Grotesk({ display: "swap", subsets: ["latin"], variable: "--font-public-sans", weight: "variable" });
@@ -44,11 +45,13 @@ export function PublicShell({
   scope: string;
 }) {
   const resolvedFunctionalStatus = functionalStatus ?? defaultFunctionalStatusByScope[scope];
+  const demoMode = isLocalDemoMode();
 
   return (
     <div className={`${sans.variable} ${editorial.variable} min-h-screen bg-background text-foreground`}
       style={typography} data-foundation-propagation="approved" data-foundation-scope={scope}
       data-product-screen-proof-status="pending-owner-review" data-typography-version="1.0"
+      data-runtime-mode={demoMode ? "demo" : "standard"}
       data-homepage={scope === "homepage" ? "" : undefined}
       data-project-brief={scope === "project-brief" ? "" : undefined}
       data-product-screen-functional={resolvedFunctionalStatus}>
@@ -61,6 +64,16 @@ export function PublicShell({
             <AuLogo className="h-7 w-auto sm:h-8" priority />
           </Link>
           <PublicNavigation />
+          {demoMode ? (
+            <span
+              aria-label="Mode demo lokal aktif"
+              className="rounded-md border border-warning-border bg-warning-background px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-warning"
+              data-demo-badge
+              title="Data dan provider deterministik lokal; bukan mode produksi"
+            >
+              Demo lokal
+            </span>
+          ) : null}
           <AuLink href="/project-brief" size="sm" className="min-h-11 hidden md:inline-flex">Diskusikan Proyek</AuLink>
         </div>
       </header>

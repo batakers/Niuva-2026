@@ -80,6 +80,8 @@ const serverEnvironmentSchema = z.object({
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: optionalNonEmptyString,
   NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: optionalNonEmptyString,
   NEXT_PUBLIC_SENTRY_DSN: optionalHttpUrl,
+  NIUVA_RUNTIME_MODE: z
+    .preprocess(blankToUndefined, z.enum(["demo", "live"]).optional()),
   NODE_ENV: z
     .preprocess(blankToUndefined, z.enum(["development", "test", "production"]).optional()),
   R2_ACCESS_KEY_ID: optionalNonEmptyString,
@@ -95,6 +97,44 @@ const serverEnvironmentSchema = z.object({
 });
 
 export type ServerEnvironment = z.infer<typeof serverEnvironmentSchema>;
+
+/**
+ * Demo is an explicit runtime mode, not a second NODE_ENV. It is intentionally
+ * enabled only for a loopback database whose name carries a local marker. This
+ * keeps a copied demo flag from turning on transactional adapters in a hosted
+ * or production environment.
+ */
+export function isLocalDemoMode(
+  source: Readonly<Record<string, string | undefined>> = process.env,
+): boolean {
+  if (source.NIUVA_RUNTIME_MODE?.trim().toLowerCase() !== "demo") {
+    return false;
+  }
+
+  if (source.NODE_ENV !== "development" && source.NODE_ENV !== "test") {
+    return false;
+  }
+
+  const databaseUrl = source.DATABASE_URL?.trim();
+  if (databaseUrl === undefined || databaseUrl.length === 0) {
+    return false;
+  }
+
+  try {
+    const url = new URL(databaseUrl);
+    if (
+      (url.protocol !== "postgres:" && url.protocol !== "postgresql:") ||
+      !["127.0.0.1", "localhost"].includes(url.hostname)
+    ) {
+      return false;
+    }
+
+    const databaseName = decodeURIComponent(url.pathname).replace(/^\/+/, "");
+    return /(^|[-_])(dev|demo|test)([-_]|$)/i.test(databaseName);
+  } catch {
+    return false;
+  }
+}
 
 export class EnvironmentValidationError extends Error {
   readonly fields: readonly string[];

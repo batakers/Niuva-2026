@@ -55,6 +55,7 @@ export interface CheckoutShippingProvider {
 }
 
 export interface CheckoutPaymentProvider {
+  readonly provider?: string;
   createPayment(input: Readonly<{
     amountRp: string;
     expiresAt: Date;
@@ -210,6 +211,7 @@ export class CheckoutService {
         orderId,
         orderNumber,
         orderPublicTokenHash: orderAccessToken.tokenHash,
+        paymentProvider: this.paymentProvider.provider,
         paymentProviderOrderId,
         reservationExpiresAt,
         shippingQuote,

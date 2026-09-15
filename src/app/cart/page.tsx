@@ -4,7 +4,7 @@ import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation
 import { PublicShell } from "@/components/niuva/public-shell";
 import { AuLink } from "@/components/ui/AuLink";
 import { getLiveShopProducts, getShopPreview } from "@/features/frontend-preview/server";
-import { getServerCapabilities } from "@/lib/env/server";
+import { getServerCapabilities, isLocalDemoMode } from "@/lib/env/server";
 import { CartItems } from "./cart-items";
 
 export const metadata: Metadata = {
@@ -20,6 +20,7 @@ export default async function CartPage({ searchParams }: CartPageProps) {
   await connection();
   const { preview } = await searchParams;
   const { scenario, products: previewProducts } = await getShopPreview(preview);
+  const demoMode = isLocalDemoMode();
   let products = previewProducts;
   let liveEnabled = false;
   if (scenario === null && process.env.DATABASE_URL !== undefined) {
@@ -30,7 +31,9 @@ export default async function CartPage({ searchParams }: CartPageProps) {
     }
     try {
       const capabilities = getServerCapabilities();
-      liveEnabled = products.length > 0 && capabilities.biteship && capabilities.midtrans;
+      liveEnabled =
+        products.length > 0 &&
+        (demoMode || (capabilities.biteship && capabilities.midtrans));
     } catch {
       liveEnabled = false;
     }
@@ -67,7 +70,7 @@ export default async function CartPage({ searchParams }: CartPageProps) {
             </aside>
           ) : null}
 
-          <CartItems products={products} catalogStatus={scenario} liveEnabled={liveEnabled} previewEnabled={previewEnabled} />
+          <CartItems demoMode={demoMode} products={products} catalogStatus={scenario} liveEnabled={liveEnabled} previewEnabled={previewEnabled} />
         </div>
       </main>
     </PublicShell>
