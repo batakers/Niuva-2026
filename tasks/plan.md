@@ -1165,3 +1165,58 @@ delivery, approved catalog/pricing/legal/accounting evidence, or real
 Biteship/Midtrans sandbox rates, payment, and webhook verification. The demo
 fixture is not a production catalog and no provider credential or business
 biodata is inferred from it.
+
+## Goal — Owner Visual Acceptance & Demo Handoff (2026-09-15)
+
+Status: `TECHNICAL_REVIEW_COMPLETE_OWNER_BASELINE_ACCEPTED`. This Goal records
+one bounded visual pass over the local-demo vertical slice. It separates browser
+evidence from the Owner's product decision and does not close any Clerk, R2,
+WhatsApp, Biteship, Midtrans, catalog, pricing, legal, or accounting gate.
+
+### Scope and acceptance
+
+- [x] Review `/project-brief`, `/demo/action-queue`, `/shop`, and `/checkout`
+  using the explicit local demo runtime and the incumbent Niuva Foundation.
+- [x] Check compact `390x844` and wide `1280x900` viewports for one clear
+  heading, readable hierarchy, primary/recovery actions, keyboard focus,
+  evidence boundaries, and horizontal overflow.
+- [x] Exercise the checkout validation and deterministic shipping state with
+  synthetic local-only input; no order was submitted and no external provider
+  was called.
+- [x] Owner accepts the current baseline for each named surface on 2026-09-15;
+  future UI/UX changes require a new bounded review and do not inherit this
+  acceptance automatically.
+- [ ] Product-screen propagation remains a separate Owner decision; this Goal
+  does not promote styleguide-only tokens beyond the existing metadata contract.
+
+### Verification evidence
+
+- [x] `node .agents/skills/impeccable/scripts/detect.mjs --json` returned `[]`
+  for the four route directories and their shared form/shell components.
+- [x] In-app browser review on 2026-09-15 found `h1=1` and
+  `scrollWidth <= innerWidth` for every route at both viewports. Observed
+  content widths were `1265 <= 1280` (wide) and `375 <= 390` (compact).
+- [x] `/project-brief` shows the server-backed form and explicit `DEMO LOKAL`
+  boundary; its skip link receives a visible focus ring from keyboard traversal.
+- [x] `/demo/action-queue` shows a read-only server projection with reference,
+  attention, next action, and updated time; no operational mutation control is
+  exposed.
+- [x] `/shop` shows the seeded `Desk Organizer Demo` card and an accessible
+  product-detail link. The missing-image placeholder is labelled as unavailable
+  evidence rather than a synthetic product photo.
+- [x] `/checkout` shows the demo authority ledger, disabled order action until
+  valid input and shipping selection, a readable validation alert, and
+  deterministic Regular/Express demo rates after recovery. Browser console
+  errors remained empty during the route pass.
+- [x] The Next.js development button seen on the demo server was treated as a
+  tooling artifact only; production-build screenshots already retained under
+  ignored `.local/visual-acceptance/` have no development overlay.
+
+### Owner handoff
+
+Use `powershell.exe -NoProfile -ExecutionPolicy Bypass -File
+scripts/local-demo-web.ps1`, then review the four routes on a desktop and a
+mobile viewport. Record one of `accepted`, `accepted with defect`, or `blocked`
+per route in the Owner checklist; do not use the demo badge as evidence of live
+provider readiness. Any defect should name the route, viewport, and expected
+copy/interaction before a follow-up implementation Goal is opened.

@@ -527,3 +527,41 @@ corepack pnpm test:e2e:demo
 The demo ends at `PENDING_PAYMENT`; it is a deterministic local demonstration,
 not a verified payment, provider smoke, Clerk session, R2 upload, WhatsApp send,
 or production-readiness claim.
+
+## Goal — Owner Visual Acceptance & Demo Handoff (2026-09-15)
+
+Status: `TECHNICAL_REVIEW_COMPLETE_OWNER_BASELINE_ACCEPTED`.
+
+- [x] Review `/project-brief`, `/demo/action-queue`, `/shop`, and `/checkout`
+  in local demo mode at `1280x900` and `390x844`.
+- [x] Confirm one `h1`, no horizontal overflow, readable primary/recovery
+  actions, explicit demo/provider boundaries, and a visible keyboard focus ring.
+- [x] Trigger checkout validation, fill synthetic local-only data, load the
+  deterministic shipping rates, and verify the server-ledger summary; no order
+  was submitted and no external provider was called.
+- [x] Impeccable detector returned `[]` for the named route and shared UI
+  components; browser console error collection remained empty.
+- [x] Owner accepts the current baseline for each named route on 2026-09-15;
+  future UI/UX changes require a new bounded review and do not inherit this
+  acceptance automatically.
+- [ ] Keep styleguide-only propagation and all live Clerk/R2/WhatsApp/
+  Biteship/Midtrans/catalog/pricing/legal/accounting gates open.
+
+### Handoff runbook
+
+```text
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/local-demo-web.ps1
+```
+
+Open these routes from the local server and review both viewports:
+
+```text
+/project-brief
+/demo/action-queue
+/shop
+/checkout
+```
+
+The development-only Next.js button is tooling, not product UI. The demo badge
+and deterministic providers must not be presented as Clerk, R2, WhatsApp,
+Biteship, Midtrans, or production acceptance evidence.
