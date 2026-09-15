@@ -10,6 +10,21 @@ Boundary Clerk, private-upload orchestration, server-backed checkout path, dan
 integration harness sudah tersedia. Kode adapter dan test lokal tidak
 membuktikan kredensial, koneksi, atau delivery provider.
 
+## Addendum — local demo mode (2026-09-15)
+
+Local demo mode adalah evidence state terpisah untuk demonstrasi dan regression
+test tanpa provider eksternal. Runtime harus menyatakan `NIUVA_RUNTIME_MODE=demo`,
+berjalan pada `NODE_ENV=development|test`, dan memakai database PostgreSQL
+loopback dengan marker `dev`, `demo`, atau `test` pada nama database. Seed demo
+bersifat idempotent dan adapter shipping/payment deterministik memberi label
+`DEMO`; checkout tetap berhenti di `PENDING_PAYMENT`.
+
+Mode ini tidak mengubah status provider mana pun menjadi `VERIFIED_SANDBOX`,
+tidak membuat sesi Clerk atau `AdminProfile`, tidak mengunggah binary ke R2,
+dan tidak mengirim WhatsApp/email. Route `/demo/action-queue` hanya proyeksi
+read-only untuk menunjukkan persistence inquiry; `/admin` tetap memakai boundary
+Clerk dan `requireAdmin()` yang sama.
+
 ## Bukti lokal
 
 - Pemeriksaan presence-only pada `.env.local` menemukan pasangan key Clerk,

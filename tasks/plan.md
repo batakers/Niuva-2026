@@ -1119,3 +1119,49 @@ payment/order smoke before implementation.
   value is approved for production or public copy.
 - `DEFERRED`: admin mutations and production checkout/provider activation remain
   outside this Goal until their own acceptance evidence exists.
+
+## Goal — Build Local Demo Mode (2026-09-15)
+
+Status: `LOCAL_DEMO_IMPLEMENTED_SANDBOX_LIVE_GATES_PRESERVED`. This Goal adds a
+provider-neutral local demonstration path without changing the production
+objective or silently satisfying any external-provider gate.
+
+### Scope and acceptance
+
+- [x] Runtime demo is explicit through `NIUVA_RUNTIME_MODE=demo` and is
+  fail-closed unless `NODE_ENV` is development/test and `DATABASE_URL` is a
+  PostgreSQL loopback URL whose database name carries a `dev`, `demo`, or `test`
+  marker.
+- [x] `db:demo:start`, `db:demo:migrate`, and `db:demo:seed` use the dedicated
+  loopback development database. The catalog fixture is idempotent and owned by
+  the `local-demo-*` namespace; it does not clear unrelated records.
+- [x] Shipping and payment use deterministic provider-neutral adapters in demo
+  mode. They make no network call, persist `DEMO` provider snapshots, and leave
+  the order pending rather than implying a paid state.
+- [x] Public surfaces show a visible `Demo lokal` badge and explicit copy. The
+  read-only `/demo/action-queue` route projects server-owned inquiry data while
+  `/admin` remains Clerk-protected; no demo route performs admin mutations.
+- [x] Browser E2E covers one real vertical slice: Project Brief submission →
+  database persistence → Action Queue projection → seeded product/cart → server
+  shipping rates → idempotent checkout → `PENDING_PAYMENT` demo order.
+- [x] Backend and integration tests cover the runtime guard, deterministic
+  adapters, provider snapshot persistence, and idempotent replay.
+
+### Verification evidence
+
+On 2026-09-15 the relevant gates passed: `corepack pnpm test` **73/73**,
+`corepack pnpm test:backend` **109/109**, `corepack pnpm test:integration`
+**17/17**, `corepack pnpm test:e2e:demo` **1/1**, `corepack pnpm lint` **0
+errors** (existing repository warnings only), and `corepack pnpm typecheck`.
+The standard Playwright suite also passed **57/57** with one worker; the
+dedicated demo commands completed database start, migration, and seed.
+
+### Explicitly preserved gates
+
+This Goal does not close or downgrade the open items under NG-01–NG-05:
+non-production Clerk tenant login and Owner provisioning, real private R2
+object smoke, Owner visual acceptance, WhatsApp provider/policy decision and
+delivery, approved catalog/pricing/legal/accounting evidence, or real
+Biteship/Midtrans sandbox rates, payment, and webhook verification. The demo
+fixture is not a production catalog and no provider credential or business
+biodata is inferred from it.

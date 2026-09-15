@@ -492,3 +492,38 @@ Project Brief integration gates are committed and pushed in `1d5b870`.
   business sender identity, and provider/invoice identity; no synthetic value
   may be promoted to production.
 - [ ] Admin mutations and production provider activation remain deferred.
+
+## Goal — Build Local Demo Mode (2026-09-15)
+
+Status: `LOCAL_DEMO_IMPLEMENTED_SANDBOX_LIVE_GATES_PRESERVED`.
+
+- [x] Add an explicit, loopback-only `NIUVA_RUNTIME_MODE=demo` guard for
+  development/test databases.
+- [x] Add idempotent local catalog seed and scripts:
+  `db:demo:start`, `db:demo:migrate`, and `db:demo:seed`.
+- [x] Add deterministic provider-neutral shipping/payment adapters; no external
+  network call is made and persisted snapshots are labelled `DEMO`.
+- [x] Add visible `Demo lokal` status, demo-specific checkout/brief copy, and a
+  read-only `/demo/action-queue` projection. Production `/admin` and Clerk
+  authorization remain unchanged.
+- [x] Add browser E2E for Project Brief → persistence → Action Queue → catalog/
+  cart → server rates → idempotent checkout (`corepack pnpm test:e2e:demo`).
+- [x] Verify unit `73/73`, backend `109/109`, integration `17/17`, demo browser
+  `1/1`, standard browser `57/57` (one worker), lint (0 errors), and typecheck
+  on 2026-09-15.
+- [ ] Keep NG-01 Clerk live smoke, NG-02 real R2 object smoke, NG-03 Owner
+  visual acceptance, NG-04 WhatsApp decision/delivery, and NG-05
+  Biteship/Midtrans sandbox + approved catalog/pricing evidence open.
+
+### Local demo runbook
+
+```text
+corepack pnpm db:demo:start
+corepack pnpm db:demo:migrate
+corepack pnpm db:demo:seed
+corepack pnpm test:e2e:demo
+```
+
+The demo ends at `PENDING_PAYMENT`; it is a deterministic local demonstration,
+not a verified payment, provider smoke, Clerk session, R2 upload, WhatsApp send,
+or production-readiness claim.

@@ -13,6 +13,7 @@
 - All unit/integration tests: `corepack pnpm test`
 - Single test: `corepack pnpm exec vitest run tests/unit/<name>.test.tsx`
 - E2E: `corepack pnpm test:e2e`
+- Local demo E2E: `corepack pnpm test:e2e:demo`
 - Typecheck: `corepack pnpm typecheck`
 - Lint: `corepack pnpm lint`
 - Build: `corepack pnpm build`
@@ -21,6 +22,31 @@
 
 The scripts and test configurations now exist. The browser smoke test starts the
 local Next dev server through Playwright's `webServer` configuration.
+
+## Local demo mode
+
+The provider-neutral demo is an explicit, local-only runtime. Start its
+loopback database, apply migrations, and seed the deterministic catalog with:
+
+```text
+corepack pnpm db:demo:start
+corepack pnpm db:demo:migrate
+corepack pnpm db:demo:seed
+corepack pnpm test:e2e:demo
+```
+
+The demo browser flow exercises the real server boundaries from Project Brief
+submission and database persistence, through the read-only Action Queue demo,
+then the seeded catalog, cart, server shipping rates, idempotent checkout, and
+the `PENDING_PAYMENT` order state. Its shipping/payment adapters never call an
+external provider and label persisted snapshots `DEMO`. This evidence does not
+prove Clerk sign-in, private R2 access, WhatsApp delivery, Biteship/Midtrans
+sandbox behavior, or production readiness.
+
+The standard Playwright config intentionally excludes `local-demo.spec.ts` and
+overrides database/demo environment variables with blank values, keeping the
+57-test preview suite deterministic even when the local demo database has been
+seeded.
 
 ## What To Test
 
