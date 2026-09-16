@@ -60,7 +60,7 @@ export async function getProjectPreview(requested: unknown) {
 
   // The local reference lets visual and browser checks exercise the normal
   // public route without making a development server depend on a live DB.
-  if (process.env.NODE_ENV === "development") {
+  if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
     return { scenario: null, projects: getApprovedProjectReference() };
   }
 
@@ -76,7 +76,7 @@ export async function getProjectPreviewBySlug(slug: string, requested: unknown) 
     return { project, scenario };
   }
 
-  if (process.env.NODE_ENV === "development") {
+  if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
     return { project: getApprovedProjectReferenceBySlug(slug), scenario: null };
   }
 
