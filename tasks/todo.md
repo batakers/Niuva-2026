@@ -117,6 +117,11 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
   (SKU/varian, harga retail, stok, foto, dimensi) masih terbuka. Portfolio
   development sudah di-seed; Biteship/Midtrans tetap sengaja ditunda.
 
+> Catatan arsip — entri FE-16–26 di bawah mempertahankan kontrak preview lama
+> untuk jejak visual/regresi. Status implementasi admin saat ini adalah matriks
+> **Current admin integration slice** di atas; entri arsip tidak boleh dibaca
+> sebagai bukti bahwa route live masih fixture-only.
+
 - [x] FE-00 — Kontrak screen dan status visual
 - [x] FE-01 — Data contoh dan skenario preview
 - [x] FE-02 — Public shell dan navigasi
@@ -140,20 +145,20 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
 - [x] FE-14 — Quote customer `/quote/[token]` (development-only immutable dossier, accept/decline confirmation, expired/superseded/read-only states, invalid token 404, no API mutation)
 - [ ] Checkpoint E — focused tests, static/build gates, dan review visual sesuai plan.
 - [x] FE-15 — Order status `/orders/[token]` (development-only retail/custom timeline, safe projection, loading/access/service failure, late-payment refund exception, no provider or status mutation)
-- [x] FE-16 — Admin shell dan sign-in (development-only preview, auth unavailable/forbidden/verified-shell states, tanpa bypass Proxy/requireAdmin)
-- [x] FE-17 — Admin Action Queue `/admin` (fixture development-only, filter dan detail handoff lokal; tanpa data atau aksi admin nyata)
+- [x] **ARCHIVE — FE-16** — Admin shell dan sign-in (kontrak development-only preview; route live sekarang memakai Clerk + `requireAdmin`)
+- [x] **ARCHIVE — FE-17** — Admin Action Queue `/admin` (kontrak fixture/filter; implementasi live membaca projection server dan handoff ke detail)
 - [ ] Checkpoint F — focused tests, static/build gates, dan review visual sesuai plan.
-- [x] FE-18 — Admin inquiry detail dari Queue (drawer fixture aman, company opsional, status/history dan follow-up lokal; tanpa data klien atau mutasi)
-- [x] FE-19 — Admin order list `/admin/orders` (preview development-only, search/filter/exception, desktop table dan kartu mobile, selection URL lokal; tanpa data atau mutasi order nyata)
-- [x] FE-20 — Admin order detail dan fulfillment (drawer fixture aman, timeline/audit lokal, edge fulfillment valid, measurement paket custom dan finance Owner-only; tanpa mutasi order, rate, shipment, payment, atau refund nyata)
+- [x] **ARCHIVE — FE-18** — Admin inquiry detail dari Queue (kontrak drawer fixture; implementasi live ada di `/admin/inquiries/[id]` dengan transition terotorisasi)
+- [x] **ARCHIVE — FE-19** — Admin order list `/admin/orders` (kontrak preview; implementasi live memakai repository/filter server-backed)
+- [x] **ARCHIVE — FE-20** — Admin order detail dan fulfillment (kontrak drawer fixture; implementasi live menjaga measurement/permission dan menahan provider-coupled fulfillment)
 - [ ] Checkpoint G — focused tests, static/build gates, dan review visual sesuai plan.
-- [x] FE-21 — Admin custom review `/admin/custom-print` (development-only request list/review drawer, file privat unavailable, validasi slicer lokal, tanpa file access atau mutasi)
-- [x] FE-22 — Admin quote draft/preview (development-only Decimal-contract breakdown, missing-active-rule block, and immutable local sent snapshot; no real quote/rule/token/audit/provider mutation)
-- [x] FE-23 — Admin product list `/admin/products` (development-only SKU search, publication/active-stock filters, explicit inactive/OOS/unpublished states, desktop table dan kartu mobile; tanpa query atau mutasi katalog nyata)
+- [x] **ARCHIVE — FE-21** — Admin custom review `/admin/custom-print` (kontrak review fixture; implementasi live memakai projection, review slicer, dan audit server)
+- [x] **ARCHIVE — FE-22** — Admin quote draft/preview (kontrak quote fixture; implementasi live menyediakan draft/send dengan active-rule dan token guards)
+- [x] **ARCHIVE — FE-23** — Admin product list `/admin/products` (kontrak list fixture; implementasi live memakai repository dan publication/stock projection)
 - [ ] Checkpoint H — focused tests, static/build gates, dan review visual sesuai plan.
-- [x] FE-24 — Admin product/variant/stock editor (development-only identity/media state, selected variant Decimal-shaped fields, stock reason, unsaved/invalid/conflict recovery, and local-only save/publish; tanpa query atau mutasi katalog nyata)
-- [x] FE-25 — Admin portfolio `/admin/portfolio` (development-only draft/published fixture list, content-readiness filter, create/edit selection lokal, dan status media/izin eksplisit; tanpa project, media, client, atau publikasi nyata)
-- [x] FE-26 — Admin portfolio editor (development-only narasi, urutan media, alt text, dan gate tiga izin; intent publikasi fixture diblokir tanpa izin lengkap dan tidak pernah mempublikasikan project/client/logo/media nyata)
+- [x] **ARCHIVE — FE-24** — Admin product/variant/stock editor (kontrak editor fixture; implementasi live memakai Server Actions terotorisasi untuk stock/media dan publication guard)
+- [x] **ARCHIVE — FE-25** — Admin portfolio `/admin/portfolio` (kontrak list fixture; implementasi live membaca project/media dari database)
+- [x] **ARCHIVE — FE-26** — Admin portfolio editor (kontrak editor fixture; implementasi live memiliki content/media edit dan publish guard server)
 - [ ] Checkpoint I — focused tests, static/build gates, dan review visual sesuai plan.
 - [ ] FE-27 — Frontend acceptance dan handoff integrasi
 - [ ] Checkpoint J — focused tests, static/build gates, dan review visual sesuai plan.
