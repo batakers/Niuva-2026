@@ -167,7 +167,9 @@ function toOrderStatusPreview(order: PublicOrderStatus): OrderStatusPreview {
           id: "cancelled",
           label: "Order dibatalkan",
           state: "cancelled" as const,
-          timestamp: publicDateFormatter.format(order.createdAt),
+          ...(order.cancelledAt === null
+            ? {}
+            : { timestamp: publicDateFormatter.format(order.cancelledAt) }),
         },
       ]
     : stages.map((stage, index) => ({

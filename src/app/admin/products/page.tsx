@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 
-import { AdminDataUnavailableView, AdminShell } from "@/components/niuva/admin-shell";
+import { AdminDataUnavailableView, AdminPagination, AdminShell } from "@/components/niuva/admin-shell";
 import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
-import { AdminOperationsService, type AdminProductRow } from "@/modules/admin/operations";
+import { AdminOperationsService, parseAdminPage, type AdminProductRow } from "@/modules/admin/operations";
 
 export const metadata: Metadata = {
   title: "Products & Stock admin · Niuva",
@@ -18,12 +18,15 @@ const currencyFormatter = new Intl.NumberFormat("id-ID", {
   style: "currency",
 });
 
-export default async function AdminProductsPage() {
+export default async function AdminProductsPage({
+  searchParams,
+}: Readonly<{ searchParams: Promise<{ page?: string }> }>) {
   await connection();
+  const page = parseAdminPage((await searchParams).page);
   const access = await loadAdminAccess();
   if (access === null) return <AdminAccessUnavailableView />;
 
-  const result = await loadProducts(access);
+  const result = await loadProducts(access, page);
   if (result === null) return <AdminDataUnavailableView role={access.profile.role} title="Products belum dapat dimuat" />;
   const published = result.items.filter((item) => item.isPublished).length;
   const variants = result.items.flatMap((item) => item.variants);
@@ -62,6 +65,7 @@ export default async function AdminProductsPage() {
                 {result.items.map((item) => <ProductCard item={item} key={item.id} />)}
               </div>
             )}
+            <AdminPagination basePath="/admin/products" hasNext={result.hasNext} page={result.page} />
           </section>
         </main>
       </AdminShell>
@@ -76,9 +80,9 @@ async function loadAdminAccess(): Promise<AdminAccess | null> {
   }
 }
 
-async function loadProducts(access: AdminAccess): Promise<Awaited<ReturnType<AdminOperationsService["listProducts"]>> | null> {
+async function loadProducts(access: AdminAccess, page: number): Promise<Awaited<ReturnType<AdminOperationsService["listProducts"]>> | null> {
   try {
-    return await new AdminOperationsService({ authorize: async () => access }).listProducts();
+    return await new AdminOperationsService({ authorize: async () => access }).listProducts({ page });
   } catch {
     return null;
   }

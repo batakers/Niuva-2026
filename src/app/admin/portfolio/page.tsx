@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 
-import { AdminDataUnavailableView, AdminShell } from "@/components/niuva/admin-shell";
+import { AdminDataUnavailableView, AdminPagination, AdminShell } from "@/components/niuva/admin-shell";
 import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
-import { AdminOperationsService, type AdminPortfolioRow } from "@/modules/admin/operations";
+import { AdminOperationsService, parseAdminPage, type AdminPortfolioRow } from "@/modules/admin/operations";
 
 export const metadata: Metadata = {
   title: "Portfolio admin · Niuva",
@@ -18,12 +18,15 @@ const dateFormatter = new Intl.DateTimeFormat("id-ID", {
   timeZone: "Asia/Jakarta",
 });
 
-export default async function AdminPortfolioPage() {
+export default async function AdminPortfolioPage({
+  searchParams,
+}: Readonly<{ searchParams: Promise<{ page?: string }> }>) {
   await connection();
+  const page = parseAdminPage((await searchParams).page);
   const access = await loadAdminAccess();
   if (access === null) return <AdminAccessUnavailableView />;
 
-  const result = await loadPortfolio(access);
+  const result = await loadPortfolio(access, page);
   if (result === null) return <AdminDataUnavailableView role={access.profile.role} title="Portfolio belum dapat dimuat" />;
   const published = result.items.filter((item) => item.isPublished).length;
   const featured = result.items.filter((item) => item.isFeatured).length;
@@ -61,6 +64,7 @@ export default async function AdminPortfolioPage() {
                 {result.items.map((item) => <PortfolioCard item={item} key={item.id} />)}
               </div>
             )}
+            <AdminPagination basePath="/admin/portfolio" hasNext={result.hasNext} page={result.page} />
           </section>
         </main>
       </AdminShell>
@@ -75,9 +79,9 @@ async function loadAdminAccess(): Promise<AdminAccess | null> {
   }
 }
 
-async function loadPortfolio(access: AdminAccess): Promise<Awaited<ReturnType<AdminOperationsService["listPortfolio"]>> | null> {
+async function loadPortfolio(access: AdminAccess, page: number): Promise<Awaited<ReturnType<AdminOperationsService["listPortfolio"]>> | null> {
   try {
-    return await new AdminOperationsService({ authorize: async () => access }).listPortfolio();
+    return await new AdminOperationsService({ authorize: async () => access }).listPortfolio({ page });
   } catch {
     return null;
   }

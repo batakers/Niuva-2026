@@ -19,6 +19,7 @@ export class OrderRepository {
     return this.prisma.order.findUnique({
       where: { publicTokenHash },
       select: {
+        cancelledAt: true,
         completedAt: true,
         createdAt: true,
         grandTotalRp: true,
@@ -33,6 +34,7 @@ export class OrderRepository {
         orderType: true,
         paidAt: true,
         shipments: {
+          orderBy: { updatedAt: "desc" },
           select: {
             status: true,
             trackingNumber: true,
@@ -47,6 +49,7 @@ export class OrderRepository {
     return this.prisma.order.findUnique({
       where: { id: orderId },
       select: {
+        cancelledAt: true,
         completedAt: true,
         createdAt: true,
         grandTotalRp: true,
@@ -62,6 +65,7 @@ export class OrderRepository {
         paidAt: true,
         publicTokenHash: true,
         shipments: {
+          orderBy: { updatedAt: "desc" },
           select: {
             status: true,
             trackingNumber: true,

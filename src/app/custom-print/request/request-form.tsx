@@ -514,7 +514,7 @@ export function RequestForm({
       ) : (
         <div className="my-6">
           <StatusNotice
-            description="R2 belum tersedia pada runtime ini. Seluruh kontrol tetap terlihat untuk review, tetapi file dan request tidak dapat dikirim."
+            description="Storage privat atau database belum tersedia pada runtime ini. Seluruh kontrol tetap terlihat untuk review, tetapi file dan request tidak dapat dikirim."
             title="Pengiriman privat belum tersedia."
             tone="info"
           />

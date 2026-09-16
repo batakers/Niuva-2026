@@ -1,4 +1,5 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { z } from "zod";
 
 import { appError } from "./errors";
 
@@ -139,7 +140,8 @@ export function getRouteAccessTokenEntityId(token: string): string | null {
 
     if (
       entityId.length === 0 ||
-      Buffer.from(entityId, "utf8").toString("base64url") !== parts[1]
+      Buffer.from(entityId, "utf8").toString("base64url") !== parts[1] ||
+      !z.uuid().safeParse(entityId).success
     ) {
       return null;
     }

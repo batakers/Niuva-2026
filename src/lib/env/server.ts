@@ -276,7 +276,9 @@ export function getServerCapabilities(
     biteship: hasAll(CAPABILITY_GROUPS[3].fields),
     clerkAdmin: hasAll(CAPABILITY_GROUPS[0].fields),
     customUploads:
-      objectStorage && environment.CUSTOM_FILE_MAX_BYTES !== undefined,
+      environment.DATABASE_URL !== undefined &&
+      objectStorage &&
+      environment.CUSTOM_FILE_MAX_BYTES !== undefined,
     database: environment.DATABASE_URL !== undefined,
     midtrans: hasAll(CAPABILITY_GROUPS[2].fields),
     objectStorage,

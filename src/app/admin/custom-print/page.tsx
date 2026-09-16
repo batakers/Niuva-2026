@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 
-import { AdminDataUnavailableView, AdminShell } from "@/components/niuva/admin-shell";
+import { AdminDataUnavailableView, AdminPagination, AdminShell } from "@/components/niuva/admin-shell";
 import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
-import { AdminOperationsService, type AdminCustomPrintRequestRow } from "@/modules/admin/operations";
+import { AdminOperationsService, parseAdminPage, type AdminCustomPrintRequestRow } from "@/modules/admin/operations";
 
 export const metadata: Metadata = {
   title: "Custom Print admin · Niuva",
@@ -18,12 +18,15 @@ const dateFormatter = new Intl.DateTimeFormat("id-ID", {
   timeZone: "Asia/Jakarta",
 });
 
-export default async function AdminCustomPrintPage() {
+export default async function AdminCustomPrintPage({
+  searchParams,
+}: Readonly<{ searchParams: Promise<{ page?: string }> }>) {
   await connection();
+  const page = parseAdminPage((await searchParams).page);
   const access = await loadAdminAccess();
   if (access === null) return <AdminAccessUnavailableView />;
 
-  const result = await loadCustomPrintRequests(access);
+  const result = await loadCustomPrintRequests(access, page);
   if (result === null) return <AdminDataUnavailableView role={access.profile.role} title="Request custom print belum dapat dimuat" />;
   const waitingReview = result.items.filter((item) => item.status === "SUBMITTED").length;
   const waitingQuote = result.items.filter((item) => item.status === "QUOTE_READY").length;
@@ -42,7 +45,7 @@ export default async function AdminCustomPrintPage() {
           <section aria-label="Ringkasan custom print" className="mt-6 grid gap-3 sm:grid-cols-3">
             <SummaryCard label="Total request" value={String(result.items.length)} />
             <SummaryCard label="Menunggu review" value={String(waitingReview)} />
-            <SummaryCard label="Siap dibuatkan quote" value={String(waitingQuote)} />
+            <SummaryCard label="Quote siap" value={String(waitingQuote)} />
           </section>
 
           <section className="mt-8" aria-labelledby="custom-print-list-title">
@@ -61,6 +64,7 @@ export default async function AdminCustomPrintPage() {
                 {result.items.map((item) => <RequestCard item={item} key={item.id} />)}
               </div>
             )}
+            <AdminPagination basePath="/admin/custom-print" hasNext={result.hasNext} page={result.page} />
           </section>
         </main>
       </AdminShell>
@@ -75,9 +79,9 @@ async function loadAdminAccess(): Promise<AdminAccess | null> {
   }
 }
 
-async function loadCustomPrintRequests(access: AdminAccess): Promise<Awaited<ReturnType<AdminOperationsService["listCustomPrintRequests"]>> | null> {
+async function loadCustomPrintRequests(access: AdminAccess, page: number): Promise<Awaited<ReturnType<AdminOperationsService["listCustomPrintRequests"]>> | null> {
   try {
-    return await new AdminOperationsService({ authorize: async () => access }).listCustomPrintRequests();
+    return await new AdminOperationsService({ authorize: async () => access }).listCustomPrintRequests({ page });
   } catch {
     return null;
   }

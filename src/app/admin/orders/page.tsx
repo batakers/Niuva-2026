@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 
-import { AdminDataUnavailableView, AdminShell } from "@/components/niuva/admin-shell";
+import { AdminDataUnavailableView, AdminPagination, AdminShell } from "@/components/niuva/admin-shell";
 import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
-import { AdminOperationsService, type AdminOrderRow } from "@/modules/admin/operations";
+import { AdminOperationsService, parseAdminPage, type AdminOrderRow } from "@/modules/admin/operations";
 
 export const metadata: Metadata = {
   title: "Orders admin · Niuva",
@@ -23,12 +23,15 @@ const currencyFormatter = new Intl.NumberFormat("id-ID", {
   style: "currency",
 });
 
-export default async function AdminOrdersPage() {
+export default async function AdminOrdersPage({
+  searchParams,
+}: Readonly<{ searchParams: Promise<{ page?: string }> }>) {
   await connection();
+  const page = parseAdminPage((await searchParams).page);
   const access = await loadAdminAccess();
   if (access === null) return <AdminAccessUnavailableView />;
 
-  const result = await loadOrders(access);
+  const result = await loadOrders(access, page);
   if (result === null) return <AdminDataUnavailableView role={access.profile.role} title="Orders belum dapat dimuat" />;
   return (
       <AdminShell active="orders" role={result.role}>
@@ -51,9 +54,9 @@ export default async function AdminOrdersPage() {
             <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
               <div>
                 <h2 className="text-xl font-semibold" id="orders-list-title">Order terbaru</h2>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">Maksimal 100 record terbaru dari database. Status tetap ditentukan service server.</p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">50 record per halaman dari database. Gunakan pagination untuk membuka record yang lebih lama; status tetap ditentukan service server.</p>
               </div>
-              <p className="text-sm text-muted-foreground" role="status">Dibaca {dateFormatter.format(result.generatedAt)}</p>
+              <p className="text-sm text-muted-foreground" role="status">Dibaca {dateFormatter.format(result.generatedAt)} · Halaman {result.page}</p>
             </div>
 
             {result.items.length === 0 ? (
@@ -85,6 +88,7 @@ export default async function AdminOrdersPage() {
                 </div>
               </>
             )}
+            <AdminPagination basePath="/admin/orders" hasNext={result.hasNext} page={result.page} />
           </section>
         </main>
       </AdminShell>
@@ -99,9 +103,9 @@ async function loadAdminAccess(): Promise<AdminAccess | null> {
   }
 }
 
-async function loadOrders(access: AdminAccess): Promise<Awaited<ReturnType<AdminOperationsService["listOrders"]>> | null> {
+async function loadOrders(access: AdminAccess, page: number): Promise<Awaited<ReturnType<AdminOperationsService["listOrders"]>> | null> {
   try {
-    return await new AdminOperationsService({ authorize: async () => access }).listOrders();
+    return await new AdminOperationsService({ authorize: async () => access }).listOrders({ page });
   } catch {
     return null;
   }

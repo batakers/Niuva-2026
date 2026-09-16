@@ -5,11 +5,19 @@ vi.mock("next/image", () => ({
   default: () => null,
 }));
 
+vi.mock("next/server", () => ({
+  connection: vi.fn(async () => undefined),
+}));
+
+vi.mock("@/features/frontend-preview/server", () => ({
+  getProjectPreview: vi.fn(async () => ({ projects: [], scenario: null })),
+}));
+
 import Home from "@/app/page";
 
 describe("public homepage", () => {
   it("renders Niuva positioning, entry paths, capabilities, and process", async () => {
-    render(<Home />);
+    render(await Home());
 
     expect(screen.getByRole("heading", { level: 1, name: /mitra pengembangan produk dari riset hingga prototipe/i })).toBeInTheDocument();
     expect(screen.getAllByText(/melalui riset, konsultasi, desain, dan prototyping/i).length).toBeGreaterThan(0);

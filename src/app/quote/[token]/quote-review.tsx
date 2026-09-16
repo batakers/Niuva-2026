@@ -64,6 +64,7 @@ export function QuoteReview({
   const [requestState, setRequestState] = useState<DecisionRequestState>("idle");
   const [actionError, setActionError] = useState<string>();
   const [orderStatusToken, setOrderStatusToken] = useState<string>();
+  const [orderNumber, setOrderNumber] = useState<string>();
   const decisionRef = useRef<HTMLDivElement>(null);
   const stateRef = useRef<HTMLDivElement>(null);
   const currentCopy = stateCopy[state];
@@ -101,11 +102,17 @@ export function QuoteReview({
       );
 
       const payload: unknown = await response.json().catch(() => null);
-      if (!response.ok || payload === null || typeof payload !== "object") {
+      if (!response.ok) {
+        throw new Error(readApiError(payload) ?? "Keputusan quote belum dapat disimpan.");
+      }
+      if (payload === null || typeof payload !== "object") {
         throw new Error("Keputusan quote belum dapat disimpan.");
       }
 
       const candidate = payload as Record<string, unknown>;
+      if (typeof candidate.orderNumber === "string") {
+        setOrderNumber(candidate.orderNumber);
+      }
       if (decision === "accept" && typeof candidate.orderAccessToken === "string") {
         setOrderStatusToken(candidate.orderAccessToken);
       }
@@ -134,7 +141,11 @@ export function QuoteReview({
                   : "Quote siap ditinjau.",
         description:
           state === "accepted"
-            ? "Quote sudah diterima dan order payable dibuat oleh server. Lanjutkan melalui tautan status order."
+            ? orderStatusToken
+              ? "Quote sudah diterima dan order payable dibuat oleh server. Lanjutkan melalui tautan status order."
+              : orderNumber
+                ? `Quote sudah diterima dan order payable dibuat oleh server. Nomor order ${orderNumber} tercatat; simpan nomor ini bila perlu menghubungi Niuva.`
+                : "Quote sudah diterima dan order payable dibuat oleh server. Jika membutuhkan status order, hubungi Niuva dengan nomor quote ini."
             : state === "declined"
               ? "Quote ditandai ditolak. Hubungi Niuva jika scope perlu dibahas kembali."
               : state === "expired"
@@ -316,4 +327,10 @@ export function QuoteReview({
       </section>
     </main>
   );
+}
+
+function readApiError(payload: unknown): string | undefined {
+  if (payload === null || typeof payload !== "object") return undefined;
+  const error = (payload as Record<string, unknown>).error;
+  return typeof error === "string" && error.trim().length > 0 ? error : undefined;
 }

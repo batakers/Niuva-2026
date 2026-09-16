@@ -49,7 +49,9 @@ export default async function CustomPrintRequestPage() {
               <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground">
                 {liveEnabled
                   ? "Upload privat meneruskan file ke ruang penyimpanan tertutup untuk diperiksa operator sebelum estimasi dan produksi."
-                  : "Preview ini memeriksa metadata dan konfigurasi tanpa mengunggah isi file atau membuat request nyata."}
+                  : previewEnabled
+                    ? "Preview ini memeriksa metadata dan konfigurasi tanpa mengunggah isi file atau membuat request nyata."
+                    : "Upload custom print belum diaktifkan pada runtime ini. Diskusikan kebutuhan Anda melalui project brief."}
               </p>
             </div>
 
@@ -74,12 +76,14 @@ export default async function CustomPrintRequestPage() {
           <div className="mx-auto grid max-w-public gap-10 px-5 py-12 sm:px-8 sm:py-16 lg:grid-cols-12 lg:gap-12">
             <aside className="space-y-8 lg:col-span-4 lg:sticky lg:top-8 lg:self-start">
               <div>
-                <p className="text-sm font-medium text-brand-700">{liveEnabled ? "Ruang privat" : "Batas preview"}</p>
-                <h2 className={`${type.heading.className} mt-3`}>{liveEnabled ? "File diteruskan untuk review." : "Metadata terlihat. Isi file tetap di perangkat."}</h2>
+                <p className="text-sm font-medium text-brand-700">{liveEnabled ? "Ruang privat" : previewEnabled ? "Batas preview" : "Upload belum tersedia"}</p>
+                <h2 className={`${type.heading.className} mt-3`}>{liveEnabled ? "File diteruskan untuk review." : previewEnabled ? "Metadata terlihat. Isi file tetap di perangkat." : "Form menunggu aktivasi capability."}</h2>
                 <p className="mt-5 text-sm leading-6 text-muted-foreground">
                   {liveEnabled
                     ? "File dikirim langsung ke storage privat. Server hanya menerima metadata terverifikasi dan file ID setelah pemeriksaan selesai."
-                    : "Browser hanya memakai nama, ekstensi, dan ukuran untuk simulasi. Tidak ada file ID, storage key, atau signed URL yang dibuat."}
+                    : previewEnabled
+                      ? "Browser hanya memakai nama, ekstensi, dan ukuran untuk simulasi. Tidak ada file ID, storage key, atau signed URL yang dibuat."
+                      : "Tidak ada file atau request yang dikirim sampai storage privat dan database siap digunakan."}
                 </p>
               </div>
               <div className="rounded-xl border border-border bg-card p-5">
@@ -88,7 +92,9 @@ export default async function CustomPrintRequestPage() {
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   {liveEnabled
                     ? "Status upload tidak menentukan kelayakan cetak, harga final, atau jadwal produksi."
-                    : "Status preview tidak menentukan kelayakan cetak, harga final, atau jadwal produksi."}
+                    : previewEnabled
+                      ? "Status preview tidak menentukan kelayakan cetak, harga final, atau jadwal produksi."
+                      : "Capability upload belum aktif; tidak ada status produksi yang dibuat dari halaman ini."}
                 </p>
               </div>
               <AuLink className="min-h-11" href="/custom-print" variant="outline">Kembali ke penjelasan proses</AuLink>

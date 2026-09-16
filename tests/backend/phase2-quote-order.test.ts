@@ -346,6 +346,7 @@ describe("Phase 2 public order status", () => {
     const repository: OrderStatusRepository = {
       async findForPublicStatusById() {
         return {
+          cancelledAt: null,
           completedAt: null,
           createdAt: now,
           items: [{ lineTotalRp: new Decimal("12500"), nameSnapshot: "Lamp", quantity: 1 }],
@@ -373,6 +374,7 @@ describe("Phase 2 public order status", () => {
     });
 
     expect(result).toEqual({
+      cancelledAt: null,
       completedAt: null,
       createdAt: now,
       items: [{ lineTotalRp: new Decimal("12500"), nameSnapshot: "Lamp", quantity: 1 }],

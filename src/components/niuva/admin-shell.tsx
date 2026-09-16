@@ -76,3 +76,33 @@ export function AdminDataUnavailableView({
     </main>
   );
 }
+
+export function AdminPagination({
+  basePath,
+  hasNext,
+  page,
+}: Readonly<{
+  basePath: string;
+  hasNext: boolean;
+  page: number;
+}>) {
+  if (page === 1 && !hasNext) return null;
+
+  return (
+    <nav aria-label="Paginasi data admin" className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
+      <p className="text-sm text-muted-foreground">Halaman {page}</p>
+      <div className="flex flex-wrap gap-2">
+        {page > 1 ? (
+          <Link className="inline-flex min-h-11 items-center rounded-lg border border-border bg-card px-4 text-sm font-semibold hover:border-brand-400 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`${basePath}?page=${page - 1}`}>
+            Sebelumnya
+          </Link>
+        ) : null}
+        {hasNext ? (
+          <Link className="inline-flex min-h-11 items-center rounded-lg border border-brand-300 bg-brand-50 px-4 text-sm font-semibold text-brand-900 hover:border-brand-500 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`${basePath}?page=${page + 1}`}>
+            Berikutnya
+          </Link>
+        ) : null}
+      </div>
+    </nav>
+  );
+}

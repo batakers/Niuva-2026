@@ -70,9 +70,22 @@ export type AdminPortfolioRow = Readonly<{
 
 export type AdminOperationsResult<T> = Readonly<{
   generatedAt: Date;
+  hasNext: boolean;
   items: readonly T[];
+  page: number;
   role: AdminRole;
 }>;
+
+export type AdminListInput = Readonly<{ page?: number }>;
+
+export const ADMIN_PAGE_SIZE = 50;
+
+export function parseAdminPage(value: string | undefined): number {
+  if (value === undefined || !/^\d+$/.test(value)) return 1;
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < 1) return 1;
+  return Math.min(parsed, 100_000);
+}
 
 type AdminOperationsDependencies = Readonly<{
   authorize?: () => Promise<AdminAccess>;
@@ -91,8 +104,9 @@ export class AdminOperationsService {
     this.prisma = dependencies.prisma ?? getPrismaClient();
   }
 
-  async listOrders(): Promise<AdminOperationsResult<AdminOrderRow>> {
+  async listOrders(input: AdminListInput = {}): Promise<AdminOperationsResult<AdminOrderRow>> {
     const access = await this.authorizeWith("ORDER_FULFILL");
+    const page = normalizePage(input.page);
     const rows = await this.prisma.order.findMany({
       orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
       select: {
@@ -116,12 +130,15 @@ export class AdminOperationsService {
         status: true,
         updatedAt: true,
       },
-      take: 100,
+      skip: (page - 1) * ADMIN_PAGE_SIZE,
+      take: ADMIN_PAGE_SIZE + 1,
     });
+    const pageRows = rows.slice(0, ADMIN_PAGE_SIZE);
 
     return {
       generatedAt: this.now(),
-      items: rows.map((row) => ({
+      hasNext: rows.length > ADMIN_PAGE_SIZE,
+      items: pageRows.map((row) => ({
         createdAt: row.createdAt,
         customerEmail: row.customerEmail,
         customerName: row.customerName,
@@ -134,12 +151,14 @@ export class AdminOperationsService {
         status: row.status,
         updatedAt: row.updatedAt,
       })),
+      page,
       role: access.profile.role,
     };
   }
 
-  async listCustomPrintRequests(): Promise<AdminOperationsResult<AdminCustomPrintRequestRow>> {
+  async listCustomPrintRequests(input: AdminListInput = {}): Promise<AdminOperationsResult<AdminCustomPrintRequestRow>> {
     const access = await this.authorizeWith("CUSTOM_PRINT_REVIEW");
+    const page = normalizePage(input.page);
     const rows = await this.prisma.customPrintRequest.findMany({
       orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
       select: {
@@ -159,12 +178,15 @@ export class AdminOperationsService {
         status: true,
         updatedAt: true,
       },
-      take: 100,
+      skip: (page - 1) * ADMIN_PAGE_SIZE,
+      take: ADMIN_PAGE_SIZE + 1,
     });
+    const pageRows = rows.slice(0, ADMIN_PAGE_SIZE);
 
     return {
       generatedAt: this.now(),
-      items: rows.map((row) => ({
+      hasNext: rows.length > ADMIN_PAGE_SIZE,
+      items: pageRows.map((row) => ({
         createdAt: row.createdAt,
         customerEmail: row.customerEmail,
         customerName: row.customerName,
@@ -177,12 +199,14 @@ export class AdminOperationsService {
         status: row.status,
         updatedAt: row.updatedAt,
       })),
+      page,
       role: access.profile.role,
     };
   }
 
-  async listProducts(): Promise<AdminOperationsResult<AdminProductRow>> {
+  async listProducts(input: AdminListInput = {}): Promise<AdminOperationsResult<AdminProductRow>> {
     const access = await this.authorizeWith("CATALOG_WRITE");
+    const page = normalizePage(input.page);
     const rows = await this.prisma.product.findMany({
       orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
       select: {
@@ -205,12 +229,15 @@ export class AdminOperationsService {
           },
         },
       },
-      take: 100,
+      skip: (page - 1) * ADMIN_PAGE_SIZE,
+      take: ADMIN_PAGE_SIZE + 1,
     });
+    const pageRows = rows.slice(0, ADMIN_PAGE_SIZE);
 
     return {
       generatedAt: this.now(),
-      items: rows.map((row) => ({
+      hasNext: rows.length > ADMIN_PAGE_SIZE,
+      items: pageRows.map((row) => ({
         category: row.category,
         description: row.description,
         id: row.id,
@@ -227,12 +254,14 @@ export class AdminOperationsService {
           stockOnHand: variant.stockOnHand,
         })),
       })),
+      page,
       role: access.profile.role,
     };
   }
 
-  async listPortfolio(): Promise<AdminOperationsResult<AdminPortfolioRow>> {
+  async listPortfolio(input: AdminListInput = {}): Promise<AdminOperationsResult<AdminPortfolioRow>> {
     const access = await this.authorizeWith("PORTFOLIO_WRITE");
+    const page = normalizePage(input.page);
     const rows = await this.prisma.portfolioProject.findMany({
       orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
       select: {
@@ -247,12 +276,15 @@ export class AdminOperationsService {
         title: true,
         updatedAt: true,
       },
-      take: 100,
+      skip: (page - 1) * ADMIN_PAGE_SIZE,
+      take: ADMIN_PAGE_SIZE + 1,
     });
+    const pageRows = rows.slice(0, ADMIN_PAGE_SIZE);
 
     return {
       generatedAt: this.now(),
-      items: rows.map((row) => ({
+      hasNext: rows.length > ADMIN_PAGE_SIZE,
+      items: pageRows.map((row) => ({
         clientName: row.clientName,
         id: row.id,
         isFeatured: row.isFeatured,
@@ -264,6 +296,7 @@ export class AdminOperationsService {
         title: row.title,
         updatedAt: row.updatedAt,
       })),
+      page,
       role: access.profile.role,
     };
   }
@@ -272,4 +305,9 @@ export class AdminOperationsService {
     const access = await this.authorize();
     return requireAdminPermission(access, permission);
   }
+}
+
+function normalizePage(value: number | undefined): number {
+  if (value === undefined || !Number.isSafeInteger(value) || value < 1) return 1;
+  return Math.min(value, 100_000);
 }

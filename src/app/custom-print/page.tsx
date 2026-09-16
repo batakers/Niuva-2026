@@ -228,11 +228,19 @@ export default async function CustomPrintPage() {
             </div>
             <StatusNotice
               tone="info"
-              title={liveEnabled ? "Form request siap untuk upload privat." : "Form request siap untuk preview."}
+              title={liveEnabled
+                ? "Form request siap untuk upload privat."
+                : previewEnabled
+                  ? "Form request siap untuk preview."
+                  : "Form request belum tersedia."}
               description={liveEnabled
                 ? "Metadata dan file diteruskan ke storage privat untuk pemeriksaan operator. Harga dan kelayakan cetak tetap menunggu review."
-                : "Anda dapat menguji metadata, konfigurasi, progres, dan pemulihan secara lokal. Tidak ada file atau request yang dikirim."}
-              action={<AuLink className="min-h-11" href="/custom-print/request">Mulai request</AuLink>}
+                : previewEnabled
+                  ? "Anda dapat menguji metadata, konfigurasi, progres, dan pemulihan secara lokal. Tidak ada file atau request yang dikirim."
+                  : "Upload custom print belum diaktifkan. Silakan diskusikan kebutuhan Anda melalui project brief."}
+              action={liveEnabled || previewEnabled
+                ? <AuLink className="min-h-11" href="/custom-print/request">Mulai request</AuLink>
+                : undefined}
               secondaryAction={<AuLink className="min-h-11" href="/project-brief" variant="outline">Diskusikan kebutuhan khusus</AuLink>}
             />
           </div>

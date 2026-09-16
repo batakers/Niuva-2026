@@ -2,14 +2,15 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { connection } from "next/server";
 import { PublicShell } from "@/components/niuva/public-shell";
 
 import { typographySystemTokens } from "@/app/auis/styleguide/foundation/typography-proof";
 import { EvidenceCard } from "@/components/niuva";
 import { AuLink } from "@/components/ui/AuLink";
 import { Icon } from "@/components/ui/Icon";
+import { getProjectPreview } from "@/features/frontend-preview/server";
 import { publicCompanyProfile, publicServices } from "@/features/public/company-content";
-import { getApprovedPortfolioProjects } from "@/modules/portfolio/public-content";
 import { cn } from "@/lib/utils";
 
 const processSteps = [
@@ -57,8 +58,10 @@ export const metadata: Metadata = {
   robots: { follow: true, index: true },
 };
 
-export default function Home() {
-  const selectedProjects = getApprovedPortfolioProjects()
+export default async function Home() {
+  await connection();
+  const { projects } = await getProjectPreview(undefined);
+  const selectedProjects = projects
     .filter((project) => project.detailReadiness !== "card-only")
     .slice(0, 3);
 
@@ -381,13 +384,13 @@ export default function Home() {
             ) : (
               <div className="mt-10 grid gap-6 lg:grid-cols-3">
                 {selectedProjects.map((project) => {
-                  const cover = project.media.find((media) => media.publicPath !== undefined);
+                  const cover = project.media.find((media) => media.url !== undefined);
                   return (
                     <article className="group min-w-0" key={project.id}>
                       <Link className="block rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/projects/${project.slug}`}>
                         <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-muted">
-                          {cover?.publicPath ? (
-                            <Image alt={cover.altText} className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100" fill sizes="(min-width: 1024px) 30vw, (min-width: 640px) 50vw, 100vw" src={cover.publicPath} />
+                          {cover?.url ? (
+                            <Image alt={cover.altText} className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100" fill sizes="(min-width: 1024px) 30vw, 100vw" src={cover.url} />
                           ) : (
                             <div className="flex h-full items-center justify-center px-5 text-center text-sm text-muted-foreground">Media project belum tersedia</div>
                           )}

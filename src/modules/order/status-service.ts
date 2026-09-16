@@ -19,6 +19,7 @@ import {
 type AuthorizeAdmin = () => Promise<AdminAccess>;
 
 export type PublicOrderStatus = Readonly<{
+  cancelledAt: Date | null;
   completedAt: Date | null;
   createdAt: Date;
   grandTotalRp?: unknown;
@@ -39,6 +40,7 @@ export type PublicOrderStatus = Readonly<{
 
 export interface OrderStatusRepository {
   findForPublicStatusById(orderId: string): Promise<Readonly<{
+    cancelledAt: Date | null;
     completedAt: Date | null;
     createdAt: Date;
     grandTotalRp?: unknown;
@@ -106,6 +108,7 @@ export class OrderStatusService {
     });
 
     const safeProjection = {
+      cancelledAt: order.cancelledAt,
       completedAt: order.completedAt,
       createdAt: order.createdAt,
       items: order.items,
