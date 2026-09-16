@@ -33,6 +33,8 @@ tidak diisi ulang dari asumsi.
 1. Katalog Shop belum boleh di-seed dari empat berkas ini saja. Owner perlu
    mengirim dataset produk retail dengan nama, deskripsi, SKU/varian, harga,
    stok awal, berat/dimensi, status publikasi, dan mapping file foto.
+   Format intake dan checklist tersedia di
+   [`shop-catalog-owner-intake.md`](./shop-catalog-owner-intake.md).
 2. Workbook belum boleh mengaktifkan `CUSTOM_PRINT_V1` secara otomatis karena
    kebijakan runtime mewajibkan `quantitySemantics` (`PER_UNIT` atau
    `AGGREGATE`) dipilih secara eksplisit oleh Owner. Nilai yang berbeda antara

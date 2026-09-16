@@ -48,7 +48,8 @@ tersebut bukan kegagalan test dan tidak boleh ditutup dengan data sintetis.
 1. R2 non-production capability dan objek test yang boleh dibersihkan.
 2. Dataset katalog Shop nyata: produk, SKU/varian, harga retail, stok, berat/
    dimensi, foto, dan mapping media production. Empat sumber yang diberikan
-   sudah diaudit; ringkasannya ada di [`catalog-source-audit.md`](../backend/catalog-source-audit.md).
+   sudah diaudit; ringkasannya ada di [`catalog-source-audit.md`](../backend/catalog-source-audit.md),
+   dengan format intake di [`shop-catalog-owner-intake.md`](../backend/shop-catalog-owner-intake.md).
 3. Daftar customer dan kanal resmi untuk pengiriman tautan reissue.
 4. Acceptance visual Owner untuk perubahan UI berikutnya tetap dijalankan
    sebagai gate terpisah dari build/test.

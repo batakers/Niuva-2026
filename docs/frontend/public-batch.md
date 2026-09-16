@@ -98,7 +98,9 @@ information for review. Preview data is not a factual client portfolio.
   loopback seed for the already curated public services/portfolio records. Its
   six portfolio covers are not retail product media. Source findings and the
   missing Shop fields are tracked in
-  [`docs/backend/catalog-source-audit.md`](../backend/catalog-source-audit.md).
+  [`docs/backend/catalog-source-audit.md`](../backend/catalog-source-audit.md);
+  the Owner dataset format is specified in
+  [`shop-catalog-owner-intake.md`](../backend/shop-catalog-owner-intake.md).
 - Authenticated visual acceptance and R2 upload smoke require Owner-provided
   environment/identity and must be run as separate evidence; passing typecheck,
   lint, build, or browser smoke does not imply those gates.
