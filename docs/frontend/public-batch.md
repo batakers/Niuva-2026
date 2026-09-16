@@ -84,7 +84,9 @@ information for review. Preview data is not a factual client portfolio.
 
 The FE-16–26 bullets below are retained as historical preview evidence. Where
 they describe fixture-only routes or “no mutation”, the current integration
-slice above is the authoritative status for the live `/admin` routes.
+slice above is the authoritative status for the live `/admin` routes. The next
+handoff should link to that slice rather than treating the archival preview
+rows as open implementation work.
 
 - Except for the current FE-07 server-backed route, no inquiry POST, email,
   database write, file upload or provider call is made by these preview pages.

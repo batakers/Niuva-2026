@@ -77,6 +77,12 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
 
 ## Current admin integration slice — 2026-09-16
 
+> Handoff clarification — bagian NG-01, local-demo, dan retained-test-profile
+> di bawah mempertahankan evidence dari sesi lokal sebelumnya. Bagian tersebut
+> bukan klaim authenticated-admin acceptance yang baru untuk checkout ini.
+> Re-run Clerk identity/profile, R2 object smoke, seed katalog Owner, dan
+> authenticated visual review sebagai gate terpisah saat input Owner tersedia.
+
 - [x] Detail/editor server-backed: orders, custom print, products, portfolio.
 - [x] Live subview: B2B Inquiries dan Pricing Rules.
 - [x] Authorized writes: order/inquiry transition, slicer review, quote draft/send,
@@ -522,7 +528,10 @@ Project Brief integration gates are committed and pushed in `1d5b870`.
 - [ ] Official company biodata remains `DEFERRED/OPEN` for public claims,
   business sender identity, and provider/invoice identity; no synthetic value
   may be promoted to production.
-- [ ] Admin mutations and production provider activation remain deferred.
+- [ ] Production provider activation and any write edge outside the current
+  admin integration slice remain deferred; the allowed order/inquiry, slicer,
+  quote, stock/media, portfolio, and token actions are tracked as implemented
+  in the current slice above.
 
 ## Goal — Build Local Demo Mode (2026-09-15)
 

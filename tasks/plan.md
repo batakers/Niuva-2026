@@ -568,7 +568,7 @@ penggunaan subagent kelak mengikuti keputusan user.
 | --- | --- |
 | Dataset produk, stock, media, izin client dan hasil project belum lengkap | Preview sintetis; publikasi factual dataset menjadi gate terpisah |
 | Clerk belum tersedia dan Proxy melindungi seluruh /admin termasuk sign-in | Preview FE-16–26 sudah retired; mulai dari slice server-backed saat auth siap dan jangan melemahkan Proxy pada fase frontend |
-| Quote decline dan beberapa mutation admin belum mempunyai HTTP boundary | Preview intent saja; daftar endpoint missing masuk handoff FE-27 |
+| Quote decline dan provider-coupled fulfillment masih dibatasi oleh boundary operasional | Quote/order/inquiry transition, slicer review, catalog/stock/media, portfolio publish, dan token reissue sudah memiliki Server Action + service boundary; payment, shipment-rate, refund, dan provider activation tetap menunggu Owner |
 | Pricing policy lama pada plan historis masih tertulis OPEN | Rujuk docs/backend/phase-3-pricing-biteship-contract.md dan policy aktif; jangan pilih rule baru atau menganggap rule sudah di-seed |
 | Form frontend berpotensi berbeda dari schema backend | FE-01/07/13 memakai field contract PRD + schema existing; perubahan domain bukan scope frontend |
 | Fixture tersangkut pada production build | Development-only boundary diuji; no real auth/data/provider imports pada preview |
@@ -579,14 +579,16 @@ penggunaan subagent kelak mengikuti keputusan user.
 Vertical slice Project Brief sekarang sudah menghubungkan form publik ke
 `/api/project-brief`, persistence inquiry, reference confirmation, dan
 WhatsApp handoff; `B2BInquiry` berstatus `NEW` otomatis menjadi signal Action
-Queue pada `/admin` setelah access boundary lolos. Tahap integrasi berikutnya
-menghubungkan read catalog dan portfolio ke published repository, lalu
-upload/payment/shipping setelah provider siap. Existing API:
-project-brief, custom-print/requests, uploads/intents, uploads/confirm,
-shipping/rates, checkout, webhooks/midtrans.
-Public catalog/portfolio/status/quote dan admin mutation boundaries perlu dicek/
-ditambahkan sesuai task integrasi; keberadaan service bukan berarti API sudah ada.
-Tidak ada commit, push, deployment, onboarding atau aktivasi provider pada task mapping.
+Queue pada `/admin` setelah access boundary lolos. Admin operations yang masuk
+goal ini sekarang membaca projection database dan menulis melalui Server Action
+serta domain service yang diaudit: order/inquiry transition, slicer review,
+quote draft/send, stock, catalog/portfolio media, portfolio publish, dan token
+reissue. Existing API tetap mencakup project-brief, custom-print/requests,
+uploads/intents, uploads/confirm, shipping/rates, checkout, dan
+webhooks/midtrans; payment/shipping provider, R2 object smoke, dan seed launch
+Owner tetap merupakan gate terpisah. Keberadaan service bukan bukti provider
+aktif atau production-ready. Tidak ada onboarding atau aktivasi provider pada
+task mapping.
 
 ### Current vertical slice — Project Brief → persistence → Action Queue → WhatsApp
 
