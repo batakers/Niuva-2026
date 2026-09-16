@@ -531,7 +531,7 @@ seed remain separate gates.
 #### Review verification — 2026-09-16
 
 - `corepack pnpm typecheck`, `corepack pnpm lint` (0 errors; existing warning
-  set), `corepack pnpm test` (73/73), `corepack pnpm test:backend` (118/118),
+  set), `corepack pnpm test` (73/73), `corepack pnpm test:backend` (119/119),
   `corepack pnpm build`, and `git diff --check` passed.
 - The reproducible CI-mode browser gate (`CI=1 corepack pnpm test:e2e`, one
   worker with retry) passed 57/57. The default four-worker local runner is

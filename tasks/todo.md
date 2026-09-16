@@ -94,7 +94,7 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
 
 ### Review verification — 2026-09-16
 
-- [x] `corepack pnpm typecheck`, lint (0 error), unit 73/73, backend 118/118,
+- [x] `corepack pnpm typecheck`, lint (0 error), unit 73/73, backend 119/119,
   production build, dan `git diff --check` lulus.
 - [x] CI-mode Playwright (`CI=1 corepack pnpm test:e2e`, satu worker dengan
   retry) lulus 57/57. Runner lokal empat worker tetap dicatat sebagai

@@ -201,7 +201,7 @@ slice above is the authoritative status for the live `/admin` routes.
 - `corepack pnpm lint`: passed with the repository's existing warning set; the
   changed files have no ESLint warnings or errors.
 - `corepack pnpm test`: 73 tests passed across 15 files.
-- `corepack pnpm test:backend`: 118 tests passed across 22 files.
+- `corepack pnpm test:backend`: 119 tests passed across 22 files.
 - `corepack pnpm build`: production build passed and emitted the new admin
   detail/subview routes.
 - `corepack pnpm test:e2e` with the default four local workers: 54 passed, 3
