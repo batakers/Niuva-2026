@@ -7,11 +7,13 @@ import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation
 import { MoneySummary } from "@/components/niuva/money-summary";
 import { StatusNotice, type StatusNoticeTone } from "@/components/niuva/status-notice";
 import { useHydrated } from "@/components/niuva/use-hydrated";
+import { AuLink } from "@/components/ui/AuLink";
 import { Button } from "@/components/ui/button";
 import type { QuotePreview, QuotePreviewState } from "@/features/frontend-preview/quote";
 
 type Decision = "accept" | "decline" | null;
 type SettledQuoteState = Exclude<QuotePreviewState, "loading">;
+type DecisionRequestState = "idle" | "submitting" | "error";
 
 const stateCopy: Record<SettledQuoteState, Readonly<{
   description: string;
@@ -47,14 +49,21 @@ const stateCopy: Record<SettledQuoteState, Readonly<{
 
 export function QuoteReview({
   initialState,
+  isPreview,
   quote,
+  token,
 }: Readonly<{
   initialState: SettledQuoteState;
+  isPreview: boolean;
   quote: QuotePreview;
+  token?: string;
 }>) {
   const hydrated = useHydrated();
   const [decision, setDecision] = useState<Decision>(null);
   const [state, setState] = useState<SettledQuoteState>(initialState);
+  const [requestState, setRequestState] = useState<DecisionRequestState>("idle");
+  const [actionError, setActionError] = useState<string>();
+  const [orderStatusToken, setOrderStatusToken] = useState<string>();
   const decisionRef = useRef<HTMLDivElement>(null);
   const stateRef = useRef<HTMLDivElement>(null);
   const currentCopy = stateCopy[state];
@@ -67,11 +76,73 @@ export function QuoteReview({
     if (state !== initialState) stateRef.current?.focus();
   }, [initialState, state]);
 
-  function confirmDecision() {
-    if (decision === null || state !== "valid") return;
-    setState(decision === "accept" ? "accepted" : "declined");
-    setDecision(null);
+  async function confirmDecision() {
+    if (decision === null || state !== "valid" || requestState === "submitting") return;
+
+    if (isPreview) {
+      setState(decision === "accept" ? "accepted" : "declined");
+      setDecision(null);
+      return;
+    }
+
+    if (token === undefined) {
+      setActionError("Tautan keputusan tidak lengkap. Minta tautan quote terbaru dari Niuva.");
+      setRequestState("error");
+      return;
+    }
+
+    setRequestState("submitting");
+    setActionError(undefined);
+
+    try {
+      const response = await fetch(
+        `/api/quote/${encodeURIComponent(token)}/${decision === "accept" ? "accept" : "decline"}`,
+        { headers: { "content-type": "application/json" }, method: "POST" },
+      );
+
+      const payload: unknown = await response.json().catch(() => null);
+      if (!response.ok || payload === null || typeof payload !== "object") {
+        throw new Error("Keputusan quote belum dapat disimpan.");
+      }
+
+      const candidate = payload as Record<string, unknown>;
+      if (decision === "accept" && typeof candidate.orderAccessToken === "string") {
+        setOrderStatusToken(candidate.orderAccessToken);
+      }
+      setState(decision === "accept" ? "accepted" : "declined");
+      setDecision(null);
+      setRequestState("idle");
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Keputusan quote belum dapat disimpan.");
+      setRequestState("error");
+    }
   }
+
+  const effectiveCopy = isPreview
+    ? currentCopy
+    : {
+        ...currentCopy,
+        title:
+          state === "accepted"
+            ? "Quote diterima dan order dibuat."
+            : state === "declined"
+              ? "Quote ditolak."
+              : state === "expired"
+                ? "Quote sudah kedaluwarsa."
+                : state === "superseded"
+                  ? "Versi quote terbaru tersedia."
+                  : "Quote siap ditinjau.",
+        description:
+          state === "accepted"
+            ? "Quote sudah diterima dan order payable dibuat oleh server. Lanjutkan melalui tautan status order."
+            : state === "declined"
+              ? "Quote ditandai ditolak. Hubungi Niuva jika scope perlu dibahas kembali."
+              : state === "expired"
+                ? "Masa berlaku quote sudah selesai. Minta operator mengirim versi quote terbaru bila masih ingin melanjutkan."
+                : state === "superseded"
+                  ? "Quote ini sudah digantikan oleh versi terbaru. Minta tautan quote terbaru dari Niuva."
+                  : "Tinjau scope, asumsi, dan total dari snapshot yang disimpan server sebelum membuat keputusan."
+      };
 
   return (
     <main className="overflow-x-hidden" data-quote-state={state} id="main-content">
@@ -107,8 +178,10 @@ export function QuoteReview({
       <section className="bg-background">
         <div className="mx-auto grid max-w-public gap-10 px-5 py-12 sm:px-8 sm:py-16 lg:grid-cols-12 lg:gap-12">
           <div className="space-y-10 lg:col-span-7">
-            <div className="rounded-xl border border-info-border bg-info-background p-4 text-sm text-info">
-              Preview lokal untuk review desain. Bukan quote customer dan tidak memberi akses ke data produksi.
+            <div className={`${isPreview ? "border-info-border bg-info-background text-info" : "border-success-border bg-success-background text-success"} rounded-xl border p-4 text-sm`}>
+              {isPreview
+                ? "Preview lokal untuk review desain. Bukan quote customer dan tidak memberi akses ke data produksi."
+                : "Projection server terotorisasi token. Nilai di halaman ini berasal dari snapshot quote yang dikunci saat dikirim."}
             </div>
 
             <section aria-labelledby="quote-scope-title">
@@ -154,9 +227,9 @@ export function QuoteReview({
           <aside className="space-y-6 lg:col-span-5 lg:sticky lg:top-8 lg:self-start" aria-label="Rincian dan keputusan quote">
             <MoneySummary
               currency={quote.currency}
-              description="Nilai sudah diformat dari snapshot quote contoh. Browser tidak menghitung subtotal atau total."
+              description={isPreview ? "Nilai sudah diformat dari snapshot quote contoh. Browser tidak menghitung subtotal atau total." : "Nilai diformat dari snapshot quote server. Browser tidak menghitung subtotal atau total."}
               lines={quote.lines}
-              note="Fixture development Pricing v1. Ongkir custom dihitung setelah pengukuran paket final."
+              note={isPreview ? "Fixture development Pricing v1. Ongkir custom dihitung setelah pengukuran paket final." : "Pricing dan ongkir custom mengikuti verifikasi operator; ongkir dihitung setelah pengukuran paket final."}
               sourceStatus="ready"
               title="Rincian quote"
               total={quote.total}
@@ -164,13 +237,30 @@ export function QuoteReview({
             />
 
             <div className="rounded-xl border border-border bg-card p-5 shadow-card" ref={stateRef} tabIndex={-1}>
-              <StatusNotice
-                description={currentCopy.description}
-                title={currentCopy.title}
-                tone={currentCopy.tone}
-              />
+              <StatusNotice description={effectiveCopy.description} title={effectiveCopy.title} tone={effectiveCopy.tone} />
 
-              {state === "valid" ? (
+              {actionError ? (
+                <p className="mt-4 rounded-lg border border-destructive-border bg-destructive-background p-3 text-sm leading-6 text-destructive" role="alert">
+                  {actionError}
+                </p>
+              ) : null}
+
+              {state === "valid" && !isPreview ? (
+                <div className="mt-5">
+                  <div className="flex items-start gap-3 text-sm leading-6 text-muted-foreground">
+                    <Clock3 aria-hidden="true" className="mt-1 size-4 shrink-0 text-brand-700" />
+                    <p>Keputusan diperiksa server dengan token, expiry, versi terbaru, dan snapshot harga.</p>
+                  </div>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                    <Button className="min-h-11 cursor-pointer" disabled={!hydrated || requestState === "submitting"} onClick={() => setDecision("accept")} type="button">
+                      Terima quote
+                    </Button>
+                    <Button className="min-h-11 cursor-pointer" disabled={!hydrated || requestState === "submitting"} onClick={() => setDecision("decline")} type="button" variant="outline">
+                      Tolak quote
+                    </Button>
+                  </div>
+                </div>
+              ) : state === "valid" ? (
                 <div className="mt-5">
                   <div className="flex items-start gap-3 text-sm leading-6 text-muted-foreground">
                     <Clock3 aria-hidden="true" className="mt-1 size-4 shrink-0 text-brand-700" />
@@ -185,6 +275,12 @@ export function QuoteReview({
                     </Button>
                   </div>
                 </div>
+              ) : null}
+
+              {orderStatusToken ? (
+                <AuLink className="mt-5 min-h-11" href={`/orders/${orderStatusToken}`} variant="outline">
+                  Lihat status order
+                </AuLink>
               ) : null}
             </div>
 
@@ -204,10 +300,10 @@ export function QuoteReview({
                     ? "Pada alur nyata, server akan memeriksa token, expiry, versi terbaru, dan snapshot harga sebelum membuat order payable."
                     : "Pada alur nyata, quote yang ditolak tidak dapat diterima kembali. Operator perlu membuat versi baru bila scope berubah."}
                 </p>
-                <p className="mt-2 text-xs">Preview ini tidak mengirim keputusan atau mengubah request.</p>
+                <p className="mt-2 text-xs">{isPreview ? "Preview ini tidak mengirim keputusan atau mengubah request." : "Keputusan akan dicatat oleh server dan tidak dapat diulang pada quote yang sama."}</p>
                 <div className="mt-5 flex flex-wrap gap-3">
-                  <Button className="min-h-11 cursor-pointer" onClick={confirmDecision} type="button" variant={decision === "accept" ? "default" : "destructive"}>
-                    {decision === "accept" ? "Konfirmasi terima" : "Konfirmasi tolak"}
+                  <Button className="min-h-11 cursor-pointer" disabled={requestState === "submitting"} onClick={() => void confirmDecision()} type="button" variant={decision === "accept" ? "default" : "destructive"}>
+                    {requestState === "submitting" ? "Menyimpan keputusan…" : decision === "accept" ? "Konfirmasi terima" : "Konfirmasi tolak"}
                   </Button>
                   <Button className="min-h-11 cursor-pointer" onClick={() => setDecision(null)} type="button" variant="outline">
                     Kembali

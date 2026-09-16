@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 
 import { PublicShell } from "@/components/niuva/public-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
-import { getOrderStatusPreview } from "@/features/frontend-preview/order-status";
+import {
+  getLiveOrderStatus,
+  getOrderStatusPreview,
+} from "@/features/frontend-preview/order-status";
+import { getRouteAccessTokenEntityId } from "@/modules/shared/access-token";
+import { isAppError } from "@/modules/shared/errors";
 import { OrderStatus } from "./order-status";
 
 export const metadata: Metadata = {
@@ -14,6 +20,7 @@ export const metadata: Metadata = {
 };
 
 export default async function OrderStatusPage({ params, searchParams }: PageProps<"/orders/[token]">) {
+  await connection();
   const [{ token }, query] = await Promise.all([params, searchParams]);
   const preview = await getOrderStatusPreview({
     preview: query.preview,
@@ -21,7 +28,28 @@ export default async function OrderStatusPage({ params, searchParams }: PageProp
     token,
   });
 
-  if (preview === null) notFound();
+  if (preview === null) {
+    const orderId = getRouteAccessTokenEntityId(token);
+
+    if (orderId === null) {
+      notFound();
+    }
+
+    const liveResult = await loadLiveOrderStatus(orderId, token);
+    if (!liveResult.ok) {
+      if (isAppError(liveResult.error) && ["NOT_FOUND", "UNAUTHORIZED"].includes(liveResult.error.code)) {
+        notFound();
+      }
+
+      throw liveResult.error;
+    }
+
+    return (
+      <PublicShell functionalStatus="server-backed" scope="order-status">
+        <OrderStatus order={liveResult.value.order} scenario={liveResult.value.scenario} isPreview={false} />
+      </PublicShell>
+    );
+  }
 
   if (preview.kind === "loading") {
     return (
@@ -87,7 +115,19 @@ export default async function OrderStatusPage({ params, searchParams }: PageProp
 
   return (
     <PublicShell scope="order-status">
-      <OrderStatus order={preview.order} scenario={preview.scenario} />
+      <OrderStatus order={preview.order} scenario={preview.scenario} isPreview />
     </PublicShell>
   );
+}
+
+type LiveOrderStatusResult =
+  | Readonly<{ ok: true; value: Awaited<ReturnType<typeof getLiveOrderStatus>> }>
+  | Readonly<{ error: unknown; ok: false }>;
+
+async function loadLiveOrderStatus(orderId: string, token: string): Promise<LiveOrderStatusResult> {
+  try {
+    return { ok: true, value: await getLiveOrderStatus({ orderId, token }) };
+  } catch (error) {
+    return { error, ok: false };
+  }
 }

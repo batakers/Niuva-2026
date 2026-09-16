@@ -21,6 +21,7 @@ type AuthorizeAdmin = () => Promise<AdminAccess>;
 export type PublicOrderStatus = Readonly<{
   completedAt: Date | null;
   createdAt: Date;
+  grandTotalRp?: unknown;
   items: readonly Readonly<{
     lineTotalRp: unknown;
     nameSnapshot: string;
@@ -40,6 +41,7 @@ export interface OrderStatusRepository {
   findForPublicStatusById(orderId: string): Promise<Readonly<{
     completedAt: Date | null;
     createdAt: Date;
+    grandTotalRp?: unknown;
     items: readonly Readonly<{
       lineTotalRp: unknown;
       nameSnapshot: string;
@@ -112,6 +114,9 @@ export class OrderStatusService {
       paidAt: order.paidAt,
       shipments: order.shipments,
       status: order.status,
+      ...(order.grandTotalRp === undefined
+        ? {}
+        : { grandTotalRp: order.grandTotalRp }),
     };
 
     return safeProjection;

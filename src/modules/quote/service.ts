@@ -143,6 +143,22 @@ export type AcceptedQuote = Readonly<{
   orderNumber: string;
 }>;
 
+export type PublicQuoteReviewState = "accepted" | "declined" | "expired" | "superseded" | "valid";
+
+export type PublicQuoteReview = Readonly<{
+  assumptions: readonly Readonly<{ label: string; value: string; detail: string }>[];
+  currency: "IDR";
+  expiresAt: Date;
+  lines: readonly Readonly<{ label: string; value: string; detail: string }>[];
+  quoteNumber: string;
+  requestReference: string;
+  scope: readonly Readonly<{ label: string; value: string }>[];
+  sentAt: Date | null;
+  state: PublicQuoteReviewState;
+  total: string;
+  version: number;
+}>;
+
 export class QuoteService {
   private readonly audit?: AuditRecorder;
   private readonly authorizeAdmin: AuthorizeAdmin;
@@ -287,6 +303,7 @@ export class QuoteService {
     const accessToken = issueAccessToken({
       entityId: quote.id,
       expiresAt,
+      includeEntityId: true,
       now: sentAt,
       randomBytes: this.randomBytes,
       scope: "CUSTOM_PRINT_QUOTE",
@@ -394,6 +411,7 @@ export class QuoteService {
     const orderId = randomUUID();
     const orderAccessToken = issueAccessToken({
       entityId: orderId,
+      includeEntityId: true,
       randomBytes: this.randomBytes,
       scope: "ORDER_STATUS",
     });
@@ -428,6 +446,194 @@ export class QuoteService {
       ...accepted,
       orderAccessToken: accepted.kind === "CREATED" ? orderAccessToken : undefined,
     };
+  }
+
+  async getPublicReview(input: Readonly<{
+    now?: Date;
+    quoteId: string;
+    token: string;
+  }>): Promise<PublicQuoteReview> {
+    const repository = this.repositoryFactory();
+    const quote = await repository.findForAcceptance(input.quoteId);
+
+    if (quote === null) {
+      throw appError("UNAUTHORIZED");
+    }
+
+    // An expired quote remains readable as a safe, read-only projection so the
+    // customer gets a useful recovery message. Accept/decline still verifies
+    // expiry and rejects the mutation path below.
+    verifyAccessToken({
+      entityId: quote.id,
+      expectedHash: quote.publicTokenHash,
+      now: input.now,
+      scope: "CUSTOM_PRINT_QUOTE",
+      token: input.token,
+    });
+
+    if (quote.status === "DRAFT") {
+      throw appError("NOT_FOUND");
+    }
+
+    const snapshot = quoteCalculationSnapshotSchema.safeParse(
+      quote.calculationSnapshot,
+    );
+
+    if (!snapshot.success || quote.expiresAt === null) {
+      throw appError("CONFLICT", {
+        message: "Snapshot quote publik tidak dapat divalidasi.",
+      });
+    }
+
+    const now = input.now ?? this.clock();
+    const latestVersion = await repository.findLatestVersion(quote.requestId);
+    const state: PublicQuoteReviewState =
+      quote.status === "ACCEPTED"
+        ? "accepted"
+        : quote.status === "DECLINED"
+          ? "declined"
+          : latestVersion !== null && latestVersion > quote.version
+            ? "superseded"
+            : quote.status === "EXPIRED" || now >= quote.expiresAt
+              ? "expired"
+              : "valid";
+    const sourceLabel = {
+      COMMUNAL: "Filament komunal",
+      CUSTOMER_OWN: "Filament customer",
+      NIUVA_STOCK: "Stok Niuva",
+    }[snapshot.data.filamentSource];
+    const durationLabel = formatPrintDuration(snapshot.data.printDurationSeconds);
+    const weightLabel = `${snapshot.data.weightGrams} g`;
+    const configuration = snapshot.data.configurationJson;
+    const unitLabel =
+      configuration !== undefined && typeof configuration.unit === "string"
+        ? configuration.unit
+        : "Dikonfirmasi saat review";
+
+    return {
+      assumptions: [
+        {
+          detail: "Nilai slicer yang dibekukan bersama quote.",
+          label: "Berat hasil review",
+          value: weightLabel,
+        },
+        {
+          detail: "Durasi dari review operator, bukan estimasi browser.",
+          label: "Durasi mesin",
+          value: durationLabel,
+        },
+        {
+          detail: "Material mengikuti konfigurasi yang ditinjau operator.",
+          label: "Sumber filament",
+          value: sourceLabel,
+        },
+        {
+          detail: "Ongkir custom dihitung setelah paket final selesai diukur.",
+          label: "Pengiriman",
+          value: "Belum termasuk",
+        },
+      ],
+      currency: "IDR",
+      expiresAt: quote.expiresAt,
+      lines: [
+        {
+          detail: `${snapshot.data.material}, ${weightLabel}, ${quote.quantity} unit`,
+          label: "Material",
+          value: quote.materialSubtotalRp.toFixed(0),
+        },
+        {
+          detail: durationLabel,
+          label: "Waktu mesin",
+          value: quote.machineSubtotalRp.toFixed(0),
+        },
+      ],
+      quoteNumber: quote.quoteNumber ?? `Quote ${quote.version}`,
+      requestReference: quote.request.referenceNumber ?? quote.requestId,
+      scope: [
+        { label: "Layanan", value: "Custom 3D Print" },
+        { label: "Material", value: snapshot.data.material },
+        { label: "Jumlah", value: `${quote.quantity} unit` },
+        { label: "Unit model", value: unitLabel },
+      ],
+      sentAt: quote.sentAt ?? null,
+      state,
+      total: quote.finalTotalRp.toFixed(0),
+      version: quote.version,
+    };
+  }
+
+  async decline(input: Readonly<{
+    now?: Date;
+    quoteId: string;
+    token: string;
+  }>): Promise<Readonly<{ id: string; status: "DECLINED" }>> {
+    const now = input.now ?? this.clock();
+    const repository = this.repositoryFactory();
+    const quote = await repository.findForAcceptance(input.quoteId);
+
+    if (quote === null) {
+      throw appError("UNAUTHORIZED");
+    }
+
+    verifyAccessToken({
+      entityId: quote.id,
+      expectedHash: quote.publicTokenHash,
+      expiresAt: quote.expiresAt ?? undefined,
+      now,
+      scope: "CUSTOM_PRINT_QUOTE",
+      token: input.token,
+    });
+
+    if (quote.status === "DECLINED") {
+      return { id: quote.id, status: "DECLINED" };
+    }
+
+    if (quote.status !== "SENT") {
+      throw appError("QUOTE_NOT_READY");
+    }
+
+    const latestVersion = await repository.findLatestVersion(quote.requestId);
+    if (latestVersion !== quote.version) {
+      throw appError("QUOTE_NOT_READY", {
+        message: "Quote ini sudah disupersede oleh versi yang lebih baru.",
+      });
+    }
+
+    const transitionAudit =
+      this.audit === undefined
+        ? undefined
+        : createTransitionAuditRecorder(this.audit, {
+            actorType: "SYSTEM",
+          });
+    await transitionQuote({
+      audit: transitionAudit,
+      current: quote.status,
+      entityId: quote.id,
+      next: "DECLINED",
+    });
+    const declined = await repository.updateStatusIfCurrent(
+      quote.id,
+      "SENT",
+      "DECLINED",
+      now,
+    );
+
+    if (declined === null) {
+      throw appError("CONFLICT", {
+        message: "Quote berubah sebelum penolakan selesai.",
+      });
+    }
+
+    await recordAudit(this.audit, {
+      action: "quote.declined",
+      actorType: "SYSTEM",
+      afterJson: { status: "DECLINED" },
+      beforeJson: { status: "SENT" },
+      entityId: quote.id,
+      entityType: "CustomPrintQuote",
+    });
+
+    return { id: declined.id, status: "DECLINED" };
   }
 
   async expire(quoteId: string) {
@@ -595,3 +801,14 @@ const quoteCalculationSnapshotSchema = z.object({
   quantity: z.int().positive(),
   weightGrams: z.string().regex(/^\d+(?:\.\d{1,6})?$/),
 });
+
+function formatPrintDuration(seconds: number): string {
+  const hours = Math.floor(seconds / 3_600);
+  const minutes = Math.floor((seconds % 3_600) / 60);
+
+  if (hours === 0) {
+    return `${minutes} menit`;
+  }
+
+  return `${hours} jam${minutes === 0 ? "" : ` ${minutes} menit`}`;
+}

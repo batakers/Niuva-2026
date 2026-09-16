@@ -21,6 +21,7 @@ export class OrderRepository {
       select: {
         completedAt: true,
         createdAt: true,
+        grandTotalRp: true,
         items: {
           select: {
             lineTotalRp: true,
@@ -48,6 +49,7 @@ export class OrderRepository {
       select: {
         completedAt: true,
         createdAt: true,
+        grandTotalRp: true,
         items: {
           select: {
             lineTotalRp: true,
