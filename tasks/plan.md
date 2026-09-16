@@ -1276,3 +1276,83 @@ readiness.
 This Goal is complete. Company biodata is not required; temporary state changes
 were restored, and the authorized local `OWNER` profile remains active solely
 for subsequent development-only admin smoke.
+
+## Goal — R2 Private Upload CSP & Non-production Smoke (2026-09-16)
+
+Status: `IMPLEMENTED_CODE_VERIFIED_OWNER_R2_SMOKE_OPEN`. This is one
+continuation Goal for the already implemented private custom-print upload
+vertical slice. It does not rebuild intent → PUT → confirm, add a migration,
+activate production storage, or change retention policy. Its code-and-test
+portion is complete; a real non-production object smoke remains Owner-only
+external setup rather than an unproven provider claim.
+
+### Scope and dependency order
+
+```text
+canonical configured R2 HTTPS endpoint
+  -> narrow CSP connect-src allowlist
+  -> existing intent → signed PUT → HEAD/confirm flow
+  -> synthetic-object smoke and cleanup evidence
+```
+
+### Task R2-01: Allow only the configured R2 origin in browser CSP
+
+**Description:** Derive a canonical HTTPS R2 endpoint origin for `connect-src`
+without exposing a credential-bearing URL or weakening the baseline policy. No
+origin is added when R2 is absent or invalid.
+
+**Acceptance criteria:**
+
+- [x] A valid complete R2 endpoint permits only its canonical origin in
+  `connect-src`.
+- [x] Missing, malformed, credential-bearing, or non-HTTPS values leave the
+  current CSP behavior unchanged.
+- [x] Existing development HMR and production HSTS behavior are preserved.
+
+**Verification:** 22 backend files / 116 tests, focused browser header smoke,
+typecheck, lint, and production build passed. The standard browser suite
+reproduced two unrelated public case-study navigation failures (55/57 passed);
+they are not part of this task's source paths.
+
+**Dependencies:** None. **Files likely touched:** `src/lib/security/headers.ts`,
+`tests/backend/security.test.ts`. **Estimated scope:** S.
+
+### Task R2-02: Run a private R2 development-object smoke
+
+**Description:** After Owner configures the complete R2 development capability
+group and exact-origin CORS outside the repository, upload one tiny synthetic
+file through the existing browser flow, verify the stored-file lifecycle and
+private object boundary, then delete the fixture.
+
+**Acceptance criteria:**
+
+- [ ] The synthetic object follows `PENDING → UPLOADED → VERIFIED` only after
+  intent, direct PUT, HEAD confirmation, and custom-request ownership binding.
+- [ ] No public URL, raw signed URL, secret, customer data, or object key is
+  retained in evidence.
+- [ ] The synthetic object is deleted after the smoke unless Owner explicitly
+  approves a bounded retention exception.
+
+**Verification:** existing upload unit/backend/integration/browser gates plus
+manual non-production browser smoke and cleanup check.
+
+**Dependencies:** R2-01 and Owner-only bucket/token/CORS setup. **Files likely
+touched:** no source changes expected; append non-secret evidence only if the
+smoke succeeds. **Estimated scope:** M including external setup.
+
+### Checkpoint — R2 private upload Goal
+
+- [x] All R2-01 automated checks pass.
+- [ ] Owner confirms development bucket/CORS setup without exposing secrets.
+- [ ] R2-02 live smoke and cleanup evidence are recorded separately from
+  production readiness.
+- [x] This Goal's no-provider code-and-test vertical slice is complete; R2-02
+  remains an explicit post-Goal external action.
+
+### Risks and mitigations
+
+| Risk | Mitigation |
+| --- | --- |
+| Browser CSP or CORS blocks direct PUT | Narrow origin allowlist plus exact-origin bucket CORS; prove with synthetic smoke. |
+| Private object becomes accessible | No public bucket access, random key, expiring signed PUT, no rendered object URL, and cleanup. |
+| Provider setup is incomplete | Keep upload capability fail-closed; do not invent environment values or activate a provider. |

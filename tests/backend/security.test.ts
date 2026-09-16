@@ -97,6 +97,45 @@ describe("in-memory rate limiter", () => {
 });
 
 describe("security response headers", () => {
+  const completeR2Environment = {
+    CUSTOM_FILE_MAX_BYTES: "104857600",
+    R2_ACCESS_KEY_ID: "access-key",
+    R2_ACCOUNT_ID: "account-id",
+    R2_ENDPOINT: "https://r2-development.example.test:8443/ignored/path?ignored=true",
+    R2_PRIVATE_BUCKET: "niuva-private-development",
+    R2_PUBLIC_BUCKET: "niuva-public-development",
+    R2_SECRET_ACCESS_KEY: "secret-key",
+  };
+
+  it("allows a configured R2 HTTPS endpoint only as its canonical connect origin", () => {
+    const csp = getContentSecurityPolicy("development", completeR2Environment);
+
+    expect(csp).toContain(
+      "connect-src 'self' https://r2-development.example.test:8443 ws: wss:",
+    );
+    expect(csp).not.toContain("/ignored/path");
+  });
+
+  it.each([
+    { ...completeR2Environment, R2_ENDPOINT: "http://r2-development.example.test" },
+    { ...completeR2Environment, R2_ENDPOINT: "https://user:password@r2-development.example.test" },
+    { ...completeR2Environment, R2_ENDPOINT: "not-a-url" },
+    { ...completeR2Environment, R2_ENDPOINT: undefined },
+    { R2_ENDPOINT: "https://r2-development.example.test" },
+  ])("keeps the baseline CSP when R2 setup is unsafe or incomplete", (environment) => {
+    const csp = getContentSecurityPolicy("development", environment);
+
+    expect(csp).toContain("connect-src 'self' ws: wss:");
+    expect(csp).not.toContain("r2-development.example.test");
+  });
+
+  it("keeps production CSP self-only even with complete R2 development values", () => {
+    const csp = getContentSecurityPolicy("production", completeR2Environment);
+
+    expect(csp).toContain("connect-src 'self'");
+    expect(csp).not.toContain("r2-development.example.test");
+  });
+
   it("uses a self-only production CSP and HSTS", () => {
     const headers = getSecurityHeaders("production");
     const csp = getContentSecurityPolicy("production");
