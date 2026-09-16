@@ -117,6 +117,7 @@ export const createQuoteDraftAction: AdminAction = async (_previous, formData) =
     });
     revalidatePath(`/admin/custom-print/${requestId}`);
     revalidatePath("/admin/custom-print");
+    revalidatePath("/admin");
     return successState("Draft quote berhasil dibuat.");
   } catch (error) {
     return errorStateFrom(error);

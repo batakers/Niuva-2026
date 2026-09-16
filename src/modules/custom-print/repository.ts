@@ -1,4 +1,4 @@
-import type { Prisma, PrismaClient } from "@/generated/prisma/client";
+import { Prisma, type PrismaClient } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { appError } from "@/modules/shared/errors";
 
@@ -292,45 +292,68 @@ export class CustomPrintQuoteRepository {
   }
 
   async createDraft(input: CreateDraftQuoteInput) {
-    const pricingRule = await this.prisma.pricingRuleVersion.findFirst({
-      where: {
-        id: input.pricingRuleVersionId,
-        status: "ACTIVE",
-      },
-      select: { id: true },
+    return this.prisma.$transaction(async (transaction) => {
+      // Serialize draft creation per request. The service preflight keeps the
+      // UI responsive, while this row lock closes the concurrent-submit race.
+      await transaction.$queryRaw(
+        Prisma.sql`
+          SELECT "id"
+          FROM "custom_print_requests"
+          WHERE "id" = ${input.requestId}::uuid
+          FOR UPDATE
+        `,
+      );
+
+      const pricingRule = await transaction.pricingRuleVersion.findFirst({
+        where: {
+          id: input.pricingRuleVersionId,
+          status: "ACTIVE",
+        },
+        select: { id: true },
+      });
+
+      if (pricingRule === null) {
+        throw appError("PRICING_RULE_NOT_APPROVED");
+      }
+
+      const existingDraft = await transaction.customPrintQuote.findFirst({
+        where: { requestId: input.requestId, status: "DRAFT" },
+        select: { id: true },
+      });
+      if (existingDraft !== null) {
+        throw appError("CONFLICT", {
+          message: "Request ini sudah memiliki draft quote. Kirim atau supersede draft tersebut sebelum membuat versi baru.",
+        });
+      }
+
+      const quote = await transaction.customPrintQuote.create({
+        data: {
+          calculationSnapshot: input.calculationSnapshot,
+          createdByAdminId: input.createdByAdminId,
+          expiresAt: input.expiresAt,
+          finalTotalRp: input.finalTotalRp,
+          id: input.id,
+          machineSubtotalRp: input.machineSubtotalRp,
+          materialCode: input.materialCode,
+          materialSubtotalRp: input.materialSubtotalRp,
+          printDurationSeconds: input.printDurationSeconds,
+          publicTokenHash: input.publicTokenHash,
+          quantity: input.quantity,
+          quoteNumber: input.quoteNumber,
+          requestId: input.requestId,
+          unroundedTotalRp: input.unroundedTotalRp,
+          verifiedWeightG: input.verifiedWeightG,
+          version: input.version,
+          pricingRuleVersionId: input.pricingRuleVersionId,
+        },
+      });
+
+      return {
+        id: quote.id,
+        quoteNumber: quote.quoteNumber,
+        status: "DRAFT" as const,
+      };
     });
-
-    if (pricingRule === null) {
-      throw appError("PRICING_RULE_NOT_APPROVED");
-    }
-
-    const quote = await this.prisma.customPrintQuote.create({
-      data: {
-        calculationSnapshot: input.calculationSnapshot,
-        createdByAdminId: input.createdByAdminId,
-        expiresAt: input.expiresAt,
-        finalTotalRp: input.finalTotalRp,
-        id: input.id,
-        machineSubtotalRp: input.machineSubtotalRp,
-        materialCode: input.materialCode,
-        materialSubtotalRp: input.materialSubtotalRp,
-        printDurationSeconds: input.printDurationSeconds,
-        publicTokenHash: input.publicTokenHash,
-        quantity: input.quantity,
-        quoteNumber: input.quoteNumber,
-        requestId: input.requestId,
-        unroundedTotalRp: input.unroundedTotalRp,
-        verifiedWeightG: input.verifiedWeightG,
-        version: input.version,
-        pricingRuleVersionId: input.pricingRuleVersionId,
-      },
-    });
-
-    return {
-      id: quote.id,
-      quoteNumber: quote.quoteNumber,
-      status: "DRAFT" as const,
-    };
   }
 
   async quoteNumberExists(quoteNumber: string): Promise<boolean> {

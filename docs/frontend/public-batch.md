@@ -76,8 +76,9 @@ information for review. Preview data is not a factual client portfolio.
   Reissue replaces the stored hash, invalidates the old link, and emits a new
   `v1.<entity-id>.<secret>` route-bound token without logging the secret.
 - `scripts/seed-catalog.ts` accepts only an Owner-supplied dataset and loopback
-  non-production database. No synthetic catalog, photo, stock, or production
-  media mapping is claimed as launch evidence.
+  non-production database, and preflights every mapped product asset under
+  `public/`. No synthetic catalog, photo, stock, or production media mapping is
+  claimed as launch evidence.
 - Authenticated visual acceptance and R2 upload smoke require Owner-provided
   environment/identity and must be run as separate evidence; passing typecheck,
   lint, build, or browser smoke does not imply those gates.
