@@ -403,16 +403,21 @@ export class QuoteService {
         version: quote.version,
       });
 
-      if (
-        existing.kind !== "ALREADY_ACCEPTED" ||
-        existing.currentOrderPublicTokenHash === undefined ||
-        repository.replaceOrderPublicTokenHash === undefined
-      ) {
+      if (existing.kind !== "ALREADY_ACCEPTED") {
         return {
           kind: existing.kind,
           orderId: existing.orderId,
           orderNumber: existing.orderNumber,
         };
+      }
+
+      if (
+        existing.currentOrderPublicTokenHash === undefined ||
+        repository.replaceOrderPublicTokenHash === undefined
+      ) {
+        throw appError("INTERNAL_ERROR", {
+          message: "Order accepted belum dapat menerbitkan ulang tautan status.",
+        });
       }
 
       const orderAccessToken = issueAccessToken({

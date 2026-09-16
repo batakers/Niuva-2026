@@ -218,6 +218,84 @@ describe("Phase 2 quote acceptance", () => {
     });
   });
 
+  it("reissues a route-bound order token when an accepted quote is replayed", async () => {
+    const quoteToken = issueAccessToken({
+      entityId: quoteId,
+      randomBytes: (size) => new Uint8Array(size).fill(6),
+      scope: "CUSTOM_PRINT_QUOTE",
+    });
+    const orderToken = issueAccessToken({
+      entityId: orderId,
+      randomBytes: (size) => new Uint8Array(size).fill(7),
+      scope: "ORDER_STATUS",
+    });
+    let replaced: { currentHash: string; nextHash: string; orderId: string } | undefined;
+    const repository: QuoteServiceRepository = {
+      async acceptAndCreatePayableOrder() {
+        return {
+          currentOrderPublicTokenHash: orderToken.tokenHash,
+          kind: "ALREADY_ACCEPTED" as const,
+          orderId,
+          orderNumber: "ORD-REPLAY-1",
+        };
+      },
+      async createDraft() {
+        throw new Error("unused");
+      },
+      async findForAcceptance() {
+        return {
+          ...quoteForAcceptance(quoteToken.tokenHash, new Date(now.getTime() + 86_400_000)),
+          status: "ACCEPTED" as const,
+        };
+      },
+      async findActivePricingRuleVersion() {
+        return activePricingRule;
+      },
+      async findLatestVersion() {
+        return 1;
+      },
+      async findRequestForReview() {
+        return null;
+      },
+      async findReview() {
+        return null;
+      },
+      async orderNumberExists() {
+        return false;
+      },
+      async quoteNumberExists() {
+        return false;
+      },
+      async replaceOrderPublicTokenHash(input) {
+        replaced = input;
+        return true;
+      },
+      async sendIfCurrent() {
+        return null;
+      },
+      async updateStatusIfCurrent() {
+        return null;
+      },
+    };
+    const service = new QuoteService({
+      now: () => now,
+      randomBytes: (size) => new Uint8Array(size).fill(8),
+      repository,
+    });
+
+    const result = await service.accept({ now, quoteId, token: quoteToken.token });
+
+    expect(result.kind).toBe("ALREADY_ACCEPTED");
+    expect(result.orderAccessToken?.scope).toBe("ORDER_STATUS");
+    expect(result.orderAccessToken?.entityId).toBe(orderId);
+    expect(result.orderAccessToken?.token).toMatch(/^v1\./);
+    expect(replaced).toEqual({
+      currentHash: orderToken.tokenHash,
+      nextHash: result.orderAccessToken?.tokenHash,
+      orderId,
+    });
+  });
+
   it("rejects a token at the stored quote expiry before any order mutation", async () => {
     const expiresAt = new Date("2026-09-04T01:00:00.000Z");
     const quoteToken = issueAccessToken({
