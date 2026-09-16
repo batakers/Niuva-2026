@@ -167,6 +167,10 @@ function actionHref(item: ActionQueueItem): string | null {
     case "ORDER_PROCESSING":
     case "PACKAGE_MEASUREMENT":
       return `/admin/orders/${entityId}`;
+    case "QUOTE_SEND":
+      return "/admin/custom-print";
+    case "SHIPPING_EXCEPTION":
+      return "/admin/orders";
     default:
       return "/admin";
   }
