@@ -516,6 +516,21 @@ wiring autentikasi pada fase integrasi tersedia.
 
 ### Checkpoints
 
+### Current integration slice — 2026-09-16
+
+The retired FE-18–26 fixture routes have been replaced for the allowed server
+slice. Live targets are `/admin/orders/[id]`, `/admin/custom-print/[id]`,
+`/admin/products/[id]`, `/admin/portfolio/[id]`, `/admin/inquiries`,
+`/admin/inquiries/[id]`, and `/admin/pricing`. Server Actions enforce the
+existing permission map and domain transition/audit contracts for fulfillment,
+inquiry status, slicer review, quote draft/send, stock, catalog media,
+portfolio content/media, and order/quote token reissue. Pricing activation,
+Biteship/Midtrans, Clerk tenant smoke, R2 live smoke, and Owner launch catalog
+seed remain separate gates.
+
+The FE-16–26 rows below remain a historical preview record; their retired
+fixture-only boundaries do not override the server-backed routes listed above.
+
 - A: FE-00–02 — kontrak, fixture isolation, public shell.
 - B: FE-03–05 — homepage, services, daftar projects.
 - C: FE-06–08 — detail project, brief, catalog.

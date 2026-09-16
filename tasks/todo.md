@@ -68,11 +68,28 @@
 ## Frontend-first execution backlog — 2026-09-06
 
 Rincian AC, paths, dependencies dan verification: [plan.md](plan.md#frontend-first-task-map--2026-09-06).
-Status: FE-00–21 UI_IMPLEMENTED; FE-22–27 proposed. Checkbox implementasi bukan
+Status: FE-00–27 UI_IMPLEMENTED; admin integration slice 2026-09-16 tersedia,
+tetapi Owner/provider gates tetap terbuka. Checkbox implementasi bukan
 visual acceptance atau tanda integrated MVP selesai. Checkpoint visual tetap terbuka.
 Handoff dan verifikasi: [public-batch.md](../docs/frontend/public-batch.md).
 Preview implementation FE-16–26 dipensiunkan pada 2026-09-10; checkbox terkait
 tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan.
+
+## Current admin integration slice — 2026-09-16
+
+- [x] Detail/editor server-backed: orders, custom print, products, portfolio.
+- [x] Live subview: B2B Inquiries dan Pricing Rules.
+- [x] Authorized writes: order/inquiry transition, slicer review, quote draft/send,
+  stock/media mapping, portfolio edit/publish guard, dan token reissue.
+- [x] Guarded catalog importer tersedia; seed nyata, foto, stok, dan mapping
+  production menunggu dataset Owner.
+- [ ] Clerk tenant smoke dengan exact `user_...` Owner identity dan authenticated
+  visual acceptance.
+- [ ] R2 non-production upload smoke nyata.
+- [ ] Dokumentasi/tautan customer lama dikirim ulang setelah token route-bound v1
+  diterbitkan pada detail order/quote.
+- [ ] Biteship/Midtrans activation/smoke — sengaja ditunda sampai data perusahaan
+  tersedia.
 
 - [x] FE-00 — Kontrak screen dan status visual
 - [x] FE-01 — Data contoh dan skenario preview

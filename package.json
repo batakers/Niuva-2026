@@ -29,6 +29,7 @@
     "db:demo:start": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/local-dev-db.ps1 start",
     "db:demo:migrate": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/local-dev-db.ps1 migrate",
     "db:demo:seed": "jiti scripts/seed-local-demo.ts",
+    "db:seed:catalog": "jiti scripts/seed-catalog.ts",
     "db:provision:admin": "jiti scripts/provision-admin-profile.ts",
     "test:integration": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/local-test-db.ps1 test"
   },

@@ -82,6 +82,14 @@ export type QuoteForAcceptance = Readonly<{
   version: number;
 }>;
 
+export type QuoteTokenForReissue = Readonly<{
+  expiresAt: Date | null;
+  id: string;
+  publicTokenHash: string;
+  quoteNumber: string;
+  status: "ACCEPTED" | "DECLINED" | "DRAFT" | "EXPIRED" | "SENT";
+}>;
+
 export type AcceptedCustomOrder = Readonly<{
   kind: "ALREADY_ACCEPTED" | "CREATED";
   orderId: string;
@@ -612,5 +620,30 @@ export class CustomPrintQuoteRepository {
     });
 
     return quote?.version ?? null;
+  }
+
+  async findForTokenReissue(quoteId: string): Promise<QuoteTokenForReissue | null> {
+    return this.prisma.customPrintQuote.findUnique({
+      where: { id: quoteId },
+      select: {
+        expiresAt: true,
+        id: true,
+        publicTokenHash: true,
+        quoteNumber: true,
+        status: true,
+      },
+    });
+  }
+
+  async replacePublicTokenHash(
+    quoteId: string,
+    currentHash: string,
+    nextHash: string,
+  ): Promise<boolean> {
+    const updated = await this.prisma.customPrintQuote.updateMany({
+      where: { id: quoteId, publicTokenHash: currentHash },
+      data: { publicTokenHash: nextHash },
+    });
+    return updated.count === 1;
   }
 }

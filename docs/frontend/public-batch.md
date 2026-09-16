@@ -1,6 +1,6 @@
-# Frontend review batch — FE-00–22
+# Frontend review batch — FE-00–27
 
-Started: 2026-09-06. Updated: 2026-09-14. Status: **UI_IMPLEMENTED**, **VISUAL_ACCEPTANCE_PENDING**,
+Started: 2026-09-06. Updated: 2026-09-16. Status: **UI_IMPLEMENTED**, **ADMIN_INTEGRATED_PENDING_OWNER_GATES**, **VISUAL_ACCEPTANCE_PENDING**,
 **PARTIALLY_INTEGRATED (FE-07, NG-02, NG-05 local path)**. User approved FE-00–02 followed by FE-03–07, FE-08–15, the isolated FE-16 admin preview, FE-17 Action Queue, FE-18 Admin Inquiry Detail, FE-19 Admin Orders, FE-20 Admin Order Fulfillment, FE-21 Admin Custom Print Review, and FE-22 Admin Quote Draft Preview.
 
 > Integration update — on 2026-09-13, FE-07 was promoted to the link-based
@@ -17,6 +17,17 @@ Started: 2026-09-06. Updated: 2026-09-14. Status: **UI_IMPLEMENTED**, **VISUAL_A
 > were added locally. Provider smokes, launch catalog/pricing seed, and Owner
 > visual acceptance remain separate gates; the preview rows below continue to
 > describe only explicit `?preview=examples` behavior.
+
+> Integration update — on 2026-09-16, the real admin surface replaced the
+> retired fixture-only FE-18–26 screens for the allowed operational slice.
+> `/admin/orders/[id]`, `/admin/custom-print/[id]`, `/admin/products/[id]`,
+> `/admin/portfolio/[id]`, `/admin/inquiries`, `/admin/inquiries/[id]`, and
+> `/admin/pricing` now read server-owned projections. Authorized Server Actions
+> cover order/inquiry transitions, slicer review, quote draft/send, stock and
+> catalog media updates, portfolio editing/media mapping, and route-bound token
+> reissue. Clerk tenant login, R2 live smoke, Owner catalog seed/media, and
+> authenticated visual acceptance remain open gates. Biteship/Midtrans activation
+> and smoke are explicitly deferred until company data is available.
 
 ## Scope and review paths
 
@@ -50,6 +61,30 @@ Run `corepack pnpm dev`; open `http://localhost:3000`. Use fictional contact
 information for review. Preview data is not a factual client portfolio.
 
 ## Boundaries
+
+### Current integration boundary (2026-09-16)
+
+- The live admin pages use Clerk + active `AdminProfile`, server repositories,
+  domain services, Zod validation, and audit logging. The browser never writes
+  directly to Prisma or receives private file URLs.
+- Product and portfolio publication is guarded by server-side completeness checks
+  (active variant/media for products; narrative/media for portfolio). Client
+  permission and factual launch content remain Owner decisions.
+- B2B inquiry and Pricing Rules are live read subviews. Pricing activation is
+  intentionally not exposed by this batch; Biteship and Midtrans remain disabled.
+- Existing SENT quote/order links can be reissued from their admin detail pages.
+  Reissue replaces the stored hash, invalidates the old link, and emits a new
+  `v1.<entity-id>.<secret>` route-bound token without logging the secret.
+- `scripts/seed-catalog.ts` accepts only an Owner-supplied dataset and loopback
+  non-production database. No synthetic catalog, photo, stock, or production
+  media mapping is claimed as launch evidence.
+- Authenticated visual acceptance and R2 upload smoke require Owner-provided
+  environment/identity and must be run as separate evidence; passing typecheck,
+  lint, build, or browser smoke does not imply those gates.
+
+The FE-16–26 bullets below are retained as historical preview evidence. Where
+they describe fixture-only routes or “no mutation”, the current integration
+slice above is the authoritative status for the live `/admin` routes.
 
 - Except for the current FE-07 server-backed route, no inquiry POST, email,
   database write, file upload or provider call is made by these preview pages.
@@ -159,6 +194,23 @@ information for review. Preview data is not a factual client portfolio.
   were introduced by this frontend batch.
 
 ## Verification
+
+### Latest integration verification — 2026-09-16
+
+- `corepack pnpm typecheck`: passed.
+- `corepack pnpm lint`: passed with the repository's existing warning set; the
+  changed files have no ESLint warnings or errors.
+- `corepack pnpm test`: 73 tests passed across 15 files.
+- `corepack pnpm test:backend`: 118 tests passed across 22 files.
+- `corepack pnpm build`: production build passed and emitted the new admin
+  detail/subview routes.
+- `corepack pnpm test:e2e`: 55 passed, 2 failed in the pre-existing published
+  project fixture flow because Smart Drop Box is not seeded in the smoke
+  environment; existing fail-closed admin checks passed, while the new detail
+  routes were not authenticated-smoked. Authenticated admin visual acceptance
+  remains blocked until Clerk identity is supplied.
+- `impeccable detect --json src/app/admin src/components/niuva/admin-shell.tsx`:
+  no findings.
 
 - `corepack pnpm lint`: 0 errors, 147 pre-existing warnings; focused ESLint on the
   changed frontend/test files has no warnings or errors.

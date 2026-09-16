@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import Link from "next/link";
 
 import { AdminDataUnavailableView, AdminPagination, AdminShell } from "@/components/niuva/admin-shell";
 import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
@@ -100,7 +101,7 @@ function ProductCard({ item }: Readonly<{ item: AdminProductRow }>) {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.1em] text-brand-700">{item.category?.name ?? "Tanpa kategori"}</p>
-          <h3 className="mt-2 text-lg font-semibold">{item.name}</h3>
+          <h3 className="mt-2 text-lg font-semibold"><Link className="underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/admin/products/${item.id}`}>{item.name}</Link></h3>
           <p className="mt-1 font-mono text-xs text-muted-foreground">{item.slug}</p>
         </div>
         <div className="flex flex-wrap gap-2 text-xs font-semibold">
@@ -122,7 +123,7 @@ function ProductCard({ item }: Readonly<{ item: AdminProductRow }>) {
           </table>
         )}
       </div>
-      <p className="mt-4 text-xs leading-5 text-muted-foreground">Total stok varian aktif: {totalStock}. Editor dan adjustment stok akan menggunakan action terotorisasi, bukan perubahan langsung dari browser.</p>
+      <p className="mt-4 text-xs leading-5 text-muted-foreground">Total stok varian aktif: {totalStock}. <Link className="font-semibold text-brand-700 underline-offset-4 hover:underline" href={`/admin/products/${item.id}`}>Buka editor dan adjustment</Link>.</p>
     </article>
   );
 }

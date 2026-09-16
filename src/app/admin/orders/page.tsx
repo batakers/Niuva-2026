@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import Link from "next/link";
 
 import { AdminDataUnavailableView, AdminPagination, AdminShell } from "@/components/niuva/admin-shell";
 import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
@@ -124,7 +125,7 @@ function OrderTableRow({ item }: Readonly<{ item: AdminOrderRow }>) {
   return (
     <tr>
       <th className="px-5 py-4 align-top font-medium" scope="row">
-        <span className="block font-mono text-sm">{item.orderNumber}</span>
+        <Link className="block font-mono text-sm text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/admin/orders/${item.id}`}>{item.orderNumber}</Link>
         <span className="mt-1 block text-xs font-normal text-muted-foreground">{orderTypeLabel(item.orderType)}</span>
       </th>
       <td className="px-5 py-4 align-top">
@@ -144,7 +145,7 @@ function OrderCard({ item }: Readonly<{ item: AdminOrderRow }>) {
     <article className="rounded-xl border border-border bg-card p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="font-mono text-sm font-semibold">{item.orderNumber}</p>
+          <Link className="font-mono text-sm font-semibold text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/admin/orders/${item.id}`}>{item.orderNumber}</Link>
           <p className="mt-1 text-xs text-muted-foreground">{orderTypeLabel(item.orderType)}</p>
         </div>
         <StatusText value={item.status} />

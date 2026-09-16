@@ -6,6 +6,7 @@ import { appError } from "@/modules/shared/errors";
 import type {
   CreateProductInput,
   CreateVariantInput,
+  ReplaceProductMediaInput,
   UpdateProductInput,
   UpdateVariantInput,
 } from "./schema";
@@ -37,12 +38,22 @@ export type StockMutationResult = Readonly<{
   stockOnHand: number;
 }>;
 
+export type AdminProductPublishCheck = Readonly<{
+  mediaCount: number;
+  activeVariantCount: number;
+}>;
+
 export interface CatalogRepositoryPort {
   createProduct(input: CreateProductInput): Promise<Readonly<{ id: string }>>;
   createVariant(input: CreateVariantInput): Promise<Readonly<{ id: string }>>;
   findPublishedProductBySlug(slug: string): Promise<PublicCatalogProduct | null>;
   findPublishedProducts(): Promise<readonly PublicCatalogProduct[]>;
+  findAdminProductForPublish?(productId: string): Promise<AdminProductPublishCheck | null>;
   findPurchasableVariantBySku(sku: string): Promise<unknown | null>;
+  replaceMedia?(
+    productId: string,
+    items: ReplaceProductMediaInput["items"],
+  ): Promise<Readonly<{ productId: string; mediaCount: number }>>;
   updateProduct(
     productId: string,
     input: UpdateProductInput,
@@ -200,6 +211,53 @@ export class CatalogRepository implements CatalogRepositoryPort {
       where: { id: variantId },
       data: input,
       select: { id: true },
+    });
+  }
+
+  async findAdminProductForPublish(
+    productId: string,
+  ): Promise<AdminProductPublishCheck | null> {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+      select: {
+        _count: { select: { media: true } },
+        variants: { where: { isActive: true }, select: { id: true } },
+      },
+    });
+    if (product === null) return null;
+    return {
+      activeVariantCount: product.variants.length,
+      mediaCount: product._count.media,
+    };
+  }
+
+  async replaceMedia(
+    productId: string,
+    items: ReplaceProductMediaInput["items"],
+  ): Promise<Readonly<{ productId: string; mediaCount: number }>> {
+    return this.prisma.$transaction(async (transaction) => {
+      const product = await transaction.product.findUnique({
+        where: { id: productId },
+        select: { id: true },
+      });
+
+      if (product === null) {
+        throw appError("NOT_FOUND");
+      }
+
+      await transaction.productMedia.deleteMany({ where: { productId } });
+      if (items.length > 0) {
+        await transaction.productMedia.createMany({
+          data: items.map((item) => ({
+            altText: item.altText,
+            productId,
+            sortOrder: item.sortOrder,
+            storageKey: item.storageKey,
+          })),
+        });
+      }
+
+      return { productId: product.id, mediaCount: items.length };
     });
   }
 
