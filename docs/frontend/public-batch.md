@@ -92,6 +92,9 @@ slice above is the authoritative status for the live `/admin` routes. The next
 handoff should link to that slice rather than treating the archival preview
 rows as open implementation work.
 
+For a requirement-by-requirement status, current loopback probe, and Owner
+input checklist, see [`operational-readiness-report.md`](./operational-readiness-report.md).
+
 - Except for the current FE-07 server-backed route, no inquiry POST, email,
   database write, file upload or provider call is made by these preview pages.
   Preview form values stay in page state/controls, without application storage.

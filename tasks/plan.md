@@ -528,6 +528,9 @@ portfolio content/media, and order/quote token reissue. Pricing activation,
 Biteship/Midtrans, Clerk tenant smoke, R2 live smoke, and Owner launch catalog
 seed remain separate gates.
 
+Requirement-level evidence and the next Owner handoff inputs are tracked in
+[`docs/frontend/operational-readiness-report.md`](../docs/frontend/operational-readiness-report.md).
+
 #### Review verification — 2026-09-16
 
 - `corepack pnpm typecheck`, `corepack pnpm lint` (0 errors; existing warning

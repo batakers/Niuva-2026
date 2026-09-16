@@ -72,6 +72,7 @@ Status: FE-00–27 UI_IMPLEMENTED; admin integration slice 2026-09-16 tersedia,
 tetapi Owner/provider gates tetap terbuka. Checkbox implementasi bukan
 visual acceptance atau tanda integrated MVP selesai. Checkpoint visual tetap terbuka.
 Handoff dan verifikasi: [public-batch.md](../docs/frontend/public-batch.md).
+Readiness report: [operational-readiness-report.md](../docs/frontend/operational-readiness-report.md).
 Preview implementation FE-16–26 dipensiunkan pada 2026-09-10; checkbox terkait
 tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan.
 
