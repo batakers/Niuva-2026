@@ -204,13 +204,20 @@ slice above is the authoritative status for the live `/admin` routes.
 - `corepack pnpm test:backend`: 118 tests passed across 22 files.
 - `corepack pnpm build`: production build passed and emitted the new admin
   detail/subview routes.
-- `corepack pnpm test:e2e`: 55 passed, 2 failed in the pre-existing published
-  project fixture flow because Smart Drop Box is not seeded in the smoke
-  environment; existing fail-closed admin checks passed, while the new detail
-  routes were not authenticated-smoked. Authenticated admin visual acceptance
-  remains blocked until Clerk identity is supplied.
+- `corepack pnpm test:e2e` with the default four local workers: 54 passed, 3
+  failed while the Next development server compiled cold routes under parallel
+  contention (one order-status navigation timeout and two Smart Drop Box
+  navigation assertions). The same three cases passed serially.
+- CI-mode browser gate (`CI=1 corepack pnpm test:e2e`, one worker with retry):
+  57/57 passed. This is the reproducible PR smoke result; the parallel local
+  runner remains a resource-sensitive diagnostic only.
+- The new admin detail/subview routes were not authenticated-smoked because
+  the Owner has not supplied a non-production Clerk `user_...` identity and
+  matching active `AdminProfile`. Authenticated admin visual acceptance remains
+  an explicit Owner gate.
 - `impeccable detect --json src/app/admin src/components/niuva/admin-shell.tsx`:
   no findings.
+- `git diff --check`: passed.
 
 - `corepack pnpm lint`: 0 errors, 147 pre-existing warnings; focused ESLint on the
   changed frontend/test files has no warnings or errors.

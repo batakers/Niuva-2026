@@ -79,7 +79,7 @@ export default async function AdminOrderDetailPage({
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Transition divalidasi oleh service server dan dicatat ke audit log. Pembatalan order berbayar tetap memerlukan workflow refund terpisah.</p>
           <div className="mt-5 flex flex-wrap gap-2">
             {nextStatuses.length === 0 ? <p className="text-sm text-muted-foreground">Tidak ada transition yang tersedia dari status ini.</p> : nextStatuses.map((next) => (
-              <AdminActionForm action={transitionOrderAction} key={next} submitLabel={`Ubah ke ${formatStatus(next)}`}>
+              <AdminActionForm action={transitionOrderAction} confirmMessage={next === "CANCELLED" ? "Batalkan order ini? Status tidak dapat dibuka kembali otomatis." : undefined} key={next} submitLabel={`Ubah ke ${formatStatus(next)}`}>
                 <input name="orderId" type="hidden" value={order.id} />
                 <input name="nextStatus" type="hidden" value={next} />
               </AdminActionForm>
@@ -88,7 +88,7 @@ export default async function AdminOrderDetailPage({
           <div className="mt-6 border-t border-border pt-5">
             <h3 className="text-sm font-semibold">Tautan status customer</h3>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">Gunakan ini untuk mengganti tautan lama yang masih memakai token opaque. Token lama akan langsung tidak berlaku.</p>
-            <AdminActionForm action={reissueOrderTokenAction} className="mt-4" submitLabel="Terbitkan tautan baru">
+            <AdminActionForm action={reissueOrderTokenAction} className="mt-4" confirmMessage="Terbitkan tautan baru dan cabut token lama untuk order ini?" submitLabel="Terbitkan tautan baru">
               <input name="orderId" type="hidden" value={order.id} />
             </AdminActionForm>
           </div>

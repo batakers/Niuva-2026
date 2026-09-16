@@ -303,7 +303,9 @@ function checkbox(formData: FormData, name: string): boolean {
 }
 
 function numberValue(formData: FormData, name: string): number {
-  const value = Number(text(formData, name));
+  const raw = text(formData, name);
+  if (raw === "") return Number.NaN;
+  const value = Number(raw);
   return Number.isFinite(value) ? value : Number.NaN;
 }
 

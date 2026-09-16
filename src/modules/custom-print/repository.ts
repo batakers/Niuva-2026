@@ -94,6 +94,7 @@ export type AcceptedCustomOrder = Readonly<{
   kind: "ALREADY_ACCEPTED" | "CREATED";
   orderId: string;
   orderNumber: string;
+  currentOrderPublicTokenHash?: string;
 }>;
 
 export type CustomPrintRequestReviewSummary = Readonly<{
@@ -521,7 +522,7 @@ export class CustomPrintQuoteRepository {
       if (quote.status === "ACCEPTED") {
         const existing = await transaction.orderItem.findFirst({
           where: { customQuoteId: quote.id },
-          select: { order: { select: { id: true, orderNumber: true } } },
+          select: { order: { select: { id: true, orderNumber: true, publicTokenHash: true } } },
         });
 
         if (existing === null) {
@@ -532,6 +533,7 @@ export class CustomPrintQuoteRepository {
 
         return {
           kind: "ALREADY_ACCEPTED",
+          currentOrderPublicTokenHash: existing.order.publicTokenHash,
           orderId: existing.order.id,
           orderNumber: existing.order.orderNumber,
         };
@@ -620,6 +622,26 @@ export class CustomPrintQuoteRepository {
     });
 
     return quote?.version ?? null;
+  }
+
+  async findDraftForRequest(requestId: string): Promise<Readonly<{ id: string }> | null> {
+    return this.prisma.customPrintQuote.findFirst({
+      where: { requestId, status: "DRAFT" },
+      orderBy: [{ version: "desc" }, { createdAt: "desc" }],
+      select: { id: true },
+    });
+  }
+
+  async replaceOrderPublicTokenHash(input: Readonly<{
+    currentHash: string;
+    nextHash: string;
+    orderId: string;
+  }>): Promise<boolean> {
+    const updated = await this.prisma.order.updateMany({
+      where: { id: input.orderId, publicTokenHash: input.currentHash },
+      data: { publicTokenHash: input.nextHash },
+    });
+    return updated.count === 1;
   }
 
   async findForTokenReissue(quoteId: string): Promise<QuoteTokenForReissue | null> {

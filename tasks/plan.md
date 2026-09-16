@@ -528,6 +528,20 @@ portfolio content/media, and order/quote token reissue. Pricing activation,
 Biteship/Midtrans, Clerk tenant smoke, R2 live smoke, and Owner launch catalog
 seed remain separate gates.
 
+#### Review verification — 2026-09-16
+
+- `corepack pnpm typecheck`, `corepack pnpm lint` (0 errors; existing warning
+  set), `corepack pnpm test` (73/73), `corepack pnpm test:backend` (118/118),
+  `corepack pnpm build`, and `git diff --check` passed.
+- The reproducible CI-mode browser gate (`CI=1 corepack pnpm test:e2e`, one
+  worker with retry) passed 57/57. The default four-worker local runner is
+  resource-sensitive during cold Next route compilation; its three affected
+  navigations pass when run serially and are not treated as application
+  regressions.
+- Authenticated admin visual acceptance, live Clerk identity, R2 object smoke,
+  and Owner catalog/media seed remain open. Biteship/Midtrans activation and
+  smoke are intentionally deferred until company data is available.
+
 The FE-16–26 rows below remain a historical preview record; their retired
 fixture-only boundaries do not override the server-backed routes listed above.
 

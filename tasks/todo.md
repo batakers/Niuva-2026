@@ -87,9 +87,21 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
   visual acceptance.
 - [ ] R2 non-production upload smoke nyata.
 - [ ] Dokumentasi/tautan customer lama dikirim ulang setelah token route-bound v1
-  diterbitkan pada detail order/quote.
+  diterbitkan pada detail order/quote; admin reissue sudah tersedia, pengiriman
+  aktual menunggu daftar customer dan kanal yang disetujui Owner.
 - [ ] Biteship/Midtrans activation/smoke — sengaja ditunda sampai data perusahaan
   tersedia.
+
+### Review verification — 2026-09-16
+
+- [x] `corepack pnpm typecheck`, lint (0 error), unit 73/73, backend 118/118,
+  production build, dan `git diff --check` lulus.
+- [x] CI-mode Playwright (`CI=1 corepack pnpm test:e2e`, satu worker dengan
+  retry) lulus 57/57. Runner lokal empat worker tetap dicatat sebagai
+  diagnostik yang sensitif terhadap cold compile; tiga navigasi yang gagal di
+  mode paralel lulus saat serial.
+- [ ] Authenticated admin visual acceptance, Clerk `user_...`, R2 smoke, dan
+  seed katalog/media Owner masih menunggu input eksternal.
 
 - [x] FE-00 — Kontrak screen dan status visual
 - [x] FE-01 — Data contoh dan skenario preview

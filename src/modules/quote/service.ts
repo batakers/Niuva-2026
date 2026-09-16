@@ -98,12 +98,18 @@ export interface QuoteServiceRepository {
     id: string;
     version: number;
   }> | null>;
+  findDraftForRequest?(requestId: string): Promise<Readonly<{ id: string }> | null>;
   findLatestVersion(requestId: string): Promise<number | null>;
   findRequestForReview(requestId: string): Promise<Readonly<{
     id: string;
     quantity: number;
     status: "APPROVED" | "CANCELLED" | "DECLINED" | "QUOTE_READY" | "QUOTE_SENT" | "SUBMITTED" | "UNDER_REVIEW";
   }> | null>;
+  replaceOrderPublicTokenHash?(input: Readonly<{
+    currentHash: string;
+    nextHash: string;
+    orderId: string;
+  }>): Promise<boolean>;
   findReview(requestId: string): Promise<CustomPrintReviewRecord | null>;
   orderNumberExists(orderNumber: string): Promise<boolean>;
   quoteNumberExists(quoteNumber: string): Promise<boolean>;
@@ -223,6 +229,15 @@ export class QuoteService {
 
     if (request.status !== "QUOTE_READY" && request.status !== "QUOTE_SENT") {
       throw appError("QUOTE_NOT_READY");
+    }
+
+    const existingDraft = repository.findDraftForRequest === undefined
+      ? null
+      : await repository.findDraftForRequest(parsed.requestId);
+    if (existingDraft !== null) {
+      throw appError("CONFLICT", {
+        message: "Request ini sudah memiliki draft quote. Kirim atau supersede draft tersebut sebelum membuat versi baru.",
+      });
     }
 
     const review = await repository.findReview(parsed.requestId);
@@ -388,7 +403,42 @@ export class QuoteService {
         version: quote.version,
       });
 
-      return existing;
+      if (
+        existing.kind !== "ALREADY_ACCEPTED" ||
+        existing.currentOrderPublicTokenHash === undefined ||
+        repository.replaceOrderPublicTokenHash === undefined
+      ) {
+        return {
+          kind: existing.kind,
+          orderId: existing.orderId,
+          orderNumber: existing.orderNumber,
+        };
+      }
+
+      const orderAccessToken = issueAccessToken({
+        entityId: existing.orderId,
+        includeEntityId: true,
+        now,
+        randomBytes: this.randomBytes,
+        scope: "ORDER_STATUS",
+      });
+      const replaced = await repository.replaceOrderPublicTokenHash({
+        currentHash: existing.currentOrderPublicTokenHash,
+        nextHash: orderAccessToken.tokenHash,
+        orderId: existing.orderId,
+      });
+      if (!replaced) {
+        throw appError("CONFLICT", {
+          message: "Order berubah sebelum tautan status baru diterbitkan.",
+        });
+      }
+
+      return {
+        kind: existing.kind,
+        orderAccessToken,
+        orderId: existing.orderId,
+        orderNumber: existing.orderNumber,
+      };
     }
 
     if (quote.status !== "SENT") {

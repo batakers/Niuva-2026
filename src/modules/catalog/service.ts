@@ -59,6 +59,11 @@ export class CatalogService {
     const parsed = parseWithValidation(createProductSchema, input);
     const admin = await this.authorizeAdmin();
     requireAdminPermission(admin, "CATALOG_WRITE");
+    if (parsed.isPublished) {
+      throw appError("VALIDATION_ERROR", {
+        details: { publish: "Buat produk sebagai draft, lalu lengkapi foto dan varian aktif sebelum publish." },
+      });
+    }
     const created = await this.repositoryFactory().createProduct(parsed);
 
     await recordAudit(this.audit, {

@@ -61,7 +61,10 @@ export const catalogSeedSchema = z
         context.addIssue({ code: "custom", message: `Slug produk duplikat: ${product.slug}.`, path: ["products"] });
       }
       productSlugs.add(product.slug);
-      if (product.isPublished && (product.media.length === 0 || product.variants.length === 0)) {
+      if (product.isPublished && (
+        product.media.length === 0 ||
+        !product.variants.some((variant) => variant.isActive)
+      )) {
         context.addIssue({ code: "custom", message: `Produk published harus memiliki media dan varian: ${product.slug}.`, path: ["products"] });
       }
       const sortOrders = new Set<number>();

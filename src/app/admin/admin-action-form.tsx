@@ -12,17 +12,27 @@ export function AdminActionForm({
   action,
   children,
   className,
+  confirmMessage,
   submitLabel = "Simpan perubahan",
 }: Readonly<{
   action: AdminAction;
   children: ReactNode;
   className?: string;
+  confirmMessage?: string;
   submitLabel?: string;
 }>) {
   const [state, formAction, pending] = useActionState(action, initialState);
 
   return (
-    <form action={formAction} className={className}>
+    <form
+      action={formAction}
+      className={className}
+      onSubmit={(event) => {
+        if (confirmMessage !== undefined && !window.confirm(confirmMessage)) {
+          event.preventDefault();
+        }
+      }}
+    >
       <fieldset className="grid gap-4" disabled={pending}>
         {children}
         <Button className="min-h-11 w-fit" disabled={pending} type="submit">

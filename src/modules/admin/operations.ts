@@ -999,20 +999,31 @@ export class AdminOperationsService {
     return {
       generatedAt: this.now(),
       hasNext: rows.length > ADMIN_PAGE_SIZE,
-      items: pageRows.map((row) => ({
-        approvedAt: row.approvedAt,
-        approvedBy: row.approvedByAdmin?.displayName ?? (row.approvedByAdmin === null ? null : "Admin profile"),
-        code: row.code,
-        createdAt: row.createdAt,
-        definitionJson: row.definitionJson,
-        id: row.id,
-        status: row.status,
-        updatedAt: row.updatedAt,
-        version: row.version,
-      })),
+      items: pageRows.map(toAdminPricingRule),
       page,
       role: access.profile.role,
     };
+  }
+
+  async getActivePricingRule(): Promise<AdminPricingRuleRow | null> {
+    await this.authorizeWith("AUDIT_READ");
+    const row = await this.prisma.pricingRuleVersion.findFirst({
+      where: { status: "ACTIVE" },
+      orderBy: [{ version: "desc" }, { createdAt: "desc" }, { id: "desc" }],
+      select: {
+        approvedAt: true,
+        approvedByAdmin: { select: { displayName: true } },
+        code: true,
+        createdAt: true,
+        definitionJson: true,
+        id: true,
+        status: true,
+        updatedAt: true,
+        version: true,
+      },
+    });
+
+    return row === null ? null : toAdminPricingRule(row);
   }
 
   private async authorizeWith(permission: AdminPermission): Promise<AdminAccess> {
@@ -1024,4 +1035,28 @@ export class AdminOperationsService {
 function normalizePage(value: number | undefined): number {
   if (value === undefined || !Number.isSafeInteger(value) || value < 1) return 1;
   return Math.min(value, 100_000);
+}
+
+function toAdminPricingRule(row: {
+  approvedAt: Date | null;
+  approvedByAdmin: { displayName: string | null } | null;
+  code: string;
+  createdAt: Date;
+  definitionJson: unknown;
+  id: string;
+  status: string;
+  updatedAt: Date;
+  version: number;
+}): AdminPricingRuleRow {
+  return {
+    approvedAt: row.approvedAt,
+    approvedBy: row.approvedByAdmin?.displayName ?? (row.approvedByAdmin === null ? null : "Admin profile"),
+    code: row.code,
+    createdAt: row.createdAt,
+    definitionJson: row.definitionJson,
+    id: row.id,
+    status: row.status,
+    updatedAt: row.updatedAt,
+    version: row.version,
+  };
 }
