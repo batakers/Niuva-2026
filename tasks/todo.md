@@ -76,23 +76,25 @@ Readiness report: [operational-readiness-report.md](../docs/frontend/operational
 Preview implementation FE-16–26 dipensiunkan pada 2026-09-10; checkbox terkait
 tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan.
 
-## Current admin integration slice — 2026-09-16
+## Current admin integration slice — 2026-09-17
 
 > Handoff clarification — bagian NG-01, local-demo, dan retained-test-profile
 > di bawah mempertahankan evidence dari sesi lokal sebelumnya. Bagian tersebut
 > bukan klaim authenticated-admin acceptance yang baru untuk checkout ini.
 > Exact Clerk identity Owner kini sudah dipasangkan ke profile loopback aktif;
-> seed konten portfolio juga sudah dilakukan terpisah. R2 object smoke,
-> katalog Shop, dan authenticated visual review tetap dicatat sebagai gate
-> terpisah.
+> seed konten portfolio juga sudah dilakukan terpisah. Katalog Shop kini sudah
+> di-seed ke loopback sebagai draft; R2 object smoke dan authenticated visual
+> review tetap dicatat sebagai gate terpisah.
 
 - [x] Detail/editor server-backed: orders, custom print, products, portfolio.
 - [x] Live subview: B2B Inquiries dan Pricing Rules.
 - [x] Authorized writes: order/inquiry transition, slicer review, quote draft/send,
   stock/media mapping, portfolio edit/publish guard, dan token reissue.
-- [x] Guarded catalog importer tersedia; seed nyata, foto, stok, dan mapping
-  production menunggu dataset Shop Owner. Audit empat sumber dan alasan
-  kekurangannya: `docs/backend/catalog-source-audit.md`.
+- [x] Guarded catalog preparation/importer: dataset Shop Owner menghasilkan 8
+  produk draft, 34 varian, 4 kategori, dan 50 mapping JPG di loopback. Enam
+  placeholder tanpa harga/stok dikecualikan; SKU merchandising, dimensi paket,
+  dan keputusan publish masih dicatat sebagai gate di
+  `docs/backend/catalog-source-audit.md`.
 - [x] Exact `user_...` Owner identity sudah terhubung ke `AdminProfile` aktif
   loopback; retained authenticated Action Queue smoke lulus.
 - [ ] Fresh authenticated visual acceptance untuk detail/editor admin setelah
@@ -105,7 +107,7 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
 - [ ] Biteship/Midtrans activation/smoke — sengaja ditunda sampai data perusahaan
   tersedia.
 
-### Review verification — 2026-09-16
+### Review verification — 2026-09-17
 
 - [x] `corepack pnpm typecheck`, lint (0 error), unit 73/73, backend 119/119,
   production build, dan `git diff --check` lulus.
@@ -113,9 +115,10 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
   retry) lulus 57/57. Runner lokal empat worker tetap dicatat sebagai
   diagnostik yang sensitif terhadap cold compile; tiga navigasi yang gagal di
   mode paralel lulus saat serial.
-- [ ] Fresh authenticated admin visual acceptance, R2 smoke, dan dataset Shop
-  (SKU/varian, harga retail, stok, foto, dimensi) masih terbuka. Portfolio
-  development sudah di-seed; Biteship/Midtrans tetap sengaja ditunda.
+- [ ] Fresh authenticated admin visual acceptance dan R2 smoke masih terbuka.
+  Dataset Shop sudah di-seed secara reproducible; SKU merchandising, dimensi
+  paket, dan keputusan publish tetap membutuhkan Owner. Portfolio development
+  sudah di-seed; Biteship/Midtrans tetap sengaja ditunda.
 
 > Catatan arsip — entri FE-16–26 di bawah mempertahankan kontrak preview lama
 > untuk jejak visual/regresi. Status implementasi admin saat ini adalah matriks
@@ -522,7 +525,9 @@ Project Brief integration gates are committed and pushed in `1d5b870`.
   order/reservation/snapshots → payment attempt and idempotent replay with
   non-production provider adapters.
 - [ ] Owner-approved product/SKU/media/stock dataset and active pricing seed are
-  available in the development database.
+  available in the development database. The Shop dataset is now seeded as 8
+  unpublished products, 34 variants, and 50 JPG media; merchandising SKU,
+  package dimensions, publish approval, and active pricing remain open.
 - [ ] Connect real server rates → idempotent guest checkout → Midtrans sandbox
   handoff → verified order state; browser totals/callbacks remain advisory.
 - [ ] Add integration and one-worker browser coverage for success, duplicate,
@@ -530,13 +535,13 @@ Project Brief integration gates are committed and pushed in `1d5b870`.
 
 ### Goal blockers / explicit boundaries
 
-- [ ] Clerk live smoke requires Owner dashboard access and a development DB;
-  paired non-production keys are present and the anonymous redirect is proven.
+- [ ] Clerk live smoke still requires interactive Owner sign-in evidence; the
+  supplied `user_...` identity is mapped to an active loopback Owner profile.
 - [ ] R2 live smoke requires a complete non-production capability group and CORS
   policy; no R2 values or approved upload-limit value are present locally.
 - [ ] Biteship/Midtrans live checkout requires provider accounts, sandbox keys,
-  callback reachability, and an Owner-approved catalog/pricing seed; none are
-  present locally.
+  callback reachability, and an Owner-approved published catalog/pricing seed;
+  provider capability is intentionally deferred by Owner.
 - [ ] Automatic WhatsApp remains `BLOCKED_DECISION` until provider approval.
 - [ ] Official company biodata remains `DEFERRED/OPEN` for public claims,
   business sender identity, and provider/invoice identity; no synthetic value

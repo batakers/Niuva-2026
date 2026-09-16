@@ -1,6 +1,6 @@
 # Frontend review batch — FE-00–27
 
-Started: 2026-09-06. Updated: 2026-09-16. Status: **UI_IMPLEMENTED**, **ADMIN_INTEGRATED_PENDING_OWNER_GATES**, **VISUAL_ACCEPTANCE_PENDING**,
+Started: 2026-09-06. Updated: 2026-09-17. Status: **UI_IMPLEMENTED**, **ADMIN_INTEGRATED_PENDING_OWNER_GATES**, **VISUAL_ACCEPTANCE_PENDING**,
 **PARTIALLY_INTEGRATED (FE-07, NG-02, NG-05 local path)**. User approved FE-00–02 followed by FE-03–07, FE-08–15, and the server-backed admin integration slice shipped on 2026-09-16. The fixture-only FE-16–26 rows below remain archival evidence, not the current admin implementation.
 
 > Integration update — on 2026-09-13, FE-07 was promoted to the link-based
@@ -14,8 +14,8 @@ Started: 2026-09-06. Updated: 2026-09-16. Status: **UI_IMPLEMENTED**, **ADMIN_IN
 
 > Integration update — on 2026-09-14, the custom-request upload orchestration
 > (R2 capability-gated) and Shop → Product → Cart → Checkout server-backed path
-> were added locally. Provider smokes, launch catalog/pricing seed, and Owner
-> visual acceptance remain separate gates; the preview rows below continue to
+> were added locally. Provider smokes, launch pricing/publish decisions, and
+> Owner visual acceptance remain separate gates; the preview rows below continue to
 > describe only explicit `?preview=examples` behavior.
 
 > Integration update — on 2026-09-16, the real admin surface replaced the
@@ -25,8 +25,8 @@ Started: 2026-09-06. Updated: 2026-09-16. Status: **UI_IMPLEMENTED**, **ADMIN_IN
 > `/admin/pricing` now read server-owned projections. Authorized Server Actions
 > cover order/inquiry transitions, slicer review, quote draft/send, stock and
 > catalog media updates, portfolio editing/media mapping, and route-bound token
-> reissue. R2 live smoke, Owner Shop catalog seed/media, and fresh authenticated
-> visual acceptance remain open gates; the supplied Clerk identity is now backed
+> reissue. R2 live smoke and fresh authenticated visual acceptance remain open
+> gates; the supplied Clerk identity is now backed
 > by an active loopback Owner profile. Biteship/Midtrans activation and smoke
 > are explicitly deferred until company data is available.
 
@@ -39,6 +39,14 @@ Started: 2026-09-06. Updated: 2026-09-16. Status: **UI_IMPLEMENTED**, **ADMIN_IN
 > Clerk identity is already represented by an active local Owner profile. R2
 > smoke and manual customer-link delivery remain open; Biteship/Midtrans stay
 > deferred by request.
+
+> Handoff update — on 2026-09-17, the Owner supplied
+> `docs/source/Dataset Shop Niuva/`. The guarded catalog preparation/seed path
+> now maps 8 products, 34 variants, 4 categories, and 50 real JPG media files
+> into loopback as unpublished drafts. Six Tokopedia placeholder variants were
+> excluded because they have no verified price/stock. Merchant SKU format,
+> package dimensions, publish approval, and variant-bound media remain explicit
+> Owner/schema gates; Biteship/Midtrans remain deferred.
 
 ## Scope and review paths
 
@@ -90,16 +98,19 @@ information for review. Preview data is not a factual client portfolio.
   manual customer handoff is documented in
   [`docs/backend/token-reissue-handoff.md`](../backend/token-reissue-handoff.md)
   and still requires an Owner-approved recipient/channel list.
-- `scripts/seed-catalog.ts` accepts only an Owner-supplied dataset and loopback
-  non-production database, and preflights every mapped product asset under
-  `public/`. No synthetic catalog, photo, stock, or production media mapping is
-  claimed as launch evidence.
+- `scripts/prepare-shop-catalog.ts` reads the Owner dataset at
+  `docs/source/Dataset Shop Niuva/`, writes the validated `catalog-seed.json`,
+  and maps only local JPG assets into `public/media/products/`.
+  `scripts/seed-catalog.ts` accepts that manifest only on a loopback
+  non-production database and preflights every mapped asset. No synthetic
+  catalog, photo, stock, or production media mapping is claimed as launch
+  evidence; all seeded products remain drafts.
 - `scripts/seed-local-public-content.ts` is a separate, confirmation-gated
   loopback seed for the already curated public services/portfolio records. Its
   six portfolio covers are not retail product media. Source findings and the
-  missing Shop fields are tracked in
+  remaining Shop fields are tracked in
   [`docs/backend/catalog-source-audit.md`](../backend/catalog-source-audit.md);
-  the Owner dataset format is specified in
+  the source/manifest contract is specified in
   [`shop-catalog-owner-intake.md`](../backend/shop-catalog-owner-intake.md).
 - Authenticated visual acceptance and R2 upload smoke require Owner-provided
   environment/identity and must be run as separate evidence; passing typecheck,
@@ -138,9 +149,10 @@ remain useful for visual regression history, but do not describe the live
   object storage keys are excluded, and SKUs are not rendered. Development cards
   link to the matching development-only detail route. Repository-level publication
   and active-variant filters remain the source contract for future integration.
-- Shop media remains an explicit empty slot because launch photography, products,
-  variants and publication permission are not yet approved. No generated product
-  image is presented as factual inventory.
+- The historical preview Shop cards keep their explicit media-empty behavior;
+  the current loopback catalog now has 50 mapped JPG assets from the Owner
+  dataset, all unpublished until the publish gate is approved. No generated
+  product image is presented as factual inventory.
 - Product detail writes a versioned local cart containing only variant ID and
   integer quantity. Product name, SKU, price, stock, dimensions and totals are not
   persisted. Cart updates and removals remain browser-local; corrupt or enriched

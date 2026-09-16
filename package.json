@@ -27,6 +27,7 @@
     "db:test:migrate": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/local-test-db.ps1 migrate",
     "db:test:seed:public-content": "jiti scripts/seed-approved-public-content.ts",
     "db:seed:public-content:local": "jiti scripts/seed-local-public-content.ts",
+    "catalog:prepare": "jiti scripts/prepare-shop-catalog.ts",
     "db:demo:start": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/local-dev-db.ps1 start",
     "db:demo:migrate": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/local-dev-db.ps1 migrate",
     "db:demo:seed": "jiti scripts/seed-local-demo.ts",

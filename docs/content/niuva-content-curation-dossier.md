@@ -554,9 +554,10 @@ is ambiguous:
 
 ## 9. Shop boundary
 
-The source set contains portfolio projects and custom-print pricing, not a
-ready-made commerce catalog. The Shop remains without launch products until a
-separate approved dataset provides, per sellable variant:
+The original portfolio/pricing source set does not contain a ready-made commerce
+catalog. A separate Owner dataset is now available at
+`docs/source/Dataset Shop Niuva/` and has been seeded to loopback as unpublished
+drafts. Launch publication still requires the following per sellable variant:
 
 - product and variant name;
 - category and public description;
@@ -595,7 +596,7 @@ sellable items merely because they appear in a source PDF.
 | Niuva's detailed role and team | `OPEN_FACT` | Project-specific responsibilities beyond the approved public boundaries still require evidence |
 | Detailed challenge/process/output | `CANDIDATE` / `OPEN_FACT` | CS-01 has a fuller approved draft; expand CS-02 through CS-06 only when supporting evidence is supplied |
 | Verified project results | `OPEN_FACT` | Provide documentary or Owner-confirmed factual evidence |
-| Ready-made Shop catalog | `OPEN_FACT` | Separate commercial dataset required |
+| Ready-made Shop catalog | `SEEDED_LOOPBACK_DRAFTS` | 8 products, 34 variants, 4 categories, and 50 mapped JPG media are available in loopback; confirm merchandising SKU format, package dimensions, and publish approval before launch |
 | Public content integration | `CONFIRMED` | Owner approved normal-route integration for company, services, six Featured Projects, and eleven Selected Works; no commerce data is activated |
 | Content publication approval | `CONFIRMED` | Owner approved the public content and six fallback cover assets; this approval is distinct from deployment, live database seeding, provider activation, and launch readiness |
 

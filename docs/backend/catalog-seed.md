@@ -1,15 +1,21 @@
 # Owner catalog seed
 
-Audit sumber yang sudah diberikan Owner dan alasan katalog Shop belum dapat
-diisi dari berkas tersebut dicatat di
+Audit sumber yang sudah diberikan Owner dan batas data yang masih terbuka dicatat di
 [`catalog-source-audit.md`](catalog-source-audit.md).
 
 `scripts/seed-catalog.ts` adalah importer idempotent untuk dataset katalog yang sudah disediakan Owner. Script ini hanya menerima database PostgreSQL loopback dengan marker `dev`, `demo`, atau `test`, dan memerlukan `CATALOG_SEED_CONFIRMATION=I_UNDERSTAND_NON_PRODUCTION`.
 
-Jalankan setelah dataset nyata tersedia:
+Dataset Shop yang saat ini dipakai berada di
+`docs/source/Dataset Shop Niuva/`. Regenerasi manifest dan mapping media:
 
 ```powershell
-$env:CATALOG_SEED_FILE = "C:\path\to\owner-catalog.json"
+corepack pnpm catalog:prepare
+```
+
+Seed loopback development:
+
+```powershell
+$env:CATALOG_SEED_FILE = (Resolve-Path -LiteralPath "docs/source/Dataset Shop Niuva/catalog-seed.json").Path
 $env:CATALOG_SEED_CONFIRMATION = "I_UNDERSTAND_NON_PRODUCTION"
 corepack pnpm db:seed:catalog
 ```
@@ -43,4 +49,4 @@ Format minimum:
 }
 ```
 
-Importer tidak membuat data sintetis, tidak menghapus produk/varian/media lain, dan tidak mengaktifkan Biteship atau Midtrans. `stockOnHand`, harga, SKU, dan foto harus berasal dari dataset Owner; key foto harus sudah dipetakan ke file asset yang benar-benar ada di `public/` sebelum transaksi seed dimulai. Publikasi tetap melewati editor admin dan gate bukti/izin.
+Importer tidak membuat data sintetis, tidak menghapus produk/varian/media lain, dan tidak mengaktifkan Biteship atau Midtrans. `stockOnHand`, harga, dan foto berasal dari dataset Owner; ID sumber dipakai sebagai SKU deterministik sementara karena kolom SKU merchant tidak ada. Dimensi paket tetap kosong sampai Owner memberikannya. Key foto harus sudah dipetakan ke file asset yang benar-benar ada di `public/` sebelum transaksi seed dimulai. Publikasi tetap melewati editor admin dan gate bukti/izin.

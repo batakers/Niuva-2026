@@ -1,0 +1,347 @@
+{
+  "version": 1,
+  "mappings": [
+    {
+      "includedInSeed": true,
+      "parentProductId": "103726333343",
+      "sourcePath": "Niuva_Product_Images/103726333343/variant_103726333343.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/wisuda-custom-3d-print-patung-graduasi-3d-personalisasi-untuk-souvenir-khusus-02.jpg",
+      "variantProductId": "103726333343",
+      "variantValues": "Figur Custom Face / 15 cm"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103726333343",
+      "sourcePath": "Niuva_Product_Images/103726333343/variant_103726333343.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/wisuda-custom-3d-print-patung-graduasi-3d-personalisasi-untuk-souvenir-khusus-02.jpg",
+      "variantProductId": "103726333344",
+      "variantValues": "Figur Custom Face / 12 cm"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103726333343",
+      "sourcePath": "Niuva_Product_Images/103726333343/variant_103726333343.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/wisuda-custom-3d-print-patung-graduasi-3d-personalisasi-untuk-souvenir-khusus-02.jpg",
+      "variantProductId": "103726333345",
+      "variantValues": "Figur Painted / 15 cm"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103726333343",
+      "sourcePath": "Niuva_Product_Images/103726333343/variant_103726333343.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/wisuda-custom-3d-print-patung-graduasi-3d-personalisasi-untuk-souvenir-khusus-02.jpg",
+      "variantProductId": "103726333346",
+      "variantValues": "Figur Painted / 12 cm"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103726333343",
+      "sourcePath": "Niuva_Product_Images/103726333343/variant_103726333343.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/wisuda-custom-3d-print-patung-graduasi-3d-personalisasi-untuk-souvenir-khusus-02.jpg",
+      "variantProductId": "103726333347",
+      "variantValues": "Figur Single Color / 15 cm"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103726333343",
+      "sourcePath": "Niuva_Product_Images/103726333343/variant_103726333343.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/wisuda-custom-3d-print-patung-graduasi-3d-personalisasi-untuk-souvenir-khusus-02.jpg",
+      "variantProductId": "103726333348",
+      "variantValues": "Figur Single Color / 12 cm"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103726333343",
+      "sourcePath": "Niuva_Product_Images/103726333343/variant_103726333343.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/wisuda-custom-3d-print-patung-graduasi-3d-personalisasi-untuk-souvenir-khusus-02.jpg",
+      "variantProductId": "103726333349",
+      "variantValues": "Lego Painted / 12 cm"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103726333343",
+      "sourcePath": "Niuva_Product_Images/103726333343/variant_103726333343.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/wisuda-custom-3d-print-patung-graduasi-3d-personalisasi-untuk-souvenir-khusus-02.jpg",
+      "variantProductId": "103726333350",
+      "variantValues": "Lego Painted / 8 cm"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103726333343",
+      "sourcePath": "Niuva_Product_Images/103726333343/variant_103726333343.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/wisuda-custom-3d-print-patung-graduasi-3d-personalisasi-untuk-souvenir-khusus-02.jpg",
+      "variantProductId": "103726333351",
+      "variantValues": "Lego Multicolor / 12 cm"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103726333343",
+      "sourcePath": "Niuva_Product_Images/103726333343/variant_103726333343.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/wisuda-custom-3d-print-patung-graduasi-3d-personalisasi-untuk-souvenir-khusus-02.jpg",
+      "variantProductId": "103726333352",
+      "variantValues": "Lego Multicolor / 8 cm"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103726333343",
+      "sourcePath": "Niuva_Product_Images/103726333343/variant_103726333343.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/wisuda-custom-3d-print-patung-graduasi-3d-personalisasi-untuk-souvenir-khusus-02.jpg",
+      "variantProductId": "103726333353",
+      "variantValues": "Lego Single Color / 12 cm"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103726333343",
+      "sourcePath": "Niuva_Product_Images/103726333343/variant_103726333343.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/wisuda-custom-3d-print-patung-graduasi-3d-personalisasi-untuk-souvenir-khusus-02.jpg",
+      "variantProductId": "103726333354",
+      "variantValues": "Lego Single Color / 8 cm"
+    },
+    {
+      "includedInSeed": false,
+      "parentProductId": "103726333343",
+      "sourcePath": "Niuva_Product_Images/103726333343/variant_103726333343.jpg",
+      "status": "PLACEHOLDER_TOKOPEDIA",
+      "storageKey": "media/products/wisuda-custom-3d-print-patung-graduasi-3d-personalisasi-untuk-souvenir-khusus-02.jpg",
+      "variantProductId": "-9223371933128442465",
+      "variantValues": "Figur Custom Face / 8 cm"
+    },
+    {
+      "includedInSeed": false,
+      "parentProductId": "103726333343",
+      "sourcePath": "Niuva_Product_Images/103726333343/variant_103726333343.jpg",
+      "status": "PLACEHOLDER_TOKOPEDIA",
+      "storageKey": "media/products/wisuda-custom-3d-print-patung-graduasi-3d-personalisasi-untuk-souvenir-khusus-02.jpg",
+      "variantProductId": "-9223371933128442465",
+      "variantValues": "Figur Painted / 8 cm"
+    },
+    {
+      "includedInSeed": false,
+      "parentProductId": "103726333343",
+      "sourcePath": "Niuva_Product_Images/103726333343/variant_103726333343.jpg",
+      "status": "PLACEHOLDER_TOKOPEDIA",
+      "storageKey": "media/products/wisuda-custom-3d-print-patung-graduasi-3d-personalisasi-untuk-souvenir-khusus-02.jpg",
+      "variantProductId": "-9223371933128442465",
+      "variantValues": "Figur Single Color / 8 cm"
+    },
+    {
+      "includedInSeed": false,
+      "parentProductId": "103726333343",
+      "sourcePath": "Niuva_Product_Images/103726333343/variant_103726333343.jpg",
+      "status": "PLACEHOLDER_TOKOPEDIA",
+      "storageKey": "media/products/wisuda-custom-3d-print-patung-graduasi-3d-personalisasi-untuk-souvenir-khusus-02.jpg",
+      "variantProductId": "-9223371933128442465",
+      "variantValues": "Lego Painted / 15 cm"
+    },
+    {
+      "includedInSeed": false,
+      "parentProductId": "103726333343",
+      "sourcePath": "Niuva_Product_Images/103726333343/variant_103726333343.jpg",
+      "status": "PLACEHOLDER_TOKOPEDIA",
+      "storageKey": "media/products/wisuda-custom-3d-print-patung-graduasi-3d-personalisasi-untuk-souvenir-khusus-02.jpg",
+      "variantProductId": "-9223371933128442465",
+      "variantValues": "Lego Multicolor / 15 cm"
+    },
+    {
+      "includedInSeed": false,
+      "parentProductId": "103726333343",
+      "sourcePath": "Niuva_Product_Images/103726333343/variant_103726333343.jpg",
+      "status": "PLACEHOLDER_TOKOPEDIA",
+      "storageKey": "media/products/wisuda-custom-3d-print-patung-graduasi-3d-personalisasi-untuk-souvenir-khusus-02.jpg",
+      "variantProductId": "-9223371933128442465",
+      "variantValues": "Lego Single Color / 15 cm"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103343689816",
+      "sourcePath": "Niuva_Product_Images/103343689816/variant_103343689816.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/3d-print-keychain-gedung-telkom-university-tult-bandung-techno-park-02.jpg",
+      "variantProductId": "103343689816",
+      "variantValues": "TULT BIRU"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103343689816",
+      "sourcePath": "Niuva_Product_Images/103343689816/variant_103343689817.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/3d-print-keychain-gedung-telkom-university-tult-bandung-techno-park-03.jpg",
+      "variantProductId": "103343689817",
+      "variantValues": "BANDUNG TECHNO PARK"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103343689816",
+      "sourcePath": "Niuva_Product_Images/103343689816/variant_103343689818.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/3d-print-keychain-gedung-telkom-university-tult-bandung-techno-park-04.jpg",
+      "variantProductId": "103343689818",
+      "variantValues": "TULT ABU"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103343687481",
+      "sourcePath": "Niuva_Product_Images/103343687481/variant_103343687481.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/3d-print-lego-figure-wisudawan-telkom-university-pla-bisa-custom-tali-toga-fakultas-02.jpg",
+      "variantProductId": "103343687481",
+      "variantValues": "PEREMPUAN"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103343687481",
+      "sourcePath": "Niuva_Product_Images/103343687481/variant_103343687482.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/3d-print-lego-figure-wisudawan-telkom-university-pla-bisa-custom-tali-toga-fakultas-03.jpg",
+      "variantProductId": "103343687482",
+      "variantValues": "LAKI LAKI"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103342790916",
+      "sourcePath": "Niuva_Product_Images/103342790916/variant_103342790916.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/3d-print-keychain-animal-telkom-university-02.jpg",
+      "variantProductId": "103342790916",
+      "variantValues": "soang baju merah"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103342790916",
+      "sourcePath": "Niuva_Product_Images/103342790916/variant_103342790917.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/3d-print-keychain-animal-telkom-university-03.jpg",
+      "variantProductId": "103342790917",
+      "variantValues": "soang baju putih"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103342790916",
+      "sourcePath": "Niuva_Product_Images/103342790916/variant_103342790918.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/3d-print-keychain-animal-telkom-university-04.jpg",
+      "variantProductId": "103342790918",
+      "variantValues": "maung wisuda"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103342790916",
+      "sourcePath": "Niuva_Product_Images/103342790916/variant_103342790919.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/3d-print-keychain-animal-telkom-university-05.jpg",
+      "variantProductId": "103342790919",
+      "variantValues": "galih"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103342790916",
+      "sourcePath": "Niuva_Product_Images/103342790916/variant_103342790920.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/3d-print-keychain-animal-telkom-university-06.jpg",
+      "variantProductId": "103342790920",
+      "variantValues": "merak"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103340568955",
+      "sourcePath": "Niuva_Product_Images/103340568955/variant_103340568955.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/3d-print-custom-figure-special-moments-newborn-weddings-birthday-dll-02.jpg",
+      "variantProductId": "103340568955",
+      "variantValues": "NO COLOUR"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103340568955",
+      "sourcePath": "Niuva_Product_Images/103340568955/variant_103340568955.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/3d-print-custom-figure-special-moments-newborn-weddings-birthday-dll-02.jpg",
+      "variantProductId": "103340568956",
+      "variantValues": "COLOUR (Acrylic hand painting)"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103339597166",
+      "sourcePath": "Niuva_Product_Images/103339597166/variant_103339597166.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/preorder-3d-print-custom-figure-bubble-head-chibi-cartoon-emoji-read-description-for-order-02.jpg",
+      "variantProductId": "103339597166",
+      "variantValues": "CARTOON / NO COLOUR"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103339597166",
+      "sourcePath": "Niuva_Product_Images/103339597166/variant_103339597166.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/preorder-3d-print-custom-figure-bubble-head-chibi-cartoon-emoji-read-description-for-order-02.jpg",
+      "variantProductId": "103339597167",
+      "variantValues": "CARTOON / COLOUR"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103339597166",
+      "sourcePath": "Niuva_Product_Images/103339597166/variant_103339597166.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/preorder-3d-print-custom-figure-bubble-head-chibi-cartoon-emoji-read-description-for-order-02.jpg",
+      "variantProductId": "103339597168",
+      "variantValues": "EMOJI / NO COLOUR"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103339597166",
+      "sourcePath": "Niuva_Product_Images/103339597166/variant_103339597166.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/preorder-3d-print-custom-figure-bubble-head-chibi-cartoon-emoji-read-description-for-order-02.jpg",
+      "variantProductId": "103339597169",
+      "variantValues": "EMOJI / COLOUR"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103339597166",
+      "sourcePath": "Niuva_Product_Images/103339597166/variant_103339597166.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/preorder-3d-print-custom-figure-bubble-head-chibi-cartoon-emoji-read-description-for-order-02.jpg",
+      "variantProductId": "103339597170",
+      "variantValues": "PETITE / NO COLOUR"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103339597166",
+      "sourcePath": "Niuva_Product_Images/103339597166/variant_103339597166.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/preorder-3d-print-custom-figure-bubble-head-chibi-cartoon-emoji-read-description-for-order-02.jpg",
+      "variantProductId": "103339597171",
+      "variantValues": "PETITE / COLOUR"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103339597166",
+      "sourcePath": "Niuva_Product_Images/103339597166/variant_103339597166.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/preorder-3d-print-custom-figure-bubble-head-chibi-cartoon-emoji-read-description-for-order-02.jpg",
+      "variantProductId": "103339597172",
+      "variantValues": "BIG HEAD / NO COLOUR"
+    },
+    {
+      "includedInSeed": true,
+      "parentProductId": "103339597166",
+      "sourcePath": "Niuva_Product_Images/103339597166/variant_103339597166.jpg",
+      "status": "TERSEDIA",
+      "storageKey": "media/products/preorder-3d-print-custom-figure-bubble-head-chibi-cartoon-emoji-read-description-for-order-02.jpg",
+      "variantProductId": "103339597173",
+      "variantValues": "BIG HEAD / COLOUR"
+    }
+  ]
+}

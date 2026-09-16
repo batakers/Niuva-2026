@@ -516,7 +516,7 @@ wiring autentikasi pada fase integrasi tersedia.
 
 ### Checkpoints
 
-### Current integration slice — 2026-09-16
+### Current integration slice — 2026-09-17
 
 The retired FE-18–26 fixture routes have been replaced for the allowed server
 slice. Live targets are `/admin/orders/[id]`, `/admin/custom-print/[id]`,
@@ -527,13 +527,15 @@ inquiry status, slicer review, quote draft/send, stock, catalog media,
 portfolio content/media, and order/quote token reissue. Pricing activation,
 Biteship/Midtrans, and R2 live smoke remain separate gates. The supplied Clerk
 identity is now mapped to an active loopback Owner profile; approved public
-portfolio content is seeded locally, while the Shop launch catalog still waits
-for retail SKU/price/stock/dimension/photo data.
+portfolio content is seeded locally. The Owner Shop dataset is also seeded as
+8 unpublished products, 34 variants, 4 categories, and 50 mapped JPG media.
+Merchant SKU format, package dimensions, publish approval, and variant-bound
+media remain explicit gates.
 
 Requirement-level evidence and the next Owner handoff inputs are tracked in
 [`docs/frontend/operational-readiness-report.md`](../docs/frontend/operational-readiness-report.md).
 
-#### Review verification — 2026-09-16
+#### Review verification — 2026-09-17
 
 - `corepack pnpm typecheck`, `corepack pnpm lint` (0 errors; existing warning
   set), `corepack pnpm test` (73/73), `corepack pnpm test:backend` (119/119),
@@ -543,8 +545,10 @@ Requirement-level evidence and the next Owner handoff inputs are tracked in
   resource-sensitive during cold Next route compilation; its three affected
   navigations pass when run serially and are not treated as application
   regressions.
-- Fresh authenticated admin visual acceptance, R2 object smoke, and Owner Shop
-  catalog/media seed remain open. The retained Clerk identity/profile smoke and
+- Fresh authenticated admin visual acceptance and R2 object smoke remain open.
+  The Shop seed is now reproducible through `catalog:prepare` plus the guarded
+  loopback importer; SKU merchandising, package dimensions, and publish
+  approval remain Owner gates. The retained Clerk identity/profile smoke and
   loopback portfolio seed are recorded separately. Biteship/Midtrans activation
   and smoke are intentionally deferred until company data is available.
 
@@ -1115,7 +1119,9 @@ callbacks.
 **Acceptance criteria:**
 
 - [ ] Owner-approved published product/variant/stock and active pricing seed are
-  available in the development database.
+  available in the development database. The Shop dataset is present as 8
+  unpublished products, 34 variants, and 50 media; publish/SKU/dimension gates
+  remain open.
 - [ ] Browser requests real server rates, creates one idempotent pending order,
   opens the sandbox payment handoff, and never renders a browser-authoritative
   paid state.
@@ -1137,23 +1143,24 @@ callbacks.
 - [ ] Provider, seed, legal, and accounting evidence are recorded separately
   from code/test acceptance.
 
-**Dependencies:** NG-03; active catalog/pricing seed; non-production Biteship
-and Midtrans capabilities; no production activation.
+**Dependencies:** NG-03; Owner-approved active catalog/pricing seed;
+non-production Biteship and Midtrans capabilities; no production activation.
 
 **Estimated scope:** XL; split into catalog seed, shipping/checkout UI, and
 payment/order smoke before implementation.
 
 ### Open decisions and blockers
 
-- `OPEN`: exact Clerk development tenant/user/profile to use for the live smoke;
-  paired non-production keys are present locally and the anonymous redirect was
-  verified, but no live sign-in/profile provisioning was performed.
+- `OPEN`: live Clerk sign-in and authenticated visual acceptance; the supplied
+  `user_...` identity is already mapped to an active loopback Owner profile,
+  but no interactive login evidence is recorded in this handoff.
 - `OPEN`: R2 development bucket/prefix, CORS policy, and provider credentials.
   Presence-only inspection on 2026-09-14 found the complete R2 group and
   `CUSTOM_FILE_MAX_BYTES` absent locally.
 - `BLOCKED_DECISION`: automatic WhatsApp provider, template, sender, and consent.
-- `OPEN`: final product/SKU/media/stock dataset and active pricing-rule seed;
-  Biteship and Midtrans capability groups are also absent locally.
+- `OPEN`: merchandising SKU format, package dimensions, publish approval, and
+  active pricing-rule seed. The product/media/stock dataset is now seeded in
+  loopback; Biteship and Midtrans capability groups remain absent locally.
 - `OPEN`: legal/accounting retention outside the approved binary lifecycle.
 - `DEFERRED/OPEN`: official company biodata required for public company-profile
   claims, business sender identity, and provider/invoice identity; no synthetic
