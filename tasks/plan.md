@@ -525,8 +525,10 @@ slice. Live targets are `/admin/orders/[id]`, `/admin/custom-print/[id]`,
 existing permission map and domain transition/audit contracts for fulfillment,
 inquiry status, slicer review, quote draft/send, stock, catalog media,
 portfolio content/media, and order/quote token reissue. Pricing activation,
-Biteship/Midtrans, Clerk tenant smoke, R2 live smoke, and Owner launch catalog
-seed remain separate gates.
+Biteship/Midtrans, and R2 live smoke remain separate gates. The supplied Clerk
+identity is now mapped to an active loopback Owner profile; approved public
+portfolio content is seeded locally, while the Shop launch catalog still waits
+for retail SKU/price/stock/dimension/photo data.
 
 Requirement-level evidence and the next Owner handoff inputs are tracked in
 [`docs/frontend/operational-readiness-report.md`](../docs/frontend/operational-readiness-report.md).
@@ -541,9 +543,10 @@ Requirement-level evidence and the next Owner handoff inputs are tracked in
   resource-sensitive during cold Next route compilation; its three affected
   navigations pass when run serially and are not treated as application
   regressions.
-- Authenticated admin visual acceptance, live Clerk identity, R2 object smoke,
-  and Owner catalog/media seed remain open. Biteship/Midtrans activation and
-  smoke are intentionally deferred until company data is available.
+- Fresh authenticated admin visual acceptance, R2 object smoke, and Owner Shop
+  catalog/media seed remain open. The retained Clerk identity/profile smoke and
+  loopback portfolio seed are recorded separately. Biteship/Midtrans activation
+  and smoke are intentionally deferred until company data is available.
 
 The FE-16–26 rows below remain a historical preview record; their retired
 fixture-only boundaries do not override the server-backed routes listed above.

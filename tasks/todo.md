@@ -81,17 +81,22 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
 > Handoff clarification — bagian NG-01, local-demo, dan retained-test-profile
 > di bawah mempertahankan evidence dari sesi lokal sebelumnya. Bagian tersebut
 > bukan klaim authenticated-admin acceptance yang baru untuk checkout ini.
-> Re-run Clerk identity/profile, R2 object smoke, seed katalog Owner, dan
-> authenticated visual review sebagai gate terpisah saat input Owner tersedia.
+> Exact Clerk identity Owner kini sudah dipasangkan ke profile loopback aktif;
+> seed konten portfolio juga sudah dilakukan terpisah. R2 object smoke,
+> katalog Shop, dan authenticated visual review tetap dicatat sebagai gate
+> terpisah.
 
 - [x] Detail/editor server-backed: orders, custom print, products, portfolio.
 - [x] Live subview: B2B Inquiries dan Pricing Rules.
 - [x] Authorized writes: order/inquiry transition, slicer review, quote draft/send,
   stock/media mapping, portfolio edit/publish guard, dan token reissue.
 - [x] Guarded catalog importer tersedia; seed nyata, foto, stok, dan mapping
-  production menunggu dataset Owner.
-- [ ] Clerk tenant smoke dengan exact `user_...` Owner identity dan authenticated
-  visual acceptance.
+  production menunggu dataset Shop Owner. Audit empat sumber dan alasan
+  kekurangannya: `docs/backend/catalog-source-audit.md`.
+- [x] Exact `user_...` Owner identity sudah terhubung ke `AdminProfile` aktif
+  loopback; retained authenticated Action Queue smoke lulus.
+- [ ] Fresh authenticated visual acceptance untuk detail/editor admin setelah
+  perubahan terakhir.
 - [ ] R2 non-production upload smoke nyata.
 - [ ] Dokumentasi/tautan customer lama dikirim ulang setelah token route-bound v1
   diterbitkan pada detail order/quote; admin reissue sudah tersedia, pengiriman
@@ -108,8 +113,9 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
   retry) lulus 57/57. Runner lokal empat worker tetap dicatat sebagai
   diagnostik yang sensitif terhadap cold compile; tiga navigasi yang gagal di
   mode paralel lulus saat serial.
-- [ ] Authenticated admin visual acceptance, Clerk `user_...`, R2 smoke, dan
-  seed katalog/media Owner masih menunggu input eksternal.
+- [ ] Fresh authenticated admin visual acceptance, R2 smoke, dan dataset Shop
+  (SKU/varian, harga retail, stok, foto, dimensi) masih terbuka. Portfolio
+  development sudah di-seed; Biteship/Midtrans tetap sengaja ditunda.
 
 - [x] FE-00 — Kontrak screen dan status visual
 - [x] FE-01 — Data contoh dan skenario preview

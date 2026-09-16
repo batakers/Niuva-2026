@@ -25,9 +25,20 @@ Started: 2026-09-06. Updated: 2026-09-16. Status: **UI_IMPLEMENTED**, **ADMIN_IN
 > `/admin/pricing` now read server-owned projections. Authorized Server Actions
 > cover order/inquiry transitions, slicer review, quote draft/send, stock and
 > catalog media updates, portfolio editing/media mapping, and route-bound token
-> reissue. Clerk tenant login, R2 live smoke, Owner catalog seed/media, and
-> authenticated visual acceptance remain open gates. Biteship/Midtrans activation
-> and smoke are explicitly deferred until company data is available.
+> reissue. R2 live smoke, Owner Shop catalog seed/media, and fresh authenticated
+> visual acceptance remain open gates; the supplied Clerk identity is now backed
+> by an active loopback Owner profile. Biteship/Midtrans activation and smoke
+> are explicitly deferred until company data is available.
+
+> Handoff update — on 2026-09-16, the Owner-supplied company/portfolio PDFs and
+> pricelist were audited. The approved public portfolio was seeded into the
+> loopback development database (4 services, 17 projects, 6 mapped media) via
+> `db:seed:public-content:local`. The same files do not contain the SKU, retail
+> price, stock, package dimensions, or product-photo mapping required for a
+> Shop catalog; those fields remain an explicit Owner dataset gate. The exact
+> Clerk identity is already represented by an active local Owner profile. R2
+> smoke and manual customer-link delivery remain open; Biteship/Midtrans stay
+> deferred by request.
 
 ## Scope and review paths
 
@@ -82,6 +93,11 @@ information for review. Preview data is not a factual client portfolio.
   non-production database, and preflights every mapped product asset under
   `public/`. No synthetic catalog, photo, stock, or production media mapping is
   claimed as launch evidence.
+- `scripts/seed-local-public-content.ts` is a separate, confirmation-gated
+  loopback seed for the already curated public services/portfolio records. Its
+  six portfolio covers are not retail product media. Source findings and the
+  missing Shop fields are tracked in
+  [`docs/backend/catalog-source-audit.md`](../backend/catalog-source-audit.md).
 - Authenticated visual acceptance and R2 upload smoke require Owner-provided
   environment/identity and must be run as separate evidence; passing typecheck,
   lint, build, or browser smoke does not imply those gates.
@@ -220,10 +236,14 @@ input checklist, see [`operational-readiness-report.md`](./operational-readiness
 - CI-mode browser gate (`CI=1 corepack pnpm test:e2e`, one worker with retry):
   57/57 passed. This is the reproducible PR smoke result; the parallel local
   runner remains a resource-sensitive diagnostic only.
-- The new admin detail/subview routes were not authenticated-smoked because
-  the Owner has not supplied a non-production Clerk `user_...` identity and
-  matching active `AdminProfile`. Authenticated admin visual acceptance remains
-  an explicit Owner gate.
+- The supplied non-production Clerk identity is now matched to an active
+  database-owned Owner `AdminProfile` on loopback. The retained authenticated
+  smoke evidence covers the Action Queue and reload boundary; any new visual
+  acceptance still remains a separate Owner decision.
+- Loopback public-content seed verification: 4 services, 17 published
+  portfolio projects, and 6 mapped portfolio media. This does not count as a
+  retail Shop catalog seed; the source/data gap is recorded in
+  [`docs/backend/catalog-source-audit.md`](../backend/catalog-source-audit.md).
 - `impeccable detect --json src/app/admin src/components/niuva/admin-shell.tsx`:
   no findings.
 - `git diff --check`: passed.

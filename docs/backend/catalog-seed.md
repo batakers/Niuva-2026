@@ -1,5 +1,9 @@
 # Owner catalog seed
 
+Audit sumber yang sudah diberikan Owner dan alasan katalog Shop belum dapat
+diisi dari berkas tersebut dicatat di
+[`catalog-source-audit.md`](catalog-source-audit.md).
+
 `scripts/seed-catalog.ts` adalah importer idempotent untuk dataset katalog yang sudah disediakan Owner. Script ini hanya menerima database PostgreSQL loopback dengan marker `dev`, `demo`, atau `test`, dan memerlukan `CATALOG_SEED_CONFIRMATION=I_UNDERSTAND_NON_PRODUCTION`.
 
 Jalankan setelah dataset nyata tersedia:
