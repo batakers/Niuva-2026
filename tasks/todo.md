@@ -596,3 +596,28 @@ Status: `OWNER_RETAINED_TEST_PROFILE_HANDOFF_COMPLETE`.
 This Goal is complete. Biodata is not a blocker; temporary state changes were
 restored and the authorized local profile remains active solely for subsequent
 development-only admin smoke.
+
+## Goal — R2 Private Upload CSP & Non-production Smoke (2026-09-16)
+
+Status: `IMPLEMENTED_CODE_VERIFIED_OWNER_R2_SMOKE_OPEN`. Existing private upload
+code is not being rebuilt; this Goal closes its browser-CSP readiness and
+records the automated lifecycle evidence. A real development-object smoke is
+still an explicit Owner action outside source control.
+
+- [x] R2-01 — Add a narrowly canonicalized R2 HTTPS origin to CSP `connect-src`
+  only when configured; keep missing/invalid values fail-closed and add focused
+  security coverage.
+  - Verify: backend security coverage (116 tests), focused security-header
+    browser smoke, `corepack pnpm typecheck`, `corepack pnpm lint`, and
+    `corepack pnpm build` all pass.
+  - Files: `src/lib/security/headers.ts`, `tests/backend/security.test.ts`.
+- [ ] R2-02 — With Owner-provided non-production bucket, token, and exact-origin
+  CORS configured locally, smoke one small synthetic file through intent → PUT
+  → confirm → custom request, verify private lifecycle, and delete it.
+  - Verify: existing unit (7 tests), integration (17 tests), and custom-request
+    browser coverage pass; a real provider smoke is intentionally not run.
+    Record no secret, signed URL, public URL, customer data, or object key.
+  - Dependency: R2-01 and Owner setup outside source control.
+- [x] Checkpoint R2 — R2-01 gates and the no-provider code slice are recorded.
+  R2-02 remains open until actual non-production provider evidence exists; it
+  must never be labeled production-ready from these automated tests alone.
