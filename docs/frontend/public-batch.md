@@ -74,7 +74,10 @@ information for review. Preview data is not a factual client portfolio.
   intentionally not exposed by this batch; Biteship and Midtrans remain disabled.
 - Existing SENT quote/order links can be reissued from their admin detail pages.
   Reissue replaces the stored hash, invalidates the old link, and emits a new
-  `v1.<entity-id>.<secret>` route-bound token without logging the secret.
+  `v1.<entity-id>.<secret>` route-bound token without logging the secret. The
+  manual customer handoff is documented in
+  [`docs/backend/token-reissue-handoff.md`](../backend/token-reissue-handoff.md)
+  and still requires an Owner-approved recipient/channel list.
 - `scripts/seed-catalog.ts` accepts only an Owner-supplied dataset and loopback
   non-production database, and preflights every mapped product asset under
   `public/`. No synthetic catalog, photo, stock, or production media mapping is

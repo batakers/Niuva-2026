@@ -94,7 +94,8 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
 - [ ] R2 non-production upload smoke nyata.
 - [ ] Dokumentasi/tautan customer lama dikirim ulang setelah token route-bound v1
   diterbitkan pada detail order/quote; admin reissue sudah tersedia, pengiriman
-  aktual menunggu daftar customer dan kanal yang disetujui Owner.
+  aktual menunggu daftar customer dan kanal yang disetujui Owner. Runbook:
+  `docs/backend/token-reissue-handoff.md`.
 - [ ] Biteship/Midtrans activation/smoke — sengaja ditunda sampai data perusahaan
   tersedia.
 
