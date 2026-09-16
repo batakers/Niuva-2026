@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getRouteAccessTokenEntityId,
   issueAccessToken,
   verifyAccessToken,
 } from "@/modules/shared/access-token";
@@ -225,6 +226,38 @@ describe("Phase 2 public references and access tokens", () => {
           expectedHash: issued.tokenHash,
           now,
           revokedAt: now,
+          scope: issued.scope,
+          token: issued.token,
+        }),
+      "UNAUTHORIZED",
+    );
+  });
+
+  it("keeps the route lookup hint separate from token authorization", () => {
+    const routeEntityId = "00000000-0000-4000-8000-000000000123";
+    const issued = issueAccessToken({
+      entityId: routeEntityId,
+      includeEntityId: true,
+      now,
+      randomBytes: (size) => new Uint8Array(size).fill(9),
+      scope: "ORDER_STATUS",
+    });
+
+    expect(getRouteAccessTokenEntityId(issued.token)).toBe(routeEntityId);
+    expect(
+      getRouteAccessTokenEntityId(
+        `v1.${Buffer.from("not-a-uuid", "utf8").toString("base64url")}.secret`,
+      ),
+    ).toBeNull();
+    expect(getRouteAccessTokenEntityId("opaque-legacy-token")).toBeNull();
+    expect(getRouteAccessTokenEntityId("v1.not-base64!.secret")).toBeNull();
+
+    expectAppError(
+      () =>
+        verifyAccessToken({
+          entityId: "different-order",
+          expectedHash: issued.tokenHash,
+          now,
           scope: issued.scope,
           token: issued.token,
         }),

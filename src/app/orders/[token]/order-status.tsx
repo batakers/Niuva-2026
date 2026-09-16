@@ -27,7 +27,9 @@ function NextAction({ action }: Readonly<{ action: OrderStatusPreview["nextActio
 export function OrderStatus({
   order,
   scenario,
+  isPreview,
 }: Readonly<{
+  isPreview: boolean;
   order: OrderStatusPreview;
   scenario: OrderStatusPreviewScenario;
 }>) {
@@ -62,8 +64,10 @@ export function OrderStatus({
 
       <section className="bg-background">
         <div className="mx-auto max-w-public px-5 py-12 sm:px-8 sm:py-16">
-          <div className="mb-10 rounded-xl border border-info-border bg-info-background p-4 text-sm text-info">
-            Preview lokal dengan data sintetis. Query browser hanya memilih skenario tampilan dan tidak menentukan status order nyata.
+          <div className={`${isPreview ? "border-info-border bg-info-background text-info" : "border-success-border bg-success-background text-success"} mb-10 rounded-xl border p-4 text-sm`}>
+            {isPreview
+              ? "Preview lokal dengan data sintetis. Query browser hanya memilih skenario tampilan dan tidak menentukan status order nyata."
+              : "Projection server terotorisasi token. Status, item, dan total berasal dari data order yang disimpan server."}
           </div>
 
           <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
@@ -126,7 +130,7 @@ export function OrderStatus({
                     <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Status</dt><dd className="font-medium">{order.shipment.status}</dd></div>
                     <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Nomor lacak</dt><dd className="font-mono font-medium">{order.shipment.trackingNumber}</dd></div>
                   </dl>
-                  <p className="mt-4 text-xs leading-5 text-muted-foreground">Nomor lacak ini sintetis dan tidak membuka situs provider.</p>
+                <p className="mt-4 text-xs leading-5 text-muted-foreground">{isPreview ? "Nomor lacak ini sintetis dan tidak membuka situs provider." : "Nomor lacak ditampilkan jika tersedia pada snapshot pengiriman server."}</p>
                 </section>
               ) : null}
 

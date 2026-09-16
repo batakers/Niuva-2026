@@ -4,6 +4,7 @@ import type {
   ActionQueueItem,
   ActionQueueResult,
 } from "@/modules/admin/action-queue";
+import { AdminShell } from "@/components/niuva/admin-shell";
 
 type AdminActionQueueViewProps = Readonly<{
   result: ActionQueueResult;
@@ -13,11 +14,6 @@ type AdminActionQueueViewProps = Readonly<{
 type AdminActionQueueErrorViewProps = Readonly<{
   role: AdminRole;
 }>;
-
-const ROLE_LABELS = {
-  ADMIN: "Admin",
-  OWNER: "Owner",
-} satisfies Record<AdminRole, string>;
 
 const DATE_FORMATTER = new Intl.DateTimeFormat("id-ID", {
   dateStyle: "medium",
@@ -30,10 +26,8 @@ export function AdminActionQueueView({
   role,
 }: AdminActionQueueViewProps) {
   return (
-    <main
-      className="mx-auto max-w-admin px-5 py-8 sm:px-8 sm:py-10"
-      id="main-content"
-    >
+    <AdminShell active="queue" role={role}>
+      <main className="rounded-xl border border-border bg-card px-5 py-8 sm:px-8 sm:py-10" id="main-content" data-admin-surface="queue">
       <header className="max-w-3xl border-b border-border pb-6">
         <p className="text-sm font-medium text-brand-700">Niuva / Admin</p>
         <h1 className="mt-4 text-balance text-3xl font-semibold tracking-tight sm:text-5xl">
@@ -41,13 +35,6 @@ export function AdminActionQueueView({
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
           Daftar pekerjaan operasional yang perlu Anda tindak lanjuti.
-        </p>
-        <p className="mt-3 text-base leading-7 text-muted-foreground">
-          Anda masuk sebagai{" "}
-          <strong className="font-semibold text-foreground">
-            {ROLE_LABELS[role]}
-          </strong>
-          .
         </p>
       </header>
 
@@ -100,7 +87,8 @@ export function AdminActionQueueView({
           .
         </p>
       </section>
-    </main>
+      </main>
+    </AdminShell>
   );
 }
 
@@ -108,22 +96,13 @@ export function AdminActionQueueErrorView({
   role,
 }: AdminActionQueueErrorViewProps) {
   return (
-    <main
-      className="mx-auto max-w-admin px-5 py-8 sm:px-8 sm:py-10"
-      id="main-content"
-    >
+    <AdminShell active="queue" role={role}>
+      <main className="rounded-xl border border-border bg-card px-5 py-8 sm:px-8 sm:py-10" id="main-content" data-admin-surface="queue-error">
       <header className="max-w-3xl border-b border-border pb-6">
         <p className="text-sm font-medium text-brand-700">Niuva / Admin</p>
         <h1 className="mt-4 text-balance text-3xl font-semibold tracking-tight sm:text-5xl">
           Action Queue belum dapat dimuat
         </h1>
-        <p className="mt-4 text-base leading-7 text-muted-foreground">
-          Anda masuk sebagai{" "}
-          <strong className="font-semibold text-foreground">
-            {ROLE_LABELS[role]}
-          </strong>
-          .
-        </p>
       </header>
 
       <p
@@ -133,7 +112,8 @@ export function AdminActionQueueErrorView({
         Data operasional belum dapat dimuat. Muat ulang halaman untuk mencoba
         lagi.
       </p>
-    </main>
+      </main>
+    </AdminShell>
   );
 }
 

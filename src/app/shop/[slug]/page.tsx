@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { ImageOff } from "lucide-react";
+import Image from "next/image";
 import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
@@ -61,6 +62,9 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   }
   if (!product) notFound();
 
+  const cover = product.media.find((media) => media.url !== undefined);
+  const supportingMedia = product.media.filter((media) => media !== cover).slice(0, 2);
+
   return (
     <PublicShell functionalStatus={scenario === "examples" ? "frontend-preview" : "server-backed"} scope="product-detail">
       <main id="main-content" className="overflow-x-hidden">
@@ -69,17 +73,37 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
           <div className="mt-5 grid gap-10 lg:grid-cols-12 lg:gap-12">
             <section aria-label="Gallery produk" className="min-w-0 lg:col-span-7">
-              <div className="flex aspect-[4/3] items-center justify-center rounded-2xl border border-border bg-muted px-6 text-center text-muted-foreground">
-                <div>
-                  <ImageOff aria-hidden="true" className="mx-auto size-8" />
-                  <p className="mt-4 font-medium text-foreground">Foto produk belum disertakan</p>
-                  <p className="mx-auto mt-2 max-w-sm text-sm leading-6">Slot ini menunggu foto launch dan izin publikasi. Tidak ada gambar sintetis yang diperlakukan sebagai produk nyata.</p>
-                </div>
+              <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted px-6 text-center text-muted-foreground">
+                {cover?.url ? (
+                  <Image
+                    alt={cover.altText || product.name}
+                    className="object-cover"
+                    fill
+                    priority
+                    sizes="(min-width: 1024px) 58vw, 100vw"
+                    src={cover.url}
+                  />
+                ) : (
+                  <div>
+                    <ImageOff aria-hidden="true" className="mx-auto size-8" />
+                    <p className="mt-4 font-medium text-foreground">Foto produk belum disertakan</p>
+                    <p className="mx-auto mt-2 max-w-sm text-sm leading-6">Slot ini menunggu foto launch dan izin publikasi. Tidak ada gambar sintetis yang diperlakukan sebagai produk nyata.</p>
+                  </div>
+                )}
               </div>
               <div className="mt-4 grid grid-cols-2 gap-4" aria-label="Slot gallery tambahan">
-                {["Detail bentuk", "Skala penggunaan"].map(label => (
-                  <div key={label} className="flex aspect-[4/3] items-center justify-center rounded-xl border border-border bg-card p-4 text-center text-xs text-muted-foreground">{label}<br />Foto belum tersedia</div>
-                ))}
+                {["Detail bentuk", "Skala penggunaan"].map((label, index) => {
+                  const media = supportingMedia[index];
+                  return (
+                    <div key={label} className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-xl border border-border bg-card p-4 text-center text-xs text-muted-foreground">
+                      {media?.url ? (
+                        <Image alt={media.altText || `${product.name} · ${label}`} className="object-cover" fill sizes="(min-width: 1024px) 28vw, 50vw" src={media.url} />
+                      ) : (
+                        <span>{label}<br />Foto belum tersedia</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </section>
 

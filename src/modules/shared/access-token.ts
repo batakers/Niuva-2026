@@ -1,4 +1,5 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { z } from "zod";
 
 import { appError } from "./errors";
 
@@ -17,6 +18,21 @@ export type IssuedAccessToken = Readonly<{
   scope: AccessTokenScope;
   token: string;
   tokenHash: string;
+}>;
+
+/**
+ * Route-bound tokens carry the public entity identifier next to their
+ * high-entropy secret. The identifier is only a lookup hint; authorization is
+ * still decided by the stored hash bound to scope, entity, and full token.
+ */
+export type AccessTokenIssueOptions = Readonly<{
+  entityId: string;
+  expiresAt?: Date;
+  includeEntityId?: boolean;
+  now?: Date;
+  randomBytes?: RandomBytes;
+  scope: AccessTokenScope;
+  tokenBytes?: number;
 }>;
 
 export type AccessTokenVerifierInput = Readonly<{
@@ -57,14 +73,7 @@ export function hashAccessToken(input: Readonly<{
     .digest("hex");
 }
 
-export function issueAccessToken(input: Readonly<{
-  entityId: string;
-  expiresAt?: Date;
-  now?: Date;
-  randomBytes?: RandomBytes;
-  scope: AccessTokenScope;
-  tokenBytes?: number;
-}>): IssuedAccessToken {
+export function issueAccessToken(input: AccessTokenIssueOptions): IssuedAccessToken {
   assertBinding(input.scope, input.entityId);
 
   const tokenBytes = input.tokenBytes ?? DEFAULT_TOKEN_BYTES;
@@ -92,7 +101,10 @@ export function issueAccessToken(input: Readonly<{
     });
   }
 
-  const token = Buffer.from(entropy).toString("base64url");
+  const secret = Buffer.from(entropy).toString("base64url");
+  const token = input.includeEntityId
+    ? `v1.${Buffer.from(input.entityId, "utf8").toString("base64url")}.${secret}`
+    : secret;
 
   return {
     entityId: input.entityId,
@@ -105,6 +117,39 @@ export function issueAccessToken(input: Readonly<{
       token,
     }),
   };
+}
+
+/**
+ * Reads the lookup hint from a route-bound token without treating it as
+ * authorization. Opaque legacy tokens intentionally return null.
+ */
+export function getRouteAccessTokenEntityId(token: string): string | null {
+  const parts = token.split(".");
+
+  if (
+    parts.length !== 3 ||
+    parts[0] !== "v1" ||
+    !/^[A-Za-z0-9_-]+$/.test(parts[1]) ||
+    !/^[A-Za-z0-9_-]+$/.test(parts[2])
+  ) {
+    return null;
+  }
+
+  try {
+    const entityId = Buffer.from(parts[1], "base64url").toString("utf8");
+
+    if (
+      entityId.length === 0 ||
+      Buffer.from(entityId, "utf8").toString("base64url") !== parts[1] ||
+      !z.uuid().safeParse(entityId).success
+    ) {
+      return null;
+    }
+
+    return entityId;
+  } catch {
+    return null;
+  }
 }
 
 export function verifyAccessToken(input: AccessTokenVerifierInput): void {

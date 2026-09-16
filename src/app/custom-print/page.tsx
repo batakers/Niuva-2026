@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { connection } from "next/server";
 import {
   ArrowDown,
   Check,
@@ -14,6 +15,8 @@ import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation
 import { PublicShell } from "@/components/niuva/public-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { AuLink } from "@/components/ui/AuLink";
+import { getServerCapabilities } from "@/lib/env/server";
+import { CUSTOM_FILE_MAX_BYTES } from "@/modules/policy/privacy";
 
 export const metadata: Metadata = {
   title: "Custom 3D Print · Niuva",
@@ -55,9 +58,27 @@ const preparationItems = [
   "Pastikan Anda berhak mengirim dan memproses file tersebut.",
 ] as const;
 
-export default function CustomPrintPage() {
+export default async function CustomPrintPage() {
+  await connection();
+
+  let liveEnabled = false;
+  try {
+    liveEnabled = getServerCapabilities().customUploads;
+  } catch {
+    // Incomplete provider configuration keeps the public page fail-closed.
+  }
+
+  const previewEnabled = process.env.NODE_ENV === "development" && !liveEnabled;
+  const functionalStatus = liveEnabled
+    ? "server-backed" as const
+    : previewEnabled
+      ? "frontend-preview" as const
+      : "capability-gated" as const;
+
+  const maxFileSizeLabel = `${CUSTOM_FILE_MAX_BYTES / 1_024 / 1_024} MiB`;
+
   return (
-    <PublicShell scope="custom-print">
+    <PublicShell functionalStatus={functionalStatus} scope="custom-print">
       <main id="main-content" data-custom-print>
         <section className="dark overflow-hidden border-b border-border bg-background text-foreground">
           <div className="mx-auto grid max-w-public gap-10 px-5 py-14 sm:px-8 sm:py-20 lg:grid-cols-[minmax(0,0.9fr)_minmax(28rem,1.1fr)] lg:items-center">
@@ -151,7 +172,7 @@ export default function CustomPrintPage() {
                   </div>
                 </div>
                 <div className="mt-8 border-t border-border pt-6 text-sm leading-6 text-muted-foreground">
-                  Batas ukuran file akan ditampilkan oleh form request setelah kebijakan final tersedia. Halaman ini tidak menebak angka sementara.
+                  Batas ukuran file adalah {maxFileSizeLabel} per file. Ekstensi dan MIME tetap divalidasi; file besar atau tidak sesuai format akan ditolak sebelum review.
                 </div>
               </div>
 
@@ -207,9 +228,19 @@ export default function CustomPrintPage() {
             </div>
             <StatusNotice
               tone="info"
-              title="Form request siap untuk preview."
-              description="Anda dapat menguji metadata, konfigurasi, progres, dan pemulihan secara lokal. Tidak ada file atau request yang dikirim."
-              action={<AuLink className="min-h-11" href="/custom-print/request">Mulai request</AuLink>}
+              title={liveEnabled
+                ? "Form request siap untuk upload privat."
+                : previewEnabled
+                  ? "Form request siap untuk preview."
+                  : "Form request belum tersedia."}
+              description={liveEnabled
+                ? "Metadata dan file diteruskan ke storage privat untuk pemeriksaan operator. Harga dan kelayakan cetak tetap menunggu review."
+                : previewEnabled
+                  ? "Anda dapat menguji metadata, konfigurasi, progres, dan pemulihan secara lokal. Tidak ada file atau request yang dikirim."
+                  : "Upload custom print belum diaktifkan. Silakan diskusikan kebutuhan Anda melalui project brief."}
+              action={liveEnabled || previewEnabled
+                ? <AuLink className="min-h-11" href="/custom-print/request">Mulai request</AuLink>
+                : undefined}
               secondaryAction={<AuLink className="min-h-11" href="/project-brief" variant="outline">Diskusikan kebutuhan khusus</AuLink>}
             />
           </div>

@@ -32,6 +32,7 @@ export type PublicShopProduct = Omit<PublicCatalogProduct, "media" | "variants">
   media: readonly Readonly<{
     altText: string;
     sortOrder: number;
+    url?: string;
   }>[];
   variants: readonly Readonly<
     Omit<CatalogVariant, "priceRp" | "weightGrams"> & {

@@ -271,6 +271,69 @@ describe("Phase 2 quote acceptance", () => {
     ).rejects.toMatchObject({ code: "UNAUTHORIZED" });
     expect(mutationCalls).toBe(0);
   });
+
+  it("keeps an expired quote readable as a safe read-only projection", async () => {
+    const expiresAt = new Date("2026-09-03T00:00:00.000Z");
+    const quoteToken = issueAccessToken({
+      entityId: quoteId,
+      expiresAt,
+      now: new Date("2026-08-27T00:00:00.000Z"),
+      randomBytes: (size) => new Uint8Array(size).fill(6),
+      scope: "CUSTOM_PRINT_QUOTE",
+    });
+    const repository: QuoteServiceRepository = {
+      async acceptAndCreatePayableOrder() {
+        throw new Error("unused");
+      },
+      async createDraft() {
+        throw new Error("unused");
+      },
+      async findForAcceptance() {
+        return {
+          ...quoteForAcceptance(quoteToken.tokenHash, expiresAt),
+          status: "EXPIRED" as const,
+        };
+      },
+      async findActivePricingRuleVersion() {
+        return activePricingRule;
+      },
+      async findLatestVersion() {
+        return 1;
+      },
+      async findRequestForReview() {
+        return null;
+      },
+      async findReview() {
+        return null;
+      },
+      async orderNumberExists() {
+        return false;
+      },
+      async quoteNumberExists() {
+        return false;
+      },
+      async sendIfCurrent() {
+        return null;
+      },
+      async updateStatusIfCurrent() {
+        return null;
+      },
+    };
+    const service = new QuoteService({ repository, now: () => now });
+
+    const result = await service.getPublicReview({
+      now,
+      quoteId,
+      token: quoteToken.token,
+    });
+
+    expect(result).toMatchObject({
+      currency: "IDR",
+      state: "expired",
+      total: "55000",
+    });
+    expect(result).not.toHaveProperty("publicTokenHash");
+  });
 });
 
 describe("Phase 2 public order status", () => {
@@ -283,6 +346,7 @@ describe("Phase 2 public order status", () => {
     const repository: OrderStatusRepository = {
       async findForPublicStatusById() {
         return {
+          cancelledAt: null,
           completedAt: null,
           createdAt: now,
           items: [{ lineTotalRp: new Decimal("12500"), nameSnapshot: "Lamp", quantity: 1 }],
@@ -310,6 +374,7 @@ describe("Phase 2 public order status", () => {
     });
 
     expect(result).toEqual({
+      cancelledAt: null,
       completedAt: null,
       createdAt: now,
       items: [{ lineTotalRp: new Decimal("12500"), nameSnapshot: "Lamp", quantity: 1 }],

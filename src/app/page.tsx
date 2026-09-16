@@ -1,12 +1,15 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { connection } from "next/server";
 import { PublicShell } from "@/components/niuva/public-shell";
 
 import { typographySystemTokens } from "@/app/auis/styleguide/foundation/typography-proof";
 import { EvidenceCard } from "@/components/niuva";
 import { AuLink } from "@/components/ui/AuLink";
 import { Icon } from "@/components/ui/Icon";
+import { getProjectPreview } from "@/features/frontend-preview/server";
 import { publicCompanyProfile, publicServices } from "@/features/public/company-content";
 import { cn } from "@/lib/utils";
 
@@ -55,7 +58,13 @@ export const metadata: Metadata = {
   robots: { follow: true, index: true },
 };
 
-export default function Home() {
+export default async function Home() {
+  await connection();
+  const { projects } = await getProjectPreview(undefined);
+  const selectedProjects = projects
+    .filter((project) => project.detailReadiness !== "card-only")
+    .slice(0, 3);
+
   const capabilityCards = publicServices.map((service, index) => ({
     actionLabel: "Tinjau layanan",
     description: service.websiteFraming,
@@ -340,6 +349,66 @@ export default function Home() {
                 ))}
               </ol>
             </div>
+          </div>
+        </section>
+
+        <section
+          aria-labelledby="project-proof-title"
+          className="border-b border-border bg-card py-16 sm:py-20"
+          data-home-section="project-proof"
+          id="project-proof"
+        >
+          <div className="mx-auto max-w-public px-5 sm:px-8">
+            <div className="grid gap-8 lg:grid-cols-[minmax(14rem,0.55fr)_minmax(0,1fr)] lg:items-end lg:gap-16">
+              <div>
+                <SectionMarker>Bukti proyek terpilih</SectionMarker>
+                <h2 className={`${headingToken} mt-3 max-w-xl`} id="project-proof-title">
+                  Lihat bagaimana keputusan menjadi artefak yang dapat ditinjau.
+                </h2>
+              </div>
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <p className="max-w-2xl text-base leading-7 text-muted-foreground">
+                  Cerita berikut berasal dari materi yang sudah disetujui untuk publikasi. Klaim dibatasi pada bukti yang tersedia, bukan asumsi tentang deployment atau performa.
+                </p>
+                <AuLink href="/projects" variant="outline" className="min-h-11 shrink-0 gap-2">
+                  Lihat semua project
+                  <PathArrow />
+                </AuLink>
+              </div>
+            </div>
+
+            {selectedProjects.length === 0 ? (
+              <div className="mt-10 rounded-xl border border-info-border bg-info-background p-5 text-sm leading-6 text-info" role="status">
+                Bukti project terpilih belum tersedia pada runtime ini. Halaman Projects tetap menjadi tempat rujukan saat record published siap ditampilkan.
+              </div>
+            ) : (
+              <div className="mt-10 grid gap-6 lg:grid-cols-3">
+                {selectedProjects.map((project) => {
+                  const cover = project.media.find((media) => media.url !== undefined);
+                  return (
+                    <article className="group min-w-0" key={project.id}>
+                      <Link className="block rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/projects/${project.slug}`}>
+                        <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-muted">
+                          {cover?.url ? (
+                            <Image alt={cover.altText} className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100" fill sizes="(min-width: 1024px) 30vw, 100vw" src={cover.url} />
+                          ) : (
+                            <div className="flex h-full items-center justify-center px-5 text-center text-sm text-muted-foreground">Media project belum tersedia</div>
+                          )}
+                        </div>
+                        <div className="mt-5">
+                          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-brand-700">
+                            <span>{project.serviceLabel}</span>
+                            {project.year ? <span>{project.year}</span> : null}
+                          </div>
+                          <h3 className={`${subheadingToken} mt-2 underline-offset-4 group-hover:underline`}>{project.title}</h3>
+                          <p className="mt-3 text-sm leading-6 text-muted-foreground">{project.summary}</p>
+                        </div>
+                      </Link>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </section>
 

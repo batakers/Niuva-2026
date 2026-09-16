@@ -61,6 +61,7 @@ describe("server environment contract", () => {
   it("enables custom uploads only with complete R2 setup and a reviewed limit", () => {
     const capabilities = getServerCapabilities({
       CUSTOM_FILE_MAX_BYTES: "104857600",
+      DATABASE_URL: "postgresql://localhost/niuva_dev",
       R2_ACCESS_KEY_ID: "access-key",
       R2_ACCOUNT_ID: "account-id",
       R2_ENDPOINT: "https://account.r2.cloudflarestorage.com",

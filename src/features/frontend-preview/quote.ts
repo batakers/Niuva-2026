@@ -1,5 +1,7 @@
 import "server-only";
 
+import { QuoteService } from "@/modules/quote/service";
+
 export type QuotePreviewState =
   | "valid"
   | "expired"
@@ -53,5 +55,44 @@ export async function getQuotePreview(input: Readonly<{
   return {
     quote: exampleQuote,
     state: resolveState(input.state),
+  };
+}
+
+const quoteDateFormatter = new Intl.DateTimeFormat("id-ID", {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: "Asia/Jakarta",
+});
+
+const quoteCurrencyFormatter = new Intl.NumberFormat("id-ID", {
+  currency: "IDR",
+  maximumFractionDigits: 0,
+  style: "currency",
+});
+
+/** Public, token-authorized server projection for a sent quote. */
+export async function getLiveQuoteReview(input: Readonly<{
+  quoteId: string;
+  token: string;
+}>): Promise<Readonly<{ quote: QuotePreview; state: Exclude<QuotePreviewState, "loading"> }>> {
+  const result = await new QuoteService().getPublicReview(input);
+
+  return {
+    quote: {
+      assumptions: result.assumptions,
+      currency: result.currency,
+      expiresAt: quoteDateFormatter.format(result.expiresAt),
+      lines: result.lines.map((line) => ({
+        ...line,
+        value: quoteCurrencyFormatter.format(BigInt(line.value)),
+      })),
+      quoteNumber: result.quoteNumber,
+      requestReference: result.requestReference,
+      scope: result.scope,
+      sentAt: result.sentAt === null ? "Waktu kirim tidak tercatat" : quoteDateFormatter.format(result.sentAt),
+      total: quoteCurrencyFormatter.format(BigInt(result.total)),
+      version: result.version,
+    },
+    state: result.state,
   };
 }

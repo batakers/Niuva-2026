@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 
 import { PublicShell } from "@/components/niuva/public-shell";
-import { getQuotePreview } from "@/features/frontend-preview/quote";
+import {
+  getLiveQuoteReview,
+  getQuotePreview,
+} from "@/features/frontend-preview/quote";
+import { getRouteAccessTokenEntityId } from "@/modules/shared/access-token";
+import { isAppError } from "@/modules/shared/errors";
 import { QuoteReview } from "./quote-review";
 
 export const metadata: Metadata = {
@@ -12,6 +18,7 @@ export const metadata: Metadata = {
 };
 
 export default async function QuotePage({ params, searchParams }: PageProps<"/quote/[token]">) {
+  await connection();
   const [{ token }, query] = await Promise.all([params, searchParams]);
   const preview = await getQuotePreview({
     preview: query.preview,
@@ -19,7 +26,36 @@ export default async function QuotePage({ params, searchParams }: PageProps<"/qu
     token,
   });
 
-  if (preview === null) notFound();
+  if (preview === null) {
+    const quoteId = getRouteAccessTokenEntityId(token);
+
+    if (quoteId === null) {
+      notFound();
+    }
+
+    const liveResult = await loadLiveQuoteReview(quoteId, token);
+    if (!liveResult.ok) {
+      if (
+        isAppError(liveResult.error) &&
+        ["CONFLICT", "NOT_FOUND", "QUOTE_NOT_READY", "UNAUTHORIZED"].includes(liveResult.error.code)
+      ) {
+        notFound();
+      }
+
+      throw liveResult.error;
+    }
+
+    return (
+      <PublicShell functionalStatus="server-backed" scope="quote-review">
+        <QuoteReview
+          initialState={liveResult.value.state}
+          isPreview={false}
+          quote={liveResult.value.quote}
+          token={token}
+        />
+      </PublicShell>
+    );
+  }
 
   if (preview.state === "loading") {
     return (
@@ -45,7 +81,19 @@ export default async function QuotePage({ params, searchParams }: PageProps<"/qu
 
   return (
     <PublicShell scope="quote-review">
-      <QuoteReview initialState={preview.state} quote={preview.quote} />
+      <QuoteReview initialState={preview.state} isPreview quote={preview.quote} />
     </PublicShell>
   );
+}
+
+type LiveQuoteReviewResult =
+  | Readonly<{ ok: true; value: Awaited<ReturnType<typeof getLiveQuoteReview>> }>
+  | Readonly<{ error: unknown; ok: false }>;
+
+async function loadLiveQuoteReview(quoteId: string, token: string): Promise<LiveQuoteReviewResult> {
+  try {
+    return { ok: true, value: await getLiveQuoteReview({ quoteId, token }) };
+  } catch (error) {
+    return { error, ok: false };
+  }
 }

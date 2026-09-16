@@ -66,14 +66,17 @@ export type QuoteForAcceptance = Readonly<{
   materialSubtotalRp: Prisma.Decimal;
   printDurationSeconds: number;
   publicTokenHash: string;
+  quoteNumber?: string;
   quantity: number;
   request: Readonly<{
     customerEmail: string;
     customerName: string;
     customerPhone: string;
+    referenceNumber?: string;
   }>;
   requestId: string;
   status: "ACCEPTED" | "DECLINED" | "DRAFT" | "EXPIRED" | "SENT";
+  sentAt?: Date | null;
   unroundedTotalRp: Prisma.Decimal;
   verifiedWeightG: Prisma.Decimal;
   version: number;
@@ -427,6 +430,7 @@ export class CustomPrintQuoteRepository {
         materialSubtotalRp: true,
         printDurationSeconds: true,
         publicTokenHash: true,
+        quoteNumber: true,
         quantity: true,
         request: {
           select: {
@@ -437,6 +441,7 @@ export class CustomPrintQuoteRepository {
         },
         requestId: true,
         status: true,
+        sentAt: true,
         unroundedTotalRp: true,
         verifiedWeightG: true,
         version: true,
@@ -490,6 +495,7 @@ export class CustomPrintQuoteRepository {
               customerEmail: true,
               customerName: true,
               customerPhone: true,
+              referenceNumber: true,
             },
           },
           requestId: true,

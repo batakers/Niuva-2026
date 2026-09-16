@@ -93,6 +93,16 @@ export async function getShopPreview(requested: unknown) {
   return { scenario, products };
 }
 
+function resolvePublicProductMediaUrl(storageKey: string): string | undefined {
+  // Product media is public only when it follows the allowlisted static-media
+  // convention. Private/customer keys never cross this serialization boundary.
+  if (!/^media\/products\/[a-z0-9][a-z0-9-]*\.(?:png|jpe?g|webp)$/i.test(storageKey)) {
+    return undefined;
+  }
+
+  return `/${storageKey}`;
+}
+
 export async function getLiveShopProducts(): Promise<readonly PublicShopProduct[]> {
   return serializeShopProducts(await new CatalogRepository().findPublishedProducts());
 }
@@ -109,7 +119,11 @@ function serializeShopProducts(
     category: product.category,
     description: product.description,
     id: product.id,
-    media: product.media.map(({ altText, sortOrder }) => ({ altText, sortOrder })),
+    media: product.media.map(({ altText, sortOrder, storageKey }) => ({
+      altText,
+      sortOrder,
+      url: resolvePublicProductMediaUrl(storageKey),
+    })),
     name: product.name,
     slug: product.slug,
     variants: product.variants.map((variant) => ({

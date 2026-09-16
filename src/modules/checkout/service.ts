@@ -186,6 +186,7 @@ export class CheckoutService {
       const orderId = randomUUID();
       const orderAccessToken = issueAccessToken({
         entityId: orderId,
+        includeEntityId: true,
         randomBytes: this.randomBytes,
         scope: "ORDER_STATUS",
       });

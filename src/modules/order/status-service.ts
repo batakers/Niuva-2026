@@ -19,8 +19,10 @@ import {
 type AuthorizeAdmin = () => Promise<AdminAccess>;
 
 export type PublicOrderStatus = Readonly<{
+  cancelledAt: Date | null;
   completedAt: Date | null;
   createdAt: Date;
+  grandTotalRp?: unknown;
   items: readonly Readonly<{
     lineTotalRp: unknown;
     nameSnapshot: string;
@@ -38,8 +40,10 @@ export type PublicOrderStatus = Readonly<{
 
 export interface OrderStatusRepository {
   findForPublicStatusById(orderId: string): Promise<Readonly<{
+    cancelledAt: Date | null;
     completedAt: Date | null;
     createdAt: Date;
+    grandTotalRp?: unknown;
     items: readonly Readonly<{
       lineTotalRp: unknown;
       nameSnapshot: string;
@@ -104,6 +108,7 @@ export class OrderStatusService {
     });
 
     const safeProjection = {
+      cancelledAt: order.cancelledAt,
       completedAt: order.completedAt,
       createdAt: order.createdAt,
       items: order.items,
@@ -112,6 +117,9 @@ export class OrderStatusService {
       paidAt: order.paidAt,
       shipments: order.shipments,
       status: order.status,
+      ...(order.grandTotalRp === undefined
+        ? {}
+        : { grandTotalRp: order.grandTotalRp }),
     };
 
     return safeProjection;
