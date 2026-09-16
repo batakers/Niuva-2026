@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { ImageOff, SearchX } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useHydrated } from "@/components/niuva/use-hydrated";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,15 +76,26 @@ export function ProductGrid({ products, previewEnabled = false }: { products: re
           {filtered.map(product => {
             const stock = availability(product);
             const price = productPrice(product);
+            const cover = product.media.find(media => media.url !== undefined);
             const href = `/shop/${product.slug}${previewEnabled ? "?preview=examples" : ""}`;
             return (
               <article key={product.id} className="min-w-0">
                 <Link href={href} className="group block rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
-                  <div className="flex aspect-[4/3] items-center justify-center rounded-xl border border-border bg-muted text-muted-foreground transition-colors duration-200 group-hover:border-brand-400 group-hover:bg-brand-50">
-                    <div className="text-center">
-                      <ImageOff aria-hidden="true" className="mx-auto size-7" />
-                      <p className="mt-3 text-sm">Foto produk belum disertakan</p>
-                    </div>
+                  <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-xl border border-border bg-muted text-muted-foreground transition-colors duration-200 group-hover:border-brand-400 group-hover:bg-brand-50">
+                    {cover?.url ? (
+                      <Image
+                        alt={cover.altText || product.name}
+                        className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                        fill
+                        sizes="(min-width: 768px) 50vw, 100vw"
+                        src={cover.url}
+                      />
+                    ) : (
+                      <div className="text-center">
+                        <ImageOff aria-hidden="true" className="mx-auto size-7" />
+                        <p className="mt-3 text-sm">Foto produk belum disertakan</p>
+                      </div>
+                    )}
                   </div>
                   <div className="mt-5 flex items-start justify-between gap-4">
                     <div className="min-w-0">
