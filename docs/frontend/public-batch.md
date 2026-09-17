@@ -1,7 +1,7 @@
-# Frontend review batch — FE-00–22
+# Frontend review batch — FE-00–27
 
-Started: 2026-09-06. Updated: 2026-09-14. Status: **UI_IMPLEMENTED**, **VISUAL_ACCEPTANCE_PENDING**,
-**PARTIALLY_INTEGRATED (FE-07, NG-02, NG-05 local path)**. User approved FE-00–02 followed by FE-03–07, FE-08–15, the isolated FE-16 admin preview, FE-17 Action Queue, FE-18 Admin Inquiry Detail, FE-19 Admin Orders, FE-20 Admin Order Fulfillment, FE-21 Admin Custom Print Review, and FE-22 Admin Quote Draft Preview.
+Started: 2026-09-06. Updated: 2026-09-17. Status: **UI_IMPLEMENTED**, **ADMIN_INTEGRATED_PENDING_OWNER_GATES**, **VISUAL_ACCEPTANCE_PENDING**,
+**PARTIALLY_INTEGRATED (FE-07, NG-02, NG-05 local path)**. User approved FE-00–02 followed by FE-03–07, FE-08–15, and the server-backed admin integration slice shipped on 2026-09-16. The fixture-only FE-16–26 rows below remain archival evidence, not the current admin implementation.
 
 > Integration update — on 2026-09-13, FE-07 was promoted to the link-based
 > server-backed Project Brief slice. The no-mutation statements below remain
@@ -14,9 +14,42 @@ Started: 2026-09-06. Updated: 2026-09-14. Status: **UI_IMPLEMENTED**, **VISUAL_A
 
 > Integration update — on 2026-09-14, the custom-request upload orchestration
 > (R2 capability-gated) and Shop → Product → Cart → Checkout server-backed path
-> were added locally. Provider smokes, launch catalog/pricing seed, and Owner
-> visual acceptance remain separate gates; the preview rows below continue to
+> were added locally. Provider smokes, launch pricing/publish decisions, and
+> Owner visual acceptance remain separate gates; the preview rows below continue to
 > describe only explicit `?preview=examples` behavior.
+
+> Integration update — on 2026-09-16, the real admin surface replaced the
+> retired fixture-only FE-18–26 screens for the allowed operational slice.
+> `/admin/orders/[id]`, `/admin/custom-print/[id]`, `/admin/products/[id]`,
+> `/admin/portfolio/[id]`, `/admin/inquiries`, `/admin/inquiries/[id]`, and
+> `/admin/pricing` now read server-owned projections. Authorized Server Actions
+> cover order/inquiry transitions, slicer review, quote draft/send, stock and
+> catalog media updates, portfolio editing/media mapping, and route-bound token
+> reissue. R2 live smoke and fresh authenticated visual acceptance remain open
+> gates; the supplied Clerk identity is now backed
+> by an active loopback Owner profile. Biteship/Midtrans activation and smoke
+> are explicitly deferred until company data is available.
+
+> Handoff update — on 2026-09-16, the Owner-supplied company/portfolio PDFs and
+> pricelist were audited. The approved public portfolio was seeded into the
+> loopback development database (4 services, 17 projects, 6 mapped media) via
+> `db:seed:public-content:local`. The same files do not contain the SKU, retail
+> price, stock, or product-photo mapping required for a Shop catalog; package
+> dimensions are conditional on automatic provider-calculated shipping. Those
+> remaining fields stay an explicit Owner dataset gate. The exact
+> Clerk identity is already represented by an active local Owner profile. R2
+> smoke and manual customer-link delivery remain open; Biteship/Midtrans stay
+> deferred by request.
+
+> Handoff update — on 2026-09-17, the Owner supplied
+> `docs/source/Dataset Shop Niuva/`. The guarded catalog preparation/seed path
+> now maps 8 products, 34 variants, 4 categories, and 50 real JPG media files
+> into loopback as unpublished drafts. Six Tokopedia placeholder variants were
+> excluded because they have no verified price/stock. Merchant SKU format,
+> publish approval, and variant-bound media remain explicit Owner/schema gates.
+> Package dimensions are not required for the current catalog/manual-shipping
+> slice and become a gate only for provider-calculated shipping; Biteship/Midtrans
+> remain deferred.
 
 ## Scope and review paths
 
@@ -38,18 +71,68 @@ Started: 2026-09-06. Updated: 2026-09-14. Status: **UI_IMPLEMENTED**, **VISUAL_A
 | FE-13 | Metadata-only file preview, progress/retry/expiry states, configuration/contact validation and production fail-closed request form | `/custom-print/request` |
 | FE-14 | Immutable quote dossier, scope/assumptions/breakdown, seven-day expiry, local confirmation states and invalid-access recovery | `/quote/preview-quote?preview=examples`, `valid`, `loading`, `expired`, `superseded`, `accepted`, `declined` |
 | FE-15 | Safe retail/custom order projection, public timeline, next action, token recovery, service failure and late-payment refund exception | `/orders/preview-order?preview=examples`, `retail-*`, `custom-*`, `cancelled`, `late-payment`, `loading`, `service-error`, `expired-token`, `revoked-token` |
-| FE-16 | Development-only admin shell and sign-in/access states, responsive navigation, no Clerk/session bypass | `/auis/proofs/frontend/admin?preview=examples`, `auth-unavailable`, `forbidden`, `ready` |
-| FE-17 | Decision-first Action Queue with brief/custom/quote/order/package/stock fixture, segmented filters, populated/loading/empty/stale recovery, and local detail handoff | `/auis/proofs/frontend/admin?preview=examples&state=ready`, `queue=populated`, `loading`, `empty`, `stale` |
-| FE-18 | Inquiry detail drawer from the Queue, safe synthetic detail projection, optional company state, local status/history progression, and explicit non-sending follow-up preview | `/auis/proofs/frontend/admin?preview=examples&state=ready`, click `Buka brief preview` |
-| FE-19 | Admin Orders list with local reference search, type/status/exception filters, desktop headers, labeled mobile cards, recovery states, and stable selected-reference query | `/auis/proofs/frontend/admin?preview=examples&state=ready&module=orders`, `orders=populated`, `loading`, `empty`, `error` |
-| FE-20 | Admin fulfillment drawer with safe projection, timeline/audit preview, valid local operator edges, custom package measurement guard, and Owner-only finance message | `/auis/proofs/frontend/admin?preview=examples&state=ready&module=orders&order=ORD-EX-4072`, `role=OWNER`, `ADMIN` |
-| FE-21 | Admin custom-request list and slicer review drawer with explicit private-file unavailability, required material/weight/duration, optional configuration/notes, local-only review handoff, and recovery states | `/auis/proofs/frontend/admin?preview=examples&state=ready&module=custom-print&request=CPR-EX-2093`, `custom=loading`, `empty`, `error` |
-| FE-22 | Admin quote draft/preview with read-only review inputs, Decimal-contract fixture breakdown, active-rule block, seven-day sent snapshot, and local-only immutable send state | `/auis/proofs/frontend/admin?preview=examples&state=ready&module=quotes&quote=QTE-EX-3028`, `quoteState=rule-missing`, `loading`, `empty`, `error` |
+| FE-16 | **ARCHIVE —** Development-only admin shell and sign-in/access states, responsive navigation, no Clerk/session bypass | `/auis/proofs/frontend/admin?preview=examples`, `auth-unavailable`, `forbidden`, `ready` |
+| FE-17 | **ARCHIVE —** Decision-first Action Queue with brief/custom/quote/order/package/stock fixture, segmented filters, populated/loading/empty/stale recovery, and local detail handoff | `/auis/proofs/frontend/admin?preview=examples&state=ready`, `queue=populated`, `loading`, `empty`, `stale` |
+| FE-18 | **ARCHIVE —** Inquiry detail drawer from the Queue, safe synthetic detail projection, optional company state, local status/history progression, and explicit non-sending follow-up preview | `/auis/proofs/frontend/admin?preview=examples&state=ready`, click `Buka brief preview` |
+| FE-19 | **ARCHIVE —** Admin Orders list with local reference search, type/status/exception filters, desktop headers, labeled mobile cards, recovery states, and stable selected-reference query | `/auis/proofs/frontend/admin?preview=examples&state=ready&module=orders`, `orders=populated`, `loading`, `empty`, `error` |
+| FE-20 | **ARCHIVE —** Admin fulfillment drawer with safe projection, timeline/audit preview, valid local operator edges, custom package measurement guard, and Owner-only finance message | `/auis/proofs/frontend/admin?preview=examples&state=ready&module=orders&order=ORD-EX-4072`, `role=OWNER`, `ADMIN` |
+| FE-21 | **ARCHIVE —** Admin custom-request list and slicer review drawer with explicit private-file unavailability, required material/weight/duration, optional configuration/notes, local-only review handoff, and recovery states | `/auis/proofs/frontend/admin?preview=examples&state=ready&module=custom-print&request=CPR-EX-2093`, `custom=loading`, `empty`, `error` |
+| FE-22 | **ARCHIVE —** Admin quote draft/preview with read-only review inputs, Decimal-contract fixture breakdown, active-rule block, seven-day sent snapshot, and local-only immutable send state | `/auis/proofs/frontend/admin?preview=examples&state=ready&module=quotes&quote=QTE-EX-3028`, `quoteState=rule-missing`, `loading`, `empty`, `error` |
+| ADM-LIVE | **CURRENT —** Server-backed admin shell, lists, detail/editors, live inquiry/pricing reads, and authorized write actions with Clerk + `AdminProfile` | `/admin`, `/admin/orders`, `/admin/orders/[id]`, `/admin/custom-print`, `/admin/custom-print/[id]`, `/admin/products`, `/admin/products/[id]`, `/admin/portfolio`, `/admin/portfolio/[id]`, `/admin/inquiries`, `/admin/inquiries/[id]`, `/admin/pricing` |
 
 Run `corepack pnpm dev`; open `http://localhost:3000`. Use fictional contact
 information for review. Preview data is not a factual client portfolio.
 
 ## Boundaries
+
+### Current integration boundary (2026-09-16)
+
+- The live admin pages use Clerk + active `AdminProfile`, server repositories,
+  domain services, Zod validation, and audit logging. The browser never writes
+  directly to Prisma or receives private file URLs.
+- Product and portfolio publication is guarded by server-side completeness checks
+  (active variant/media for products; narrative/media for portfolio). Client
+  permission and factual launch content remain Owner decisions.
+- B2B inquiry and Pricing Rules are live read subviews. Pricing activation is
+  intentionally not exposed by this batch; Biteship and Midtrans remain disabled.
+- Existing SENT quote/order links can be reissued from their admin detail pages.
+  Reissue replaces the stored hash, invalidates the old link, and emits a new
+  `v1.<entity-id>.<secret>` route-bound token without logging the secret. The
+  manual customer handoff is documented in
+  [`docs/backend/token-reissue-handoff.md`](../backend/token-reissue-handoff.md)
+  and still requires an Owner-approved recipient/channel list.
+- `scripts/prepare-shop-catalog.ts` reads the Owner dataset at
+  `docs/source/Dataset Shop Niuva/`, writes the validated `catalog-seed.json`,
+  and maps only local JPG assets into `public/media/products/`.
+  `scripts/seed-catalog.ts` accepts that manifest only on a loopback
+  non-production database and preflights every mapped asset. No synthetic
+  catalog, photo, stock, or production media mapping is claimed as launch
+  evidence; all seeded products remain drafts.
+- `scripts/seed-local-public-content.ts` is a separate, confirmation-gated
+  loopback seed for the already curated public services/portfolio records. Its
+  six portfolio covers are not retail product media. Source findings and the
+  remaining Shop fields are tracked in
+  [`docs/backend/catalog-source-audit.md`](../backend/catalog-source-audit.md);
+  the source/manifest contract is specified in
+  [`shop-catalog-owner-intake.md`](../backend/shop-catalog-owner-intake.md).
+- Authenticated visual acceptance and R2 upload smoke require Owner-provided
+  environment/identity and must be run as separate evidence; passing typecheck,
+  lint, build, or browser smoke does not imply those gates.
+
+The FE-16–26 bullets below are retained as historical preview evidence. Where
+they describe fixture-only routes or “no mutation”, the current integration
+slice above is the authoritative status for the live `/admin` routes. The next
+handoff should link to that slice rather than treating the archival preview
+rows as open implementation work.
+
+For a requirement-by-requirement status, current loopback probe, and Owner
+input checklist, see [`operational-readiness-report.md`](./operational-readiness-report.md).
+
+### Historical preview evidence (archived)
+
+The FE-16–26 bullets below describe the retired fixture-only proof routes. They
+remain useful for visual regression history, but do not describe the live
+`/admin` implementation or its server-backed permissions and writes.
 
 - Except for the current FE-07 server-backed route, no inquiry POST, email,
   database write, file upload or provider call is made by these preview pages.
@@ -69,9 +152,10 @@ information for review. Preview data is not a factual client portfolio.
   object storage keys are excluded, and SKUs are not rendered. Development cards
   link to the matching development-only detail route. Repository-level publication
   and active-variant filters remain the source contract for future integration.
-- Shop media remains an explicit empty slot because launch photography, products,
-  variants and publication permission are not yet approved. No generated product
-  image is presented as factual inventory.
+- The historical preview Shop cards keep their explicit media-empty behavior;
+  the current loopback catalog now has 50 mapped JPG assets from the Owner
+  dataset, all unpublished until the publish gate is approved. No generated
+  product image is presented as factual inventory.
 - Product detail writes a versioned local cart containing only variant ID and
   integer quantity. Product name, SKU, price, stock, dimensions and totals are not
   persisted. Cart updates and removals remain browser-local; corrupt or enriched
@@ -159,6 +243,34 @@ information for review. Preview data is not a factual client portfolio.
   were introduced by this frontend batch.
 
 ## Verification
+
+### Latest integration verification — 2026-09-16
+
+- `corepack pnpm typecheck`: passed.
+- `corepack pnpm lint`: passed with the repository's existing warning set; the
+  changed files have no ESLint warnings or errors.
+- `corepack pnpm test`: 73 tests passed across 15 files.
+- `corepack pnpm test:backend`: 119 tests passed across 22 files.
+- `corepack pnpm build`: production build passed and emitted the new admin
+  detail/subview routes.
+- `corepack pnpm test:e2e` with the default four local workers: 54 passed, 3
+  failed while the Next development server compiled cold routes under parallel
+  contention (one order-status navigation timeout and two Smart Drop Box
+  navigation assertions). The same three cases passed serially.
+- CI-mode browser gate (`CI=1 corepack pnpm test:e2e`, one worker with retry):
+  57/57 passed. This is the reproducible PR smoke result; the parallel local
+  runner remains a resource-sensitive diagnostic only.
+- The supplied non-production Clerk identity is now matched to an active
+  database-owned Owner `AdminProfile` on loopback. The retained authenticated
+  smoke evidence covers the Action Queue and reload boundary; any new visual
+  acceptance still remains a separate Owner decision.
+- Loopback public-content seed verification: 4 services, 17 published
+  portfolio projects, and 6 mapped portfolio media. This does not count as a
+  retail Shop catalog seed; the source/data gap is recorded in
+  [`docs/backend/catalog-source-audit.md`](../backend/catalog-source-audit.md).
+- `impeccable detect --json src/app/admin src/components/niuva/admin-shell.tsx`:
+  no findings.
+- `git diff --check`: passed.
 
 - `corepack pnpm lint`: 0 errors, 147 pre-existing warnings; focused ESLint on the
   changed frontend/test files has no warnings or errors.
@@ -396,17 +508,19 @@ requested by the task map.
 
 ## Git and handoff
 
-Branch: `codex/frontend-public-pages`.
-Base: `542375db56f0a8313bf0596ac0c127b7368cad0f`.
-FE-16 is recorded through commit `394f752`. FE-17 is recorded and pushed through
-commit `9456fc0`. FE-18 is recorded and pushed through commit `adc6e9a`. FE-19
-is recorded and pushed through commit `0cd2c5a`. FE-20 is recorded and pushed
-through commit `9f0a5d8`. FE-21 is recorded and pushed through commit `c5dbb5a`.
-FE-22 is recorded and pushed through commit `cfd19a7`. FE-23 is recorded and
-pushed through commit `01346c9`. FE-24 is recorded and pushed through commit
-`a1d695f`. FE-25 is recorded and pushed through commit `f274ca8`. FE-26 is an
-uncommitted review slice at this checkpoint.
-No merge or deployment is performed by this frontend batch.
+Current branch: `codex/frontend-ui-ux-hardening`.
+Current PR: [#3](https://github.com/batakers/Niuva-2026/pull/3), head
+`ee95d2a`. The PR is `OPEN · MERGEABLE · CLEAN`; no merge or deployment has
+been performed because the Owner/provider gates in the readiness report remain
+open.
+
+The FE-16–26 commit lineage below is retained as historical frontend-batch
+evidence only; it is not the current server-backed admin handoff.
+
+Historical FE-16 is recorded through commit `394f752`; FE-17 through `9456fc0`;
+FE-18 through `adc6e9a`; FE-19 through `0cd2c5a`; FE-20 through `9f0a5d8`;
+FE-21 through `c5dbb5a`; FE-22 through `cfd19a7`; FE-23 through `01346c9`;
+FE-24 through `a1d695f`; and FE-25 through `f274ca8`.
 
 Pre-existing sandbox changes are preserved: `.env.example`, the two sandbox
 documents in `docs/backend/`, and `scripts/local-dev-db.ps1`. The existing task-map

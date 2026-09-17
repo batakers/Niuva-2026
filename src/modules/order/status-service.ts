@@ -5,12 +5,20 @@ import {
   recordAudit,
   type AuditRecorder,
 } from "@/modules/shared/audit";
-import { verifyAccessToken } from "@/modules/shared/access-token";
+import {
+  issueAccessToken,
+  verifyAccessToken,
+  type IssuedAccessToken,
+} from "@/modules/shared/access-token";
 import { appError } from "@/modules/shared/errors";
 import { requireAdminPermission } from "@/modules/admin/permissions";
 import { getCancellationDecision } from "@/modules/policy/commercial";
 
-import { OrderRepository, type OrderMutationState } from "./repository";
+import {
+  OrderRepository,
+  type OrderMutationState,
+  type OrderTokenForReissue,
+} from "./repository";
 import {
   transitionCustomOrder,
   transitionRetailOrder,
@@ -68,24 +76,40 @@ export interface OrderStatusRepository {
   ): Promise<OrderMutationState | null>;
 }
 
+export interface OrderTokenRepository {
+  findForTokenReissue(orderId: string): Promise<OrderTokenForReissue | null>;
+  replacePublicTokenHash(
+    orderId: string,
+    currentHash: string,
+    nextHash: string,
+  ): Promise<boolean>;
+}
+
 export type OrderStatusServiceDependencies = Readonly<{
   audit?: AuditRecorder;
   authorizeAdmin?: AuthorizeAdmin;
   now?: () => Date;
+  randomBytes?: (size: number) => Uint8Array;
   repository?: OrderStatusRepository;
+  tokenRepository?: OrderTokenRepository;
 }>;
 
 export class OrderStatusService {
   private readonly audit?: AuditRecorder;
   private readonly authorizeAdmin: AuthorizeAdmin;
   private readonly clock: () => Date;
+  private readonly randomBytes?: (size: number) => Uint8Array;
   private readonly repositoryFactory: () => OrderStatusRepository;
+  private readonly tokenRepositoryFactory: () => OrderTokenRepository;
 
   constructor(dependencies: OrderStatusServiceDependencies = {}) {
     this.audit = dependencies.audit;
     this.authorizeAdmin = dependencies.authorizeAdmin ?? requireAdmin;
     this.clock = dependencies.now ?? (() => new Date());
+    this.randomBytes = dependencies.randomBytes;
     this.repositoryFactory = () => dependencies.repository ?? new OrderRepository();
+    this.tokenRepositoryFactory = () =>
+      dependencies.tokenRepository ?? new OrderRepository();
   }
 
   async getPublicStatus(input: Readonly<{
@@ -208,5 +232,46 @@ export class OrderStatusService {
     });
 
     return updated;
+  }
+
+  async reissuePublicToken(orderId: string): Promise<Readonly<{
+    accessToken: IssuedAccessToken;
+    orderId: string;
+    orderNumber: string;
+  }>> {
+    const admin = await this.authorizeAdmin();
+    requireAdminPermission(admin, "ORDER_FULFILL");
+    const repository = this.tokenRepositoryFactory();
+    const order = await repository.findForTokenReissue(orderId);
+    if (order === null) throw appError("NOT_FOUND");
+
+    const accessToken = issueAccessToken({
+      entityId: order.id,
+      includeEntityId: true,
+      now: this.clock(),
+      randomBytes: this.randomBytes,
+      scope: "ORDER_STATUS",
+    });
+    const replaced = await repository.replacePublicTokenHash(
+      order.id,
+      order.publicTokenHash,
+      accessToken.tokenHash,
+    );
+    if (!replaced) {
+      throw appError("CONFLICT", {
+        message: "Token order berubah sebelum tautan baru disimpan.",
+      });
+    }
+
+    await recordAudit(this.audit, {
+      action: "order.public-token.reissued",
+      actorId: admin.profile.id,
+      actorType: "ADMIN",
+      afterJson: { format: "route-bound-v1" },
+      entityId: order.id,
+      entityType: "Order",
+    });
+
+    return { accessToken, orderId: order.id, orderNumber: order.orderNumber };
   }
 }

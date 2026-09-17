@@ -5,6 +5,12 @@ const slug = z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 const nonNegativeInteger = z.int().nonnegative();
 const nonNegativeDecimal = z.string().trim().regex(/^\d+(?:\.\d{1,6})?$/);
 const nonNegativeMoney = z.string().trim().regex(/^\d+$/);
+const publicMediaStorageKey = z
+  .string()
+  .trim()
+  .regex(/^media\/products\/[a-z0-9]+(?:-[a-z0-9]+)*\.(?:png|jpe?g|webp)$/i, {
+    message: "Media product harus memakai key publik yang diizinkan.",
+  });
 
 export const createProductSchema = z.object({
   categoryId: z.uuid().optional(),
@@ -58,9 +64,22 @@ export const updateStockSchema = z.object({
   stockOnHand: nonNegativeInteger,
 });
 
+export const replaceProductMediaSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        altText: requiredText,
+        sortOrder: nonNegativeInteger,
+        storageKey: publicMediaStorageKey,
+      }),
+    )
+    .max(12),
+});
+
 export type CreateProductInput = z.infer<typeof createProductSchema>;
 export type UpdateProductInput = z.infer<typeof updateProductSchema>;
 export type CreateVariantInput = z.infer<typeof createVariantSchema>;
 export type UpdateVariantInput = z.infer<typeof updateVariantSchema>;
 export type UpdateStockInput = z.infer<typeof updateStockSchema>;
+export type ReplaceProductMediaInput = z.infer<typeof replaceProductMediaSchema>;
 

@@ -5,6 +5,10 @@ const optionalText = z.preprocess(
   (value) => (typeof value === "string" && value.trim().length === 0 ? undefined : value),
   z.string().trim().min(1).optional(),
 );
+const optionalHttpUrl = z
+  .union([z.url({ protocol: /^https?$/ }), z.literal("")])
+  .optional()
+  .transform((value) => (value === "" ? undefined : value));
 
 const inquiryStages = [
   "IDEA",
@@ -27,9 +31,7 @@ export const b2bInquiryInputSchema = z
     phone: requiredText,
     preferredService: optionalText,
     projectGoal: requiredText,
-    referenceLink: z.union([z.url(), z.literal("")]).optional().transform(
-      (value) => (value === "" ? undefined : value),
-    ),
+    referenceLink: optionalHttpUrl,
     targetDeadline: z.iso.date(),
     targetQuantity: requiredText,
   })

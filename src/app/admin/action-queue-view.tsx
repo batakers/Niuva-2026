@@ -5,6 +5,7 @@ import type {
   ActionQueueResult,
 } from "@/modules/admin/action-queue";
 import { AdminShell } from "@/components/niuva/admin-shell";
+import Link from "next/link";
 
 type AdminActionQueueViewProps = Readonly<{
   result: ActionQueueResult;
@@ -118,6 +119,7 @@ export function AdminActionQueueErrorView({
 }
 
 function ActionQueueRow({ item }: Readonly<{ item: ActionQueueItem }>) {
+  const href = actionHref(item);
   return (
     <li className="grid gap-4 p-5 sm:grid-cols-[minmax(0,1fr)_minmax(15rem,0.8fr)] sm:p-6">
       <div className="min-w-0">
@@ -125,7 +127,7 @@ function ActionQueueRow({ item }: Readonly<{ item: ActionQueueItem }>) {
           {item.title}
         </p>
         <p className="mt-2 break-words font-mono text-sm text-foreground">
-          {item.reference}
+          {href ? <Link className="text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={href}>{item.reference}</Link> : item.reference}
         </p>
       </div>
       <div className="min-w-0 sm:text-right">
@@ -150,6 +152,28 @@ function ActionQueueRow({ item }: Readonly<{ item: ActionQueueItem }>) {
       </div>
     </li>
   );
+}
+
+function actionHref(item: ActionQueueItem): string | null {
+  const parts = item.id.split(":");
+  const entityId = parts.slice(2).join(":");
+  if (!entityId) return null;
+  switch (item.kind) {
+    case "B2B_INQUIRY":
+      return `/admin/inquiries/${entityId}`;
+    case "CUSTOM_PRINT_REVIEW":
+    case "QUOTE_PREPARATION":
+      return `/admin/custom-print/${entityId}`;
+    case "ORDER_PROCESSING":
+    case "PACKAGE_MEASUREMENT":
+      return `/admin/orders/${entityId}`;
+    case "QUOTE_SEND":
+      return "/admin/custom-print";
+    case "SHIPPING_EXCEPTION":
+      return "/admin/orders";
+    default:
+      return "/admin";
+  }
 }
 
 function formatDate(value: Date): string {

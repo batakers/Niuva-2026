@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import Link from "next/link";
 
 import { AdminDataUnavailableView, AdminPagination, AdminShell } from "@/components/niuva/admin-shell";
 import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
@@ -97,7 +98,7 @@ function PortfolioCard({ item }: Readonly<{ item: AdminPortfolioRow }>) {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.1em] text-brand-700">{item.serviceLabel}</p>
-          <h3 className="mt-2 text-lg font-semibold">{item.title}</h3>
+          <h3 className="mt-2 text-lg font-semibold"><Link className="underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/admin/portfolio/${item.id}`}>{item.title}</Link></h3>
           <p className="mt-1 text-sm text-muted-foreground">{item.clientName ?? "Client tidak ditampilkan"}</p>
         </div>
         <div className="flex flex-wrap gap-2 text-xs font-semibold">
@@ -111,7 +112,7 @@ function PortfolioCard({ item }: Readonly<{ item: AdminPortfolioRow }>) {
         <div><dt className="text-xs text-muted-foreground">Slug</dt><dd className="mt-1 break-words font-mono text-xs">{item.slug}</dd></div>
         <div><dt className="text-xs text-muted-foreground">Diperbarui</dt><dd className="mt-1 text-muted-foreground">{dateFormatter.format(item.updatedAt)}</dd></div>
       </dl>
-      <p className="mt-4 text-xs leading-5 text-muted-foreground">Publish action tetap memerlukan pengecekan izin dan kelengkapan bukti. Preview tidak dianggap sebagai persetujuan publikasi.</p>
+      <p className="mt-4 text-xs leading-5 text-muted-foreground"><Link className="font-semibold text-brand-700 underline-offset-4 hover:underline" href={`/admin/portfolio/${item.id}`}>Buka editor project</Link>. Publish action tetap memerlukan pengecekan izin dan kelengkapan bukti.</p>
     </article>
   );
 }

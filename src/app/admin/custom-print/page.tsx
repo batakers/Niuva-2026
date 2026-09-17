@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import Link from "next/link";
 
 import { AdminDataUnavailableView, AdminPagination, AdminShell } from "@/components/niuva/admin-shell";
 import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
@@ -96,7 +97,7 @@ function RequestCard({ item }: Readonly<{ item: AdminCustomPrintRequestRow }>) {
     <article className="rounded-xl border border-border bg-card p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="font-mono text-sm font-semibold">{item.referenceNumber}</p>
+          <Link className="font-mono text-sm font-semibold text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/admin/custom-print/${item.id}`}>{item.referenceNumber}</Link>
           <h3 className="mt-2 text-lg font-semibold">{item.customerName}</h3>
           <p className="mt-1 text-sm text-muted-foreground">{item.customerEmail}</p>
         </div>
@@ -108,7 +109,7 @@ function RequestCard({ item }: Readonly<{ item: AdminCustomPrintRequestRow }>) {
         <div><dt className="text-xs text-muted-foreground">File privat</dt><dd className="mt-1 font-medium">{item.fileCount} file terverifikasi</dd></div>
         <div><dt className="text-xs text-muted-foreground">Quote terakhir</dt><dd className="mt-1 font-medium">{item.latestQuote ? `${item.latestQuote.quoteNumber} · v${item.latestQuote.version}` : "Belum ada"}</dd></div>
       </dl>
-      <p className="mt-5 text-xs leading-5 text-muted-foreground">Diperbarui {dateFormatter.format(item.updatedAt)}. Form review dan aksi quote akan memakai service server terotorisasi pada detail berikutnya.</p>
+      <p className="mt-5 text-xs leading-5 text-muted-foreground">Diperbarui {dateFormatter.format(item.updatedAt)}. <Link className="font-semibold text-brand-700 underline-offset-4 hover:underline" href={`/admin/custom-print/${item.id}`}>Buka detail dan aksi</Link>.</p>
     </article>
   );
 }

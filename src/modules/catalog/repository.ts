@@ -1,4 +1,4 @@
-import type { Prisma, PrismaClient } from "@/generated/prisma/client";
+import { Prisma, type PrismaClient } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { lockVariant } from "@/modules/inventory/repository";
 import { appError } from "@/modules/shared/errors";
@@ -6,6 +6,7 @@ import { appError } from "@/modules/shared/errors";
 import type {
   CreateProductInput,
   CreateVariantInput,
+  ReplaceProductMediaInput,
   UpdateProductInput,
   UpdateVariantInput,
 } from "./schema";
@@ -37,12 +38,22 @@ export type StockMutationResult = Readonly<{
   stockOnHand: number;
 }>;
 
+export type AdminProductPublishCheck = Readonly<{
+  mediaCount: number;
+  activeVariantCount: number;
+}>;
+
 export interface CatalogRepositoryPort {
   createProduct(input: CreateProductInput): Promise<Readonly<{ id: string }>>;
   createVariant(input: CreateVariantInput): Promise<Readonly<{ id: string }>>;
   findPublishedProductBySlug(slug: string): Promise<PublicCatalogProduct | null>;
   findPublishedProducts(): Promise<readonly PublicCatalogProduct[]>;
+  findAdminProductForPublish?(productId: string): Promise<AdminProductPublishCheck | null>;
   findPurchasableVariantBySku(sku: string): Promise<unknown | null>;
+  replaceMedia?(
+    productId: string,
+    items: ReplaceProductMediaInput["items"],
+  ): Promise<Readonly<{ productId: string; mediaCount: number }>>;
   updateProduct(
     productId: string,
     input: UpdateProductInput,
@@ -170,11 +181,34 @@ export class CatalogRepository implements CatalogRepositoryPort {
   }
 
   async updateProduct(productId: string, input: UpdateProductInput) {
-    return this.prisma.product.update({
-      where: { id: productId },
-      data: input,
-      select: { id: true },
-    });
+    return this.prisma.$transaction(async (transaction) => {
+      const current = await transaction.product.findUnique({
+        where: { id: productId },
+        select: {
+          _count: { select: { media: true } },
+          id: true,
+          isPublished: true,
+          variants: { where: { isActive: true }, select: { id: true } },
+        },
+      });
+
+      if (current === null) {
+        throw appError("NOT_FOUND");
+      }
+
+      const isPublished = input.isPublished ?? current.isPublished;
+      if (isPublished && (current._count.media === 0 || current.variants.length === 0)) {
+        throw appError("VALIDATION_ERROR", {
+          details: { publish: "Produk publish harus memiliki foto dan minimal satu varian aktif." },
+        });
+      }
+
+      return transaction.product.update({
+        where: { id: productId },
+        data: input,
+        select: { id: true },
+      });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   }
 
   async createVariant(input: CreateVariantInput) {
@@ -196,11 +230,91 @@ export class CatalogRepository implements CatalogRepositoryPort {
   }
 
   async updateVariant(variantId: string, input: UpdateVariantInput) {
-    return this.prisma.productVariant.update({
-      where: { id: variantId },
-      data: input,
-      select: { id: true },
+    return this.prisma.$transaction(async (transaction) => {
+      const current = await transaction.productVariant.findUnique({
+        where: { id: variantId },
+        select: {
+          id: true,
+          isActive: true,
+          product: { select: { id: true, isPublished: true } },
+        },
+      });
+
+      if (current === null) {
+        throw appError("NOT_FOUND");
+      }
+
+      const isActive = input.isActive ?? current.isActive;
+      if (current.product.isPublished && current.isActive && !isActive) {
+        const activeVariantCount = await transaction.productVariant.count({
+          where: { isActive: true, productId: current.product.id },
+        });
+        if (activeVariantCount <= 1) {
+          throw appError("VALIDATION_ERROR", {
+            details: { isActive: "Produk publish harus memiliki minimal satu varian aktif." },
+          });
+        }
+      }
+
+      return transaction.productVariant.update({
+        where: { id: variantId },
+        data: input,
+        select: { id: true },
+      });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  }
+
+  async findAdminProductForPublish(
+    productId: string,
+  ): Promise<AdminProductPublishCheck | null> {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+      select: {
+        _count: { select: { media: true } },
+        variants: { where: { isActive: true }, select: { id: true } },
+      },
     });
+    if (product === null) return null;
+    return {
+      activeVariantCount: product.variants.length,
+      mediaCount: product._count.media,
+    };
+  }
+
+  async replaceMedia(
+    productId: string,
+    items: ReplaceProductMediaInput["items"],
+  ): Promise<Readonly<{ productId: string; mediaCount: number }>> {
+    return this.prisma.$transaction(async (transaction) => {
+      const product = await transaction.product.findUnique({
+        where: { id: productId },
+        select: { id: true, isPublished: true },
+      });
+
+      if (product === null) {
+        throw appError("NOT_FOUND");
+      }
+
+      if (product.isPublished && items.length === 0) {
+        throw appError("VALIDATION_ERROR", {
+          details: { items: "Produk publish harus memiliki minimal satu foto." },
+        });
+      }
+
+      await transaction.productMedia.deleteMany({ where: { productId } });
+      if (items.length > 0) {
+        await transaction.productMedia.createMany({
+          data: items.map((item) => ({
+            altText: item.altText,
+            productId,
+            sortOrder: item.sortOrder,
+            storageKey: item.storageKey,
+          })),
+        });
+      }
+
+      return { productId: product.id, mediaCount: items.length };
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   }
 
   async updateStock(

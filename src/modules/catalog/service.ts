@@ -13,15 +13,18 @@ import {
   createProductSchema,
   createVariantSchema,
   updateProductSchema,
+  replaceProductMediaSchema,
   updateStockSchema,
   updateVariantSchema,
   type CreateProductInput,
   type CreateVariantInput,
   type UpdateProductInput,
+  type ReplaceProductMediaInput,
   type UpdateStockInput,
   type UpdateVariantInput,
 } from "./schema";
 import { parseWithValidation } from "@/modules/shared/validation";
+import { appError } from "@/modules/shared/errors";
 import { requireAdminPermission } from "@/modules/admin/permissions";
 
 type AuthorizeAdmin = () => Promise<AdminAccess>;
@@ -56,6 +59,11 @@ export class CatalogService {
     const parsed = parseWithValidation(createProductSchema, input);
     const admin = await this.authorizeAdmin();
     requireAdminPermission(admin, "CATALOG_WRITE");
+    if (parsed.isPublished) {
+      throw appError("VALIDATION_ERROR", {
+        details: { publish: "Buat produk sebagai draft, lalu lengkapi foto dan varian aktif sebelum publish." },
+      });
+    }
     const created = await this.repositoryFactory().createProduct(parsed);
 
     await recordAudit(this.audit, {
@@ -74,7 +82,19 @@ export class CatalogService {
     const parsed = parseWithValidation(updateProductSchema, input);
     const admin = await this.authorizeAdmin();
     requireAdminPermission(admin, "CATALOG_WRITE");
-    const updated = await this.repositoryFactory().updateProduct(productId, parsed);
+    const repository = this.repositoryFactory();
+    if (parsed.isPublished === true && repository.findAdminProductForPublish !== undefined) {
+      const check = await repository.findAdminProductForPublish(productId);
+      if (check === null) {
+        throw appError("NOT_FOUND");
+      }
+      if (check.mediaCount === 0 || check.activeVariantCount === 0) {
+        throw appError("VALIDATION_ERROR", {
+          details: { publish: "Produk publish harus memiliki foto dan minimal satu varian aktif." },
+        });
+      }
+    }
+    const updated = await repository.updateProduct(productId, parsed);
 
     await recordAudit(this.audit, {
       action: "catalog.product.updated",
@@ -145,6 +165,31 @@ export class CatalogService {
       beforeJson: { stockOnHand: updated.previousStockOnHand },
       entityId: updated.id,
       entityType: "ProductVariant",
+    });
+
+    return updated;
+  }
+
+  async replaceMedia(productId: string, input: unknown) {
+    const parsed: ReplaceProductMediaInput = parseWithValidation(
+      replaceProductMediaSchema,
+      input,
+    );
+    const admin = await this.authorizeAdmin();
+    requireAdminPermission(admin, "CATALOG_WRITE");
+    const repository = this.repositoryFactory();
+    if (repository.replaceMedia === undefined) {
+      throw new Error("Catalog repository tidak mendukung media write.");
+    }
+    const updated = await repository.replaceMedia(productId, parsed.items);
+
+    await recordAudit(this.audit, {
+      action: "catalog.product.media.replaced",
+      actorId: admin.profile.id,
+      actorType: "ADMIN",
+      afterJson: { mediaCount: updated.mediaCount },
+      entityId: productId,
+      entityType: "ProductMedia",
     });
 
     return updated;

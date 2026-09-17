@@ -20,7 +20,7 @@ function asOptionalCopy(value: string): string | undefined {
 }
 
 function resolvePublicMediaUrl(storageKey: string): string | undefined {
-  if (!/^media\/portfolio\/[a-z0-9][a-z0-9-]*\.png$/i.test(storageKey)) {
+  if (!/^media\/portfolio\/[a-z0-9][a-z0-9-]*\.(?:png|jpe?g|webp)$/i.test(storageKey)) {
     return undefined;
   }
 
@@ -55,17 +55,11 @@ function toPublicProject(
     detailReadiness: resolveDetailReadiness(project, approved),
     evidenceBoundary: approved?.evidenceBoundary,
     id: project.id,
-    media: approved
-      ? approved.media.map((media) => ({
-          altText: media.altText,
-          sortOrder: media.sortOrder,
-          url: media.publicPath,
-        }))
-      : project.media.map((media) => ({
-          altText: media.altText,
-          sortOrder: media.sortOrder,
-          url: resolvePublicMediaUrl(media.storageKey),
-        })),
+    media: project.media.map((media) => ({
+      altText: media.altText,
+      sortOrder: media.sortOrder,
+      url: resolvePublicMediaUrl(media.storageKey),
+    })),
     process: asOptionalCopy(project.process),
     result: asOptionalCopy(project.result),
     serviceLabel: project.serviceLabel,

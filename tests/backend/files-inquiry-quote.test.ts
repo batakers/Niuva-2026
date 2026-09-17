@@ -80,6 +80,12 @@ describe("B2B inquiry contract", () => {
         targetDeadline: "2026-02-30",
       }).success,
     ).toBe(false);
+    expect(
+      b2bInquiryInputSchema.safeParse({
+        ...input,
+        referenceLink: "javascript:alert(1)",
+      }).success,
+    ).toBe(false);
   });
 });
 

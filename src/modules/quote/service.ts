@@ -34,6 +34,7 @@ import {
   type AcceptedCustomOrder,
   type CustomPrintReviewRecord,
   type QuoteForAcceptance,
+  type QuoteTokenForReissue,
 } from "@/modules/custom-print/repository";
 
 import { transitionQuote } from "./transitions";
@@ -97,12 +98,18 @@ export interface QuoteServiceRepository {
     id: string;
     version: number;
   }> | null>;
+  findDraftForRequest?(requestId: string): Promise<Readonly<{ id: string }> | null>;
   findLatestVersion(requestId: string): Promise<number | null>;
   findRequestForReview(requestId: string): Promise<Readonly<{
     id: string;
     quantity: number;
     status: "APPROVED" | "CANCELLED" | "DECLINED" | "QUOTE_READY" | "QUOTE_SENT" | "SUBMITTED" | "UNDER_REVIEW";
   }> | null>;
+  replaceOrderPublicTokenHash?(input: Readonly<{
+    currentHash: string;
+    nextHash: string;
+    orderId: string;
+  }>): Promise<boolean>;
   findReview(requestId: string): Promise<CustomPrintReviewRecord | null>;
   orderNumberExists(orderNumber: string): Promise<boolean>;
   quoteNumberExists(quoteNumber: string): Promise<boolean>;
@@ -124,12 +131,22 @@ export interface QuoteServiceRepository {
   ): Promise<Readonly<{ id: string; status: "ACCEPTED" | "DECLINED" | "DRAFT" | "EXPIRED" | "SENT" }> | null>;
 }
 
+export interface QuoteTokenRepository {
+  findForTokenReissue(quoteId: string): Promise<QuoteTokenForReissue | null>;
+  replacePublicTokenHash(
+    quoteId: string,
+    currentHash: string,
+    nextHash: string,
+  ): Promise<boolean>;
+}
+
 export type QuoteServiceDependencies = Readonly<{
   audit?: AuditRecorder;
   authorizeAdmin?: AuthorizeAdmin;
   now?: () => Date;
   randomBytes?: (size: number) => Uint8Array;
   repository?: QuoteServiceRepository;
+  tokenRepository?: QuoteTokenRepository;
 }>;
 
 export type CreatedQuoteDraft = Readonly<{
@@ -165,6 +182,7 @@ export class QuoteService {
   private readonly clock: () => Date;
   private readonly randomBytes?: (size: number) => Uint8Array;
   private readonly repositoryFactory: () => QuoteServiceRepository;
+  private readonly tokenRepositoryFactory: () => QuoteTokenRepository;
 
   constructor(dependencies: QuoteServiceDependencies = {}) {
     this.audit = dependencies.audit;
@@ -173,6 +191,8 @@ export class QuoteService {
     this.randomBytes = dependencies.randomBytes;
     this.repositoryFactory = () =>
       dependencies.repository ?? new CustomPrintQuoteRepository();
+    this.tokenRepositoryFactory = () =>
+      dependencies.tokenRepository ?? new CustomPrintQuoteRepository();
   }
 
   async createDraft(input: unknown): Promise<CreatedQuoteDraft> {
@@ -209,6 +229,15 @@ export class QuoteService {
 
     if (request.status !== "QUOTE_READY" && request.status !== "QUOTE_SENT") {
       throw appError("QUOTE_NOT_READY");
+    }
+
+    const existingDraft = repository.findDraftForRequest === undefined
+      ? null
+      : await repository.findDraftForRequest(parsed.requestId);
+    if (existingDraft !== null) {
+      throw appError("CONFLICT", {
+        message: "Request ini sudah memiliki draft quote. Kirim atau supersede draft tersebut sebelum membuat versi baru.",
+      });
     }
 
     const review = await repository.findReview(parsed.requestId);
@@ -374,7 +403,47 @@ export class QuoteService {
         version: quote.version,
       });
 
-      return existing;
+      if (existing.kind !== "ALREADY_ACCEPTED") {
+        return {
+          kind: existing.kind,
+          orderId: existing.orderId,
+          orderNumber: existing.orderNumber,
+        };
+      }
+
+      if (
+        existing.currentOrderPublicTokenHash === undefined ||
+        repository.replaceOrderPublicTokenHash === undefined
+      ) {
+        throw appError("INTERNAL_ERROR", {
+          message: "Order accepted belum dapat menerbitkan ulang tautan status.",
+        });
+      }
+
+      const orderAccessToken = issueAccessToken({
+        entityId: existing.orderId,
+        includeEntityId: true,
+        now,
+        randomBytes: this.randomBytes,
+        scope: "ORDER_STATUS",
+      });
+      const replaced = await repository.replaceOrderPublicTokenHash({
+        currentHash: existing.currentOrderPublicTokenHash,
+        nextHash: orderAccessToken.tokenHash,
+        orderId: existing.orderId,
+      });
+      if (!replaced) {
+        throw appError("CONFLICT", {
+          message: "Order berubah sebelum tautan status baru diterbitkan.",
+        });
+      }
+
+      return {
+        kind: existing.kind,
+        orderAccessToken,
+        orderId: existing.orderId,
+        orderNumber: existing.orderNumber,
+      };
     }
 
     if (quote.status !== "SENT") {
@@ -690,6 +759,64 @@ export class QuoteService {
     });
 
     return expired;
+  }
+
+  async reissuePublicToken(quoteId: string): Promise<Readonly<{
+    accessToken: IssuedAccessToken;
+    quoteId: string;
+    quoteNumber: string;
+  }>> {
+    const admin = await this.authorizeAdmin();
+    requireAdminPermission(admin, "QUOTE_MANAGE");
+    const repository = this.tokenRepositoryFactory();
+    const quote = await repository.findForTokenReissue(quoteId);
+    if (quote === null) throw appError("NOT_FOUND");
+    if (quote.status !== "SENT") {
+      throw appError("QUOTE_NOT_READY", {
+        message: "Tautan baru hanya dapat diterbitkan untuk quote yang sudah dikirim.",
+      });
+    }
+
+    const now = this.clock();
+    if (quote.expiresAt === null || now >= quote.expiresAt) {
+      throw appError("QUOTE_NOT_READY", {
+        message: "Quote sudah kedaluwarsa; buat dan kirim quote baru.",
+      });
+    }
+
+    const accessToken = issueAccessToken({
+      entityId: quote.id,
+      expiresAt: quote.expiresAt,
+      includeEntityId: true,
+      now,
+      randomBytes: this.randomBytes,
+      scope: "CUSTOM_PRINT_QUOTE",
+    });
+    const replaced = await repository.replacePublicTokenHash(
+      quote.id,
+      quote.publicTokenHash,
+      accessToken.tokenHash,
+    );
+    if (!replaced) {
+      throw appError("CONFLICT", {
+        message: "Token quote berubah sebelum tautan baru disimpan.",
+      });
+    }
+
+    await recordAudit(this.audit, {
+      action: "quote.public-token.reissued",
+      actorId: admin.profile.id,
+      actorType: "ADMIN",
+      afterJson: { format: "route-bound-v1" },
+      entityId: quote.id,
+      entityType: "CustomPrintQuote",
+    });
+
+    return {
+      accessToken,
+      quoteId: quote.id,
+      quoteNumber: quote.quoteNumber,
+    };
   }
 }
 

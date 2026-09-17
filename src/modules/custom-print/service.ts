@@ -143,6 +143,7 @@ export class CustomPrintService {
     });
     const accessToken = issueAccessToken({
       entityId: id,
+      includeEntityId: true,
       randomBytes: this.randomBytes,
       scope: "CUSTOM_PRINT_REQUEST",
     });

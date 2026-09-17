@@ -12,6 +12,13 @@ export type OrderMutationState = Readonly<{
   status: OrderStatus;
 }>;
 
+export type OrderTokenForReissue = Readonly<{
+  id: string;
+  orderNumber: string;
+  publicTokenHash: string;
+  status: OrderStatus;
+}>;
+
 export class OrderRepository {
   constructor(private readonly prisma: PrismaClient = getPrismaClient()) {}
 
@@ -118,6 +125,25 @@ export class OrderRepository {
         },
       },
     });
+  }
+
+  async findForTokenReissue(orderId: string): Promise<OrderTokenForReissue | null> {
+    return this.prisma.order.findUnique({
+      where: { id: orderId },
+      select: { id: true, orderNumber: true, publicTokenHash: true, status: true },
+    });
+  }
+
+  async replacePublicTokenHash(
+    orderId: string,
+    currentHash: string,
+    nextHash: string,
+  ): Promise<boolean> {
+    const updated = await this.prisma.order.updateMany({
+      where: { id: orderId, publicTokenHash: currentHash },
+      data: { publicTokenHash: nextHash },
+    });
+    return updated.count === 1;
   }
 }
 

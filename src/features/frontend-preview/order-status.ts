@@ -281,7 +281,7 @@ function statusDescription(status: OrderStatus, custom: boolean): string {
   if (status === "PAID") return custom ? "Pembayaran terverifikasi. Pekerjaan custom akan bergerak ke produksi." : "Pembayaran terverifikasi. Pesanan segera masuk proses.";
   if (status === "PROCESSING" || status === "IN_PRODUCTION") return "Tim Niuva sedang memproses order sesuai data yang tersimpan.";
   if (status === "FINISHING_QC") return "Order custom berada pada tahap finishing dan quality control.";
-  if (status === "WAITING_SHIPPING_PAYMENT") return "Paket final sedang dipersiapkan; pembayaran pengiriman menunggu langkah berikutnya.";
+  if (status === "WAITING_SHIPPING_PAYMENT") return "Paket final sudah diukur. Pembayaran pengiriman menunggu instruksi resmi Niuva.";
   if (status === "READY_TO_SHIP") return "Paket siap dikirim setelah detail pengiriman terkonfirmasi.";
   if (status === "SHIPPED") return "Paket sudah diserahkan ke kurir.";
   if (status === "COMPLETED") return "Order ditandai selesai oleh server.";
@@ -291,9 +291,17 @@ function statusDescription(status: OrderStatus, custom: boolean): string {
 function nextAction(status: OrderStatus, custom: boolean): OrderStatusPreview["nextAction"] {
   if (status === "PENDING_PAYMENT" || status === "WAITING_PAYMENT") {
     return {
-      description: "Gunakan kanal pembayaran yang dikirim bersama konfirmasi order. Status PAID hanya berubah setelah webhook diverifikasi.",
+      description: "Pembayaran hanya dilakukan melalui instruksi resmi Niuva. Status PAID hanya berubah setelah webhook diverifikasi server.",
       kind: "support",
       title: "Pembayaran masih menunggu",
+      tone: "warning",
+    };
+  }
+  if (status === "WAITING_SHIPPING_PAYMENT") {
+    return {
+      description: "Paket final sudah diukur. Hubungi Niuva melalui kanal konfirmasi untuk instruksi pembayaran pengiriman; status berubah setelah webhook diverifikasi.",
+      kind: "support",
+      title: "Pembayaran pengiriman menunggu instruksi",
       tone: "warning",
     };
   }

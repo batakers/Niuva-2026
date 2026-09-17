@@ -111,6 +111,7 @@ export class InquiryService {
     });
     const accessToken = issueAccessToken({
       entityId: id,
+      includeEntityId: true,
       randomBytes: this.randomBytes,
       scope: "B2B_INQUIRY",
     });

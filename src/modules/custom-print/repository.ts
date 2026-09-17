@@ -1,4 +1,4 @@
-import type { Prisma, PrismaClient } from "@/generated/prisma/client";
+import { Prisma, type PrismaClient } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { appError } from "@/modules/shared/errors";
 
@@ -82,10 +82,19 @@ export type QuoteForAcceptance = Readonly<{
   version: number;
 }>;
 
+export type QuoteTokenForReissue = Readonly<{
+  expiresAt: Date | null;
+  id: string;
+  publicTokenHash: string;
+  quoteNumber: string;
+  status: "ACCEPTED" | "DECLINED" | "DRAFT" | "EXPIRED" | "SENT";
+}>;
+
 export type AcceptedCustomOrder = Readonly<{
   kind: "ALREADY_ACCEPTED" | "CREATED";
   orderId: string;
   orderNumber: string;
+  currentOrderPublicTokenHash?: string;
 }>;
 
 export type CustomPrintRequestReviewSummary = Readonly<{
@@ -283,45 +292,68 @@ export class CustomPrintQuoteRepository {
   }
 
   async createDraft(input: CreateDraftQuoteInput) {
-    const pricingRule = await this.prisma.pricingRuleVersion.findFirst({
-      where: {
-        id: input.pricingRuleVersionId,
-        status: "ACTIVE",
-      },
-      select: { id: true },
+    return this.prisma.$transaction(async (transaction) => {
+      // Serialize draft creation per request. The service preflight keeps the
+      // UI responsive, while this row lock closes the concurrent-submit race.
+      await transaction.$queryRaw(
+        Prisma.sql`
+          SELECT "id"
+          FROM "custom_print_requests"
+          WHERE "id" = ${input.requestId}::uuid
+          FOR UPDATE
+        `,
+      );
+
+      const pricingRule = await transaction.pricingRuleVersion.findFirst({
+        where: {
+          id: input.pricingRuleVersionId,
+          status: "ACTIVE",
+        },
+        select: { id: true },
+      });
+
+      if (pricingRule === null) {
+        throw appError("PRICING_RULE_NOT_APPROVED");
+      }
+
+      const existingDraft = await transaction.customPrintQuote.findFirst({
+        where: { requestId: input.requestId, status: "DRAFT" },
+        select: { id: true },
+      });
+      if (existingDraft !== null) {
+        throw appError("CONFLICT", {
+          message: "Request ini sudah memiliki draft quote. Kirim atau supersede draft tersebut sebelum membuat versi baru.",
+        });
+      }
+
+      const quote = await transaction.customPrintQuote.create({
+        data: {
+          calculationSnapshot: input.calculationSnapshot,
+          createdByAdminId: input.createdByAdminId,
+          expiresAt: input.expiresAt,
+          finalTotalRp: input.finalTotalRp,
+          id: input.id,
+          machineSubtotalRp: input.machineSubtotalRp,
+          materialCode: input.materialCode,
+          materialSubtotalRp: input.materialSubtotalRp,
+          printDurationSeconds: input.printDurationSeconds,
+          publicTokenHash: input.publicTokenHash,
+          quantity: input.quantity,
+          quoteNumber: input.quoteNumber,
+          requestId: input.requestId,
+          unroundedTotalRp: input.unroundedTotalRp,
+          verifiedWeightG: input.verifiedWeightG,
+          version: input.version,
+          pricingRuleVersionId: input.pricingRuleVersionId,
+        },
+      });
+
+      return {
+        id: quote.id,
+        quoteNumber: quote.quoteNumber,
+        status: "DRAFT" as const,
+      };
     });
-
-    if (pricingRule === null) {
-      throw appError("PRICING_RULE_NOT_APPROVED");
-    }
-
-    const quote = await this.prisma.customPrintQuote.create({
-      data: {
-        calculationSnapshot: input.calculationSnapshot,
-        createdByAdminId: input.createdByAdminId,
-        expiresAt: input.expiresAt,
-        finalTotalRp: input.finalTotalRp,
-        id: input.id,
-        machineSubtotalRp: input.machineSubtotalRp,
-        materialCode: input.materialCode,
-        materialSubtotalRp: input.materialSubtotalRp,
-        printDurationSeconds: input.printDurationSeconds,
-        publicTokenHash: input.publicTokenHash,
-        quantity: input.quantity,
-        quoteNumber: input.quoteNumber,
-        requestId: input.requestId,
-        unroundedTotalRp: input.unroundedTotalRp,
-        verifiedWeightG: input.verifiedWeightG,
-        version: input.version,
-        pricingRuleVersionId: input.pricingRuleVersionId,
-      },
-    });
-
-    return {
-      id: quote.id,
-      quoteNumber: quote.quoteNumber,
-      status: "DRAFT" as const,
-    };
   }
 
   async quoteNumberExists(quoteNumber: string): Promise<boolean> {
@@ -513,7 +545,7 @@ export class CustomPrintQuoteRepository {
       if (quote.status === "ACCEPTED") {
         const existing = await transaction.orderItem.findFirst({
           where: { customQuoteId: quote.id },
-          select: { order: { select: { id: true, orderNumber: true } } },
+          select: { order: { select: { id: true, orderNumber: true, publicTokenHash: true } } },
         });
 
         if (existing === null) {
@@ -524,6 +556,7 @@ export class CustomPrintQuoteRepository {
 
         return {
           kind: "ALREADY_ACCEPTED",
+          currentOrderPublicTokenHash: existing.order.publicTokenHash,
           orderId: existing.order.id,
           orderNumber: existing.order.orderNumber,
         };
@@ -612,5 +645,50 @@ export class CustomPrintQuoteRepository {
     });
 
     return quote?.version ?? null;
+  }
+
+  async findDraftForRequest(requestId: string): Promise<Readonly<{ id: string }> | null> {
+    return this.prisma.customPrintQuote.findFirst({
+      where: { requestId, status: "DRAFT" },
+      orderBy: [{ version: "desc" }, { createdAt: "desc" }],
+      select: { id: true },
+    });
+  }
+
+  async replaceOrderPublicTokenHash(input: Readonly<{
+    currentHash: string;
+    nextHash: string;
+    orderId: string;
+  }>): Promise<boolean> {
+    const updated = await this.prisma.order.updateMany({
+      where: { id: input.orderId, publicTokenHash: input.currentHash },
+      data: { publicTokenHash: input.nextHash },
+    });
+    return updated.count === 1;
+  }
+
+  async findForTokenReissue(quoteId: string): Promise<QuoteTokenForReissue | null> {
+    return this.prisma.customPrintQuote.findUnique({
+      where: { id: quoteId },
+      select: {
+        expiresAt: true,
+        id: true,
+        publicTokenHash: true,
+        quoteNumber: true,
+        status: true,
+      },
+    });
+  }
+
+  async replacePublicTokenHash(
+    quoteId: string,
+    currentHash: string,
+    nextHash: string,
+  ): Promise<boolean> {
+    const updated = await this.prisma.customPrintQuote.updateMany({
+      where: { id: quoteId, publicTokenHash: currentHash },
+      data: { publicTokenHash: nextHash },
+    });
+    return updated.count === 1;
   }
 }

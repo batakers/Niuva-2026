@@ -60,7 +60,9 @@ export const metadata: Metadata = {
 
 export default async function Home() {
   await connection();
-  const { projects } = await getProjectPreview(undefined);
+  // Portfolio evidence is additive; a database outage must not take down the
+  // company narrative and the primary contact paths on the homepage.
+  const { projects } = await getProjectPreview(undefined).catch(() => ({ projects: [] as const }));
   const selectedProjects = projects
     .filter((project) => project.detailReadiness !== "card-only")
     .slice(0, 3);

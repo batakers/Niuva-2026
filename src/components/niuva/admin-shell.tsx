@@ -3,7 +3,14 @@ import Link from "next/link";
 import type { AdminRole } from "@/generated/prisma/client";
 import AuLogo from "@/components/ui/AuLogo";
 
-export type AdminArea = "queue" | "orders" | "custom-print" | "products" | "portfolio";
+export type AdminArea =
+  | "queue"
+  | "orders"
+  | "custom-print"
+  | "products"
+  | "portfolio"
+  | "inquiries"
+  | "pricing";
 
 const navigation: readonly Readonly<{ area: AdminArea; href: string; label: string }>[] = [
   { area: "queue", href: "/admin", label: "Action Queue" },
@@ -11,6 +18,8 @@ const navigation: readonly Readonly<{ area: AdminArea; href: string; label: stri
   { area: "custom-print", href: "/admin/custom-print", label: "Custom Print" },
   { area: "products", href: "/admin/products", label: "Products & Stock" },
   { area: "portfolio", href: "/admin/portfolio", label: "Portfolio" },
+  { area: "inquiries", href: "/admin/inquiries", label: "B2B Inquiries" },
+  { area: "pricing", href: "/admin/pricing", label: "Pricing Rules" },
 ];
 
 const roleLabels: Record<AdminRole, string> = {

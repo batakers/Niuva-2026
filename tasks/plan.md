@@ -501,20 +501,60 @@ wiring autentikasi pada fase integrasi tersedia.
 | FE-13 | Custom request `/custom-print/request` | 12 | src/app/custom-print/request/page.tsx; src/app/custom-print/request/request-form.tsx; tests/unit/custom-request-form.test.tsx; tests/e2e/custom-request.spec.ts | Material/qty/scale/contact dan FileUploadField; preview type/size/progress/retry tanpa upload biner atau menyebut file tersimpan saat R2 belum tersedia. | V1 + V2: file metadata dan form recovery |
 | FE-14 | Quote customer `/quote/[token]` | 01,13 | src/app/quote/[token]/page.tsx; src/app/quote/[token]/quote-review.tsx; tests/e2e/quote-review.spec.ts | Breakdown/scope/expiry immutable ditampilkan; preview accept/decline/expired/superseded/already accepted, route nyata tidak memakai fixture sebagai token authorization. | V1 + V2: state quote dan konfirmasi |
 | FE-15 | Order status `/orders/[token]` | 01,11,14 | src/app/orders/[token]/page.tsx; src/app/orders/[token]/order-status.tsx; tests/e2e/order-status.spec.ts | Timeline retail/custom dan next action mengikuti state; missing/revoked token dan late-payment exception ditampilkan tanpa internal notes/alamat lengkap atau klaim paid dari query browser. | V2: state timeline, projection aman |
-| FE-16 | Admin shell dan sign-in | 00,01 | src/components/niuva/admin-shell.tsx; src/features/admin/sign-in-view.tsx; src/app/auis/proofs/frontend/admin/page.tsx; tests/e2e/admin-preview.spec.ts | Shell untuk target `/admin` dan `/admin/sign-in`, nav responsive serta auth unavailable/forbidden; saat Clerk absent review komponen di development-only preview, tanpa bypass Proxy/requireAdmin. | V1 + V2: layout dan guard preview |
-| FE-17 | Admin Action Queue `/admin` | 16 | src/features/admin/action-queue.tsx; src/features/admin/queue-filters.tsx; tests/e2e/admin-queue.spec.ts | Prioritas brief/quote/order/measurement/stock, filter dan empty/stale; setiap row punya aksi jelas ke detail preview, bukan dashboard metrik hiasan. | V1 + V2: filter dan next action |
-| FE-18 | Admin inquiry detail dari Queue | 17 | src/features/admin/inquiry-detail.tsx; tests/unit/inquiry-detail.test.tsx; tests/e2e/admin-inquiry.spec.ts | Drawer list/detail inquiry dari Queue, company opsional dan status/history; preview follow-up tanpa mengirim email/WhatsApp atau memakai data client asli. | V1 + V2: detail dan perubahan status lokal |
-| FE-19 | Admin order list `/admin/orders` | 16 | src/features/admin/orders-list.tsx; src/features/admin/order-filters.tsx; tests/e2e/admin-orders.spec.ts | Search/type/status/exception filters, loading/empty dan mobile rows; pilih order membuka detail dengan URL/selection yang konsisten. | V1 + V2: search/filter |
-| FE-20 | Admin order detail dan fulfillment | 19,15 | src/features/admin/order-detail.tsx; src/features/admin/package-measurement.tsx; tests/unit/order-detail.test.tsx; tests/e2e/admin-fulfillment.spec.ts | Drawer detail, timeline/audit display dan final measurement; preview aksi hanya transisi valid, finance OWNER-only, shipping sebelum measurement ditolak. | V1 + V2: state/role/measurement |
-| FE-21 | Admin custom review `/admin/custom-print` | 16,13 | src/features/admin/custom-request-list.tsx; src/features/admin/custom-review.tsx; tests/unit/custom-review.test.tsx; tests/e2e/admin-custom-review.spec.ts | Request list dan review slicer weight/duration/config; file unavailable dan missing inputs terlihat, tidak menyediakan link file privat palsu. | V1 + V2: validasi review |
-| FE-22 | Admin quote draft/preview | 21,14 | src/features/admin/quote-editor.tsx; src/features/admin/quote-preview.tsx; tests/unit/quote-editor.test.tsx; tests/e2e/admin-quote.spec.ts | Draft/breakdown/expiry dan sent immutable; kalkulasi tampilan reuse Decimal/domain contract, missing active rule diblokir dan send hanya skenario preview. | V1 + V2: review wajib dan immutable sent |
-| FE-23 | Admin product list `/admin/products` | 16,08 | src/features/admin/products-list.tsx; tests/e2e/admin-products.spec.ts | Search SKU, stock dan publication filters; row memisahkan inactive, OOS dan unpublished dengan label jelas. | V1 + V2: filter catalog admin |
-| FE-24 | Admin product/variant/stock editor | 23,09 | src/features/admin/product-editor.tsx; src/features/admin/stock-editor.tsx; tests/unit/product-editor.test.tsx; tests/e2e/admin-product-editor.spec.ts | Identity/media/variant/price/weight/dimensions dan stock reason; unsaved changes, invalid values dan conflict dapat diuji; save/publish hanya state preview. | V1 + V2: validasi/unsaved/conflict |
-| FE-25 | Admin portfolio `/admin/portfolio` | 16,05 | src/features/admin/portfolio-list.tsx; tests/e2e/admin-portfolio.spec.ts | Draft/published list dan create/edit selection; status publication dan content missing terlihat pada viewport kecil. | V2: list dan selection |
-| FE-26 | Admin portfolio editor | 25,06 | src/features/admin/portfolio-editor.tsx; src/features/admin/portfolio-media-editor.tsx; tests/unit/portfolio-editor.test.tsx; tests/e2e/admin-portfolio-editor.spec.ts | Narrative/media ordering/alt text dan permission checklist; publication diblokir tanpa izin, preview tidak mempublikasikan client/logo contoh. | V1 + V2: media order dan permission |
+| FE-16 | **ARCHIVE —** Admin shell dan sign-in | 00,01 | src/components/niuva/admin-shell.tsx; src/features/admin/sign-in-view.tsx; src/app/auis/proofs/frontend/admin/page.tsx; tests/e2e/admin-preview.spec.ts | Kontrak fixture-only untuk shell/auth-unavailable/forbidden; route preview telah dipensiunkan dan tidak menggantikan Clerk + `requireAdmin`. | Arsip V1 + V2 |
+| FE-17 | **ARCHIVE —** Admin Action Queue `/admin` | 16 | src/features/admin/action-queue.tsx; src/features/admin/queue-filters.tsx; tests/e2e/admin-queue.spec.ts | Kontrak fixture-only untuk prioritas/filter/detail handoff; implementasi live sekarang ada di `/admin` dan membaca projection server. | Arsip V1 + V2 |
+| FE-18 | **ARCHIVE —** Admin inquiry detail dari Queue | 17 | src/features/admin/inquiry-detail.tsx; tests/unit/inquiry-detail.test.tsx; tests/e2e/admin-inquiry.spec.ts | Kontrak drawer sintetis; route live `/admin/inquiries/[id]` sekarang membaca database dan menyediakan transition terotorisasi. | Arsip V1 + V2 |
+| FE-19 | **ARCHIVE —** Admin order list `/admin/orders` | 16 | src/features/admin/orders-list.tsx; src/features/admin/order-filters.tsx; tests/e2e/admin-orders.spec.ts | Kontrak list fixture; route live `/admin/orders` sekarang memakai repository dan filter server-backed. | Arsip V1 + V2 |
+| FE-20 | **ARCHIVE —** Admin order detail dan fulfillment | 19,15 | src/features/admin/order-detail.tsx; src/features/admin/package-measurement.tsx; tests/unit/order-detail.test.tsx; tests/e2e/admin-fulfillment.spec.ts | Kontrak drawer fixture; route live `/admin/orders/[id]` memiliki guard measurement/permission dan menahan fulfillment provider-coupled. | Arsip V1 + V2 |
+| FE-21 | **ARCHIVE —** Admin custom review `/admin/custom-print` | 16,13 | src/features/admin/custom-request-list.tsx; src/features/admin/custom-review.tsx; tests/unit/custom-review.test.tsx; tests/e2e/admin-custom-review.spec.ts | Kontrak review sintetis; route live `/admin/custom-print/[id]` sekarang memakai projection, review slicer, dan audit server. | Arsip V1 + V2 |
+| FE-22 | **ARCHIVE —** Admin quote draft/preview | 21,14 | src/features/admin/quote-editor.tsx; src/features/admin/quote-preview.tsx; tests/unit/quote-editor.test.tsx; tests/e2e/admin-quote.spec.ts | Kontrak quote fixture; route live `/admin/custom-print/[id]` sekarang menyediakan draft/send dengan active-rule dan token guards. | Arsip V1 + V2 |
+| FE-23 | **ARCHIVE —** Admin product list `/admin/products` | 16,08 | src/features/admin/products-list.tsx; tests/e2e/admin-products.spec.ts | Kontrak list fixture; route live `/admin/products` sekarang memakai repository dan publication/stock projection. | Arsip V1 + V2 |
+| FE-24 | **ARCHIVE —** Admin product/variant/stock editor | 23,09 | src/features/admin/product-editor.tsx; src/features/admin/stock-editor.tsx; tests/unit/product-editor.test.tsx; tests/e2e/admin-product-editor.spec.ts | Kontrak editor fixture; route live `/admin/products/[id]` sekarang memakai Server Actions terotorisasi untuk stock/media dan publication guard. | Arsip V1 + V2 |
+| FE-25 | **ARCHIVE —** Admin portfolio `/admin/portfolio` | 16,05 | src/features/admin/portfolio-list.tsx; tests/e2e/admin-portfolio.spec.ts | Kontrak list fixture; route live `/admin/portfolio` sekarang membaca project/media dari database. | Arsip V2 |
+| FE-26 | **ARCHIVE —** Admin portfolio editor | 25,06 | src/features/admin/portfolio-editor.tsx; src/features/admin/portfolio-media-editor.tsx; tests/unit/portfolio-editor.test.tsx; tests/e2e/admin-portfolio-editor.spec.ts | Kontrak editor fixture; route live `/admin/portfolio/[id]` sekarang memiliki content/media edit dan publish guard server. | Arsip V1 + V2 |
 | FE-27 | Frontend acceptance dan handoff integrasi | 03,04,06,07,11,15,18,20,22,24,26 | tests/e2e/frontend-journeys.spec.ts; tasks/plan.md; tasks/todo.md; docs/backend/frontend-handoff.md | Review tiga journey customer dan lima modul admin beserta login; semua CTA punya hasil/recovery, catat API tersedia/missing dan pisahkan frontend complete dari integrated/production-ready. | V3: regression, visual review, handoff |
 
 ### Checkpoints
+
+### Current integration slice — 2026-09-17
+
+The retired FE-18–26 fixture routes have been replaced for the allowed server
+slice. Live targets are `/admin/orders/[id]`, `/admin/custom-print/[id]`,
+`/admin/products/[id]`, `/admin/portfolio/[id]`, `/admin/inquiries`,
+`/admin/inquiries/[id]`, and `/admin/pricing`. Server Actions enforce the
+existing permission map and domain transition/audit contracts for fulfillment,
+inquiry status, slicer review, quote draft/send, stock, catalog media,
+portfolio content/media, and order/quote token reissue. Pricing activation,
+Biteship/Midtrans, and R2 live smoke remain separate gates. The supplied Clerk
+identity is now mapped to an active loopback Owner profile; approved public
+portfolio content is seeded locally. The Owner Shop dataset is also seeded as
+8 unpublished products, 34 variants, 4 categories, and 50 mapped JPG media.
+Merchant SKU format, publish approval, and variant-bound media remain explicit
+gates. Package dimensions are conditional on provider-calculated shipping and
+do not block catalog preview or manual/flat-rate operation.
+
+Requirement-level evidence and the next Owner handoff inputs are tracked in
+[`docs/frontend/operational-readiness-report.md`](../docs/frontend/operational-readiness-report.md).
+
+#### Review verification — 2026-09-17
+
+- `corepack pnpm typecheck`, `corepack pnpm lint` (0 errors; existing warning
+  set), `corepack pnpm test` (73/73), `corepack pnpm test:backend` (119/119),
+  `corepack pnpm build`, and `git diff --check` passed.
+- The reproducible CI-mode browser gate (`CI=1 corepack pnpm test:e2e`, one
+  worker with retry) passed 57/57. The default four-worker local runner is
+  resource-sensitive during cold Next route compilation; its three affected
+  navigations pass when run serially and are not treated as application
+  regressions.
+- Fresh authenticated admin visual acceptance and R2 object smoke remain open.
+  The Shop seed is now reproducible through `catalog:prepare` plus the guarded
+  loopback importer; SKU merchandising and publish approval remain Owner gates.
+  Package dimensions are conditional on provider-calculated shipping. The retained Clerk identity/profile smoke and
+  loopback portfolio seed are recorded separately. Biteship/Midtrans activation
+  and smoke are intentionally deferred until company data is available.
+
+The FE-16–26 rows below remain a historical preview record; their retired
+fixture-only boundaries do not override the server-backed routes listed above.
 
 - A: FE-00–02 — kontrak, fixture isolation, public shell.
 - B: FE-03–05 — homepage, services, daftar projects.
@@ -539,7 +579,7 @@ penggunaan subagent kelak mengikuti keputusan user.
 | --- | --- |
 | Dataset produk, stock, media, izin client dan hasil project belum lengkap | Preview sintetis; publikasi factual dataset menjadi gate terpisah |
 | Clerk belum tersedia dan Proxy melindungi seluruh /admin termasuk sign-in | Preview FE-16–26 sudah retired; mulai dari slice server-backed saat auth siap dan jangan melemahkan Proxy pada fase frontend |
-| Quote decline dan beberapa mutation admin belum mempunyai HTTP boundary | Preview intent saja; daftar endpoint missing masuk handoff FE-27 |
+| Quote decline dan provider-coupled fulfillment masih dibatasi oleh boundary operasional | Quote/order/inquiry transition, slicer review, catalog/stock/media, portfolio publish, dan token reissue sudah memiliki Server Action + service boundary; payment, shipment-rate, refund, dan provider activation tetap menunggu Owner |
 | Pricing policy lama pada plan historis masih tertulis OPEN | Rujuk docs/backend/phase-3-pricing-biteship-contract.md dan policy aktif; jangan pilih rule baru atau menganggap rule sudah di-seed |
 | Form frontend berpotensi berbeda dari schema backend | FE-01/07/13 memakai field contract PRD + schema existing; perubahan domain bukan scope frontend |
 | Fixture tersangkut pada production build | Development-only boundary diuji; no real auth/data/provider imports pada preview |
@@ -550,14 +590,16 @@ penggunaan subagent kelak mengikuti keputusan user.
 Vertical slice Project Brief sekarang sudah menghubungkan form publik ke
 `/api/project-brief`, persistence inquiry, reference confirmation, dan
 WhatsApp handoff; `B2BInquiry` berstatus `NEW` otomatis menjadi signal Action
-Queue pada `/admin` setelah access boundary lolos. Tahap integrasi berikutnya
-menghubungkan read catalog dan portfolio ke published repository, lalu
-upload/payment/shipping setelah provider siap. Existing API:
-project-brief, custom-print/requests, uploads/intents, uploads/confirm,
-shipping/rates, checkout, webhooks/midtrans.
-Public catalog/portfolio/status/quote dan admin mutation boundaries perlu dicek/
-ditambahkan sesuai task integrasi; keberadaan service bukan berarti API sudah ada.
-Tidak ada commit, push, deployment, onboarding atau aktivasi provider pada task mapping.
+Queue pada `/admin` setelah access boundary lolos. Admin operations yang masuk
+goal ini sekarang membaca projection database dan menulis melalui Server Action
+serta domain service yang diaudit: order/inquiry transition, slicer review,
+quote draft/send, stock, catalog/portfolio media, portfolio publish, dan token
+reissue. Existing API tetap mencakup project-brief, custom-print/requests,
+uploads/intents, uploads/confirm, shipping/rates, checkout, dan
+webhooks/midtrans; payment/shipping provider, R2 object smoke, dan seed launch
+Owner tetap merupakan gate terpisah. Keberadaan service bukan bukti provider
+aktif atau production-ready. Tidak ada onboarding atau aktivasi provider pada
+task mapping.
 
 ### Current vertical slice — Project Brief → persistence → Action Queue → WhatsApp
 
@@ -1078,7 +1120,9 @@ callbacks.
 **Acceptance criteria:**
 
 - [ ] Owner-approved published product/variant/stock and active pricing seed are
-  available in the development database.
+  available in the development database. The Shop dataset is present as 8
+  unpublished products, 34 variants, and 50 media; publish/SKU gates remain
+  open. Package dimensions are required only for provider-calculated shipping.
 - [ ] Browser requests real server rates, creates one idempotent pending order,
   opens the sandbox payment handoff, and never renders a browser-authoritative
   paid state.
@@ -1100,23 +1144,25 @@ callbacks.
 - [ ] Provider, seed, legal, and accounting evidence are recorded separately
   from code/test acceptance.
 
-**Dependencies:** NG-03; active catalog/pricing seed; non-production Biteship
-and Midtrans capabilities; no production activation.
+**Dependencies:** NG-03; Owner-approved active catalog/pricing seed;
+non-production Biteship and Midtrans capabilities; no production activation.
 
 **Estimated scope:** XL; split into catalog seed, shipping/checkout UI, and
 payment/order smoke before implementation.
 
 ### Open decisions and blockers
 
-- `OPEN`: exact Clerk development tenant/user/profile to use for the live smoke;
-  paired non-production keys are present locally and the anonymous redirect was
-  verified, but no live sign-in/profile provisioning was performed.
+- `OPEN`: live Clerk sign-in and authenticated visual acceptance; the supplied
+  `user_...` identity is already mapped to an active loopback Owner profile,
+  but no interactive login evidence is recorded in this handoff.
 - `OPEN`: R2 development bucket/prefix, CORS policy, and provider credentials.
   Presence-only inspection on 2026-09-14 found the complete R2 group and
   `CUSTOM_FILE_MAX_BYTES` absent locally.
 - `BLOCKED_DECISION`: automatic WhatsApp provider, template, sender, and consent.
-- `OPEN`: final product/SKU/media/stock dataset and active pricing-rule seed;
-  Biteship and Midtrans capability groups are also absent locally.
+- `OPEN`: merchandising SKU format, publish approval, and active pricing-rule
+  seed. Package dimensions are conditional and become `OPEN` only when
+  provider-calculated shipping is selected. The product/media/stock dataset is now seeded in
+  loopback; Biteship and Midtrans capability groups remain absent locally.
 - `OPEN`: legal/accounting retention outside the approved binary lifecycle.
 - `DEFERRED/OPEN`: official company biodata required for public company-profile
   claims, business sender identity, and provider/invoice identity; no synthetic
