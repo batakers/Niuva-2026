@@ -15,7 +15,7 @@ tidak diisi ulang dari asumsi.
 | `docs/source/brand/portofolio produk NIUVA.pdf` (11 halaman) | Papan proyek/produk: Waste-based Product, Elips Tandem Penta Bike, brand accessories, Screen Printing Workstation, Smart Drop Box, BeVenTU, Portable Handwash Station, Sterilizer Tunnel 3/2 fase, Arei Smart Bag V1, dan Bagit Arei Smart Bag V2. | Harga jual, SKU, stok, varian retail, dimensi pengiriman, dan asset foto produk yang siap dipetakan ke `public/media/products/`. |
 | `docs/source/brand/PRODUCT DESIGN SERVICES selection.pdf` (13 halaman) | Artefak layanan/proyek: PDS Telkom University, Savero, mock-up PT Pindad, Field Kitchen Truck/Bhimasena, leather bag, electric car, dan Smart Drop Box. | Data katalog retail dan metadata komersial produk. |
 | `docs/source/Company profile PT Niuva_compressed.pdf` (15 halaman) | Positioning perusahaan, empat layanan, dan ringkasan proyek termasuk Motor Xeon, motor EV PT Pindad, Bicycle Arcade, dan Motorcycle Simulator. | SKU, price list retail, stok, mapping media produk retail, dan approval publikasi komersial. |
-| `docs/source/Dataset Shop Niuva/` (CSV/JSON/XLSX + JPG) | 8 produk, 4 kategori, harga/stok untuk 32 varian terverifikasi, 2 produk single-SKU, 55 JPG sumber valid, dan 74 baris mapping gambar. | Tidak ada kolom SKU merchant terpisah, dimensi paket, atau keputusan publish untuk Niuva; 6 baris varian adalah placeholder tanpa harga/stok. |
+| `docs/source/Dataset Shop Niuva/` (CSV/JSON/XLSX + JPG) | 8 produk, 4 kategori, pilihan ukuran produk di detail/varian, harga/stok untuk 32 varian terverifikasi, 2 produk single-SKU, 55 JPG sumber valid, dan 74 baris mapping gambar. | Tidak ada kolom SKU merchant terpisah atau keputusan publish untuk Niuva. Dimensi paket pengiriman belum tersedia; 6 baris varian adalah placeholder tanpa harga/stok. |
 
 ## Yang sudah dipetakan dan di-seed
 
@@ -44,10 +44,10 @@ tidak diisi ulang dari asumsi.
 
 ## Gate yang masih terbuka
 
-1. **SKU merchandising dan dimensi paket** masih perlu dikonfirmasi Owner.
-   Seed lokal menggunakan ID sumber sebagai SKU deterministik dan membiarkan
-   dimensi kosong; checkout/shipping production tidak boleh menganggapnya
-   lengkap sampai data paket diberikan.
+1. **SKU merchandising** masih perlu dikonfirmasi Owner. Seed lokal menggunakan
+   ID sumber sebagai SKU deterministik. Dimensi paket bukan blocker untuk seed
+   katalog atau mode ongkir manual/flat-rate; dimensi menjadi wajib hanya jika
+   mode shipping provider-calculated diaktifkan.
 2. **Keputusan publish Niuva** masih terbuka. Delapan produk sudah berada di
    database loopback sebagai draft dengan harga, stok, berat, dan media nyata.
 3. **Relasi media varian** belum tersedia pada model katalog; bila UI harus
@@ -61,7 +61,9 @@ tidak diisi ulang dari asumsi.
    goal Owner.
 
 Dengan demikian, sumber sudah cukup untuk seed katalog retail loopback yang
-terukur dan dapat diaudit. Status ini belum menjadi klaim `catalog ready` atau
-checkout retail production-ready karena SKU merchandising, dimensi paket,
-keputusan publish, provider, dan bukti visual/Owner tetap merupakan gate
-terpisah.
+terukur dan dapat diaudit, termasuk preview dengan packaging cost yang dianggap
+sudah termasuk harga. Status ini belum menjadi klaim `catalog ready` untuk
+publish atau checkout dengan ongkir otomatis karena SKU merchandising,
+keputusan publish, relasi media-varian, provider, dan bukti visual/Owner tetap
+merupakan gate terpisah; dimensi paket hanya berlaku pada gate shipping
+provider-calculated.

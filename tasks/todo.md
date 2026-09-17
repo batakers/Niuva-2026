@@ -92,8 +92,8 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
   stock/media mapping, portfolio edit/publish guard, dan token reissue.
 - [x] Guarded catalog preparation/importer: dataset Shop Owner menghasilkan 8
   produk draft, 34 varian, 4 kategori, dan 50 mapping JPG di loopback. Enam
-  placeholder tanpa harga/stok dikecualikan; SKU merchandising, dimensi paket,
-  dan keputusan publish masih dicatat sebagai gate di
+  placeholder tanpa harga/stok dikecualikan; SKU merchandising dan keputusan
+  publish masih dicatat sebagai gate di
   `docs/backend/catalog-source-audit.md`.
 - [x] Exact `user_...` Owner identity sudah terhubung ke `AdminProfile` aktif
   loopback; retained authenticated Action Queue smoke lulus.
@@ -116,8 +116,9 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
   diagnostik yang sensitif terhadap cold compile; tiga navigasi yang gagal di
   mode paralel lulus saat serial.
 - [ ] Fresh authenticated admin visual acceptance dan R2 smoke masih terbuka.
-  Dataset Shop sudah di-seed secara reproducible; SKU merchandising, dimensi
-  paket, dan keputusan publish tetap membutuhkan Owner. Portfolio development
+  Dataset Shop sudah di-seed secara reproducible; SKU merchandising dan
+  keputusan publish tetap membutuhkan Owner. Dimensi paket hanya diperlukan
+  saat automatic provider-calculated shipping diaktifkan. Portfolio development
   sudah di-seed; Biteship/Midtrans tetap sengaja ditunda.
 
 > Catatan arsip — entri FE-16–26 di bawah mempertahankan kontrak preview lama
@@ -527,7 +528,9 @@ Project Brief integration gates are committed and pushed in `1d5b870`.
 - [ ] Owner-approved product/SKU/media/stock dataset and active pricing seed are
   available in the development database. The Shop dataset is now seeded as 8
   unpublished products, 34 variants, and 50 JPG media; merchandising SKU,
-  package dimensions, publish approval, and active pricing remain open.
+  publish approval, and active pricing remain open. Package dimensions are
+  conditional on provider-calculated shipping and do not block manual/flat-rate
+  catalog operation.
 - [ ] Connect real server rates → idempotent guest checkout → Midtrans sandbox
   handoff → verified order state; browser totals/callbacks remain advisory.
 - [ ] Add integration and one-worker browser coverage for success, duplicate,

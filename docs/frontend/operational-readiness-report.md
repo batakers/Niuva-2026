@@ -14,7 +14,7 @@ dicatat di sini.
 | Aksi admin write | `IMPLEMENTED_WITH_BOUNDARIES` | Transition order/inquiry, review slicer, quote draft/send, stok, mapping media, portfolio edit/publish guard, dan token reissue melewati Server Action, permission, service, serta audit. Fulfillment yang membutuhkan rate/shipment/payment provider tetap ditahan. |
 | B2B Inquiries | `IMPLEMENTED_LIVE_READ` | List/detail membaca database; transition status tersedia dari detail inquiry. |
 | Pricing Rules | `IMPLEMENTED_LIVE_READ` | List/pagination dan active-rule lookup membaca database; aktivasi tidak diekspos. |
-| Katalog/foto/stok | `SEEDED_LOOPBACK_DRAFTS_OWNER_GATES_OPEN` | Dataset Shop Owner sudah diproses: 8 produk, 34 varian, 50 media JPG, 4 kategori ke loopback. Semua produk masih draft; SKU merchandising terpisah, dimensi paket, publish decision, dan relasi media-varian masih gate Owner/kontrak. Lihat [`catalog-source-audit.md`](../backend/catalog-source-audit.md). |
+| Katalog/foto/stok | `SEEDED_LOOPBACK_DRAFTS_OWNER_GATES_OPEN` | Dataset Shop Owner sudah diproses: 8 produk, 34 varian, 50 media JPG, 4 kategori ke loopback. Semua produk masih draft; SKU merchandising, publish decision, dan relasi media-varian masih gate Owner/kontrak. Dimensi paket hanya menjadi gate jika shipping provider-calculated diaktifkan. Lihat [`catalog-source-audit.md`](../backend/catalog-source-audit.md). |
 | Clerk smoke + visual authenticated | `LOCAL_OWNER_PROFILE_READY` | Exact identity Owner yang diberikan sudah terhubung ke `AdminProfile` aktif ber-role Owner di database loopback. Smoke authenticated sebelumnya lulus; acceptance visual production tetap terpisah dari gate teknis. |
 | R2 smoke nyata | `BLOCKED_OWNER_INPUT` | Runtime `.env.local` tidak menyediakan konfigurasi R2; belum ada binary non-production yang boleh diklaim terunggah. |
 | Pengiriman ulang tautan lama | `READY_SERVER_SIDE_PENDING_MANUAL_SEND` | Reissue route-bound v1 meng-invalidasi token opaque lama; pengiriman aktual menunggu daftar customer dan kanal yang disetujui Owner. Runbook ada di `docs/backend/token-reissue-handoff.md`. |
@@ -50,8 +50,10 @@ tersebut bukan kegagalan test dan tidak boleh ditutup dengan data sintetis.
 ## Input Owner untuk handoff berikutnya
 
 1. R2 non-production capability dan objek test yang boleh dibersihkan.
-2. Konfirmasi format SKU merchandising, dimensi paket, dan keputusan publish untuk
-   dataset Shop yang sudah di-seed dari `docs/source/Dataset Shop Niuva/`.
+2. Konfirmasi format SKU merchandising dan keputusan publish untuk dataset Shop
+   yang sudah di-seed dari `docs/source/Dataset Shop Niuva/`. Dimensi paket hanya
+   diperlukan bila mode shipping otomatis/provider-calculated dipilih; mode
+   manual/flat-rate tidak memblokir katalog.
    Enam placeholder Tokopedia tanpa harga/stok sengaja dibiarkan di luar seed;
    detail audit ada di [`catalog-source-audit.md`](../backend/catalog-source-audit.md)
    dan kontrak intake di [`shop-catalog-owner-intake.md`](../backend/shop-catalog-owner-intake.md).

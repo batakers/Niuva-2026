@@ -529,8 +529,9 @@ Biteship/Midtrans, and R2 live smoke remain separate gates. The supplied Clerk
 identity is now mapped to an active loopback Owner profile; approved public
 portfolio content is seeded locally. The Owner Shop dataset is also seeded as
 8 unpublished products, 34 variants, 4 categories, and 50 mapped JPG media.
-Merchant SKU format, package dimensions, publish approval, and variant-bound
-media remain explicit gates.
+Merchant SKU format, publish approval, and variant-bound media remain explicit
+gates. Package dimensions are conditional on provider-calculated shipping and
+do not block catalog preview or manual/flat-rate operation.
 
 Requirement-level evidence and the next Owner handoff inputs are tracked in
 [`docs/frontend/operational-readiness-report.md`](../docs/frontend/operational-readiness-report.md).
@@ -547,8 +548,8 @@ Requirement-level evidence and the next Owner handoff inputs are tracked in
   regressions.
 - Fresh authenticated admin visual acceptance and R2 object smoke remain open.
   The Shop seed is now reproducible through `catalog:prepare` plus the guarded
-  loopback importer; SKU merchandising, package dimensions, and publish
-  approval remain Owner gates. The retained Clerk identity/profile smoke and
+  loopback importer; SKU merchandising and publish approval remain Owner gates.
+  Package dimensions are conditional on provider-calculated shipping. The retained Clerk identity/profile smoke and
   loopback portfolio seed are recorded separately. Biteship/Midtrans activation
   and smoke are intentionally deferred until company data is available.
 
@@ -1120,8 +1121,8 @@ callbacks.
 
 - [ ] Owner-approved published product/variant/stock and active pricing seed are
   available in the development database. The Shop dataset is present as 8
-  unpublished products, 34 variants, and 50 media; publish/SKU/dimension gates
-  remain open.
+  unpublished products, 34 variants, and 50 media; publish/SKU gates remain
+  open. Package dimensions are required only for provider-calculated shipping.
 - [ ] Browser requests real server rates, creates one idempotent pending order,
   opens the sandbox payment handoff, and never renders a browser-authoritative
   paid state.
@@ -1158,8 +1159,9 @@ payment/order smoke before implementation.
   Presence-only inspection on 2026-09-14 found the complete R2 group and
   `CUSTOM_FILE_MAX_BYTES` absent locally.
 - `BLOCKED_DECISION`: automatic WhatsApp provider, template, sender, and consent.
-- `OPEN`: merchandising SKU format, package dimensions, publish approval, and
-  active pricing-rule seed. The product/media/stock dataset is now seeded in
+- `OPEN`: merchandising SKU format, publish approval, and active pricing-rule
+  seed. Package dimensions are conditional and become `OPEN` only when
+  provider-calculated shipping is selected. The product/media/stock dataset is now seeded in
   loopback; Biteship and Midtrans capability groups remain absent locally.
 - `OPEN`: legal/accounting retention outside the approved binary lifecycle.
 - `DEFERRED/OPEN`: official company biodata required for public company-profile

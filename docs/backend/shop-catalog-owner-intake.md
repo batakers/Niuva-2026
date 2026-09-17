@@ -23,13 +23,23 @@ katalog retail tanpa keputusan publikasi dan mapping media yang jelas.
 | Varian | `priceRp` | integer Rupiah, bukan estimasi jasa cetak | 32 varian `TERSEDIA` dari `harga_varian`; single-SKU dari `harga_detail` |
 | Varian | `stockOnHand` | integer nonnegatif | `stok_varian`/`stok_tersedia_public` pada ekspor |
 | Varian | `weightGrams` | desimal nonnegatif | `berat` dikonversi dari kilogram ke gram |
-| Varian | `lengthCm`, `widthCm`, `heightCm` | desimal nonnegatif bila tersedia/diwajibkan checkout | Belum ada pada sumber; sengaja kosong |
+| Varian | `lengthCm`, `widthCm`, `heightCm` | desimal nonnegatif bila mode shipping `PROVIDER_CALCULATED` diaktifkan | Belum ada pada sumber; boleh kosong untuk katalog loopback, ongkir manual, atau flat-rate |
 | Media | `storageKey` | file nyata di `public/media/products/`; ekstensi png/jpg/jpeg/webp | 50 JPG asli yang lolos preflight |
 | Media | `altText`, `sortOrder` | alt text tidak kosong; urutan unik per produk | Copy aksesibilitas dan urutan galeri |
 
 Produk `isPublished: true` wajib memiliki minimal satu varian aktif dan satu
 media. Dataset yang belum lengkap harus tetap berupa draft atau ditahan sampai
 Owner melengkapi data; jangan mengisi nilai kosong dengan data contoh.
+
+## Keputusan packaging dan shipping
+
+Keputusan Owner pada 2026-09-17: biaya packaging dianggap sudah termasuk dalam
+harga produk. Karena itu, dimensi paket tidak menjadi syarat untuk katalog
+loopback, preview, atau ongkir manual/flat-rate. Dimensi paket hanya diwajibkan
+ketika Niuva mengaktifkan perhitungan ongkir otomatis berbasis provider.
+
+Nilai `Size` seperti `15 cm`, `12 cm`, dan `8 cm` adalah ukuran produk/varian
+yang ditampilkan ke customer, bukan ukuran kardus atau paket pengiriman.
 
 ## Bentuk file
 
@@ -52,7 +62,9 @@ sebelum seed dijalankan.
 
 - [x] Product/varian adalah barang retail, bukan layanan cetak atau artefak
       portfolio.
-- [ ] Format SKU merchandising dan dimensi paket sudah dikonfirmasi Owner.
+- [ ] Format SKU merchandising sudah dikonfirmasi Owner.
+- [x] Dimensi paket ditetapkan sebagai gate kondisional: tidak diperlukan untuk
+      katalog/manual shipping, wajib saat provider-calculated shipping aktif.
 - [x] Harga, stok awal, dan berat sumber sudah dipetakan; enam placeholder tanpa
       harga/stok dikecualikan.
 - [x] Foto asli sudah ditempatkan di `public/media/products/` dan setiap mapping

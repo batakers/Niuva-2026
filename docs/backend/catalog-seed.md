@@ -49,4 +49,4 @@ Format minimum:
 }
 ```
 
-Importer tidak membuat data sintetis, tidak menghapus produk/varian/media lain, dan tidak mengaktifkan Biteship atau Midtrans. `stockOnHand`, harga, dan foto berasal dari dataset Owner; ID sumber dipakai sebagai SKU deterministik sementara karena kolom SKU merchant tidak ada. Dimensi paket tetap kosong sampai Owner memberikannya. Key foto harus sudah dipetakan ke file asset yang benar-benar ada di `public/` sebelum transaksi seed dimulai. Publikasi tetap melewati editor admin dan gate bukti/izin.
+Importer tidak membuat data sintetis, tidak menghapus produk/varian/media lain, dan tidak mengaktifkan Biteship atau Midtrans. `stockOnHand`, harga, dan foto berasal dari dataset Owner; ID sumber dipakai sebagai SKU deterministik sementara karena kolom SKU merchant tidak ada. Dimensi paket boleh tetap kosong selama katalog memakai preview, ongkir manual, atau flat-rate; field itu menjadi wajib saat shipping provider-calculated diaktifkan. Key foto harus sudah dipetakan ke file asset yang benar-benar ada di `public/` sebelum transaksi seed dimulai. Publikasi tetap melewati editor admin dan gate bukti/izin.

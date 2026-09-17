@@ -34,8 +34,9 @@ Started: 2026-09-06. Updated: 2026-09-17. Status: **UI_IMPLEMENTED**, **ADMIN_IN
 > pricelist were audited. The approved public portfolio was seeded into the
 > loopback development database (4 services, 17 projects, 6 mapped media) via
 > `db:seed:public-content:local`. The same files do not contain the SKU, retail
-> price, stock, package dimensions, or product-photo mapping required for a
-> Shop catalog; those fields remain an explicit Owner dataset gate. The exact
+> price, stock, or product-photo mapping required for a Shop catalog; package
+> dimensions are conditional on automatic provider-calculated shipping. Those
+> remaining fields stay an explicit Owner dataset gate. The exact
 > Clerk identity is already represented by an active local Owner profile. R2
 > smoke and manual customer-link delivery remain open; Biteship/Midtrans stay
 > deferred by request.
@@ -45,8 +46,10 @@ Started: 2026-09-06. Updated: 2026-09-17. Status: **UI_IMPLEMENTED**, **ADMIN_IN
 > now maps 8 products, 34 variants, 4 categories, and 50 real JPG media files
 > into loopback as unpublished drafts. Six Tokopedia placeholder variants were
 > excluded because they have no verified price/stock. Merchant SKU format,
-> package dimensions, publish approval, and variant-bound media remain explicit
-> Owner/schema gates; Biteship/Midtrans remain deferred.
+> publish approval, and variant-bound media remain explicit Owner/schema gates.
+> Package dimensions are not required for the current catalog/manual-shipping
+> slice and become a gate only for provider-calculated shipping; Biteship/Midtrans
+> remain deferred.
 
 ## Scope and review paths
 

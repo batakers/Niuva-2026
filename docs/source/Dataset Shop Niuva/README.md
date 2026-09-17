@@ -1,19 +1,23 @@
 # Dataset Shop Niuva
 
 Dataset lokal ini adalah sumber Owner untuk katalog retail Niuva yang diekspor
-dari listing Shop Niuva. File CSV/JSON/XLSX dan folder gambar dipertahankan
-sebagai evidence sumber; `catalog-seed.json` adalah manifest turunan yang sudah
-divalidasi oleh `catalogSeedSchema`.
+dari listing Shop Niuva. File CSV/JSON/XLSX, detail produk, dan folder gambar
+dipertahankan sebagai evidence sumber; `catalog-seed.json` adalah manifest
+turunan yang sudah divalidasi oleh `catalogSeedSchema`.
 
 ## Snapshot validasi
 
 - 8 produk sumber dan 4 kategori.
 - 38 baris varian: 32 varian `TERSEDIA` dengan harga/stok, 6 baris
   `PLACEHOLDER_TOKOPEDIA` tanpa harga/stok yang tidak dimasukkan ke seed.
+- Detail produk tersedia untuk seluruh 8 produk dalam 31 bagian terstruktur;
+  `Size` seperti `15 cm`, `12 cm`, dan `8 cm` adalah ukuran produk/varian.
 - 2 produk single-SKU tidak memiliki baris varian; ID produk sumber dipakai
   sebagai SKU deterministik agar data tetap dapat diedit di admin.
 - Berat sumber dalam kilogram dikonversi ke gram (50, 100, 150, atau 200 g).
-- Dimensi paket tidak ada di dataset; field dimensi sengaja tidak ditebak.
+- Biaya packaging dianggap termasuk dalam harga produk. Dimensi paket tidak
+  diperlukan untuk katalog loopback, preview, atau ongkir manual/flat-rate;
+  field dimensi menjadi wajib bila provider-calculated shipping diaktifkan.
 - 55 file JPG sumber valid (700×700); 50 mapping unik dipilih sesuai batas
   maksimal 12 media per produk pada kontrak katalog.
 - Semua produk pada manifest `isPublished: false` sampai Owner memberikan
