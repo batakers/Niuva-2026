@@ -97,8 +97,13 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
   `docs/backend/catalog-source-audit.md`.
 - [x] Exact `user_...` Owner identity sudah terhubung ke `AdminProfile` aktif
   loopback; retained authenticated Action Queue smoke lulus.
-- [ ] Fresh authenticated visual acceptance untuk detail/editor admin setelah
-  perubahan terakhir.
+- [x] Fresh authenticated desktop visual acceptance untuk list/detail/editor
+  admin setelah perubahan terakhir: Owner session aktif, route live ter-render
+  pada 1280px tanpa horizontal overflow, dan tidak ada write action yang
+  dijalankan.
+- [ ] Authenticated mobile visual acceptance untuk route admin. Browser tool
+  pada handoff ini tidak menyediakan kontrol viewport; lakukan capture manual
+  pada 390px sebelum gate ini ditutup.
 - [ ] R2 non-production upload smoke nyata.
 - [ ] Dokumentasi/tautan customer lama dikirim ulang setelah token route-bound v1
   diterbitkan pada detail order/quote; admin reissue sudah tersedia, pengiriman
@@ -115,11 +120,12 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
   retry) lulus 57/57. Runner lokal empat worker tetap dicatat sebagai
   diagnostik yang sensitif terhadap cold compile; tiga navigasi yang gagal di
   mode paralel lulus saat serial.
-- [ ] Fresh authenticated admin visual acceptance dan R2 smoke masih terbuka.
-  Dataset Shop sudah di-seed secara reproducible; SKU merchandising dan
-  keputusan publish tetap membutuhkan Owner. Dimensi paket hanya diperlukan
-  saat automatic provider-calculated shipping diaktifkan. Portfolio development
-  sudah di-seed; Biteship/Midtrans tetap sengaja ditunda.
+- [ ] Authenticated mobile admin visual acceptance dan R2 smoke masih terbuka.
+  Desktop acceptance live sudah dicatat pada handoff 2026-09-17. Dataset Shop
+  sudah di-seed secara reproducible; SKU merchandising dan keputusan publish
+  tetap membutuhkan Owner. Dimensi paket hanya diperlukan saat automatic
+  provider-calculated shipping diaktifkan. Portfolio development sudah di-seed;
+  Biteship/Midtrans tetap sengaja ditunda.
 
 > Catatan arsip — entri FE-16–26 di bawah mempertahankan kontrak preview lama
 > untuk jejak visual/regresi. Status implementasi admin saat ini adalah matriks
