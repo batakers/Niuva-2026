@@ -1,6 +1,6 @@
 # Frontend review batch — FE-00–27
 
-Started: 2026-09-06. Updated: 2026-09-17. Status: **UI_IMPLEMENTED**, **ADMIN_INTEGRATED_PENDING_OWNER_GATES**, **VISUAL_ACCEPTANCE_PENDING**,
+Started: 2026-09-06. Updated: 2026-09-17. Status: **UI_IMPLEMENTED**, **ADMIN_INTEGRATED_PENDING_OWNER_GATES**, **VISUAL_ACCEPTANCE_DESKTOP_ACCEPTED_MOBILE_PENDING**,
 **PARTIALLY_INTEGRATED (FE-07, NG-02, NG-05 local path)**. User approved FE-00–02 followed by FE-03–07, FE-08–15, and the server-backed admin integration slice shipped on 2026-09-16. The fixture-only FE-16–26 rows below remain archival evidence, not the current admin implementation.
 
 > Integration update — on 2026-09-13, FE-07 was promoted to the link-based
@@ -25,7 +25,7 @@ Started: 2026-09-06. Updated: 2026-09-17. Status: **UI_IMPLEMENTED**, **ADMIN_IN
 > `/admin/pricing` now read server-owned projections. Authorized Server Actions
 > cover order/inquiry transitions, slicer review, quote draft/send, stock and
 > catalog media updates, portfolio editing/media mapping, and route-bound token
-> reissue. R2 live smoke and fresh authenticated visual acceptance remain open
+> reissue. R2 live smoke and authenticated mobile visual acceptance remain open
 > gates; the supplied Clerk identity is now backed
 > by an active loopback Owner profile. Biteship/Midtrans activation and smoke
 > are explicitly deferred until company data is available.
@@ -50,6 +50,14 @@ Started: 2026-09-06. Updated: 2026-09-17. Status: **UI_IMPLEMENTED**, **ADMIN_IN
 > Package dimensions are not required for the current catalog/manual-shipping
 > slice and become a gate only for provider-calculated shipping; Biteship/Midtrans
 > remain deferred.
+
+> Acceptance update — on 2026-09-17, the supplied Owner identity was verified
+> against the active loopback profile and the live admin list/detail/editor routes
+> were inspected in the authenticated browser at 1280px. The pages rendered with
+> no horizontal overflow and no write action was submitted. Mobile acceptance at
+> 390px remains open because the current browser tool cannot change viewport.
+> Portfolio data currently has 11 published projects without mapped media, and
+> this content gate remains separate from the desktop UI result.
 
 ## Scope and review paths
 
@@ -117,7 +125,9 @@ information for review. Preview data is not a factual client portfolio.
   [`shop-catalog-owner-intake.md`](../backend/shop-catalog-owner-intake.md).
 - Authenticated visual acceptance and R2 upload smoke require Owner-provided
   environment/identity and must be run as separate evidence; passing typecheck,
-  lint, build, or browser smoke does not imply those gates.
+  lint, build, or browser smoke does not imply those gates. Desktop admin
+  acceptance is recorded above; mobile viewport acceptance and real R2 object
+  smoke remain open.
 
 The FE-16–26 bullets below are retained as historical preview evidence. Where
 they describe fixture-only routes or “no mutation”, the current integration
@@ -509,10 +519,10 @@ requested by the task map.
 ## Git and handoff
 
 Current branch: `codex/frontend-ui-ux-hardening`.
-Current PR: [#3](https://github.com/batakers/Niuva-2026/pull/3), head
-`ee95d2a`. The PR is `OPEN · MERGEABLE · CLEAN`; no merge or deployment has
-been performed because the Owner/provider gates in the readiness report remain
-open.
+Current PR: [#3](https://github.com/batakers/Niuva-2026/pull/3), merged to `main`
+as `2c845d8`. The source branch remains available for traceability; no deployment
+or provider activation was performed because the Owner/provider gates in the
+readiness report remain open.
 
 The FE-16–26 commit lineage below is retained as historical frontend-batch
 evidence only; it is not the current server-backed admin handoff.
