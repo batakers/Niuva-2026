@@ -3,6 +3,10 @@ import { isAbsolute, relative, resolve } from "node:path";
 
 import Decimal from "decimal.js";
 
+import {
+  resolveCatalogPublishApproval,
+  type CatalogPublishDecision,
+} from "../src/modules/catalog/publish-decisions";
 import { catalogSeedSchema, type CatalogSeedInput } from "../src/modules/catalog/seed";
 
 type SourceRecord = Record<string, unknown>;
@@ -25,6 +29,7 @@ const datasetRoot = resolve(
   process.env.SHOP_DATASET_DIR?.trim() || "docs/source/Dataset Shop Niuva",
 );
 const sourceJsonPath = resolve(datasetRoot, "Niuva_Tokopedia_Products.json");
+const publishApprovalPath = resolve(datasetRoot, "catalog-publish-decisions.json");
 const seedOutputPath = resolve(datasetRoot, "catalog-seed.json");
 const variantMediaMapOutputPath = resolve(datasetRoot, "variant-media-map.json");
 const publicRoot = resolve("public");
@@ -205,6 +210,13 @@ const dataset: SourceDataset = {
   products: records(rawDataset.products, "dataset.products"),
   variants: records(rawDataset.variants, "dataset.variants"),
 };
+const publishApproval = resolveCatalogPublishApproval(
+  JSON.parse(await readFile(publishApprovalPath, "utf8")) as unknown,
+  dataset.products.map((product) => ({
+    name: text(product.nama_produk, "products.nama_produk"),
+    sourceProductId: sourceId(product.product_id, "products.product_id"),
+  })),
+);
 
 const categoryNames = new Map<string, string>();
 const usedSlugs = new Set<string>();
@@ -231,6 +243,10 @@ let skippedPlaceholders = 0;
 for (const product of dataset.products) {
   const productId = sourceId(product.product_id, "products.product_id");
   const productName = text(product.nama_produk, `products.${productId}.nama_produk`);
+  const publishDecision = publishApproval.decisions.get(productId);
+  if (publishDecision === undefined) {
+    throw new Error(`Keputusan publish tidak ditemukan untuk produk ${productId}.`);
+  }
   const baseSlug = slugify(productName);
   const productSlug = usedSlugs.has(baseSlug) ? `${baseSlug}-${productId}` : baseSlug;
   usedSlugs.add(productSlug);
@@ -279,7 +295,7 @@ for (const product of dataset.products) {
   preparedProducts.push({
     categorySlug,
     description: cleanDescription(text(product.deskripsi, `products.${productId}.deskripsi`)),
-    isPublished: process.env.SHOP_CATALOG_PUBLISH === "true",
+    isPublished: publishDecision === "PUBLISH_READY_MADE",
     media,
     name: productName,
     slug: productSlug,
@@ -340,8 +356,15 @@ await writeFile(
 
 const variantCount = seedInput.products.reduce((total, product) => total + product.variants.length, 0);
 const mediaCount = seedInput.products.reduce((total, product) => total + product.media.length, 0);
+const publicationCounts = [...publishApproval.decisions.values()].reduce(
+  (counts: Record<CatalogPublishDecision, number>, decision) => ({
+    ...counts,
+    [decision]: counts[decision] + 1,
+  }),
+  { HOLD_CUSTOM_FLOW: 0, PUBLISH_READY_MADE: 0 },
+);
 console.log(`Shop catalog prepared: ${seedInput.products.length} products, ${variantCount} variants, ${mediaCount} media, ${seedInput.categories.length} categories.`);
 console.log(`Skipped ${skippedPlaceholders} placeholder variants without a verified price/stock.`);
-console.log(`Publication mode: ${process.env.SHOP_CATALOG_PUBLISH === "true" ? "published" : "draft"}.`);
+console.log(`Owner approval ${publishApproval.approvedAt}: ${publicationCounts.PUBLISH_READY_MADE} publish ready-made, ${publicationCounts.HOLD_CUSTOM_FLOW} hold custom flow; SKU ${publishApproval.skuPolicy}.`);
 console.log(`Seed manifest: ${seedOutputPath}`);
 console.log(`Variant media map: ${variantMediaMapOutputPath}`);

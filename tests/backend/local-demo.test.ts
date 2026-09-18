@@ -2,12 +2,20 @@ import Decimal from "decimal.js";
 import { describe, expect, it } from "vitest";
 
 import { isLocalDemoMode } from "@/lib/env/server";
+import { isCatalogProductVisibleForRuntime } from "@/modules/demo/catalog-visibility";
+import { LOCAL_DEMO_PRODUCT_SLUG } from "@/modules/demo/seed";
 import {
   LocalDemoPaymentProvider,
   LocalDemoShippingProvider,
 } from "@/modules/providers/local-demo";
 
 describe("local demo runtime boundary", () => {
+  it("keeps the local catalog fixture out of non-demo runtimes", () => {
+    expect(isCatalogProductVisibleForRuntime(LOCAL_DEMO_PRODUCT_SLUG, false)).toBe(false);
+    expect(isCatalogProductVisibleForRuntime(LOCAL_DEMO_PRODUCT_SLUG, true)).toBe(true);
+    expect(isCatalogProductVisibleForRuntime("owner-product", false)).toBe(true);
+  });
+
   it("enables demo only for a development loopback database", () => {
     expect(
       isLocalDemoMode({

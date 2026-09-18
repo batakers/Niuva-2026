@@ -1,9 +1,11 @@
 import "server-only";
 
+import { isLocalDemoMode } from "@/lib/env/server";
 import {
   CatalogRepository,
   type PublicCatalogProduct,
 } from "@/modules/catalog/repository";
+import { isCatalogProductVisibleForRuntime } from "@/modules/demo/catalog-visibility";
 import {
   getApprovedPortfolioProjectBySlug,
   getApprovedPortfolioProjects,
@@ -104,10 +106,20 @@ function resolvePublicProductMediaUrl(storageKey: string): string | undefined {
 }
 
 export async function getLiveShopProducts(): Promise<readonly PublicShopProduct[]> {
-  return serializeShopProducts(await new CatalogRepository().findPublishedProducts());
+  const products = await new CatalogRepository().findPublishedProducts();
+  const localDemoMode = isLocalDemoMode();
+  const visibleProducts = products.filter((product) =>
+    isCatalogProductVisibleForRuntime(product.slug, localDemoMode),
+  );
+
+  return serializeShopProducts(visibleProducts);
 }
 
 export async function getLiveShopProduct(slug: string): Promise<PublicShopProduct | null> {
+  if (!isCatalogProductVisibleForRuntime(slug, isLocalDemoMode())) {
+    return null;
+  }
+
   const product = await new CatalogRepository().findPublishedProductBySlug(slug);
   return product === null ? null : serializeShopProducts([product])[0] ?? null;
 }

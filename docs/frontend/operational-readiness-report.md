@@ -15,7 +15,7 @@ dicatat di sini.
 | B2B Inquiries | `IMPLEMENTED_LIVE_READ` | List/detail membaca database; transition status tersedia dari detail inquiry. |
 | Pricing Rules | `IMPLEMENTED_LIVE_READ` | List/pagination dan active-rule lookup membaca database; aktivasi tidak diekspos. |
 | Portfolio Selected Works | `OWNER_APPROVED_CARD_ONLY` | 11 Selected Works tetap published sebagai kartu ringkasan tanpa media. Media mapping bersifat opsional dan hanya dilakukan jika aset, provenance, alt text, serta caption per project sudah disetujui Owner. Enam Featured Case Studies tetap mengikuti gate narasi dan minimal satu media. |
-| Katalog/foto/stok | `SEEDED_LOOPBACK_DRAFTS_OWNER_GATES_OPEN` | Dataset Shop Owner sudah diproses: 8 produk, 34 varian, 50 media JPG, 4 kategori ke loopback. Semua produk masih draft; SKU merchandising, publish decision, dan relasi media-varian masih gate Owner/kontrak. Dimensi paket hanya menjadi gate jika shipping provider-calculated diaktifkan. Lihat [`catalog-source-audit.md`](../backend/catalog-source-audit.md). |
+| Katalog/foto/stok | `OWNER_APPROVED_SEEDED_PUBLIC_ACCEPTED` | Dataset Shop berisi 8 produk, 34 varian, 50 media JPG, dan 4 kategori. Owner menyetujui source ID sebagai SKU internal v1, 3 produk ready-made published, 5 produk custom-flow tetap draft meski seluruhnya memiliki foto, dan galeri produk sebagai fallback media-varian MVP. Public Shop normal lulus acceptance 1280×900 dan 390×844; fixture lokal hanya terlihat pada runtime demo eksplisit. Dimensi paket hanya menjadi gate jika shipping provider-calculated diaktifkan. Lihat [`catalog-publish-readiness.md`](../backend/catalog-publish-readiness.md). |
 | Clerk smoke + visual authenticated | `LOCAL_OWNER_PROFILE_AND_DESKTOP_MOBILE_VISUAL_ACCEPTED` | Exact identity Owner yang diberikan terhubung ke `AdminProfile` aktif ber-role Owner di database loopback. Fresh live-admin desktop acceptance pada 1280px dan mobile acceptance pada 390x844 mencakup list/detail/editor routes tanpa horizontal overflow dan tanpa write action. Pada mobile, Orders/Inquiries memakai kartu berlabel dan Products tidak lagi memaksa lebar halaman. Keyboard focus nav, label kontrol detail, empty/error state, dan console browser diperiksa. |
 | R2 smoke nyata | `PASSED_NON_PRODUCTION_SMOKE` | Owner-configured development R2 passed intent `201`, exact-origin CORS preflight `204`, direct PUT `200`, confirm `200`, dan custom request `201`; lifecycle `PENDING → UPLOADED → VERIFIED`. Fixture object dan row sintetis sudah dibersihkan; bucket private tetap non-public. |
 | Pengiriman ulang tautan lama | `READY_SERVER_SIDE_PENDING_MANUAL_SEND` | Reissue route-bound v1 meng-invalidasi token opaque lama; pengiriman aktual menunggu daftar customer dan kanal yang disetujui Owner. Runbook ada di `docs/backend/token-reissue-handoff.md`. |
@@ -23,12 +23,13 @@ dicatat di sini.
 
 ## Probe loopback terakhir
 
-Database `niuva_dev` dimigrasikan tanpa pending migration, lalu dihentikan
-kembali setelah probe. Isinya sudah memuat dataset Shop draft dan satu fixture
-demo; ini tetap bukan launch dataset:
+Database `niuva_dev` dimigrasikan tanpa pending migration. Probe katalog
+2026-09-18 sudah memuat keputusan Owner dan satu fixture demo; ini tetap
+merupakan bukti loopback, bukan deployment production:
 
 - `admin_profiles=1`, `active_admin_profiles=1`
-- `products=9` (8 Shop draft + 1 local demo), `published_products=1`
+- `products=9` (8 Shop + 1 local demo), `published_products=4`
+  (3 Shop ready-made + 1 local demo); 5 Shop custom-flow tetap draft
 - `product_variants=35` (34 Shop + 1 local demo), `active_variants=35`
 - `product_media=50` untuk Shop; demo tetap tanpa media
 - `portfolio_projects=17`, `published_portfolio_projects=17`, `portfolio_media=6`
@@ -37,6 +38,11 @@ demo; ini tetap bukan launch dataset:
   tetap opsional dan tidak boleh dipetakan tanpa aset serta provenance yang
   disetujui per project.
 - `pricing_rules=0`, `active_pricing_rules=0`
+
+Walaupun fixture demo tetap published di database loopback bersama, boundary
+katalog normal mengecualikan slug tersebut. Ia hanya terlihat ketika runtime
+demo eksplisit lolos guard development/test + PostgreSQL loopback. Acceptance
+publik normal memverifikasi tepat tiga produk Owner dan lima draft 404.
 
 ## Gate teknis terakhir
 
@@ -56,17 +62,24 @@ ini berada di `main`. Merge code tidak menutup
 gate Owner/provider di atas dan tidak berarti deployment atau provider live sudah
 aktif.
 
+Follow-up katalog 2026-09-18 lulus `catalog:prepare`, seed/query loopback
+(3 Shop published, 5 Shop draft, 34 varian, 50 media, 0 SKU duplikat),
+typecheck, schema validate, production build, unit 78/78, backend 120/120,
+CI-mode Playwright 57/57, serta local-demo Playwright 1/1. Repository lint
+lulus dengan 0 error dan 294 warning existing/local-skill-worktree; focused
+ESLint pada seluruh file kode/test yang berubah lulus tanpa warning atau error.
+Acceptance server-backed terpisah memeriksa katalog dan tiga detail pada
+1280×900 serta 390×844, media nyata, zero overflow/browser error, dan lima
+draft-route 404.
+
 ## Input Owner untuk handoff berikutnya
 
-1. Konfirmasi format SKU merchandising dan keputusan publish untuk dataset Shop
-   yang sudah di-seed dari `docs/source/Dataset Shop Niuva/`. Dimensi paket hanya
-   diperlukan bila mode shipping otomatis/provider-calculated dipilih; mode
-   manual/flat-rate tidak memblokir katalog.
-   Enam placeholder Tokopedia tanpa harga/stok sengaja dibiarkan di luar seed;
-   detail audit ada di [`catalog-source-audit.md`](../backend/catalog-source-audit.md)
-   dan kontrak intake di [`shop-catalog-owner-intake.md`](../backend/shop-catalog-owner-intake.md).
+1. Tidak ada input Owner katalog tambahan untuk MVP: SKU internal v1, keputusan
+   3 published/5 draft, dan fallback galeri produk sudah disetujui. Lima draft
+   tetap memiliki foto tetapi membutuhkan intake custom yang belum tersedia.
+   Enam placeholder Tokopedia tanpa harga/stok tetap dibiarkan di luar seed;
+   detail ada di [`catalog-publish-readiness.md`](../backend/catalog-publish-readiness.md).
 2. Daftar customer dan kanal resmi untuk pengiriman tautan reissue.
 3. Tidak ada input Owner tambahan untuk mobile acceptance; gate tersebut sudah
    lulus pada 390x844. R2 non-production smoke juga sudah lulus; gate berikutnya
-   tetap pengiriman manual tautan reissue dan keputusan dataset/catalog yang
-   masih terbuka.
+   tetap pengiriman manual tautan reissue serta provider/pricing yang deferred.

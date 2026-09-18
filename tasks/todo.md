@@ -83,19 +83,20 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
 > bukan klaim authenticated-admin acceptance yang baru untuk checkout ini.
 > Exact Clerk identity Owner kini sudah dipasangkan ke profile loopback aktif;
 > seed konten portfolio juga sudah dilakukan terpisah. Katalog Shop kini sudah
-> di-seed ke loopback sebagai draft; authenticated visual review dan R2 object
-> smoke sudah memiliki evidence terpisah.
+> di-seed ke loopback sesuai approval Owner: 3 ready-made published dan 5
+> custom-flow draft; authenticated visual review dan R2 object smoke memiliki
+> evidence terpisah.
 
 - [x] Detail/editor server-backed: orders, custom print, products, portfolio.
 - [x] Live subview: B2B Inquiries dan Pricing Rules.
 - [x] Authorized writes: order/inquiry transition, slicer review, quote draft/send,
   stock/media mapping, portfolio edit/publish guard, dan token reissue.
 - [x] Guarded catalog preparation/importer: dataset Shop Owner menghasilkan 8
-  produk draft, 34 varian, 4 kategori, dan 50 mapping JPG di loopback. Enam
-  placeholder tanpa harga/stok dikecualikan; SKU merchandising dan keputusan
-  publish masih dicatat sebagai gate di
-  `docs/backend/catalog-source-audit.md` dan audit readiness terbaru
-  `docs/backend/catalog-publish-readiness.md`.
+  produk, 34 varian, 4 kategori, dan 50 mapping JPG di loopback. Enam
+  placeholder tanpa harga/stok dikecualikan. Owner menyetujui source ID sebagai
+  SKU internal v1, 3 produk ready-made published, 5 custom-flow draft meski
+  semuanya memiliki foto, serta galeri produk sebagai fallback media-varian.
+  Evidence: `docs/backend/catalog-publish-readiness.md`.
 - [x] Exact `user_...` Owner identity sudah terhubung ke `AdminProfile` aktif
   loopback; retained authenticated Action Queue smoke lulus.
 - [x] Fresh authenticated desktop visual acceptance untuk list/detail/editor
@@ -133,11 +134,28 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
   list/detail/editor live, empty/error state, overflow, fokus keyboard, dan
   console browser diperiksa tanpa write action.
 - [x] R2 smoke sudah lulus dan fixture sudah dibersihkan. Dataset Shop sudah
-  di-seed secara reproducible;
-  SKU merchandising dan keputusan publish tetap membutuhkan Owner. Dimensi
-  paket hanya diperlukan saat automatic provider-calculated shipping diaktifkan.
+  di-seed secara reproducible; keputusan SKU internal v1 dan 3 published/5
+  draft sudah disetujui Owner. Dimensi paket hanya diperlukan saat automatic
+  provider-calculated shipping diaktifkan.
   Portfolio sudah memiliki keputusan Owner untuk 11 Selected Works `card-only`;
   Biteship/Midtrans tetap sengaja ditunda.
+- [x] Acceptance publik Shop server-backed lulus pada 1280×900 dan 390×844:
+  tiga produk Owner dan seluruh detail/media tampil tanpa overflow atau browser
+  error, lima route draft 404, dan fixture checkout lokal tersembunyi di luar
+  runtime demo eksplisit. Fresh visual admin post-seed tetap terpisah; state
+  database 3 published/5 draft sudah diverifikasi.
+
+### Catalog publication verification — 2026-09-18
+
+- [x] `catalog:prepare` dan guarded loopback seed lulus; hasil 8 produk, 34
+  varian, 50 media, 3 Shop published, 5 Shop draft, dan 0 SKU duplikat.
+- [x] Typecheck, schema validate, production build, unit 78/78, backend
+  120/120, CI-mode Playwright 57/57, local-demo Playwright 1/1, serta
+  `git diff --check` lulus. Repository lint 0 error; focused changed-file lint
+  tanpa warning/error.
+- [x] Server-backed public acceptance lulus pada 1280×900 dan 390×844 untuk
+  tiga kartu/tiga detail/media, tanpa horizontal overflow atau browser error;
+  lima slug draft 404 dan fixture demo tersembunyi di runtime normal.
 
 > Catatan arsip — entri FE-16–26 di bawah mempertahankan kontrak preview lama
 > untuk jejak visual/regresi. Status implementasi admin saat ini adalah matriks
@@ -544,13 +562,12 @@ Project Brief integration gates are committed and pushed in `1d5b870`.
   order/reservation/snapshots → payment attempt and idempotent replay with
   non-production provider adapters.
 - [ ] Owner-approved product/SKU/media/stock dataset and active pricing seed are
-  available in the development database. The Shop dataset is now seeded as 8
-  unpublished products, 34 variants, and 50 JPG media; merchandising SKU,
-  publish approval, and active pricing remain open. Variant-media binding is
-  currently a product-gallery fallback because `ProductMedia` has no
-  `variantId`. Package dimensions are conditional on provider-calculated
-  shipping and do not block manual/flat-rate catalog operation. See
-  `docs/backend/catalog-publish-readiness.md` for the evidence matrix.
+  available in the development database. Catalog portion is complete in
+  loopback: 8 products, 34 variants, 50 JPG media, source-ID SKU v1, and Owner
+  approval for 3 ready-made published/5 custom-flow draft. Active pricing seed
+  remains open, so this combined item is not complete. Variant-media binding is
+  intentionally deferred with product-gallery fallback. Package dimensions
+  remain conditional on provider-calculated shipping.
 - [ ] Connect real server rates → idempotent guest checkout → Midtrans sandbox
   handoff → verified order state; browser totals/callbacks remain advisory.
 - [ ] Add integration and one-worker browser coverage for success, duplicate,
@@ -558,8 +575,10 @@ Project Brief integration gates are committed and pushed in `1d5b870`.
 
 ### Goal blockers / explicit boundaries
 
-- [ ] Clerk live smoke still requires interactive Owner sign-in evidence; the
-  supplied `user_...` identity is mapped to an active loopback Owner profile.
+- [x] Clerk non-production identity/profile smoke dan authenticated admin
+  desktop/mobile acceptance sudah lulus. Slice katalog terbaru tidak mengubah
+  layout admin; fresh post-seed visual angka 3/5 belum diulang karena automation
+  tidak memiliki sesi Clerk terisolasi yang aman.
 - [x] R2 non-production live smoke lulus dengan capability group lengkap dan
   exact-origin CORS; evidence tidak menyatakan production readiness.
 - [ ] Biteship/Midtrans live checkout requires provider accounts, sandbox keys,

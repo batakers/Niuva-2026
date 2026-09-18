@@ -20,8 +20,9 @@ turunan yang sudah divalidasi oleh `catalogSeedSchema`.
   field dimensi menjadi wajib bila provider-calculated shipping diaktifkan.
 - 55 file JPG sumber valid (700×700); 50 mapping unik dipilih sesuai batas
   maksimal 12 media per produk pada kontrak katalog.
-- Semua produk pada manifest `isPublished: false` sampai Owner memberikan
-  keputusan publish untuk Niuva, terpisah dari status listing sumber.
+- `catalog-publish-decisions.json` mencatat approval Owner 2026-09-18:
+  3 produk ready-made `isPublished: true`, 5 produk yang membutuhkan alur
+  custom tetap draft, dan ID sumber dipakai sebagai SKU internal v1.
 
 Media varian dipetakan sebagai media galeri produk karena model `ProductMedia`
 saat ini berscope produk, bukan relasi varian. Sidecar
@@ -41,7 +42,9 @@ $env:CATALOG_SEED_CONFIRMATION = "I_UNDERSTAND_NON_PRODUCTION"
 corepack pnpm db:seed:catalog
 ```
 
-`catalog:prepare` hanya membaca dataset sumber, menulis manifest turunan,
-dan menyalin mapping JPG ke `public/media/products/`. `db:seed:catalog`
+`catalog:prepare` hanya membaca dataset sumber dan approval Owner, menulis
+manifest turunan, serta menyalin mapping JPG ke `public/media/products/`.
+Generator gagal bila approval tidak cocok tepat dengan delapan produk sumber.
+`db:seed:catalog`
 menolak production dan database non-loopback; importer tidak menghapus data
 lain dan tidak mengaktifkan Biteship atau Midtrans.
