@@ -22,6 +22,18 @@ test("custom print landing explains the operator-reviewed path without instant-p
   await expect(page).toHaveURL(/\/project-brief$/);
 });
 
+test("custom draft cards route to a preselected intake without checkout", async ({ page }) => {
+  await page.goto("/custom-print");
+
+  await expect(page.getByRole("heading", { name: "Pilih referensi, lalu biarkan operator mengunci detailnya." })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Ajukan intake custom" })).toHaveCount(5);
+
+  await page.getByRole("link", { name: "Ajukan intake custom" }).first().click();
+  await expect(page).toHaveURL(/\/custom-print\/request\?product=103726333343$/);
+  await expect(page.getByLabel("Produk yang diminati")).toHaveValue("103726333343");
+  await expect(page.getByText("tidak ada checkout langsung", { exact: false })).toBeVisible();
+});
+
 test("custom print landing stays usable without horizontal overflow", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 900 });
   await page.goto("/custom-print");

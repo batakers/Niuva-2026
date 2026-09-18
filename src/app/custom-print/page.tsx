@@ -16,6 +16,7 @@ import { PublicShell } from "@/components/niuva/public-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { AuLink } from "@/components/ui/AuLink";
 import { getServerCapabilities } from "@/lib/env/server";
+import { CUSTOM_FLOW_PRODUCT_OPTIONS } from "@/modules/custom-print/product-intake";
 import { CUSTOM_FILE_MAX_BYTES } from "@/modules/policy/privacy";
 
 export const metadata: Metadata = {
@@ -144,6 +145,38 @@ export default async function CustomPrintPage() {
                 </li>
               ))}
             </ol>
+          </div>
+        </section>
+
+        <section className="border-b border-border bg-background" aria-labelledby="custom-products-title">
+          <div className="mx-auto max-w-public px-5 py-16 sm:px-8 sm:py-20">
+            <div className="max-w-3xl">
+              <p className="text-sm font-medium text-brand-700">Inspirasi produk custom</p>
+              <h2 className={`${type.heading.className} mt-3`} id="custom-products-title">
+                Pilih referensi, lalu biarkan operator mengunci detailnya.
+              </h2>
+              <p className="mt-5 text-base leading-7 text-muted-foreground">
+                Lima produk berikut memiliki foto referensi, tetapi tetap draft karena membutuhkan konteks custom, review, dan quote. Harga pada katalog bukan checkout otomatis untuk alur ini.
+              </p>
+            </div>
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {CUSTOM_FLOW_PRODUCT_OPTIONS.map((product) => (
+                <article className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card" key={product.sourceProductId}>
+                  <div className="relative aspect-[4/3] bg-muted">
+                    {product.imagePath ? <Image alt={`Foto referensi ${product.name}`} className="object-cover" fill sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw" src={product.imagePath} /> : null}
+                  </div>
+                  <div className="flex flex-1 flex-col p-5">
+                    <h3 className="text-base font-semibold leading-6">{product.name}</h3>
+                    <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground">
+                      Varian referensi: {product.variantNames.join(", ")}.
+                    </p>
+                    <AuLink className="mt-5 min-h-11 w-full" href={`/custom-print/request?product=${encodeURIComponent(product.sourceProductId)}`}>
+                      Ajukan intake custom
+                    </AuLink>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 

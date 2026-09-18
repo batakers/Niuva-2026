@@ -10,6 +10,7 @@ import { useHydrated } from "@/components/niuva/use-hydrated";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createPublicWhatsAppHref } from "@/features/public/company-content";
+import type { CustomFlowProductOption } from "@/modules/custom-print/product-intake";
 import { CUSTOM_FILE_MAX_BYTES } from "@/modules/policy/privacy";
 
 const acceptedExtensions = [".stl", ".3mf", ".obj", ".step", ".stp"] as const;
@@ -20,15 +21,27 @@ const optionalText = z.preprocess(
   (value) => (typeof value === "string" && value.trim().length === 0 ? undefined : value),
   z.string().trim().min(1).optional(),
 );
+const optionalDate = z.preprocess(
+  (value) => (typeof value === "string" && value.trim().length === 0 ? undefined : value),
+  z.iso.date().optional(),
+);
+const unspecifiedProductValue = "CUSTOM_UNSPECIFIED";
 
 const requestPreviewSchema = z.object({
   colorRequested: optionalText,
   customerEmail: z.email(),
   customerName: z.string().trim().min(1),
   customerPhone: z.string().trim().min(1),
+  faculty: optionalText,
   materialRequested: z.string().trim().min(1),
   notes: optionalText,
+  productInterest: z.preprocess(
+    (value) => (typeof value !== "string" || value.trim().length === 0 ? unspecifiedProductValue : value),
+    z.string().trim().min(1),
+  ),
   quantity: z.coerce.number().int().positive(),
+  requestedSize: optionalText,
+  targetDeadline: optionalDate,
   unitConfirmation: z.string().trim().min(1),
 });
 
@@ -79,11 +92,15 @@ const fieldLabels: Record<PreviewFieldName, string> = {
   customerEmail: "Email",
   customerName: "Nama",
   customerPhone: "Nomor WhatsApp",
+  faculty: "Fakultas/identitas",
   file: "File model",
   materialRequested: "Material",
   notes: "Catatan",
+  productInterest: "Produk referensi",
   quantity: "Jumlah",
   rightsAck: "Persetujuan pemrosesan",
+  requestedSize: "Ukuran target",
+  targetDeadline: "Target diperlukan",
   unitConfirmation: "Unit atau skala",
 };
 
@@ -107,9 +124,13 @@ function fileMetadata(file: File) {
 export function RequestForm({
   liveEnabled = false,
   previewEnabled = false,
+  initialProductInterest,
+  productOptions = [],
 }: {
   liveEnabled?: boolean;
   previewEnabled?: boolean;
+  initialProductInterest?: string;
+  productOptions?: readonly CustomFlowProductOption[];
 }) {
   const mode: RequestFormMode = liveEnabled
     ? "live"
@@ -627,6 +648,36 @@ export function RequestForm({
           />
         </section>
 
+        <section className="space-y-5" aria-labelledby="product-section-title">
+          <div>
+            <h3 className="border-b border-border pb-3 text-base font-semibold" id="product-section-title">Produk referensi</h3>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+              Pilihan ini hanya mengarahkan konteks intake. Produk custom tetap melalui review, quote, dan persetujuan operator; tidak ada checkout langsung.
+            </p>
+          </div>
+          <FormField
+            description="Pilih produk draft yang paling mendekati kebutuhan Anda, atau tandai kebutuhan custom lain bila belum yakin."
+            error={errors.productInterest}
+            id="custom-productInterest"
+            label="Produk yang diminati"
+            required
+          >
+            <select
+              className={controlClass}
+              defaultValue={initialProductInterest ?? unspecifiedProductValue}
+              name="productInterest"
+              required
+            >
+              <option value={unspecifiedProductValue}>Belum menentukan / kebutuhan custom lain</option>
+              {productOptions.map((product) => (
+                <option key={product.sourceProductId} value={product.sourceProductId}>
+                  {product.name}
+                </option>
+              ))}
+            </select>
+          </FormField>
+        </section>
+
         <section className="space-y-5" aria-labelledby="configuration-section-title">
           <h3 className="border-b border-border pb-3 text-base font-semibold" id="configuration-section-title">Konfigurasi awal</h3>
           <div className="grid gap-5 sm:grid-cols-2">
@@ -644,6 +695,15 @@ export function RequestForm({
             </FormField>
             <FormField error={errors.quantity} id="custom-quantity" label="Jumlah" required>
               <Input className={controlClass} inputMode="numeric" min={1} name="quantity" required type="number" />
+            </FormField>
+            <FormField error={errors.requestedSize} id="custom-requestedSize" label="Ukuran target (opsional)">
+              <Input className={controlClass} name="requestedSize" placeholder="Contoh: 8 cm atau mengikuti referensi" />
+            </FormField>
+            <FormField error={errors.faculty} id="custom-faculty" label="Fakultas/identitas (opsional)">
+              <Input className={controlClass} name="faculty" placeholder="Contoh: Fakultas Teknik" />
+            </FormField>
+            <FormField description="Tanggal ini hanya target pembahasan, bukan janji selesai otomatis." error={errors.targetDeadline} id="custom-targetDeadline" label="Target diperlukan (opsional)">
+              <Input className={controlClass} name="targetDeadline" type="date" />
             </FormField>
             <FormField description="Konfirmasi ini membantu mencegah salah ukuran, terutama pada STL." error={errors.unitConfirmation} id="custom-unitConfirmation" label="Unit atau skala" required>
               <select className={controlClass} defaultValue="" name="unitConfirmation" required>

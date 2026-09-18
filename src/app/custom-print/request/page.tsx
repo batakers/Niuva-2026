@@ -6,6 +6,10 @@ import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation
 import { PublicShell } from "@/components/niuva/public-shell";
 import { AuLink } from "@/components/ui/AuLink";
 import { getServerCapabilities } from "@/lib/env/server";
+import {
+  CUSTOM_FLOW_PRODUCT_OPTIONS,
+  getCustomFlowProductOption,
+} from "@/modules/custom-print/product-intake";
 import { RequestForm } from "./request-form";
 
 export const metadata: Metadata = {
@@ -20,8 +24,15 @@ const readinessItems = [
   "Kontak yang dapat dipakai untuk pembahasan operator.",
 ] as const;
 
-export default async function CustomPrintRequestPage() {
+export default async function CustomPrintRequestPage({
+  searchParams,
+}: Readonly<{ searchParams: Promise<{ product?: string | string[] }> }>) {
   await connection();
+  const params = await searchParams;
+  const productParam = Array.isArray(params.product) ? params.product[0] : params.product;
+  const initialProductInterest = productParam !== undefined && getCustomFlowProductOption(productParam) !== null
+    ? productParam
+    : undefined;
 
   let liveEnabled = false;
   try {
@@ -101,7 +112,12 @@ export default async function CustomPrintRequestPage() {
             </aside>
 
             <div className="lg:col-span-8">
-              <RequestForm liveEnabled={liveEnabled} previewEnabled={previewEnabled} />
+              <RequestForm
+                initialProductInterest={initialProductInterest}
+                liveEnabled={liveEnabled}
+                previewEnabled={previewEnabled}
+                productOptions={CUSTOM_FLOW_PRODUCT_OPTIONS}
+              />
             </div>
           </div>
         </section>
