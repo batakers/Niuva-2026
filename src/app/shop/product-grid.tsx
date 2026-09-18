@@ -100,11 +100,11 @@ export function ProductGrid({ products, previewEnabled = false }: { products: re
                   <div className="mt-5 flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <p className="text-sm text-brand-700">{product.category?.name ?? "Tanpa kategori"}</p>
-                      <h2 className={`${type.subheading.className} mt-2 underline-offset-4 group-hover:underline`}>{product.name}</h2>
+                      <h2 className={`${type.subheading.className} mt-2 line-clamp-3 underline-offset-4 group-hover:underline`}>{product.name}</h2>
                     </div>
                     <span className={`shrink-0 rounded-md border px-2.5 py-1 text-xs font-medium ${stock.available ? "border-success-border bg-success-background text-success" : "border-warning-border bg-warning-background text-warning"}`}>{stock.label}</span>
                   </div>
-                  <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">{product.description}</p>
+                  <p className="mt-3 line-clamp-4 max-w-xl text-sm leading-6 text-muted-foreground">{product.description}</p>
                   <div className="mt-5 flex flex-wrap items-end justify-between gap-3 border-t border-border pt-4">
                     <div>
                       <p className="text-xs text-muted-foreground">Mulai dari</p>

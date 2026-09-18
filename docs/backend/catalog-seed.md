@@ -6,7 +6,9 @@ Audit sumber yang sudah diberikan Owner dan batas data yang masih terbuka dicata
 `scripts/seed-catalog.ts` adalah importer idempotent untuk dataset katalog yang sudah disediakan Owner. Script ini hanya menerima database PostgreSQL loopback dengan marker `dev`, `demo`, atau `test`, dan memerlukan `CATALOG_SEED_CONFIRMATION=I_UNDERSTAND_NON_PRODUCTION`.
 
 Dataset Shop yang saat ini dipakai berada di
-`docs/source/Dataset Shop Niuva/`. Regenerasi manifest dan mapping media:
+`docs/source/Dataset Shop Niuva/`. `catalog-publish-decisions.json` adalah
+approval Owner yang tervalidasi: SKU `SOURCE_ID_V1`, 3 produk ready-made
+published, dan 5 produk custom-flow draft. Regenerasi manifest dan mapping media:
 
 ```powershell
 corepack pnpm catalog:prepare
@@ -49,4 +51,11 @@ Format minimum:
 }
 ```
 
-Importer tidak membuat data sintetis, tidak menghapus produk/varian/media lain, dan tidak mengaktifkan Biteship atau Midtrans. `stockOnHand`, harga, dan foto berasal dari dataset Owner; ID sumber dipakai sebagai SKU deterministik sementara karena kolom SKU merchant tidak ada. Dimensi paket boleh tetap kosong selama katalog memakai preview, ongkir manual, atau flat-rate; field itu menjadi wajib saat shipping provider-calculated diaktifkan. Key foto harus sudah dipetakan ke file asset yang benar-benar ada di `public/` sebelum transaksi seed dimulai. Publikasi tetap melewati editor admin dan gate bukti/izin.
+Generator menolak approval yang tidak mencakup tepat seluruh produk sumber,
+memiliki ID/nama yang tidak cocok, atau menduplikasi keputusan. Importer tidak
+membuat data sintetis, tidak menghapus produk/varian/media lain, dan tidak
+mengaktifkan Biteship atau Midtrans. `stockOnHand`, harga, dan foto berasal dari
+dataset Owner; ID sumber digunakan sebagai SKU internal v1 sesuai approval.
+Dimensi paket boleh tetap kosong selama katalog memakai preview, ongkir manual,
+atau flat-rate; field itu menjadi wajib saat shipping provider-calculated
+diaktifkan. Key foto harus menunjuk file nyata di `public/` sebelum transaksi.

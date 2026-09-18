@@ -1,6 +1,6 @@
 # Intake dataset Shop Owner
 
-Status: **TERSEDIA — SUDAH DI-SEED KE LOOPBACK** · scope: loopback development
+Status: **OWNER APPROVED — 3 PUBLISHED / 5 DRAFT DI LOOPBACK** · scope: loopback development
 
 Sumber yang dipakai ada di [`docs/source/Dataset Shop Niuva/`](../source/Dataset%20Shop%20Niuva/).
 Manifest turunannya adalah `catalog-seed.json`; regenerasi dilakukan dengan
@@ -18,8 +18,8 @@ katalog retail tanpa keputusan publikasi dan mapping media yang jelas.
 | Produk | `slug` | unik, lowercase, kebab-case | Diturunkan deterministik dari nama produk |
 | Produk | `name`, `description` | tidak boleh kosong | Copy listing sumber, karakter replacement dibersihkan |
 | Produk | `categorySlug` | harus cocok dengan kategori bila diisi | 4 kategori dari kolom `kategori` |
-| Produk | `isPublished` | `true` hanya jika semua gate di bawah lulus | Semua `false` sampai Owner memutuskan publish |
-| Varian | `name`, `sku` | SKU unik di seluruh dataset | ID produk/varian sumber dipakai sementara sebagai SKU deterministik |
+| Produk | `isPublished` | `true` hanya jika semua gate di bawah lulus | Approval per produk di `catalog-publish-decisions.json`; 3 ready-made published, 5 custom-flow draft |
+| Varian | `name`, `sku` | SKU unik di seluruh dataset | Owner menyetujui ID produk/varian sumber sebagai SKU internal v1 |
 | Varian | `priceRp` | integer Rupiah, bukan estimasi jasa cetak | 32 varian `TERSEDIA` dari `harga_varian`; single-SKU dari `harga_detail` |
 | Varian | `stockOnHand` | integer nonnegatif | `stok_varian`/`stok_tersedia_public` pada ekspor |
 | Varian | `weightGrams` | desimal nonnegatif | `berat` dikonversi dari kilogram ke gram |
@@ -43,6 +43,11 @@ yang ditampilkan ke customer, bukan ukuran kardus atau paket pengiriman.
 
 ## Bentuk file
 
+Keputusan Owner disimpan terpisah di `catalog-publish-decisions.json` agar
+regenerasi manifest tidak memakai sakelar publish global. File approval harus
+mencakup tepat delapan source product ID beserta nama yang cocok; generator
+gagal bila ada produk hilang, tambahan, duplikat, atau salah nama.
+
 Gunakan JSON `version: 1` yang mengikuti `catalogSeedSchema` di
 `src/modules/catalog/seed.ts`:
 
@@ -62,14 +67,15 @@ sebelum seed dijalankan.
 
 - [x] Product/varian adalah barang retail, bukan layanan cetak atau artefak
       portfolio.
-- [ ] Format SKU merchandising sudah dikonfirmasi Owner.
+- [x] SKU internal v1 dikonfirmasi Owner: gunakan ID produk/varian sumber.
 - [x] Dimensi paket ditetapkan sebagai gate kondisional: tidak diperlukan untuk
       katalog/manual shipping, wajib saat provider-calculated shipping aktif.
 - [x] Harga, stok awal, dan berat sumber sudah dipetakan; enam placeholder tanpa
       harga/stok dikecualikan.
 - [x] Foto asli sudah ditempatkan di `public/media/products/` dan setiap mapping
       lolos preflight file.
-- [ ] Status publikasi Niuva setiap produk sudah diputuskan.
+- [x] Status publikasi diputuskan Owner: 3 ready-made published dan 5 produk
+      yang membutuhkan custom flow tetap draft; semua delapan produk memiliki foto.
 - [x] Dataset disimpan di source control sebagai data produk publik yang diberikan
       Owner; tidak ada data customer atau secret.
 - [ ] `quantitySemantics` custom print diputuskan terpisah; field itu bukan
@@ -84,7 +90,7 @@ production, dan gagal sebelum transaksi jika file media tidak ditemukan. Lihat
 [`catalog-source-audit.md`](./catalog-source-audit.md) untuk gap empat sumber
 Owner yang sudah diaudit.
 
-Catatan: relasi media varian belum ada di model `ProductMedia`, sehingga foto
-varian dipetakan sebagai galeri produk dan nilai varian dicatat pada alt text.
-Jika diperlukan penggantian foto berdasarkan pilihan varian, buat keputusan
-schema/UI terpisah sebelum mengubah kontrak katalog.
+Catatan: Owner menyetujui galeri produk + alt text sebagai fallback MVP karena
+relasi media varian belum ada di model `ProductMedia`. Jika kemudian diperlukan
+penggantian foto berdasarkan pilihan varian, buat keputusan schema/UI terpisah
+sebelum mengubah kontrak katalog.

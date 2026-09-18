@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "approvalStatus": "OWNER_APPROVED",
+  "approvedAt": "2026-09-18",
+  "skuPolicy": "SOURCE_ID_V1",
+  "products": [
+    {
+      "sourceProductId": "103726663896",
+      "name": "Kicau Mania Kunci Gantung Kucing Lucu dengan Desain Kreatif dan Warna Cerah untuk Penggemar Kucing dan Aksesori Unik",
+      "decision": "PUBLISH_READY_MADE"
+    },
+    {
+      "sourceProductId": "103726333343",
+      "name": "Wisuda Custom 3D Print - Patung Graduasi 3D Personalisasi untuk Souvenir Khusus",
+      "decision": "HOLD_CUSTOM_FLOW"
+    },
+    {
+      "sourceProductId": "103474501379",
+      "name": "3D PRINT LEGO FIGURE WISUDAWAN TELKOM UNIVERSITY",
+      "decision": "HOLD_CUSTOM_FLOW"
+    },
+    {
+      "sourceProductId": "103343689816",
+      "name": "3D PRINT KEYCHAIN GEDUNG TELKOM UNIVERSITY (TULT, BANDUNG TECHNO PARK)",
+      "decision": "PUBLISH_READY_MADE"
+    },
+    {
+      "sourceProductId": "103343687481",
+      "name": "3D Print LEGO Figure Wisudawan Telkom University PLA (Bisa Custom Tali Toga Fakultas)",
+      "decision": "HOLD_CUSTOM_FLOW"
+    },
+    {
+      "sourceProductId": "103342790916",
+      "name": "3D PRINT KEYCHAIN ANIMAL TELKOM UNIVERSITY",
+      "decision": "PUBLISH_READY_MADE"
+    },
+    {
+      "sourceProductId": "103340568955",
+      "name": "3D PRINT CUSTOM FIGURE SPECIAL MOMENTS (Newborn, weddings, birthday, dll)",
+      "decision": "HOLD_CUSTOM_FLOW"
+    },
+    {
+      "sourceProductId": "103339597166",
+      "name": "[PREORDER] 3D PRINT CUSTOM FIGURE (Bubble head, chibi, cartoon, emoji) READ DESCRIPTION FOR ORDER",
+      "decision": "HOLD_CUSTOM_FLOW"
+    }
+  ]
+}

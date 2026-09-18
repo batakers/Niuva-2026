@@ -34,11 +34,9 @@ tidak diisi ulang dari asumsi.
 - Dataset Shop Owner sudah diproses oleh `scripts/prepare-shop-catalog.ts`.
   Manifest `docs/source/Dataset Shop Niuva/catalog-seed.json` lolos schema dan
   preflight media; seed loopback terakhir menghasilkan **4 kategori, 8 produk,
-  34 varian, dan 50 media**. Semua produk ditahan sebagai draft
-  (`isPublished: false`) sampai keputusan publish diberikan.
-- ID produk/varian sumber dipakai sebagai SKU deterministik hanya untuk
-  menjaga identitas data di database lokal; ini bukan klaim bahwa Owner sudah
-  menetapkan format SKU merchandising. Enam placeholder Tokopedia tidak
+  34 varian, dan 50 media**. Keputusan Owner menetapkan 3 ready-made sebagai
+  published dan 5 produk yang membutuhkan custom flow tetap draft.
+- Owner menyetujui ID produk/varian sumber sebagai SKU internal v1. Enam placeholder Tokopedia tidak
   di-seed karena tidak mempunyai harga/stok terverifikasi.
 - Foto varian dipetakan ke galeri produk karena `ProductMedia` saat ini tidak
   memiliki `variantId`; alt text mencatat nilai varian yang tersedia. Batas
@@ -46,29 +44,32 @@ tidak diisi ulang dari asumsi.
 - Importer `db:seed:catalog` tetap menolak media yang tidak memiliki file nyata
   di `public/`, sehingga tidak ada foto produk sintetis atau placeholder yang
   dipublikasikan.
+- Acceptance publik server-backed pada 1280×900 dan 390×844 memverifikasi tiga
+  produk ready-made, detail dan media nyata, tanpa overflow/browser error;
+  lima produk custom draft tidak dapat diakses publik. Fixture checkout demo
+  juga disembunyikan kecuali runtime demo loopback diaktifkan eksplisit.
 
 ## Gate yang masih terbuka
 
-1. **SKU merchandising** masih perlu dikonfirmasi Owner. Seed lokal menggunakan
-   ID sumber sebagai SKU deterministik. Dimensi paket bukan blocker untuk seed
-   katalog atau mode ongkir manual/flat-rate; dimensi menjadi wajib hanya jika
-   mode shipping provider-calculated diaktifkan.
-2. **Keputusan publish Niuva** masih terbuka. Delapan produk sudah berada di
-   database loopback sebagai draft dengan harga, stok, berat, dan media nyata.
-3. **Relasi media varian** belum tersedia pada model katalog; bila UI harus
-   mengganti foto berdasarkan varian, perlu keputusan/schema terpisah.
-4. Workbook belum boleh mengaktifkan `CUSTOM_PRINT_V1` secara otomatis karena
+1. **SKU internal v1** dan **keputusan publish** sudah ditutup oleh Owner pada
+   2026-09-18 melalui `catalog-publish-decisions.json`: 3 published/5 draft.
+   Dimensi paket bukan blocker untuk seed katalog atau mode ongkir manual/
+   flat-rate; dimensi menjadi wajib hanya jika provider-calculated diaktifkan.
+2. **Relasi media varian** belum tersedia pada model katalog. Owner menyetujui
+   galeri produk + alt text sebagai fallback MVP; binding khusus varian ditunda
+   sampai ada bukti kebutuhan UX.
+3. Workbook belum boleh mengaktifkan `CUSTOM_PRINT_V1` secara otomatis karena
    kebijakan runtime mewajibkan `quantitySemantics` (`PER_UNIT` atau
    `AGGREGATE`) dipilih secara eksplisit oleh Owner. Nilai yang berbeda antara
    baris spreadsheet dan keputusan Pricing v1 tetap ditangani oleh policy
    server, bukan ditebak oleh importer.
-5. Aktivasi/smoke Biteship dan Midtrans sengaja tidak dilakukan sesuai batas
+4. Aktivasi/smoke Biteship dan Midtrans sengaja tidak dilakukan sesuai batas
    goal Owner.
 
 Dengan demikian, sumber sudah cukup untuk seed katalog retail loopback yang
 terukur dan dapat diaudit, termasuk preview dengan packaging cost yang dianggap
 sudah termasuk harga. Status ini belum menjadi klaim `catalog ready` untuk
-publish atau checkout dengan ongkir otomatis karena SKU merchandising,
-keputusan publish, relasi media-varian, provider, dan bukti visual/Owner tetap
-merupakan gate terpisah; dimensi paket hanya berlaku pada gate shipping
+checkout dengan ongkir otomatis karena provider dan pricing aktif tetap
+merupakan gate terpisah. SKU/publish sudah diputuskan; variant-media binding
+ditunda sebagai enhancement. Dimensi paket hanya berlaku pada gate shipping
 provider-calculated.

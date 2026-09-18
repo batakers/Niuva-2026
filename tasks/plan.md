@@ -546,12 +546,16 @@ Requirement-level evidence and the next Owner handoff inputs are tracked in
   resource-sensitive during cold Next route compilation; its three affected
   navigations pass when run serially and are not treated as application
   regressions.
-- Fresh authenticated admin visual acceptance and R2 object smoke remain open.
-  The Shop seed is now reproducible through `catalog:prepare` plus the guarded
-  loopback importer; SKU merchandising and publish approval remain Owner gates.
-  Package dimensions are conditional on provider-calculated shipping. The retained Clerk identity/profile smoke and
-  loopback portfolio seed are recorded separately. Biteship/Midtrans activation
-  and smoke are intentionally deferred until company data is available.
+- Authenticated admin desktop/mobile acceptance and the non-production R2 object
+  smoke passed in their recorded slices. The Shop seed is reproducible through
+  `catalog:prepare` plus the guarded loopback importer; Owner approval now fixes
+  source-ID SKU v1, 3 ready-made published, 5 custom-flow draft, and product
+  gallery fallback. Public Shop list/detail acceptance passed at 1280×900 and
+  390×844, including five draft 404s and local-demo fixture isolation. Fresh
+  post-seed admin visual confirmation remains separate because automation has no
+  isolated Clerk session. Package dimensions remain conditional on
+  provider-calculated shipping; Biteship/Midtrans activation and smoke are
+  intentionally deferred until company data is available.
 
 The FE-16–26 rows below remain a historical preview record; their retired
 fixture-only boundaries do not override the server-backed routes listed above.

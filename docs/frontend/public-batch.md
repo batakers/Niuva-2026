@@ -14,9 +14,9 @@ Started: 2026-09-06. Updated: 2026-09-18. Status: **UI_IMPLEMENTED**, **ADMIN_IN
 
 > Integration update — on 2026-09-14, the custom-request upload orchestration
 > (R2 capability-gated) and Shop → Product → Cart → Checkout server-backed path
-> were added locally. Provider smokes, launch pricing/publish decisions, and
-> Owner visual acceptance remain separate gates; the preview rows below continue to
-> describe only explicit `?preview=examples` behavior.
+> were added locally. At that handoff, provider smokes, launch pricing/publish
+> decisions, and Owner visual acceptance remained separate gates; the preview
+> rows below continue to describe only explicit `?preview=examples` behavior.
 
 > Integration update — on 2026-09-16, the real admin surface replaced the
 > retired fixture-only FE-18–26 screens for the allowed operational slice.
@@ -51,13 +51,24 @@ Started: 2026-09-06. Updated: 2026-09-18. Status: **UI_IMPLEMENTED**, **ADMIN_IN
 
 > Handoff update — on 2026-09-17, the Owner supplied
 > `docs/source/Dataset Shop Niuva/`. The guarded catalog preparation/seed path
-> now maps 8 products, 34 variants, 4 categories, and 50 real JPG media files
-> into loopback as unpublished drafts. Six Tokopedia placeholder variants were
-> excluded because they have no verified price/stock. Merchant SKU format,
-> publish approval, and variant-bound media remain explicit Owner/schema gates.
+> mapped 8 products, 34 variants, 4 categories, and 50 real JPG media files
+> into loopback as unpublished drafts at that handoff. Six Tokopedia placeholder
+> variants were excluded because they have no verified price/stock. Merchant SKU
+> format, publish approval, and variant-bound media were then explicit
+> Owner/schema gates.
 > Package dimensions are not required for the current catalog/manual-shipping
 > slice and become a gate only for provider-calculated shipping; Biteship/Midtrans
 > remain deferred.
+
+> Catalog publication update — on 2026-09-18, the Owner approved source IDs as
+> internal SKU v1, three ready-made products for publication, five custom-flow
+> products to remain draft, and product galleries as the MVP media fallback.
+> Regeneration now requires an exact per-product approval file; it no longer has
+> a global publish switch. Server-backed public acceptance passed at 1280×900
+> and 390×844 for all three published list/detail routes, real media, overflow,
+> clean browser console, and five draft-route 404s. The local checkout fixture
+> is excluded outside explicit loopback demo mode. Fresh post-seed authenticated
+> admin visual confirmation remains separate; database state is verified 3/5.
 
 > Acceptance update — on 2026-09-17, the supplied Owner identity was verified
 > against the active loopback profile and the live admin list/detail/editor routes
