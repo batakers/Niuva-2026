@@ -46,8 +46,9 @@ existing), unit **73/73**, backend **119/119**, `corepack pnpm build`,
 (`CI=1 corepack pnpm test:e2e`, satu worker) **57/57** lulus. Seed konten lokal
 diulang dua kali dan tetap menghasilkan 4 layanan, 17 proyek, dan 6 media tanpa
 duplikasi. Seed Shop juga idempotent dan menghasilkan 8 produk, 34 varian,
-serta 50 media pada setiap run. Ini adalah bukti teknis/loopback; bukan bukti
-R2 atau provider live.
+serta 50 media pada setiap run. Ini adalah bukti teknis/loopback; R2 smoke
+memiliki evidence provider development terpisah, sedangkan provider lain tetap
+belum diaktifkan.
 
 PR #3 sudah `MERGED` ke `main` pada commit `2c845d8`; dokumentasi acceptance
 follow-up sudah `MERGED` melalui PR #5 pada commit `0f350ec`, dan checkout saat
@@ -57,16 +58,15 @@ aktif.
 
 ## Input Owner untuk handoff berikutnya
 
-1. R2 non-production capability dan objek test yang boleh dibersihkan.
-2. Konfirmasi format SKU merchandising dan keputusan publish untuk dataset Shop
+1. Konfirmasi format SKU merchandising dan keputusan publish untuk dataset Shop
    yang sudah di-seed dari `docs/source/Dataset Shop Niuva/`. Dimensi paket hanya
    diperlukan bila mode shipping otomatis/provider-calculated dipilih; mode
    manual/flat-rate tidak memblokir katalog.
    Enam placeholder Tokopedia tanpa harga/stok sengaja dibiarkan di luar seed;
    detail audit ada di [`catalog-source-audit.md`](../backend/catalog-source-audit.md)
    dan kontrak intake di [`shop-catalog-owner-intake.md`](../backend/shop-catalog-owner-intake.md).
-3. Daftar customer dan kanal resmi untuk pengiriman tautan reissue.
-4. Tidak ada input Owner tambahan untuk mobile acceptance; gate tersebut sudah
+2. Daftar customer dan kanal resmi untuk pengiriman tautan reissue.
+3. Tidak ada input Owner tambahan untuk mobile acceptance; gate tersebut sudah
    lulus pada 390x844. R2 non-production smoke juga sudah lulus; gate berikutnya
    tetap pengiriman manual tautan reissue dan keputusan dataset/catalog yang
    masih terbuka.
