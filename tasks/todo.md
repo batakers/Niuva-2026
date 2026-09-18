@@ -83,8 +83,8 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
 > bukan klaim authenticated-admin acceptance yang baru untuk checkout ini.
 > Exact Clerk identity Owner kini sudah dipasangkan ke profile loopback aktif;
 > seed konten portfolio juga sudah dilakukan terpisah. Katalog Shop kini sudah
-> di-seed ke loopback sebagai draft; R2 object smoke dan authenticated visual
-> review tetap dicatat sebagai gate terpisah.
+> di-seed ke loopback sebagai draft; authenticated visual review dan R2 object
+> smoke sudah memiliki evidence terpisah.
 
 - [x] Detail/editor server-backed: orders, custom print, products, portfolio.
 - [x] Live subview: B2B Inquiries dan Pricing Rules.
@@ -108,7 +108,10 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
 - [x] Keputusan Owner portfolio: 11 Selected Works tetap published sebagai
   `card-only` tanpa media. Media mapping tidak boleh ditebak dan hanya opsional
   setelah aset, provenance, alt text, caption, serta izin per project disetujui.
-- [ ] R2 non-production upload smoke nyata.
+- [x] R2 non-production upload smoke nyata: intent `201`, exact-origin CORS
+  preflight `204`, direct PUT `200`, confirm `200`, custom request `201`,
+  lifecycle `PENDING → UPLOADED → VERIFIED`, lalu object dan row sintetis
+  dibersihkan.
 - [ ] Dokumentasi/tautan customer lama dikirim ulang setelah token route-bound v1
   diterbitkan pada detail order/quote; admin reissue sudah tersedia, pengiriman
   aktual menunggu daftar customer dan kanal yang disetujui Owner. Runbook:
@@ -128,7 +131,8 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
   perbaikan min-width kartu Products dan kartu mobile B2B Inquiries. Rute
   list/detail/editor live, empty/error state, overflow, fokus keyboard, dan
   console browser diperiksa tanpa write action.
-- [ ] R2 smoke tetap terbuka. Dataset Shop sudah di-seed secara reproducible;
+- [x] R2 smoke sudah lulus dan fixture sudah dibersihkan. Dataset Shop sudah
+  di-seed secara reproducible;
   SKU merchandising dan keputusan publish tetap membutuhkan Owner. Dimensi
   paket hanya diperlukan saat automatic provider-calculated shipping diaktifkan.
   Portfolio sudah memiliki keputusan Owner untuk 11 Selected Works `card-only`;
@@ -489,11 +493,11 @@ Project Brief integration gates are committed and pushed in `1d5b870`.
 - [x] Submit the custom request only with a verified file ID; retain preview
   fallback when R2 is unavailable.
 - [x] Handle failure, expiry, metadata mismatch, retry/remove, and no-public-URL
-  states at client/service boundaries; real object smoke remains open.
+  states at client/service boundaries; real object smoke juga sudah lulus.
 - [x] Document the non-production R2 setup contract: private bucket, minimum
   object permissions, exact-origin CORS, and secret-safe smoke/cleanup steps.
-- [ ] Run a non-production R2 smoke proving `PENDING → UPLOADED` and private
-  object access.
+- [x] Run a non-production R2 smoke proving `PENDING → UPLOADED → VERIFIED`,
+  private object access, exact-origin CORS, dan cleanup fixture.
 
 ### Checkpoint A — private-file slice
 
@@ -553,8 +557,8 @@ Project Brief integration gates are committed and pushed in `1d5b870`.
 
 - [ ] Clerk live smoke still requires interactive Owner sign-in evidence; the
   supplied `user_...` identity is mapped to an active loopback Owner profile.
-- [ ] R2 live smoke requires a complete non-production capability group and CORS
-  policy; no R2 values or approved upload-limit value are present locally.
+- [x] R2 non-production live smoke lulus dengan capability group lengkap dan
+  exact-origin CORS; evidence tidak menyatakan production readiness.
 - [ ] Biteship/Midtrans live checkout requires provider accounts, sandbox keys,
   callback reachability, and an Owner-approved published catalog/pricing seed;
   provider capability is intentionally deferred by Owner.
@@ -671,10 +675,9 @@ development-only admin smoke.
 
 ## Goal — R2 Private Upload CSP & Non-production Smoke (2026-09-16)
 
-Status: `IMPLEMENTED_CODE_VERIFIED_OWNER_R2_SMOKE_OPEN`. Existing private upload
-code is not being rebuilt; this Goal closes its browser-CSP readiness and
-records the automated lifecycle evidence. A real development-object smoke is
-still an explicit Owner action outside source control.
+Status: `NON_PRODUCTION_SMOKE_PASSED`. Existing private upload code is not being
+rebuilt; this Goal records browser-CSP readiness dan evidence provider
+development yang sudah dibersihkan. Ini bukan klaim production readiness.
 
 - [x] R2-01 — Add a narrowly canonicalized R2 HTTPS origin to CSP `connect-src`
   only when configured; keep missing/invalid values fail-closed and add focused
@@ -683,13 +686,13 @@ still an explicit Owner action outside source control.
     browser smoke, `corepack pnpm typecheck`, `corepack pnpm lint`, and
     `corepack pnpm build` all pass.
   - Files: `src/lib/security/headers.ts`, `tests/backend/security.test.ts`.
-- [ ] R2-02 — With Owner-provided non-production bucket, token, and exact-origin
-  CORS configured locally, smoke one small synthetic file through intent → PUT
-  → confirm → custom request, verify private lifecycle, and delete it.
-  - Verify: existing unit (7 tests), integration (17 tests), and custom-request
-    browser coverage pass; a real provider smoke is intentionally not run.
-    Record no secret, signed URL, public URL, customer data, or object key.
-  - Dependency: R2-01 and Owner setup outside source control.
-- [x] Checkpoint R2 — R2-01 gates and the no-provider code slice are recorded.
-  R2-02 remains open until actual non-production provider evidence exists; it
-  must never be labeled production-ready from these automated tests alone.
+- [x] R2-02 — With Owner-provided non-production bucket, token, and exact-origin
+  CORS configured locally, smoke satu file sintetis kecil melalui intent → PUT
+  → confirm → custom request, verifikasi lifecycle privat, lalu hapus fixture.
+  - Verify: intent `201`, preflight `204`, PUT `200`, confirm `200`, custom
+    request `201`, lifecycle `PENDING → UPLOADED → VERIFIED`, dan post-cleanup
+    HEAD `NOT_FOUND`. Tidak ada secret, signed URL, public URL, customer data,
+    atau object key yang dicatat di repository.
+  - Dependency: R2-01 dan Owner setup di luar source control.
+- [x] Checkpoint R2 — R2-01 dan R2-02 sudah memiliki evidence; status tetap
+  non-production dan tidak boleh dilabeli production-ready.
