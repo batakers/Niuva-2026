@@ -140,9 +140,10 @@ database integration `niuva_test`; gunakan database development yang terpisah.
 
 ## Persiapan R2 private non-production
 
-Status: **READY_FOR_OWNER_SETUP**. Runtime sudah memiliki intent → signed PUT →
-HEAD/confirm → ownership verification, tetapi capability R2 belum tersedia pada
-environment lokal.
+Status: **SMOKE_PASSED_NON_PRODUCTION** pada 2026-09-18. Owner telah
+menyediakan capability R2 pada environment lokal untuk bucket development
+privat dan CORS exact-origin. Runtime intent → signed PUT → HEAD/confirm →
+ownership verification sudah dibuktikan dengan fixture sintetis kecil.
 
 1. Buat resource development terpisah dengan satu bucket customer privat dan
    satu bucket media publik yang tidak dipakai untuk file customer. Jangan
@@ -163,11 +164,12 @@ environment lokal.
    token sementara dan tidak boleh masuk log, screenshot, atau audit payload.
    Lihat [R2 CORS guidance](https://developers.cloudflare.com/r2/buckets/cors/)
    dan [presigned URL guidance](https://developers.cloudflare.com/r2/api/s3/presigned-urls/).
-5. Restart server development, buka `/custom-print/request`, pilih fixture
-   sintetis kecil dengan ekstensi/MIME yang cocok, lalu amati urutan intent →
-   PUT langsung → confirm. Verifikasi hanya metadata non-secret: row berubah
-   `PENDING → UPLOADED`, request berikutnya mengubah ownership file menjadi
-   `VERIFIED`, dan tidak ada public URL yang diberikan.
-6. Setelah smoke, hapus object fixture, cabut/rotasi token bila diperlukan, dan
-   kosongkan group R2 sebelum mengubah runtime kembali ke preview. Legal dan
+5. Smoke nyata 2026-09-18 menggunakan file sintetis 4-byte dan development
+   database loopback. Hasil non-secret: intent `201`, CORS preflight `204`,
+   direct PUT `200`, confirm `200`, dan submit custom request `201`. Row
+   `StoredFile` mencapai `VERIFIED`; tidak ada public URL yang diberikan.
+6. Fixture object kemudian dihapus dan pemeriksaan HEAD setelah cleanup
+   mengembalikan `NOT_FOUND`; row fixture dan request sintetis juga dihapus dari
+   database development. Token tetap hanya berada di `.env.local` yang
+   diabaikan Git; Owner dapat mencabut/merotasinya sesuai kebijakan. Legal dan
    accounting retention tetap keputusan terpisah.

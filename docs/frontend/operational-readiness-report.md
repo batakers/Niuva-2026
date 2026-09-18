@@ -17,7 +17,7 @@ dicatat di sini.
 | Portfolio Selected Works | `OWNER_APPROVED_CARD_ONLY` | 11 Selected Works tetap published sebagai kartu ringkasan tanpa media. Media mapping bersifat opsional dan hanya dilakukan jika aset, provenance, alt text, serta caption per project sudah disetujui Owner. Enam Featured Case Studies tetap mengikuti gate narasi dan minimal satu media. |
 | Katalog/foto/stok | `SEEDED_LOOPBACK_DRAFTS_OWNER_GATES_OPEN` | Dataset Shop Owner sudah diproses: 8 produk, 34 varian, 50 media JPG, 4 kategori ke loopback. Semua produk masih draft; SKU merchandising, publish decision, dan relasi media-varian masih gate Owner/kontrak. Dimensi paket hanya menjadi gate jika shipping provider-calculated diaktifkan. Lihat [`catalog-source-audit.md`](../backend/catalog-source-audit.md). |
 | Clerk smoke + visual authenticated | `LOCAL_OWNER_PROFILE_AND_DESKTOP_MOBILE_VISUAL_ACCEPTED` | Exact identity Owner yang diberikan terhubung ke `AdminProfile` aktif ber-role Owner di database loopback. Fresh live-admin desktop acceptance pada 1280px dan mobile acceptance pada 390x844 mencakup list/detail/editor routes tanpa horizontal overflow dan tanpa write action. Pada mobile, Orders/Inquiries memakai kartu berlabel dan Products tidak lagi memaksa lebar halaman. Keyboard focus nav, label kontrol detail, empty/error state, dan console browser diperiksa. |
-| R2 smoke nyata | `BLOCKED_OWNER_INPUT` | Runtime `.env.local` tidak menyediakan konfigurasi R2; belum ada binary non-production yang boleh diklaim terunggah. |
+| R2 smoke nyata | `PASSED_NON_PRODUCTION_SMOKE` | Owner-configured development R2 passed intent `201`, exact-origin CORS preflight `204`, direct PUT `200`, confirm `200`, dan custom request `201`; lifecycle `PENDING → UPLOADED → VERIFIED`. Fixture object dan row sintetis sudah dibersihkan; bucket private tetap non-public. |
 | Pengiriman ulang tautan lama | `READY_SERVER_SIDE_PENDING_MANUAL_SEND` | Reissue route-bound v1 meng-invalidasi token opaque lama; pengiriman aktual menunggu daftar customer dan kanal yang disetujui Owner. Runbook ada di `docs/backend/token-reissue-handoff.md`. |
 | Biteship/Midtrans | `DEFERRED_BY_USER` | Activation dan smoke tidak dilakukan pada goal ini, terlepas dari presence nama env; menunggu data perusahaan Owner. |
 
@@ -67,5 +67,6 @@ aktif.
    dan kontrak intake di [`shop-catalog-owner-intake.md`](../backend/shop-catalog-owner-intake.md).
 3. Daftar customer dan kanal resmi untuk pengiriman tautan reissue.
 4. Tidak ada input Owner tambahan untuk mobile acceptance; gate tersebut sudah
-   lulus pada 390x844. Gate berikutnya tetap R2 non-production dan pengiriman
-   manual tautan reissue.
+   lulus pada 390x844. R2 non-production smoke juga sudah lulus; gate berikutnya
+   tetap pengiriman manual tautan reissue dan keputusan dataset/catalog yang
+   masih terbuka.

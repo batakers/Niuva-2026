@@ -25,8 +25,8 @@ Started: 2026-09-06. Updated: 2026-09-18. Status: **UI_IMPLEMENTED**, **ADMIN_IN
 > `/admin/pricing` now read server-owned projections. Authorized Server Actions
 > cover order/inquiry transitions, slicer review, quote draft/send, stock and
 > catalog media updates, portfolio editing/media mapping, and route-bound token
-> reissue. R2 live smoke and authenticated mobile visual acceptance remain open
-> gates; the supplied Clerk identity is now backed
+> reissue. Authenticated mobile visual acceptance is now accepted and the R2
+> non-production smoke passed on 2026-09-18; the supplied Clerk identity is backed
 > by an active loopback Owner profile. Biteship/Midtrans activation and smoke
 > are explicitly deferred until company data is available.
 
@@ -37,9 +37,17 @@ Started: 2026-09-06. Updated: 2026-09-18. Status: **UI_IMPLEMENTED**, **ADMIN_IN
 > price, stock, or product-photo mapping required for a Shop catalog; package
 > dimensions are conditional on automatic provider-calculated shipping. Those
 > remaining fields stay an explicit Owner dataset gate. The exact
-> Clerk identity is already represented by an active local Owner profile. R2
-> smoke and manual customer-link delivery remain open; Biteship/Midtrans stay
+> Clerk identity is already represented by an active local Owner profile. At
+> that handoff, R2 smoke and manual customer-link delivery remained open; the
+> R2 gate is closed by the 2026-09-18 update below. Biteship/Midtrans stay
 > deferred by request.
+
+> R2 handoff update — on 2026-09-18, the Owner-configured development bucket
+> passed a real 4-byte synthetic smoke: intent `201`, exact-origin CORS
+> preflight `204`, direct PUT `200`, confirm `200`, and custom request `201`.
+> The stored-file lifecycle reached `VERIFIED`; the private object and synthetic
+> rows were cleaned up, and no public URL was enabled. Manual customer-link
+> delivery and Biteship/Midtrans remain separate open gates.
 
 > Handoff update — on 2026-09-17, the Owner supplied
 > `docs/source/Dataset Shop Niuva/`. The guarded catalog preparation/seed path
@@ -134,10 +142,10 @@ information for review. Preview data is not a factual client portfolio.
   [`docs/backend/catalog-source-audit.md`](../backend/catalog-source-audit.md);
   the source/manifest contract is specified in
   [`shop-catalog-owner-intake.md`](../backend/shop-catalog-owner-intake.md).
-- Authenticated visual acceptance and R2 upload smoke require Owner-provided
-  environment/identity and must be run as separate evidence; passing typecheck,
-  lint, build, or browser smoke does not imply those gates. Desktop and mobile
-  admin acceptance are recorded above; real R2 object smoke remains open.
+- Authenticated visual acceptance and R2 upload smoke were run as separate
+  evidence after Owner-provided environment/identity setup; passing typecheck,
+  lint, build, or browser smoke does not imply those gates. Desktop/mobile admin
+  acceptance and the cleaned-up R2 smoke are recorded above.
 
 The FE-16–26 bullets below are retained as historical preview evidence. Where
 they describe fixture-only routes or “no mutation”, the current integration

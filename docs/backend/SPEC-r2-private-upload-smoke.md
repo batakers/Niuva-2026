@@ -124,8 +124,11 @@ CSP, browser state, logs, audits, tests, or documentation.
 2. [x] Existing unit and integration coverage verifies that a synthetic upload
    reaches `UPLOADED` only after HEAD metadata matches and becomes `VERIFIED`
    only after ownership binding, without rendering a public URL.
-3. [ ] A real development-bucket smoke and fixture cleanup remain Owner-only
-   external work; no provider operation occurred in this Goal.
+3. [x] A real development-bucket smoke completed on 2026-09-18 with a
+   synthetic 4-byte fixture. Intent `201`, exact-origin CORS preflight `204`,
+   direct PUT `200`, confirm `200`, and custom request `201` were observed;
+   the stored-file lifecycle reached `VERIFIED`, then the object and synthetic
+   database rows were cleaned up. No public URL was enabled.
 4. [x] Relevant focused unit/backend/integration/browser gates, typecheck,
    lint, build, and `git diff --check` are recorded below.
 
@@ -146,11 +149,13 @@ CSP, browser state, logs, audits, tests, or documentation.
   or security-header paths; they remain a separate public-pages baseline item.
 - `corepack pnpm typecheck` and `corepack pnpm build`: passed. `corepack pnpm
   lint` exited successfully with existing warnings outside this slice.
+- Real non-production smoke on the Owner-configured development R2 bucket:
+  HTTP `201/204/200/200/201` for intent/CORS/PUT/confirm/request, lifecycle
+  `PENDING → UPLOADED → VERIFIED`, and post-cleanup HEAD `NOT_FOUND`. The
+  private bucket remained non-public; no secret, signed URL, or customer file
+  was recorded.
 
 ## Open questions
 
-- `OPEN_EXTERNAL_ACTION`: the Owner must configure six matching
-  non-production R2 fields plus the approved 100 MiB limit in `.env.local` and
-  exact-origin CORS on the private development bucket.
 - `BLOCKED_DECISION`: legal/accounting retention outside the approved binary
   14/60/90-day lifecycle remains unchanged and is not part of this Goal.
