@@ -7,6 +7,7 @@ import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
 import { AdminOperationsService, parseAdminPage, type AdminPortfolioRow } from "@/modules/admin/operations";
+import { isApprovedCardOnlyPortfolioProject } from "@/modules/portfolio/public-content";
 
 export const metadata: Metadata = {
   title: "Portfolio admin · Niuva",
@@ -53,7 +54,7 @@ export default async function AdminPortfolioPage({
             <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
               <div>
                 <h2 className="text-xl font-semibold" id="portfolio-list-title">Project proof</h2>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">Pastikan konteks, hasil, media, alt text, dan izin publikasi siap sebelum menandai project sebagai published.</p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">Featured project memerlukan konteks, hasil, media, alt text, dan izin publikasi. Selected Works card-only dapat published dengan ringkasan Owner-approved tanpa media.</p>
               </div>
               <p className="text-sm text-muted-foreground" role="status">{result.items.length} project</p>
             </div>
@@ -93,6 +94,8 @@ function SummaryCard({ label, value }: Readonly<{ label: string; value: string }
 }
 
 function PortfolioCard({ item }: Readonly<{ item: AdminPortfolioRow }>) {
+  const isCardOnly = isApprovedCardOnlyPortfolioProject(item);
+
   return (
     <article className="rounded-xl border border-border bg-card p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -104,6 +107,7 @@ function PortfolioCard({ item }: Readonly<{ item: AdminPortfolioRow }>) {
         <div className="flex flex-wrap gap-2 text-xs font-semibold">
           <span className={item.isPublished ? "rounded-md border border-success-border bg-success-background px-2.5 py-1 text-success" : "rounded-md border border-warning-border bg-warning-background px-2.5 py-1 text-warning"}>{item.isPublished ? "Published" : "Draft"}</span>
           {item.isFeatured ? <span className="rounded-md border border-brand-300 bg-brand-50 px-2.5 py-1 text-brand-800">Featured</span> : null}
+          {isCardOnly ? <span className="rounded-md border border-border bg-muted px-2.5 py-1 text-muted-foreground">Card-only</span> : null}
         </div>
       </div>
       <p className="mt-4 max-w-3xl text-sm leading-6 text-muted-foreground">{item.summary}</p>
@@ -112,7 +116,7 @@ function PortfolioCard({ item }: Readonly<{ item: AdminPortfolioRow }>) {
         <div><dt className="text-xs text-muted-foreground">Slug</dt><dd className="mt-1 break-words font-mono text-xs">{item.slug}</dd></div>
         <div><dt className="text-xs text-muted-foreground">Diperbarui</dt><dd className="mt-1 text-muted-foreground">{dateFormatter.format(item.updatedAt)}</dd></div>
       </dl>
-      <p className="mt-4 text-xs leading-5 text-muted-foreground"><Link className="font-semibold text-brand-700 underline-offset-4 hover:underline" href={`/admin/portfolio/${item.id}`}>Buka editor project</Link>. Publish action tetap memerlukan pengecekan izin dan kelengkapan bukti.</p>
+      <p className="mt-4 text-xs leading-5 text-muted-foreground"><Link className="font-semibold text-brand-700 underline-offset-4 hover:underline" href={`/admin/portfolio/${item.id}`}>Buka editor project</Link>. {isCardOnly ? "Card-only memakai ringkasan publik; media dapat ditambahkan kemudian jika asetnya disetujui." : "Publish action tetap memerlukan pengecekan izin dan kelengkapan bukti."}</p>
     </article>
   );
 }

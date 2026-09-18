@@ -19,11 +19,93 @@ export default async function AdminInquiriesPage({ searchParams }: Readonly<{ se
   const result = await loadInquiries(access, page);
   if (result === null) return <AdminDataUnavailableView role={access.profile.role} title="B2B inquiries belum dapat dimuat" />;
 
-  return <AdminShell active="inquiries" role={result.role}><main className="space-y-8" data-admin-surface="inquiries" id="main-content"><header className="border-b border-border pb-6"><p className="text-sm font-medium text-brand-700">Niuva / Operations</p><h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">B2B Inquiries</h1><p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">Subview live untuk prospek B2B. Status, target, dan tindak lanjut dibaca dari database serta diubah melalui transition service yang diaudit.</p></header><section aria-label="Ringkasan inquiry" className="grid gap-3 sm:grid-cols-3"><Summary label="Tampil" value={String(result.items.length)} /><Summary label="Baru" value={String(result.items.filter((item) => item.status === "NEW").length)} /><Summary label="Qualified" value={String(result.items.filter((item) => item.status === "QUALIFIED").length)} /></section><section aria-labelledby="inquiries-list-title"><div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4"><div><h2 className="text-xl font-semibold" id="inquiries-list-title">Inquiry terbaru</h2><p className="mt-1 text-sm leading-6 text-muted-foreground">Klik record untuk membuka detail, catatan, dan transition status.</p></div><p className="text-sm text-muted-foreground" role="status">Dibaca {dateFormatter.format(result.generatedAt)}</p></div>{result.items.length === 0 ? <div className="mt-6"><StatusNotice tone="info" title="Belum ada inquiry." description="Inquiry akan muncul setelah form B2B tervalidasi dan tersimpan." /></div> : <div className="mt-6 overflow-x-auto rounded-xl border border-border bg-card"><table className="w-full min-w-[58rem] text-left text-sm"><caption className="sr-only">Daftar B2B inquiries</caption><thead className="border-b border-border bg-muted text-xs uppercase tracking-[0.1em] text-muted-foreground"><tr><th className="px-5 py-4 font-medium" scope="col">Reference</th><th className="px-5 py-4 font-medium" scope="col">Prospek</th><th className="px-5 py-4 font-medium" scope="col">Stage</th><th className="px-5 py-4 font-medium" scope="col">Status</th><th className="px-5 py-4 font-medium" scope="col">Deadline</th><th className="px-5 py-4 text-right font-medium" scope="col">Diperbarui</th></tr></thead><tbody className="divide-y divide-border">{result.items.map((item) => <InquiryRow item={item} key={item.id} />)}</tbody></table></div>}<AdminPagination basePath="/admin/inquiries" hasNext={result.hasNext} page={result.page} /></section></main></AdminShell>;
+  return (
+    <AdminShell active="inquiries" role={result.role}>
+      <main className="space-y-8" data-admin-surface="inquiries" id="main-content">
+        <header className="border-b border-border pb-6">
+          <p className="text-sm font-medium text-brand-700">Niuva / Operations</p>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">B2B Inquiries</h1>
+          <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
+            Subview live untuk prospek B2B. Status, target, dan tindak lanjut dibaca dari database serta diubah melalui transition service yang diaudit.
+          </p>
+        </header>
+
+        <section aria-label="Ringkasan inquiry" className="grid gap-3 sm:grid-cols-3">
+          <Summary label="Tampil" value={String(result.items.length)} />
+          <Summary label="Baru" value={String(result.items.filter((item) => item.status === "NEW").length)} />
+          <Summary label="Qualified" value={String(result.items.filter((item) => item.status === "QUALIFIED").length)} />
+        </section>
+
+        <section aria-labelledby="inquiries-list-title">
+          <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
+            <div>
+              <h2 className="text-xl font-semibold" id="inquiries-list-title">Inquiry terbaru</h2>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">Klik record untuk membuka detail, catatan, dan transition status.</p>
+            </div>
+            <p className="text-sm text-muted-foreground" role="status">Dibaca {dateFormatter.format(result.generatedAt)}</p>
+          </div>
+
+          {result.items.length === 0 ? (
+            <div className="mt-6">
+              <StatusNotice tone="info" title="Belum ada inquiry." description="Inquiry akan muncul setelah form B2B tervalidasi dan tersimpan." />
+            </div>
+          ) : (
+            <>
+              <div className="mt-6 hidden overflow-x-auto rounded-xl border border-border bg-card lg:block">
+                <table className="w-full min-w-[58rem] text-left text-sm">
+                  <caption className="sr-only">Daftar B2B inquiries</caption>
+                  <thead className="border-b border-border bg-muted text-xs uppercase tracking-[0.1em] text-muted-foreground">
+                    <tr>
+                      <th className="px-5 py-4 font-medium" scope="col">Reference</th>
+                      <th className="px-5 py-4 font-medium" scope="col">Prospek</th>
+                      <th className="px-5 py-4 font-medium" scope="col">Stage</th>
+                      <th className="px-5 py-4 font-medium" scope="col">Status</th>
+                      <th className="px-5 py-4 font-medium" scope="col">Deadline</th>
+                      <th className="px-5 py-4 text-right font-medium" scope="col">Diperbarui</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {result.items.map((item) => <InquiryRow item={item} key={item.id} />)}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-6 grid gap-3 lg:hidden">
+                {result.items.map((item) => <InquiryCard item={item} key={item.id} />)}
+              </div>
+            </>
+          )}
+          <AdminPagination basePath="/admin/inquiries" hasNext={result.hasNext} page={result.page} />
+        </section>
+      </main>
+    </AdminShell>
+  );
 }
 
 async function loadAdminAccess(): Promise<AdminAccess | null> { try { return await requireAdmin(); } catch { return null; } }
 async function loadInquiries(access: AdminAccess, page: number): Promise<Awaited<ReturnType<AdminOperationsService["listInquiries"]>> | null> { try { return await new AdminOperationsService({ authorize: async () => access }).listInquiries({ page }); } catch { return null; } }
 function Summary({ label, value }: Readonly<{ label: string; value: string }>) { return <div className="rounded-xl border border-border bg-card p-4"><p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></div>; }
 function InquiryRow({ item }: Readonly<{ item: AdminInquiryRow }>) { return <tr><th className="px-5 py-4 align-top font-medium" scope="row"><Link className="font-mono text-sm text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/admin/inquiries/${item.id}`}>{item.referenceNumber}</Link><span className="mt-1 block text-xs font-normal text-muted-foreground">{item.company ?? "Tanpa perusahaan"}</span></th><td className="px-5 py-4 align-top"><span className="block font-medium">{item.name}</span><span className="mt-1 block text-xs text-muted-foreground">{item.email}</span></td><td className="px-5 py-4 align-top">{formatStatus(item.currentStage)}</td><td className="px-5 py-4 align-top"><span className="rounded-md border border-brand-300 bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-800">{formatStatus(item.status)}</span></td><td className="px-5 py-4 align-top text-muted-foreground">{item.targetDeadline ? dateFormatter.format(item.targetDeadline) : "—"}</td><td className="px-5 py-4 text-right align-top text-xs text-muted-foreground">{dateFormatter.format(item.updatedAt)}</td></tr>; }
+function InquiryCard({ item }: Readonly<{ item: AdminInquiryRow }>) {
+  return (
+    <article aria-labelledby={`inquiry-${item.id}`} className="min-w-0 rounded-xl border border-border bg-card p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="font-semibold" id={`inquiry-${item.id}`}>
+            <Link className="break-words font-mono text-sm text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/admin/inquiries/${item.id}`}>
+              {item.referenceNumber}
+            </Link>
+          </h3>
+          <p className="mt-1 break-words text-sm text-muted-foreground">{item.company ?? "Tanpa perusahaan"}</p>
+        </div>
+        <span className="inline-flex rounded-md border border-brand-300 bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-800">{formatStatus(item.status)}</span>
+      </div>
+      <dl className="mt-5 grid gap-4 border-t border-border pt-4 text-sm sm:grid-cols-2">
+        <div><dt className="text-xs text-muted-foreground">Prospek</dt><dd className="mt-1 break-words font-medium">{item.name}</dd><dd className="break-words text-xs text-muted-foreground">{item.email}</dd></div>
+        <div><dt className="text-xs text-muted-foreground">Stage</dt><dd className="mt-1 font-medium">{formatStatus(item.currentStage)}</dd></div>
+        <div><dt className="text-xs text-muted-foreground">Deadline</dt><dd className="mt-1 text-muted-foreground">{item.targetDeadline ? dateFormatter.format(item.targetDeadline) : "—"}</dd></div>
+        <div><dt className="text-xs text-muted-foreground">Diperbarui</dt><dd className="mt-1 text-muted-foreground">{dateFormatter.format(item.updatedAt)}</dd></div>
+      </dl>
+    </article>
+  );
+}
 function formatStatus(value: string): string { return value.toLocaleLowerCase("id").split("_").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" "); }

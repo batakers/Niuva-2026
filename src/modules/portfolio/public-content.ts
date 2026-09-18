@@ -83,3 +83,16 @@ export function getApprovedPortfolioProjectBySlug(
 ): ApprovedPortfolioProject | null {
   return getApprovedPortfolioProjects().find((project) => project.slug === slug) ?? null;
 }
+
+/**
+ * Selected Works are intentionally publishable as summary cards without
+ * production media. Keep the exception tied to the Owner-approved curation
+ * and to the non-featured presentation mode so an arbitrary project cannot
+ * bypass the normal case-study media gate.
+ */
+export function isApprovedCardOnlyPortfolioProject(
+  input: Readonly<{ isFeatured: boolean; slug: string }>,
+): boolean {
+  if (input.isFeatured) return false;
+  return getApprovedPortfolioProjectBySlug(input.slug)?.detailReadiness === "card-only";
+}

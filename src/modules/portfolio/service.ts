@@ -7,6 +7,7 @@ import {
 import { appError } from "@/modules/shared/errors";
 import { parseWithValidation } from "@/modules/shared/validation";
 
+import { isApprovedCardOnlyPortfolioProject } from "./public-content";
 import { PortfolioRepository } from "./repository";
 import {
   replacePortfolioMediaSchema,
@@ -48,7 +49,7 @@ export class PortfolioService {
 
     const candidate = { ...current, ...parsed };
     if (candidate.isPublished) {
-      assertPublishable(candidate);
+      assertPublishable(candidate, isApprovedCardOnlyPortfolioProject(candidate));
     }
 
     const updated = await repository.updateProject(projectId, parsed);
@@ -77,7 +78,11 @@ export class PortfolioService {
     const repository = this.repositoryFactory();
     const current = await repository.findAdminProjectById(projectId);
     if (current === null) throw appError("NOT_FOUND");
-    if (current.isPublished && parsed.items.length === 0) {
+    if (
+      current.isPublished &&
+      parsed.items.length === 0 &&
+      !isApprovedCardOnlyPortfolioProject(current)
+    ) {
       throw appError("VALIDATION_ERROR", {
         details: { items: "Portfolio terbit harus memiliki minimal satu media." },
       });
@@ -108,20 +113,27 @@ function assertPublishable(project: Readonly<{
   slug: string;
   summary: string;
   title: string;
-}>): void {
-  const fields: readonly [keyof typeof project, string][] = [
-    ["title", "Judul"],
-    ["slug", "Slug"],
-    ["summary", "Ringkasan"],
-    ["challenge", "Tantangan"],
-    ["process", "Proses"],
-    ["result", "Hasil"],
-    ["serviceLabel", "Layanan"],
-  ];
+}>, cardOnly: boolean): void {
+  const fields: readonly [keyof typeof project, string][] = cardOnly
+    ? [
+        ["title", "Judul"],
+        ["slug", "Slug"],
+        ["summary", "Ringkasan"],
+        ["serviceLabel", "Layanan"],
+      ]
+    : [
+        ["title", "Judul"],
+        ["slug", "Slug"],
+        ["summary", "Ringkasan"],
+        ["challenge", "Tantangan"],
+        ["process", "Proses"],
+        ["result", "Hasil"],
+        ["serviceLabel", "Layanan"],
+      ];
   const missing = fields
     .filter(([key]) => typeof project[key] !== "string" || project[key].trim() === "")
     .map(([, label]) => label);
-  if (missing.length > 0 || project.media.length === 0) {
+  if (missing.length > 0 || (!cardOnly && project.media.length === 0)) {
     throw appError("VALIDATION_ERROR", {
       details: {
         publish:

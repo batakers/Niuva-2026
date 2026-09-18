@@ -5,6 +5,7 @@ import type {
   ReplacePortfolioMediaInput,
   UpdatePortfolioProjectInput,
 } from "./schema";
+import { isApprovedCardOnlyPortfolioProject } from "./public-content";
 
 export class PortfolioRepository {
   constructor(private readonly prisma: PrismaClient = getPrismaClient()) {}
@@ -112,6 +113,7 @@ export class PortfolioRepository {
           _count: { select: { media: true } },
           challenge: true,
           id: true,
+          isFeatured: true,
           isPublished: true,
           process: true,
           publishedAt: true,
@@ -129,7 +131,11 @@ export class PortfolioRepository {
 
       const candidate = { ...current, ...input };
       if (candidate.isPublished) {
-        assertPublishable(candidate, current._count.media);
+        assertPublishable(
+          candidate,
+          current._count.media,
+          isApprovedCardOnlyPortfolioProject(candidate),
+        );
       }
 
       const data = {
@@ -155,12 +161,16 @@ export class PortfolioRepository {
     return this.prisma.$transaction(async (transaction) => {
       const project = await transaction.portfolioProject.findUnique({
         where: { id: projectId },
-        select: { id: true, isPublished: true },
+        select: { id: true, isFeatured: true, isPublished: true, slug: true },
       });
       if (project === null) {
         throw appError("NOT_FOUND");
       }
-      if (project.isPublished && items.length === 0) {
+      if (
+        project.isPublished &&
+        items.length === 0 &&
+        !isApprovedCardOnlyPortfolioProject(project)
+      ) {
         throw appError("VALIDATION_ERROR", {
           details: { items: "Portfolio terbit harus memiliki minimal satu media." },
         });
@@ -192,23 +202,31 @@ function assertPublishable(
     title: string;
   }>,
   mediaCount: number,
+  cardOnly: boolean,
 ): void {
   const requiredFields: readonly [
     "title" | "slug" | "summary" | "challenge" | "process" | "result" | "serviceLabel",
     string,
-  ][] = [
-    ["title", "Judul"],
-    ["slug", "Slug"],
-    ["summary", "Ringkasan"],
-    ["challenge", "Tantangan"],
-    ["process", "Proses"],
-    ["result", "Hasil"],
-    ["serviceLabel", "Layanan"],
-  ];
+  ][] = cardOnly
+    ? [
+        ["title", "Judul"],
+        ["slug", "Slug"],
+        ["summary", "Ringkasan"],
+        ["serviceLabel", "Layanan"],
+      ]
+    : [
+        ["title", "Judul"],
+        ["slug", "Slug"],
+        ["summary", "Ringkasan"],
+        ["challenge", "Tantangan"],
+        ["process", "Proses"],
+        ["result", "Hasil"],
+        ["serviceLabel", "Layanan"],
+      ];
   const missing = requiredFields
     .filter(([key]) => project[key].trim() === "")
     .map(([, label]) => label);
-  if (missing.length > 0 || mediaCount === 0) {
+  if (missing.length > 0 || (!cardOnly && mediaCount === 0)) {
     throw appError("VALIDATION_ERROR", {
       details: {
         publish: missing.length > 0

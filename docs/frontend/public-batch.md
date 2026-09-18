@@ -1,6 +1,6 @@
 # Frontend review batch — FE-00–27
 
-Started: 2026-09-06. Updated: 2026-09-17. Status: **UI_IMPLEMENTED**, **ADMIN_INTEGRATED_PENDING_OWNER_GATES**, **VISUAL_ACCEPTANCE_DESKTOP_ACCEPTED_MOBILE_PENDING**,
+Started: 2026-09-06. Updated: 2026-09-18. Status: **UI_IMPLEMENTED**, **ADMIN_INTEGRATED_PENDING_OWNER_GATES**, **VISUAL_ACCEPTANCE_DESKTOP_MOBILE_ACCEPTED**,
 **PARTIALLY_INTEGRATED (FE-07, NG-02, NG-05 local path)**. User approved FE-00–02 followed by FE-03–07, FE-08–15, and the server-backed admin integration slice shipped on 2026-09-16. The fixture-only FE-16–26 rows below remain archival evidence, not the current admin implementation.
 
 > Integration update — on 2026-09-13, FE-07 was promoted to the link-based
@@ -53,11 +53,20 @@ Started: 2026-09-06. Updated: 2026-09-17. Status: **UI_IMPLEMENTED**, **ADMIN_IN
 
 > Acceptance update — on 2026-09-17, the supplied Owner identity was verified
 > against the active loopback profile and the live admin list/detail/editor routes
-> were inspected in the authenticated browser at 1280px. The pages rendered with
-> no horizontal overflow and no write action was submitted. Mobile acceptance at
-> 390px remains open because the current browser tool cannot change viewport.
-> Portfolio data currently has 11 published projects without mapped media, and
-> this content gate remains separate from the desktop UI result.
+> were inspected in the authenticated browser at 1280px and 390x844. All twelve
+> route surfaces rendered without page-level horizontal overflow and no write
+> action was submitted. Orders and B2B Inquiries expose labeled mobile cards;
+> Products keeps variant tables in an internal scroller after its card receives
+> `min-w-0`. Keyboard focus on the admin nav, visible field labels, empty/error
+> states, and clean browser console were checked. The 11 published projects
+> without mapped media are Owner-approved `Selected Works` card-only records;
+> this is an intentional content mode, not a missing visual acceptance gate.
+
+> Portfolio decision update — on 2026-09-18, the Owner approved keeping the 11
+> Selected Works records published as card-only summaries. No speculative media
+> mapping or unpublish operation is authorized. Media remains optional and must
+> be mapped per project only after the asset, provenance, alt text, caption, and
+> permission are approved.
 
 ## Scope and review paths
 
@@ -99,8 +108,10 @@ information for review. Preview data is not a factual client portfolio.
   domain services, Zod validation, and audit logging. The browser never writes
   directly to Prisma or receives private file URLs.
 - Product and portfolio publication is guarded by server-side completeness checks
-  (active variant/media for products; narrative/media for portfolio). Client
-  permission and factual launch content remain Owner decisions.
+  (active variant/media for products; narrative/media for Featured portfolio
+  projects). Owner-approved Selected Works card-only records require their
+  summary metadata but may remain published without media. Client permission and
+  factual launch content remain Owner decisions.
 - B2B inquiry and Pricing Rules are live read subviews. Pricing activation is
   intentionally not exposed by this batch; Biteship and Midtrans remain disabled.
 - Existing SENT quote/order links can be reissued from their admin detail pages.
@@ -125,9 +136,8 @@ information for review. Preview data is not a factual client portfolio.
   [`shop-catalog-owner-intake.md`](../backend/shop-catalog-owner-intake.md).
 - Authenticated visual acceptance and R2 upload smoke require Owner-provided
   environment/identity and must be run as separate evidence; passing typecheck,
-  lint, build, or browser smoke does not imply those gates. Desktop admin
-  acceptance is recorded above; mobile viewport acceptance and real R2 object
-  smoke remain open.
+  lint, build, or browser smoke does not imply those gates. Desktop and mobile
+  admin acceptance are recorded above; real R2 object smoke remains open.
 
 The FE-16–26 bullets below are retained as historical preview evidence. Where
 they describe fixture-only routes or “no mutation”, the current integration
@@ -518,11 +528,12 @@ requested by the task map.
 
 ## Git and handoff
 
-Current branch: `codex/frontend-ui-ux-hardening`.
-Current PR: [#3](https://github.com/batakers/Niuva-2026/pull/3), merged to `main`
-as `2c845d8`. The source branch remains available for traceability; no deployment
-or provider activation was performed because the Owner/provider gates in the
-readiness report remain open.
+Current branch: `main`.
+Implementation PR [#3](https://github.com/batakers/Niuva-2026/pull/3) merged as
+`2c845d8`; the acceptance-handoff documentation follow-up is PR
+[#5](https://github.com/batakers/Niuva-2026/pull/5), merged as `0f350ec`. No
+deployment or provider activation was performed because the Owner/provider
+gates in the readiness report remain open.
 
 The FE-16–26 commit lineage below is retained as historical frontend-batch
 evidence only; it is not the current server-backed admin handoff.
