@@ -94,7 +94,8 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
   produk draft, 34 varian, 4 kategori, dan 50 mapping JPG di loopback. Enam
   placeholder tanpa harga/stok dikecualikan; SKU merchandising dan keputusan
   publish masih dicatat sebagai gate di
-  `docs/backend/catalog-source-audit.md`.
+  `docs/backend/catalog-source-audit.md` dan audit readiness terbaru
+  `docs/backend/catalog-publish-readiness.md`.
 - [x] Exact `user_...` Owner identity sudah terhubung ke `AdminProfile` aktif
   loopback; retained authenticated Action Queue smoke lulus.
 - [x] Fresh authenticated desktop visual acceptance untuk list/detail/editor
@@ -545,9 +546,11 @@ Project Brief integration gates are committed and pushed in `1d5b870`.
 - [ ] Owner-approved product/SKU/media/stock dataset and active pricing seed are
   available in the development database. The Shop dataset is now seeded as 8
   unpublished products, 34 variants, and 50 JPG media; merchandising SKU,
-  publish approval, and active pricing remain open. Package dimensions are
-  conditional on provider-calculated shipping and do not block manual/flat-rate
-  catalog operation.
+  publish approval, and active pricing remain open. Variant-media binding is
+  currently a product-gallery fallback because `ProductMedia` has no
+  `variantId`. Package dimensions are conditional on provider-calculated
+  shipping and do not block manual/flat-rate catalog operation. See
+  `docs/backend/catalog-publish-readiness.md` for the evidence matrix.
 - [ ] Connect real server rates → idempotent guest checkout → Midtrans sandbox
   handoff → verified order state; browser totals/callbacks remain advisory.
 - [ ] Add integration and one-worker browser coverage for success, duplicate,

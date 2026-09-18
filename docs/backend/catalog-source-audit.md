@@ -2,6 +2,11 @@
 
 Snapshot: **2026-09-17** · scope: loopback development saja.
 
+Audit lanjutan dengan bukti database loopback per 2026-09-18 tersedia di
+[`catalog-publish-readiness.md`](catalog-publish-readiness.md). Dokumen ini
+tetap menjadi audit sumber dan kontrak data; dokumen lanjutan memisahkan gate
+SKU, approval publish, dan pilihan relasi media-varian.
+
 Dokumen ini mencatat apa yang benar-benar tersedia dari sumber Owner yang sudah
 diberikan.
 Berkas sumber diperlakukan sebagai evidence; angka, SKU, stok, dan hak publikasi
