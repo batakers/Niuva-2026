@@ -97,16 +97,18 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
   SKU internal v1, 3 produk ready-made published, 5 custom-flow draft meski
   semuanya memiliki foto, serta galeri produk sebagai fallback media-varian.
   Evidence: `docs/backend/catalog-publish-readiness.md`.
+- [x] Custom Product Intake v1: lima produk draft memiliki kartu referensi dan
+  CTA ke `/custom-print/request`; form menangkap konteks produk/ukuran/warna/
+  identitas/jumlah/deadline/catatan serta upload privat; server memvalidasi
+  source ID dan meneruskan request ke review operator tanpa checkout.
 - [x] Exact `user_...` Owner identity sudah terhubung ke `AdminProfile` aktif
   loopback; retained authenticated Action Queue smoke lulus.
-- [x] Fresh authenticated desktop visual acceptance untuk list/detail/editor
-  admin setelah perubahan terakhir: Owner session aktif, route live ter-render
-  pada 1280px tanpa horizontal overflow, dan tidak ada write action yang
-  dijalankan.
-- [x] Authenticated mobile visual acceptance untuk route admin pada viewport
-  390x844: seluruh list/detail/editor route live dirender tanpa horizontal
-  overflow; tabel desktop berubah menjadi kartu berlabel pada mobile; keyboard
-  focus nav dan label kontrol detail diperiksa tanpa menjalankan write action.
+- [x] Fresh authenticated desktop/mobile visual acceptance **pasca-seed katalog
+  dan Custom Product Intake v1** lulus pada 1280px dan 390x844 untuk Action
+  Queue, seluruh list admin, serta detail order/product/portfolio/inquiry yang
+  memiliki data. Tidak ada horizontal overflow, write action, kebocoran data
+  privat, atau error aplikasi non-extension. `/admin/custom-print` tetap empty
+  (0 request), sehingga detail custom-print tidak diuji dengan ID sintetis.
 - [x] Keputusan Owner portfolio: 11 Selected Works tetap published sebagai
   `card-only` tanpa media. Media mapping tidak boleh ditebak dan hanya opsional
   setelah aset, provenance, alt text, caption, serta izin per project disetujui.
@@ -156,6 +158,21 @@ tetap menjadi catatan historis, bukan source atau route yang masih dipertahankan
 - [x] Server-backed public acceptance lulus pada 1280×900 dan 390×844 untuk
   tiga kartu/tiga detail/media, tanpa horizontal overflow atau browser error;
   lima slug draft 404 dan fixture demo tersembunyi di runtime normal.
+
+### Authenticated admin acceptance verification — 2026-09-18
+
+- [x] Owner session kembali valid setelah sinkronisasi waktu Windows dan restart
+  server dev lokal; `/admin` menampilkan role Owner serta 6 pekerjaan server.
+- [x] Desktop 1280×900 dan mobile 390×844 memeriksa `/admin`, Orders,
+  Custom Print, Products & Stock, Portfolio, B2B Inquiries, Pricing Rules,
+  serta detail order/product/portfolio/inquiry dari ID database yang tampil di
+  list. Semua route ter-render, tanpa page-level horizontal overflow.
+- [x] Browser console tidak memiliki error aplikasi non-extension; hydration
+  noise dari ekstensi Brave dipisahkan dari hasil acceptance. Tidak ada tombol
+  write yang ditekan dan tidak ada data privat yang diekspos.
+- [x] Custom Print list terverifikasi sebagai empty state (0 request); detail
+  custom-print ditandai *not exercised* karena tidak ada record nyata dan ID
+  sintetis tidak boleh dibuat untuk acceptance.
 
 > Catatan arsip — entri FE-16–26 di bawah mempertahankan kontrak preview lama
 > untuk jejak visual/regresi. Status implementasi admin saat ini adalah matriks
@@ -576,9 +593,9 @@ Project Brief integration gates are committed and pushed in `1d5b870`.
 ### Goal blockers / explicit boundaries
 
 - [x] Clerk non-production identity/profile smoke dan authenticated admin
-  desktop/mobile acceptance sudah lulus. Slice katalog terbaru tidak mengubah
-  layout admin; fresh post-seed visual angka 3/5 belum diulang karena automation
-  tidak memiliki sesi Clerk terisolasi yang aman.
+  desktop/mobile acceptance sudah lulus. Fresh post-seed visual untuk slice
+  katalog dan Custom Product Intake juga lulus pada 1280×900 dan 390×844;
+  `/admin/custom-print` tetap empty karena belum ada request nyata.
 - [x] R2 non-production live smoke lulus dengan capability group lengkap dan
   exact-origin CORS; evidence tidak menyatakan production readiness.
 - [ ] Biteship/Midtrans live checkout requires provider accounts, sandbox keys,

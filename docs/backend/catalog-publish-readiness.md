@@ -107,11 +107,14 @@ Playwright 57/57, local-demo Playwright 1/1, focused ESLint tanpa warning/error,
 serta repository lint tanpa error semuanya lulus.
 
 1. Fresh authenticated visual acceptance untuk angka 3 published/5 draft pada
-   admin belum diulang setelah seed karena tidak tersedia sesi Clerk terisolasi
-   yang aman untuk automation. Status database sudah diverifikasi langsung;
-   layout admin sebelumnya sudah diterima dan tidak diubah oleh slice ini.
-2. Pertahankan lima produk custom sebagai draft sampai tersedia intake yang
-   menangkap kebutuhan produknya.
+   admin sudah diulang pasca-seed pada 1280x900 dan 390x844 dengan sesi Clerk
+   Owner. List admin serta detail order/product/portfolio/inquiry yang memiliki
+   data ter-render tanpa horizontal overflow; tidak ada write action atau error
+   aplikasi non-extension.
+2. Lima produk custom tetap draft, tetapi jalur intake sekarang tersedia melalui
+   [`custom-product-intake.md`](./custom-product-intake.md). Produk hanya boleh
+   diproses melalui review operator dan quote; jangan ubah menjadi checkout
+   langsung tanpa keputusan Owner/provider terpisah.
 3. Evaluasi variant-media binding hanya bila acceptance/customer evidence
    menunjukkan galeri produk tidak cukup.
 

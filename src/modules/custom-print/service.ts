@@ -25,6 +25,7 @@ import {
   customPrintRequestInputSchema,
   type CustomPrintRequestInput,
 } from "./schema";
+import { formatCustomPrintIntakeNotes } from "./product-intake";
 import { transitionCustomPrintRequest } from "./transitions";
 
 const reviewConfigurationValue = z.union([
@@ -147,10 +148,12 @@ export class CustomPrintService {
       randomBytes: this.randomBytes,
       scope: "CUSTOM_PRINT_REQUEST",
     });
+    const notes = formatCustomPrintIntakeNotes(parsed);
     const request = await repository.create({
       ...parsed,
       fileIds: [...uploadReadyFileIds],
       id,
+      notes,
       publicTokenHash: accessToken.tokenHash,
       referenceNumber,
     });
@@ -158,7 +161,10 @@ export class CustomPrintService {
     await recordAudit(this.audit, {
       action: "custom-print.request.submitted",
       actorType: "SYSTEM",
-      afterJson: { referenceNumber },
+      afterJson: {
+        productInterest: parsed.productInterest,
+        referenceNumber,
+      },
       entityId: request.id,
       entityType: "CustomPrintRequest",
       metadata: { operation: "submit", referenceNumber },

@@ -16,7 +16,8 @@ dicatat di sini.
 | Pricing Rules | `IMPLEMENTED_LIVE_READ` | List/pagination dan active-rule lookup membaca database; aktivasi tidak diekspos. |
 | Portfolio Selected Works | `OWNER_APPROVED_CARD_ONLY` | 11 Selected Works tetap published sebagai kartu ringkasan tanpa media. Media mapping bersifat opsional dan hanya dilakukan jika aset, provenance, alt text, serta caption per project sudah disetujui Owner. Enam Featured Case Studies tetap mengikuti gate narasi dan minimal satu media. |
 | Katalog/foto/stok | `OWNER_APPROVED_SEEDED_PUBLIC_ACCEPTED` | Dataset Shop berisi 8 produk, 34 varian, 50 media JPG, dan 4 kategori. Owner menyetujui source ID sebagai SKU internal v1, 3 produk ready-made published, 5 produk custom-flow tetap draft meski seluruhnya memiliki foto, dan galeri produk sebagai fallback media-varian MVP. Public Shop normal lulus acceptance 1280×900 dan 390×844; fixture lokal hanya terlihat pada runtime demo eksplisit. Dimensi paket hanya menjadi gate jika shipping provider-calculated diaktifkan. Lihat [`catalog-publish-readiness.md`](../backend/catalog-publish-readiness.md). |
-| Clerk smoke + visual authenticated | `LOCAL_OWNER_PROFILE_AND_DESKTOP_MOBILE_VISUAL_ACCEPTED` | Exact identity Owner yang diberikan terhubung ke `AdminProfile` aktif ber-role Owner di database loopback. Fresh live-admin desktop acceptance pada 1280px dan mobile acceptance pada 390x844 mencakup list/detail/editor routes tanpa horizontal overflow dan tanpa write action. Pada mobile, Orders/Inquiries memakai kartu berlabel dan Products tidak lagi memaksa lebar halaman. Keyboard focus nav, label kontrol detail, empty/error state, dan console browser diperiksa. |
+| Custom Product Intake v1 | `IMPLEMENTED_WITH_REVIEW_GATE` | Lima produk draft memiliki kartu referensi dan CTA ke `/custom-print/request`. Form menangkap produk, ukuran, warna, fakultas/identitas, jumlah, deadline, catatan, kontak, serta file privat. Server memvalidasi source ID dan menormalisasi konteks ke catatan request; tidak ada checkout, reservasi, harga final, atau provider baru. Detail operator tetap di `/admin/custom-print/[id]`. Lihat [`custom-product-intake.md`](../backend/custom-product-intake.md). |
+| Clerk smoke + visual authenticated | `AUTHENTICATED_VISUAL_ACCEPTED_POST_SEED` | Exact identity Owner yang diberikan terhubung ke `AdminProfile` aktif ber-role Owner di database loopback. Fresh browser acceptance pasca-seed katalog dan Custom Product Intake lulus pada 1280×900 dan 390×844 untuk `/admin`, seluruh list admin, serta detail order/product/portfolio/inquiry yang memiliki data; tidak ada horizontal overflow, write action, kebocoran data privat, atau error aplikasi non-extension. `/admin/custom-print` terbuka sebagai empty state (0 request), sehingga detail custom-print tidak dipaksakan dengan ID sintetis. |
 | R2 smoke nyata | `PASSED_NON_PRODUCTION_SMOKE` | Owner-configured development R2 passed intent `201`, exact-origin CORS preflight `204`, direct PUT `200`, confirm `200`, dan custom request `201`; lifecycle `PENDING → UPLOADED → VERIFIED`. Fixture object dan row sintetis sudah dibersihkan; bucket private tetap non-public. |
 | Pengiriman ulang tautan lama | `READY_SERVER_SIDE_PENDING_MANUAL_SEND` | Reissue route-bound v1 meng-invalidasi token opaque lama; pengiriman aktual menunggu daftar customer dan kanal yang disetujui Owner. Runbook ada di `docs/backend/token-reissue-handoff.md`. |
 | Biteship/Midtrans | `DEFERRED_BY_USER` | Activation dan smoke tidak dilakukan pada goal ini, terlepas dari presence nama env; menunggu data perusahaan Owner. |
@@ -76,10 +77,12 @@ draft-route 404.
 
 1. Tidak ada input Owner katalog tambahan untuk MVP: SKU internal v1, keputusan
    3 published/5 draft, dan fallback galeri produk sudah disetujui. Lima draft
-   tetap memiliki foto tetapi membutuhkan intake custom yang belum tersedia.
+   tetap memiliki foto dan sekarang diarahkan ke Custom Product Intake v1;
+   keputusan harga/quote tetap berada pada review operator.
    Enam placeholder Tokopedia tanpa harga/stok tetap dibiarkan di luar seed;
    detail ada di [`catalog-publish-readiness.md`](../backend/catalog-publish-readiness.md).
 2. Daftar customer dan kanal resmi untuk pengiriman tautan reissue.
-3. Tidak ada input Owner tambahan untuk mobile acceptance; gate tersebut sudah
-   lulus pada 390x844. R2 non-production smoke juga sudah lulus; gate berikutnya
-   tetap pengiriman manual tautan reissue serta provider/pricing yang deferred.
+3. Tidak ada input Owner tambahan untuk mobile atau authenticated admin
+   acceptance; gate tersebut sudah lulus pada 1280×900 dan 390×844. R2
+   non-production smoke juga sudah lulus; gate berikutnya adalah pengiriman
+   manual tautan reissue serta provider/pricing yang deferred.

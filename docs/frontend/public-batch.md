@@ -87,6 +87,26 @@ Started: 2026-09-06. Updated: 2026-09-18. Status: **UI_IMPLEMENTED**, **ADMIN_IN
 > be mapped per project only after the asset, provenance, alt text, caption, and
 > permission are approved.
 
+> Custom Product Intake update — on 2026-09-18, the five Owner-approved draft
+> products now have reference cards and a guarded CTA into
+> `/custom-print/request`. The intake captures product reference, requested size,
+> color, faculty/identity, quantity, target date, notes, contact, and private
+> model upload. Server validation rejects unknown source IDs and stores the
+> context in a canonical request note before the existing admin review/quote
+> workflow. The products remain draft; no checkout, reservation, instant price,
+> Biteship, or Midtrans path was added.
+
+> Fresh authenticated acceptance update — on 2026-09-18, after the Owner
+> session and local clock were repaired, the server-backed admin shell, all
+> seven list surfaces, and populated order/product/portfolio/inquiry detail
+> routes rendered at 1280×900 and 390×844. Every checked surface had no page
+> level horizontal overflow, no write action was submitted, and no
+> non-extension browser error was observed. `/admin/custom-print` correctly
+> rendered its empty state (0 requests), so its detail route was not exercised
+> with a fabricated ID. The dynamic detail routes required one local Next dev
+> server restart to refresh the route manifest; no source or data change was
+> needed for that recovery.
+
 ## Scope and review paths
 
 | Task | Result | Local review |
@@ -115,6 +135,7 @@ Started: 2026-09-06. Updated: 2026-09-18. Status: **UI_IMPLEMENTED**, **ADMIN_IN
 | FE-21 | **ARCHIVE —** Admin custom-request list and slicer review drawer with explicit private-file unavailability, required material/weight/duration, optional configuration/notes, local-only review handoff, and recovery states | `/auis/proofs/frontend/admin?preview=examples&state=ready&module=custom-print&request=CPR-EX-2093`, `custom=loading`, `empty`, `error` |
 | FE-22 | **ARCHIVE —** Admin quote draft/preview with read-only review inputs, Decimal-contract fixture breakdown, active-rule block, seven-day sent snapshot, and local-only immutable send state | `/auis/proofs/frontend/admin?preview=examples&state=ready&module=quotes&quote=QTE-EX-3028`, `quoteState=rule-missing`, `loading`, `empty`, `error` |
 | ADM-LIVE | **CURRENT —** Server-backed admin shell, lists, detail/editors, live inquiry/pricing reads, and authorized write actions with Clerk + `AdminProfile` | `/admin`, `/admin/orders`, `/admin/orders/[id]`, `/admin/custom-print`, `/admin/custom-print/[id]`, `/admin/products`, `/admin/products/[id]`, `/admin/portfolio`, `/admin/portfolio/[id]`, `/admin/inquiries`, `/admin/inquiries/[id]`, `/admin/pricing` |
+| INTAKE-V1 | **CURRENT —** Draft-product reference cards and server-validated custom intake layered on the existing private upload and operator quote workflow; no direct checkout | `/custom-print`, `/custom-print/request`, `/admin/custom-print`, `/admin/custom-print/[id]` |
 
 Run `corepack pnpm dev`; open `http://localhost:3000`. Use fictional contact
 information for review. Preview data is not a factual client portfolio.
