@@ -524,7 +524,8 @@ slice. Live targets are `/admin/orders/[id]`, `/admin/custom-print/[id]`,
 `/admin/inquiries/[id]`, and `/admin/pricing`. Server Actions enforce the
 existing permission map and domain transition/audit contracts for fulfillment,
 inquiry status, slicer review, quote draft/send, stock, catalog media,
-portfolio content/media, and order/quote token reissue. Pricing activation,
+portfolio content/media, and order/quote token reissue. Development pricing
+activation is complete with `PER_UNIT` semantics; production pricing,
 Biteship/Midtrans, and R2 live smoke remain separate gates. The supplied Clerk
 identity is now mapped to an active loopback Owner profile; approved public
 portfolio content is seeded locally. The Owner Shop dataset is also seeded as

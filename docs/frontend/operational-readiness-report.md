@@ -13,7 +13,7 @@ dicatat di sini.
 | Detail/editor admin | `IMPLEMENTED` | `/admin/orders/[id]`, `/admin/custom-print/[id]`, `/admin/products/[id]`, `/admin/portfolio/[id]` membaca projection server dan memakai Clerk + `AdminProfile`. |
 | Aksi admin write | `IMPLEMENTED_WITH_BOUNDARIES` | Transition order/inquiry, review slicer, quote draft/send, stok, mapping media, portfolio edit/publish guard, dan token reissue melewati Server Action, permission, service, serta audit. Fulfillment yang membutuhkan rate/shipment/payment provider tetap ditahan. |
 | B2B Inquiries | `IMPLEMENTED_LIVE_READ` | List/detail membaca database; transition status tersedia dari detail inquiry. |
-| Pricing Rules | `IMPLEMENTED_LIVE_READ` | List/pagination dan active-rule lookup membaca database; aktivasi tidak diekspos. |
+| Pricing Rules | `IMPLEMENTED_GUARDED_WRITE` | `CUSTOM_PRINT_V1` v1 aktif di development loopback dengan semantics `PER_UNIT`; Owner-only activation memakai loopback guard, approval metadata, dan audit. Production activation tetap terpisah. |
 | Portfolio Selected Works | `OWNER_APPROVED_CARD_ONLY` | 11 Selected Works tetap published sebagai kartu ringkasan tanpa media. Media mapping bersifat opsional dan hanya dilakukan jika aset, provenance, alt text, serta caption per project sudah disetujui Owner. Enam Featured Case Studies tetap mengikuti gate narasi dan minimal satu media. |
 | Katalog/foto/stok | `OWNER_APPROVED_SEEDED_PUBLIC_ACCEPTED` | Dataset Shop berisi 8 produk, 34 varian, 50 media JPG, dan 4 kategori. Owner menyetujui source ID sebagai SKU internal v1, 3 produk ready-made published, 5 produk custom-flow tetap draft meski seluruhnya memiliki foto, dan galeri produk sebagai fallback media-varian MVP. Public Shop normal lulus acceptance 1280×900 dan 390×844; fixture lokal hanya terlihat pada runtime demo eksplisit. Dimensi paket hanya menjadi gate jika shipping provider-calculated diaktifkan. Lihat [`catalog-publish-readiness.md`](../backend/catalog-publish-readiness.md). |
 | Custom Product Intake v1 | `IMPLEMENTED_WITH_REVIEW_GATE` | Lima produk draft memiliki kartu referensi dan CTA ke `/custom-print/request`. Form menangkap produk, ukuran, warna, fakultas/identitas, jumlah, deadline, catatan, kontak, serta file privat. Server memvalidasi source ID dan menormalisasi konteks ke catatan request; tidak ada checkout, reservasi, harga final, atau provider baru. Detail operator tetap di `/admin/custom-print/[id]`. Lihat [`custom-product-intake.md`](../backend/custom-product-intake.md). |
@@ -38,7 +38,8 @@ merupakan bukti loopback, bukan deployment production:
   Owner untuk tampil sebagai ringkasan publik tanpa media. Media production
   tetap opsional dan tidak boleh dipetakan tanpa aset serta provenance yang
   disetujui per project.
-- `pricing_rules=0`, `active_pricing_rules=0`
+- `pricing_rules=1`, `active_pricing_rules=1` (`CUSTOM_PRINT_V1` v1, `PER_UNIT`,
+  Owner-approved pada 2026-09-19)
 
 Walaupun fixture demo tetap published di database loopback bersama, boundary
 katalog normal mengecualikan slug tersebut. Ia hanya terlihat ketika runtime

@@ -152,8 +152,10 @@ information for review. Preview data is not a factual client portfolio.
   projects). Owner-approved Selected Works card-only records require their
   summary metadata but may remain published without media. Client permission and
   factual launch content remain Owner decisions.
-- B2B inquiry and Pricing Rules are live read subviews. Pricing activation is
-  intentionally not exposed by this batch; Biteship and Midtrans remain disabled.
+- B2B inquiry and Pricing Rules are live subviews. Pricing has a guarded,
+  development-only Owner activation form with explicit quantity semantics;
+  production activation is not exposed by this batch. Biteship and Midtrans
+  remain disabled.
 - Existing SENT quote/order links can be reissued from their admin detail pages.
   Reissue replaces the stored hash, invalidates the old link, and emits a new
   `v1.<entity-id>.<secret>` route-bound token without logging the secret. The
