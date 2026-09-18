@@ -33,9 +33,10 @@ activation.
 At quote draft creation, the server reads the selected `ACTIVE`
 `PricingRuleVersion`, verifies the exact `CUSTOM_PRINT_V1` v1 definition, and
 freezes it into the immutable calculation snapshot. Browser input cannot
-supply a policy. An Owner must still provision and activate the reviewed rule
-record through the guarded operational path; no seed, production write, or
-automatic activation was performed here.
+supply a policy. The Owner-only `/admin/pricing` development form now provides
+that guarded activation path, but it requires an explicit quantity semantic and
+non-production confirmation; no seed, production write, or automatic
+activation is performed.
 
 ## Biteship retail-rate boundary
 
@@ -83,9 +84,13 @@ surface is still needed before enabling instant-courier UX.
 
 ## Remaining activation gates
 
-- Provision an active Owner-approved `CUSTOM_PRINT_V1` rule with an explicit
-  quantity semantic; add the Owner-only rule-administration route/UI before
-  operational use.
+- **Development activation completed 2026-09-19:** Owner activated
+  `CUSTOM_PRINT_V1` v1 with `PER_UNIT` semantics on the loopback database. The
+  service recorded approval metadata and an audit event, and its guard refuses
+  production/non-loopback databases or replacing an active rule with a
+  different semantic.
+- Production activation remains a separate gate and requires an explicit
+  release decision; this development action does not make the rule live.
 - Configure only sandbox `BITESHIP_API_KEY`, `BITESHIP_COURIERS`, and
   `BITESHIP_ORIGIN_AREA_ID` in a non-production environment, then perform
   test transactions. No key is present in this worktree.

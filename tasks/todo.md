@@ -247,8 +247,9 @@ Status: `TECHNICAL_GATES_PASSED_LIVE_SMOKE_PENDING` (2026-09-14).
 Decision sync:
 
 - Pricing 1–49 g dan communal ABS mengikuti
-  `docs/backend/phase-3-pricing-biteship-contract.md`; active-rule seed,
-  quantity semantics, dan provider activation belum dianggap selesai.
+  `docs/backend/phase-3-pricing-biteship-contract.md`; `CUSTOM_PRINT_V1` v1
+  sudah aktif di development dengan semantics `PER_UNIT` melalui jalur Owner
+  guarded. Production/provider activation tetap belum dianggap selesai.
 - Binary upload 100 MiB serta lifecycle 14/60/90 hari mengikuti
   `docs/backend/phase-2-closure-decisions.md`; legal/accounting retention tetap
   terbuka.

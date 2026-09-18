@@ -8,6 +8,7 @@ import { CustomPrintService } from "@/modules/custom-print/service";
 import { InquiryService } from "@/modules/inquiry/service";
 import { OrderStatusService } from "@/modules/order/status-service";
 import { PortfolioService } from "@/modules/portfolio/service";
+import { PricingRuleAdminService } from "@/modules/pricing/admin-service";
 import { QuoteService } from "@/modules/quote/service";
 import { isAppError, toAppError } from "@/modules/shared/errors";
 
@@ -119,6 +120,25 @@ export const createQuoteDraftAction: AdminAction = async (_previous, formData) =
     revalidatePath("/admin/custom-print");
     revalidatePath("/admin");
     return successState("Draft quote berhasil dibuat.");
+  } catch (error) {
+    return errorStateFrom(error);
+  }
+};
+
+export const activatePricingRuleAction: AdminAction = async (_previous, formData) => {
+  try {
+    const result = await new PricingRuleAdminService().activate({
+      confirmation: text(formData, "confirmation"),
+      quantitySemantics: text(formData, "quantitySemantics"),
+    });
+    revalidatePath("/admin/pricing");
+    revalidatePath("/admin/custom-print");
+    revalidatePath("/admin");
+    return successState(
+      result.idempotent
+        ? `Pricing rule ${result.code} v${result.version} sudah aktif; tidak ada perubahan.`
+        : `Pricing rule ${result.code} v${result.version} berhasil diaktifkan untuk development (${result.quantitySemantics}).`,
+    );
   } catch (error) {
     return errorStateFrom(error);
   }
