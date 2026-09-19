@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test("shop preview filters products and links to product detail", async ({ page }) => {
-  await page.goto("/shop");
+  await page.goto("/shop?preview=empty");
   await expect(page.getByText("Katalog ready-made belum dipublikasikan.")).toBeVisible();
   await page.getByRole("link", { name: "Contoh", exact: true }).click();
   await expect(page.locator("article")).toHaveCount(4);

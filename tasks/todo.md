@@ -1,5 +1,12 @@
 # Niuva MVP Task List
 
+> **Current status ledger — 2026-09-20:** non-provider MVP release readiness
+> sudah diaudit pada `main` commit `a171686`. Gunakan
+> [`docs/frontend/mvp-release-readiness.md`](../docs/frontend/mvp-release-readiness.md)
+> dan [`docs/frontend/operational-readiness-report.md`](../docs/frontend/operational-readiness-report.md)
+> untuk status terkini. Checkbox Phase 1–4 di bawah adalah histori rencana dan
+> tidak boleh dibaca sebagai pengganti ledger handoff terbaru.
+
 ## Phase 1: UI Foundation discovery, proof, and finalization
 
 - [x] Task 1 — Bootstrap Next.js at the current project root.
@@ -760,3 +767,25 @@ Status: `LOOPBACK_SYNTHETIC_ACCEPTANCE_PASSED`.
   order; evidence lokal berada di folder temp dan tidak dicommit.
 - [ ] Pembayaran, pengiriman, notifikasi, dan pengiriman tautan ke customer nyata
   tetap terpisah dan menunggu provider/kanal yang disetujui Owner.
+
+## Goal — MVP Release Readiness & Operational Closure (2026-09-20)
+
+Status: `NON_PROVIDER_RELEASE_READINESS_AUDITED`.
+
+- [x] Reconcile current readiness against the latest merged `main` commit and
+  separate implementation, visual, authorization, provider, and Owner gates.
+- [x] Confirm unknown/inactive Clerk authorization evidence remains closed;
+  temporary profile-state changes were restored and no live credential is
+  recorded in the repository.
+- [x] Update stale browser contracts for server-backed Custom Request and
+  explicit Shop preview scenarios. Preview-only file-failure simulation is
+  skipped when upload capability is live.
+- [x] Run final non-provider gates: typecheck, lint (0 error), unit 81/81,
+  backend 125/125, schema validate, production build, diff check, and serial
+  browser subset 55 passed/1 skipped.
+- [x] Publish the canonical readiness ledger at
+  `docs/frontend/mvp-release-readiness.md` and link it from the operational
+  report and frontend review batch.
+- [ ] Manual customer-link reissue delivery remains Owner-input dependent.
+- [ ] WhatsApp, legal/accounting retention, official biodata, Biteship,
+  Midtrans, deployment, and production acceptance remain separate future gates.

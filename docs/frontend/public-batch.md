@@ -1,7 +1,6 @@
 # Frontend review batch — FE-00–27
 
-Started: 2026-09-06. Updated: 2026-09-20. Status: **UI_IMPLEMENTED**, **ADMIN_INTEGRATED_PENDING_OWNER_GATES**, **VISUAL_ACCEPTANCE_DESKTOP_MOBILE_ACCEPTED**, **QUOTE_LIFECYCLE_LOOPBACK_ACCEPTED**,
-**PARTIALLY_INTEGRATED (FE-07, NG-02, NG-05 local path)**. User approved FE-00–02 followed by FE-03–07, FE-08–15, and the server-backed admin integration slice shipped on 2026-09-16. The fixture-only FE-16–26 rows below remain archival evidence, not the current admin implementation.
+Started: 2026-09-06. Updated: 2026-09-20. Status: **UI_IMPLEMENTED**, **ADMIN_INTEGRATED**, **VISUAL_ACCEPTANCE_DESKTOP_MOBILE_ACCEPTED**, **QUOTE_LIFECYCLE_LOOPBACK_ACCEPTED**, **NON_PROVIDER_RELEASE_READINESS_AUDITED**, **PROVIDER_PATH_DEFERRED**. User approved FE-00–02 followed by FE-03–07, FE-08–15, and the server-backed admin integration slice shipped on 2026-09-16. The fixture-only FE-16–26 rows below remain archival evidence, not the current admin implementation.
 
 > Integration update — on 2026-09-13, FE-07 was promoted to the link-based
 > server-backed Project Brief slice. The no-mutation statements below remain
@@ -116,6 +115,15 @@ Started: 2026-09-06. Updated: 2026-09-20. Status: **UI_IMPLEMENTED**, **ADMIN_IN
 > status projection. No payment, shipping, notification, or real-customer
 > channel was called. The decline branch is covered by a permanent backend
 > regression test and the preview UI remains separately covered by FE-14.
+
+> Release-readiness closure update — on 2026-09-20, the non-provider MVP gate
+> was audited on `main` at commit `a171686`. Static gates, unit/backend tests,
+> production build, schema validation, negative Clerk authorization evidence,
+> and serial public browser smoke are now recorded in the canonical
+> [`mvp-release-readiness.md`](./mvp-release-readiness.md). Remaining open
+> items are manual customer-link delivery, official company biodata,
+> WhatsApp policy, legal/accounting retention, and provider/production work;
+> none are silently treated as complete.
 
 ## Scope and review paths
 
