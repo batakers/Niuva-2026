@@ -583,7 +583,8 @@ Project Brief integration gates are committed and pushed in `1d5b870`.
   available in the development database. Catalog portion is complete in
   loopback: 8 products, 34 variants, 50 JPG media, source-ID SKU v1, and Owner
   approval for 3 ready-made published/5 custom-flow draft. Active pricing seed
-  remains open, so this combined item is not complete. Variant-media binding is
+  is complete for `CUSTOM_PRINT_V1` v1 `PER_UNIT`, so this combined item remains
+  open only for provider-backed checkout. Variant-media binding is
   intentionally deferred with product-gallery fallback. Package dimensions
   remain conditional on provider-calculated shipping.
 - [ ] Connect real server rates → idempotent guest checkout → Midtrans sandbox
@@ -736,3 +737,26 @@ development yang sudah dibersihkan. Ini bukan klaim production readiness.
   - Dependency: R2-01 dan Owner setup di luar source control.
 - [x] Checkpoint R2 — R2-01 dan R2-02 sudah memiliki evidence; status tetap
   non-production dan tidak boleh dilabeli production-ready.
+
+## Goal — Custom Print Quote Lifecycle Acceptance (2026-09-20)
+
+Status: `LOOPBACK_SYNTHETIC_ACCEPTANCE_PASSED`.
+
+- [x] Gunakan request sintetis `CPR-20260918-4YHG84HF` yang sudah berstatus
+  `QUOTE_READY`; tidak ada data customer nyata yang dipakai.
+- [x] Buat draft dan kirim quote melalui service/server action dengan rule aktif
+  `CUSTOM_PRINT_V1` v1 `PER_UNIT`; snapshot Decimal server menghasilkan total
+  Rp13.750 dari review 12,5 g PLA dan durasi 900 detik.
+- [x] Buka route-bound token quote pada viewport mobile 390×844; projection
+  publik menampilkan scope, asumsi, expiry tujuh hari, dan rincian server tanpa
+  merender token mentah.
+- [x] Terima quote melalui API publik; server memvalidasi token, expiry, versi,
+  dan snapshot, lalu membuat satu order custom `WAITING_PAYMENT` dengan status
+  publik yang dapat dibuka melalui token order baru.
+- [x] Tambahkan regression test jalur decline untuk memastikan quote menjadi
+  `DECLINED` tanpa membuat order; preview UI accept/decline tetap dicakup oleh
+  `tests/e2e/quote-review.spec.ts`.
+- [x] Verifikasi screenshot mobile untuk quote valid, quote diterima, dan status
+  order; evidence lokal berada di folder temp dan tidak dicommit.
+- [ ] Pembayaran, pengiriman, notifikasi, dan pengiriman tautan ke customer nyata
+  tetap terpisah dan menunggu provider/kanal yang disetujui Owner.

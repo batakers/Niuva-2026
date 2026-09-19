@@ -218,6 +218,77 @@ describe("Phase 2 quote acceptance", () => {
     });
   });
 
+  it("records a valid decline without creating an order", async () => {
+    const quoteToken = issueAccessToken({
+      entityId: quoteId,
+      expiresAt: new Date("2026-09-11T00:00:00.000Z"),
+      now,
+      randomBytes: (size) => new Uint8Array(size).fill(10),
+      scope: "CUSTOM_PRINT_QUOTE",
+    });
+    let orderMutationCalls = 0;
+    const audit = auditRecorder();
+    const repository: QuoteServiceRepository = {
+      async acceptAndCreatePayableOrder() {
+        orderMutationCalls += 1;
+        throw new Error("decline must not create an order");
+      },
+      async createDraft() {
+        throw new Error("unused");
+      },
+      async findForAcceptance() {
+        return quoteForAcceptance(
+          quoteToken.tokenHash,
+          new Date("2026-09-11T00:00:00.000Z"),
+        );
+      },
+      async findActivePricingRuleVersion() {
+        return activePricingRule;
+      },
+      async findLatestVersion() {
+        return 1;
+      },
+      async findRequestForReview() {
+        return null;
+      },
+      async findReview() {
+        return null;
+      },
+      async orderNumberExists() {
+        return false;
+      },
+      async quoteNumberExists() {
+        return false;
+      },
+      async sendIfCurrent() {
+        return null;
+      },
+      async updateStatusIfCurrent(_id, currentStatus, nextStatus) {
+        expect(currentStatus).toBe("SENT");
+        expect(nextStatus).toBe("DECLINED");
+        return { id: quoteId, status: "DECLINED" as const };
+      },
+    };
+    const service = new QuoteService({
+      audit: audit.record,
+      now: () => now,
+      repository,
+    });
+
+    const result = await service.decline({
+      now,
+      quoteId,
+      token: quoteToken.token,
+    });
+
+    expect(result).toEqual({ id: quoteId, status: "DECLINED" });
+    expect(orderMutationCalls).toBe(0);
+    expect(audit.events.at(-1)).toMatchObject({
+      action: "quote.declined",
+      entityId: quoteId,
+    });
+  });
+
   it("reissues a route-bound order token when an accepted quote is replayed", async () => {
     const quoteToken = issueAccessToken({
       entityId: quoteId,

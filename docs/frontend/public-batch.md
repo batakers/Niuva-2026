@@ -1,6 +1,6 @@
 # Frontend review batch — FE-00–27
 
-Started: 2026-09-06. Updated: 2026-09-18. Status: **UI_IMPLEMENTED**, **ADMIN_INTEGRATED_PENDING_OWNER_GATES**, **VISUAL_ACCEPTANCE_DESKTOP_MOBILE_ACCEPTED**,
+Started: 2026-09-06. Updated: 2026-09-20. Status: **UI_IMPLEMENTED**, **ADMIN_INTEGRATED_PENDING_OWNER_GATES**, **VISUAL_ACCEPTANCE_DESKTOP_MOBILE_ACCEPTED**, **QUOTE_LIFECYCLE_LOOPBACK_ACCEPTED**,
 **PARTIALLY_INTEGRATED (FE-07, NG-02, NG-05 local path)**. User approved FE-00–02 followed by FE-03–07, FE-08–15, and the server-backed admin integration slice shipped on 2026-09-16. The fixture-only FE-16–26 rows below remain archival evidence, not the current admin implementation.
 
 > Integration update — on 2026-09-13, FE-07 was promoted to the link-based
@@ -107,6 +107,16 @@ Started: 2026-09-06. Updated: 2026-09-18. Status: **UI_IMPLEMENTED**, **ADMIN_IN
 > server restart to refresh the route manifest; no source or data change was
 > needed for that recovery.
 
+> Quote lifecycle acceptance update — on 2026-09-20, the existing synthetic
+> request `CPR-20260918-4YHG84HF` was taken from `QUOTE_READY` through the
+> server-backed quote workflow. Draft and send froze the active `CUSTOM_PRINT_V1`
+> `PER_UNIT` snapshot at Rp13.750; the mobile 390×844 live route rendered the
+> token-authorized quote, accepted it through `POST /api/quote/[token]/accept`,
+> created one custom order in `WAITING_PAYMENT`, and opened its live public
+> status projection. No payment, shipping, notification, or real-customer
+> channel was called. The decline branch is covered by a permanent backend
+> regression test and the preview UI remains separately covered by FE-14.
+
 ## Scope and review paths
 
 | Task | Result | Local review |
@@ -180,6 +190,11 @@ information for review. Preview data is not a factual client portfolio.
   evidence after Owner-provided environment/identity setup; passing typecheck,
   lint, build, or browser smoke does not imply those gates. Desktop/mobile admin
   acceptance and the cleaned-up R2 smoke are recorded above.
+- The live custom-print quote path is now separately accepted on the loopback
+  development database using one synthetic request. The server owns the
+  calculation snapshot, token verification, expiry, version check, and order
+  hand-off. The resulting order stops at `WAITING_PAYMENT`; provider activation
+  and production quote sending remain out of scope.
 
 The FE-16–26 bullets below are retained as historical preview evidence. Where
 they describe fixture-only routes or “no mutation”, the current integration
