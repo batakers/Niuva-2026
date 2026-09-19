@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("custom request previews file progress and validates without API mutations", async ({ page }) => {
+test("custom request exposes the active capability without accidental mutations", async ({ page }) => {
   const mutations: string[] = [];
   page.on("request", (request) => {
     if (request.method() === "POST" && /\/api\/(uploads|custom-print)/.test(request.url())) {
@@ -9,8 +9,24 @@ test("custom request previews file progress and validates without API mutations"
   });
 
   await page.goto("/custom-print/request");
-  await expect(page.locator("[data-product-screen-functional]")).toHaveAttribute("data-product-screen-functional", "frontend-preview");
+  const functionalStatus = await page.locator("[data-product-screen-functional]").getAttribute("data-product-screen-functional");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Siapkan file untuk review operator.");
+
+  if (functionalStatus === "server-backed") {
+    await expect(page.getByText("Upload privat aktif")).toBeVisible();
+    await expect(page.getByLabel("File model 3D *")).toBeEnabled();
+    expect(mutations).toEqual([]);
+    return;
+  }
+
+  if (functionalStatus === "capability-gated") {
+    await expect(page.getByText("Pengiriman privat belum tersedia.")).toBeVisible();
+    await expect(page.getByLabel("File model 3D *")).toBeDisabled();
+    expect(mutations).toEqual([]);
+    return;
+  }
+
+  expect(functionalStatus).toBe("frontend-preview");
   const fileInput = page.getByLabel("File model 3D *");
   await expect(fileInput).toBeEnabled();
   await fileInput.setInputFiles({
@@ -37,6 +53,8 @@ test("custom request previews file progress and validates without API mutations"
 
 test("custom request recovers from a simulated file failure", async ({ page }) => {
   await page.goto("/custom-print/request");
+  const functionalStatus = await page.locator("[data-product-screen-functional]").getAttribute("data-product-screen-functional");
+  test.skip(functionalStatus !== "frontend-preview", "File failure simulation is a development preview-only control.");
   const scenario = page.getByLabel("Hasil simulasi file");
   await scenario.selectOption("failed");
   await expect(scenario).toHaveValue("failed");

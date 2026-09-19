@@ -1,5 +1,12 @@
 # Implementation Plan: Niuva MVP
 
+> **Current handoff status — 2026-09-20:** use
+> [`docs/frontend/mvp-release-readiness.md`](../docs/frontend/mvp-release-readiness.md)
+> as the current non-provider readiness ledger. The historical sections below
+> preserve the original phase plan and may contain intentionally open rows;
+> they do not override completed Clerk, R2, catalog, visual, quote, or admin
+> evidence recorded in the current ledger.
+
 ## Overview
 
 Niuva akan dibangun sebagai satu modular monolith yang menghubungkan company

@@ -1,6 +1,6 @@
 # Laporan readiness operasional Niuva
 
-Snapshot: **2026-09-20** · checkout `main` · latest merged implementation PR [#10](https://github.com/batakers/Niuva-2026/pull/10) merged as `eb4532e`; earlier implementation PRs [#3](https://github.com/batakers/Niuva-2026/pull/3) and [#5](https://github.com/batakers/Niuva-2026/pull/5) remain historical references.
+Snapshot: **2026-09-20** · checkout `main` · latest merged implementation PR [#11](https://github.com/batakers/Niuva-2026/pull/11) merged as `a171686`; earlier implementation PRs [#3](https://github.com/batakers/Niuva-2026/pull/3), [#5](https://github.com/batakers/Niuva-2026/pull/5), and [#10](https://github.com/batakers/Niuva-2026/pull/10) remain historical references.
 
 Laporan ini memisahkan bukti implementasi kode dari gate Owner, provider, dan
 acceptance visual. Tidak ada nilai secret, token, atau data customer yang
@@ -22,6 +22,7 @@ dicatat di sini.
 | R2 smoke nyata | `PASSED_NON_PRODUCTION_SMOKE` | Owner-configured development R2 passed intent `201`, exact-origin CORS preflight `204`, direct PUT `200`, confirm `200`, dan custom request `201`; lifecycle `PENDING → UPLOADED → VERIFIED`. Fixture object dan row sintetis sudah dibersihkan; bucket private tetap non-public. |
 | Pengiriman ulang tautan lama | `READY_SERVER_SIDE_PENDING_MANUAL_SEND` | Reissue route-bound v1 meng-invalidasi token opaque lama; pengiriman aktual menunggu daftar customer dan kanal yang disetujui Owner. Runbook ada di `docs/backend/token-reissue-handoff.md`. |
 | Biteship/Midtrans | `DEFERRED_BY_USER` | Activation dan smoke tidak dilakukan pada goal ini, terlepas dari presence nama env; menunggu data perusahaan Owner. |
+| MVP release readiness non-provider | `AUDITED_NON_PRODUCTION` | Gate typecheck/lint/unit/backend/build/schema, browser subset, negative authorization, catalog, R2, authenticated admin, dan quote lifecycle telah dipisahkan dari gate Owner/provider. Ledger canonical ada di [`mvp-release-readiness.md`](./mvp-release-readiness.md). |
 
 ## Probe loopback terakhir
 
@@ -91,6 +92,14 @@ Verification goal 2026-09-20: `corepack pnpm typecheck`, `corepack pnpm lint`
 `corepack pnpm test:backend` (**125/125**), `corepack pnpm build`,
 `corepack pnpm db:validate`, focused quote/order Playwright (**15/15**), dan
 `git diff --check` lulus.
+
+Release-readiness closure 2026-09-20: serial public/preview browser subset
+terhadap server development aktif lulus **55/55** dengan **1 skip** untuk
+kontrol simulasi file yang hanya tersedia pada mode preview. Dua test blank
+credential Clerk tidak digabungkan ke run tersebut karena server aktif memang
+memakai Clerk; negative authorization tetap tercakup oleh backend dan live
+profile-state evidence yang tercatat di task map. Detail ledger ada di
+[`mvp-release-readiness.md`](./mvp-release-readiness.md).
 
 ## Input Owner untuk handoff berikutnya
 
