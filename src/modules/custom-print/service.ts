@@ -100,10 +100,15 @@ export type CustomPrintNotificationScheduler = (input: Readonly<{
   requestId: string;
 }>) => void | Promise<void>;
 
+export type CustomPrintNotificationFactory = () =>
+  | CustomPrintNotificationScheduler
+  | undefined;
+
 export type CustomPrintServiceDependencies = Readonly<{
   audit?: AuditRecorder;
   authorizeAdmin?: AuthorizeAdmin;
   notification?: CustomPrintNotificationScheduler;
+  notificationFactory?: CustomPrintNotificationFactory;
   randomBytes?: (size: number) => Uint8Array;
   repository?: CustomPrintServiceRepository;
 }>;
@@ -112,6 +117,7 @@ export class CustomPrintService {
   private readonly audit?: AuditRecorder;
   private readonly authorizeAdmin: AuthorizeAdmin;
   private readonly notification?: CustomPrintNotificationScheduler;
+  private readonly notificationFactory?: CustomPrintNotificationFactory;
   private readonly randomBytes?: (size: number) => Uint8Array;
   private readonly repositoryFactory: () => CustomPrintServiceRepository;
 
@@ -119,6 +125,7 @@ export class CustomPrintService {
     this.audit = dependencies.audit;
     this.authorizeAdmin = dependencies.authorizeAdmin ?? requireAdmin;
     this.notification = dependencies.notification;
+    this.notificationFactory = dependencies.notificationFactory;
     this.randomBytes = dependencies.randomBytes;
     this.repositoryFactory = () =>
       dependencies.repository ?? new CustomPrintRequestRepository();
@@ -170,30 +177,49 @@ export class CustomPrintService {
       metadata: { operation: "submit", referenceNumber },
     });
 
-    if (this.notification !== undefined) {
+    let notification = this.notification;
+    let notificationFactoryFailed = false;
+
+    if (notification === undefined && this.notificationFactory !== undefined) {
       try {
-        await this.notification({
+        notification = this.notificationFactory();
+      } catch {
+        notificationFactoryFailed = true;
+      }
+    }
+
+    if (notificationFactoryFailed) {
+      await this.recordNotificationFailure(request.id);
+    }
+
+    if (notification !== undefined) {
+      try {
+        await notification({
           referenceNumber: request.referenceNumber,
           requestId: request.id,
         });
       } catch {
-        try {
-          await recordAudit(this.audit, {
-            action: "custom-print.request.notification.failed",
-            actorType: "SYSTEM",
-            afterJson: { status: "NOT_SENT" },
-            entityId: request.id,
-            entityType: "CustomPrintRequest",
-            metadata: { operation: "notification", result: "FAILED" },
-          });
-        } catch {
-          // A committed custom request remains successful while notification
-          // and its auxiliary audit trail are retried operationally.
-        }
+        await this.recordNotificationFailure(request.id);
       }
     }
 
     return { accessToken, request };
+  }
+
+  private async recordNotificationFailure(requestId: string): Promise<void> {
+    try {
+      await recordAudit(this.audit, {
+        action: "custom-print.request.notification.failed",
+        actorType: "SYSTEM",
+        afterJson: { status: "NOT_SENT" },
+        entityId: requestId,
+        entityType: "CustomPrintRequest",
+        metadata: { operation: "notification", result: "FAILED" },
+      });
+    } catch {
+      // A committed custom request remains successful while notification and
+      // its auxiliary audit trail are retried operationally.
+    }
   }
 
   async recordReview(input: unknown) {

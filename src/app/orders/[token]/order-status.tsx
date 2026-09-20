@@ -7,8 +7,16 @@ import { StatusNotice } from "@/components/niuva/status-notice";
 import { Button } from "@/components/ui/button";
 import type { OrderStatusPreview, OrderStatusPreviewScenario } from "@/features/frontend-preview/order-status";
 
-function NextAction({ action }: Readonly<{ action: OrderStatusPreview["nextAction"] }>) {
-  const control = action.kind === "quote"
+function NextAction({ action, payment }: Readonly<{
+  action: OrderStatusPreview["nextAction"];
+  payment: OrderStatusPreview["payment"];
+}>) {
+  const paymentLabel = payment?.purpose === "CUSTOM_SHIPPING"
+    ? "Buka pembayaran pengiriman"
+    : "Buka pembayaran";
+  const control = payment?.redirectUrl
+    ? <a className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={payment.redirectUrl} rel="noreferrer" target="_blank">{paymentLabel}</a>
+    : action.kind === "quote"
     ? <Link className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href="/quote/preview-quote?preview=examples">{action.label}</Link>
     : action.kind === "payment-unavailable" || action.kind === "shipping-payment-unavailable"
       ? <Button className="min-h-11" disabled type="button">{action.label}</Button>
@@ -17,8 +25,10 @@ function NextAction({ action }: Readonly<{ action: OrderStatusPreview["nextActio
   return (
     <StatusNotice
       action={control}
-      description={action.description}
-      title={action.title}
+      description={payment?.redirectUrl
+        ? `Tautan pembayaran ${payment.purpose === "CUSTOM_SHIPPING" ? "pengiriman " : ""}disiapkan server dan berlaku sampai ${payment.expiresAt}. Status hanya berubah setelah webhook provider diverifikasi.`
+        : action.description}
+      title={payment?.redirectUrl ? `${paymentLabel} tersedia` : action.title}
       tone={action.tone}
     />
   );
@@ -118,7 +128,7 @@ export function OrderStatus({
                 </dl>
               </section>
 
-              <NextAction action={order.nextAction} />
+              <NextAction action={order.nextAction} payment={order.payment} />
 
               {order.shipment ? (
                 <section className="rounded-xl border border-border bg-card p-5" aria-labelledby="shipment-title">

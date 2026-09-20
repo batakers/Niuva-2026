@@ -41,7 +41,24 @@ export default async function OrderStatusPage({ params, searchParams }: PageProp
         notFound();
       }
 
-      throw liveResult.error;
+      return (
+        <PublicShell functionalStatus="server-backed" scope="order-status">
+          <main className="mx-auto max-w-public px-5 py-16 sm:px-8 sm:py-24" id="main-content">
+            <div className="max-w-2xl">
+              <p className="text-sm font-medium text-brand-700">Status order</p>
+              <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-5xl">Status belum dapat dimuat.</h1>
+              <div className="mt-8">
+                <StatusNotice
+                  action={<Link className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/orders/${token}`}>Coba lagi</Link>}
+                  description="Order tidak diubah. Muat ulang tautan ini untuk mencoba membaca projection server kembali."
+                  title="Layanan status sementara tidak tersedia"
+                  tone="error"
+                />
+              </div>
+            </div>
+          </main>
+        </PublicShell>
+      );
     }
 
     return (

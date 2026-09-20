@@ -79,6 +79,31 @@ const checkoutPreviewSchema = z.object({
   postalCode: z.string().trim().regex(/^\d{5}$/),
 });
 
+const checkoutOrderStatusSchema = z.enum([
+  "PENDING_PAYMENT",
+  "PAID",
+  "PROCESSING",
+  "READY_TO_SHIP",
+  "SHIPPED",
+  "COMPLETED",
+  "CANCELLED",
+  "SUBMITTED",
+  "UNDER_REVIEW",
+  "WAITING_FOR_APPROVAL",
+  "WAITING_PAYMENT",
+  "IN_PRODUCTION",
+  "FINISHING_QC",
+  "WAITING_SHIPPING_PAYMENT",
+]);
+
+type CheckoutOrderStatus = z.infer<typeof checkoutOrderStatusSchema>;
+
+const checkoutPaymentResponseSchema = z.object({
+  provider: z.string().min(1).optional(),
+  redirectUrl: z.url({ protocol: /^https?$/ }).optional(),
+  token: z.string().min(1).optional(),
+});
+
 const shippingRatesResponseSchema = z.object({
   expiresAt: z.string().min(1),
   options: z.array(z.object({
@@ -97,27 +122,38 @@ const checkoutCreatedResponseSchema = z.object({
   kind: z.literal("CREATED"),
   orderId: z.uuid(),
   orderNumber: z.string().min(1),
-  payment: z.object({
-    redirectUrl: z.url({ protocol: /^https?$/ }).optional(),
-    token: z.string().min(1).optional(),
-  }),
+  payment: checkoutPaymentResponseSchema,
   paymentAttemptId: z.uuid(),
   totalRp: z.string().regex(/^\d+$/),
 });
 
 const checkoutReplayResponseSchema = z.object({
-  grandTotalRp: z.string().regex(/^\d+$/),
+  accessToken: z.string().min(1),
   kind: z.literal("REPLAY"),
   orderId: z.uuid(),
   orderNumber: z.string().min(1),
+  payment: checkoutPaymentResponseSchema,
   paymentAttemptId: z.uuid(),
-  status: z.literal("PENDING_PAYMENT"),
+  status: checkoutOrderStatusSchema,
+  totalRp: z.string().regex(/^\d+$/),
 });
 
 const checkoutResponseSchema = z.discriminatedUnion("kind", [
   checkoutCreatedResponseSchema,
   checkoutReplayResponseSchema,
 ]);
+
+const checkoutIdempotencyKeySchema = z.string()
+  .min(8)
+  .max(128)
+  .regex(/^[A-Za-z0-9._~-]+$/);
+
+const checkoutRecoveryStorageSchema = z.object({
+  orderNumber: z.string().min(1),
+  orderStatusToken: z.string().min(1),
+  paymentRedirectUrl: z.url({ protocol: /^https?$/ }).optional(),
+  status: checkoutOrderStatusSchema,
+});
 
 const previewShippingOptions: readonly ShippingPreviewOption[] = [
   { id: "preview-regular", carrier: "Kurir contoh", service: "Regular", eta: "2 sampai 4 hari", priceRp: "24000" },
@@ -126,8 +162,45 @@ const previewShippingOptions: readonly ShippingPreviewOption[] = [
 
 const controlClass = "min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 py-2 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 const rupiah = new Intl.NumberFormat("id-ID", { currency: "IDR", maximumFractionDigits: 0, style: "currency" });
+const CHECKOUT_IDEMPOTENCY_STORAGE_KEY = "niuva.checkout.idempotency-key";
+const CHECKOUT_RECOVERY_STORAGE_KEY = "niuva.checkout.recovery";
 
-class CheckoutClientError extends Error {}
+const orderStatusLabels: Record<CheckoutOrderStatus, string> = {
+  CANCELLED: "dibatalkan",
+  COMPLETED: "selesai",
+  FINISHING_QC: "finishing dan quality control",
+  IN_PRODUCTION: "dalam produksi",
+  PAID: "pembayaran terverifikasi",
+  PENDING_PAYMENT: "menunggu pembayaran",
+  PROCESSING: "sedang diproses",
+  READY_TO_SHIP: "siap dikirim",
+  SHIPPED: "dikirim",
+  SUBMITTED: "diajukan",
+  UNDER_REVIEW: "sedang ditinjau",
+  WAITING_FOR_APPROVAL: "menunggu persetujuan",
+  WAITING_PAYMENT: "menunggu pembayaran",
+  WAITING_SHIPPING_PAYMENT: "menunggu pembayaran pengiriman",
+};
+
+class CheckoutClientError extends Error {
+  constructor(message: string, readonly code?: string) {
+    super(message);
+    this.name = "CheckoutClientError";
+  }
+}
+
+const checkoutApiErrorSchema = z.object({
+  code: z.string().optional(),
+  error: z.string().optional(),
+}).partial();
+
+function checkoutApiErrorMessage(code: string | undefined, fallback: string): string {
+  if (code === "OUT_OF_STOCK") return "Stok berubah saat checkout. Tinjau Cart sebelum mencoba lagi.";
+  if (code === "SHIPPING_PROVIDER_UNAVAILABLE") return "Tarif pengiriman sudah tidak tersedia. Muat ulang opsi pengiriman lalu coba lagi.";
+  if (code === "PROVIDER_UNAVAILABLE") return "Layanan pembayaran belum tersedia. Coba lagi setelah layanan kembali siap.";
+  if (code === "CONFLICT") return "Checkout perlu dimuat ulang karena data atau kunci idempotensi berubah. Tinjau Cart lalu coba lagi.";
+  return fallback;
+}
 
 async function readCheckoutResponse<T>(response: Response, schema: z.ZodType<T>, fallbackMessage: string): Promise<T> {
   let payload: unknown;
@@ -137,7 +210,15 @@ async function readCheckoutResponse<T>(response: Response, schema: z.ZodType<T>,
     throw new CheckoutClientError(fallbackMessage);
   }
 
-  if (!response.ok) throw new CheckoutClientError(fallbackMessage);
+  if (!response.ok) {
+    const parsedError = checkoutApiErrorSchema.safeParse(payload);
+    throw new CheckoutClientError(
+      parsedError.success
+        ? checkoutApiErrorMessage(parsedError.data.code, parsedError.data.error ?? fallbackMessage)
+        : fallbackMessage,
+      parsedError.success ? parsedError.data.code : undefined,
+    );
+  }
 
   const parsed = schema.safeParse(payload);
   if (!parsed.success) throw new CheckoutClientError(fallbackMessage);
@@ -175,6 +256,7 @@ export function CheckoutForm({
   catalogStatus,
   demoMode = false,
   initialScenario,
+  liveCatalogError = false,
   liveEnabled = false,
   previewEnabled,
   products,
@@ -182,6 +264,7 @@ export function CheckoutForm({
   catalogStatus: PreviewScenario | null;
   demoMode?: boolean;
   initialScenario?: string | string[];
+  liveCatalogError?: boolean;
   liveEnabled?: boolean;
   previewEnabled: boolean;
   products: readonly PublicShopProduct[];
@@ -204,7 +287,9 @@ export function CheckoutForm({
   const [selectedShippingId, setSelectedShippingId] = useState<string | null>(null);
   const [result, setResult] = useState<CheckoutResult>("idle");
   const [serverError, setServerError] = useState<string>();
+  const [serverErrorCode, setServerErrorCode] = useState<string>();
   const [orderNumber, setOrderNumber] = useState<string>();
+  const [orderStatus, setOrderStatus] = useState<CheckoutOrderStatus>("PENDING_PAYMENT");
   const [orderStatusToken, setOrderStatusToken] = useState<string>();
   const [paymentRedirectUrl, setPaymentRedirectUrl] = useState<string>();
   const [reviewingRates, setReviewingRates] = useState(false);
@@ -218,10 +303,36 @@ export function CheckoutForm({
       const cart = readCart(window.localStorage);
       setSnapshot(cart.snapshot);
       setStorageAvailable(cart.storageAvailable);
+      if (isLive) {
+        const storedIdempotencyKey = checkoutIdempotencyKeySchema.safeParse(
+          window.sessionStorage.getItem(CHECKOUT_IDEMPOTENCY_STORAGE_KEY),
+        );
+        if (storedIdempotencyKey.success) {
+          idempotencyKeyRef.current = storedIdempotencyKey.data;
+        }
+
+        const storedRecovery = window.sessionStorage.getItem(CHECKOUT_RECOVERY_STORAGE_KEY);
+        if (storedRecovery !== null) {
+          try {
+            const parsedRecovery = checkoutRecoveryStorageSchema.safeParse(
+              JSON.parse(storedRecovery) as unknown,
+            );
+            if (parsedRecovery.success) {
+              setOrderNumber(parsedRecovery.data.orderNumber);
+              setOrderStatusToken(parsedRecovery.data.orderStatusToken);
+              setPaymentRedirectUrl(parsedRecovery.data.paymentRedirectUrl);
+              setOrderStatus(parsedRecovery.data.status);
+              setResult("payment-pending");
+            }
+          } catch {
+            window.sessionStorage.removeItem(CHECKOUT_RECOVERY_STORAGE_KEY);
+          }
+        }
+      }
       setLoadState("ready");
     }, 0);
     return () => window.clearTimeout(loadTimer);
-  }, []);
+  }, [isLive]);
 
   useEffect(() => () => clearTimeout(timer.current), []);
   useEffect(() => {
@@ -273,6 +384,7 @@ export function CheckoutForm({
     if (!form || !validate(form)) return;
     setResult("idle");
     setServerError(undefined);
+    setServerErrorCode(undefined);
     setSelectedShippingId(null);
     setErrors(clearShippingError);
     if (!isLive) {
@@ -314,6 +426,7 @@ export function CheckoutForm({
     } catch (error) {
       setShippingStatus("unavailable");
       setServerError(error instanceof CheckoutClientError ? error.message : "Opsi pengiriman belum tersedia. Coba lagi.");
+      setServerErrorCode(error instanceof CheckoutClientError ? error.code : undefined);
     } finally {
       setReviewingRates(false);
     }
@@ -325,6 +438,7 @@ export function CheckoutForm({
     setErrors(clearShippingError);
     setResult("idle");
     setServerError(undefined);
+    setServerErrorCode(undefined);
     if (isLive) {
       setShippingOptions([]);
       setShippingExpiresAt(undefined);
@@ -338,6 +452,11 @@ export function CheckoutForm({
     const formData = new FormData(form);
     const idempotencyKey = idempotencyKeyRef.current ?? crypto.randomUUID();
     idempotencyKeyRef.current = idempotencyKey;
+    try {
+      window.sessionStorage.setItem(CHECKOUT_IDEMPOTENCY_STORAGE_KEY, idempotencyKey);
+    } catch {
+      // Checkout still remains server-idempotent for this page lifetime.
+    }
     const response = await fetch("/api/checkout", {
       body: JSON.stringify({
         address: {
@@ -391,6 +510,7 @@ export function CheckoutForm({
     setErrors({});
     setResult("submitting");
     setServerError(undefined);
+    setServerErrorCode(undefined);
     if (isLive) {
       void submitLiveCheckout(event.currentTarget)
         .then((response) => {
@@ -399,16 +519,31 @@ export function CheckoutForm({
             setOrderNumber(response.orderNumber);
             setOrderStatusToken(response.accessToken);
             setPaymentRedirectUrl(response.payment.redirectUrl);
+            setOrderStatus("PENDING_PAYMENT");
           } else {
             setOrderNumber(response.orderNumber);
-            setOrderStatusToken(undefined);
-            setPaymentRedirectUrl(undefined);
+            setOrderStatusToken(response.accessToken);
+            setPaymentRedirectUrl(response.payment.redirectUrl);
+            setOrderStatus(response.status);
+          }
+          try {
+            window.sessionStorage.setItem(CHECKOUT_RECOVERY_STORAGE_KEY, JSON.stringify({
+              orderNumber: response.orderNumber,
+              orderStatusToken: response.accessToken,
+              ...(response.payment.redirectUrl === undefined
+                ? {}
+                : { paymentRedirectUrl: response.payment.redirectUrl }),
+              status: response.kind === "CREATED" ? "PENDING_PAYMENT" : response.status,
+            }));
+          } catch {
+            // The server response remains usable even when session storage is blocked.
           }
           setResult("payment-pending");
         })
         .catch((error) => {
           pending.current = false;
           setServerError(error instanceof CheckoutClientError ? error.message : "Checkout belum dapat dibuat. Coba lagi.");
+          setServerErrorCode(error instanceof CheckoutClientError ? error.code : undefined);
           setResult("payment-error");
         });
       return;
@@ -428,11 +563,19 @@ export function CheckoutForm({
     setScenario("ready");
     setResult("idle");
     setServerError(undefined);
+    setServerErrorCode(undefined);
     setOrderNumber(undefined);
+    setOrderStatus("PENDING_PAYMENT");
     setOrderStatusToken(undefined);
     setPaymentRedirectUrl(undefined);
     if (isLive) {
       idempotencyKeyRef.current = undefined;
+      try {
+        window.sessionStorage.removeItem(CHECKOUT_IDEMPOTENCY_STORAGE_KEY);
+        window.sessionStorage.removeItem(CHECKOUT_RECOVERY_STORAGE_KEY);
+      } catch {
+        // Nothing else is required to reset the in-memory checkout state.
+      }
       setSelectedShippingId(null);
       setShippingStatus("idle");
       setShippingOptions([]);
@@ -449,6 +592,16 @@ export function CheckoutForm({
   }
 
   if ((!previewEnabled || catalogStatus !== "examples") && !isLive) {
+    if (liveCatalogError) {
+      return (
+        <StatusNotice
+          action={<AuLink href="/checkout" variant="outline" className="min-h-11">Muat ulang checkout</AuLink>}
+          description="Sumber katalog atau provider checkout sedang tidak dapat dijangkau. Tidak ada order atau pembayaran yang dibuat."
+          title="Checkout live belum dapat dimuat."
+          tone="error"
+        />
+      );
+    }
     return (
       <StatusNotice
         tone="info"
@@ -522,16 +675,29 @@ export function CheckoutForm({
           {result === "reviewed" ? <StatusNotice tone="success" title="Preview checkout siap ditinjau." description="Kontak, alamat, dan opsi pengiriman lolos validasi lokal. Belum ada order, reservasi, token pembayaran, atau data yang dikirim." /> : null}
           {result === "payment-pending" && isLive ? (
             <StatusNotice
-              action={paymentRedirectUrl ? <a className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={paymentRedirectUrl} rel="noreferrer" target="_blank">{demoMode ? "Buka pembayaran demo" : "Buka pembayaran sandbox"}</a> : orderStatusToken ? <AuLink className="min-h-11" href={`/orders/${orderStatusToken}`} variant="outline">Lihat status order</AuLink> : undefined}
+              action={
+                <div className="flex flex-wrap gap-2">
+                  {paymentRedirectUrl && orderStatus === "PENDING_PAYMENT" ? (
+                    <a className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={paymentRedirectUrl} rel="noreferrer" target="_blank">
+                      {demoMode ? "Buka pembayaran demo" : "Buka pembayaran sandbox"}
+                    </a>
+                  ) : null}
+                  {orderStatusToken ? <AuLink className="min-h-11" href={`/orders/${orderStatusToken}`} variant="outline">Lihat status order</AuLink> : null}
+                </div>
+              }
               description={demoMode
-                ? orderNumber ? `Order ${orderNumber} tersimpan di database lokal dan menunggu simulasi pembayaran. Tidak ada provider eksternal yang dipanggil.` : "Order demo tersimpan di database lokal dan menunggu simulasi pembayaran."
-                : orderNumber ? `Order ${orderNumber} sudah dibuat dan menunggu pembayaran. Status PAID hanya dapat ditetapkan setelah webhook provider diverifikasi server.` : "Order sudah dibuat dan menunggu pembayaran. Status PAID hanya dapat ditetapkan setelah webhook provider diverifikasi server."}
-              title={demoMode ? "Order demo tersimpan." : "Checkout tersimpan, pembayaran menunggu."}
-              tone="info"
+                ? orderNumber ? `Order ${orderNumber} tersimpan di database lokal dengan status ${orderStatusLabels[orderStatus]}. Tidak ada provider eksternal yang dipanggil.` : `Order demo tersimpan di database lokal dengan status ${orderStatusLabels[orderStatus]}.`
+                : orderNumber
+                  ? orderStatus === "PENDING_PAYMENT"
+                    ? `Order ${orderNumber} sudah dibuat dan menunggu pembayaran. Status PAID hanya dapat ditetapkan setelah webhook provider diverifikasi server.`
+                    : `Order ${orderNumber} dipulihkan dengan status ${orderStatusLabels[orderStatus]}. Status ini berasal dari server.`
+                  : `Order sudah dibuat dengan status ${orderStatusLabels[orderStatus]}.`}
+              title={demoMode ? "Order demo tersimpan." : orderStatus === "PENDING_PAYMENT" ? "Checkout tersimpan, pembayaran menunggu." : "Status order dipulihkan."}
+              tone={orderStatus === "PENDING_PAYMENT" ? "info" : "success"}
             />
           ) : null}
           {result === "payment-pending" && !isLive ? <StatusNotice tone="info" title="Simulasi pembayaran masih menunggu." description="Browser tidak menyimpulkan status pembayaran. Pada integrasi nyata, status hanya berubah setelah notifikasi provider diverifikasi server." action={<Button type="button" variant="outline" className="min-h-11" onClick={resetOutcome}>Kembali ke ringkasan</Button>} /> : null}
-          {result === "payment-error" ? <StatusNotice tone="error" title={isLive ? "Checkout belum dapat dibuat." : "Simulasi pembayaran gagal."} description={isLive ? serverError ?? "Periksa data dan coba lagi." : "Isian checkout tetap tersedia dan tidak ada transaksi nyata. Kembali ke skenario siap untuk mencoba alur pemulihan."} action={<Button type="button" variant="outline" className="min-h-11" onClick={resetOutcome}>{isLive ? "Coba lagi" : "Coba lagi"}</Button>} /> : null}
+          {result === "payment-error" ? <StatusNotice tone="error" title={isLive ? "Checkout belum dapat dibuat." : "Simulasi pembayaran gagal."} description={isLive ? serverError ?? "Periksa data dan coba lagi." : "Isian checkout tetap tersedia dan tidak ada transaksi nyata. Kembali ke skenario siap untuk mencoba alur pemulihan."} action={isLive && serverErrorCode === "OUT_OF_STOCK" ? <AuLink href="/cart" variant="outline" className="min-h-11">Tinjau Cart</AuLink> : <Button type="button" variant="outline" className="min-h-11" onClick={resetOutcome}>{isLive ? "Coba lagi" : "Coba lagi"}</Button>} /> : null}
         </div>
 
         <fieldset disabled={busy} className="min-w-0 space-y-5 rounded-xl border border-border bg-card p-5 shadow-card sm:p-6">

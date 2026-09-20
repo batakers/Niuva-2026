@@ -4,6 +4,7 @@ import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation
 import { PublicShell } from "@/components/niuva/public-shell";
 import { AuLink } from "@/components/ui/AuLink";
 import { getLiveShopProducts, getShopPreview } from "@/features/frontend-preview/server";
+import type { PreviewScenario } from "@/features/frontend-preview/types";
 import { getServerCapabilities, isLocalDemoMode } from "@/lib/env/server";
 import { CartItems } from "./cart-items";
 
@@ -23,10 +24,13 @@ export default async function CartPage({ searchParams }: CartPageProps) {
   const demoMode = isLocalDemoMode();
   let products = previewProducts;
   let liveEnabled = false;
+  let catalogStatus: PreviewScenario | "live-empty" | "live-error" | "live-unavailable" | null = scenario;
   if (scenario === null && process.env.DATABASE_URL !== undefined) {
     try {
       products = await getLiveShopProducts();
+      catalogStatus = products.length === 0 ? "live-empty" : null;
     } catch {
+      catalogStatus = "live-error";
       products = [];
     }
     try {
@@ -37,6 +41,8 @@ export default async function CartPage({ searchParams }: CartPageProps) {
     } catch {
       liveEnabled = false;
     }
+  } else if (scenario === null) {
+    catalogStatus = "live-unavailable";
   }
   const previewEnabled = scenario === "examples";
   const functionalStatus = liveEnabled
@@ -70,7 +76,7 @@ export default async function CartPage({ searchParams }: CartPageProps) {
             </aside>
           ) : null}
 
-          <CartItems demoMode={demoMode} products={products} catalogStatus={scenario} liveEnabled={liveEnabled} previewEnabled={previewEnabled} />
+          <CartItems demoMode={demoMode} products={products} catalogStatus={catalogStatus} liveEnabled={liveEnabled} previewEnabled={previewEnabled} />
         </div>
       </main>
     </PublicShell>

@@ -26,7 +26,7 @@ export default function ProjectBriefPage() {
               <ul className="mt-4 space-y-3 text-sm leading-6 text-muted-foreground">
                 <li>Tujuan, tahap saat ini, dan batasan proyek.</li>
                 <li>Perkiraan jumlah serta tanggal target.</li>
-                <li>Link referensi yang dapat Anda bagikan.</li>
+                <li>Jika sudah ada, link referensi yang dapat Anda bagikan.</li>
               </ul>
             </div>
           </div>

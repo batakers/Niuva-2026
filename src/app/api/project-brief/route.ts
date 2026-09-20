@@ -27,7 +27,7 @@ export async function POST(request: Request) {
       maxBytes: PROJECT_BRIEF_MAX_BODY_BYTES,
     });
     const result = await new InquiryService({
-      notification: createInquiryAdminNotificationFromEnvironment(),
+      notificationFactory: createInquiryAdminNotificationFromEnvironment,
     }).submit(payload);
 
     return apiSuccess(

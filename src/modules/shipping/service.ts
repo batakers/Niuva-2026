@@ -22,6 +22,10 @@ import { requireAdminPermission } from "@/modules/admin/permissions";
 import { customPaymentExpiresAt } from "@/modules/policy/commercial";
 
 const nonNegativeDecimal = z.string().trim().regex(/^\d+(?:\.\d{1,6})?$/);
+const optionalAddressText = z.preprocess(
+  (value) => (typeof value === "string" && value.trim().length === 0 ? undefined : value),
+  z.string().trim().max(120).optional(),
+);
 
 export const customPackageMeasurementSchema = z.object({
   finalHeightCm: nonNegativeDecimal,
@@ -30,9 +34,28 @@ export const customPackageMeasurementSchema = z.object({
   finalWidthCm: nonNegativeDecimal,
 });
 
+export const shipmentMetadataSchema = z.object({
+  courierCode: z.string().trim().min(2).max(64).regex(/^[A-Za-z0-9._-]+$/),
+  trackingNumber: z.string().trim().min(3).max(128).regex(/^[A-Za-z0-9._/ -]+$/),
+}).strict();
+
+export const customShippingAddressSchema = z.object({
+  addressLine: z.string().trim().min(8).max(500),
+  city: z.string().trim().min(2).max(120),
+  countryCode: z.literal("ID"),
+  district: optionalAddressText,
+  phone: z.string().trim().regex(/^\+?[0-9][0-9\s-]{7,19}$/),
+  postalCode: z.string().trim().regex(/^\d{5}$/),
+  province: z.string().trim().min(2).max(120),
+  recipientName: z.string().trim().min(2).max(120),
+}).strict();
+
 export type CustomPackageMeasurement = z.infer<
   typeof customPackageMeasurementSchema
 >;
+
+export type ShipmentMetadata = z.infer<typeof shipmentMetadataSchema>;
+export type CustomShippingAddress = z.infer<typeof customShippingAddressSchema>;
 
 export type ShippingProviderRate = Readonly<{
   courierCode: string;
@@ -222,6 +245,68 @@ export class ShippingService {
     });
 
     return { payment, preparation };
+  }
+
+  async recordShipmentMetadata(
+    orderId: string,
+    input: unknown,
+  ): Promise<Readonly<{ shipmentId: string }>> {
+    const admin = await this.authorizeAdmin();
+    requireAdminPermission(admin, "SHIPPING_MANAGE");
+    const metadata = parseWithValidation(shipmentMetadataSchema, input);
+    const repository = this.repositoryFactory();
+    if (repository.recordShipmentMetadata === undefined) {
+      throw appError("INTERNAL_ERROR", {
+        message: "Repository metadata shipment belum tersedia.",
+      });
+    }
+
+    const result = await repository.recordShipmentMetadata(orderId, metadata);
+    await recordAudit(this.audit, {
+      action: "shipping.shipment.metadata.recorded",
+      actorId: admin.profile.id,
+      actorType: "ADMIN",
+      afterJson: {
+        courierCode: metadata.courierCode,
+        hasTrackingNumber: true,
+        shipmentId: result.shipmentId,
+      },
+      entityId: orderId,
+      entityType: "Shipment",
+    });
+    return result;
+  }
+
+  async saveCustomShippingAddress(
+    orderId: string,
+    input: unknown,
+  ): Promise<Readonly<{ orderId: string }>> {
+    const admin = await this.authorizeAdmin();
+    requireAdminPermission(admin, "SHIPPING_MANAGE");
+    const address = parseWithValidation(customShippingAddressSchema, input);
+    const repository = this.repositoryFactory();
+    if (repository.saveCustomShippingAddress === undefined) {
+      throw appError("INTERNAL_ERROR", {
+        message: "Repository alamat shipping custom belum tersedia.",
+      });
+    }
+
+    const result = await repository.saveCustomShippingAddress(orderId, address);
+    await recordAudit(this.audit, {
+      action: "shipping.address.saved",
+      actorId: admin.profile.id,
+      actorType: "ADMIN",
+      afterJson: {
+        city: address.city,
+        countryCode: address.countryCode,
+        hasAddressLine: address.addressLine.length > 0,
+        hasPhone: address.phone.length > 0,
+        postalCode: address.postalCode,
+      },
+      entityId: orderId,
+      entityType: "Order",
+    });
+    return result;
   }
 }
 

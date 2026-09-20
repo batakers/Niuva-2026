@@ -39,6 +39,12 @@ export type OrderStatusPreview = Readonly<{
   }>;
   orderNumber: string;
   orderType: "RETAIL" | "CUSTOM_PRINT";
+  payment?: Readonly<{
+    expiresAt: string;
+    purpose: "ORDER_TOTAL" | "CUSTOM_SHIPPING";
+    redirectUrl?: string;
+    token?: string;
+  }>;
   paidAt: string | null;
   shipment: Readonly<{
     status: string;
@@ -199,6 +205,16 @@ function toOrderStatusPreview(order: PublicOrderStatus): OrderStatusPreview {
     nextAction: nextAction(order.status, custom),
     orderNumber: order.orderNumber,
     orderType: order.orderType,
+    ...(order.payment === undefined
+      ? {}
+      : {
+          payment: {
+            expiresAt: publicDateFormatter.format(order.payment.expiresAt),
+            purpose: order.payment.purpose,
+            ...(order.payment.redirectUrl === undefined ? {} : { redirectUrl: order.payment.redirectUrl }),
+            ...(order.payment.token === undefined ? {} : { token: order.payment.token }),
+          },
+        }),
     paidAt: order.paidAt === null ? null : publicDateFormatter.format(order.paidAt),
     shipment: order.shipments[0]
       ? {

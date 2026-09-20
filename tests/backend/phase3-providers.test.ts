@@ -111,6 +111,10 @@ class FakePrivateObjectStorage implements PrivateObjectStorage {
     contentType: "model/stl",
   };
 
+  async createDownloadUrl(input: Readonly<{ expiresInSeconds: number; key: string }>) {
+    return `https://storage.example.test/download?key=${input.key}&ttl=${input.expiresInSeconds}`;
+  }
+
   async createUploadUrl(input: Readonly<{
     contentType: string;
     expiresInSeconds: number;

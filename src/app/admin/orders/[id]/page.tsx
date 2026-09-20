@@ -14,7 +14,10 @@ import {
   AdminActionForm,
 } from "@/app/admin/admin-action-form";
 import {
+  createCustomShippingPaymentAction,
+  recordShipmentMetadataAction,
   reissueOrderTokenAction,
+  saveCustomShippingAddressAction,
   transitionOrderAction,
 } from "@/app/admin/actions";
 import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
@@ -26,6 +29,7 @@ import type { OrderStatus } from "@/generated/prisma/client";
 import {
   CUSTOM_ORDER_TRANSITIONS,
   RETAIL_ORDER_TRANSITIONS,
+  requiresVerifiedPaymentSettlement,
 } from "@/modules/order/transitions";
 
 export const metadata: Metadata = {
@@ -57,7 +61,9 @@ export default async function AdminOrderDetailPage({
 
   const currentStatus = order.status as OrderStatus;
   const transitions = order.orderType === "RETAIL" ? RETAIL_ORDER_TRANSITIONS : CUSTOM_ORDER_TRANSITIONS;
-  const nextStatuses = transitions[currentStatus] ?? [];
+  const nextStatuses = (transitions[currentStatus] ?? []).filter(
+    (nextStatus) => !requiresVerifiedPaymentSettlement(currentStatus, nextStatus),
+  );
 
   return (
     <AdminShell active="orders" role={access.profile.role}>
@@ -92,7 +98,62 @@ export default async function AdminOrderDetailPage({
               <input name="orderId" type="hidden" value={order.id} />
             </AdminActionForm>
           </div>
+          {order.orderType === "CUSTOM_PRINT" &&
+          (currentStatus === "FINISHING_QC" || currentStatus === "WAITING_SHIPPING_PAYMENT") ? (
+            <div className="mt-6 border-t border-border pt-5">
+              <h3 className="text-sm font-semibold">Pengukuran paket final</h3>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+                Catat berat dan dimensi setelah finishing. Server akan meminta rate provider, menyimpan snapshot shipment, lalu membuat atau memakai ulang payment attempt shipping.
+              </p>
+              <AdminActionForm action={createCustomShippingPaymentAction} className="mt-4" submitLabel="Siapkan pembayaran shipping">
+                <input name="orderId" type="hidden" value={order.id} />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <MeasurementField label="Berat final (gram)" name="finalWeightGrams" />
+                  <MeasurementField label="Panjang final (cm)" name="finalLengthCm" />
+                  <MeasurementField label="Lebar final (cm)" name="finalWidthCm" />
+                  <MeasurementField label="Tinggi final (cm)" name="finalHeightCm" />
+                </div>
+              </AdminActionForm>
+            </div>
+          ) : null}
+          {(currentStatus === "READY_TO_SHIP" || currentStatus === "SHIPPED") && order.shipments.length > 0 ? (
+            <div className="mt-6 border-t border-border pt-5">
+              <h3 className="text-sm font-semibold">Kurir dan nomor resi</h3>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+                Catat data pengiriman manual setelah paket siap. Booking kurir otomatis tidak diperlukan untuk menyimpan metadata ini.
+              </p>
+              <AdminActionForm action={recordShipmentMetadataAction} className="mt-4" submitLabel="Simpan kurir & resi">
+                <input name="orderId" type="hidden" value={order.id} />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <ShipmentMetadataField label="Kode kurir" name="courierCode" value={order.shipments[0]?.courierCode ?? ""} />
+                  <ShipmentMetadataField label="Nomor resi" name="trackingNumber" value={order.shipments[0]?.trackingNumber ?? ""} />
+                </div>
+              </AdminActionForm>
+            </div>
+          ) : null}
         </section>
+
+        {order.orderType === "CUSTOM_PRINT" && !["CANCELLED", "COMPLETED", "SHIPPED"].includes(currentStatus) ? (
+          <section aria-labelledby="custom-address-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
+            <h2 className="text-xl font-semibold" id="custom-address-title">Alamat shipping custom</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Order custom dibuat tanpa alamat. Simpan alamat penerima sebelum meminta rate provider dan membuat tagihan shipping.</p>
+            <AdminActionForm action={saveCustomShippingAddressAction} className="mt-5" submitLabel="Simpan alamat shipping">
+              <input name="orderId" type="hidden" value={order.id} />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <ShipmentMetadataField label="Nama penerima" name="recipientName" value={order.address?.recipientName ?? ""} />
+                <ShipmentMetadataField label="Nomor telepon" name="phone" value={order.address?.phone ?? ""} />
+                <label className="grid gap-1.5 text-sm font-medium sm:col-span-2" htmlFor="addressLine">
+                  Alamat lengkap
+                  <textarea className="min-h-24 rounded-lg border border-input bg-background px-3 py-2 text-base font-normal shadow-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50" defaultValue={order.address?.addressLine ?? ""} id="addressLine" name="addressLine" required rows={3} />
+                </label>
+                <ShipmentMetadataField label="Kecamatan (opsional)" name="district" value={order.address?.district ?? ""} required={false} />
+                <ShipmentMetadataField label="Kota atau kabupaten" name="city" value={order.address?.city ?? ""} />
+                <ShipmentMetadataField label="Provinsi" name="province" value={order.address?.province ?? ""} />
+                <ShipmentMetadataField label="Kode pos" name="postalCode" value={order.address?.postalCode ?? ""} />
+              </div>
+            </AdminActionForm>
+          </section>
+        ) : null}
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(18rem,0.85fr)]">
           <section aria-labelledby="customer-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
@@ -125,7 +186,7 @@ export default async function AdminOrderDetailPage({
         <div className="grid gap-6 lg:grid-cols-3">
           <RecordList title="Pembayaran" empty="Belum ada percobaan pembayaran." items={order.paymentAttempts.map((attempt) => `${attempt.providerOrderId} · ${formatStatus(attempt.status)} · ${formatMoney(attempt.amountRp)}`)} />
           <RecordList title="Reservasi stok" empty="Tidak ada reservasi stok." items={order.reservations.map((reservation) => `${reservation.variantId} · ${reservation.quantity} unit · ${formatStatus(reservation.status)}`)} />
-          <RecordList title="Pengiriman" empty="Belum ada shipment." items={order.shipments.map((shipment) => `${formatStatus(shipment.status)} · ${shipment.trackingNumber ?? "Tanpa resi"}`)} />
+          <RecordList title="Pengiriman" empty="Belum ada shipment." items={order.shipments.map((shipment) => `${formatStatus(shipment.status)} · ${shipment.courierCode ?? "Kurir belum dicatat"} · ${shipment.trackingNumber ?? "Tanpa resi"}`)} />
         </div>
         <StatusNotice tone="info" title="Provider pengiriman belum diaktifkan" description="Biteship dan Midtrans sengaja tidak diaktifkan pada goal ini. Measurement, rate lookup, payment, dan webhook tetap menunggu data perusahaan Owner." />
       </main>
@@ -143,6 +204,39 @@ async function loadOrder(access: AdminAccess, id: string): Promise<AdminOrderDet
 
 function Info({ label, value }: Readonly<{ label: string; value: string }>) {
   return <div><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-1 break-words font-medium">{value}</dd></div>;
+}
+
+function MeasurementField({ label, name }: Readonly<{ label: string; name: string }>) {
+  return (
+    <label className="grid gap-1.5 text-sm font-medium" htmlFor={name}>
+      {label}
+      <input
+        className="min-h-11 rounded-lg border border-input bg-background px-3 text-base font-normal shadow-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        id={name}
+        inputMode="decimal"
+        name={name}
+        placeholder="0"
+        required
+        type="text"
+      />
+    </label>
+  );
+}
+
+function ShipmentMetadataField({ label, name, required = true, value }: Readonly<{ label: string; name: string; required?: boolean; value: string }>) {
+  return (
+    <label className="grid gap-1.5 text-sm font-medium" htmlFor={name}>
+      {label}
+      <input
+        className="min-h-11 rounded-lg border border-input bg-background px-3 text-base font-normal shadow-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        defaultValue={value}
+        id={name}
+        name={name}
+        required={required}
+        type="text"
+      />
+    </label>
+  );
 }
 
 function RecordList({ empty, items, title }: Readonly<{ empty: string; items: readonly string[]; title: string }>) {

@@ -25,6 +25,7 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
   const previewEnabled = process.env.NODE_ENV === "development" && scenario === "examples";
   const demoMode = isLocalDemoMode();
   let liveEnabled = false;
+  let liveCatalogError = false;
   let products = previewProducts;
 
   if (!previewEnabled && scenario === null) {
@@ -37,9 +38,10 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
         products = await getLiveShopProducts();
         liveEnabled = products.length > 0;
       }
-    } catch {
-      // Provider, catalog, and database boundaries fail closed to the safe notice.
-    }
+      } catch {
+        liveCatalogError = true;
+        // Provider, catalog, and database boundaries fail closed to the safe notice.
+      }
   }
   const functionalStatus = liveEnabled
     ? "server-backed" as const
@@ -63,7 +65,7 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
         </section>
 
         <div className="mx-auto max-w-public px-5 py-10 sm:px-8 sm:py-14">
-          <CheckoutForm demoMode={demoMode} products={products} catalogStatus={scenario} liveEnabled={liveEnabled} previewEnabled={previewEnabled} initialScenario={state} />
+          <CheckoutForm catalogStatus={scenario} demoMode={demoMode} initialScenario={state} liveCatalogError={liveCatalogError} liveEnabled={liveEnabled} previewEnabled={previewEnabled} products={products} />
         </div>
       </main>
     </PublicShell>

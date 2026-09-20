@@ -27,6 +27,7 @@ export type CustomShippingContext = Readonly<{
     province: string;
     recipientName: string;
   }> | null;
+  grandTotalRp?: string;
   orderNumber: string;
   orderType: "CUSTOM_PRINT" | "RETAIL";
   status: "CANCELLED" | "COMPLETED" | "FINISHING_QC" | "IN_PRODUCTION" | "PAID" | "PENDING_PAYMENT" | "PROCESSING" | "READY_TO_SHIP" | "SHIPPED" | "SUBMITTED" | "UNDER_REVIEW" | "WAITING_FOR_APPROVAL" | "WAITING_PAYMENT" | "WAITING_SHIPPING_PAYMENT";
@@ -68,6 +69,23 @@ export interface ShippingServiceRepository {
   }>): Promise<CustomShippingPreparation>;
   findCustomShippingContext(orderId: string): Promise<CustomShippingContext | null>;
   paymentProviderOrderIdExists(providerOrderId: string): Promise<boolean>;
+  recordShipmentMetadata?(
+    orderId: string,
+    input: Readonly<{ courierCode: string; trackingNumber: string }>,
+  ): Promise<Readonly<{ shipmentId: string }>>;
+  saveCustomShippingAddress?(
+    orderId: string,
+    input: Readonly<{
+      addressLine: string;
+      city: string;
+      countryCode: "ID";
+      district?: string;
+      phone: string;
+      postalCode: string;
+      province: string;
+      recipientName: string;
+    }>,
+  ): Promise<Readonly<{ orderId: string }>>;
 }
 
 export class ShippingRepository implements ShippingServiceRepository {
@@ -91,7 +109,7 @@ export class ShippingRepository implements ShippingServiceRepository {
   async findCustomShippingContext(
     orderId: string,
   ): Promise<CustomShippingContext | null> {
-    return this.prisma.order.findUnique({
+    const order = await this.prisma.order.findUnique({
       where: { id: orderId },
       select: {
         address: {
@@ -107,11 +125,19 @@ export class ShippingRepository implements ShippingServiceRepository {
             recipientName: true,
           },
         },
+        grandTotalRp: true,
         orderNumber: true,
         orderType: true,
         status: true,
       },
     });
+
+    if (order === null) return null;
+
+    return {
+      ...order,
+      grandTotalRp: order.grandTotalRp.toString(),
+    };
   }
 
   async paymentProviderOrderIdExists(providerOrderId: string): Promise<boolean> {
@@ -121,6 +147,106 @@ export class ShippingRepository implements ShippingServiceRepository {
     });
 
     return attempt !== null;
+  }
+
+  async recordShipmentMetadata(
+    orderId: string,
+    input: Readonly<{ courierCode: string; trackingNumber: string }>,
+  ): Promise<Readonly<{ shipmentId: string }>> {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      select: {
+        status: true,
+        shipments: {
+          orderBy: { createdAt: "desc" },
+          select: { id: true },
+          take: 1,
+        },
+      },
+    });
+
+    if (order === null) throw appError("NOT_FOUND");
+    if (order.status !== "READY_TO_SHIP" && order.status !== "SHIPPED") {
+      throw appError("CONFLICT", {
+        message: "Kurir dan resi hanya dapat dicatat saat order siap atau sudah dikirim.",
+      });
+    }
+
+    const shipment = order.shipments[0];
+    if (shipment === undefined) {
+      throw appError("CONFLICT", {
+        message: "Order belum memiliki snapshot shipment untuk dicatat.",
+      });
+    }
+
+    await this.prisma.shipment.update({
+      where: { id: shipment.id },
+      data: {
+        courierCode: input.courierCode,
+        trackingNumber: input.trackingNumber,
+      },
+      select: { id: true },
+    });
+
+    return { shipmentId: shipment.id };
+  }
+
+  async saveCustomShippingAddress(
+    orderId: string,
+    input: Readonly<{
+      addressLine: string;
+      city: string;
+      countryCode: "ID";
+      district?: string;
+      phone: string;
+      postalCode: string;
+      province: string;
+      recipientName: string;
+    }>,
+  ): Promise<Readonly<{ orderId: string }>> {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      select: { orderType: true, status: true },
+    });
+    if (order === null) throw appError("NOT_FOUND");
+    if (order.orderType !== "CUSTOM_PRINT") {
+      throw appError("CONFLICT", {
+        message: "Alamat shipping custom hanya tersedia untuk order custom print.",
+      });
+    }
+    if (["CANCELLED", "COMPLETED", "SHIPPED"].includes(order.status)) {
+      throw appError("CONFLICT", {
+        message: "Alamat tidak dapat diubah setelah order ditutup atau dikirim.",
+      });
+    }
+
+    await this.prisma.orderAddress.upsert({
+      where: { orderId },
+      create: {
+        addressLine: input.addressLine,
+        city: input.city,
+        countryCode: input.countryCode,
+        district: input.district ?? null,
+        orderId,
+        phone: input.phone,
+        postalCode: input.postalCode,
+        province: input.province,
+        recipientName: input.recipientName,
+      },
+      update: {
+        addressLine: input.addressLine,
+        city: input.city,
+        countryCode: input.countryCode,
+        district: input.district ?? null,
+        phone: input.phone,
+        postalCode: input.postalCode,
+        province: input.province,
+        recipientName: input.recipientName,
+      },
+      select: { orderId: true },
+    });
+
+    return { orderId };
   }
 
   async createCustomShippingPayment(input: Readonly<{

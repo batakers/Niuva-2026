@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Check, Clock3, FileLock2, ShieldCheck } from "lucide-react";
+import { z } from "zod";
 
 import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
 import { MoneySummary } from "@/components/niuva/money-summary";
@@ -14,6 +15,42 @@ import type { QuotePreview, QuotePreviewState } from "@/features/frontend-previe
 type Decision = "accept" | "decline" | null;
 type SettledQuoteState = Exclude<QuotePreviewState, "loading">;
 type DecisionRequestState = "idle" | "submitting" | "error";
+
+const quoteOrderStatusSchema = z.enum([
+  "PENDING_PAYMENT",
+  "PAID",
+  "PROCESSING",
+  "READY_TO_SHIP",
+  "SHIPPED",
+  "COMPLETED",
+  "CANCELLED",
+  "SUBMITTED",
+  "UNDER_REVIEW",
+  "WAITING_FOR_APPROVAL",
+  "WAITING_PAYMENT",
+  "IN_PRODUCTION",
+  "FINISHING_QC",
+  "WAITING_SHIPPING_PAYMENT",
+]);
+type QuoteOrderStatus = z.infer<typeof quoteOrderStatusSchema>;
+const quoteAcceptanceResponseSchema = z.object({
+  orderAccessToken: z.string().min(1).optional(),
+  orderNumber: z.string().min(1),
+  payment: z.object({
+    provider: z.string().min(1).optional(),
+    redirectUrl: z.url({ protocol: /^https?$/ }).optional(),
+    token: z.string().min(1).optional(),
+  }).optional(),
+  status: quoteOrderStatusSchema.optional(),
+});
+const quoteRecoveryStorageSchema = z.object({
+  orderNumber: z.string().min(1),
+  orderStatusToken: z.string().min(1),
+  paymentRedirectUrl: z.url({ protocol: /^https?$/ }).optional(),
+  quoteNumber: z.string().min(1),
+  status: quoteOrderStatusSchema,
+});
+const QUOTE_RECOVERY_STORAGE_KEY = "niuva.quote.recovery";
 
 const stateCopy: Record<SettledQuoteState, Readonly<{
   description: string;
@@ -65,6 +102,8 @@ export function QuoteReview({
   const [actionError, setActionError] = useState<string>();
   const [orderStatusToken, setOrderStatusToken] = useState<string>();
   const [orderNumber, setOrderNumber] = useState<string>();
+  const [paymentRedirectUrl, setPaymentRedirectUrl] = useState<string>();
+  const [paymentStatus, setPaymentStatus] = useState<QuoteOrderStatus>("WAITING_PAYMENT");
   const decisionRef = useRef<HTMLDivElement>(null);
   const stateRef = useRef<HTMLDivElement>(null);
   const currentCopy = stateCopy[state];
@@ -109,14 +148,10 @@ export function QuoteReview({
         throw new Error("Keputusan quote belum dapat disimpan.");
       }
 
-      const candidate = payload as Record<string, unknown>;
-      if (typeof candidate.orderNumber === "string") {
-        setOrderNumber(candidate.orderNumber);
+      if (decision === "accept") {
+        applyAcceptedPayload(payload);
       }
-      if (decision === "accept" && typeof candidate.orderAccessToken === "string") {
-        setOrderStatusToken(candidate.orderAccessToken);
-      }
-      setState(decision === "accept" ? "accepted" : "declined");
+      if (decision === "decline") setState("declined");
       setDecision(null);
       setRequestState("idle");
     } catch (error) {
@@ -124,6 +159,85 @@ export function QuoteReview({
       setRequestState("error");
     }
   }
+
+  const applyAcceptedPayload = useCallback((payload: unknown) => {
+    const parsed = quoteAcceptanceResponseSchema.safeParse(payload);
+    if (!parsed.success) {
+      throw new Error("Respons kelanjutan quote tidak valid.");
+    }
+
+    setOrderNumber(parsed.data.orderNumber);
+    if (parsed.data.orderAccessToken !== undefined) {
+      setOrderStatusToken(parsed.data.orderAccessToken);
+    }
+    const nextStatus = parsed.data.status ?? "WAITING_PAYMENT";
+    setPaymentStatus(nextStatus);
+    const nextPaymentUrl = parsed.data.payment?.redirectUrl;
+    setPaymentRedirectUrl(nextPaymentUrl);
+    setState("accepted");
+
+    if (parsed.data.orderAccessToken !== undefined) {
+      try {
+        window.sessionStorage.setItem(QUOTE_RECOVERY_STORAGE_KEY, JSON.stringify({
+          orderNumber: parsed.data.orderNumber,
+          orderStatusToken: parsed.data.orderAccessToken,
+          ...(nextPaymentUrl === undefined ? {} : { paymentRedirectUrl: nextPaymentUrl }),
+          quoteNumber: quote.quoteNumber,
+          status: nextStatus,
+        }));
+      } catch {
+        // The current response remains usable without session storage.
+      }
+    }
+  }, [quote.quoteNumber]);
+
+  const recoverAcceptedQuote = useCallback(async () => {
+    if (token === undefined) return;
+
+    try {
+      const response = await fetch(
+        `/api/quote/${encodeURIComponent(token)}/accept`,
+        { headers: { "content-type": "application/json" }, method: "POST" },
+      );
+      const payload: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(readApiError(payload) ?? "Kelanjutan pembayaran quote belum dapat dipulihkan.");
+      }
+      applyAcceptedPayload(payload);
+      setRequestState("idle");
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Kelanjutan pembayaran quote belum dapat dipulihkan.");
+      setRequestState("error");
+    }
+  }, [applyAcceptedPayload, token]);
+
+  useEffect(() => {
+    if (isPreview || initialState !== "accepted" || token === undefined) return;
+
+    try {
+      const stored = window.sessionStorage.getItem(QUOTE_RECOVERY_STORAGE_KEY);
+      if (stored !== null) {
+        const parsed = quoteRecoveryStorageSchema.safeParse(JSON.parse(stored) as unknown);
+        if (parsed.success && parsed.data.quoteNumber === quote.quoteNumber) {
+          queueMicrotask(() => {
+            setOrderNumber(parsed.data.orderNumber);
+            setOrderStatusToken(parsed.data.orderStatusToken);
+            setPaymentRedirectUrl(parsed.data.paymentRedirectUrl);
+            setPaymentStatus(parsed.data.status);
+          });
+          return;
+        }
+      }
+    } catch {
+      // The route-bound token remains the recovery source when browser storage
+      // is unavailable or contains malformed data.
+    }
+
+    queueMicrotask(() => {
+      setRequestState("submitting");
+      void recoverAcceptedQuote();
+    });
+  }, [initialState, isPreview, quote.quoteNumber, recoverAcceptedQuote, token]);
 
   const effectiveCopy = isPreview
     ? currentCopy
@@ -142,7 +256,9 @@ export function QuoteReview({
         description:
           state === "accepted"
             ? orderStatusToken
-              ? "Quote sudah diterima dan order payable dibuat oleh server. Lanjutkan melalui tautan status order."
+              ? paymentRedirectUrl && paymentStatus === "WAITING_PAYMENT"
+                ? `Quote sudah diterima dan order ${orderNumber ?? "payable"} menunggu pembayaran. Lanjutkan pembayaran atau buka status order.`
+                : "Quote sudah diterima dan order payable dibuat oleh server. Lanjutkan melalui tautan status order."
               : orderNumber
                 ? `Quote sudah diterima dan order payable dibuat oleh server. Nomor order ${orderNumber} tercatat; simpan nomor ini bila perlu menghubungi Niuva.`
                 : "Quote sudah diterima dan order payable dibuat oleh server. Jika membutuhkan status order, hubungi Niuva dengan nomor quote ini."
@@ -289,9 +405,12 @@ export function QuoteReview({
               ) : null}
 
               {orderStatusToken ? (
-                <AuLink className="mt-5 min-h-11" href={`/orders/${orderStatusToken}`} variant="outline">
-                  Lihat status order
-                </AuLink>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {paymentRedirectUrl && paymentStatus === "WAITING_PAYMENT" ? <a className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={paymentRedirectUrl} rel="noreferrer" target="_blank">Buka pembayaran</a> : null}
+                  <AuLink className="min-h-11" href={`/orders/${orderStatusToken}`} variant="outline">
+                    Lihat status order
+                  </AuLink>
+                </div>
               ) : null}
             </div>
 

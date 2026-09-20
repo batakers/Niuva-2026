@@ -745,6 +745,43 @@ development yang sudah dibersihkan. Ini bukan klaim production readiness.
 - [x] Checkpoint R2 — R2-01 dan R2-02 sudah memiliki evidence; status tetap
   non-production dan tidak boleh dilabeli production-ready.
 
+## Goal — Audit remediation implementation (2026-09-20)
+
+Status: `COMPLETE_WITH_PROVIDER_AUTH_GATES`; source changes are scoped to confirmed findings from the
+current checkout. Production provider activation, migrations/seeds, customer
+accounts, and unresolved Owner decisions remain out of scope.
+
+### Goal 1 — Payment authority and retail recovery
+
+- [x] Block generic admin settlement of `PAID` and `READY_TO_SHIP`.
+- [x] Preserve and test verified webhook settlement/idempotency.
+- [x] Recover the same order/payment on checkout `REPLAY`, reload, and retry.
+- [x] Show payment and order-status continuation together.
+- [x] Checkpoint A: focused tests, typecheck, lint, build, and browser checks.
+
+### Goal 2 — Operator file access and custom payment continuation
+
+- [x] Add authorized short-lived operator download for verified private files.
+- [x] Recover accepted-quote order continuation after reload.
+- [x] Create/reuse custom payment for the existing payable order.
+- [x] Checkpoint B: focused tests, typecheck, lint, build, and browser checks.
+
+### Goal 3 — Custom shipping completion
+
+- [x] Add validated final measurement/address handoff on existing surfaces.
+- [x] Wire custom shipping payment and shipment metadata actions.
+- [x] Keep `READY_TO_SHIP` settlement-authoritative.
+- [x] Checkpoint C: focused shipping/order verification.
+
+### Goal 4 — Inquiry, admin session, and operational recovery UX
+
+- [x] Make inquiry persistence independent from notification availability.
+- [x] Add Clerk logout and safe admin access recovery affordances.
+- [x] Add public Cart navigation.
+- [x] Distinguish live empty/not-found/service errors and map checkout recovery.
+- [x] Align quote send/review UI with manual handoff and immutable review rules.
+- [x] Checkpoint D: focused tests, typecheck, lint, build, and browser checks.
+
 ## Goal — Custom Print Quote Lifecycle Acceptance (2026-09-20)
 
 Status: `LOOPBACK_SYNTHETIC_ACCEPTANCE_PASSED`.

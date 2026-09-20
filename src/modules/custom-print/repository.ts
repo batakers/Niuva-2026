@@ -1,4 +1,8 @@
-import { Prisma, type PrismaClient } from "@/generated/prisma/client";
+import {
+  Prisma,
+  type OrderStatus,
+  type PrismaClient,
+} from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { appError } from "@/modules/shared/errors";
 
@@ -95,6 +99,18 @@ export type AcceptedCustomOrder = Readonly<{
   orderId: string;
   orderNumber: string;
   currentOrderPublicTokenHash?: string;
+}>;
+
+export type CustomOrderPaymentPreparation = Readonly<{
+  amountRp: Prisma.Decimal;
+  created: boolean;
+  orderId: string;
+  orderNumber: string;
+  payment?: Readonly<{ redirectUrl?: string; token?: string }>;
+  paymentAttemptId: string;
+  paymentExpiresAt: Date;
+  paymentProviderOrderId: string;
+  status: OrderStatus;
 }>;
 
 export type CustomPrintRequestReviewSummary = Readonly<{
@@ -374,6 +390,15 @@ export class CustomPrintQuoteRepository {
     return order !== null;
   }
 
+  async paymentProviderOrderIdExists(providerOrderId: string): Promise<boolean> {
+    const attempt = await this.prisma.paymentAttempt.findUnique({
+      where: { providerOrderId },
+      select: { id: true },
+    });
+
+    return attempt !== null;
+  }
+
   async findRequestForReview(
     requestId: string,
   ): Promise<CustomPrintRequestReviewSummary | null> {
@@ -634,6 +659,165 @@ export class CustomPrintQuoteRepository {
         orderId: input.orderId,
         orderNumber: input.orderNumber,
       };
+    });
+  }
+
+  async prepareOrderPayment(input: Readonly<{
+    now: Date;
+    orderId: string;
+    paymentExpiresAt: Date;
+    paymentProvider?: string;
+    paymentProviderOrderId: string;
+  }>): Promise<CustomOrderPaymentPreparation> {
+    return this.prisma.$transaction(async (transaction) => {
+      await transaction.$queryRaw(
+        Prisma.sql`
+          SELECT "id"
+          FROM "payment_attempts"
+          WHERE "order_id" = ${input.orderId}::uuid
+          ORDER BY "id"
+          FOR UPDATE
+        `,
+      );
+      await transaction.$queryRaw(
+        Prisma.sql`
+          SELECT "id"
+          FROM "orders"
+          WHERE "id" = ${input.orderId}::uuid
+          FOR UPDATE
+        `,
+      );
+
+      const order = await transaction.order.findUnique({
+        where: { id: input.orderId },
+        select: {
+          grandTotalRp: true,
+          orderNumber: true,
+          orderType: true,
+          status: true,
+        },
+      });
+
+      if (order === null) throw appError("NOT_FOUND");
+      if (order.orderType !== "CUSTOM_PRINT") {
+        throw appError("CONFLICT", {
+          message: "Pembayaran quote hanya tersedia untuk order custom print.",
+        });
+      }
+      if (order.status !== "WAITING_PAYMENT" && order.status !== "PAID") {
+        throw appError("CONFLICT", {
+          message: "Order quote belum berada pada tahap pembayaran.",
+        });
+      }
+
+      const existing = await transaction.paymentAttempt.findFirst({
+        where: { orderId: input.orderId, purpose: "ORDER_TOTAL" },
+        orderBy: { createdAt: "desc" },
+        select: {
+          amountRp: true,
+          expiresAt: true,
+          id: true,
+          providerOrderId: true,
+          redirectUrl: true,
+          snapToken: true,
+          status: true,
+        },
+      });
+
+      if (existing !== null) {
+        if (existing.status === "PENDING") {
+          if (order.status !== "WAITING_PAYMENT" || existing.expiresAt <= input.now) {
+            throw appError("CONFLICT", {
+              message: "Payment quote kedaluwarsa atau tidak konsisten dengan status order.",
+            });
+          }
+
+          return {
+            amountRp: existing.amountRp,
+            created: false,
+            orderId: input.orderId,
+            orderNumber: order.orderNumber,
+            ...(existing.redirectUrl === null && existing.snapToken === null
+              ? {}
+              : {
+                  payment: {
+                    ...(existing.redirectUrl === null
+                      ? {}
+                      : { redirectUrl: existing.redirectUrl }),
+                    ...(existing.snapToken === null
+                      ? {}
+                      : { token: existing.snapToken }),
+                  },
+                }),
+            paymentAttemptId: existing.id,
+            paymentExpiresAt: existing.expiresAt,
+            paymentProviderOrderId: existing.providerOrderId,
+            status: order.status,
+          };
+        }
+
+        if (order.status === "PAID") {
+          return {
+            amountRp: existing.amountRp,
+            created: false,
+            orderId: input.orderId,
+            orderNumber: order.orderNumber,
+            paymentAttemptId: existing.id,
+            paymentExpiresAt: existing.expiresAt,
+            paymentProviderOrderId: existing.providerOrderId,
+            status: order.status,
+          };
+        }
+
+        if (
+          existing.status !== "EXPIRED" &&
+          existing.status !== "FAILED" &&
+          existing.status !== "CANCELLED"
+        ) {
+          throw appError("CONFLICT", {
+            message: "Payment quote tidak dapat diganti pada status saat ini.",
+          });
+        }
+      }
+
+      if (order.status !== "WAITING_PAYMENT") {
+        throw appError("CONFLICT", {
+          message: "Order quote sudah tidak menunggu pembayaran.",
+        });
+      }
+
+      const paymentAttempt = await transaction.paymentAttempt.create({
+        data: {
+          amountRp: order.grandTotalRp,
+          expiresAt: input.paymentExpiresAt,
+          orderId: input.orderId,
+          provider: input.paymentProvider ?? "MIDTRANS",
+          providerOrderId: input.paymentProviderOrderId,
+          purpose: "ORDER_TOTAL",
+        },
+        select: { id: true },
+      });
+
+      return {
+        amountRp: order.grandTotalRp,
+        created: true,
+        orderId: input.orderId,
+        orderNumber: order.orderNumber,
+        paymentAttemptId: paymentAttempt.id,
+        paymentExpiresAt: input.paymentExpiresAt,
+        paymentProviderOrderId: input.paymentProviderOrderId,
+        status: order.status,
+      };
+    });
+  }
+
+  async attachPaymentProviderResult(
+    paymentAttemptId: string,
+    result: Readonly<{ redirectUrl?: string; token?: string }>,
+  ): Promise<void> {
+    await this.prisma.paymentAttempt.update({
+      where: { id: paymentAttemptId },
+      data: { redirectUrl: result.redirectUrl, snapToken: result.token },
     });
   }
 

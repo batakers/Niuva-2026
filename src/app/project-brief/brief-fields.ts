@@ -23,7 +23,7 @@ export const briefFieldGroups: readonly { title: string; fields: readonly BriefF
     { name: "targetDeadline", label: "Target waktu", type: "date", required: true },
   ] },
   { title: "Referensi dan preferensi", fields: [
-    { name: "referenceLink", label: "Link referensi", type: "url", required: true, description: "Gunakan link yang dapat Anda bagikan. Upload file belum tersedia pada tahap ini." },
+    { name: "referenceLink", label: "Link referensi", type: "url", description: "Opsional untuk tahap ide. Jika sudah ada, gunakan link yang dapat Anda bagikan; upload file belum tersedia pada tahap ini." },
     { name: "budgetRange", label: "Rentang anggaran (opsional)" },
     { name: "preferredService", label: "Dukungan yang dicari (opsional)", type: "select", options: publicServices.map(service => ({ value: service.title, label: service.title })) },
   ] },

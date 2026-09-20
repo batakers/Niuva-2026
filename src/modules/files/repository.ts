@@ -37,6 +37,15 @@ export type PendingFileForConfirmation = Readonly<{
   uploadTokenHash: string | null;
 }>;
 
+export type VerifiedPrivateFileForOwner = Readonly<{
+  fileId: string;
+  mimeType: string;
+  originalName: string;
+  storageKey: string;
+}>;
+
+export type PrivateFileOwner = "B2B_INQUIRY" | "CUSTOM_PRINT_REQUEST";
+
 export class StoredFileRepository {
   constructor(private readonly prisma: PrismaClient = getPrismaClient()) {}
 
@@ -90,6 +99,39 @@ export class StoredFileRepository {
       bucketScope: file.bucketScope as FileBucketScope,
       uploadStatus: file.uploadStatus as FileUploadStatus,
     };
+  }
+
+  async findVerifiedPrivateFileForOwner(input: Readonly<{
+    fileId: string;
+    ownerId: string;
+    ownerType: PrivateFileOwner;
+  }>): Promise<VerifiedPrivateFileForOwner | null> {
+    const file = await this.prisma.storedFile.findFirst({
+      where: {
+        bucketScope: "PRIVATE_CUSTOMER",
+        deletedAt: null,
+        id: input.fileId,
+        uploadStatus: "VERIFIED",
+        ...(input.ownerType === "B2B_INQUIRY"
+          ? { b2bInquiryLinks: { some: { inquiryId: input.ownerId } } }
+          : { customPrintRequestLinks: { some: { requestId: input.ownerId } } }),
+      },
+      select: {
+        id: true,
+        mimeType: true,
+        originalName: true,
+        storageKey: true,
+      },
+    });
+
+    return file === null
+      ? null
+      : {
+          fileId: file.id,
+          mimeType: file.mimeType,
+          originalName: file.originalName,
+          storageKey: file.storageKey,
+        };
   }
 
   async markUploadedIfPending(input: Readonly<{

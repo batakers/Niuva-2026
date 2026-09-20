@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import type { AdminRole } from "@/generated/prisma/client";
 import AuLogo from "@/components/ui/AuLogo";
+import { AdminSessionActions } from "./admin-session-actions";
 
 export type AdminArea =
   | "queue"
@@ -62,6 +63,9 @@ export function AdminShell({
             <Link className="mt-4 inline-flex min-h-11 items-center text-sm text-brand-300 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href="/">
               Lihat situs publik
             </Link>
+            <div className="mt-4">
+              <AdminSessionActions dark showLogout={Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)} />
+            </div>
           </div>
         </aside>
         <div className="min-w-0">{children}</div>
@@ -82,6 +86,9 @@ export function AdminDataUnavailableView({
         Sesi {roleLabels[role]} tersedia, tetapi sumber data sedang tidak dapat dijangkau. Coba muat ulang tanpa mengubah data.
       </p>
       <p className="mt-5 text-sm font-medium text-destructive" role="alert">Tidak ada perubahan operasional yang dibuat.</p>
+      <div className="mt-6">
+        <AdminSessionActions retryHref="/admin" showLogout={Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)} />
+      </div>
     </main>
   );
 }

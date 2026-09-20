@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 
 import { PublicShell } from "@/components/niuva/public-shell";
+import { StatusNotice } from "@/components/niuva/status-notice";
 import {
   getLiveQuoteReview,
   getQuotePreview,
@@ -42,7 +44,24 @@ export default async function QuotePage({ params, searchParams }: PageProps<"/qu
         notFound();
       }
 
-      throw liveResult.error;
+      return (
+        <PublicShell functionalStatus="server-backed" scope="quote-review">
+          <main className="mx-auto max-w-public px-5 py-16 sm:px-8 sm:py-24" id="main-content">
+            <div className="max-w-2xl">
+              <p className="text-sm font-medium text-brand-700">Review quote</p>
+              <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-5xl">Quote belum dapat dimuat.</h1>
+              <div className="mt-8">
+                <StatusNotice
+                  action={<Link className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/quote/${token}`}>Coba lagi</Link>}
+                  description="Quote tidak diubah. Muat ulang tautan ini untuk mencoba membaca snapshot server kembali."
+                  title="Layanan quote sementara tidak tersedia"
+                  tone="error"
+                />
+              </div>
+            </div>
+          </main>
+        </PublicShell>
+      );
     }
 
     return (

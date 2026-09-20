@@ -43,6 +43,17 @@ export const CUSTOM_ORDER_TRANSITIONS: TransitionMap<OrderStatus> = {
   WAITING_SHIPPING_PAYMENT: ["READY_TO_SHIP"],
 };
 
+export function requiresVerifiedPaymentSettlement(
+  current: OrderStatus,
+  next: OrderStatus,
+): boolean {
+  return (
+    (current === "PENDING_PAYMENT" && next === "PAID") ||
+    (current === "WAITING_PAYMENT" && next === "PAID") ||
+    (current === "WAITING_SHIPPING_PAYMENT" && next === "READY_TO_SHIP")
+  );
+}
+
 export async function transitionRetailOrder(input: Readonly<{
   allowCancellation?: boolean;
   audit?: TransitionAuditWriter;

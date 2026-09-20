@@ -365,10 +365,10 @@ describe("Project Brief route integration", () => {
     const replayResponse = await postCheckout(makeRequest());
     expect(replayResponse.status).toBe(200);
     await expect(replayResponse.json()).resolves.toMatchObject({
-      grandTotalRp: "40000",
       kind: "REPLAY",
       orderId,
       status: "PENDING_PAYMENT",
+      totalRp: "40000",
     });
     expect(checkoutProviderMocks.getRates).toHaveBeenCalledTimes(2);
     expect(checkoutProviderMocks.createPayment).toHaveBeenCalledTimes(1);

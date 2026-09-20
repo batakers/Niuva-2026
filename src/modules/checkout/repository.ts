@@ -1,6 +1,11 @@
 import Decimal from "decimal.js";
 
-import { Prisma, type PrismaClient } from "@/generated/prisma/client";
+import {
+  Prisma,
+  type OrderStatus,
+  type PaymentAttemptStatus,
+  type PrismaClient,
+} from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
 import {
   lockVariant,
@@ -38,6 +43,20 @@ export type PaymentProviderResult = Readonly<{
   token?: string;
 }>;
 
+export type CheckoutRecoveryState = Readonly<{
+  grandTotalRp: string;
+  orderId: string;
+  orderNumber: string;
+  paymentAttemptId: string;
+  paymentExpiresAt: Date;
+  paymentProvider?: string;
+  paymentRedirectUrl: string | null;
+  paymentStatus: PaymentAttemptStatus;
+  paymentToken?: string | null;
+  publicTokenHash: string;
+  status: OrderStatus;
+}>;
+
 export interface CheckoutRepositoryPort {
   attachPaymentProviderResult(
     paymentAttemptId: string,
@@ -58,8 +77,17 @@ export interface CheckoutRepositoryPort {
     reservationExpiresAt: Date;
     shippingQuote: CheckoutShippingQuote;
   }>): Promise<CheckoutTransactionResult>;
+  findForRecovery(input: Readonly<{
+    orderId: string;
+    paymentAttemptId: string;
+  }>): Promise<CheckoutRecoveryState | null>;
   orderNumberExists(orderNumber: string): Promise<boolean>;
   paymentProviderOrderIdExists(providerOrderId: string): Promise<boolean>;
+  replacePublicTokenHash(
+    orderId: string,
+    currentHash: string,
+    nextHash: string,
+  ): Promise<boolean>;
 }
 
 type LockedCatalogVariant = Readonly<{
@@ -97,6 +125,50 @@ export class CheckoutRepository implements CheckoutRepositoryPort {
     });
 
     return attempt !== null;
+  }
+
+  async findForRecovery(input: Readonly<{
+    orderId: string;
+    paymentAttemptId: string;
+  }>): Promise<CheckoutRecoveryState | null> {
+    const order = await this.prisma.order.findFirst({
+      where: { id: input.orderId, orderType: "RETAIL" },
+      select: {
+        grandTotalRp: true,
+        id: true,
+        orderNumber: true,
+        paymentAttempts: {
+          where: { id: input.paymentAttemptId, purpose: "ORDER_TOTAL" },
+          select: {
+            expiresAt: true,
+            provider: true,
+            redirectUrl: true,
+            snapToken: true,
+            status: true,
+          },
+          take: 1,
+        },
+        publicTokenHash: true,
+        status: true,
+      },
+    });
+
+    const paymentAttempt = order?.paymentAttempts[0];
+    if (order === null || paymentAttempt === undefined) return null;
+
+    return {
+      grandTotalRp: order.grandTotalRp.toString(),
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      paymentAttemptId: input.paymentAttemptId,
+      paymentExpiresAt: paymentAttempt.expiresAt,
+      paymentProvider: paymentAttempt.provider,
+      paymentRedirectUrl: paymentAttempt.redirectUrl,
+      paymentStatus: paymentAttempt.status,
+      paymentToken: paymentAttempt.snapToken,
+      publicTokenHash: order.publicTokenHash,
+      status: order.status,
+    };
   }
 
   async createCheckoutTransaction(input: Readonly<{
@@ -354,5 +426,18 @@ export class CheckoutRepository implements CheckoutRepositoryPort {
         snapToken: result.token,
       },
     });
+  }
+
+  async replacePublicTokenHash(
+    orderId: string,
+    currentHash: string,
+    nextHash: string,
+  ): Promise<boolean> {
+    const updated = await this.prisma.order.updateMany({
+      where: { id: orderId, publicTokenHash: currentHash },
+      data: { publicTokenHash: nextHash },
+    });
+
+    return updated.count === 1;
   }
 }

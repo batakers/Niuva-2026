@@ -13,12 +13,14 @@ export function AdminActionForm({
   children,
   className,
   confirmMessage,
+  successLinkLabel = "Buka tautan baru",
   submitLabel = "Simpan perubahan",
 }: Readonly<{
   action: AdminAction;
   children: ReactNode;
   className?: string;
   confirmMessage?: string;
+  successLinkLabel?: string;
   submitLabel?: string;
 }>) {
   const [state, formAction, pending] = useActionState(action, initialState);
@@ -57,7 +59,7 @@ export function AdminActionForm({
               rel="noreferrer"
               target="_blank"
             >
-              Buka tautan baru
+              {successLinkLabel}
             </Link>
           ) : null}
         </div>
