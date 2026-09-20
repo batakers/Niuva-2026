@@ -85,7 +85,7 @@ export function ProductGrid({ products, previewEnabled = false }: { products: re
                     {cover?.url ? (
                       <Image
                         alt={cover.altText || product.name}
-                        className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                        className="object-cover transition-transform [transition-duration:var(--duration-normal-token)] [transition-timing-function:var(--ease-standard-token)] group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                         fill
                         sizes="(min-width: 768px) 50vw, 100vw"
                         src={cover.url}

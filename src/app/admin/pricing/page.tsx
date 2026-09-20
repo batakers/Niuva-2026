@@ -29,7 +29,7 @@ const dateFormatter = new Intl.DateTimeFormat("id-ID", {
 });
 
 const inputClass =
-  "min-h-11 rounded-lg border border-border bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
+  "min-h-11 rounded-lg border border-border bg-background px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm";
 
 export default async function AdminPricingPage({
   searchParams,

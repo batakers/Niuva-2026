@@ -392,7 +392,7 @@ export default async function Home() {
                       <Link className="block rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/projects/${project.slug}`}>
                         <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-muted">
                           {cover?.url ? (
-                            <Image alt={cover.altText} className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100" fill sizes="(min-width: 1024px) 30vw, 100vw" src={cover.url} />
+                            <Image alt={cover.altText} className="object-cover transition-transform [transition-duration:var(--duration-normal-token)] [transition-timing-function:var(--ease-standard-token)] group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100" fill sizes="(min-width: 1024px) 30vw, 100vw" src={cover.url} />
                           ) : (
                             <div className="flex h-full items-center justify-center px-5 text-center text-sm text-muted-foreground">Media project belum tersedia</div>
                           )}
