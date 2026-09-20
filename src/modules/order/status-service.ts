@@ -1,4 +1,9 @@
-import type { OrderStatus, OrderType } from "@/generated/prisma/client";
+import type {
+  OrderStatus,
+  OrderType,
+  PaymentAttemptStatus,
+  PaymentPurpose,
+} from "@/generated/prisma/client";
 import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
 import {
   createTransitionAuditRecorder,
@@ -20,11 +25,21 @@ import {
   type OrderTokenForReissue,
 } from "./repository";
 import {
+  requiresVerifiedPaymentSettlement,
   transitionCustomOrder,
   transitionRetailOrder,
 } from "./transitions";
 
 type AuthorizeAdmin = () => Promise<AdminAccess>;
+
+type PublicPaymentAttempt = Readonly<{
+  expiresAt: Date;
+  provider: string;
+  purpose: PaymentPurpose;
+  redirectUrl: string | null;
+  snapToken: string | null;
+  status: PaymentAttemptStatus;
+}>;
 
 export type PublicOrderStatus = Readonly<{
   cancelledAt: Date | null;
@@ -38,12 +53,21 @@ export type PublicOrderStatus = Readonly<{
   }>[];
   orderNumber: string;
   orderType: OrderType;
+  payment?: PublicPaymentHandoff;
   paidAt: Date | null;
   shipments: readonly Readonly<{
     status: string;
     trackingNumber: string | null;
   }>[];
   status: OrderStatus;
+}>;
+
+export type PublicPaymentHandoff = Readonly<{
+  expiresAt: Date;
+  provider: string;
+  purpose: PaymentPurpose;
+  redirectUrl?: string;
+  token?: string;
 }>;
 
 export interface OrderStatusRepository {
@@ -59,6 +83,14 @@ export interface OrderStatusRepository {
     }>[];
     orderNumber: string;
     orderType: OrderType;
+    paymentAttempts?: readonly Readonly<{
+      expiresAt: Date;
+      provider: string;
+      purpose: PaymentPurpose;
+      redirectUrl: string | null;
+      snapToken: string | null;
+      status: PaymentAttemptStatus;
+    }>[];
     paidAt: Date | null;
     publicTokenHash: string;
     shipments: readonly Readonly<{
@@ -131,6 +163,11 @@ export class OrderStatusService {
       token: input.token,
     });
 
+    const payment = publicPaymentHandoff(
+      order.paymentAttempts,
+      order.status,
+      input.now ?? this.clock(),
+    );
     const safeProjection = {
       cancelledAt: order.cancelledAt,
       completedAt: order.completedAt,
@@ -141,6 +178,7 @@ export class OrderStatusService {
       paidAt: order.paidAt,
       shipments: order.shipments,
       status: order.status,
+      ...(payment === undefined ? {} : { payment }),
       ...(order.grandTotalRp === undefined
         ? {}
         : { grandTotalRp: order.grandTotalRp }),
@@ -172,6 +210,50 @@ export class OrderStatusService {
       requireAdminPermission(admin, "ORDER_CANCEL_PAID");
       throw appError("CONFLICT", {
         message: "Order berbayar hanya dapat dibatalkan melalui workflow refund penuh.",
+      });
+    }
+
+    if (requiresVerifiedPaymentSettlement(current.status, nextStatus)) {
+      await recordAudit(this.audit, {
+        action: "order.status.transition",
+        actorId: admin.profile.id,
+        actorType: "ADMIN",
+        afterJson: { status: nextStatus },
+        beforeJson: { status: current.status },
+        entityId: orderId,
+        entityType: current.orderType === "RETAIL" ? "RetailOrder" : "CustomOrder",
+        metadata: {
+          reason: "VERIFIED_PAYMENT_REQUIRED",
+          result: "REJECTED",
+        },
+      });
+      throw appError("PAYMENT_VERIFICATION_FAILED", {
+        message: "Status pembayaran hanya dapat berubah setelah payment provider diverifikasi server.",
+      });
+    }
+
+    if (
+      current.status === "READY_TO_SHIP" &&
+      nextStatus === "SHIPPED" &&
+      (current.shipment === null ||
+        current.shipment.courierCode === null ||
+        current.shipment.trackingNumber === null)
+    ) {
+      await recordAudit(this.audit, {
+        action: "order.status.transition",
+        actorId: admin.profile.id,
+        actorType: "ADMIN",
+        afterJson: { status: nextStatus },
+        beforeJson: { status: current.status },
+        entityId: orderId,
+        entityType: current.orderType === "RETAIL" ? "RetailOrder" : "CustomOrder",
+        metadata: {
+          reason: "SHIPMENT_METADATA_REQUIRED",
+          result: "REJECTED",
+        },
+      });
+      throw appError("CONFLICT", {
+        message: "Catat kode kurir dan nomor resi sebelum memindahkan order ke status dikirim.",
       });
     }
 
@@ -274,4 +356,32 @@ export class OrderStatusService {
 
     return { accessToken, orderId: order.id, orderNumber: order.orderNumber };
   }
+}
+
+function publicPaymentHandoff(
+  attempts: readonly PublicPaymentAttempt[] | undefined,
+  orderStatus: OrderStatus,
+  now: Date,
+): PublicPaymentHandoff | undefined {
+  const purpose = orderStatus === "WAITING_SHIPPING_PAYMENT"
+    ? "CUSTOM_SHIPPING"
+    : orderStatus === "PENDING_PAYMENT" || orderStatus === "WAITING_PAYMENT"
+      ? "ORDER_TOTAL"
+      : undefined;
+  if (purpose === undefined || attempts === undefined) return undefined;
+
+  const attempt = attempts.find((candidate) =>
+    candidate.purpose === purpose &&
+    candidate.status === "PENDING" &&
+    candidate.expiresAt > now,
+  );
+  if (attempt === undefined) return undefined;
+
+  return {
+    expiresAt: attempt.expiresAt,
+    provider: attempt.provider,
+    purpose: attempt.purpose,
+    ...(attempt.redirectUrl === null ? {} : { redirectUrl: attempt.redirectUrl }),
+    ...(attempt.snapToken === null ? {} : { token: attempt.snapToken }),
+  };
 }

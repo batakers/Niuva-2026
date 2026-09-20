@@ -96,7 +96,7 @@ export function PublicShell({
               </a>
             </address>
             <nav aria-label="Navigasi footer" className="flex flex-wrap items-start gap-x-6 gap-y-2">
-              {[["/shop", "Shop"], ["/custom-print", "Custom Print"], ["/services", "Layanan"], ["/projects", "Projects"], ["/project-brief", "Diskusikan Proyek"]].map(([href, label]) => (
+              {[["/shop", "Shop"], ["/cart", "Cart"], ["/custom-print", "Custom Print"], ["/services", "Layanan"], ["/projects", "Projects"], ["/project-brief", "Diskusikan Proyek"]].map(([href, label]) => (
                 <Link key={href} href={href} className="inline-flex min-h-11 items-center rounded-lg text-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">{label}</Link>
               ))}
             </nav>

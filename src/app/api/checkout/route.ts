@@ -41,8 +41,14 @@ export async function POST(request: Request) {
 
     if (result.kind === "REPLAY") {
       return apiSuccess({
+        accessToken: result.orderAccessToken.token,
         kind: result.kind,
-        ...result.response,
+        orderId: result.orderId,
+        orderNumber: result.orderNumber,
+        payment: result.payment,
+        paymentAttemptId: result.paymentAttemptId,
+        status: result.status,
+        totalRp: result.totalRp,
       }, { correlationId });
     }
 

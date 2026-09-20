@@ -1,6 +1,7 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const storageMock = vi.hoisted(() => ({
+  createDownloadUrl: vi.fn(),
   createUploadUrl: vi.fn(),
   deleteObject: vi.fn(),
   headObject: vi.fn(),
@@ -9,6 +10,7 @@ const storageMock = vi.hoisted(() => ({
 
 vi.mock("@/modules/files/r2", () => ({
   createR2PrivateObjectStorageFromEnvironment: () => ({
+    createDownloadUrl: storageMock.createDownloadUrl,
     createUploadUrl: storageMock.createUploadUrl,
     deleteObject: storageMock.deleteObject,
     headObject: storageMock.headObject,

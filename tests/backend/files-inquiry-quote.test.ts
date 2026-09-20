@@ -86,6 +86,13 @@ describe("B2B inquiry contract", () => {
         referenceLink: "javascript:alert(1)",
       }).success,
     ).toBe(false);
+    expect(
+      b2bInquiryInputSchema.safeParse({
+        ...input,
+        currentStage: "IDEA",
+        referenceLink: undefined,
+      }).success,
+    ).toBe(true);
   });
 });
 

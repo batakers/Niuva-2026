@@ -5,11 +5,14 @@ import type { OrderStatus } from "@/generated/prisma/client";
 import type { InquiryStatus } from "@/generated/prisma/client";
 import { CatalogService } from "@/modules/catalog/service";
 import { CustomPrintService } from "@/modules/custom-print/service";
+import { PrivateFileDownloadService } from "@/modules/files/download-service";
 import { InquiryService } from "@/modules/inquiry/service";
 import { OrderStatusService } from "@/modules/order/status-service";
 import { PortfolioService } from "@/modules/portfolio/service";
 import { PricingRuleAdminService } from "@/modules/pricing/admin-service";
 import { QuoteService } from "@/modules/quote/service";
+import { createCustomShippingProviderForRuntime, createPaymentProviderForRuntime } from "@/modules/providers/runtime";
+import { ShippingService } from "@/modules/shipping/service";
 import { isAppError, toAppError } from "@/modules/shared/errors";
 
 export type AdminActionState = Readonly<{
@@ -75,6 +78,95 @@ export const reissueOrderTokenAction: AdminAction = async (_previous, formData) 
     return successState(
       `Tautan ${result.orderNumber} diterbitkan ulang dengan format route-bound v1.`,
       `/orders/${result.accessToken.token}`,
+    );
+  } catch (error) {
+    return errorStateFrom(error);
+  }
+};
+
+export const createCustomShippingPaymentAction: AdminAction = async (_previous, formData) => {
+  const orderId = text(formData, "orderId");
+  if (!orderId) return errorState("Order tidak ditemukan.");
+
+  try {
+    const result = await new ShippingService({
+      paymentProvider: createPaymentProviderForRuntime(),
+      shippingProvider: createCustomShippingProviderForRuntime(),
+    }).createCustomShippingPayment(orderId, {
+      finalHeightCm: text(formData, "finalHeightCm"),
+      finalLengthCm: text(formData, "finalLengthCm"),
+      finalWeightGrams: text(formData, "finalWeightGrams"),
+      finalWidthCm: text(formData, "finalWidthCm"),
+    });
+    revalidatePath(`/admin/orders/${orderId}`);
+    revalidatePath("/admin/orders");
+    revalidatePath("/admin");
+    return successState(
+      "Rate shipping custom dan payment attempt berhasil disiapkan. Tautan provider tersimpan di server.",
+      result.payment.redirectUrl,
+    );
+  } catch (error) {
+    return errorStateFrom(error);
+  }
+};
+
+export const recordShipmentMetadataAction: AdminAction = async (_previous, formData) => {
+  const orderId = text(formData, "orderId");
+  if (!orderId) return errorState("Order tidak ditemukan.");
+
+  try {
+    await new ShippingService().recordShipmentMetadata(orderId, {
+      courierCode: text(formData, "courierCode"),
+      trackingNumber: text(formData, "trackingNumber"),
+    });
+    revalidatePath(`/admin/orders/${orderId}`);
+    revalidatePath("/admin/orders");
+    return successState("Kurir dan nomor resi berhasil dicatat.");
+  } catch (error) {
+    return errorStateFrom(error);
+  }
+};
+
+export const saveCustomShippingAddressAction: AdminAction = async (_previous, formData) => {
+  const orderId = text(formData, "orderId");
+  if (!orderId) return errorState("Order tidak ditemukan.");
+
+  try {
+    await new ShippingService().saveCustomShippingAddress(orderId, {
+      addressLine: text(formData, "addressLine"),
+      city: text(formData, "city"),
+      countryCode: "ID",
+      district: text(formData, "district"),
+      phone: text(formData, "phone"),
+      postalCode: text(formData, "postalCode"),
+      province: text(formData, "province"),
+      recipientName: text(formData, "recipientName"),
+    });
+    revalidatePath(`/admin/orders/${orderId}`);
+    revalidatePath("/admin/orders");
+    return successState("Alamat shipping custom berhasil disimpan.");
+  } catch (error) {
+    return errorStateFrom(error);
+  }
+};
+
+export const downloadPrivateFileAction: AdminAction = async (_previous, formData) => {
+  const fileId = text(formData, "fileId");
+  const ownerId = text(formData, "ownerId");
+  const ownerType = text(formData, "ownerType");
+  if (!fileId || !ownerId || !ownerType) {
+    return errorState("File privat atau pemilik file tidak ditemukan.");
+  }
+
+  try {
+    const result = await new PrivateFileDownloadService().createDownload({
+      fileId,
+      ownerId,
+      ownerType,
+    });
+    return successState(
+      `${result.originalName} siap diunduh. Tautan berlaku lima menit.`,
+      result.downloadUrl,
     );
   } catch (error) {
     return errorStateFrom(error);
@@ -153,7 +245,7 @@ export const sendQuoteAction: AdminAction = async (_previous, formData) => {
     revalidatePath(`/admin/custom-print/${requestId}`);
     revalidatePath("/admin/custom-print");
     revalidatePath("/admin");
-    return successState("Quote dikirim dengan token route-bound v1.", `/quote/${result.accessToken.token}`);
+    return successState("Quote diterbitkan. Bagikan tautan ini secara manual melalui kanal yang disepakati.", `/quote/${result.accessToken.token}`);
   } catch (error) {
     return errorStateFrom(error);
   }

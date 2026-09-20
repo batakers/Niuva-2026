@@ -25,6 +25,7 @@ const rupiah = new Intl.NumberFormat("id-ID", {
 
 type LoadState = "loading" | "ready";
 type PersistenceNotice = "none" | "recovered" | "unavailable";
+type CatalogStatus = PreviewScenario | "live-empty" | "live-error" | "live-unavailable" | null;
 
 type ResolvedCartItem = Readonly<{
   cart: CartSnapshot["items"][number];
@@ -50,7 +51,7 @@ export function CartItems({
   demoMode?: boolean;
   liveEnabled?: boolean;
   products: readonly PublicShopProduct[];
-  catalogStatus: PreviewScenario | null;
+  catalogStatus: CatalogStatus;
   previewEnabled: boolean;
 }) {
   const [snapshot, setSnapshot] = useState<CartSnapshot>(EMPTY_CART);
@@ -112,6 +113,8 @@ export function CartItems({
   if (snapshot.items.length === 0) {
     return (
       <div className="mx-auto max-w-3xl space-y-5">
+        {catalogStatus === "live-error" ? <StatusNotice tone="error" title="Data katalog live belum dapat diperiksa." description="Cart lokal tetap utuh, tetapi sumber produk sedang tidak tersedia. Coba muat ulang sebelum menilai item." action={<AuLink href="/cart" variant="outline" className="min-h-11">Muat ulang</AuLink>} /> : null}
+        {catalogStatus === "live-unavailable" ? <StatusNotice tone="warning" title="Katalog live belum terhubung." description="Cart dapat ditinjau sebagai data lokal, tetapi harga dan stok live belum tersedia pada runtime ini." action={<AuLink href="/cart?preview=examples" variant="outline" className="min-h-11">Buka preview contoh</AuLink>} /> : null}
         {persistenceNotice === "recovered" ? (
           <StatusNotice tone="warning" title="Cart lokal dipulihkan." description="Data cart sebelumnya tidak valid dan telah dibersihkan. Tidak ada harga, stok, atau transaksi yang digunakan dari data tersebut." />
         ) : null}
@@ -141,6 +144,15 @@ export function CartItems({
       ) : null}
       {catalogStatus === "error" ? (
         <StatusNotice tone="error" title="Data produk belum dapat diperiksa." description="Cart lokal tetap utuh. Muat ulang data produk sebelum menilai harga dan stok." action={<AuLink href="/cart?preview=examples" variant="outline" className="min-h-11">Coba lagi</AuLink>} />
+      ) : null}
+      {catalogStatus === "live-error" ? (
+        <StatusNotice tone="error" title="Data katalog live belum dapat diperiksa." description="Cart lokal tetap utuh, tetapi sumber produk sedang tidak tersedia. Muat ulang data sebelum melanjutkan." action={<AuLink href="/cart" variant="outline" className="min-h-11">Muat ulang</AuLink>} />
+      ) : null}
+      {catalogStatus === "live-unavailable" ? (
+        <StatusNotice tone="warning" title="Katalog live belum terhubung." description="ID cart tetap tersimpan di browser, tetapi harga dan stok live belum tersedia pada runtime ini." action={<AuLink href="/cart?preview=examples" variant="outline" className="min-h-11">Buka preview contoh</AuLink>} />
+      ) : null}
+      {catalogStatus === "live-empty" ? (
+        <StatusNotice tone="info" title="Katalog live masih kosong." description="Sumber data berhasil dijangkau, tetapi belum ada produk ready-made yang dipublikasikan." action={<AuLink href="/services" variant="outline" className="min-h-11">Lihat layanan</AuLink>} />
       ) : null}
 
       <div className="grid gap-10 md:grid-cols-12 md:items-start">

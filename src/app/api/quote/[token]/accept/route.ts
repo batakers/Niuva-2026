@@ -8,6 +8,7 @@ import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
 import { getRouteAccessTokenEntityId } from "@/modules/shared/access-token";
 import { appError } from "@/modules/shared/errors";
 import { QuoteService } from "@/modules/quote/service";
+import { createPaymentProviderForRuntime } from "@/modules/providers/runtime";
 
 export const runtime = "nodejs";
 
@@ -32,7 +33,9 @@ export async function POST(
       throw appError("UNAUTHORIZED");
     }
 
-    const result = await new QuoteService().accept({ quoteId, token });
+    const result = await new QuoteService({
+      paymentProvider: createPaymentProviderForRuntime(),
+    }).accept({ quoteId, token });
 
     return apiSuccess(
       {
@@ -40,6 +43,10 @@ export async function POST(
         orderAccessToken: result.orderAccessToken?.token,
         orderId: result.orderId,
         orderNumber: result.orderNumber,
+        payment: result.payment,
+        paymentAttemptId: result.paymentAttemptId,
+        status: result.status,
+        totalRp: result.totalRp,
       },
       { correlationId, status: result.kind === "CREATED" ? 201 : 200 },
     );

@@ -39,10 +39,12 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   const [{ slug }, { preview }] = await Promise.all([params, searchParams]);
   const { product: previewProduct, scenario } = await getShopProductPreview(slug, preview);
   let product = previewProduct;
+  let liveCatalogError = false;
   if (scenario === null && product === null && process.env.DATABASE_URL !== undefined) {
     try {
       product = await getLiveShopProduct(slug);
     } catch {
+      liveCatalogError = true;
       product = null;
     }
   }
@@ -55,6 +57,23 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
           <h1 className={`${type.heading.className} max-w-3xl`}>Detail produk belum dapat dimuat.</h1>
           <div className="mt-8 max-w-2xl">
             <StatusNotice tone="error" title="Terjadi gangguan pada preview." description="Tidak ada pilihan atau transaksi yang dibuat. Muat kembali data contoh untuk melanjutkan peninjauan." action={<AuLink href={`/shop/${slug}?preview=examples`} variant="outline" className="min-h-11">Coba lagi</AuLink>} />
+          </div>
+        </main>
+      </PublicShell>
+    );
+  }
+  if (liveCatalogError || (scenario === null && process.env.DATABASE_URL === undefined)) {
+    return (
+      <PublicShell functionalStatus="capability-gated" scope="product-detail">
+        <main id="main-content" className="mx-auto max-w-public px-5 py-14 sm:px-8 sm:py-20">
+          <h1 className={`${type.heading.className} max-w-3xl`}>Detail produk belum dapat dimuat.</h1>
+          <div className="mt-8 max-w-2xl">
+            <StatusNotice
+              tone={liveCatalogError ? "error" : "warning"}
+              title={liveCatalogError ? "Sumber katalog sedang tidak tersedia." : "Katalog live belum terhubung."}
+              description={liveCatalogError ? "Data produk tidak dapat diperiksa saat ini. Tidak ada pilihan atau transaksi yang dibuat." : "Gunakan preview contoh untuk meninjau alur tampilan. Preview tidak mewakili inventory nyata."}
+              action={<AuLink href={liveCatalogError ? `/shop/${slug}` : "/shop?preview=examples"} variant="outline" className="min-h-11">{liveCatalogError ? "Muat ulang" : "Buka preview contoh"}</AuLink>}
+            />
           </div>
         </main>
       </PublicShell>

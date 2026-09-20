@@ -66,6 +66,8 @@ export function BriefForm({
     event.preventDefault();
     if (pending.current) return;
     const formData = new FormData(event.currentTarget);
+    const currentStage = String(formData.get("currentStage") ?? "");
+    const referenceRequired = currentStage !== "IDEA";
     const parsed = b2bInquiryInputSchema.safeParse({
       ...Object.fromEntries(formData), confidentialityAck: formData.get("confidentialityAck") === "on",
     });
@@ -74,7 +76,7 @@ export function BriefForm({
     if (!parsed.success) {
       const fields: Record<string, string> = {};
       for (const issue of parsed.error.issues) {
-        const name = issue.path[0] === "attachmentFileIds" ? "referenceLink" : String(issue.path[0]);
+        const name = issue.path[0] === "attachmentFileIds" && referenceRequired ? "referenceLink" : String(issue.path[0]);
         fields[name] = name === "confidentialityAck" ? "Persetujuan diperlukan sebelum melanjutkan."
           : name === "email" ? "Masukkan alamat email yang valid."
           : name === "referenceLink" ? "Masukkan link referensi yang valid, termasuk https://."
@@ -83,7 +85,7 @@ export function BriefForm({
       }
       // Zod can stop before the reference cross-field refinement when consent
       // is invalid. Show both actionable omissions in the same form pass.
-      if (!String(formData.get("referenceLink") ?? "").trim()) {
+      if (referenceRequired && !String(formData.get("referenceLink") ?? "").trim()) {
         fields.referenceLink = "Masukkan link referensi yang valid, termasuk https://.";
       }
       setErrors(fields);

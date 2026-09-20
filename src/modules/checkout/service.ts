@@ -19,11 +19,13 @@ import { retailReservationExpiresAt } from "@/modules/policy/commercial";
 
 import {
   CheckoutRepository,
+  type CheckoutRecoveryState,
   type CheckoutRepositoryPort,
   type CheckoutShippingQuote,
   type PaymentProviderResult,
 } from "./repository";
 import { checkoutInputSchema, type CheckoutInput } from "./schema";
+import type { OrderStatus } from "@/generated/prisma/client";
 
 export interface CheckoutIdempotencyPort {
   complete(input: Readonly<{
@@ -89,7 +91,13 @@ export type CheckoutCreatedResult = Readonly<{
 
 export type CheckoutReplayResult = Readonly<{
   kind: "REPLAY";
-  response: StoredIdempotencyResponse;
+  orderAccessToken: ReturnType<typeof issueAccessToken>;
+  orderId: string;
+  orderNumber: string;
+  payment: PaymentProviderResult;
+  paymentAttemptId: string;
+  status: OrderStatus;
+  totalRp: string;
 }>;
 
 const DEFAULT_IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1_000;
@@ -152,6 +160,8 @@ export class CheckoutService {
       });
     }
 
+    const repository = this.repositoryFactory();
+
     const resolution = await idempotency.reserve(
       {
         expiresAt: idempotencyExpiresAt,
@@ -163,10 +173,11 @@ export class CheckoutService {
     );
 
     if (resolution.kind === "REPLAY") {
-      return {
-        kind: "REPLAY",
-        response: parseStoredCheckoutResponse(resolution.response),
-      };
+      return this.recoverReplay(
+        parseStoredCheckoutResponse(resolution.response),
+        now,
+        repository,
+      );
     }
 
     if (resolution.kind === "CONFLICT") {
@@ -177,7 +188,6 @@ export class CheckoutService {
     }
 
     try {
-      const repository = this.repositoryFactory();
       const shippingQuote = await this.shippingProvider.getRate({
         address: parsed.address,
         items: parsed.items,
@@ -276,6 +286,89 @@ export class CheckoutService {
       throw error;
     }
   }
+
+  private async recoverReplay(
+    response: StoredIdempotencyResponse,
+    now: Date,
+    repository: CheckoutRepositoryPort,
+  ): Promise<CheckoutReplayResult> {
+    const stored = parseStoredCheckoutResponse(response);
+    const recovery = await repository.findForRecovery({
+      orderId: stored.orderId!,
+      paymentAttemptId: stored.paymentAttemptId!,
+    });
+
+    if (recovery === null) {
+      throw appError("INTERNAL_ERROR", {
+        message: "Recovery checkout tidak menemukan order/payment yang konsisten.",
+      });
+    }
+
+    const orderAccessToken = issueAccessToken({
+      entityId: recovery.orderId,
+      includeEntityId: true,
+      now,
+      randomBytes: this.randomBytes,
+      scope: "ORDER_STATUS",
+    });
+    const replaced = await repository.replacePublicTokenHash(
+      recovery.orderId,
+      recovery.publicTokenHash,
+      orderAccessToken.tokenHash,
+    );
+
+    if (!replaced) {
+      throw appError("CONFLICT", {
+        message: "Token status order berubah. Ulangi checkout dengan permintaan yang sama.",
+      });
+    }
+
+    const payment = paymentHandoff(recovery, now);
+    await recordAudit(this.audit, {
+      action: "checkout.replayed",
+      actorType: "SYSTEM",
+      afterJson: { status: recovery.status },
+      entityId: recovery.orderId,
+      entityType: "Order",
+      metadata: { operation: "checkout-replay", result: "RECOVERED" },
+    });
+
+    return {
+      kind: "REPLAY",
+      orderAccessToken,
+      orderId: recovery.orderId,
+      orderNumber: recovery.orderNumber,
+      payment,
+      paymentAttemptId: recovery.paymentAttemptId,
+      status: recovery.status,
+      totalRp: recovery.grandTotalRp,
+    };
+  }
+}
+
+function paymentHandoff(
+  recovery: CheckoutRecoveryState,
+  now: Date,
+): PaymentProviderResult {
+  if (
+    recovery.status !== "PENDING_PAYMENT" ||
+    recovery.paymentStatus !== "PENDING" ||
+    recovery.paymentExpiresAt <= now
+  ) {
+    return {};
+  }
+
+  return {
+    ...(recovery.paymentProvider === undefined
+      ? {}
+      : { provider: recovery.paymentProvider }),
+    ...(recovery.paymentRedirectUrl === null
+      ? {}
+      : { redirectUrl: recovery.paymentRedirectUrl }),
+    ...(recovery.paymentToken === undefined || recovery.paymentToken === null
+      ? {}
+      : { token: recovery.paymentToken }),
+  };
 }
 
 function parseStoredCheckoutResponse(

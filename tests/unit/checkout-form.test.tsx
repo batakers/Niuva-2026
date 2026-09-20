@@ -61,6 +61,7 @@ const liveProducts = [{
 
 beforeEach(() => {
   window.localStorage.clear();
+  window.sessionStorage.clear();
   seedCart();
 });
 
@@ -226,6 +227,61 @@ describe("checkout live server flow", () => {
       shippingOptionId: "rate-jne-reg",
     });
     expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("replays the order token and pending payment handoff together", async () => {
+    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify({
+      version: 1,
+      items: [{ variantId: liveVariantId, quantity: 1 }],
+    }));
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      if (url.endsWith("/api/shipping/rates")) {
+        return Response.json({
+          expiresAt: "2099-09-14T01:00:00.000Z",
+          options: [{
+            courierCode: "JNE",
+            courierName: "Jalur Express",
+            etaText: "1-2 hari",
+            optionId: "rate-jne-reg",
+            priceRp: "24000",
+            serviceCode: "REG",
+            serviceName: "Regular",
+          }],
+        });
+      }
+      if (url.endsWith("/api/checkout")) {
+        return Response.json({
+          accessToken: "recovered-order-status-token",
+          kind: "REPLAY",
+          orderId: "7d2ce4a7-409b-4eb2-a2d5-15f2a7c0d090",
+          orderNumber: "ORD-20260914-REPLAYED",
+          payment: { redirectUrl: "https://payment.example.test/retry" },
+          paymentAttemptId: "f8414be7-c1c6-45a2-b1cf-8cf7f2b6f4c0",
+          status: "PENDING_PAYMENT",
+          totalRp: "209000",
+        });
+      }
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    });
+
+    render(<CheckoutForm catalogStatus={null} liveEnabled products={liveProducts} previewEnabled={false} />);
+    const form = await screen.findByRole("form", { name: "Form checkout tamu" });
+    fillCheckout();
+    fireEvent.click(screen.getByRole("button", { name: "Tinjau opsi pengiriman" }));
+    await screen.findByRole("radio", { name: /Jalur Express/ });
+    fireEvent.click(screen.getByRole("radio", { name: /Jalur Express/ }));
+    fireEvent.submit(form);
+
+    await screen.findByText("Checkout tersimpan, pembayaran menunggu.");
+    expect(screen.getByRole("link", { name: "Buka pembayaran sandbox" })).toHaveAttribute(
+      "href",
+      "https://payment.example.test/retry",
+    );
+    expect(screen.getByRole("link", { name: "Lihat status order" })).toHaveAttribute(
+      "href",
+      "/orders/recovered-order-status-token",
+    );
   });
 
   it("keeps the live checkout recoverable when rates fail", async () => {

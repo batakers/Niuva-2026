@@ -74,6 +74,196 @@ function quoteForAcceptance(tokenHash: string, expiresAt: Date): QuoteForAccepta
 }
 
 describe("Phase 2 quote acceptance", () => {
+  it("creates one payable custom payment attempt and returns the handoff", async () => {
+    const quoteToken = issueAccessToken({
+      entityId: quoteId,
+      expiresAt: new Date("2026-09-11T00:00:00.000Z"),
+      now,
+      randomBytes: (size) => new Uint8Array(size).fill(11),
+      scope: "CUSTOM_PRINT_QUOTE",
+    });
+    let providerCalls = 0;
+    let attachedAttemptId: string | undefined;
+    const repository: QuoteServiceRepository = {
+      async acceptAndCreatePayableOrder(input) {
+        return {
+          kind: "CREATED",
+          orderId: input.orderId,
+          orderNumber: input.orderNumber,
+        };
+      },
+      async attachPaymentProviderResult(paymentAttemptId) {
+        attachedAttemptId = paymentAttemptId;
+      },
+      async createDraft() {
+        throw new Error("unused");
+      },
+      async findForAcceptance() {
+        return quoteForAcceptance(
+          quoteToken.tokenHash,
+          new Date("2026-09-11T00:00:00.000Z"),
+        );
+      },
+      async findActivePricingRuleVersion() {
+        return activePricingRule;
+      },
+      async findLatestVersion() {
+        return 1;
+      },
+      async findRequestForReview() {
+        return null;
+      },
+      async findReview() {
+        return null;
+      },
+      async orderNumberExists() {
+        return false;
+      },
+      async prepareOrderPayment() {
+        return {
+          amountRp: new Decimal("55000"),
+          created: true,
+          orderId,
+          orderNumber: "ORD-QUOTE-PAYMENT",
+          paymentAttemptId: "3b5b4e5c-9b24-4b64-a1e0-50eb2bb4d2ab",
+          paymentExpiresAt: new Date(now.getTime() + 900_000),
+          paymentProviderOrderId: "PAY-QUOTE-1",
+          status: "WAITING_PAYMENT" as const,
+        };
+      },
+      async quoteNumberExists() {
+        return false;
+      },
+      async sendIfCurrent() {
+        return null;
+      },
+      async updateStatusIfCurrent() {
+        return null;
+      },
+    };
+    const service = new QuoteService({
+      audit: (event) => { void event; },
+      now: () => now,
+      paymentProvider: {
+        provider: "MIDTRANS",
+        async createPayment() {
+          providerCalls += 1;
+          return { redirectUrl: "https://payment.example.test/quote" };
+        },
+      },
+      randomBytes: (size) => new Uint8Array(size).fill(12),
+      repository,
+    });
+
+    const result = await service.accept({ now, quoteId, token: quoteToken.token });
+
+    expect(result).toMatchObject({
+      payment: { redirectUrl: "https://payment.example.test/quote" },
+      paymentAttemptId: "3b5b4e5c-9b24-4b64-a1e0-50eb2bb4d2ab",
+      status: "WAITING_PAYMENT",
+      totalRp: "55000",
+    });
+    expect(providerCalls).toBe(1);
+    expect(attachedAttemptId).toBe("3b5b4e5c-9b24-4b64-a1e0-50eb2bb4d2ab");
+  });
+
+  it("reuses an existing pending custom payment handoff without creating another provider payment", async () => {
+    const quoteToken = issueAccessToken({
+      entityId: quoteId,
+      expiresAt: new Date("2026-09-11T00:00:00.000Z"),
+      now,
+      randomBytes: (size) => new Uint8Array(size).fill(13),
+      scope: "CUSTOM_PRINT_QUOTE",
+    });
+    let providerCalls = 0;
+    const auditEvents: unknown[] = [];
+    const repository: QuoteServiceRepository = {
+      async acceptAndCreatePayableOrder(input) {
+        return {
+          kind: "CREATED",
+          orderId: input.orderId,
+          orderNumber: input.orderNumber,
+        };
+      },
+      async attachPaymentProviderResult() {
+        throw new Error("existing payment handoff must not be attached again");
+      },
+      async createDraft() {
+        throw new Error("unused");
+      },
+      async findForAcceptance() {
+        return quoteForAcceptance(
+          quoteToken.tokenHash,
+          new Date("2026-09-11T00:00:00.000Z"),
+        );
+      },
+      async findActivePricingRuleVersion() {
+        return activePricingRule;
+      },
+      async findLatestVersion() {
+        return 1;
+      },
+      async findRequestForReview() {
+        return null;
+      },
+      async findReview() {
+        return null;
+      },
+      async orderNumberExists() {
+        return false;
+      },
+      async prepareOrderPayment() {
+        return {
+          amountRp: new Decimal("55000"),
+          created: false,
+          orderId,
+          orderNumber: "ORD-QUOTE-PAYMENT",
+          payment: { redirectUrl: "https://payment.example.test/existing" },
+          paymentAttemptId: "b4b3c1c9-1e63-44d5-a576-3a2d4c5e6f70",
+          paymentExpiresAt: new Date(now.getTime() + 900_000),
+          paymentProviderOrderId: "PAY-QUOTE-EXISTING",
+          status: "WAITING_PAYMENT" as const,
+        };
+      },
+      async quoteNumberExists() {
+        return false;
+      },
+      async sendIfCurrent() {
+        return null;
+      },
+      async updateStatusIfCurrent() {
+        return null;
+      },
+    };
+    const service = new QuoteService({
+      audit: (event) => {
+        auditEvents.push(event);
+      },
+      now: () => now,
+      paymentProvider: {
+        provider: "MIDTRANS",
+        async createPayment() {
+          providerCalls += 1;
+          return { redirectUrl: "https://payment.example.test/new" };
+        },
+      },
+      randomBytes: (size) => new Uint8Array(size).fill(14),
+      repository,
+    });
+
+    const result = await service.accept({ now, quoteId, token: quoteToken.token });
+
+    expect(result.payment).toEqual({
+      redirectUrl: "https://payment.example.test/existing",
+    });
+    expect(result.paymentAttemptId).toBe("b4b3c1c9-1e63-44d5-a576-3a2d4c5e6f70");
+    expect(providerCalls).toBe(0);
+    expect(auditEvents.at(-1)).toMatchObject({
+      action: "quote.payment.prepared",
+      metadata: { created: false },
+    });
+  });
+
   it("issues the public token and seven-day expiry only when the draft is sent", async () => {
     const audit = auditRecorder();
     const placeholder = issueAccessToken({

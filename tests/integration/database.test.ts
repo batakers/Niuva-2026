@@ -614,13 +614,11 @@ describe("isolated PostgreSQL integration harness", () => {
 
     await expect(checkout.create(input)).resolves.toMatchObject({
       kind: "REPLAY",
-      response: {
-        grandTotalRp: "40000",
-        orderId: created.orderId,
-        orderNumber: created.orderNumber,
-        paymentAttemptId: created.paymentAttemptId,
-        status: "PENDING_PAYMENT",
-      },
+      orderId: created.orderId,
+      orderNumber: created.orderNumber,
+      paymentAttemptId: created.paymentAttemptId,
+      status: "PENDING_PAYMENT",
+      totalRp: "40000",
     });
     expect(paymentCalls).toHaveLength(1);
     expect(shippingRequests).toHaveLength(2);

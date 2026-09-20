@@ -14,7 +14,7 @@ import {
   verifyAccessToken,
   type IssuedAccessToken,
 } from "@/modules/shared/access-token";
-import type { Prisma } from "@/generated/prisma/client";
+import type { OrderStatus, Prisma } from "@/generated/prisma/client";
 import { appError, isAppError } from "@/modules/shared/errors";
 import { createUniqueHumanReference } from "@/modules/shared/reference";
 import { parseWithValidation } from "@/modules/shared/validation";
@@ -27,11 +27,13 @@ import {
   type CustomPrintPricingPolicy,
 } from "@/modules/pricing/policy";
 import { requireAdminPermission } from "@/modules/admin/permissions";
-import { quoteExpiresAt } from "@/modules/policy/commercial";
+import { customPaymentExpiresAt, quoteExpiresAt } from "@/modules/policy/commercial";
+import type { PaymentProviderResult } from "@/modules/checkout/repository";
 
 import {
   CustomPrintQuoteRepository,
   type AcceptedCustomOrder,
+  type CustomOrderPaymentPreparation,
   type CustomPrintReviewRecord,
   type QuoteForAcceptance,
   type QuoteTokenForReissue,
@@ -91,6 +93,10 @@ export interface QuoteServiceRepository {
     verifiedWeightG: Prisma.Decimal;
     version: number;
   }>): Promise<Readonly<{ id: string; quoteNumber: string; status: "DRAFT" }>>;
+  attachPaymentProviderResult?(
+    paymentAttemptId: string,
+    result: Readonly<{ redirectUrl?: string; token?: string }>,
+  ): Promise<void>;
   findForAcceptance(quoteId: string): Promise<QuoteForAcceptance | null>;
   findActivePricingRuleVersion(pricingRuleVersionId: string): Promise<Readonly<{
     code: string;
@@ -100,6 +106,14 @@ export interface QuoteServiceRepository {
   }> | null>;
   findDraftForRequest?(requestId: string): Promise<Readonly<{ id: string }> | null>;
   findLatestVersion(requestId: string): Promise<number | null>;
+  paymentProviderOrderIdExists?(providerOrderId: string): Promise<boolean>;
+  prepareOrderPayment?(input: Readonly<{
+    now: Date;
+    orderId: string;
+    paymentExpiresAt: Date;
+    paymentProvider?: string;
+    paymentProviderOrderId: string;
+  }>): Promise<CustomOrderPaymentPreparation>;
   findRequestForReview(requestId: string): Promise<Readonly<{
     id: string;
     quantity: number;
@@ -144,10 +158,22 @@ export type QuoteServiceDependencies = Readonly<{
   audit?: AuditRecorder;
   authorizeAdmin?: AuthorizeAdmin;
   now?: () => Date;
+  paymentProvider?: QuotePaymentProvider;
   randomBytes?: (size: number) => Uint8Array;
   repository?: QuoteServiceRepository;
   tokenRepository?: QuoteTokenRepository;
 }>;
+
+export interface QuotePaymentProvider {
+  readonly provider?: string;
+  createPayment(input: Readonly<{
+    amountRp: string;
+    expiresAt: Date;
+    orderId: string;
+    orderNumber: string;
+    providerOrderId: string;
+  }>): Promise<PaymentProviderResult>;
+}
 
 export type CreatedQuoteDraft = Readonly<{
   quote: Readonly<{ id: string; quoteNumber: string; status: "DRAFT" }>;
@@ -158,6 +184,10 @@ export type AcceptedQuote = Readonly<{
   orderAccessToken?: IssuedAccessToken;
   orderId: string;
   orderNumber: string;
+  payment?: PaymentProviderResult;
+  paymentAttemptId?: string;
+  status?: OrderStatus;
+  totalRp?: string;
 }>;
 
 export type PublicQuoteReviewState = "accepted" | "declined" | "expired" | "superseded" | "valid";
@@ -180,6 +210,7 @@ export class QuoteService {
   private readonly audit?: AuditRecorder;
   private readonly authorizeAdmin: AuthorizeAdmin;
   private readonly clock: () => Date;
+  private readonly paymentProvider?: QuotePaymentProvider;
   private readonly randomBytes?: (size: number) => Uint8Array;
   private readonly repositoryFactory: () => QuoteServiceRepository;
   private readonly tokenRepositoryFactory: () => QuoteTokenRepository;
@@ -188,6 +219,7 @@ export class QuoteService {
     this.audit = dependencies.audit;
     this.authorizeAdmin = dependencies.authorizeAdmin ?? requireAdmin;
     this.clock = dependencies.now ?? (() => new Date());
+    this.paymentProvider = dependencies.paymentProvider;
     this.randomBytes = dependencies.randomBytes;
     this.repositoryFactory = () =>
       dependencies.repository ?? new CustomPrintQuoteRepository();
@@ -404,10 +436,16 @@ export class QuoteService {
       });
 
       if (existing.kind !== "ALREADY_ACCEPTED") {
+        const continuation = await this.preparePaymentContinuation(
+          existing,
+          now,
+          repository,
+        );
         return {
           kind: existing.kind,
           orderId: existing.orderId,
           orderNumber: existing.orderNumber,
+          ...(continuation ?? {}),
         };
       }
 
@@ -438,11 +476,17 @@ export class QuoteService {
         });
       }
 
+      const continuation = await this.preparePaymentContinuation(
+        existing,
+        now,
+        repository,
+      );
       return {
         kind: existing.kind,
         orderAccessToken,
         orderId: existing.orderId,
         orderNumber: existing.orderNumber,
+        ...(continuation ?? {}),
       };
     }
 
@@ -511,9 +555,106 @@ export class QuoteService {
       entityType: "CustomPrintQuote",
     });
 
+    const continuation = await this.preparePaymentContinuation(
+      accepted,
+      now,
+      repository,
+    );
+
     return {
       ...accepted,
       orderAccessToken: accepted.kind === "CREATED" ? orderAccessToken : undefined,
+      ...(continuation ?? {}),
+    };
+  }
+
+  private async preparePaymentContinuation(
+    order: Readonly<{ orderId: string; orderNumber: string }>,
+    now: Date,
+    repository: QuoteServiceRepository,
+  ): Promise<Readonly<{
+    payment: PaymentProviderResult;
+    paymentAttemptId: string;
+    status: OrderStatus;
+    totalRp: string;
+  }> | null> {
+    if (this.paymentProvider === undefined) return null;
+    if (
+      repository.prepareOrderPayment === undefined ||
+      repository.attachPaymentProviderResult === undefined
+    ) {
+      throw appError("INTERNAL_ERROR", {
+        message: "Repository payment quote belum tersedia.",
+      });
+    }
+
+    const paymentProviderOrderId = await createUniqueHumanReference({
+      exists: (candidate) =>
+        repository.paymentProviderOrderIdExists === undefined
+          ? repository.orderNumberExists(candidate)
+          : repository.paymentProviderOrderIdExists(candidate),
+      now,
+      prefix: "PAY",
+      randomBytes: this.randomBytes,
+    });
+    const preparation = await repository.prepareOrderPayment({
+      now,
+      orderId: order.orderId,
+      paymentExpiresAt: customPaymentExpiresAt(now),
+      paymentProvider: this.paymentProvider.provider,
+      paymentProviderOrderId,
+    });
+
+    if (preparation.status === "PAID") {
+      return {
+        payment: {},
+        paymentAttemptId: preparation.paymentAttemptId,
+        status: preparation.status,
+        totalRp: preparation.amountRp.toString(),
+      };
+    }
+
+    if (preparation.paymentExpiresAt <= now) {
+      throw appError("CONFLICT", {
+        message: "Payment quote sudah kedaluwarsa; minta operator menerbitkan quote baru.",
+      });
+    }
+
+    const payment = preparation.payment ?? (await this.paymentProvider.createPayment({
+      amountRp: preparation.amountRp.toString(),
+      expiresAt: preparation.paymentExpiresAt,
+      orderId: preparation.orderId,
+      orderNumber: preparation.orderNumber,
+      providerOrderId: preparation.paymentProviderOrderId,
+    }));
+    if (preparation.payment === undefined) {
+      await repository.attachPaymentProviderResult(
+        preparation.paymentAttemptId,
+        payment,
+      );
+    }
+
+    await recordAudit(this.audit, {
+      action: "quote.payment.prepared",
+      actorType: "SYSTEM",
+      afterJson: {
+        amountRp: preparation.amountRp.toString(),
+        status: preparation.status,
+      },
+      entityId: preparation.orderId,
+      entityType: "Order",
+      metadata: {
+        created: preparation.created,
+        operation: "quote-payment-continuation",
+        paymentAttemptId: preparation.paymentAttemptId,
+      },
+    });
+
+    return {
+      payment,
+      paymentAttemptId: preparation.paymentAttemptId,
+      status: preparation.status,
+      totalRp: preparation.amountRp.toString(),
     };
   }
 

@@ -1,5 +1,6 @@
 import {
   DeleteObjectCommand,
+  GetObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
   S3Client,
@@ -17,6 +18,10 @@ export type ObjectStorageHead = Readonly<{
 }>;
 
 export interface PrivateObjectStorage {
+  createDownloadUrl(input: Readonly<{
+    expiresInSeconds: number;
+    key: string;
+  }>): Promise<string>;
   createUploadUrl(input: Readonly<{
     contentType: string;
     expiresInSeconds: number;
@@ -67,6 +72,30 @@ export class R2PrivateObjectStorage implements PrivateObjectStorage {
       new PutObjectCommand({
         Bucket: this.config.privateBucket,
         ContentType: input.contentType,
+        Key: input.key,
+      }),
+      { expiresIn: input.expiresInSeconds },
+    );
+  }
+
+  async createDownloadUrl(input: Readonly<{
+    expiresInSeconds: number;
+    key: string;
+  }>): Promise<string> {
+    if (
+      !Number.isSafeInteger(input.expiresInSeconds) ||
+      input.expiresInSeconds < 1 ||
+      input.expiresInSeconds > 15 * 60
+    ) {
+      throw appError("VALIDATION_ERROR", {
+        details: { expiresInSeconds: "Masa berlaku download URL tidak valid." },
+      });
+    }
+
+    return getSignedUrl(
+      this.client,
+      new GetObjectCommand({
+        Bucket: this.config.privateBucket,
         Key: input.key,
       }),
       { expiresIn: input.expiresInSeconds },

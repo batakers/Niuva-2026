@@ -1414,3 +1414,121 @@ smoke succeeds. **Estimated scope:** M including external setup.
 | Browser CSP or CORS blocks direct PUT | Narrow origin allowlist plus exact-origin bucket CORS; prove with synthetic smoke. |
 | Private object becomes accessible | No public bucket access, random key, expiring signed PUT, no rendered object URL, and cleanup. |
 | Provider setup is incomplete | Keep upload capability fail-closed; do not invent environment values or activate a provider. |
+
+## Goal — Audit remediation implementation (2026-09-20)
+
+Status: `COMPLETE_WITH_PROVIDER_AUTH_GATES`. This Goal implements the confirmed source-level findings
+from the read-only audit at the current checkout. It does not activate
+production providers, create customer accounts, change migrations, seed data,
+or resolve Owner business decisions silently.
+
+### Goal 1 — Payment authority and retail recovery
+
+**Description:** Make financial order transitions server-authoritative and
+recoverable after checkout replay, reload, or a lost response. Preserve guest
+checkout and the existing verified webhook path.
+
+**Acceptance criteria:**
+
+- [x] Generic admin status actions cannot settle retail/custom orders or move a
+  custom order to `READY_TO_SHIP` without a settled payment attempt.
+- [x] Existing verified payment webhook transitions remain valid and idempotent.
+- [x] Checkout replay/recovery returns the same order and payment continuation,
+  never a second order/payment.
+- [x] Payment and status actions are both visible when the order is payable.
+
+**Verification:** Focused backend/unit tests, typecheck, lint, build, and
+checkout/order-status browser coverage where provider-independent.
+
+**Dependencies:** Existing payment attempt/repository contracts. Provider
+activation remains a separate Owner gate.
+
+**Files likely touched:** order status service/transitions/repository, checkout
+service/API/form, payment tests, checkout/order-status tests.
+
+**Estimated scope:** Large; implement as two vertical slices with a checkpoint.
+
+### Goal 2 — Operator file access and custom payment continuation
+
+**Description:** Let an authorized operator retrieve verified private files and
+let an accepted custom quote continue through the same payable order, including
+after reload.
+
+**Acceptance criteria:**
+
+- [x] Admin-only short-lived download URLs are issued only for linked verified
+  files and are audited.
+- [x] Accepted quote status can recover its order continuation.
+- [x] Custom payment creates/reuses one payment attempt for the existing order.
+- [x] No customer account or new customer dashboard is introduced.
+
+**Verification:** Focused file/auth/quote/order tests, typecheck, lint, build,
+and provider-independent browser checks.
+
+**Dependencies:** Goal 1; R2 production remains guarded. Custom address timing
+uses the existing order-status surface unless an Owner decision changes it.
+
+**Files likely touched:** private storage adapter/service, custom admin detail,
+quote/order services and routes, focused tests.
+
+**Estimated scope:** Large; split file access from payment continuation.
+
+### Goal 3 — Custom shipping completion
+
+**Description:** Connect final package measurement, custom shipping payment,
+and shipment metadata through the existing admin order surface.
+
+**Acceptance criteria:**
+
+- [x] Final dimensions and address are validated server-side.
+- [x] Shipping payment is created/recovered for the same order.
+- [x] Only verified shipping settlement can produce `READY_TO_SHIP`.
+- [x] Manual courier/tracking recording is supported without requiring booking
+  automation.
+
+**Verification:** Focused shipping/order tests, typecheck, lint, build, and
+provider-neutral integration coverage.
+
+**Dependencies:** Goals 1–2. Biteship live activation remains separate.
+
+**Files likely touched:** shipping service/repository, admin order page/actions,
+order-status projection, focused tests.
+
+**Estimated scope:** Medium–Large.
+
+### Goal 4 — Inquiry, admin session, and operational recovery UX
+
+**Description:** Ensure inquiry persistence is not blocked by optional
+notifications, add provider-backed admin logout/recovery affordances, and make
+live empty/error states distinguishable from preview states.
+
+**Acceptance criteria:**
+
+- [x] Inquiry persists when notification construction or delivery is unavailable.
+- [x] Admin shell exposes Clerk logout and safe access recovery guidance.
+- [x] Cart is reachable from public navigation/footer.
+- [x] Live catalog/order/quote/checkout failures have explicit recovery paths.
+- [x] Quote send/review copy matches the manual handoff and immutable review
+  contract.
+
+**Verification:** Focused unit/backend tests, typecheck, lint, build, and
+provider-independent browser checks. Live Clerk/provider smoke remains separate.
+
+**Dependencies:** Goal 1 for payment error mapping; Owner decisions for
+WhatsApp automation, cart cleanup, and catalog creation workflow remain open.
+
+**Files likely touched:** inquiry route/service/notification factory, admin shell,
+public navigation, shop/quote/order/checkout route boundaries, custom admin
+review/quote surfaces, focused tests.
+
+**Estimated scope:** Large; split into inquiry/admin and public recovery slices.
+
+### Remediation checkpoints
+
+- [x] Checkpoint A — Goal 1 payment authority and retail recovery verified.
+- [x] Checkpoint B — Goal 2 private file and custom payment continuation verified.
+- [x] Checkpoint C — Goal 3 custom shipping verified.
+- [x] Checkpoint D — Goal 4 operational recovery verified with provider-independent
+  tests and an isolated fail-closed admin smoke.
+- [ ] Provider, deployment, migration/seed, production data, and Owner business
+  decisions remain explicitly separate from these code goals.

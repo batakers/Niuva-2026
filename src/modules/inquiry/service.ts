@@ -18,7 +18,11 @@ import { parseWithValidation } from "@/modules/shared/validation";
 import { requireAdminPermission } from "@/modules/admin/permissions";
 
 import { B2BInquiryRepository } from "./repository";
-import { b2bInquiryInputSchema, type B2BInquiryInput } from "./schema";
+import {
+  b2bInquiryInputSchema,
+  requiresInquiryReference,
+  type B2BInquiryInput,
+} from "./schema";
 import { transitionInquiry } from "./transitions";
 
 type AuthorizeAdmin = () => Promise<AdminAccess>;
@@ -32,6 +36,10 @@ export type InquiryNotificationScheduler = (input: Readonly<{
   inquiryId: string;
   referenceNumber: string;
 }>) => void | Promise<void>;
+
+export type InquiryNotificationFactory = () =>
+  | InquiryNotificationScheduler
+  | undefined;
 
 export interface InquiryServiceRepository {
   create(
@@ -63,6 +71,7 @@ export type InquiryServiceDependencies = Readonly<{
   audit?: AuditRecorder;
   authorizeAdmin?: AuthorizeAdmin;
   notification?: InquiryNotificationScheduler;
+  notificationFactory?: InquiryNotificationFactory;
   randomBytes?: (size: number) => Uint8Array;
   repository?: InquiryServiceRepository;
 }>;
@@ -76,6 +85,7 @@ export class InquiryService {
   private readonly audit?: AuditRecorder;
   private readonly authorizeAdmin: AuthorizeAdmin;
   private readonly notification?: InquiryNotificationScheduler;
+  private readonly notificationFactory?: InquiryNotificationFactory;
   private readonly randomBytes?: (size: number) => Uint8Array;
   private readonly repositoryFactory: () => InquiryServiceRepository;
 
@@ -83,6 +93,7 @@ export class InquiryService {
     this.audit = dependencies.audit;
     this.authorizeAdmin = dependencies.authorizeAdmin ?? requireAdmin;
     this.notification = dependencies.notification;
+    this.notificationFactory = dependencies.notificationFactory;
     this.randomBytes = dependencies.randomBytes;
     this.repositoryFactory = () =>
       dependencies.repository ?? new B2BInquiryRepository();
@@ -94,10 +105,8 @@ export class InquiryService {
     const requestedFileIds = parsed.attachmentFileIds ?? [];
     const uploadReadyFileIds = await repository.findUploadReadyFileIds(requestedFileIds);
 
-    if (
-      uploadReadyFileIds.length !== new Set(requestedFileIds).size ||
-      (parsed.referenceLink === undefined && uploadReadyFileIds.length === 0)
-    ) {
+    if (uploadReadyFileIds.length !== new Set(requestedFileIds).size ||
+      (requiresInquiryReference(parsed) && parsed.referenceLink === undefined && uploadReadyFileIds.length === 0)) {
       throw appError("CONFLICT", {
         message: "Inquiry hanya boleh mengikat file upload yang siap diverifikasi.",
       });
@@ -132,32 +141,49 @@ export class InquiryService {
       metadata: { operation: "submit", referenceNumber },
     });
 
-    if (this.notification !== undefined) {
+    let notification = this.notification;
+    let notificationFactoryFailed = false;
+
+    if (notification === undefined && this.notificationFactory !== undefined) {
       try {
-        await this.notification({
+        notification = this.notificationFactory();
+      } catch {
+        notificationFactoryFailed = true;
+      }
+    }
+
+    if (notificationFactoryFailed) {
+      await this.recordNotificationFailure(inquiry.id);
+    }
+
+    if (notification !== undefined) {
+      try {
+        await notification({
           inquiryId: inquiry.id,
           referenceNumber: inquiry.referenceNumber,
         });
       } catch {
-        // The inquiry is already committed. Keep the submission successful and
-        // leave a best-effort operational trail for notification retry tooling.
-        try {
-          await recordAudit(this.audit, {
-            action: "inquiry.notification.failed",
-            actorType: "SYSTEM",
-            afterJson: { status: "NOT_SENT" },
-            entityId: inquiry.id,
-            entityType: "B2BInquiry",
-            metadata: { operation: "notification", result: "FAILED" },
-          });
-        } catch {
-          // Do not turn a committed inquiry into a failed request if audit
-          // infrastructure is unavailable as well.
-        }
+        await this.recordNotificationFailure(inquiry.id);
       }
     }
 
     return { accessToken, inquiry };
+  }
+
+  private async recordNotificationFailure(inquiryId: string): Promise<void> {
+    try {
+      await recordAudit(this.audit, {
+        action: "inquiry.notification.failed",
+        actorType: "SYSTEM",
+        afterJson: { status: "NOT_SENT" },
+        entityId: inquiryId,
+        entityType: "B2BInquiry",
+        metadata: { operation: "notification", result: "FAILED" },
+      });
+    } catch {
+      // A committed inquiry must remain successful if audit infrastructure is
+      // unavailable as well.
+    }
   }
 
   async transitionStatus(

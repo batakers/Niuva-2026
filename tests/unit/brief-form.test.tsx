@@ -36,6 +36,19 @@ describe("brief frontend", () => {
     expect(document.querySelector("#brief-referenceLink")).toHaveAttribute("aria-invalid", "true");
     expect(screen.getByRole("checkbox")).toHaveAttribute("aria-invalid", "true");
   });
+  it("allows an idea-stage brief without a reference link", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      response({ accessToken: "opaque-access-token", referenceNumber: "INQ-20260913-IDEA1234" }),
+    );
+    render(<BriefForm />);
+    fill();
+    fireEvent.change(document.querySelector('[name="currentStage"]')!, { target: { value: "IDEA" } });
+    fireEvent.change(document.querySelector('[name="referenceLink"]')!, { target: { value: "" } });
+    fireEvent.submit(screen.getByRole("form"));
+
+    expect(await screen.findByText("Brief tersimpan.")).toBeVisible();
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
   it("preserves input through simulated failure/retry, prevents duplicate submission and makes no fetch", async () => {
     vi.useFakeTimers();
     const fetchSpy = vi.spyOn(globalThis, "fetch");

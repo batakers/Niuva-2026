@@ -193,6 +193,54 @@ describe("Phase 2 inquiry and checkout services", () => {
     });
   });
 
+  it("keeps the persisted inquiry successful when notification construction fails", async () => {
+    const audit = auditRecorder();
+    let createCalls = 0;
+    const repository: InquiryServiceRepository = {
+      async create(input) {
+        createCalls += 1;
+        return { id: input.id, referenceNumber: input.referenceNumber };
+      },
+      async findUploadReadyFileIds() {
+        return [];
+      },
+      async referenceExists() {
+        return false;
+      },
+      async updateStatusIfCurrent() {
+        return null;
+      },
+    };
+    const service = new InquiryService({
+      audit: audit.record,
+      notificationFactory: () => {
+        throw new Error("invalid notification provider configuration");
+      },
+      randomBytes: (size) => new Uint8Array(size).fill(10),
+      repository,
+    });
+
+    await expect(
+      service.submit({
+        confidentialityAck: true,
+        currentStage: "CAD",
+        description: "Prototype housing",
+        email: "client@example.test",
+        name: "Client",
+        phone: "+628000000000",
+        projectGoal: "Validate prototype",
+        referenceLink: "https://example.test/reference",
+        targetDeadline: "2026-10-01",
+        targetQuantity: "10",
+      }),
+    ).resolves.toMatchObject({ inquiry: { referenceNumber: expect.any(String) } });
+    expect(createCalls).toBe(1);
+    expect(audit.events.at(-1)).toMatchObject({
+      action: "inquiry.notification.failed",
+      entityType: "B2BInquiry",
+    });
+  });
+
   it("ignores client totals and never calls payment provider inside the repository transaction", async () => {
     const audit = auditRecorder();
     const orderCalls: string[] = [];
@@ -234,6 +282,12 @@ describe("Phase 2 inquiry and checkout services", () => {
         return false;
       },
       async paymentProviderOrderIdExists() {
+        return false;
+      },
+      async findForRecovery() {
+        return null;
+      },
+      async replacePublicTokenHash() {
         return false;
       },
     };
@@ -288,6 +342,87 @@ describe("Phase 2 inquiry and checkout services", () => {
       "attach",
       "complete:12500",
     ]);
+  });
+
+  it("recovers the existing order token and pending payment on replay", async () => {
+    const audit = auditRecorder();
+    const replayResponse: StoredIdempotencyResponse = {
+      grandTotalRp: "12500",
+      orderId: "order-replay-1",
+      orderNumber: "ORD-REPLAY-1",
+      paymentAttemptId: "payment-replay-1",
+      status: "PENDING_PAYMENT",
+    };
+    let replacement: Readonly<{ currentHash: string; nextHash: string }> | undefined;
+    const recoveryRepository = {
+      async findForRecovery() {
+        return {
+          grandTotalRp: "12500",
+          orderId: "order-replay-1",
+          orderNumber: "ORD-REPLAY-1",
+          paymentAttemptId: "payment-replay-1",
+          paymentExpiresAt: new Date(now.getTime() + 1_800_000),
+          paymentRedirectUrl: "https://payment.example.test/retry",
+          paymentStatus: "PENDING" as const,
+          publicTokenHash: "old-order-token-hash",
+          status: "PENDING_PAYMENT" as const,
+        };
+      },
+      async replacePublicTokenHash(_orderId: string, currentHash: string, nextHash: string) {
+        replacement = { currentHash, nextHash };
+        return true;
+      },
+    };
+    const idempotency = {
+      async reserve() {
+        return {
+          kind: "REPLAY" as const,
+          response: replayResponse,
+          responseStatus: 201,
+        };
+      },
+      async complete() {
+        throw new Error("must not complete a replay");
+      },
+    };
+    const service = new CheckoutService({
+      audit: audit.record,
+      idempotency,
+      now: () => now,
+      randomBytes: (size) => new Uint8Array(size).fill(4),
+      repository: recoveryRepository as unknown as CheckoutRepositoryPort,
+    });
+
+    const result = await service.create({
+      address: {
+        addressLine: "Jl. Replay 1",
+        city: "Bandung",
+        countryCode: "ID",
+        phone: "+628000000000",
+        postalCode: "40111",
+        province: "Jawa Barat",
+        recipientName: "Replay Client",
+      },
+      customerEmail: "replay@example.test",
+      customerName: "Replay Client",
+      customerPhone: "+628000000000",
+      idempotencyKey: "checkout-replay-key",
+      items: [{ quantity: 1, variantId: "2b7f3c1a-18f7-4d91-8b86-8d98fcd0f7f4" }],
+      shippingOptionId: "jne-reg",
+    });
+
+    expect(result).toMatchObject({
+      kind: "REPLAY",
+      orderId: "order-replay-1",
+      orderNumber: "ORD-REPLAY-1",
+      payment: { redirectUrl: "https://payment.example.test/retry" },
+      paymentAttemptId: "payment-replay-1",
+      status: "PENDING_PAYMENT",
+      totalRp: "12500",
+    });
+    if (result.kind !== "REPLAY") throw new Error("Expected replay result.");
+    expect(result.orderAccessToken.token).toMatch(/^v1\./);
+    expect(replacement).toMatchObject({ currentHash: "old-order-token-hash" });
   });
 });
 

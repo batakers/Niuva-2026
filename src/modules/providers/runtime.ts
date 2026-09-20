@@ -4,6 +4,8 @@ import { createMidtransSnapGatewayFromEnvironment } from "@/modules/payment/midt
 import { LocalDemoPaymentProvider, LocalDemoShippingProvider } from "./local-demo";
 import { createBiteshipRateGatewayFromEnvironment } from "@/modules/shipping/biteship";
 import type { BiteshipRateProvider } from "@/modules/shipping/biteship";
+import { createCustomShippingProvider } from "@/modules/shipping/custom-provider";
+import type { CustomShippingProvider } from "@/modules/shipping/service";
 
 /**
  * Resolve a server adapter without allowing demo mode to leak into hosted
@@ -16,6 +18,12 @@ export function createShippingProviderForRuntime(
   return isLocalDemoMode(source)
     ? new LocalDemoShippingProvider()
     : createBiteshipRateGatewayFromEnvironment(source);
+}
+
+export function createCustomShippingProviderForRuntime(
+  source: Readonly<Record<string, string | undefined>> = process.env,
+): CustomShippingProvider {
+  return createCustomShippingProvider(createShippingProviderForRuntime(source));
 }
 
 export function createPaymentProviderForRuntime(

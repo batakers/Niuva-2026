@@ -9,6 +9,7 @@ import { getPrismaClient } from "@/lib/db/prisma";
 export type OrderMutationState = Readonly<{
   id: string;
   orderType: OrderType;
+  shipment: Readonly<{ courierCode: string | null; trackingNumber: string | null }> | null;
   status: OrderStatus;
 }>;
 
@@ -39,6 +40,17 @@ export class OrderRepository {
         },
         orderNumber: true,
         orderType: true,
+        paymentAttempts: {
+          orderBy: { createdAt: "desc" },
+          select: {
+            expiresAt: true,
+            provider: true,
+            purpose: true,
+            redirectUrl: true,
+            snapToken: true,
+            status: true,
+          },
+        },
         paidAt: true,
         shipments: {
           orderBy: { updatedAt: "desc" },
@@ -69,6 +81,17 @@ export class OrderRepository {
         },
         orderNumber: true,
         orderType: true,
+        paymentAttempts: {
+          orderBy: { createdAt: "desc" },
+          select: {
+            expiresAt: true,
+            provider: true,
+            purpose: true,
+            redirectUrl: true,
+            snapToken: true,
+            status: true,
+          },
+        },
         paidAt: true,
         publicTokenHash: true,
         shipments: {
@@ -84,10 +107,27 @@ export class OrderRepository {
   }
 
   async findStatusForMutation(orderId: string): Promise<OrderMutationState | null> {
-    return this.prisma.order.findUnique({
+    const order = await this.prisma.order.findUnique({
       where: { id: orderId },
-      select: { id: true, orderType: true, status: true },
+      select: {
+        id: true,
+        orderType: true,
+        shipments: {
+          orderBy: { updatedAt: "desc" },
+          select: { courierCode: true, trackingNumber: true },
+          take: 1,
+        },
+        status: true,
+      },
     });
+
+    if (order === null) return null;
+    return {
+      id: order.id,
+      orderType: order.orderType,
+      shipment: order.shipments[0] ?? null,
+      status: order.status,
+    };
   }
 
   async updateStatusIfCurrent(

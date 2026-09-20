@@ -27,7 +27,7 @@ export async function POST(request: Request) {
       maxBytes: CUSTOM_PRINT_REQUEST_MAX_BODY_BYTES,
     });
     const result = await new CustomPrintService({
-      notification: createCustomPrintAdminNotificationFromEnvironment(),
+      notificationFactory: createCustomPrintAdminNotificationFromEnvironment,
     }).submit(payload);
 
     return apiSuccess(

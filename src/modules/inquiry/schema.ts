@@ -47,10 +47,8 @@ export const b2bInquiryInputSchema = z
       });
     }
 
-    if (
-      input.referenceLink === undefined &&
-      (input.attachmentFileIds === undefined || input.attachmentFileIds.length === 0)
-    ) {
+    if (requiresInquiryReference(input) && input.referenceLink === undefined &&
+      (input.attachmentFileIds === undefined || input.attachmentFileIds.length === 0)) {
       context.addIssue({
         code: "custom",
         message: "Lampiran file privat atau link referensi wajib diisi.",
@@ -60,3 +58,9 @@ export const b2bInquiryInputSchema = z
   });
 
 export type B2BInquiryInput = z.infer<typeof b2bInquiryInputSchema>;
+
+export function requiresInquiryReference(
+  input: Pick<B2BInquiryInput, "currentStage">,
+): boolean {
+  return input.currentStage !== "IDEA";
+}

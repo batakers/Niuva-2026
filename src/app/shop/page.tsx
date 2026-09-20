@@ -17,13 +17,18 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
   const { scenario, products: previewProducts } = await getShopPreview((await searchParams).preview);
   let products = previewProducts;
   let liveEnabled = false;
+  let liveCatalogError = false;
+  let liveCatalogUnavailable = false;
   if (scenario === null && process.env.DATABASE_URL !== undefined) {
     try {
       products = await getLiveShopProducts();
       liveEnabled = products.length > 0;
     } catch {
+      liveCatalogError = true;
       products = [];
     }
+  } else if (scenario === null) {
+    liveCatalogUnavailable = true;
   }
   const functionalStatus = liveEnabled
     ? "server-backed" as const
@@ -54,7 +59,11 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
             </aside>
           )}
 
-          {scenario === "loading" ? (
+          {liveCatalogError ? (
+            <StatusNotice tone="error" title="Katalog live belum dapat dimuat." description="Sumber data produk sedang tidak dapat dijangkau. Tidak ada transaksi yang dibuat; coba muat ulang atau gunakan preview contoh." action={<AuLink href="/shop" variant="outline" className="min-h-11">Muat ulang</AuLink>} />
+          ) : liveCatalogUnavailable ? (
+            <StatusNotice tone="warning" title="Katalog live belum terhubung." description="Database katalog belum tersedia pada runtime ini. Gunakan preview contoh untuk meninjau tampilan; data preview bukan inventory nyata." action={<AuLink href="/shop?preview=examples" variant="outline" className="min-h-11">Buka preview contoh</AuLink>} />
+          ) : scenario === "loading" ? (
             <div role="status" aria-label="Memuat katalog" className="space-y-5 py-8">
               <p className="text-sm text-muted-foreground">Memuat katalog contoh…</p>
               <div className="grid gap-8 md:grid-cols-2">
