@@ -345,6 +345,20 @@ Exact brand colors dan final typography: **TBD during UI Foundation / Visual Pro
 11. New visual patterns should be reusable or intentionally page-specific with documented reason.
 12. A UI task is not complete until checked for token compliance, component reuse, desktop, mobile, keyboard, focus, loading, empty, error, success, and reduced motion.
 
+### Optional editorial copy review
+
+The project-local [`niuva-editorial`](../.agents/skills/niuva-editorial/SKILL.md)
+skill provides an editorial pass for human-facing copy. It adapts the
+principles of `petergyang/no-ai-slop` to Niuva's Indonesian voice, evidence
+requirements, and Owner approval boundaries.
+
+Use it for public, project-brief, product, portfolio, email, and UX copy. It
+does not change code, UI tokens, component contracts, authoritative prices,
+stock, shipping, payment, legal text, or unresolved Owner decisions. The
+result is a writing aid, not a visual-proof, test, or production-readiness
+gate; factual claims still require the existing Niuva evidence and approval
+workflow.
+
 ---
 
 # 8. Visual Proof Gate
