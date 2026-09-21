@@ -5,6 +5,10 @@ Foundation status: **Foundation visual proof approved for styleguide-only on
 2026-09-03; global product-screen propagation remains separately blocked.**
 Implementation status: **P0/P1 components are visually approved for the
 styleguide; global product-screen propagation remains separately blocked.**
+`OptionChip` implementation is approved as a styleguide-only extension on
+2026-09-21. Owner accepted the named visual proof on 2026-09-22; scoped
+Chromium/browser semantics acceptance is verified, while cross-browser/physical
+screen-reader interoperability and product propagation remain separate gates.
 
 This document turns the UI Foundation into a controlled component boundary. The
 owner approved the four P0 and four P1 contracts on 2026-08-28. The visual
@@ -374,6 +378,32 @@ reusable boundary.
   associated.
 - **Tokens/showcase:** Brand accent, focus, muted, destructive, and control
   radius tokens; showcase product detail and out-of-stock recovery.
+
+### `OptionChip` — approved implementation / styleguide-only
+
+- **Purpose:** Provide a mutually exclusive selection control whose selected
+  and unavailable states remain understandable without relying on color alone.
+- **Anatomy:** Native `button`, visible label, optional selected check marker,
+  and an explicit unavailable label. The parent owns the selected value and any
+  material downstream status.
+- **States and sizing:** Default, selected, unavailable, and focus-visible;
+  minimum height `44px`, `8px` control radius, `8px` vertical / `12px`
+  horizontal padding, and an `18px` selected marker. Labels wrap without
+  truncation or font shrinking; groups wrap in source order.
+- **Props/data:** `label`, `selected`, `unavailable`, `unavailableLabel`,
+  native button event/description props, and `className`. It does not own
+  stock, price, or product authority.
+- **Accessibility:** Uses native button semantics with `aria-pressed` for
+  selected state and native `disabled` for unavailable state. The unavailable
+  label remains visible. No duplicate live announcement is emitted by the
+  component; an adjacent status is permitted only for a material downstream
+  change.
+- **Tokens/showcase:** Semantic border, surface, primary, muted, and focus
+  tokens; implementation proof at `/auis/styleguide#option-chip-proof`.
+  The named visual proof was accepted by the Owner on 2026-09-22, and the
+  scoped Chromium/browser semantics acceptance is verified. Status is approved
+  for styleguide-only; cross-browser/physical screen-reader interoperability
+  and product propagation remain separate gates.
 
 ## 6. Page-only compositions
 

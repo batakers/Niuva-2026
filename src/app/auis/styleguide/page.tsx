@@ -29,6 +29,7 @@ import { DesignSystemArchitecture } from "./components/design-system-architectur
 import { MotionSystemProof } from "./components/motion-system";
 import { P0ComponentShowcase } from "./components/p0-showcase";
 import { P1ComponentShowcase } from "./components/p1-showcase";
+import { OptionChipShowcase } from "./components/option-chip-showcase";
 import { PatternsShowcase } from "./components/patterns-showcase";
 import { TypographyProof } from "./components/typography-proof";
 
@@ -289,6 +290,7 @@ export default function StyleguidePage() {
 
       <P0ComponentShowcase />
       <P1ComponentShowcase />
+      <OptionChipShowcase />
       <MotionSystemProof />
       <PatternsShowcase />
 
