@@ -1,0 +1,4 @@
+interface:
+  display_name: "Niuva Editorial"
+  short_description: "Edit Niuva copy without unsupported claims"
+  default_prompt: "Use $niuva-editorial to review or edit Niuva copy while preserving facts and approval boundaries."
