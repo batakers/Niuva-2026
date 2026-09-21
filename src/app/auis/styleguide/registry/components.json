@@ -11,6 +11,10 @@
     "productScreenProof": {
       "status": "authorized-proof",
       "routes": ["/", "/project-brief"],
+      "technicalEvidence": "verified",
+      "evidenceDoc": "docs/frontend/product-route-proof.md",
+      "evidenceTest": "tests/e2e/product-route-proof.spec.ts",
+      "viewports": [320, 390, 768, 1280],
       "visualAcceptance": "pending-owner-review",
       "checkoutAdminIncluded": false,
       "creativeDecorativeIncluded": false,
