@@ -1,6 +1,14 @@
 import { expect, test } from "@playwright/test";
 
 test("AUiS styleguide exposes the Niuva Visual Proof", async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") {
+      consoleErrors.push(message.text());
+    }
+  });
+  page.on("pageerror", (error) => consoleErrors.push(error.message));
+
   await page.goto("/auis/styleguide");
 
   await expect(page).toHaveTitle("Design System styleguide · Niuva");
@@ -83,6 +91,25 @@ test("AUiS styleguide exposes the Niuva Visual Proof", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "FileUploadField" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "OrderStatusTimeline" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "VariantSelector" })).toBeVisible();
+  const optionChipProof = page.locator("[data-component-showcase='option-chip']");
+  await expect(optionChipProof).toBeVisible();
+  await expect(optionChipProof).toHaveAttribute("data-implementation-scope", "styleguide-only");
+  await expect(optionChipProof).toHaveAttribute("data-implementation-status", "complete");
+  await expect(optionChipProof).toHaveAttribute("data-acceptance-gate", "verified");
+  const absChip = optionChipProof.getByRole("button", { name: "ABS" }).first();
+  const plaChip = optionChipProof.getByRole("button", { name: "PLA" }).first();
+  const resinChip = optionChipProof.getByRole("button", { name: /Resin.*Tidak tersedia/ }).first();
+  await expect(absChip).toHaveAttribute("aria-pressed", "true");
+  await expect(resinChip).toBeDisabled();
+  await plaChip.focus();
+  await page.keyboard.press("Space");
+  await expect(plaChip).toHaveAttribute("aria-pressed", "true");
+  await expect(plaChip).toBeFocused();
+  await expect(optionChipProof.getByRole("status")).toContainText("PLA");
+  await expect(optionChipProof.getByRole("status")).toHaveCount(1);
+  await resinChip.evaluate((element) => (element as HTMLButtonElement).click());
+  await expect(optionChipProof.getByRole("status")).toContainText("PLA");
+  await expect(optionChipProof.locator("[data-option-chip-reflow='true']")).toBeVisible();
   const compactSummaries = page.locator(
     '[data-component="money-summary"][data-variant="compact"]',
   );
@@ -110,6 +137,7 @@ test("AUiS styleguide exposes the Niuva Visual Proof", async ({ page }) => {
   await expect(page.locator("[data-contract-scope='styleguide-only']")).toBeVisible();
   await expect(page.getByText("Product propagation · paused")).toBeVisible();
   await expect(page.locator("[data-proof-surface='public']").getByRole("button", { name: "Diskusikan proyek" })).toBeVisible();
+  expect(consoleErrors).toEqual([]);
 });
 
 test("AUiS styleguide keeps the mobile proof within the viewport and exposes upload focus", async ({ page }) => {
@@ -133,6 +161,23 @@ test("AUiS styleguide keeps the mobile proof within the viewport and exposes upl
     (element) => window.getComputedStyle(element).boxShadow,
   );
   expect(focusShadow).not.toBe("none");
+
+  const optionChipProof = page.locator("[data-component-showcase='option-chip']");
+  const optionChipViewport = await optionChipProof.evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+  }));
+  expect(optionChipViewport.scrollWidth).toBeLessThanOrEqual(optionChipViewport.clientWidth);
+  const reflowFrame = optionChipProof.locator("[data-option-chip-reflow='true']");
+  await expect(reflowFrame).toBeVisible();
+  for (const width of [220, 280, 320]) {
+    await page.setViewportSize({ height: 844, width });
+    await page.goto("/auis/styleguide");
+    const frameViewport = await page
+      .locator("[data-component-showcase='option-chip'] [data-option-chip-reflow='true']")
+      .evaluate((element) => ({ clientWidth: element.clientWidth, scrollWidth: element.scrollWidth }));
+    expect(frameViewport.scrollWidth).toBeLessThanOrEqual(frameViewport.clientWidth);
+  }
 });
 
 test("typography proof records styleguide approval and explicit public propagation", async ({ page }) => {

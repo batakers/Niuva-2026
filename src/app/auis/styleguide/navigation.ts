@@ -26,6 +26,7 @@ export const navigation: NavSection[] = [
       { name: "Core components", href: "/auis/styleguide#components" },
       { name: "P0 components", href: "/auis/styleguide#p0-components" },
       { name: "P1 components", href: "/auis/styleguide#p1-components" },
+      { name: "Option chip proof", href: "/auis/styleguide#option-chip-proof" },
       { name: "Motion System v1", href: "/auis/styleguide#motion-system" },
       { name: "Patterns", href: "/auis/styleguide#patterns" },
       { name: "Component contracts", href: "/auis/styleguide#registry" },

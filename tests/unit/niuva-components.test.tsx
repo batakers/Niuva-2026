@@ -7,6 +7,7 @@ import {
   FileUploadField,
   FormField,
   MoneySummary,
+  OptionChip,
   OrderStatusTimeline,
   StatusNotice,
   VariantSelector,
@@ -162,6 +163,33 @@ describe("Niuva P0 components", () => {
 });
 
 describe("Niuva P1 components", () => {
+  it("keeps OptionChip states native, explicit, and keyboard reachable", () => {
+    const onClick = vi.fn();
+
+    render(
+      <div>
+        <OptionChip label="ABS" onClick={onClick} selected />
+        <OptionChip label="Resin" unavailable />
+      </div>,
+    );
+
+    const selected = screen.getByRole("button", { name: "ABS" });
+    const unavailable = screen.getByRole("button", { name: /Resin.*Tidak tersedia/ });
+
+    expect(selected).toHaveAttribute("type", "button");
+    expect(selected).toHaveAttribute("aria-pressed", "true");
+    expect(selected).toHaveAttribute("data-state", "selected");
+    expect(selected).toHaveClass("min-h-11");
+    expect(screen.getByText("✓")).toHaveAttribute("aria-hidden", "true");
+    expect(unavailable).toBeDisabled();
+    expect(unavailable).toHaveAttribute("aria-pressed", "false");
+    expect(unavailable).toHaveAttribute("data-state", "unavailable");
+    expect(unavailable).toHaveTextContent("Tidak tersedia");
+
+    fireEvent.click(selected);
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
   it("renders server-provided money values without taking calculation authority", () => {
     render(
       <MoneySummary

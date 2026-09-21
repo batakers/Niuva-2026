@@ -80,7 +80,8 @@
       "money-summary",
       "file-upload-field",
       "order-status-timeline",
-      "variant-selector"
+      "variant-selector",
+      "option-chip"
     ],
     "screenPropagationAllowed": false,
     "screenPropagationMode": "blocked-until-separate-page-authorization"
@@ -124,6 +125,13 @@
       "status": "approved",
       "source": "src/components/niuva",
       "components": ["evidence-card", "form-field", "status-notice", "action-queue-item", "money-summary", "file-upload-field", "order-status-timeline", "variant-selector"]
+    },
+    {
+      "id": "styleguide-extensions",
+      "layer": "core-components",
+      "status": "approved",
+      "source": "src/components/niuva",
+      "components": ["option-chip"]
     }
   ],
   "patterns": [

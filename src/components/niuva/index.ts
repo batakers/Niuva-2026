@@ -52,3 +52,4 @@ export {
   type VariantSelectorVariant,
   type VariantSwatchTone,
 } from "./variant-selector";
+export { OptionChip, type OptionChipProps } from "./option-chip";

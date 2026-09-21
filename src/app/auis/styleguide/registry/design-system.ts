@@ -369,6 +369,15 @@ export const designSystemComponentGroups = [
     source: "Custom source in src/components/niuva",
     status: "approved",
   },
+  {
+    boundary: "Approved styleguide-only implementation proof; cross-browser/physical screen-reader interoperability, official promotion, and product propagation remain separate gates.",
+    id: "styleguide-extensions",
+    items: ["OptionChip"],
+    layer: "core-components",
+    label: "Styleguide extensions",
+    source: "Custom source in src/components/niuva",
+    status: "approved",
+  },
 ] as const satisfies readonly DesignSystemComponentGroup[];
 
 export const designSystemPatterns = [

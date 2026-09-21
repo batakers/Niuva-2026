@@ -63,6 +63,12 @@ product-screen propagation. New components and new visual defaults must enter
 the same proof path again; Creative and Decorative layers remain separate
 review gates.
 
+`OptionChip` is a separate approved styleguide-only extension authorized on
+2026-09-21. Its named visual proof was accepted by the Owner on 2026-09-22,
+and scoped Chromium/browser semantics acceptance is verified. It is not part of
+the initial P0/P1 approval; cross-browser/physical screen-reader interoperability,
+official promotion, and product propagation remain separate gates.
+
 ## Foundation visual gate
 
 The revised Foundation Visual Proof passed owner review on **2026-09-03** for
