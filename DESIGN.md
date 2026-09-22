@@ -841,6 +841,15 @@ metadata:
       status: "SEPARATE GATE"
       candidateRoutes: ["homepage", "project-brief", "checkout", "admin"]
       requiredEvidence: "named route, representative content, responsive proof, keyboard/focus, semantic states, recovery, and route-specific media/layout evidence"
+      currentProof:
+        status: "VERIFIED technical evidence; APPROVED OWNER VISUAL ACCEPTANCE"
+        acceptedAt: "2026-09-22"
+        acceptanceScope: "Owner accepted the named previews for / and /project-brief; no global product-screen propagation"
+        routes: ["/", "/project-brief"]
+        viewports: [320, 390, 768, 1280]
+        source: "docs/frontend/product-route-proof.md"
+        test: "tests/e2e/product-route-proof.spec.ts"
+        passed: "responsive rendering, landmark/heading and control semantics, keyboard/focus, form recovery, representative media boundary, and no horizontal overflow"
       propagation: "no product-screen propagation is authorized by this evidence policy alone"
     scope: "evidence and acceptance policy only; no new token, component default, product propagation, provider activation, or production approval"
   functionalGradientPolicy:
@@ -1905,7 +1914,7 @@ bawah hanya evidence atau gate terpisah.
 | DS-DEC-017-EVIDENCE-BOUNDARY | Evidence and acceptance boundary / `APPROVED`; current evidence remains mixed | Owner menyetujui pada 2026-09-22 evidence ladder dari documentation, local technical evidence, named visual acceptance, runtime/AT, product-route proof, hingga provider/production gate | Boundary ditutup; setiap claim harus menyebut level dan scope; belum ada runtime/AT, layout/media route, product-route, atau provider/production acceptance umum |
 | DS-DEC-017-RUNTIME-AT-ACCEPTANCE | Runtime and assistive-technology acceptance / gate `APPROVED`; evidence `UNVERIFIED` | Actual browser/screen-reader pair pada runtime yang disetujui; keyboard entry, focus retention/recovery, state announcement, unavailable behavior, dan narrow reflow | Gate criteria ditutup; actual output/interoperability dan acceptance result tetap `UNVERIFIED` sampai evidence nyata tersedia |
 | DS-DEC-017-LAYOUT-MEDIA-PROOF | Layout/media route proof / gate `APPROVED`; proof `DEFERRED` | Named route, representative licensed assets, compact/standard/wide viewport, reading/action order, no overflow, focus, media role/crop, loading, dan recovery | Exact composition, ratio/crop/loading/art direction/sticky collision tetap `DEFERRED` sampai route proof dibuka |
-| DS-DEC-017-PRODUCT-ROUTE-PROOF | Product-route acceptance / `SEPARATE GATE` | Candidate scope: homepage, project brief, checkout, dan admin; masing-masing memerlukan named route evidence | Tidak ada product-screen propagation atau production readiness yang tersirat; propagation hanya setelah proof dan keputusan terpisah |
+| DS-DEC-017-PRODUCT-ROUTE-PROOF | Product-route acceptance / `SEPARATE GATE`; technical proof `VERIFIED` dan visual acceptance Owner `APPROVED` pada 2026-09-22 untuk `/` dan `/project-brief` | Candidate scope: homepage, project brief, checkout, dan admin; dua route pertama memiliki named technical evidence pada `docs/frontend/product-route-proof.md` | Acceptance hanya berlaku untuk dua preview route yang dinamai; tidak ada product-screen propagation, checkout/admin acceptance, atau production readiness yang tersirat; propagation tetap memerlukan proof dan keputusan terpisah |
 
 Batch B menutup policy baseline kontrak komponen melalui `DS-DEC-016`; Batch C
 menutup evidence boundary melalui `DS-DEC-017-EVIDENCE-BOUNDARY`; DS-DEC-018

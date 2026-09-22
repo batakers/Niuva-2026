@@ -46,11 +46,14 @@ export function PublicShell({
 }) {
   const resolvedFunctionalStatus = functionalStatus ?? defaultFunctionalStatusByScope[scope];
   const demoMode = isLocalDemoMode();
+  const productRouteProofStatus = scope === "homepage" || scope === "project-brief"
+    ? "approved-owner"
+    : "pending-owner-review";
 
   return (
     <div className={`${sans.variable} ${editorial.variable} min-h-screen bg-background text-foreground`}
       style={typography} data-foundation-propagation="approved" data-foundation-scope={scope}
-      data-product-screen-proof-status="pending-owner-review" data-typography-version="1.0"
+      data-product-screen-proof-status={productRouteProofStatus} data-typography-version="1.0"
       data-runtime-mode={demoMode ? "demo" : "standard"}
       data-homepage={scope === "homepage" ? "" : undefined}
       data-project-brief={scope === "project-brief" ? "" : undefined}
