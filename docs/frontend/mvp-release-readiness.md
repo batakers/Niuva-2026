@@ -66,3 +66,13 @@ simulasi itu hanya boleh muncul pada mode preview.
    provider smoke, callback/payment, dan production acceptance.
 3. Jangan menandai `READY` di tabel ini sebagai bukti deployment atau aktivasi
    provider.
+
+## Gate closure addendum — 2026-09-22
+
+Evidence terarah untuk checkout, Admin fail-closed, provider boundaries, touch
+emulation, dan OptionChip tercatat di
+[`gate-closure-audit.md`](./gate-closure-audit.md). Checkout dan Admin local
+technical proof lulus; touch proof masih emulated; physical screen-reader,
+provider activation, production deployment, dan OptionChip product propagation
+belum ditutup. Tidak ada provider atau production resource yang diaktifkan oleh
+audit ini.
