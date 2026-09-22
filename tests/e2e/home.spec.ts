@@ -27,13 +27,13 @@ test("public homepage exposes the Niuva narrative and entry paths", async ({ pag
   await expect(page.locator("nav").getByRole("link", { name: "Pilih jalur" })).toBeVisible();
 });
 
-test("authorized Foundation proof remains pending owner review", async ({ page }) => {
+test("authorized Foundation proof records scoped owner visual acceptance", async ({ page }) => {
   await page.goto("/");
 
   const homepage = page.locator("[data-homepage]");
   await expect(homepage).toHaveAttribute("data-foundation-propagation", "approved");
   await expect(homepage).toHaveAttribute("data-foundation-scope", "homepage");
-  await expect(homepage).toHaveAttribute("data-product-screen-proof-status", "pending-owner-review");
+  await expect(homepage).toHaveAttribute("data-product-screen-proof-status", "approved-owner");
   await expect(homepage).toHaveAttribute("data-typography-version", "1.0");
   const homepageFont = await homepage.evaluate(
     (element) => window.getComputedStyle(element).fontFamily,
@@ -46,7 +46,7 @@ test("authorized Foundation proof remains pending owner review", async ({ page }
   await expect(projectBrief).toHaveAttribute("data-foundation-propagation", "approved");
   await expect(projectBrief).toHaveAttribute("data-foundation-scope", "project-brief");
   await expect(projectBrief).toHaveAttribute("data-product-screen-functional", "server-backed");
-  await expect(projectBrief).toHaveAttribute("data-product-screen-proof-status", "pending-owner-review");
+  await expect(projectBrief).toHaveAttribute("data-product-screen-proof-status", "approved-owner");
   await expect(page.getByRole("heading", { level: 1, name: "Buat langkah awal proyek jadi jelas." })).toBeVisible();
   await expect(page.getByRole("button", { name: "Kirim project brief" })).toBeVisible();
   await expect(page.locator("[data-project-brief-form]")).toBeVisible();

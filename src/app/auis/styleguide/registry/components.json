@@ -15,7 +15,9 @@
       "evidenceDoc": "docs/frontend/product-route-proof.md",
       "evidenceTest": "tests/e2e/product-route-proof.spec.ts",
       "viewports": [320, 390, 768, 1280],
-      "visualAcceptance": "pending-owner-review",
+      "visualAcceptance": "approved-owner",
+      "visualAcceptanceAt": "2026-09-22",
+      "acceptanceScope": "Owner accepted the named previews for / and /project-brief; no global product-screen propagation",
       "checkoutAdminIncluded": false,
       "creativeDecorativeIncluded": false,
       "screenPropagationAllowed": false

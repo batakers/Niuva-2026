@@ -1,6 +1,6 @@
 # Product Route Proof — `/` dan `/project-brief`
 
-Status: **TECHNICAL PROOF VERIFIED · OWNER VISUAL ACCEPTANCE PENDING**
+Status: **TECHNICAL PROOF VERIFIED · OWNER VISUAL ACCEPTED**
 
 Tanggal pemeriksaan: **2026-09-22**
 
@@ -52,14 +52,14 @@ corepack pnpm exec playwright test tests/e2e/product-route-proof.spec.ts --worke
 
 Test source: `tests/e2e/product-route-proof.spec.ts`.
 
-Proof memakai Chromium lokal melalui Next development server. Hasil ini
-menutup bukti teknis pada route yang dinamai; visual acceptance Owner tetap
-harus dilakukan pada preview aktual sebelum registry dapat berubah dari
-`pending-owner-review` atau propagation guard dibuka.
+Proof memakai Chromium lokal melalui Next development server. Owner menerima
+preview aktual untuk dua route ini pada 2026-09-22. Registry sekarang mencatat
+`approved-owner` hanya untuk proof route yang dinamai; propagation guard tetap
+tertutup dan tidak ada perluasan scope ke checkout, admin, provider, atau
+production.
 
 ## Review boundary
 
-Setelah Owner menerima preview homepage dan project brief pada viewport/content
-yang sama, bukti visual dapat dicatat sebagai accepted untuk dua route tersebut.
-Acceptance itu tetap scoped: checkout/admin, provider/production, dan promosi
-komponen `Official` membutuhkan gate terpisah.
+Owner menerima preview homepage dan project brief pada viewport/content yang
+sama pada 2026-09-22. Acceptance ini tetap scoped: checkout/admin,
+provider/production, dan promosi komponen `Official` membutuhkan gate terpisah.
