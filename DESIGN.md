@@ -812,7 +812,7 @@ metadata:
     scopeClassification:
       approved: "Current Niuva design defaults and component policies"
       notApplicable: "Apple-only treatment, decorative gradient, sub-navigation, floating sticky bar, editorial quote card, and product-tile micro-variants without a named Niuva need"
-      unverified: "Runtime, screen-reader, device-touch, and application evidence not executed in this documentation pass"
+      unverified: "Physical screen-reader speech/output, physical device-touch behavior, cross-browser interoperability, and provider/production evidence remain unverified; named local route/application evidence is recorded in the gate audit"
       deferred: "Named route layout/media proof and future functional gradient use"
       separateGate: "Product propagation, provider activation, deployment, and production acceptance"
     reopenRule: "Only a new named Niuva need, route, or evidence contradiction may create a new decision; it must receive a new decisionRef and may not silently change this closure"
@@ -851,6 +851,15 @@ metadata:
         test: "tests/e2e/product-route-proof.spec.ts"
         passed: "responsive rendering, landmark/heading and control semantics, keyboard/focus, form recovery, representative media boundary, and no horizontal overflow"
       propagation: "no product-screen propagation is authorized by this evidence policy alone"
+    followUpGates:
+      source: "docs/frontend/gate-closure-audit.md"
+      status: "PARTIAL; local technical gates verified while external acceptance remains blocked or deferred"
+      checkout: "VERIFIED_LOCAL_TECHNICAL; provider, payment, webhook, and production acceptance remain separate"
+      admin: "VERIFIED_LOCAL_TECHNICAL; authenticated non-production surface accepted; production remains separate"
+      providerProduction: "BLOCKED_EXTERNAL_INPUT; no activation, deployment, or production approval"
+      touchDevice: "PARTIAL_EMULATED; physical iOS/Android acceptance remains OPEN"
+      screenReader: "PARTIAL_BROWSER_SEMANTICS; physical screen-reader speech/output remains OPEN"
+      optionChipPropagation: "BLOCKED_DECISION; no named product use case; VariantSelector remains the product control"
     scope: "evidence and acceptance policy only; no new token, component default, product propagation, provider activation, or production approval"
   functionalGradientPolicy:
     decisionStatus: "APPROVED"
