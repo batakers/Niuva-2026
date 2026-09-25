@@ -25,10 +25,26 @@ bersifat idempotent dan adapter shipping/payment deterministik memberi label
 `DEMO`; checkout tetap berhenti di `PENDING_PAYMENT`.
 
 Mode ini tidak mengubah status provider mana pun menjadi `VERIFIED_SANDBOX`,
-tidak membuat sesi Clerk atau `AdminProfile`, tidak mengunggah binary ke R2,
+tidak membuat sesi Clerk atau `AdminProfile`, dan tidak membuat fake Google
+Customer login. Checkout demo/preview tetap membutuhkan Customer session;
+automated tests memakai mock pada boundary OAuth. Mode ini tidak mengunggah binary ke R2,
 dan tidak mengirim WhatsApp/email. Route `/demo/action-queue` hanya proyeksi
 read-only untuk menunjukkan persistence inquiry; `/admin` tetap memakai boundary
 Clerk dan `requireAdmin()` yang sama.
+
+## Addendum — Customer Google OAuth (2026-09-25)
+
+Customer Google OAuth adalah scope implementasi baru yang terpisah dari Clerk
+Admin. Route `/login` dan `/register` menuju flow Google yang sama, `/account`
+menyajikan profil read-only dan riwayat order retail/custom-print, dan
+`/checkout` serta `/api/shipping/rates` menolak request tanpa Customer session,
+termasuk demo/preview.
+
+Evidence lokal mencakup state + PKCE, validasi issuer/audience/expiry dan
+`email_verified`, opaque DB session 30 hari, revoke/logout, safe `returnTo`,
+auto-link order unowned berdasarkan email ternormalisasi, pencegahan cross-account
+leakage, dan browser-email spoof protection. OAuth automated test memakai mock
+adapter; live Google Development smoke belum dijalankan.
 
 ## Bukti lokal
 
@@ -52,6 +68,7 @@ bukan keberhasilan login, transaksi, upload, atau delivery.
 | Provider | Status lokal | Konfigurasi wajib menurut source saat ini | Syarat sebelum pengujian nyata |
 | --- | --- | --- | --- |
 | Clerk | `LOCAL_KEYS_PRESENT_LIVE_SMOKE_PENDING` | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` | Instance development; pasangan key dari instance yang sama; user test dan active `AdminProfile` dengan role sesuai policy. Bootstrap Owner mengikuti exact Clerk user ID. |
+| Customer Google OAuth | `MISSING_LOCAL_CONFIG` | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` | Google Development credentials, exact HTTPS/localhost redirect URI, consent/origin configuration, test account, dan live `/login` → `/account` smoke. Secret tetap di environment manager. |
 | Midtrans | `MISSING_LOCAL_CONFIG` | `MIDTRANS_IS_PRODUCTION`, `MIDTRANS_SERVER_KEY`, `NEXT_PUBLIC_MIDTRANS_CLIENT_KEY` | Pasangan key sandbox; flag `false`; runtime development; jalur callback yang dapat dijangkau provider menuju `/api/webhooks/midtrans`, diverifikasi sebelum transaksi. |
 | Biteship | `MISSING_LOCAL_CONFIG` | `BITESHIP_API_KEY`, `BITESHIP_COURIERS`, `BITESHIP_ORIGIN_AREA_ID` | Key berawalan `biteship_test.`; origin area valid dan daftar kurir yang dipilih; destination test serta variant dengan harga, stock, berat, dan dimensi valid. |
 | R2 | `MISSING_LOCAL_CONFIG` | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_ENDPOINT`, `R2_PRIVATE_BUCKET`, `R2_PUBLIC_BUCKET`, `CUSTOM_FILE_MAX_BYTES` | Resource development yang terpisah; akses bucket customer tetap private; izin object sesuai operasi adapter; CORS untuk origin upload yang dipilih; limit `104857600`. |
@@ -84,14 +101,17 @@ bukan keberhasilan login, transaksi, upload, atau delivery.
 
 ## Urutan tindak lanjut
 
-1. Lengkapi Clerk live smoke: Owner memilih user development, menjalankan
+1. Lengkapi Customer Google live smoke: Owner menyediakan Google Development
+   credentials dan exact redirect URI, lalu uji `/login` dan `/register` ke
+   `/account`, logout, legacy-order link, serta checkout setelah login.
+2. Lengkapi Clerk live smoke: Owner memilih user development, menjalankan
    `corepack pnpm db:provision:admin`, lalu uji `/admin` dengan browser satu
    worker. Jangan gunakan database yang dibersihkan test suite.
-2. Lengkapi group R2 secara utuh, CORS exact-origin, dan smoke intent → PUT →
+3. Lengkapi group R2 secara utuh, CORS exact-origin, dan smoke intent → PUT →
    confirm; pastikan object tetap private dan row berpindah `PENDING → UPLOADED`.
-3. Lengkapi group Biteship/Midtrans beserta origin/courier test, fixture catalog
+4. Lengkapi group Biteship/Midtrans beserta origin/courier test, fixture catalog
    dan alamat, lalu uji rates → checkout → pembayaran sandbox → webhook.
-4. Putuskan provider WhatsApp dan kebijakan pengiriman sebelum menambah send
+5. Putuskan provider WhatsApp dan kebijakan pengiriman sebelum menambah send
    otomatis. Biodata resmi tetap `DEFERRED/OPEN` untuk identitas bisnis.
 
 Setiap provider baru boleh disebut **VERIFIED_SANDBOX** setelah konfigurasi

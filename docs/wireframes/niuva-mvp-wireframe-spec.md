@@ -11,7 +11,7 @@ Primary sources: docs/PRD-Niuva-MVP.md and docs/TechDesign-Niuva-MVP.md
 Live visual board: retired on 2026-09-10 during repository complexity cleanup.
 This document remains the approved wireframe architecture record.
 
-Approval scope: 20-surface inventory, MVP/deferred boundary, journeys, screen
+Approval scope: 22-surface inventory, MVP/deferred boundary, journeys, screen
 responsibilities, required states, responsive order, and accessibility
 constraints. This approval does not approve final visual treatment or product
 screen propagation.
@@ -31,10 +31,9 @@ authorized tetapi menunggu visual acceptance owner.
 
 ## 2. Scope correction
 
-PRD mendefinisikan 18 key screens. Untuk kebutuhan autentikasi, paket ini
-menambahkan Admin Sign-in sebagai layar MVP. Customer Login/Register ditampilkan
-sebagai surface deferred agar keputusan produk terlihat, tetapi tidak menjadi
-fitur MVP.
+PRD mendefinisikan 18 key screens. Scope expansion Customer Google OAuth
+menambahkan Customer Login, Customer Register, dan Customer Account sebagai
+surface MVP, selain Admin Sign-in.
 
 Ringkasan scope:
 
@@ -42,11 +41,13 @@ Ringkasan scope:
 | --- | ---: | --- |
 | PRD key screens | 18 | MVP |
 | Admin Sign-in | 1 | MVP |
-| Customer Account Access | 1 | Deferred, bukan MVP |
-| Total surface yang dipetakan | 20 | Wireframe review |
+| Customer Login/Register/Account | 3 | MVP — Google OAuth Customer |
+| Total surface yang dipetakan | 22 | Wireframe review |
 
-Customer tetap dapat menyelesaikan checkout sebagai guest. Customer account
-tidak boleh ditambahkan hanya karena layar login/register muncul di board.
+Customer wajib menyelesaikan Google login sebelum checkout. Login dan register
+adalah dua label untuk satu flow OAuth; account menampilkan profil read-only dan
+riwayat order. Quote-token, custom request, dan order-token status tetap berada
+pada boundary masing-masing.
 
 Route detail seperti Admin Inquiry detail, Admin Custom Print detail, Admin
 Product detail, dan Admin Pricing adalah subview dari screen owner-nya. Route
@@ -94,7 +95,8 @@ Auth screen menggunakan:
 - satu tugas utama per surface;
 - error yang dekat dengan field atau credential issue;
 - no public admin registration;
-- customer account surface tidak aktif di MVP.
+- customer account surface read-only aktif dalam scope expansion MVP; Google
+  OAuth tetap satu-satunya metode Customer auth dan tidak ada editable profile.
 
 ### 3.3 Behavior annotation
 
@@ -119,7 +121,7 @@ Setiap screen harus menjawab:
 | 06 | Shop | /shop | Retail/B2C | MVP |
 | 07 | Product Detail | /shop/:slug | Retail/B2C | MVP |
 | 08 | Cart | /cart | Retail/B2C | MVP |
-| 09 | Checkout | /checkout | Retail/B2C | MVP |
+| 09 | Checkout | /checkout | Retail/B2C + Customer session | MVP |
 | 10 | Custom 3D Print Landing | /custom-print | Retail/B2C, B2B | MVP |
 | 11 | Custom Print Request | /custom-print/request | Retail/B2C, B2B | MVP |
 | 12 | Quote Review | /quote/:token | Customer | MVP |
@@ -130,7 +132,9 @@ Setiap screen harus menjawab:
 | 17 | Admin Products & Stock | /admin/products | Owner/Admin | MVP |
 | 18 | Admin Portfolio | /admin/portfolio | Owner/Admin | MVP |
 | 19 | Admin Sign-in | /admin/sign-in | Owner/Admin | MVP |
-| 20 | Customer Account Access | /account | Customer | Deferred |
+| 20 | Customer Account | /account | Customer | MVP |
+| 21 | Customer Login | /login | Customer | MVP |
+| 22 | Customer Register | /register | Customer | MVP |
 
 ## 5. Journey map
 
@@ -154,7 +158,8 @@ Homepage
 Shop
   -> Product Detail
   -> Cart
-  -> Checkout as guest
+  -> Customer Login/Register
+  -> Checkout
   -> shipping rate
   -> payment
   -> Order Status
@@ -405,7 +410,7 @@ has an accessible name and bounded error; add-to-cart result is announced.
 ### 08. Cart
 
 Purpose: memungkinkan customer memeriksa item, quantity, stock, dan subtotal
-sebelum guest checkout.
+sebelum login Customer lalu checkout.
 
 Content priority:
 
@@ -429,12 +434,12 @@ remove action identifies the product; focus is restored after row mutation.
 
 ### 09. Checkout
 
-Purpose: menyelesaikan pembelian retail sebagai guest dengan shipping dan
-payment yang authoritative di server.
+Purpose: menyelesaikan pembelian retail setelah Customer Google session aktif,
+dengan shipping dan payment yang authoritative di server.
 
 Content priority:
 
-1. contact;
+1. read-only Google identity plus contact/address;
 2. shipping address;
 3. Biteship shipping options and rate;
 4. order summary;
@@ -723,29 +728,37 @@ announced; sign-in does not reveal whether a non-admin account exists.
 MVP rule: Admin registration is controlled outside the public product surface.
 Do not add an open admin register form.
 
-### 20. Customer Account Access
+### 20. Customer Account
 
-Purpose: memetakan keputusan yang mungkin dibutuhkan setelah MVP tanpa
-mengubah guest checkout requirement.
+Purpose: menampilkan profil Google read-only dan seluruh riwayat order retail
+serta custom print yang tertaut pada Customer.
 
-Status: deferred exploration, not implemented, not part of MVP acceptance.
+Status: MVP implementation; Google OAuth is the only Customer auth method.
 
 Potential content:
 
-- login;
-- register;
-- password or identity recovery;
-- account order history.
+- verified Google email;
+- display name and optional avatar;
+- retail/custom-print order history;
+- logout;
+- empty, expired-session, and auth-unavailable states.
 
-Desktop and mobile composition: shown only as an annotated placeholder in this
-board, with the deferred boundary visible.
+Desktop and mobile composition: compact profile card plus order-history list;
+read-only identity stays separate from checkout address/contact fields.
 
-States to define later: signed out, invalid credential, new account,
-verification pending, account recovery, disabled account.
+States: signed out redirect, Google callback error, new Google identity,
+expired/revoked session, empty order history, and auth-unavailable notice.
 
-MVP rule: customer account is optional future scope. Shop, Cart, Checkout, Quote
-Review, and Order Status must remain usable through guest or secure token flows
-defined by the PRD.
+MVP rule: `/checkout` and `/api/shipping/rates` require an active Customer
+session. Quote Review, Custom Print Request, and Order Status retain their
+existing token/public boundaries and are not silently expanded to Customer auth.
+
+### 21–22. Customer Login and Register
+
+Both screens use the same Google-only OAuth CTA. Register is not a separate
+password form. The flow stores short-lived state/PKCE cookies, returns to an
+allowlisted internal path, and shows a safe unavailable/error state when
+Google credentials are missing. No Google access token is shown or persisted.
 
 ## 7. Cross-screen state matrix
 

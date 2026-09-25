@@ -50,7 +50,7 @@ implementation restriction below, not its historical visual-review record.
 | Shop | Category/search filters, two-column product grid, StatusNotice | Examples, available/out of stock, empty, no results, loading, retry |
 | Product detail | Asymmetric gallery placeholder, VariantSelector, price/quantity controls, StatusNotice | Unselected, available, out of stock, loading, retry, missing slug, local-only cart intent |
 | Cart | Editable line items, quantity controls, StatusNotice, validation ledger | Loading, empty, ready, corrupt recovery, unavailable product, write failure, remove |
-| Checkout | Page-owned guest form, FormField/Input, native shipping radios, StatusNotice, authority ledger | Validation, rates loading/unavailable/stale, payment pending/error, ready review, production unavailable |
+| Checkout | Page-owned Customer-authenticated form, FormField/Input, native shipping radios, StatusNotice, authority ledger | Google-session identity, validation, rates loading/unavailable/stale, payment pending/error, ready review, production unavailable |
 | Custom Print landing | Route-owned dossier grid, operator verification rail, format checklist, StatusNotice | Informational, private-file expectation, manual review, request unavailable with real fallback |
 | Custom Print request | FormField/Input/select/textarea, FileUploadField preview mode, StatusNotice | Hydration guard, metadata progress, invalid/failed/expired/retry, validation summary, production unavailable |
 | Customer quote | Route-owned immutable dossier, MoneySummary, StatusNotice, confirmation panel | Valid, loading, expired, superseded, accepted, declined, invalid access, local accept/decline confirmation |
@@ -59,9 +59,9 @@ Product detail composes the existing P1 VariantSelector under the owner-approved
 FE-09 route scope. FE-10 persists only variant ID and quantity in a strict,
 versioned browser record. Product facts and totals are display estimates from a
 browser-safe projection; the browser does not calculate authoritative price,
-reserve stock, or create an order. FE-11 adds a development-only guest checkout
-preview. It validates contact/address input and simulates rate/payment recovery
-without calling provider or order boundaries.
+reserve stock, or create an order. FE-11 adds a development-only Customer checkout
+preview behind the Google Customer session boundary. It validates contact/address
+input and simulates rate/payment recovery without calling provider or order boundaries.
 FE-12 adds a static custom-print explanation and composes the existing link,
 button and StatusNotice contracts. Its illustration is explicitly conceptual;
 the route does not upload a file, calculate price, create a request or introduce

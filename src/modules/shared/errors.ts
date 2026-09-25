@@ -5,6 +5,7 @@ export const ERROR_CODES = [
   "UNAUTHORIZED",
   "FORBIDDEN",
   "AUTH_UNAVAILABLE",
+  "CUSTOMER_AUTH_UNAVAILABLE",
   "ORIGIN_NOT_ALLOWED",
   "NOT_FOUND",
   "CONFLICT",
@@ -53,6 +54,10 @@ const ERROR_DEFINITIONS: Record<ErrorCode, ErrorDefinition> = {
   },
   AUTH_UNAVAILABLE: {
     message: "Layanan autentikasi admin belum tersedia.",
+    status: 503,
+  },
+  CUSTOMER_AUTH_UNAVAILABLE: {
+    message: "Layanan login customer belum tersedia.",
     status: 503,
   },
   ORIGIN_NOT_ALLOWED: {

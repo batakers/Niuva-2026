@@ -8,7 +8,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   // The local Next dev server becomes contention-bound above four workers;
   // CI remains serialized for the most conservative browser smoke.
-  workers: process.env.CI ? 1 : 4,
+  workers: 1,
   reporter: [["list"]],
   use: {
     baseURL: "http://localhost:3000",
@@ -16,7 +16,8 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   webServer: {
-    command: "corepack pnpm dev",
+    command:
+      "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/local-e2e-web.ps1",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
@@ -24,9 +25,7 @@ export default defineConfig({
     stderr: "pipe",
     env: {
       NODE_ENV: "test",
-      DATABASE_URL: "",
-      DEMO_DATABASE_URL: "",
-      NIUVA_RUNTIME_MODE: "",
+      NIUVA_CUSTOMER_AUTH_MOCK: "true",
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "",
       CLERK_SECRET_KEY: "",
       R2_ACCOUNT_ID: "",

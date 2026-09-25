@@ -4,6 +4,8 @@ node_modules/
 
 # Next.js and build output
 .next/
+.next-e2e/
+.next-demo-e2e/
 out/
 dist/
 coverage/

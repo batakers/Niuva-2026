@@ -64,6 +64,7 @@ export interface CheckoutRepositoryPort {
   ): Promise<void>;
   createCheckoutTransaction(input: Readonly<{
     address: CheckoutAddress;
+    customerId?: string;
     customerEmail: string;
     customerName: string;
     customerPhone: string;
@@ -173,6 +174,7 @@ export class CheckoutRepository implements CheckoutRepositoryPort {
 
   async createCheckoutTransaction(input: Readonly<{
     address: CheckoutAddress;
+    customerId?: string;
     customerEmail: string;
     customerName: string;
     customerPhone: string;
@@ -314,6 +316,9 @@ export class CheckoutRepository implements CheckoutRepositoryPort {
       const grandTotal = itemsSubtotal.plus(shippingPrice);
       const order = await transaction.order.create({
         data: {
+          ...(input.customerId === undefined
+            ? {}
+            : { customerId: input.customerId }),
           customerEmail: input.customerEmail,
           customerName: input.customerName,
           customerPhone: input.customerPhone,

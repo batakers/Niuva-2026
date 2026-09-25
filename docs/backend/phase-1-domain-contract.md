@@ -8,7 +8,8 @@
 
 ## Confirmed implementation boundary
 
-- Clerk authenticates only Owner/Admin users. Customer checkout stays guest.
+- Clerk authenticates only Owner/Admin users. Customer checkout requires the
+  separate Google Customer session described in the scope-expansion addendum.
 - `AdminProfile` is the product authorization record. New profiles default to
   `is_active = false`; a valid Clerk identity without an active profile is
   denied by `requireAdmin`.

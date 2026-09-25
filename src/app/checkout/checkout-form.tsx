@@ -254,6 +254,7 @@ function clearShippingError(current: Partial<Record<CheckoutField, string>>) {
 
 export function CheckoutForm({
   catalogStatus,
+  customer,
   demoMode = false,
   initialScenario,
   liveCatalogError = false,
@@ -262,6 +263,10 @@ export function CheckoutForm({
   products,
 }: {
   catalogStatus: PreviewScenario | null;
+  customer?: Readonly<{
+    displayName: string | null;
+    email: string;
+  }>;
   demoMode?: boolean;
   initialScenario?: string | string[];
   liveCatalogError?: boolean;
@@ -627,7 +632,7 @@ export function CheckoutForm({
   const busy = result === "submitting" || reviewingRates;
 
   return (
-    <form noValidate onSubmit={submit} aria-label="Form checkout tamu" aria-busy={busy} className="grid gap-8 md:grid-cols-12 md:items-start">
+    <form noValidate onSubmit={submit} aria-label="Form checkout Customer" aria-busy={busy} className="grid gap-8 md:grid-cols-12 md:items-start">
       <div className="min-w-0 space-y-8 md:col-span-8">
         {isLive ? (
           <aside aria-label={demoMode ? "Checkout demo lokal" : "Checkout transaksi"} className="rounded-lg border border-success-border bg-success-background p-4 text-success">
@@ -702,10 +707,10 @@ export function CheckoutForm({
 
         <fieldset disabled={busy} className="min-w-0 space-y-5 rounded-xl border border-border bg-card p-5 shadow-card sm:p-6">
           <legend className="px-2 text-lg font-semibold">1. Kontak pemesan</legend>
-          <p className="text-sm leading-6 text-muted-foreground">Checkout ini tidak memerlukan akun. Tanda * menunjukkan field wajib.</p>
+          <p className="text-sm leading-6 text-muted-foreground">Checkout membutuhkan akun Customer yang login dengan Google. Tanda * menunjukkan field wajib.</p>
           <div className="grid gap-5 sm:grid-cols-2">
-            <FormField id="checkout-customerName" label="Nama pemesan" required error={errors.customerName} className="sm:col-span-2"><Input name="customerName" autoComplete="name" required className={controlClass} /></FormField>
-            <FormField id="checkout-customerEmail" label="Email" required error={errors.customerEmail}><Input name="customerEmail" type="email" autoComplete="email" required className={controlClass} /></FormField>
+            <FormField id="checkout-customerName" label="Nama pemesan (Customer)" required error={errors.customerName} description="Diambil dari profil Google dan tidak dapat diubah di checkout." className="sm:col-span-2"><Input name="customerName" autoComplete="name" defaultValue={customer?.displayName ?? customer?.email ?? ""} readOnly required className={controlClass} /></FormField>
+            <FormField id="checkout-customerEmail" label="Email terverifikasi" required error={errors.customerEmail} description="Email ini berasal dari Google session Customer." ><Input name="customerEmail" type="email" autoComplete="email" defaultValue={customer?.email ?? ""} readOnly required className={controlClass} /></FormField>
             <FormField id="checkout-customerPhone" label="Nomor WhatsApp pemesan" required error={errors.customerPhone}><Input name="customerPhone" type="tel" autoComplete="tel" required className={controlClass} /></FormField>
           </div>
         </fieldset>
