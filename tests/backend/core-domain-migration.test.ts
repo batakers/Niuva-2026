@@ -6,6 +6,10 @@ const migrationUrl = new URL(
   "../../prisma/migrations/20260904090000_core_domain_persistence/migration.sql",
   import.meta.url,
 );
+const tokenRotationMigrationUrl = new URL(
+  "../../prisma/migrations/20260925120000_allow_public_token_rotation/migration.sql",
+  import.meta.url,
+);
 
 describe("core domain migration contract", () => {
   it("contains unique, snapshot, and deferred ownership safeguards", async () => {
@@ -52,5 +56,15 @@ describe("core domain migration contract", () => {
     expect(migration).toContain(
       'target_file_ids := ARRAY[OLD."file_id", NEW."file_id"];',
     );
+  });
+
+  it("keeps committed commercial snapshots immutable while allowing access-token rotation", async () => {
+    const migration = await readFile(tokenRotationMigrationUrl, "utf8");
+
+    expect(migration).toContain(
+      'CREATE OR REPLACE FUNCTION "niuva_reject_committed_snapshot_mutation"()',
+    );
+    expect(migration).toContain('NEW."grand_total_rp" IS DISTINCT FROM OLD."grand_total_rp"');
+    expect(migration).not.toContain('NEW."public_token_hash" IS DISTINCT FROM OLD."public_token_hash"');
   });
 });

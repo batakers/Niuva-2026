@@ -24,7 +24,13 @@ test("public homepage exposes the Niuva narrative and entry paths", async ({ pag
   await page.reload();
   await expect(page.getByRole("heading", { level: 1, name: "Mitra pengembangan produk dari riset hingga prototipe." })).toBeVisible();
   await page.getByRole("button", { name: "Buka menu" }).click();
-  await expect(page.locator("nav").getByRole("link", { name: "Pilih jalur" })).toBeVisible();
+  const navigation = page.locator("#public-navigation");
+  await expect(navigation.getByRole("link", { name: "Layanan", exact: true })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "Cart", exact: true })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "Akun", exact: true })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "Diskusikan Proyek", exact: true })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "Pilih jalur", exact: true })).toHaveCount(0);
+  await expect(navigation.getByRole("link", { name: "Cara kerja", exact: true })).toHaveCount(0);
 });
 
 test("authorized Foundation proof records scoped owner visual acceptance", async ({ page }) => {
