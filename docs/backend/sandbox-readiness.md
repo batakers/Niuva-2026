@@ -10,6 +10,11 @@ Boundary Clerk, private-upload orchestration, server-backed checkout path, dan
 integration harness sudah tersedia. Kode adapter dan test lokal tidak
 membuktikan kredensial, koneksi, atau delivery provider.
 
+Snapshot presence-only terbaru per 2026-09-25 dicatat di
+[`provider-staging-intake.md`](./provider-staging-intake.md). Gunakan intake
+tersebut sebagai status environment saat ini; tabel dan hasil di bawah tetap
+merupakan audit historis tanpa nilai secret.
+
 ## Addendum — local demo mode (2026-09-15)
 
 Local demo mode adalah evidence state terpisah untuk demonstrasi dan regression
