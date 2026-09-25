@@ -10,7 +10,7 @@ import { CartItems } from "./cart-items";
 
 export const metadata: Metadata = {
   title: "Cart · Niuva",
-  description: "Tinjau pilihan produk ready-made sebelum melanjutkan ke checkout tamu.",
+  description: "Tinjau pilihan produk ready-made sebelum melanjutkan ke checkout Customer.",
 };
 
 type CartPageProps = {
@@ -56,7 +56,7 @@ export default async function CartPage({ searchParams }: CartPageProps) {
       <main id="main-content">
         <section className="border-b border-border bg-card">
           <div className="mx-auto max-w-public px-5 py-12 sm:px-8 sm:py-16">
-            <p className="text-sm font-medium text-brand-700">Cart tamu</p>
+            <p className="text-sm font-medium text-brand-700">Cart</p>
             <h1 className={`${type.heading.className} mt-4 max-w-4xl`}>Tinjau pilihan sebelum data diperiksa kembali.</h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground">
               Cart ini menyimpan ID varian dan jumlah di browser. Harga, stok, ongkir, dan total final tetap harus diverifikasi server saat checkout.

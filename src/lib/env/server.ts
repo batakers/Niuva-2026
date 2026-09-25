@@ -75,6 +75,9 @@ const serverEnvironmentSchema = z.object({
   CUSTOM_FILE_MAX_BYTES: optionalApprovedCustomFileMaxBytes,
   DATABASE_URL: optionalDatabaseUrl,
   EMAIL_FROM: optionalNonEmptyString,
+  GOOGLE_CLIENT_ID: optionalNonEmptyString,
+  GOOGLE_CLIENT_SECRET: optionalNonEmptyString,
+  GOOGLE_REDIRECT_URI: optionalHttpUrl,
   MIDTRANS_IS_PRODUCTION: optionalBoolean,
   MIDTRANS_SERVER_KEY: optionalNonEmptyString,
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: optionalNonEmptyString,
@@ -210,6 +213,10 @@ const CAPABILITY_GROUPS: readonly CapabilityGroup[] = [
     fields: ["RESEND_API_KEY", "EMAIL_FROM", "ADMIN_NOTIFICATION_EMAIL"],
     name: "Resend",
   },
+  {
+    fields: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REDIRECT_URI"],
+    name: "Customer Google auth",
+  },
 ];
 
 function isConfigured(value: unknown): boolean {
@@ -258,6 +265,7 @@ export type ServerCapabilities = {
   biteship: boolean;
   clerkAdmin: boolean;
   customUploads: boolean;
+  customerGoogle: boolean;
   database: boolean;
   midtrans: boolean;
   objectStorage: boolean;
@@ -279,6 +287,7 @@ export function getServerCapabilities(
       environment.DATABASE_URL !== undefined &&
       objectStorage &&
       environment.CUSTOM_FILE_MAX_BYTES !== undefined,
+    customerGoogle: hasAll(CAPABILITY_GROUPS[5].fields),
     database: environment.DATABASE_URL !== undefined,
     midtrans: hasAll(CAPABILITY_GROUPS[2].fields),
     objectStorage,

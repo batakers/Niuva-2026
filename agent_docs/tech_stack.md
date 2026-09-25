@@ -12,7 +12,7 @@ installation and again before launch.
 | Frontend | Next.js 16.3 App Router | Server Components by default; Client Components only for interaction |
 | Backend | Next.js server runtime on Node.js 24 LTS | Modular monolith; Route Handlers and authenticated Server Actions call domain services |
 | Database | Neon PostgreSQL + Prisma | Separate local/staging/production data; Decimal money; reviewed migrations |
-| Auth | Clerk for Owner/Admin only | Guest checkout and tokenized customer status/quote access |
+| Auth | Clerk for Owner/Admin only; custom Google OAuth for Customer | Customer session is DB-backed opaque token; tokenized status/quote boundaries remain separate |
 | Styling | Tailwind CSS + shadcn/ui + Base UI | Semantic tokens, Niuva component layer, Visual Proof gate |
 | UI support | Motion, Lucide, Embla, TanStack Table, React Hook Form + Zod | Add only where the documented use case exists |
 | Storage | Cloudflare R2 | Separate private customer files and public media; direct presigned uploads |

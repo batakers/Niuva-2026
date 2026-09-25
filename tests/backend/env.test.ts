@@ -13,6 +13,7 @@ describe("server environment contract", () => {
       biteship: false,
       clerkAdmin: false,
       customUploads: false,
+      customerGoogle: false,
       database: false,
       midtrans: false,
       objectStorage: false,

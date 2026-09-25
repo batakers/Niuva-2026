@@ -79,6 +79,12 @@ export type CheckoutServiceDependencies = Readonly<{
   idempotencyExpiry?: (now: Date) => Date;
 }>;
 
+export type CheckoutCustomerContext = Readonly<{
+  customerId: string;
+  email: string;
+  displayName: string | null;
+}>;
+
 export type CheckoutCreatedResult = Readonly<{
   kind: "CREATED";
   orderAccessToken: ReturnType<typeof issueAccessToken>;
@@ -132,10 +138,20 @@ export class CheckoutService {
       dependencies.shippingProvider ?? unavailableShippingProvider;
   }
 
-  async create(input: unknown): Promise<CheckoutCreatedResult | CheckoutReplayResult> {
+  async create(
+    input: unknown,
+    customer?: CheckoutCustomerContext,
+  ): Promise<CheckoutCreatedResult | CheckoutReplayResult> {
     const parsed = parseWithValidation(checkoutInputSchema, input);
+    const effectiveInput: CheckoutInput = customer === undefined
+      ? parsed
+      : {
+        ...parsed,
+        customerEmail: customer.email.trim(),
+        customerName: customer.displayName?.trim() || customer.email.trim(),
+      };
     const now = this.clock();
-    const requestHash = hashRequest(parsed);
+    const requestHash = hashRequest(effectiveInput);
     const idempotency = this.idempotencyFactory();
     const scope = "checkout.retail";
     const reservationExpiresAt = this.reservationExpiry(now);
@@ -165,7 +181,7 @@ export class CheckoutService {
     const resolution = await idempotency.reserve(
       {
         expiresAt: idempotencyExpiresAt,
-        key: parsed.idempotencyKey,
+        key: effectiveInput.idempotencyKey,
         requestHash,
         scope,
       },
@@ -189,9 +205,9 @@ export class CheckoutService {
 
     try {
       const shippingQuote = await this.shippingProvider.getRate({
-        address: parsed.address,
-        items: parsed.items,
-        optionId: parsed.shippingOptionId,
+        address: effectiveInput.address,
+        items: effectiveInput.items,
+        optionId: effectiveInput.shippingOptionId,
       });
       const orderId = randomUUID();
       const orderAccessToken = issueAccessToken({
@@ -213,11 +229,12 @@ export class CheckoutService {
         randomBytes: this.randomBytes,
       });
       const transactionResult = await repository.createCheckoutTransaction({
-        address: parsed.address,
-        customerEmail: parsed.customerEmail,
-        customerName: parsed.customerName,
-        customerPhone: parsed.customerPhone,
-        items: parsed.items,
+        address: effectiveInput.address,
+        ...(customer === undefined ? {} : { customerId: customer.customerId }),
+        customerEmail: effectiveInput.customerEmail,
+        customerName: effectiveInput.customerName,
+        customerPhone: effectiveInput.customerPhone,
+        items: effectiveInput.items,
         now,
         orderId,
         orderNumber,
@@ -248,7 +265,7 @@ export class CheckoutService {
         status: "PENDING_PAYMENT",
       };
       await idempotency.complete({
-        key: parsed.idempotencyKey,
+        key: effectiveInput.idempotencyKey,
         response,
         responseStatus: 201,
         scope,
@@ -275,7 +292,7 @@ export class CheckoutService {
     } catch (error) {
       try {
         await idempotency.fail?.({
-          key: parsed.idempotencyKey,
+          key: effectiveInput.idempotencyKey,
           responseStatus: 500,
           scope,
         });

@@ -10,6 +10,14 @@
 **Target Launch:** 1–4 minggu setelah development dimulai  
 **Platform:** Responsive Web — `niuva.id`
 
+> **Scope expansion addendum — 25 September 2026:** Customer Google OAuth
+> sekarang termasuk scope implementasi. `/login` dan `/register` memakai flow
+> Google yang sama, `/account` menampilkan profil read-only dan seluruh order
+> milik Customer, dan login wajib sebelum checkout termasuk demo/preview. Clerk
+> tetap khusus Owner/Admin. Google credential dan redirect URI hanya boleh ada di
+> environment non-production yang disetujui; secret tidak masuk repository atau
+> chat.
+
 ### Launch Goal
 
 MVP Niuva bertujuan membuat website yang benar-benar dapat digunakan secara operasional, bukan hanya menjadi prototype visual.
@@ -291,7 +299,8 @@ Shop
 → Variant
 → Stock Check
 → Add to Cart
-→ Guest Checkout
+→ Customer Login/Register
+→ Checkout
 → Shipping Address
 → Shipping Rate
 → Payment
@@ -299,7 +308,15 @@ Shop
 → Order Status
 ```
 
-Customer account **tidak wajib pada MVP**.
+Customer wajib login dengan Google sebelum checkout. `/login` dan `/register`
+adalah dua entry point ke flow OAuth yang sama; tidak ada password atau email
+authentication terpisah. `/account` menampilkan nama, email terverifikasi,
+avatar opsional, serta riwayat order retail dan custom print secara read-only.
+
+Order guest lama yang belum memiliki Customer dapat ditautkan ketika login
+pertama jika emailnya sama setelah normalisasi `trim().toLowerCase()`. Order
+yang sudah dimiliki Customer lain tidak pernah ditimpa dan konflik identity
+tidak di-auto-merge.
 
 Checkout menggunakan:
 
@@ -413,10 +430,10 @@ Pricing engine kemudian menghasilkan quotation berdasarkan **Pricing v1**.
 
 ---
 
-### 4. Cart & Guest Checkout
+### 4. Cart & Customer Checkout
 
-- **What:** Checkout tanpa mewajibkan customer membuat account.
-- **User Story:** Sebagai customer, saya ingin membeli produk dengan sedikit friction agar saya dapat langsung menyelesaikan pesanan.
+- **What:** Checkout retail setelah Customer login dengan Google.
+- **User Story:** Sebagai customer, saya ingin login sekali dengan Google lalu menyelesaikan pesanan dan melihat riwayat order.
 - **Priority:** P0 — Critical
 
 #### Success Criteria
@@ -428,7 +445,8 @@ Pricing engine kemudian menghasilkan quotation berdasarkan **Pricing v1**.
 - [ ] Checkout meminta contact dan shipping information.
 - [ ] Order dibuat sebelum pembayaran.
 - [ ] Duplicate checkout/payment tidak membuat duplicate paid order.
-- [ ] Customer account tidak diwajibkan.
+- [ ] Customer session wajib sebelum shipping rates dan checkout.
+- [ ] Email order berasal dari Google session, bukan input browser.
 
 ---
 
@@ -695,9 +713,9 @@ Fitur ini tidak boleh menunda P0.
 
 ### Customer Account
 
-Ditunda karena guest checkout sudah cukup untuk launch.
-
-**Trigger:** repeat orders mulai menjadi kebutuhan nyata.
+Scope baru yang sudah diimplementasikan untuk Customer Google OAuth. Profil
+read-only, riwayat order, logout, dan session opaque 30 hari termasuk scope;
+edit profil, password login, dan account recovery tetap di luar scope.
 
 ### Automatic Browser/Server Slicing
 
@@ -924,7 +942,7 @@ Satu aplikasi deployable dengan domain modules terpisah secara logis.
 | Hosting | Vercel Pro |
 | Storage | Cloudflare R2 Private |
 | Admin Auth | Clerk |
-| Customer Auth | Guest checkout |
+| Customer Auth | Google OAuth custom; checkout wajib Customer session |
 | Commerce | Custom commerce inside main app |
 | Payment | Midtrans Snap |
 | Shipping | Biteship |
@@ -1263,7 +1281,8 @@ MVP siap launch ketika:
 - [ ] B2B project brief bekerja end-to-end.
 - [ ] Product catalog bekerja.
 - [ ] Cart bekerja.
-- [ ] Guest checkout bekerja.
+- [x] Google Customer login/register dan mandatory Customer checkout bekerja
+  pada gate teknis lokal; live Google smoke tetap menjadi readiness gate.
 - [ ] Midtrans payment flow bekerja.
 - [ ] Ready-made shipping rate bekerja.
 - [ ] Private custom-file upload bekerja.
@@ -1360,7 +1379,7 @@ Setelah PRD disetujui:
     "Company Profile, Services & Case Studies",
     "B2B Project Brief",
     "Ready-Made Product Catalog",
-    "Cart & Guest Checkout",
+    "Cart & Customer Checkout",
     "Online Payment",
     "Ready-Made Shipping",
     "Private Custom 3D File Upload",
@@ -1380,7 +1399,6 @@ Setelah PRD disetujui:
     "Basic analytics dashboard"
   ],
   "notInMvp": [
-    "Customer account",
     "Automatic browser/server slicing",
     "Instant final 3D pricing from file",
     "Full CMS / Page Builder",

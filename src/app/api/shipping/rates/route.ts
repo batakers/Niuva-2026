@@ -1,4 +1,5 @@
 import { readJsonBody } from "@/lib/http/body";
+import { requireCustomer } from "@/lib/auth/customer";
 import { assertPublicMutationRequest } from "@/lib/http/public-mutation";
 import {
   apiError,
@@ -23,6 +24,7 @@ export async function POST(request: Request) {
 
   try {
     assertPublicMutationRequest(request, shippingRatesRateLimiter);
+    await requireCustomer();
     const payload = await readJsonBody(request, {
       maxBytes: SHIPPING_RATES_MAX_BODY_BYTES,
     });

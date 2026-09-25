@@ -38,7 +38,7 @@ async function renderCheckout(initialScenario: CheckoutPreviewScenario = "ready"
       products={exampleShopProducts}
     />,
   );
-  return screen.findByRole("form", { name: "Form checkout tamu" });
+  return screen.findByRole("form", { name: "Form checkout Customer" });
 }
 
 const liveVariantId = "2b7f3c1a-18f7-4d91-8b86-8d98fcd0f7f4";
@@ -158,7 +158,7 @@ describe("checkout frontend preview", () => {
   it("fails closed when development preview authority is absent", async () => {
     render(<CheckoutForm catalogStatus={null} previewEnabled={false} products={[]} />);
     expect(await screen.findByText("Checkout belum tersedia untuk transaksi.")).toBeVisible();
-    expect(screen.queryByRole("form", { name: "Form checkout tamu" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("form", { name: "Form checkout Customer" })).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Skenario checkout")).not.toBeInTheDocument();
   });
 });
@@ -202,7 +202,7 @@ describe("checkout live server flow", () => {
     });
 
     render(<CheckoutForm catalogStatus={null} liveEnabled products={liveProducts} previewEnabled={false} />);
-    const form = await screen.findByRole("form", { name: "Form checkout tamu" });
+    const form = await screen.findByRole("form", { name: "Form checkout Customer" });
     fillCheckout();
     fireEvent.click(screen.getByRole("button", { name: "Tinjau opsi pengiriman" }));
     await screen.findByRole("radio", { name: /Jalur Express/ });
@@ -266,7 +266,7 @@ describe("checkout live server flow", () => {
     });
 
     render(<CheckoutForm catalogStatus={null} liveEnabled products={liveProducts} previewEnabled={false} />);
-    const form = await screen.findByRole("form", { name: "Form checkout tamu" });
+    const form = await screen.findByRole("form", { name: "Form checkout Customer" });
     fillCheckout();
     fireEvent.click(screen.getByRole("button", { name: "Tinjau opsi pengiriman" }));
     await screen.findByRole("radio", { name: /Jalur Express/ });
@@ -292,7 +292,7 @@ describe("checkout live server flow", () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 503 }));
 
     render(<CheckoutForm catalogStatus={null} liveEnabled products={liveProducts} previewEnabled={false} />);
-    await screen.findByRole("form", { name: "Form checkout tamu" });
+    await screen.findByRole("form", { name: "Form checkout Customer" });
     fillCheckout();
     fireEvent.click(screen.getByRole("button", { name: "Tinjau opsi pengiriman" }));
 
@@ -337,7 +337,7 @@ describe("checkout live server flow", () => {
     });
 
     render(<CheckoutForm catalogStatus={null} liveEnabled products={liveProducts} previewEnabled={false} />);
-    const form = await screen.findByRole("form", { name: "Form checkout tamu" });
+    const form = await screen.findByRole("form", { name: "Form checkout Customer" });
     fillCheckout();
     fireEvent.click(screen.getByRole("button", { name: "Tinjau opsi pengiriman" }));
     await screen.findByRole("radio", { name: /Jalur Express/ });

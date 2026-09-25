@@ -3,6 +3,7 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 $demoDatabaseUrl = "postgresql://niuva_dev@127.0.0.1:55433/niuva_dev?schema=public"
+$demoPort = if ($env:NIUVA_LOCAL_DEMO_PORT) { $env:NIUVA_LOCAL_DEMO_PORT } else { "3001" }
 
 function Invoke-Step([string]$executable, [string[]]$arguments) {
   & $executable @arguments
@@ -31,7 +32,7 @@ try {
 
   Invoke-Step "corepack" @("pnpm", "exec", "prisma", "migrate", "deploy")
   Invoke-Step "corepack" @("pnpm", "exec", "jiti", "scripts/seed-local-demo.ts")
-  Invoke-Step "corepack" @("pnpm", "exec", "next", "dev", "-p", "3001")
+  Invoke-Step "corepack" @("pnpm", "exec", "next", "dev", "-p", $demoPort)
 }
 finally {
   Pop-Location

@@ -12,7 +12,7 @@ Use this as the short build-facing version of the PRD. Do not paste the entire P
 ## Primary journeys
 
 - B2B: `Landing → Service/Case Study → Project Brief → Admin Review → Consultation/Quotation`.
-- Ready-made: `Shop → Product/Variant → Cart → Guest Checkout → Shipping → Payment → Order Status`.
+- Ready-made: `Shop → Product/Variant → Cart → Google Login/Register → Checkout → Shipping → Payment → Account/Order Status`.
 - Custom print: `Private Upload → Operator Review/Slice → Pricing v1 Quote → Approval → Payment → Production/QC → Shipping Payment → Completion`.
 
 ## Must-Have Features
@@ -20,7 +20,8 @@ Use this as the short build-facing version of the PRD. Do not paste the entire P
 - **Company Profile, Services & Case Studies** — Explain Niuva beyond 3D printing, expose four services and selected projects, and route users to B2B, Custom Print, or Shop on desktop/mobile.
 - **B2B Project Brief** — Server-validated required fields, private reference attachment, reference ID, success state, admin visibility, and WhatsApp continuation.
 - **Ready-Made Product Catalog** — Categories, product variants, prices, stock, media, out-of-stock protection, and basic admin CRUD.
-- **Cart & Guest Checkout** — Add/update/remove items, authoritative totals, contact/address capture, order creation, and duplicate checkout/payment protection without mandatory account.
+- **Customer Auth & Account** — Google-only Customer OAuth, read-only profile/order history, 30-day opaque sessions, safe logout, and automatic linking of unowned legacy orders by verified normalized email.
+- **Cart & Customer Checkout** — Add/update/remove items, authoritative totals, contact/address capture, order creation, and duplicate checkout/payment protection after mandatory Customer session; browser email cannot replace the session email.
 - **Online Payment** — Midtrans Snap tied to the correct order; verified idempotent server webhook is authoritative; sandbox flow passes.
 - **Ready-Made Shipping** — Biteship rates from server-owned product/address data; selected rate and price are stored as an order snapshot; provider failure cannot corrupt the order.
 - **Private Custom 3D File Upload** — STL/3MF/OBJ plus manual-review STEP/STP; private bucket, random key, validation, expiring access, tenant isolation, and unit/scale confirmation.
@@ -44,7 +45,7 @@ These may not delay P0.
 
 ## Out Of Scope
 
-- Customer account.
+- Password/email Customer auth and editable Customer profile.
 - Automatic browser/server slicing.
 - Instant final 3D pricing from file geometry.
 - Full CMS or page builder.

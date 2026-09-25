@@ -140,7 +140,7 @@ Started: 2026-09-06. Updated: 2026-09-20. Status: **UI_IMPLEMENTED**, **ADMIN_IN
 | FE-08 | Browser-safe catalog projection, category/search filters, stock states and recovery without purchase actions | `/shop?preview=examples`, `empty`, `loading`, `error` |
 | FE-09 | Product detail shell, explicit media slots, variant/price/quantity selection, OOS guard and missing-slug recovery | `/shop/contoh-dock-modular-meja?preview=examples`, `/shop/contoh-stand-display-ringkas?preview=examples` |
 | FE-10 | Versioned local cart, add/update/remove, empty/recovery states, unavailable-product handling, and non-authoritative estimate ledger | `/cart?preview=examples`, `empty`, `loading`, `error` |
-| FE-11 | Guest contact/address form, synthetic shipping selection, authority ledger, validation and explicit rate/payment recovery states | `/checkout?preview=examples&state=ready`, `rates-loading`, `rates-unavailable`, `rate-stale`, `payment-pending`, `payment-error` |
+| FE-11 | Customer-authenticated contact/address form, synthetic shipping selection, authority ledger, validation and explicit rate/payment recovery states | `/checkout?preview=examples&state=ready`, `rates-loading`, `rates-unavailable`, `rate-stale`, `payment-pending`, `payment-error` |
 | FE-12 | Custom-print expectations, operator-reviewed workflow, file checklist, privacy/price/shipping boundaries and honest request handoff | `/custom-print` |
 | FE-13 | Metadata-only file preview, progress/retry/expiry states, configuration/contact validation and production fail-closed request form | `/custom-print/request` |
 | FE-14 | Immutable quote dossier, scope/assumptions/breakdown, seven-day expiry, local confirmation states and invalid-access recovery | `/quote/preview-quote?preview=examples`, `valid`, `loading`, `expired`, `superseded`, `accepted`, `declined` |
@@ -430,7 +430,7 @@ remain useful for visual regression history, but do not describe the live
   project and product filter/detail/404/retry, variant/quantity/OOS behavior,
   cart add/update/remove/persistence/corrupt recovery, form recovery and no
   inquiry API mutation (superseded for FE-07 by the 2026-09-13 server-backed
-  slice). FE-11 adds guest validation, Cart handoff, shipping
+  slice). FE-11 adds Customer-session validation, Cart handoff, shipping
   loading/unavailable/stale recovery, payment pending/error, and an assertion
   that the preview makes no shipping or checkout API request. FE-12 adds the
   operator-reviewed workflow, file-format boundary, conceptual-evidence label,
@@ -470,7 +470,7 @@ remain useful for visual regression history, but do not describe the live
   mobile column; controls remain 44px minimum and the 390px capture has no
   horizontal overflow.
 - FE-11 was visually inspected with a populated development cart at 1280x900
-  and 390x844. The guest form and authority ledger form an 8/4 desktop split
+  and 390x844. The Customer form and authority ledger form an 8/4 desktop split
   and a single mobile column; controls remain at least 44px and the responsive
   matrix has no horizontal overflow or page errors.
 - FE-12 was visually inspected at 1280x900 and 390x844. The dossier grid and

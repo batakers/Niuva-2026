@@ -25,6 +25,8 @@ async function cleanIntegrationDatabase(): Promise<void> {
   await prisma.$executeRaw`
     TRUNCATE TABLE
       "audit_logs",
+      "customer_sessions",
+      "customers",
       "idempotency_records",
       "payment_events",
       "payment_attempts",

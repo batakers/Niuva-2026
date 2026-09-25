@@ -1,4 +1,5 @@
 import { readJsonBody } from "@/lib/http/body";
+import { requireCustomer } from "@/lib/auth/customer";
 import { assertPublicMutationRequest } from "@/lib/http/public-mutation";
 import {
   apiError,
@@ -27,6 +28,7 @@ export async function POST(request: Request) {
 
   try {
     assertPublicMutationRequest(request, checkoutRateLimiter);
+    const customer = await requireCustomer();
     const payload = await readJsonBody(request, {
       maxBytes: CHECKOUT_MAX_BODY_BYTES,
     });
@@ -37,7 +39,11 @@ export async function POST(request: Request) {
       paymentProvider: createPaymentProviderForRuntime(),
       shippingProvider,
     });
-    const result = await service.create(payload);
+    const result = await service.create(payload, {
+      customerId: customer.id,
+      displayName: customer.displayName,
+      email: customer.email,
+    });
 
     if (result.kind === "REPLAY") {
       return apiSuccess({
