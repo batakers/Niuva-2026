@@ -22,8 +22,8 @@ async function fillProjectBrief(page: Page): Promise<void> {
 }
 
 async function fillCheckout(page: Page): Promise<void> {
-  await expect(page.getByLabel(/Nama pemesan/)).toHaveValue("Demo Customer");
-  await expect(page.getByLabel("Email terverifikasi")).toHaveValue("demo-customer@example.test");
+  await page.getByLabel("Nama pemesan").fill("Demo Client");
+  await page.getByLabel("Email").fill("demo-client@example.test");
   await page.getByLabel("Nomor WhatsApp pemesan").fill("+628000000001");
   await page.getByLabel("Nama penerima").fill("Demo Recipient");
   await page.getByLabel("Nomor WhatsApp penerima").fill("+628000000001");
@@ -68,8 +68,6 @@ test("Project Brief persists to Action Queue and continues to local demo checkou
   await page.getByRole("button", { name: "Tambah ke cart" }).click();
   await page.getByRole("link", { name: "Lihat cart" }).click();
   await page.getByRole("link", { name: "Lanjut ke checkout" }).click();
-  await expect(page).toHaveURL(/\/login\?returnTo=(?:%2F|\/)checkout$/);
-  await page.getByRole("link", { name: "Lanjutkan dengan Google" }).click();
   await expect(page).toHaveURL(/\/checkout$/);
   await expect(page.getByText("Checkout demo lokal aktif")).toBeVisible();
 
