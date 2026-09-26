@@ -81,6 +81,7 @@ export class PrismaActionQueueRepository
         orderBy: [{ updatedAt: "asc" }, { id: "asc" }],
         select: {
           id: true,
+          orderId: true,
           order: {
             select: {
               orderNumber: true,
@@ -124,6 +125,7 @@ export class PrismaActionQueueRepository
           kind: "QUOTE_SEND",
           reference: record.quoteNumber,
           sourceUpdatedAt: record.createdAt,
+          targetId: record.requestId,
           workflowKey: record.requestId,
         }),
       ),
@@ -157,6 +159,7 @@ export class PrismaActionQueueRepository
           kind: "SHIPPING_EXCEPTION",
           reference: record.order.orderNumber,
           sourceUpdatedAt: record.updatedAt,
+          targetId: record.orderId,
         }),
       ),
     ];

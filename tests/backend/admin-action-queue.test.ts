@@ -98,6 +98,7 @@ describe("ActionQueueService", () => {
       attention: "STANDARD",
       nextAction: "Ukur paket final untuk pengiriman",
     });
+    expect(result.items.find((item) => item.kind === "B2B_INQUIRY")?.href).toBe("/admin/inquiries/inquiry-1");
     expect(result.items.every((item) => !("customerEmail" in item))).toBe(true);
     expect(result.items.every((item) => !("providerPayload" in item))).toBe(true);
   });
@@ -141,8 +142,43 @@ describe("ActionQueueService", () => {
     }).list();
 
     expect(result.items).toHaveLength(50);
+    expect(result.totalOpen).toBe(56);
+    expect(result.filteredTotal).toBe(56);
+    expect(result.priorityItems).toHaveLength(5);
     expect(result.items.filter((item) => item.kind === "QUOTE_PREPARATION")).toHaveLength(0);
     expect(result.items.filter((item) => item.kind === "QUOTE_SEND")).toHaveLength(1);
+  });
+
+  it("routes quote and shipment work to their owning details when the server supplies target ids", async () => {
+    const result = await new ActionQueueService({
+      repository: { async listSignals() {
+        return [
+          { ...signal("QUOTE_SEND", "quote-1", "QTE-1", "2026-09-11T01:00:00.000Z"), targetId: "request-1" },
+          { ...signal("SHIPPING_EXCEPTION", "shipment-1", "ORD-1", "2026-09-11T02:00:00.000Z"), targetId: "order-1" },
+        ];
+      } },
+    }).list();
+    expect(result.items.find((item) => item.kind === "QUOTE_SEND")?.href).toBe("/admin/custom-print/request-1");
+    expect(result.items.find((item) => item.kind === "SHIPPING_EXCEPTION")?.href).toBe("/admin/orders/order-1");
+  });
+
+  it("filters de-duplicated work before the display limit and keeps global priorities", async () => {
+    const signals: ActionQueueSignal[] = Array.from({ length: 55 }, (_, index) =>
+      signal("B2B_INQUIRY", `inquiry-${index}`, `BRF-${index}`, "2026-09-11T01:00:00.000Z"),
+    );
+    signals.push(signal("ORDER_PROCESSING", "paid-1", "ORD-1", "2026-09-11T02:00:00.000Z"));
+    signals.push(signal("SHIPPING_EXCEPTION", "shipping-1", "ORD-2", "2026-09-11T03:00:00.000Z"));
+
+    const result = await new ActionQueueService({
+      now: () => new Date("2026-09-11T08:00:00.000Z"),
+      repository: { async listSignals() { return signals; } },
+    }).list("orders");
+
+    expect(result.totalOpen).toBe(57);
+    expect(result.filteredTotal).toBe(2);
+    expect(result.items.map((item) => item.kind)).toEqual(["SHIPPING_EXCEPTION", "ORDER_PROCESSING"]);
+    expect(result.priorityItems[0].kind).toBe("SHIPPING_EXCEPTION");
+    expect(result.priorityItems).toHaveLength(5);
   });
 });
 

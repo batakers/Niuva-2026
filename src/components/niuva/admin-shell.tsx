@@ -5,6 +5,7 @@ import AuLogo from "@/components/ui/AuLogo";
 import { AdminSessionActions } from "./admin-session-actions";
 
 export type AdminArea =
+  | "overview"
   | "queue"
   | "orders"
   | "custom-print"
@@ -13,13 +14,17 @@ export type AdminArea =
   | "inquiries"
   | "pricing";
 
-const navigation: readonly Readonly<{ area: AdminArea; href: string; label: string }>[] = [
-  { area: "queue", href: "/admin", label: "Action Queue" },
+const primaryNavigation: readonly Readonly<{ area: AdminArea; href: string; label: string }>[] = [
+  { area: "overview", href: "/admin", label: "Overview" },
+  { area: "queue", href: "/admin/queue", label: "Action Queue" },
   { area: "orders", href: "/admin/orders", label: "Orders" },
   { area: "custom-print", href: "/admin/custom-print", label: "Custom Print" },
+  { area: "inquiries", href: "/admin/inquiries", label: "B2B Inquiries" },
+];
+
+const manageNavigation: readonly Readonly<{ area: AdminArea; href: string; label: string }>[] = [
   { area: "products", href: "/admin/products", label: "Products & Stock" },
   { area: "portfolio", href: "/admin/portfolio", label: "Portfolio" },
-  { area: "inquiries", href: "/admin/inquiries", label: "B2B Inquiries" },
   { area: "pricing", href: "/admin/pricing", label: "Pricing Rules" },
 ];
 
@@ -37,56 +42,81 @@ export function AdminShell({
   children: ReactNode;
   role: AdminRole;
 }>) {
+  const manageActive = manageNavigation.some((item) => item.area === active);
   return (
     <div
-      className="min-h-screen bg-muted text-foreground"
+      className="min-h-dvh bg-neutral-100 text-foreground"
       data-foundation-propagation="approved"
       data-foundation-scope="admin"
-      data-product-screen-proof-status="approved-owner"
+      data-product-screen-proof-status="pending-owner-review"
       data-typography-propagation="approved"
       data-typography-version="1.0"
     >
-      <div className="mx-auto grid max-w-admin gap-6 px-5 py-6 sm:px-8 sm:py-8 lg:grid-cols-[15rem_minmax(0,1fr)]">
-        <aside className="dark h-fit rounded-xl bg-background p-4 text-foreground lg:sticky lg:top-6" aria-label="Navigasi admin">
-          <Link href="/admin" aria-label="Niuva Admin, kembali ke Action Queue" className="inline-flex rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
-            <AuLogo className="h-8 w-auto" priority />
-          </Link>
-          <p className="mt-6 text-xs font-medium uppercase tracking-[0.12em] text-brand-300">Operations</p>
-          <nav className="mt-3 grid gap-1" aria-label="Menu operasional">
-            {navigation.map((item) => (
-              <Link
-                aria-current={item.area === active ? "page" : undefined}
-                className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-neutral-50 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=page]:bg-brand-900 aria-[current=page]:text-neutral-50"
-                href={item.href}
-                key={item.area}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="mt-6 border-t border-neutral-700 pt-4">
-            <p className="text-xs text-neutral-400">Masuk sebagai</p>
-            <p className="mt-1 text-sm font-medium text-neutral-50">{roleLabels[role]}</p>
-            <Link className="mt-4 inline-flex min-h-11 items-center text-sm text-brand-300 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href="/">
-              Lihat situs publik
+      <div className="mx-auto max-w-admin px-4 pb-10 pt-4 sm:px-8 sm:pt-6">
+        <header className="rounded-xl border border-border bg-card px-4 py-4 sm:px-6" aria-label="Niuva Admin">
+          <div className="flex flex-wrap items-center gap-3">
+            <Link href="/admin" aria-label="Niuva Admin, kembali ke Overview" className="inline-flex rounded-lg bg-neutral-900 px-2 py-2 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+              <AuLogo className="h-6 w-auto" priority />
             </Link>
-            <div className="mt-4">
-              <AdminSessionActions dark showLogout={Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)} />
-            </div>
+            <span className="text-sm font-medium text-muted-foreground">Operations</span>
+            <span className="ml-auto rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-foreground">{roleLabels[role]}</span>
+            <Link className="hidden min-h-11 items-center text-sm font-medium text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:inline-flex" href="/">Situs publik</Link>
+            <AdminSessionActions showLogout={Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)} />
           </div>
-        </aside>
-        <div className="min-w-0">{children}</div>
+          <nav aria-label="Menu operasional" className="mt-4 hidden flex-wrap items-center gap-2 lg:flex">
+            {primaryNavigation.map((item) => <AdminNavLink active={active} item={item} key={item.area} />)}
+            <details className="group relative">
+              <summary className={`flex min-h-11 cursor-pointer list-none items-center rounded-full border px-4 text-sm font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 ${manageActive ? "border-brand-700 bg-brand-50 text-brand-900" : "border-border bg-card"}`}>Kelola <span aria-hidden="true" className="ml-2 text-muted-foreground">⌄</span></summary>
+              <div className="absolute right-0 z-20 mt-2 grid min-w-52 gap-1 rounded-xl border border-border bg-card p-1 shadow-floating">
+                {manageNavigation.map((item) => <AdminNavLink active={active} item={item} key={item.area} menu />)}
+              </div>
+            </details>
+          </nav>
+          <details className="mt-4 lg:hidden">
+            <summary className="inline-flex min-h-11 cursor-pointer list-none items-center rounded-lg border border-border bg-card px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">Menu Admin <span aria-hidden="true" className="ml-2">⌄</span></summary>
+            <nav aria-label="Menu operasional mobile" className="mt-3 grid gap-1 border-t border-border pt-3">
+              {primaryNavigation.map((item) => <AdminNavLink active={active} item={item} key={item.area} menu />)}
+              <p className="px-3 pt-2 text-xs font-semibold text-muted-foreground">Kelola</p>
+              {manageNavigation.map((item) => <AdminNavLink active={active} item={item} key={item.area} menu />)}
+              <Link className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm text-brand-700 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:hidden" href="/">Situs publik</Link>
+            </nav>
+          </details>
+        </header>
+        <div className="min-w-0 pt-6">{children}</div>
       </div>
     </div>
   );
 }
 
+function AdminNavLink({
+  active,
+  item,
+  menu = false,
+}: Readonly<{
+  active: AdminArea;
+  item: Readonly<{ area: AdminArea; href: string; label: string }>;
+  menu?: boolean;
+}>) {
+  return (
+    <Link
+      aria-current={item.area === active ? "page" : undefined}
+      className={`${menu ? "rounded-lg" : "rounded-full"} inline-flex min-h-11 items-center border px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 ${item.area === active ? "border-brand-700 bg-brand-50 text-brand-900" : "border-transparent text-foreground hover:border-border hover:bg-muted"}`}
+      href={item.href}
+    >
+      {item.label}
+    </Link>
+  );
+}
+
 export function AdminDataUnavailableView({
+  active = "overview",
   role,
   title = "Data operasional belum dapat dimuat",
-}: Readonly<{ role: AdminRole; title?: string }>) {
+}: Readonly<{ active?: AdminArea; role: AdminRole; title?: string }>) {
+  const retryHref = active === "overview" ? "/admin" : active === "queue" ? "/admin/queue" :
+    [...primaryNavigation, ...manageNavigation].find((item) => item.area === active)?.href ?? "/admin";
   return (
-    <main className="rounded-xl border border-destructive-border bg-card p-6 sm:p-8" id="main-content">
+    <AdminShell active={active} role={role}><main className="rounded-xl border border-destructive-border bg-card p-6 sm:p-8" id="main-content">
       <p className="text-sm font-medium text-brand-700">Niuva / Admin</p>
       <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
       <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -94,9 +124,9 @@ export function AdminDataUnavailableView({
       </p>
       <p className="mt-5 text-sm font-medium text-destructive" role="alert">Tidak ada perubahan operasional yang dibuat.</p>
       <div className="mt-6">
-        <AdminSessionActions retryHref="/admin" showLogout={Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)} />
+        <AdminSessionActions retryHref={retryHref} showLogout={Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)} />
       </div>
-    </main>
+    </main></AdminShell>
   );
 }
 

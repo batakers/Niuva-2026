@@ -23,7 +23,7 @@ export default async function AdminPortfolioDetailPage({ params }: Readonly<{ pa
   const access = await loadAdminAccess();
   if (access === null) return <AdminAccessUnavailableView />;
   const project = await loadProject(access, id);
-  if (project === null) return <AdminDataUnavailableView role={access.profile.role} title="Detail portfolio belum dapat dimuat" />;
+  if (project === null) return <AdminDataUnavailableView active="portfolio" role={access.profile.role} title="Detail portfolio belum dapat dimuat" />;
   const isCardOnly = isApprovedCardOnlyPortfolioProject(project);
 
   return (

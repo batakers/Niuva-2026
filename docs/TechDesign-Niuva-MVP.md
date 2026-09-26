@@ -1372,7 +1372,7 @@ Final legal/accounting record retention outside that binary lifecycle remains
 
 # 30. Thin Admin Architecture
 
-Admin home starts with **Action Queue**, not raw database table.
+Admin home starts with a server-rendered **Overview Dashboard**. The complete Action Queue is at `/admin/queue`. This route change follows Owner acceptance of the isolated Admin prototype on 2026-09-26; the new live Admin visual remains pending review.
 
 ```text
 Action Queue
@@ -1387,6 +1387,7 @@ Routes:
 
 ```text
 /admin
+/admin/queue
 /admin/orders
 /admin/orders/:id
 /admin/inquiries
@@ -1399,6 +1400,10 @@ Routes:
 ```
 
 TanStack Table only for detailed lists where sorting/filter/pagination is useful.
+
+`/admin` and `/admin/queue` call `requireAdmin()` before reads and fail closed without an active Owner/Admin `AdminProfile`. The Action Queue service de-duplicates current signals, sorts shipping exceptions first then oldest work, counts all open items before applying the 50-item display limit, and validates `group=all|inquiries|custom-print|orders` on the server. An invalid group falls back to `all`; filtering happens before limiting. The overview uses the unfiltered top five as priorities and a filtered work table.
+
+Dashboard repository queries only the three status counts (`B2BInquiry.NEW`, `CustomPrintRequest.SUBMITTED`, `Order.PAID`) and `createdAt` timestamps for the three 30-day activity series. The service uses Jakarta calendar boundaries `[start of day 29 days ago, start of tomorrow)`, fills missing days with zero, and exposes no PII or provider data. Admin mutations that affect these projections revalidate both routes; current service validation and audit remain authoritative.
 
 ---
 

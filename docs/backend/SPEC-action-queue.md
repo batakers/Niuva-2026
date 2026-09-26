@@ -2,6 +2,12 @@
 
 Status: **OWNER_APPROVED** on 2026-09-10. Module ID: `action-queue`.
 
+**Route and presentation addendum, 2026-09-26:** Owner accepted the isolated interactive Admin dashboard prototype and authorized a live operational overview. The original Action Queue acceptance below remains historical for its initial implementation. The current route contract is `/admin` for Overview and `/admin/queue` for the full Action Queue. Visual acceptance of these new live routes is **PENDING_OWNER_REVIEW**.
+
+The 2026-09-10 "specification only" and "ask first" statements below describe the initial slice. For this redesign, the Owner's later explicit implementation request authorizes the route, visual, filter, and projection changes stated in this addendum. The protected auth, payment, provider, and migration boundaries still apply.
+
+The queue remains read-only and server-owned. Its full de-duplicated count is calculated before the 50-row limit. The server validates group filters `all`, `inquiries`, `custom-print`, and `orders`, then filters before limiting; invalid values fall back to `all`. The overview uses the existing order's first five items as priorities, alongside status counts and Jakarta-calendar creation activity from a separate minimal repository. Both routes enforce `requireAdmin()` and the active `AdminProfile` gate before any data read. Overview fields are limited to counts, safe references, statuses, timestamps, and internal links. Existing payment-exception closure remains **BLOCKED_DECISION**.
+
 This document specifies the next module in the approved admin rebuild sequence:
 `admin-access` → `action-queue` → `admin-operations`. It is a specification
 only. It does not authorize source changes, database changes, Clerk provisioning,

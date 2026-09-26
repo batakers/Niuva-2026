@@ -32,6 +32,7 @@ import { P1ComponentShowcase } from "./components/p1-showcase";
 import { OptionChipShowcase } from "./components/option-chip-showcase";
 import { PatternsShowcase } from "./components/patterns-showcase";
 import { TypographyProof } from "./components/typography-proof";
+import { AdminDashboardPreview } from "./components/admin-dashboard-preview";
 
 export const metadata: Metadata = {
   title: "Design System styleguide · Niuva",
@@ -293,6 +294,7 @@ export default function StyleguidePage() {
       <OptionChipShowcase />
       <MotionSystemProof />
       <PatternsShowcase />
+      <AdminDashboardPreview />
 
       <section className="space-y-6" id="dark-preview">
         <div className="space-y-2">

@@ -31,6 +31,7 @@ vi.mock("next/server", () => ({
 }));
 
 import AdminPage from "@/app/admin/page";
+import AdminQueuePage from "@/app/admin/queue/page";
 import { getPrismaClient } from "@/lib/db/prisma";
 
 const prisma = getPrismaClient();
@@ -114,20 +115,46 @@ describe("Admin page route integration", () => {
       },
     });
 
-    const markup = renderToStaticMarkup(await AdminPage());
+    const markup = renderToStaticMarkup(await AdminPage({ searchParams: Promise.resolve({}) }));
 
     expect(clerkMocks.auth).toHaveBeenCalledOnce();
     expect(nextServerMocks.connection).toHaveBeenCalledOnce();
-    expect(markup).toContain("Action Queue");
+    expect(markup).toContain("Overview");
     expect(markup).toContain(inquiry.referenceNumber);
+    expect(markup).toContain("Aktivitas 30 hari");
     expect(markup).toContain("Owner");
+    expect(markup).not.toContain("admin-page@example.test");
+    expect(markup).not.toContain("+628000000000");
+    expect(markup).not.toContain("https://example.test/admin-page-fixture");
     expect(markup).not.toContain("Development-only preview");
+  });
+
+  it("applies the queue group on the server before rendering rows", async () => {
+    await prisma.adminProfile.create({ data: { clerkUserId: ownerClerkUserId, isActive: true, role: "OWNER" } });
+    await prisma.b2BInquiry.create({ data: {
+      confidentialityAck: true,
+      currentStage: "CAD",
+      description: "Queue group fixture.",
+      email: "queue-group@example.test",
+      name: "Queue Group Fixture",
+      phone: "+628000000001",
+      projectGoal: "Verify filtered queue",
+      publicTokenHash: "admin-queue-group-token-hash",
+      referenceNumber: "INQ-20260914-GROUP001",
+      referenceLink: "https://example.test/queue-group-fixture",
+      targetQuantity: "1 prototype",
+    } });
+
+    const markup = renderToStaticMarkup(await AdminQueuePage({ searchParams: Promise.resolve({ group: "orders" }) }));
+    expect(markup).toContain("Action Queue");
+    expect(markup).toContain("0 pada kelompok ini");
+    expect(markup).not.toContain("INQ-20260914-GROUP001");
   });
 
   it("keeps the queue hidden when the Clerk identity has no active profile", async () => {
     clerkMocks.auth.mockResolvedValue({ userId: "clerk_test_admin_page_unknown" });
 
-    const markup = renderToStaticMarkup(await AdminPage());
+    const markup = renderToStaticMarkup(await AdminPage({ searchParams: Promise.resolve({}) }));
 
     expect(markup).toContain("Akses admin belum tersedia");
     expect(markup).not.toContain("Action Queue");

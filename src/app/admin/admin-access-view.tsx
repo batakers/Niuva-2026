@@ -2,10 +2,10 @@ import { AdminSessionActions } from "@/components/niuva/admin-session-actions";
 
 export function AdminAccessUnavailableView() {
   return (
-    <main className="mx-auto max-w-admin px-5 py-8 sm:px-8 sm:py-10" id="main-content">
-      <header className="max-w-2xl border-b border-border pb-6">
+    <main className="min-h-dvh bg-neutral-100 px-4 py-6 sm:px-8 sm:py-10" id="main-content">
+      <header className="mx-auto max-w-admin rounded-xl border border-border bg-card p-6 sm:p-8">
         <p className="text-sm font-medium text-brand-700">Niuva / Admin</p>
-        <h1 className="mt-4 text-balance text-3xl font-semibold tracking-tight sm:text-5xl">
+        <h1 className="mt-3 text-balance text-2xl font-semibold tracking-tight sm:text-3xl">
           Akses admin belum tersedia
         </h1>
         <p className="mt-4 text-base leading-7 text-muted-foreground">

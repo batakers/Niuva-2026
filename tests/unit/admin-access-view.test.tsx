@@ -20,6 +20,7 @@ const nextServerMocks = vi.hoisted(() => ({
 const queueMocks = vi.hoisted(() => ({
   list: vi.fn(),
 }));
+const dashboardMocks = vi.hoisted(() => ({ load: vi.fn() }));
 
 vi.mock("@/lib/auth/clerk", () => ({
   requireAdmin: authMocks.requireAdmin,
@@ -33,11 +34,18 @@ vi.mock("@/modules/admin/action-queue-service", () => ({
   }),
 }));
 
+vi.mock("@/modules/admin/dashboard-service", () => ({
+  DashboardService: vi.fn(function MockDashboardService() {
+    return { load: dashboardMocks.load };
+  }),
+}));
+
 vi.mock("next/server", () => ({
   connection: nextServerMocks.connection,
 }));
 
 import AdminPage from "@/app/admin/page";
+import AdminQueuePage from "@/app/admin/queue/page";
 import { AdminShell } from "@/components/niuva/admin-shell";
 
 beforeEach(() => {
@@ -46,13 +54,25 @@ beforeEach(() => {
   nextServerMocks.connection.mockResolvedValue(undefined);
   queueMocks.list.mockReset();
   queueMocks.list.mockResolvedValue({
+    filteredTotal: 0,
     generatedAt: new Date("2026-09-11T08:00:00.000Z"),
+    group: "all",
     items: [],
+    priorityItems: [],
+    totalOpen: 0,
+  });
+  dashboardMocks.load.mockReset();
+  dashboardMocks.load.mockResolvedValue({
+    generatedAt: new Date("2026-09-11T08:00:00.000Z"),
+    newInquiries: 0,
+    submittedCustomPrint: 0,
+    paidOrders: 0,
+    activity: [],
   });
 });
 
 describe("admin access view", () => {
-  it("marks global Admin visual acceptance approved while exposing the approved foundation", () => {
+  it("marks the redesigned Admin visual pending while exposing the approved foundation", () => {
     render(
       <AdminShell active="queue" role="OWNER">
         <main>Admin content</main>
@@ -62,7 +82,7 @@ describe("admin access view", () => {
     const shell = document.querySelector("[data-foundation-scope='admin']");
     expect(shell).toHaveAttribute("data-foundation-propagation", "approved");
     expect(shell).toHaveAttribute("data-typography-propagation", "approved");
-    expect(shell).toHaveAttribute("data-product-screen-proof-status", "approved-owner");
+    expect(shell).toHaveAttribute("data-product-screen-proof-status", "pending-owner-review");
     expect(screen.getByText("Admin content")).toBeInTheDocument();
   });
 
@@ -90,13 +110,13 @@ describe("admin access route", () => {
       },
     } satisfies AdminAccess);
 
-    render(await AdminPage());
+    render(await AdminPage({ searchParams: Promise.resolve({}) }));
 
     expect(nextServerMocks.connection).toHaveBeenCalledOnce();
     expect(authMocks.requireAdmin).toHaveBeenCalledOnce();
     expect(queueMocks.list).toHaveBeenCalledOnce();
     expect(
-      screen.getByRole("heading", { level: 1, name: "Action Queue" }),
+      screen.getByRole("heading", { level: 1, name: "Overview" }),
     ).toBeInTheDocument();
     expect(screen.getByText("Owner")).toBeInTheDocument();
   });
@@ -104,7 +124,7 @@ describe("admin access route", () => {
   it("renders the safe fallback after an expected authorization failure", async () => {
     authMocks.requireAdmin.mockRejectedValue(appError("FORBIDDEN"));
 
-    render(await AdminPage());
+    render(await AdminPage({ searchParams: Promise.resolve({}) }));
 
     expect(
       screen.getByRole("heading", { level: 1, name: "Akses admin belum tersedia" }),
@@ -125,16 +145,34 @@ describe("admin access route", () => {
     } satisfies AdminAccess);
     queueMocks.list.mockRejectedValue(new Error("database unavailable"));
 
-    render(await AdminPage());
+    render(await AdminPage({ searchParams: Promise.resolve({}) }));
 
     expect(
       screen.getByRole("heading", {
         level: 1,
-        name: "Action Queue belum dapat dimuat",
+        name: "Overview belum dapat dimuat",
       }),
     ).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "Data operasional belum dapat dimuat.",
+      "Tidak ada perubahan operasional yang dibuat.",
     );
+  });
+
+  it("keeps the new queue route closed without an active Admin profile", async () => {
+    authMocks.requireAdmin.mockRejectedValue(appError("FORBIDDEN"));
+    render(await AdminQueuePage({ searchParams: Promise.resolve({ group: "orders" }) }));
+    expect(screen.getByRole("heading", { level: 1, name: "Akses admin belum tersedia" })).toBeInTheDocument();
+    expect(queueMocks.list).not.toHaveBeenCalled();
+  });
+
+  it("shows a safe overview error when dashboard data fails after authorization", async () => {
+    authMocks.requireAdmin.mockResolvedValue({
+      clerkUserId: "user_admin",
+      profile: { clerkUserId: "user_admin", id: "a6f443d8-3e8a-49b5-81d0-94d56e06c208", isActive: true, role: "ADMIN" },
+    } satisfies AdminAccess);
+    dashboardMocks.load.mockRejectedValue(new Error("private database failure"));
+    render(await AdminPage({ searchParams: Promise.resolve({}) }));
+    expect(screen.getByRole("heading", { level: 1, name: "Overview belum dapat dimuat" })).toBeInTheDocument();
+    expect(screen.queryByText("private database failure")).not.toBeInTheDocument();
   });
 });

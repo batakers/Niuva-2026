@@ -1,181 +1,50 @@
-import type { AdminRole } from "@/generated/prisma/client";
-
-import type {
-  ActionQueueItem,
-  ActionQueueResult,
-} from "@/modules/admin/action-queue";
-import { AdminShell } from "@/components/niuva/admin-shell";
 import Link from "next/link";
-
-type AdminActionQueueViewProps = Readonly<{
-  result: ActionQueueResult;
-  role: AdminRole;
-}>;
-
-type AdminActionQueueErrorViewProps = Readonly<{
-  role: AdminRole;
-}>;
-
-const DATE_FORMATTER = new Intl.DateTimeFormat("id-ID", {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "Asia/Jakarta",
-});
+import type { AdminRole } from "@/generated/prisma/client";
+import type { ActionQueueResult } from "@/modules/admin/action-queue";
+import { AdminShell } from "@/components/niuva/admin-shell";
+import { AdminWorkList, formatAdminDate, WorkGroupFilters } from "./admin-work-list";
 
 export function AdminActionQueueView({
   result,
   role,
-}: AdminActionQueueViewProps) {
+}: Readonly<{ result: ActionQueueResult; role: AdminRole }>) {
   return (
     <AdminShell active="queue" role={role}>
-      <main className="rounded-xl border border-border bg-card px-5 py-8 sm:px-8 sm:py-10" id="main-content" data-admin-surface="queue">
-      <header className="max-w-3xl border-b border-border pb-6">
-        <p className="text-sm font-medium text-brand-700">Niuva / Admin</p>
-        <h1 className="mt-4 text-balance text-3xl font-semibold tracking-tight sm:text-5xl">
-          Action Queue
-        </h1>
-        <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
-          Daftar pekerjaan operasional yang perlu Anda tindak lanjuti.
-        </p>
-      </header>
-
-      <section
-        aria-labelledby="action-queue-list-title"
-        className="mt-8 max-w-4xl"
-      >
-        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
+      <main className="space-y-6" data-admin-surface="queue" id="main-content">
+        <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 id="action-queue-list-title" className="text-xl font-semibold">
-              Pekerjaan yang perlu perhatian
-            </h2>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Status ini berasal dari layanan server Niuva dan dapat berubah
-              setelah pekerjaan diproses.
-            </p>
+            <p className="text-sm font-medium text-brand-700">Niuva / Operations</p>
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Action Queue</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Pekerjaan aktif yang memerlukan tindakan Owner atau Admin.</p>
           </div>
-          <p className="text-sm text-muted-foreground" role="status">
-            {result.items.length} pekerjaan
-          </p>
-        </div>
-
-        {result.items.length === 0 ? (
-          <div
-            className="mt-6 rounded-xl border border-border bg-card p-6"
-            role="status"
-          >
-            <p className="font-semibold">Tidak ada pekerjaan yang perlu ditinjau.</p>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Antrean akan terisi kembali saat ada status operasional baru dari
-              layanan server.
-            </p>
+          <Link className="inline-flex min-h-11 items-center text-sm font-semibold text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href="/admin">← Kembali ke Overview</Link>
+        </header>
+        <section aria-labelledby="queue-list-title" className="min-w-0 rounded-xl border border-border bg-card p-4 sm:p-5">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold" id="queue-list-title">Daftar pekerjaan</h2>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">{result.filteredTotal} pada kelompok ini · {result.totalOpen} terbuka seluruhnya. Maksimal 50 ditampilkan.</p>
+            </div>
+            <p className="text-xs text-muted-foreground">Dibaca <time dateTime={result.generatedAt.toISOString()}>{formatAdminDate(result.generatedAt)}</time></p>
           </div>
-        ) : (
-          <ol
-            aria-label="Pekerjaan operasional"
-            className="mt-6 divide-y divide-border rounded-xl border border-border bg-card"
-          >
-            {result.items.map((item) => (
-              <ActionQueueRow item={item} key={item.id} />
-            ))}
-          </ol>
-        )}
-
-        <p className="mt-4 text-xs leading-5 text-muted-foreground" role="status">
-          Data server dibuat{" "}
-          <time dateTime={result.generatedAt.toISOString()}>
-            {formatDate(result.generatedAt)}
-          </time>
-          .
-        </p>
-      </section>
+          <div className="mt-4"><WorkGroupFilters basePath="/admin/queue" group={result.group} /></div>
+          <div className="mt-4"><AdminWorkList emptyMessage={result.totalOpen === 0 ? "Antrean pekerjaan sedang kosong." : undefined} items={result.items} /></div>
+          {result.filteredTotal > result.items.length ? <p className="mt-4 text-xs text-muted-foreground">Menampilkan {result.items.length} dari {result.filteredTotal} pekerjaan pada kelompok ini.</p> : null}
+        </section>
       </main>
     </AdminShell>
   );
 }
 
-export function AdminActionQueueErrorView({
-  role,
-}: AdminActionQueueErrorViewProps) {
+export function AdminActionQueueErrorView({ role }: Readonly<{ role: AdminRole }>) {
   return (
     <AdminShell active="queue" role={role}>
-      <main className="rounded-xl border border-border bg-card px-5 py-8 sm:px-8 sm:py-10" id="main-content" data-admin-surface="queue-error">
-      <header className="max-w-3xl border-b border-border pb-6">
-        <p className="text-sm font-medium text-brand-700">Niuva / Admin</p>
-        <h1 className="mt-4 text-balance text-3xl font-semibold tracking-tight sm:text-5xl">
-          Action Queue belum dapat dimuat
-        </h1>
-      </header>
-
-      <p
-        className="mt-8 max-w-2xl rounded-xl border border-destructive/30 bg-destructive/5 p-5 text-sm leading-6 text-destructive"
-        role="alert"
-      >
-        Data operasional belum dapat dimuat. Muat ulang halaman untuk mencoba
-        lagi.
-      </p>
+      <main className="rounded-xl border border-destructive-border bg-card p-6 sm:p-8" data-admin-surface="queue-error" id="main-content">
+        <p className="text-sm font-medium text-brand-700">Niuva / Operations</p>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">Action Queue belum dapat dimuat</h1>
+        <p className="mt-4 max-w-2xl text-sm leading-6 text-destructive" role="alert">Sumber data operasional sedang tidak tersedia. Muat ulang halaman untuk mencoba lagi.</p>
+        <Link className="mt-5 inline-flex min-h-11 items-center rounded-lg border border-border px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href="/admin/queue">Muat ulang</Link>
       </main>
     </AdminShell>
   );
-}
-
-function ActionQueueRow({ item }: Readonly<{ item: ActionQueueItem }>) {
-  const href = actionHref(item);
-  return (
-    <li className="grid gap-4 p-5 sm:grid-cols-[minmax(0,1fr)_minmax(15rem,0.8fr)] sm:p-6">
-      <div className="min-w-0">
-        <p className="text-xs font-medium uppercase tracking-[0.12em] text-brand-700">
-          {item.title}
-        </p>
-        <p className="mt-2 break-words font-mono text-sm text-foreground">
-          {href ? <Link className="text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={href}>{item.reference}</Link> : item.reference}
-        </p>
-      </div>
-      <div className="min-w-0 sm:text-right">
-        <p
-          className={
-            item.attention === "EXCEPTION"
-              ? "text-xs font-semibold uppercase tracking-[0.12em] text-destructive"
-              : "text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground"
-          }
-        >
-          {item.attention === "EXCEPTION" ? "Exception" : "Tindakan"}
-        </p>
-        <p className="mt-2 text-sm font-semibold leading-6 text-foreground">
-          {item.nextAction}
-        </p>
-        <time
-          className="mt-2 block text-xs leading-5 text-muted-foreground"
-          dateTime={item.sourceUpdatedAt.toISOString()}
-        >
-          Diperbarui {formatDate(item.sourceUpdatedAt)}
-        </time>
-      </div>
-    </li>
-  );
-}
-
-function actionHref(item: ActionQueueItem): string | null {
-  const parts = item.id.split(":");
-  const entityId = parts.slice(2).join(":");
-  if (!entityId) return null;
-  switch (item.kind) {
-    case "B2B_INQUIRY":
-      return `/admin/inquiries/${entityId}`;
-    case "CUSTOM_PRINT_REVIEW":
-    case "QUOTE_PREPARATION":
-      return `/admin/custom-print/${entityId}`;
-    case "ORDER_PROCESSING":
-    case "PACKAGE_MEASUREMENT":
-      return `/admin/orders/${entityId}`;
-    case "QUOTE_SEND":
-      return "/admin/custom-print";
-    case "SHIPPING_EXCEPTION":
-      return "/admin/orders";
-    default:
-      return "/admin";
-  }
-}
-
-function formatDate(value: Date): string {
-  return DATE_FORMATTER.format(value);
 }

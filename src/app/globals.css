@@ -269,6 +269,26 @@
   }
 }
 
+@layer components {
+  [data-foundation-scope="admin"] [data-admin-surface] > header {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--card);
+    padding: 1.25rem;
+  }
+
+  [data-foundation-scope="admin"] [data-admin-surface] > header h1 {
+    font-size: clamp(1.875rem, 3vw, 2.5rem);
+    line-height: 1.15;
+  }
+
+  @media (min-width: 640px) {
+    [data-foundation-scope="admin"] [data-admin-surface] > header {
+      padding: 1.5rem;
+    }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

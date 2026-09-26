@@ -44,6 +44,7 @@ export default async function AdminPricingPage({
   if (pricing === null) {
     return (
       <AdminDataUnavailableView
+        active="pricing"
         role={access.profile.role}
         title="Pricing rules belum dapat dimuat"
       />

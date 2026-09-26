@@ -29,7 +29,7 @@ export default async function AdminPortfolioPage({
   if (access === null) return <AdminAccessUnavailableView />;
 
   const result = await loadPortfolio(access, page);
-  if (result === null) return <AdminDataUnavailableView role={access.profile.role} title="Portfolio belum dapat dimuat" />;
+  if (result === null) return <AdminDataUnavailableView active="portfolio" role={access.profile.role} title="Portfolio belum dapat dimuat" />;
   const published = result.items.filter((item) => item.isPublished).length;
   const featured = result.items.filter((item) => item.isFeatured).length;
 

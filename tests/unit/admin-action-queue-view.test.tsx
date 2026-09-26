@@ -15,6 +15,7 @@ const generatedAt = new Date("2026-09-11T08:00:00.000Z");
 function item(overrides: Partial<ActionQueueItem> = {}): ActionQueueItem {
   return {
     attention: "STANDARD",
+    href: "/admin/inquiries/inquiry-1",
     id: "action-queue:B2B_INQUIRY:inquiry-1",
     kind: "B2B_INQUIRY",
     nextAction: "Tinjau brief proyek baru",
@@ -26,7 +27,7 @@ function item(overrides: Partial<ActionQueueItem> = {}): ActionQueueItem {
 }
 
 function result(items: readonly ActionQueueItem[]): ActionQueueResult {
-  return { generatedAt, items };
+  return { filteredTotal: items.length, generatedAt, group: "all", items, priorityItems: items.slice(0, 5), totalOpen: items.length };
 }
 
 describe("AdminActionQueueView", () => {
@@ -51,10 +52,10 @@ describe("AdminActionQueueView", () => {
       screen.getByRole("heading", { level: 1, name: "Action Queue" }),
     ).toBeInTheDocument();
     expect(screen.getByText("Owner")).toBeInTheDocument();
-    expect(screen.getByRole("list", { name: "Pekerjaan operasional" })).toBeInTheDocument();
-    expect(screen.getByText("ORD-SHIP-1")).toBeInTheDocument();
-    expect(screen.getByText("Tinjau exception pengiriman")).toBeInTheDocument();
-    expect(screen.getByText("Exception")).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "Pekerjaan operasional Niuva" })).toBeInTheDocument();
+    expect(screen.getAllByText("ORD-SHIP-1")).toHaveLength(2);
+    expect(screen.getAllByText("Tinjau exception pengiriman")).toHaveLength(2);
+    expect(screen.getAllByText("Exception")).toHaveLength(2);
     expect(screen.queryByText("client@example.com")).not.toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
@@ -68,10 +69,10 @@ describe("AdminActionQueueView", () => {
     );
 
     expect(
-      screen.getByText("Tidak ada pekerjaan yang perlu ditinjau."),
+      screen.getByText("Antrean pekerjaan sedang kosong."),
     ).toBeInTheDocument();
     expect(screen.queryByText("Development-only preview")).not.toBeInTheDocument();
-    expect(screen.queryByRole("list", { name: "Pekerjaan operasional" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("list", { name: "Pekerjaan operasional Niuva" })).not.toBeInTheDocument();
   });
 
   it("renders a safe recovery state when the queue cannot be read", () => {
@@ -84,7 +85,7 @@ describe("AdminActionQueueView", () => {
       }),
     ).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "Data operasional belum dapat dimuat.",
+      "Sumber data operasional sedang tidak tersedia.",
     );
     expect(screen.queryByText("Development-only preview")).not.toBeInTheDocument();
   });

@@ -1,58 +1,41 @@
-import {
-  AdminActionQueueErrorView,
-  AdminActionQueueView,
-} from "@/app/admin/action-queue-view";
-import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
-import { ActionQueueService } from "@/modules/admin/action-queue-service";
-import { requireAdmin } from "@/lib/auth/clerk";
-import { isAppError } from "@/modules/shared/errors";
+import type { Metadata } from "next";
 import { connection } from "next/server";
+import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
+import { AdminDataUnavailableView } from "@/components/niuva/admin-shell";
+import { ActionQueueService } from "@/modules/admin/action-queue-service";
+import { parseActionQueueGroup } from "@/modules/admin/action-queue";
+import { DashboardService } from "@/modules/admin/dashboard-service";
+import { loadAdminPageAccess } from "./admin-page-access";
+import { AdminOverviewView } from "./overview-view";
 
-const ADMIN_ACCESS_FAILURE_CODES = new Set([
-  "AUTH_UNAVAILABLE",
-  "FORBIDDEN",
-  "UNAUTHORIZED",
-]);
+export const metadata: Metadata = {
+  title: "Overview Admin · Niuva",
+  robots: { follow: false, index: false },
+};
 
-async function getAdminAccess() {
-  try {
-    return await requireAdmin();
-  } catch (error) {
-    if (isAppError(error) && ADMIN_ACCESS_FAILURE_CODES.has(error.code)) {
-      return null;
-    }
+export default async function AdminPage({
+  searchParams,
+}: Readonly<{ searchParams: Promise<{ group?: string | string[] }> }>) {
+  await connection();
+  const access = await loadAdminPageAccess();
+  if (access === null) return <AdminAccessUnavailableView />;
 
-    throw error;
+  const group = parseActionQueueGroup((await searchParams).group);
+  const result = await loadOverview(group);
+  if (result === null) {
+    return <AdminDataUnavailableView role={access.profile.role} title="Overview belum dapat dimuat" />;
   }
+  return <AdminOverviewView dashboard={result.dashboard} queue={result.queue} role={access.profile.role} />;
 }
 
-async function getAdminActionQueue() {
+async function loadOverview(group: ReturnType<typeof parseActionQueueGroup>) {
   try {
-    return await new ActionQueueService().list();
+    const [queue, dashboard] = await Promise.all([
+      new ActionQueueService().list(group),
+      new DashboardService().load(),
+    ]);
+    return { queue, dashboard };
   } catch {
     return null;
   }
-}
-
-export default async function AdminPage() {
-  await connection();
-
-  const access = await getAdminAccess();
-
-  if (access === null) {
-    return <AdminAccessUnavailableView />;
-  }
-
-  const result = await getAdminActionQueue();
-
-  if (result === null) {
-    return <AdminActionQueueErrorView role={access.profile.role} />;
-  }
-
-  return (
-    <AdminActionQueueView
-      result={result}
-      role={access.profile.role}
-    />
-  );
 }
