@@ -1,5 +1,8 @@
 import { defineConfig } from "@playwright/test";
 
+const ciTestDatabaseUrl =
+  "postgresql://niuva_test@127.0.0.1:5432/niuva_test?schema=public";
+
 export default defineConfig({
   testDir: "./tests/e2e",
   testIgnore: /local-demo\.spec\.ts/,
@@ -16,15 +19,28 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   webServer: {
-    command:
-      "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/local-e2e-web.ps1",
+    command: process.env.CI
+      ? "corepack pnpm exec next dev -p 3000"
+      : "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/local-e2e-web.ps1",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     stdout: "ignore",
     stderr: "pipe",
     env: {
+      ...(process.env.CI
+        ? {
+            DATABASE_URL: ciTestDatabaseUrl,
+            DEMO_DATABASE_URL: ciTestDatabaseUrl,
+            GOOGLE_CLIENT_ID: "local-e2e-google-client",
+            GOOGLE_CLIENT_SECRET: "local-e2e-google-secret",
+            GOOGLE_REDIRECT_URI:
+              "http://localhost:3000/api/auth/google/callback",
+            NIUVA_NEXT_DIST_DIR: ".next-e2e",
+          }
+        : {}),
       NODE_ENV: "test",
+      NIUVA_RUNTIME_MODE: "",
       NIUVA_CUSTOMER_AUTH_MOCK: "true",
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "",
       CLERK_SECRET_KEY: "",
