@@ -24,6 +24,13 @@ The baseline application currently exposes these commands:
 - `corepack pnpm test` — Vitest + React Testing Library unit/component gate.
 - `corepack pnpm test:e2e` — Playwright browser smoke gate; it starts the local Next dev server.
 - `corepack pnpm build` — required production-build gate.
+
+The GitHub Actions workflow at `.github/workflows/quality.yml` runs lint,
+typecheck, unit/backend/integration tests, Prisma validation, Chromium E2E, and
+the production build for pull requests to `main` and pushes to `main`. Its
+integration job uses an ephemeral PostgreSQL service and does not require
+provider credentials.
+
 The current application includes Prisma, `prisma/schema.prisma`, and reviewed
 migrations. Use the repository scripts:
 

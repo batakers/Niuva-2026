@@ -1,0 +1,79 @@
+name: Quality
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality gates
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: niuva_test
+          POSTGRES_USER: niuva_test
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U niuva_test -d niuva_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: corepack pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: corepack pnpm lint
+
+      - name: Typecheck
+        run: corepack pnpm typecheck
+
+      - name: Unit and component tests
+        run: corepack pnpm test
+
+      - name: Backend tests
+        run: corepack pnpm test:backend
+
+      - name: Validate Prisma schema
+        run: corepack pnpm db:validate
+
+      - name: Apply migrations to the ephemeral test database
+        run: corepack pnpm exec prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://niuva_test@127.0.0.1:5432/niuva_test?schema=public
+
+      - name: Integration tests
+        run: corepack pnpm exec vitest run --config vitest.integration.config.mts
+        env:
+          TEST_DATABASE_URL: postgresql://niuva_test@127.0.0.1:5432/niuva_test?schema=public
+
+      - name: Install Chromium for Playwright
+        run: corepack pnpm exec playwright install --with-deps chromium
+
+      - name: Browser E2E tests
+        run: corepack pnpm test:e2e
+
+      - name: Production build
+        run: corepack pnpm build

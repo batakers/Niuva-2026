@@ -76,3 +76,18 @@ technical proof lulus; touch proof masih emulated; physical screen-reader,
 provider activation, production deployment, dan OptionChip product propagation
 belum ditutup. Tidak ada provider atau production resource yang diaktifkan oleh
 audit ini.
+
+## CI quality-gate addendum — 2026-09-26
+
+`PASSED_PR_CHECK` — GitHub Actions workflow `Quality` lulus pada PR #23,
+commit `4721cac928c3c9c9ae26cc2905f6dfaf77bebe1a`:
+[run 36233414587](https://github.com/batakers/Niuva-2026/actions/runs/36233414587).
+Lint, typecheck, unit/component tests, backend tests, validasi Prisma,
+migration dan integration tests pada PostgreSQL 18 sementara, instalasi
+Chromium, browser E2E, serta production build semuanya lulus. Build hosted
+runner juga berhasil mengambil font yang digunakan `next/font/google`.
+
+Bukti ini hanya menutup quality check otomatis untuk commit PR tersebut; bukan
+bukti visual acceptance baru, physical-device atau accessibility acceptance,
+provider/staging smoke, deployment, backup/restore, rollback, maupun production
+readiness. Workflow tidak memakai provider secrets dan tidak melakukan deploy.
