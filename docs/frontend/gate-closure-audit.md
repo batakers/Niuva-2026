@@ -306,8 +306,8 @@ Creative, Decorative, dan OptionChip tetap menjadi gate terpisah.
 
 ## Admin visual review status — global authenticated Admin — 2026-09-26
 
-Status terbaru: **UNVERIFIED — Owner review belum dilakukan** untuk area Admin
-yang tercantum pada batch ini.
+Status saat bagian ini dicatat, sebelum keputusan Owner di bawah: **UNVERIFIED —
+Owner review belum dilakukan** untuk area Admin yang tercantum pada batch ini.
 
 Foundation/Typography, semantic token, Clerk states, CSP, dan responsive
 geometry memiliki evidence teknis lokal. Namun tidak ada review visual Owner
@@ -337,6 +337,161 @@ physical-device/AT acceptance, atau promosi P0/P1, Motion, Patterns, Creative,
 Decorative, dan OptionChip. Registry product-screen proof pada
 `design-system.ts` dan `components.json` tetap scoped pada `/` dan
 `/project-brief` serta tidak berubah.
+
+## Browser revalidation — authenticated Admin — 2026-09-26
+
+Status pada batch browser awal: **PARTIAL_BROWSER_REVIEW**; saat itu global
+Admin visual acceptance masih `UNVERIFIED` dan runtime marker `AdminShell`
+masih `pending-owner-review`.
+Owner sudah menyatakan persetujuan global dalam percakapan, tetapi pemeriksaan
+browser pada batch ini menemukan overflow baru. Persetujuan tersebut belum
+dicatat sebagai hasil lolos untuk seluruh route dan viewport.
+
+`corepack pnpm build` **PASS**. PostgreSQL development yang sudah ada dan Next
+production server dijalankan pada loopback (`127.0.0.1:55433` dan `::1:3000`)
+tanpa migration, seed, atau reset. Browser authenticated yang benar-benar dipakai
+adalah Brave Work (berbasis Chromium) dengan sesi Clerk Development Owner yang
+valid; `/admin/sign-in` diperiksa tanpa sesi pada Codex in-app Chromium.
+Tautan detail diambil dari daftar record non-production yang sudah ada, tanpa
+mencatat ID, credential, session data, atau isi bisnis. Sebanyak 52 kombinasi
+route/viewport diperiksa; screenshot hanya ditahan sementara dalam sesi browser
+untuk inspeksi, bukan disimpan sebagai berkas atau dalam repository. Tidak ada
+form atau Server Action yang disubmit. Pada 48 kombinasi authenticated, heading
+utama dirender, navigasi Tab mencapai focus ring yang terlihat, dan tidak ada
+console/page error. State error/disabled yang tidak muncul pada data tersedia
+tidak dipaksakan lewat perubahan record.
+
+| Surface | Viewport | Observasi browser | Status batch |
+| --- | --- | --- | --- |
+| `/admin` | 320×900, 390×844, 768×900, 1280×900 | Action Queue dirender; tidak ada horizontal overflow atau console error; focus keyboard terlihat. | `REVIEWED_LOCAL` |
+| `/admin/orders` dan `/admin/orders/[id]` | 320×900, 390×844, 768×900, 1280×900 | Daftar dan detail dari record yang tersedia dirender; tidak ada horizontal overflow atau console error; focus keyboard terlihat. | `REVIEWED_LOCAL` |
+| `/admin/custom-print` dan `/admin/custom-print/[id]` | 320×900, 390×844, 768×900, 1280×900 | Daftar dan detail dari record yang tersedia dirender; tidak ada horizontal overflow atau console error; focus keyboard terlihat. | `REVIEWED_LOCAL` |
+| `/admin/products` dan `/admin/products/[id]` | 320×900, 390×844, 768×900, 1280×900 | Daftar dan detail dirender tanpa horizontal overflow atau console error. Dua checkbox pada detail memiliki label terkait dengan tinggi 44px, focus-visible, dan computed `accent-color: rgb(63, 96, 127)` pada seluruh viewport. | `REVIEWED_LOCAL` |
+| `/admin/portfolio` dan `/admin/portfolio/[id]` | 320×900, 390×844, 768×900, 1280×900 | Daftar dan detail dirender tanpa horizontal overflow atau console error. Dua checkbox pada detail memiliki label terkait dengan tinggi 44px, focus-visible, dan computed `accent-color: rgb(63, 96, 127)` pada seluruh viewport. | `REVIEWED_LOCAL` |
+| `/admin/inquiries` dan `/admin/inquiries/[id]` | 320×900, 390×844, 768×900, 1280×900 | Daftar dan detail dari record yang tersedia dirender; tidak ada horizontal overflow atau console error; focus keyboard terlihat. | `REVIEWED_LOCAL` |
+| `/admin/pricing` | 320×900, 390×844, 768×900, 1280×900 | Horizontal overflow pada 320px: `scrollWidth` 466 vs `clientWidth` 305; pada 390px: 466 vs 375. Tidak ada overflow pada 768/1280px; focus terlihat dan console error kosong. `PricingCard` melebar hingga 446px; `<pre>` JSON menjadi 404px. | `OPEN` — visual remediation candidate |
+| `/admin/sign-in` | 320×900, 390×844, 768×900, 1280×900 | Form Clerk dirender tanpa horizontal overflow atau console error; tiga control yang benar-benar terlihat masing-masing minimal 44px, tombol primary `rgb(63, 96, 127)`, dan focus keyboard terlihat. Link `Sign up` masih muncul sesuai follow-up `OPEN` sebelumnya. | `REVIEWED_LOCAL` dengan follow-up terpisah |
+
+Overflow Pricing berasal dari area `PricingCard`/`<pre>` pada
+`src/app/admin/pricing/page.tsx`; penyesuaian ukuran intrinsik dan scroll
+internal menjadi candidate remediation, tidak diterapkan dalam review ini.
+Checkbox aktivasi Pricing DS-04 tidak dirender karena rule development sudah
+aktif. Source menampilkannya hanya saat belum ada active rule, sehingga visual
+state checkbox Pricing tetap `UNVERIFIED` tanpa mengubah database atau membuat
+fixture. Checkbox Product dan Portfolio telah diperiksa pada empat viewport.
+
+Browser ini tidak mengemulasikan `prefers-reduced-motion: reduce`; aturan global
+tersedia di `src/app/globals.css`, tetapi perilaku runtime reduced motion pada
+Admin tetap `UNVERIFIED`. Hasil ini juga bukan physical-device/AT, provider,
+deployment, atau production acceptance. Histori blocker di atas dipertahankan;
+`design-system.ts`, `components.json`, dan assertion unit `AdminShell` tidak
+dipromosikan oleh review parsial ini.
+
+## Remediation Pricing dan browser revalidation — 2026-09-26
+
+Status teknis: **FIXED** untuk overflow `/admin/pricing` dan penentuan form
+aktivasi dari daftar terpaginasikan. Pada akhir batch remediation ini, visual
+acceptance global Admin masih **UNVERIFIED** dan marker `AdminShell` masih
+`pending-owner-review`, menunggu keputusan Owner yang kini dicatat pada bagian
+terbaru di bawah. Entry browser sebelumnya tetap menjadi histori sebelum
+remediation ini.
+
+`PricingCard` kini dapat menyusut di viewport sempit. Definisi JSON tetap
+berformat `<pre>`, memiliki nama aksesibel dan fokus keyboard, serta scroll
+horizontal di dalam blok tersebut. Pada 320×900, lebar dokumen/client sama-sama
+305px, lebar kartu 263px, dan `pre` memiliki `clientWidth` 206px versus
+`scrollWidth` 387px. Pada 390×844, lebar dokumen/client sama-sama 375px,
+kartu 333px, dan `pre` 276px versus 387px. Tombol panah menggeser `pre`
+secara horizontal (terukur `scrollLeft` 40px) dengan focus ring terlihat.
+Pada 768×900 dan 1280×900 juga tidak ada overflow halaman.
+
+Halaman Pricing sekarang membaca rule aktif melalui `getActivePricingRule()`
+terpisah dari daftar yang tetap terpaginasikan. Ringkasan Active, notice, dan
+form aktivasi memakai status global tersebut; hitungan Draft / retired tetap
+berdasarkan item yang tampil. Gagal membaca status rule aktif menghasilkan
+fallback data-unavailable, bukan form aktivasi. Halaman daftar kosong di page
+lanjutan tidak lagi menyatakan "Belum ada pricing rule" ketika status global
+menunjukkan rule aktif. Unit test membuktikan rule aktif di luar halaman daftar,
+halaman lanjutan kosong, kondisi tanpa rule aktif, kegagalan pembacaan, dan kelas
+pembatas/akses keyboard JSON. Tidak ada Server Action yang dipanggil.
+
+Browser authenticated: **Brave Work (Chromium)** dengan sesi Clerk Development
+Owner yang sudah tersedia. Browser sign-in tanpa sesi: **Codex in-app Chromium**.
+Database development dan Next production server tetap hanya di loopback
+(`127.0.0.1:55433` dan `::1:3000`); tidak ada migration, seed, reset, fixture,
+atau perubahan data bisnis. ID record detail yang tersedia digunakan hanya
+untuk navigasi lokal dan tidak dicatat di dokumen ini.
+
+| Surface | Viewport yang diperiksa | Hasil runtime |
+| --- | --- | --- |
+| `/admin` | 320×900, 390×844, 768×900, 1280×900 | Action Queue dirender; tanpa overflow; Tab/focus ring terlihat. |
+| `/admin/orders` dan `/admin/orders/[id]` | 320×900, 390×844, 768×900, 1280×900 | Daftar/detail dirender; tanpa overflow; Tab/focus ring terlihat. |
+| `/admin/custom-print` dan `/admin/custom-print/[id]` | 320×900, 390×844, 768×900, 1280×900 | Daftar/detail dirender; tanpa overflow; Tab/focus ring terlihat. |
+| `/admin/products` dan `/admin/products/[id]` | 320×900, 390×844, 768×900, 1280×900 | Daftar/detail dirender; tanpa overflow; dua checkbox detail berwarna `rgb(63, 96, 127)` dengan label setinggi 44px pada setiap viewport. |
+| `/admin/portfolio` dan `/admin/portfolio/[id]` | 320×900, 390×844, 768×900, 1280×900 | Daftar/detail dirender; tanpa overflow; dua checkbox detail berwarna `rgb(63, 96, 127)` dengan label setinggi 44px pada setiap viewport. |
+| `/admin/inquiries` dan `/admin/inquiries/[id]` | 320×900, 390×844, 768×900, 1280×900 | Daftar/detail dirender; tanpa overflow; Tab/focus ring terlihat. |
+| `/admin/pricing` | 320×900, 390×844, 768×900, 1280×900 | Tanpa overflow halaman; JSON dapat di-scroll di dalam kartu melalui keyboard; checkbox aktivasi tidak dirender karena rule development aktif. |
+| `/admin/sign-in` (sesi tanpa autentikasi) | 320×900, 390×844, 768×900, 1280×900 | Form Clerk dirender; tanpa overflow; tiga control terlihat masing-masing 44px; tombol primary `rgb(63, 96, 127)`; Tab/focus ring terlihat. Link `Sign up` yang sudah diketahui tetap `OPEN` terpisah. |
+
+Total 48 kombinasi authenticated dan empat kombinasi sign-in diperiksa.
+Tidak ada heading utama yang hilang, overflow halaman, atau focus ring yang
+tidak terlihat. Tidak ada error dengan stack aplikasi yang teramati pada
+pemeriksaan ulang; dua error awal berupa listener pesan ekstensi dan delapan
+error lain memiliki stack `chrome-extension://` pada daftar Inquiries 320px.
+Keduanya dicatat terpisah, sehingga ini bukan klaim bahwa profil browser bebas
+error. Screenshot non-sensitif kartu Pricing dan sign-in diambil untuk inspeksi
+sementara dalam sesi browser, tetapi konektor tidak menyediakan ekspor berkas;
+permintaan menyimpan screenshot di luar repository **belum terpenuhi**.
+
+Setelah patch pesan halaman daftar kosong dan build ulang, `/admin/pricing`
+diperiksa kembali pada keempat viewport. Lebar dokumen/client sama di setiap
+viewport: 305/305px, 375/375px, 753/753px, dan 1265/1265px. Pada 320px,
+`pre` memiliki `scrollWidth` 387px versus `clientWidth` 206px; tombol panah
+menggeser konten 40px dan focus ring terlihat. Tidak ada console error pada
+tab Pricing dalam pemeriksaan terakhir. `/admin/pricing?page=2` juga dibuka
+secara read-only: notice rule aktif dan pesan "Tidak ada versi rule di halaman
+ini" tampil, tanpa form aktivasi atau pesan palsu "Belum ada pricing rule".
+Pagination ini hanya memeriksa konsistensi status, bukan pengganti state nyata
+tanpa rule aktif untuk meninjau checkbox.
+
+Browser tidak menyediakan emulasi `prefers-reduced-motion: reduce`, sehingga
+perilaku Admin pada mode tersebut tetap **UNVERIFIED** meski aturan global CSS
+tersedia. Checkbox aktivasi Pricing tetap **UNVERIFIED** karena kondisi tanpa
+rule aktif tidak tersedia; halaman terpaginasikan tidak dipakai sebagai
+pengganti kondisi tersebut. Status `AdminShell`, assertion unit, registry proof
+publik, serta gate physical-device/AT, provider, deployment, dan production
+tidak dipromosikan. `corepack pnpm lint` lulus dengan 147 warning existing;
+`typecheck`, 111 unit test, dan `build` lulus. E2E default tidak dijalankan
+karena skrip servernya menjalankan migration.
+
+## Owner visual acceptance Admin global — 2026-09-26
+
+Status terbaru: **OWNER_VISUAL_ACCEPTED**. Owner menyetujui acceptance visual
+global Admin dalam percakapan pada 2026-09-26. Runtime marker `AdminShell`
+sekarang `approved-owner`; assertion unit memeriksa marker tersebut. Status ini
+berlaku untuk browser lokal/non-production dan empat viewport yang direview:
+320×900, 390×844, 768×900, serta 1280×900.
+
+Acceptance mencakup `/admin`, daftar dan detail Orders, Custom Print, Products,
+Portfolio, dan B2B Inquiries, serta `/admin/pricing`. `/admin/sign-in` diterima
+sebagai auth surface terpisah; route tersebut tidak merender `AdminShell`.
+Bukti browser pada section sebelumnya mencatat 48 kombinasi authenticated dan
+empat kombinasi sign-in, responsive layout, horizontal overflow, keyboard dan
+focus-visible, state yang tersedia, warna DS-04 `accent-primary`, serta hasil
+console/page error sesuai catatan per browser.
+
+Owner menutup acceptance global dengan catatan bahwa checkbox aktivasi Pricing
+pada kondisi tanpa rule aktif belum ditampilkan dalam sesi browser, reduced
+motion belum diuji melalui emulasi browser, dan screenshot sementara belum
+dapat diekspor sebagai berkas. Ketiga keterbatasan ini tetap tercatat sebagai
+bukti yang belum diuji; keputusan Owner mencakup status visual global Admin.
+Entry `UNVERIFIED` sebelumnya dipertahankan sebagai histori dan section ini
+menjadi status terbaru. Registry product-screen proof tetap scoped pada `/` dan
+`/project-brief`.
+
+Acceptance ini hanya untuk bukti browser lokal/non-production. Physical-device
+dan AT, provider, deployment, production, serta promosi P0/P1, Motion, Patterns,
+Creative, Decorative, dan OptionChip tetap memiliki gate masing-masing.
 
 ## Required next evidence
 
