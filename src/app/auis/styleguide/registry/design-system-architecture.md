@@ -1,15 +1,16 @@
 # Niuva Design System Architecture v1
 
 Status: **Architecture v1 approved for the `/auis/styleguide` registry on
-2026-09-02.** This is an architecture and governance decision, not a blanket
-approval for product-screen propagation.
+2026-09-02; Foundation/Typography global propagation authorized by
+DS-DEC-019 on 2026-09-25.** This does not promote component layers or close
+visual, AT/device, provider, or production gates.
 
 ## Boundary
 
 Architecture v1 records ownership, source provenance, promotion states, and
-implementation boundaries. It does not add a runtime dependency, change the
-global token baseline, restyle shared product components, or expand product
-screens.
+implementation boundaries. It does not add a runtime dependency or promote
+P0/P1, Motion, Patterns, Creative, or Decorative layers. Foundation/Typography
+v1.0 is the explicit global propagation scope recorded by DS-DEC-019.
 
 The machine-readable registry is
 `src/app/auis/styleguide/registry/design-system.ts`. The component registry
@@ -20,7 +21,7 @@ summary remains `components.json`; the contract details remain in
 
 | Layer | Owns | Source policy | Status |
 | --- | --- | --- | --- |
-| `01 Foundation` | Typography, color, spacing, sizing, radius, border, shadow, opacity, z-index, breakpoints, motion tokens, iconography, density, and semantic states. | AUiS foundation tokens and the approved Typography System v1.0. | Approved for styleguide-only on 2026-09-03; product propagation remains paused. |
+| `01 Foundation` | Typography, color, spacing, sizing, radius, border, shadow, opacity, z-index, breakpoints, motion tokens, iconography, density, and semantic states. | AUiS foundation tokens and the approved Typography System v1.0. | Visual proof approved for styleguide-only; Foundation/Typography global propagation authorized by DS-DEC-019. |
 | `02 Primitives` | Semantic anatomy, accessibility, focus management, keyboard interaction, and state behavior. | Native HTML first; Base UI is the primary interaction primitive; Radix is an exception path only. | Implemented bridge. |
 | `03 Core Components` | Source-owned controls, Niuva composites, and reusable interaction surfaces. | shadcn source distribution + Base UI + custom Niuva components. | Initial P0/P1 set visually approved for styleguide-only; new additions require a separate proof. |
 | `04 Motion System` | Duration, easing, spring-like fallback, enter/exit, hover, press, scroll, and layout-transition recipes. | CSS-first Motion System v1 in the styleguide; a physics/gesture engine remains a separate candidate and is not installed. | Approved CSS-first proof for styleguide-only; runtime engine remains candidate. |
@@ -87,10 +88,11 @@ approved Foundation, P0/P1 Core Components, and existing CSS-first Motion
 contracts. It excludes checkout, admin, Creative Components, and Decorative
 Effects. Visual acceptance remains pending owner review.
 
-This authorization does not change the registry's
-`productScreenPropagationAllowed` guard or promote either route to `Official`;
-the proof-only project brief is not a functional submission flow. A later owner
-acceptance is required before this scoped proof can be promoted.
+This historical proof remains the named visual acceptance record and does not
+promote either route to `Official`. DS-DEC-019 now authorizes only the
+Foundation/Typography baseline globally; visual acceptance for other screens,
+component promotion, AT/device, provider, and production readiness remain
+separate gates.
 
 ## Promotion states
 
@@ -104,9 +106,9 @@ Every creative component, effect, or new pattern follows this path:
 4. **Approved** — owner accepts the visual behavior, contract, and boundary.
 5. **Official** — a separate scoped task permits use in product screens.
 
-Technical green checks do not replace visual acceptance. Global product
-propagation remains disabled for this Architecture v1 record outside the named
-approved proof routes.
+Technical green checks do not replace visual acceptance. Global Foundation/
+Typography authorization does not make the named proof a blanket visual
+acceptance or promote other Design System layers.
 
 ## Motion System v1 proof
 

@@ -2,11 +2,12 @@
 
 Status: Baseline UI Foundation tokens were accepted on 2026-08-28. Typography
 System v1.0 was approved by the owner on 2026-08-29. The revised Foundation
-visual proof was approved for styleguide-only use on 2026-09-03. The P0/P1
+visual proof was approved for styleguide-only use on 2026-09-03. DS-DEC-019
+authorized Foundation/Typography propagation globally on 2026-09-25. The P0/P1
 implementation gate was approved for styleguide-only use on 2026-09-02, and
 Motion System v1 plus the Pattern proofs were approved for styleguide-only use
-on 2026-09-03. Creative/Decorative review and product-screen propagation remain
-separate gates.
+on 2026-09-03. Creative/Decorative review, component promotion, visual
+acceptance, AT/device, provider, and production readiness remain separate gates.
 
 The scoped 2026-09-03 Foundation + Primitive/Core audit found no contrast-token
 change to justify: the existing semantic pairs remain valid in the contrast
@@ -16,12 +17,12 @@ menu-group semantics, and keeps the core/P0 examples visually aligned. These
 are styleguide proof hardening changes, not product-screen propagation. The
 owner approval closes the Foundation visual gate for this route only.
 
-`src/app/globals.css` remains the canonical source for the currently propagated
-baseline. The approved typography contract lives in `typography-proof.ts` and is
-loaded only by the nested `/auis/styleguide` layout. This approval intentionally
-does not change the root layout, global tokens, or product-screen composition.
-The audit hardens existing primitive bridge classes only; it does not add new
-product usage or authorize propagation of typography, motion, or patterns.
+`src/app/globals.css` remains the canonical source for the globally propagated
+Foundation baseline. The approved typography contract lives in
+`typography-proof.ts`; the root layout owns its font loading and the nested
+`/auis/styleguide` layout renders the proof. DS-DEC-019 authorizes Foundation/
+Typography only; it does not promote P0/P1, Motion, Patterns, Creative, or
+Decorative usage.
 
 ## Visual Proof coverage
 
@@ -76,15 +77,17 @@ product-screen promotion remains separate.
 | Focus | `--ring` | `ring-ring` |
 | Card elevation | `--shadow-card-token` | `shadow-card` |
 
-Use these values through the revised component contracts and a scoped page task.
-Do not bypass component contracts or introduce page-specific token values;
-wider product-screen propagation still requires its own scoped authorization.
+Use these values through the revised component contracts and DS-DEC-019 global
+Foundation/Typography authorization. Do not bypass component contracts or
+introduce page-specific token values; other layer promotion still requires its
+own scoped authorization.
 
 ## Design System handoff
 
 - Design System Architecture v1 and its source/promotion registry:
   ../registry/design-system-architecture.md and
-  ../registry/design-system.ts (styleguide-only, approved 2026-09-02).
+  ../registry/design-system.ts (Foundation/Typography global authorization by
+  DS-DEC-019; component proof remains styleguide-scoped).
 - P0 official components: `EvidenceCard`, `FormField`, `StatusNotice`, and
   `ActionQueueItem`; showcase: `/auis/styleguide#p0-components`.
 - P1 official components: `MoneySummary`, `FileUploadField`,
@@ -97,12 +100,13 @@ wider product-screen propagation still requires its own scoped authorization.
 - Full contract inventory: `../registry/component-contracts.md`.
 - Design System implementation was accepted on 2026-08-28, then returned to
   visual review on 2026-08-29 after the typography feedback.
-- Typography System v1.0 was approved on 2026-08-29 for foundation/styleguide
-  scope only; P0/P1 visual approval followed on 2026-09-02 for the styleguide.
+- Typography System v1.0 was approved on 2026-08-29; DS-DEC-019 authorizes its
+  Foundation/Typography use globally while P0/P1 visual approval remains scoped
+  to the styleguide.
 - Motion and Pattern proofs are approved styleguide surfaces. The owner has
-  authorized, but not yet visually accepted, the scoped product-screen proof
-  for `/` and `/project-brief`; wider product-screen use still requires a
-  separate scoped page/route task.
-- Bulk product-screen propagation remains paused and requires a separate,
-  explicitly scoped page/route task; no checkout, admin, Creative, Decorative,
-  or bulk propagation is implied.
+  authorized, but not yet visually accepted outside the named record, the
+  Foundation/Typography baseline for all product screens through DS-DEC-019.
+  The `/` and `/project-brief` proof remains the named visual acceptance record.
+- P0/P1, Motion, Patterns, Creative, Decorative, OptionChip, checkout/admin
+  visual acceptance, AT/device, provider, and production gates remain separate;
+  no component-layer or decorative bulk propagation is implied.

@@ -2,9 +2,10 @@
 
 Status: **P0/P1 visual implementation approved for styleguide-only scope**
 Foundation status: **Foundation visual proof approved for styleguide-only on
-2026-09-03; global product-screen propagation remains separately blocked.**
+2026-09-03; Foundation/Typography global propagation authorized by DS-DEC-019
+on 2026-09-25.**
 Implementation status: **P0/P1 components are visually approved for the
-styleguide; global product-screen propagation remains separately blocked.**
+styleguide; P0/P1 component propagation remains separately blocked.**
 `OptionChip` implementation is approved as a styleguide-only extension on
 2026-09-21. Owner accepted the named visual proof on 2026-09-22; scoped
 Chromium/browser semantics acceptance is verified, while cross-browser/physical
@@ -14,8 +15,9 @@ This document turns the UI Foundation into a controlled component boundary. The
 owner approved the four P0 and four P1 contracts on 2026-08-28. The visual
 implementation review was reopened on 2026-08-29 after feedback that repeated
 uppercase and monospace treatment made the system feel generic. The owner then
-approved Typography System v1.0 on 2026-08-29 without authorizing global-token,
-shared-component, or product-screen propagation. The renewed P0/P1 visual gate
+approved Typography System v1.0 on 2026-08-29. DS-DEC-019 subsequently
+authorized global Foundation/Typography propagation without promoting shared
+component layers. The renewed P0/P1 visual gate
 was approved for the styleguide on 2026-09-02. The revised Foundation visual
 proof was approved for styleguide-only use on 2026-09-03. Motion System v1 and
 the four Pattern proofs were also approved for styleguide-only usage on
@@ -83,7 +85,7 @@ The architecture registry is recorded in
 
 | Layer | Responsibility | Source/boundary | Status |
 | --- | --- | --- | --- |
-| `01 Foundation` | Visual tokens, typography, iconography, density, and semantic states. | AUiS foundation and Typography System v1.0; accepted within the named styleguide proof. | Approved for styleguide-only |
+| `01 Foundation` | Visual tokens, typography, iconography, density, and semantic states. | AUiS foundation and Typography System v1.0; visual proof remains named to the styleguide. | Foundation/Typography globally authorized; visual proof remains styleguide-only |
 | `02 Primitives` | Native semantics, accessibility, focus, keyboard, and state behavior. | Native HTML first; Base UI primary; Radix exception-only. | Implemented |
 | `03 Core Components` | Source-owned controls and Niuva composites. | shadcn source distribution + Base UI + custom Niuva. | Approved for styleguide-only |
 | `04 Motion System` | Duration, easing, spring-like fallback, enter/exit, hover, press, scroll, and layout recipes. | CSS-first Motion System v1 is implemented in the styleguide; a runtime Motion engine remains candidate and is not installed. | Approved proof for styleguide-only |
@@ -113,10 +115,26 @@ remain separate gates.
 The owner authorized a propagation proof on 2026-09-03 for `/` and
 `/project-brief` only. It uses the approved Foundation and existing component
 contracts, excludes checkout/admin and Creative/Decorative layers, and remains
-pending visual acceptance. The global product-screen propagation guard stays
-blocked until that acceptance is recorded; the project brief remains a
-proof-only surface until its functional submission flow is implemented
-separately.
+pending visual acceptance. This named proof remains the visual acceptance record;
+DS-DEC-019 separately authorizes only the Foundation/Typography baseline
+globally. The project brief remains a proof-only surface until its functional
+submission flow is implemented separately.
+
+### DS-DEC-019 Foundation/Typography propagation authorization
+
+On 2026-09-25 the Owner authorized Foundation and Typography System v1.0 for
+all product screens rendered by `PublicShell` or `AdminShell`, including public,
+shop, checkout, custom-print, quote, order, project, and authenticated admin
+routes. The root layout owns the Space Grotesk and Fraunces font loading;
+`typography-proof.ts` remains the source of the v1 role and responsive values.
+
+This authorization is intentionally narrower than component promotion. P0/P1
+composites, Motion, Patterns, Creative, Decorative, and OptionChip retain their
+existing styleguide-only, candidate, or restricted boundaries. Visual
+acceptance, physical-device and assistive-technology evidence, provider
+readiness, and production readiness remain separate gates. The named homepage
+and project-brief proof remains the current visual acceptance record; global
+authorization does not mark other routes visually accepted.
 
 ### Motion System v1 boundary
 
@@ -148,9 +166,9 @@ a separate page/route task authorizes their use.
 
 - `src/app/globals.css` remains the canonical source for the currently
   propagated baseline. `foundation/typography-proof.ts` is the approved
-  Typography System v1.0 contract and is loaded only by the styleguide until a
-  separate propagation task is authorized. `foundation/tokens.ts` exposes its
-  styleguide compatibility view.
+  Typography System v1.0 contract and is used by product routes through the
+  global authorization recorded in DS-DEC-019. `foundation/tokens.ts` exposes
+  its styleguide compatibility view.
 - Existing Base UI/shadcn primitives in `src/components/ui` are the bridge.
   They should be extended only when a Niuva requirement cannot be expressed by
   their existing API.
@@ -504,7 +522,8 @@ gate was closed for the styleguide on 2026-09-02 after review of:
 - the P0/P1 names and priorities;
 - each P0/P1 candidate's anatomy, states, props/data boundary, accessibility, and
   showcase requirement; and
-- the rule that product-screen propagation remains a separate authorization.
+- the rule that component-layer product-screen propagation remains a separate
+  authorization from the Foundation/Typography global baseline;
 
 The accepted proof covered desktop and mobile layout, default and semantic
 states, visible focus and keyboard paths, recovery copy/actions, CTA contrast,
@@ -519,8 +538,9 @@ last accepted the previous visual/technical implementation. Owner feedback on
 2026-08-29 reopened the visual review; the revised proof closed it on 2026-09-02
 for styleguide-only usage and keeps scoped product-page work paused.
 Typography approval record: **`Setujui Candidate v2 sebagai Typography System
-v1.0, tetap tanpa propagasi product screens.`** on 2026-08-29. This remains a
-separate foundation approval and does not authorize product-screen propagation.
+v1.0, tetap tanpa propagasi product screens.`** on 2026-08-29. This remains the
+historical foundation approval; DS-DEC-019 is the current authorization for
+global Foundation/Typography use.
 
 ## 8. Implementation boundary
 
@@ -530,7 +550,7 @@ separate foundation approval and does not authorize product-screen propagation.
 - Fixture values are clearly preview-only. No pricing calculation, stock
   authority, upload authorization, payment handoff, or order transition lives
   in these components.
-- Other product screens may proceed only through a separate scoped page/route
-  task after the applicable visual review and explicit authorization; no global
-  or bulk propagation, shared-component restyling, or domain integration is
-  authorized by this revision.
+- Foundation/Typography may be used across product screens under DS-DEC-019.
+  P0/P1 component promotion, Motion, Patterns, Creative, Decorative, shared
+  component restyling beyond the remediation scope, and domain integration still
+  require their own scoped authorization and evidence.
