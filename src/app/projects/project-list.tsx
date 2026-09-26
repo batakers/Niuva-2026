@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
+import { typographySystemTokens as type } from "@/design/typography";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { useHydrated } from "@/components/niuva/use-hydrated";
 import { Button } from "@/components/ui/button";

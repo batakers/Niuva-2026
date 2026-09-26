@@ -1,13 +1,12 @@
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
-import AuLogo from "@/components/ui/AuLogo";
-import { AuLink } from "@/components/ui/AuLink";
+import NiuvaLogo from "@/components/ui/NiuvaLogo";
+import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { publicCompanyProfile } from "@/features/public/company-content";
 import { isLocalDemoMode } from "@/lib/env/server";
 import { PublicNavigation } from "./public-navigation";
 
 const typography = {
-  "--font-auis-proof-sans": "var(--font-public-sans)", "--font-auis-proof-serif": "var(--font-public-editorial)",
   "--font-body": "var(--font-public-sans)", "--font-body-token": "var(--font-public-sans)",
   "--font-display": "var(--font-public-sans)", "--font-display-token": "var(--font-public-sans)",
   "--font-mono": "var(--font-public-sans)", "--font-sans": "var(--font-public-sans)",
@@ -61,7 +60,7 @@ export function PublicShell({
       <header className="dark border-b border-border bg-background text-foreground" data-home-section="header">
         <div className="mx-auto flex max-w-public flex-wrap items-center gap-3 px-5 py-4 sm:px-8">
           <Link href="/" aria-label="Niuva, kembali ke halaman utama" className="shrink-0 rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
-            <AuLogo className="h-7 w-auto sm:h-8" priority />
+            <NiuvaLogo className="h-7 w-auto sm:h-8" priority />
           </Link>
           <PublicNavigation />
           {demoMode ? (
@@ -74,14 +73,14 @@ export function PublicShell({
               Demo lokal
             </span>
           ) : null}
-          <AuLink href="/project-brief" size="sm" className="min-h-11 hidden md:inline-flex">Diskusikan Proyek</AuLink>
+          <NiuvaLink href="/project-brief" size="sm" className="min-h-11 hidden md:inline-flex">Diskusikan Proyek</NiuvaLink>
         </div>
       </header>
       {children}
       <footer className="dark border-t border-border bg-background text-foreground" data-home-section="footer">
         <div className="mx-auto grid max-w-public gap-8 px-5 py-10 sm:px-8 md:grid-cols-[minmax(0,1fr)_minmax(15rem,0.7fr)]">
           <div className="space-y-4">
-            <Link href="/" aria-label="Niuva, kembali ke halaman utama" className="inline-flex rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"><AuLogo className="h-7 w-auto" /></Link>
+            <Link href="/" aria-label="Niuva, kembali ke halaman utama" className="inline-flex rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"><NiuvaLogo className="h-7 w-auto" /></Link>
             <p className="max-w-md text-sm leading-6 text-muted-foreground">{publicCompanyProfile.supportingCopy}</p>
             <p className="text-xs text-muted-foreground">Niuva Inovasi Utama</p>
           </div>

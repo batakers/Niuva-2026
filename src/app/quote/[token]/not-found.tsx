@@ -1,7 +1,7 @@
-import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
+import { typographySystemTokens as type } from "@/design/typography";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
-import { AuLink } from "@/components/ui/AuLink";
+import { NiuvaLink } from "@/components/ui/NiuvaLink";
 
 export default function QuoteNotFound() {
   return (
@@ -13,7 +13,7 @@ export default function QuoteNotFound() {
         </h1>
         <div className="mt-8 max-w-2xl">
           <StatusNotice
-            action={<AuLink className="min-h-11" href="/custom-print" variant="outline">Lihat proses custom print</AuLink>}
+            action={<NiuvaLink className="min-h-11" href="/custom-print" variant="outline">Lihat proses custom print</NiuvaLink>}
             description="Tautan mungkin tidak sesuai, sudah dicabut, atau belum terhubung ke quote yang dapat diakses. Tidak ada informasi quote yang dibuka."
             title="Periksa kembali tautan dari Niuva."
             tone="warning"

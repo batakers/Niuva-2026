@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { PublicShell } from "@/components/niuva/public-shell";
-import { AuLink } from "@/components/ui/AuLink";
+import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Icon } from "@/components/ui/Icon";
-import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
+import { typographySystemTokens as type } from "@/design/typography";
 import { publicServices } from "@/features/public/company-content";
 
 export const metadata: Metadata = {
@@ -42,7 +42,7 @@ export default function ServicesPage() {
               <h1 className={`${type.display.className} mt-4 max-w-xl`}>Dukungan yang mengikuti tahap proyek Anda.</h1></div>
             <div className="max-w-lg space-y-6 lg:pl-10">
               <p className="text-lg leading-8 text-muted-foreground">Ada yang dimulai dari pertanyaan. Ada yang sudah berbentuk sketsa, model, atau prototype. Kita mulai dari konteks itu.</p>
-              <AuLink href="/project-brief" className="min-h-11 gap-2">Diskusikan kebutuhan <Icon aria-hidden="true" className="size-4" name="arrow-up-right" /></AuLink>
+              <NiuvaLink href="/project-brief" className="min-h-11 gap-2">Diskusikan kebutuhan <Icon aria-hidden="true" className="size-4" name="arrow-up-right" /></NiuvaLink>
             </div>
           </div>
         </section>
@@ -62,13 +62,13 @@ export default function ServicesPage() {
                   <div className="py-4"><dt className="text-sm font-semibold">Yang bisa Anda bawa</dt><dd className="mt-2 text-sm leading-6 text-muted-foreground">{service.inputs}</dd></div>
                   <div className="py-4"><dt className="text-sm font-semibold">Arah pembahasan</dt><dd className="mt-2 text-sm leading-6 text-muted-foreground">{service.outputs}</dd></div>
                 </dl>
-                <AuLink className="min-h-11" href="/project-brief" variant="outline" aria-label={`Buat brief untuk ${service.title.toLowerCase()}`}>Buat brief layanan ini</AuLink>
+                <NiuvaLink className="min-h-11" href="/project-brief" variant="outline" aria-label={`Buat brief untuk ${service.title.toLowerCase()}`}>Buat brief layanan ini</NiuvaLink>
               </div>
             </section>
           ))}
           <section className="grid gap-6 py-16 md:grid-cols-2 md:items-center">
             <h2 className={type.heading.className}>Belum tahu harus mulai dari mana?</h2>
-            <div><p className="mb-5 text-base leading-7 text-muted-foreground">Tidak perlu menentukan semua detail sekarang. Tujuan dan batasan awal membantu kita memilih pembahasan yang relevan.</p><div className="flex flex-wrap gap-3"><AuLink className="min-h-11" href="/project-brief">Ceritakan konteks proyek</AuLink><AuLink className="min-h-11" href="/projects" variant="outline">Lihat projects</AuLink></div></div>
+            <div><p className="mb-5 text-base leading-7 text-muted-foreground">Tidak perlu menentukan semua detail sekarang. Tujuan dan batasan awal membantu kita memilih pembahasan yang relevan.</p><div className="flex flex-wrap gap-3"><NiuvaLink className="min-h-11" href="/project-brief">Ceritakan konteks proyek</NiuvaLink><NiuvaLink className="min-h-11" href="/projects" variant="outline">Lihat projects</NiuvaLink></div></div>
           </section>
         </div>
       </main>

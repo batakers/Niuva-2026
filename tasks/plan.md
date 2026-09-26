@@ -1,5 +1,11 @@
 # Implementation Plan: Niuva MVP
 
+> **Visual workflow update — 2026-09-27:** AUiS routes and registry were
+> retired. The foundation/styleguide approval sequence and old source paths
+> below are historical. Use root `AGENTS.md` and `DESIGN.md` for current UI
+> work; implement a requested route directly and review visually only when
+> the Owner asks.
+
 > **Current handoff status — 2026-09-20:** use
 > [`docs/frontend/mvp-release-readiness.md`](../docs/frontend/mvp-release-readiness.md)
 > as the current non-provider readiness ledger. The historical sections below

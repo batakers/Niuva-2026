@@ -4,7 +4,7 @@ import { useState } from "react";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { VariantSelector } from "@/components/niuva/variant-selector";
 import { useHydrated } from "@/components/niuva/use-hydrated";
-import { AuLink } from "@/components/ui/AuLink";
+import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/input";
@@ -130,7 +130,7 @@ export function ProductSelection({ product, previewEnabled = true }: { product: 
             tone="success"
             title="Pilihan ditambahkan ke cart."
             description={`${quantity} × ${selected?.name ?? "varian"} tersimpan lokal.${cartResult === "recovered" ? " Data cart lama yang tidak valid telah dibersihkan." : ""} Belum ada reservasi stok atau transaksi yang dibuat.`}
-            action={<AuLink href={previewEnabled ? "/cart?preview=examples" : "/cart"} variant="outline" className="min-h-11">Lihat cart</AuLink>}
+            action={<NiuvaLink href={previewEnabled ? "/cart?preview=examples" : "/cart"} variant="outline" className="min-h-11">Lihat cart</NiuvaLink>}
           />
         </div>
       ) : null}

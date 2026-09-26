@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod";
 
-import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
+import { typographySystemTokens as type } from "@/design/typography";
 import { MoneySummary } from "@/components/niuva/money-summary";
 import { StatusNotice, type StatusNoticeTone } from "@/components/niuva/status-notice";
 import { useHydrated } from "@/components/niuva/use-hydrated";
-import { AuLink } from "@/components/ui/AuLink";
+import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/Icon";
 import type { QuotePreview, QuotePreviewState } from "@/features/frontend-preview/quote";
@@ -407,9 +407,9 @@ export function QuoteReview({
               {orderStatusToken ? (
                 <div className="mt-5 flex flex-wrap gap-2">
                   {paymentRedirectUrl && paymentStatus === "WAITING_PAYMENT" ? <a className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={paymentRedirectUrl} rel="noreferrer" target="_blank">Buka pembayaran</a> : null}
-                  <AuLink className="min-h-11" href={`/orders/${orderStatusToken}`} variant="outline">
+                  <NiuvaLink className="min-h-11" href={`/orders/${orderStatusToken}`} variant="outline">
                     Lihat status order
-                  </AuLink>
+                  </NiuvaLink>
                 </div>
               ) : null}
             </div>

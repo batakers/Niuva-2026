@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { StatusNotice } from "@/components/niuva/status-notice";
-import { AuLink } from "@/components/ui/AuLink";
+import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/input";
@@ -113,8 +113,8 @@ export function CartItems({
   if (snapshot.items.length === 0) {
     return (
       <div className="mx-auto max-w-3xl space-y-5">
-        {catalogStatus === "live-error" ? <StatusNotice tone="error" title="Data katalog live belum dapat diperiksa." description="Cart lokal tetap utuh, tetapi sumber produk sedang tidak tersedia. Coba muat ulang sebelum menilai item." action={<AuLink href="/cart" variant="outline" className="min-h-11">Muat ulang</AuLink>} /> : null}
-        {catalogStatus === "live-unavailable" ? <StatusNotice tone="warning" title="Katalog live belum terhubung." description="Cart dapat ditinjau sebagai data lokal, tetapi harga dan stok live belum tersedia pada runtime ini." action={<AuLink href="/cart?preview=examples" variant="outline" className="min-h-11">Buka preview contoh</AuLink>} /> : null}
+        {catalogStatus === "live-error" ? <StatusNotice tone="error" title="Data katalog live belum dapat diperiksa." description="Cart lokal tetap utuh, tetapi sumber produk sedang tidak tersedia. Coba muat ulang sebelum menilai item." action={<NiuvaLink href="/cart" variant="outline" className="min-h-11">Muat ulang</NiuvaLink>} /> : null}
+        {catalogStatus === "live-unavailable" ? <StatusNotice tone="warning" title="Katalog live belum terhubung." description="Cart dapat ditinjau sebagai data lokal, tetapi harga dan stok live belum tersedia pada runtime ini." action={<NiuvaLink href="/cart?preview=examples" variant="outline" className="min-h-11">Buka preview contoh</NiuvaLink>} /> : null}
         {persistenceNotice === "recovered" ? (
           <StatusNotice tone="warning" title="Cart lokal dipulihkan." description="Data cart sebelumnya tidak valid dan telah dibersihkan. Tidak ada harga, stok, atau transaksi yang digunakan dari data tersebut." />
         ) : null}
@@ -125,7 +125,7 @@ export function CartItems({
           tone="info"
           title="Cart Anda masih kosong."
           description="Pilih varian yang tersedia dari halaman detail produk untuk mulai menyiapkan pesanan."
-          action={<AuLink href={shopHref} variant="outline" className="min-h-11">Kembali ke Shop</AuLink>}
+          action={<NiuvaLink href={shopHref} variant="outline" className="min-h-11">Kembali ke Shop</NiuvaLink>}
         />
       </div>
     );
@@ -140,19 +140,19 @@ export function CartItems({
         <StatusNotice tone="error" title="Perubahan belum tersimpan." description="Cart masih dapat ditinjau pada halaman ini, tetapi browser menolak penyimpanan. Muat ulang dapat menghilangkan perubahan terbaru." />
       ) : null}
       {catalogStatus === "loading" ? (
-        <StatusNotice tone="info" title="Data produk masih dimuat." description="ID dan jumlah cart tetap ada, tetapi harga serta stok belum dapat ditampilkan." action={<AuLink href="/cart?preview=examples" variant="outline" className="min-h-11">Muat data contoh</AuLink>} />
+        <StatusNotice tone="info" title="Data produk masih dimuat." description="ID dan jumlah cart tetap ada, tetapi harga serta stok belum dapat ditampilkan." action={<NiuvaLink href="/cart?preview=examples" variant="outline" className="min-h-11">Muat data contoh</NiuvaLink>} />
       ) : null}
       {catalogStatus === "error" ? (
-        <StatusNotice tone="error" title="Data produk belum dapat diperiksa." description="Cart lokal tetap utuh. Muat ulang data produk sebelum menilai harga dan stok." action={<AuLink href="/cart?preview=examples" variant="outline" className="min-h-11">Coba lagi</AuLink>} />
+        <StatusNotice tone="error" title="Data produk belum dapat diperiksa." description="Cart lokal tetap utuh. Muat ulang data produk sebelum menilai harga dan stok." action={<NiuvaLink href="/cart?preview=examples" variant="outline" className="min-h-11">Coba lagi</NiuvaLink>} />
       ) : null}
       {catalogStatus === "live-error" ? (
-        <StatusNotice tone="error" title="Data katalog live belum dapat diperiksa." description="Cart lokal tetap utuh, tetapi sumber produk sedang tidak tersedia. Muat ulang data sebelum melanjutkan." action={<AuLink href="/cart" variant="outline" className="min-h-11">Muat ulang</AuLink>} />
+        <StatusNotice tone="error" title="Data katalog live belum dapat diperiksa." description="Cart lokal tetap utuh, tetapi sumber produk sedang tidak tersedia. Muat ulang data sebelum melanjutkan." action={<NiuvaLink href="/cart" variant="outline" className="min-h-11">Muat ulang</NiuvaLink>} />
       ) : null}
       {catalogStatus === "live-unavailable" ? (
-        <StatusNotice tone="warning" title="Katalog live belum terhubung." description="ID cart tetap tersimpan di browser, tetapi harga dan stok live belum tersedia pada runtime ini." action={<AuLink href="/cart?preview=examples" variant="outline" className="min-h-11">Buka preview contoh</AuLink>} />
+        <StatusNotice tone="warning" title="Katalog live belum terhubung." description="ID cart tetap tersimpan di browser, tetapi harga dan stok live belum tersedia pada runtime ini." action={<NiuvaLink href="/cart?preview=examples" variant="outline" className="min-h-11">Buka preview contoh</NiuvaLink>} />
       ) : null}
       {catalogStatus === "live-empty" ? (
-        <StatusNotice tone="info" title="Katalog live masih kosong." description="Sumber data berhasil dijangkau, tetapi belum ada produk ready-made yang dipublikasikan." action={<AuLink href="/services" variant="outline" className="min-h-11">Lihat layanan</AuLink>} />
+        <StatusNotice tone="info" title="Katalog live masih kosong." description="Sumber data berhasil dijangkau, tetapi belum ada produk ready-made yang dipublikasikan." action={<NiuvaLink href="/services" variant="outline" className="min-h-11">Lihat layanan</NiuvaLink>} />
       ) : null}
 
       <div className="grid gap-10 md:grid-cols-12 md:items-start">
@@ -162,7 +162,7 @@ export function CartItems({
               <h2 id="cart-items-title" className="text-xl font-semibold">Pilihan produk</h2>
               <p className="mt-1 text-sm text-muted-foreground" aria-live="polite">{snapshot.items.length} jenis varian di cart</p>
             </div>
-            <AuLink href={shopHref} variant="link" className="min-h-11 px-0">Tambah produk lain</AuLink>
+            <NiuvaLink href={shopHref} variant="link" className="min-h-11 px-0">Tambah produk lain</NiuvaLink>
           </div>
 
           <div>
@@ -254,9 +254,9 @@ export function CartItems({
             <p role="status" className="mt-6 text-sm font-medium text-warning">Periksa {unavailableCount + stockIssueCount} item sebelum checkout dapat dilanjutkan.</p>
           ) : null}
           {checkoutEnabled && persistenceNotice !== "unavailable" && unavailableCount === 0 && stockIssueCount === 0 ? (
-            <AuLink href={previewEnabled ? "/checkout?preview=examples&state=ready" : "/checkout"} size="lg" className="mt-6 min-h-11 w-full" aria-describedby="checkout-availability-note">
+            <NiuvaLink href={previewEnabled ? "/checkout?preview=examples&state=ready" : "/checkout"} size="lg" className="mt-6 min-h-11 w-full" aria-describedby="checkout-availability-note">
               Lanjut ke checkout
-            </AuLink>
+            </NiuvaLink>
           ) : (
             <Button type="button" size="lg" className="mt-6 min-h-11 w-full" disabled aria-describedby="checkout-availability-note">
               Lanjut ke checkout

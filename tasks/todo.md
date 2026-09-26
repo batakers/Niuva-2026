@@ -1,5 +1,9 @@
 # Niuva MVP Task List
 
+> **Visual workflow update — 2026-09-27:** AUiS routes and registry were
+> retired. Historical styleguide tasks below do not gate work on product
+> routes. Current UI rules live in root `AGENTS.md` and `DESIGN.md`.
+
 > **Current status ledger — 2026-09-20:** non-provider MVP release readiness
 > sudah diaudit pada `main` commit `a171686`. Gunakan
 > [`docs/frontend/mvp-release-readiness.md`](../docs/frontend/mvp-release-readiness.md)

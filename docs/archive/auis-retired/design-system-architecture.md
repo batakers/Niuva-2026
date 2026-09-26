@@ -17,13 +17,20 @@ The machine-readable registry is
 summary remains `components.json`; the contract details remain in
 `component-contracts.md`.
 
+`DESIGN.md` owns the Niuva Design System rules. The registry and
+`/auis/styleguide` document and display shared contracts; product UI lives in
+its named route and components. A request to redesign a route authorizes work
+and proof on that route. It does not require a styleguide preview or registry
+entry for page-only composition. Use the styleguide for an explicitly requested
+Design System showcase, separate proof, or isolated prototype.
+
 ## Layer map
 
 | Layer | Owns | Source policy | Status |
 | --- | --- | --- | --- |
 | `01 Foundation` | Typography, color, spacing, sizing, radius, border, shadow, opacity, z-index, breakpoints, motion tokens, iconography, density, and semantic states. | AUiS foundation tokens and the approved Typography System v1.0. | Visual proof approved for styleguide-only; Foundation/Typography global propagation authorized by DS-DEC-019. |
 | `02 Primitives` | Semantic anatomy, accessibility, focus management, keyboard interaction, and state behavior. | Native HTML first; Base UI is the primary interaction primitive; Radix is an exception path only. | Implemented bridge. |
-| `03 Core Components` | Source-owned controls, Niuva composites, and reusable interaction surfaces. | shadcn source distribution + Base UI + custom Niuva components. | Initial P0/P1 set visually approved for styleguide-only; new additions require a separate proof. |
+| `03 Core Components` | Source-owned controls, Niuva composites, and reusable interaction surfaces. | shadcn source distribution + Base UI + custom Niuva components. | Initial P0/P1 set visually approved for styleguide-only; new shared additions need scoped proof, which may be on a named product route. |
 | `04 Motion System` | Duration, easing, spring-like fallback, enter/exit, hover, press, scroll, and layout-transition recipes. | CSS-first Motion System v1 in the styleguide; a physics/gesture engine remains a separate candidate and is not installed. | Approved CSS-first proof for styleguide-only; runtime engine remains candidate. |
 | `05 Creative Components` | Selective signature interactions that clarify a real Niuva story. | React Bits, Animate UI, Cult UI, Aceternity, or custom code are reference sources; approved code is copied and owned. | Candidate. |
 | `06 Decorative Effects` | Optional atmosphere such as SVG, CSS, noise, texture, grid, and carefully justified effects. | Reference catalog only; every effect needs a static fallback and performance review. | Restricted. |
@@ -59,10 +66,12 @@ for the styleguide only. The proof covered the four P0 composites, four P1
 workflow components, their documented states, visible focus and recovery paths,
 desktop/mobile layout, CTA contrast, and aligned compact summary cards.
 
-This approval is bounded: it does not add a runtime dependency or permit
-product-screen propagation. New components and new visual defaults must enter
-the same proof path again; Creative and Decorative layers remain separate
-review gates.
+This approval is bounded: it does not add a runtime dependency or authorize
+blanket product-screen propagation. A user request naming a product route
+authorizes implementation and verification there. New shared components and
+global visual defaults need a documented contract and proof in the requested
+scope; Owner visual review occurs only when requested. Creative and Decorative
+system-wide promotion remains separately scoped.
 
 `OptionChip` is a separate approved styleguide-only extension authorized on
 2026-09-21. Its named visual proof was accepted by the Owner on 2026-09-22,
@@ -96,19 +105,23 @@ separate gates.
 
 ## Promotion states
 
-Every creative component, effect, or new pattern follows this path:
+For system-wide promotion of a creative component, effect, or reusable pattern,
+these labels describe status and evidence, not five implementation pauses:
 
 1. **Reference** — source or idea used as evidence for a proposal.
 2. **Candidate** — adapted proposal with provenance, owner, a11y, performance,
    and fallback notes.
-3. **Proof** — rendered in the named styleguide surface across relevant states
-   and breakpoints.
-4. **Approved** — owner accepts the visual behavior, contract, and boundary.
-5. **Official** — a separate scoped task permits use in product screens.
+3. **Proof** — rendered on the named product route, or in the styleguide when a
+   separate showcase/prototype is requested, across relevant states and sizes.
+4. **Approved** — owner accepts the displayed visual scope if review is requested.
+5. **Official** — the shared Design System contract is authorized beyond the
+   named implementation scope.
 
-Technical green checks do not replace visual acceptance. Global Foundation/
-Typography authorization does not make the named proof a blanket visual
-acceptance or promote other Design System layers.
+Page-local composition may be implemented and verified within a requested route
+without waiting for `Approved` or `Official` system-wide status. Technical green
+checks do not replace visual acceptance. Global Foundation/Typography
+authorization does not make a named proof a blanket visual acceptance or
+promote other Design System layers.
 
 ## Motion System v1 proof
 

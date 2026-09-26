@@ -6,7 +6,7 @@
 - **One-line positioning:** Niuva Inovasi Utama adalah mitra inovasi dan pengembangan produk end-to-end yang membantu perusahaan mengubah ide menjadi solusi teknologi dan produk kreatif bernilai tinggi melalui riset, desain, engineering, prototyping, hingga dukungan manufaktur.
 - **Primary mark:** `/assets/brand/niuva-logo-horizontal-dark.svg`
 - **Logo source:** `docs/source/brand/Niuva_Logo_System_v1.0/SVG/Horizontal/niuva-logo-horizontal-dark.svg`
-- **Setup status:** Brand established from owner interview; the revised UI Foundation Visual Proof was approved on 2026-09-03 for styleguide-only scope; Typography System v1.0 was approved on 2026-08-29; Design System Architecture & Registry v1 was documented on 2026-09-02; DS-DEC-019 on 2026-09-25 authorizes Foundation/Typography v1.0 globally across product screens; the initial P0/P1 visual gate, Motion System v1 CSS-first, and four Niuva Pattern proofs remain styleguide-only; visual acceptance, physical-device/AT, provider, and production readiness remain separate gates; Voice bootstrapped from owner positioning and product documents.
+- **Setup status:** Brand established from owner interview. DS-DEC-019 authorizes Foundation/Typography v1.0 across product screens. The previous AUiS proof/registry is retired and preserved in `docs/archive/auis-retired/`; its named historical visual acceptance does not transfer to other routes. Visual acceptance, physical-device/AT, provider, and production readiness remain separate. Voice comes from owner positioning and product documents.
 
 ## Foundation status
 
@@ -68,22 +68,16 @@
   dan italic core v1 tidak dimuat. Technical micro-label tetap Space Grotesk
   `12/18`, weight `500`, tracking `0.05em`, uppercase hanya untuk 1–3 kata.
 - **Evidence-backed identity accent:** `--brand-500: #6390BB`.
-- **Retained non-typography baseline:** Spacing rhythm, radius roles, elevation,
-  motion, and reduced-motion behavior remain accepted. Typography System v1.0
-  is locked in `src/app/auis/styleguide/foundation/typography-proof.ts` and
-  loaded from the root font contract with a styleguide proof view. Motion System v1 is
-  CSS-first and approved for styleguide-only use; no runtime motion dependency
-  was added.
-- **Review state:** Visual Proof at `/auis/styleguide` and the P0/P1 Design
-  System implementation were returned to visual review on 2026-08-29 after
-  owner feedback. The typography candidate and the initial P0/P1 visual gate
-  are now approved for styleguide-only scope; the Motion System v1 proof and
-  four flow-based Patterns are also approved for styleguide-only use. The
-  revised Foundation Visual Proof is approved for this named styleguide scope;
-  DS-DEC-019 authorizes Foundation/Typography globally, while the scoped
-  product-screen proof for `/` and `/project-brief` remains the named visual
-  acceptance record. Checkout/admin visual acceptance, Creative/Decorative,
-  provider, and production gates remain separate.
+- **Retained non-typography baseline:** Spacing, radius, elevation, motion,
+  and reduced-motion rules are in `DESIGN.md` and `src/app/globals.css`.
+  Typography classes used by product routes are in `src/design/typography.ts`;
+  the font contract is loaded by `src/app/layout.tsx`.
+- **Review state:** Historical AUiS proof acceptance is recorded in the archived
+  design document and remains scoped to that former proof. Named product-route
+  acceptance, including `/` and `/project-brief`, is recorded separately in
+  `docs/frontend/mvp-release-readiness.md`. The retired proof is not a current
+  review route; new visual review uses the implemented product route when
+  requested. Provider and production gates remain separate.
 
 ## Language & locale
 
@@ -132,19 +126,19 @@ Until the candidate terms are confirmed, preserve their source spelling and do n
 
 ## Errors & recovery
 
-- **Status:** Confirmed by owner during the `/auis/welcome` UX-writing review.
+- **Status:** Confirmed by owner during the historical brand UX-writing review.
 - **Pattern:** Explain what happened, then provide the next recovery action. Include the reason when it is known and useful.
 - **Confirmed constraint:** customer-facing failures use clear language and do not expose raw stack traces or secrets (`docs/TechDesign-Niuva-MVP.md:1222`).
 
 ## Canonical copy corpus
 
-These are real owner- or product-document strings. The public Niuva shipping corpus is empty because no public Niuva product screen exists yet; AUiS setup and styleguide scaffold strings are intentionally excluded.
+These strings come from owner or product documents; check the live route copy before reusing them.
 
-- “Niuva” — `src/app/auis/_data/brand.runtime.json:2`.
-- “Niuva Inovasi Utama adalah mitra inovasi dan pengembangan produk end-to-end yang membantu perusahaan mengubah ide menjadi solusi teknologi dan produk kreatif bernilai tinggi melalui riset, desain, engineering, prototyping, hingga dukungan manufaktur.” — owner-provided positioning, `src/app/auis/_data/brand.runtime.json:3`.
+- “Niuva” — `src/app/layout.tsx` metadata and the current logo component.
+- “Niuva Inovasi Utama adalah mitra inovasi dan pengembangan produk end-to-end yang membantu perusahaan mengubah ide menjadi solusi teknologi dan produk kreatif bernilai tinggi melalui riset, desain, engineering, prototyping, hingga dukungan manufaktur.” — owner-provided positioning, also in `src/app/layout.tsx` metadata.
 - “Idea → Design → Prototype → Finished Product” — core customer promise, `docs/PRD-Niuva-MVP.md:165-167`.
 - “Diskusikan Proyek” — documented CTA, `docs/PRD-Niuva-MVP.md:192`.
 - “Custom 3D Print” — documented CTA, `docs/PRD-Niuva-MVP.md:205`.
 
-This file records the current brand identity for the AUiS setup slice. It does
-not replace `docs/PRD-Niuva-MVP.md` or `docs/TechDesign-Niuva-MVP.md`.
+This file records product and brand context; `DESIGN.md` governs visual design.
+It does not replace `docs/PRD-Niuva-MVP.md` or `docs/TechDesign-Niuva-MVP.md`.

@@ -5,7 +5,7 @@ import { z } from "zod";
 import { FormField } from "@/components/niuva/form-field";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { useHydrated } from "@/components/niuva/use-hydrated";
-import { AuLink } from "@/components/ui/AuLink";
+import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EMPTY_CART, readCart, type CartSnapshot } from "@/features/cart/cart-state";
@@ -600,7 +600,7 @@ export function CheckoutForm({
     if (liveCatalogError) {
       return (
         <StatusNotice
-          action={<AuLink href="/checkout" variant="outline" className="min-h-11">Muat ulang checkout</AuLink>}
+          action={<NiuvaLink href="/checkout" variant="outline" className="min-h-11">Muat ulang checkout</NiuvaLink>}
           description="Sumber katalog atau provider checkout sedang tidak dapat dijangkau. Tidak ada order atau pembayaran yang dibuat."
           title="Checkout live belum dapat dimuat."
           tone="error"
@@ -612,21 +612,21 @@ export function CheckoutForm({
         tone="info"
         title="Checkout belum tersedia untuk transaksi."
         description="Produk publik dan koneksi provider belum siap. Tidak ada data checkout, order, reservasi, tarif, atau pembayaran yang dibuat."
-        action={<AuLink href="/cart" variant="outline" className="min-h-11">Kembali ke Cart</AuLink>}
+        action={<NiuvaLink href="/cart" variant="outline" className="min-h-11">Kembali ke Cart</NiuvaLink>}
       />
     );
   }
 
   if (!storageAvailable) {
-    return <StatusNotice tone="error" title="Cart browser tidak dapat dibaca." description="Izinkan penyimpanan browser, lalu kembali ke Cart sebelum memulai checkout." action={<AuLink href="/cart?preview=examples" variant="outline" className="min-h-11">Kembali ke Cart</AuLink>} />;
+    return <StatusNotice tone="error" title="Cart browser tidak dapat dibaca." description="Izinkan penyimpanan browser, lalu kembali ke Cart sebelum memulai checkout." action={<NiuvaLink href="/cart?preview=examples" variant="outline" className="min-h-11">Kembali ke Cart</NiuvaLink>} />;
   }
 
   if (snapshot.items.length === 0) {
-    return <StatusNotice tone="info" title="Belum ada item untuk checkout." description="Tambahkan varian yang tersedia ke Cart sebelum mengisi kontak dan alamat." action={<AuLink href="/shop?preview=examples" variant="outline" className="min-h-11">Pilih produk contoh</AuLink>} />;
+    return <StatusNotice tone="info" title="Belum ada item untuk checkout." description="Tambahkan varian yang tersedia ke Cart sebelum mengisi kontak dan alamat." action={<NiuvaLink href="/shop?preview=examples" variant="outline" className="min-h-11">Pilih produk contoh</NiuvaLink>} />;
   }
 
   if (hasUnavailableItem) {
-    return <StatusNotice tone="warning" title="Cart perlu ditinjau kembali." description="Ada item yang tidak dikenali atau jumlahnya melebihi stok tampilan. Perbaiki Cart sebelum melanjutkan." action={<AuLink href="/cart?preview=examples" variant="outline" className="min-h-11">Tinjau Cart</AuLink>} />;
+    return <StatusNotice tone="warning" title="Cart perlu ditinjau kembali." description="Ada item yang tidak dikenali atau jumlahnya melebihi stok tampilan. Perbaiki Cart sebelum melanjutkan." action={<NiuvaLink href="/cart?preview=examples" variant="outline" className="min-h-11">Tinjau Cart</NiuvaLink>} />;
   }
 
   const busy = result === "submitting" || reviewingRates;
@@ -687,7 +687,7 @@ export function CheckoutForm({
                       {demoMode ? "Buka pembayaran demo" : "Buka pembayaran sandbox"}
                     </a>
                   ) : null}
-                  {orderStatusToken ? <AuLink className="min-h-11" href={`/orders/${orderStatusToken}`} variant="outline">Lihat status order</AuLink> : null}
+                  {orderStatusToken ? <NiuvaLink className="min-h-11" href={`/orders/${orderStatusToken}`} variant="outline">Lihat status order</NiuvaLink> : null}
                 </div>
               }
               description={demoMode
@@ -702,7 +702,7 @@ export function CheckoutForm({
             />
           ) : null}
           {result === "payment-pending" && !isLive ? <StatusNotice tone="info" title="Simulasi pembayaran masih menunggu." description="Browser tidak menyimpulkan status pembayaran. Pada integrasi nyata, status hanya berubah setelah notifikasi provider diverifikasi server." action={<Button type="button" variant="outline" className="min-h-11" onClick={resetOutcome}>Kembali ke ringkasan</Button>} /> : null}
-          {result === "payment-error" ? <StatusNotice tone="error" title={isLive ? "Checkout belum dapat dibuat." : "Simulasi pembayaran gagal."} description={isLive ? serverError ?? "Periksa data dan coba lagi." : "Isian checkout tetap tersedia dan tidak ada transaksi nyata. Kembali ke skenario siap untuk mencoba alur pemulihan."} action={isLive && serverErrorCode === "OUT_OF_STOCK" ? <AuLink href="/cart" variant="outline" className="min-h-11">Tinjau Cart</AuLink> : <Button type="button" variant="outline" className="min-h-11" onClick={resetOutcome}>{isLive ? "Coba lagi" : "Coba lagi"}</Button>} /> : null}
+          {result === "payment-error" ? <StatusNotice tone="error" title={isLive ? "Checkout belum dapat dibuat." : "Simulasi pembayaran gagal."} description={isLive ? serverError ?? "Periksa data dan coba lagi." : "Isian checkout tetap tersedia dan tidak ada transaksi nyata. Kembali ke skenario siap untuk mencoba alur pemulihan."} action={isLive && serverErrorCode === "OUT_OF_STOCK" ? <NiuvaLink href="/cart" variant="outline" className="min-h-11">Tinjau Cart</NiuvaLink> : <Button type="button" variant="outline" className="min-h-11" onClick={resetOutcome}>{isLive ? "Coba lagi" : "Coba lagi"}</Button>} /> : null}
         </div>
 
         <fieldset disabled={busy} className="min-w-0 space-y-5 rounded-xl border border-border bg-card p-5 shadow-card sm:p-6">

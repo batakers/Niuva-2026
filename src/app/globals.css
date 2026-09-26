@@ -4,17 +4,16 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Niuva UI Foundation — baseline tokens retained; revised styleguide proof
- * approved for styleguide-only use on 2026-09-03; Foundation and Typography
- * propagation was authorized globally on 2026-09-25 by DS-DEC-019.
+ * Niuva UI Foundation — runtime tokens for the active DESIGN.md guide.
+ * Foundation and Typography propagation was authorized globally on
+ * 2026-09-25 by DS-DEC-019.
  *
  * Evidence: Niuva Logo System v1.0 locks --brand-500 (#6390BB), the light
  * wordmark foreground, and light-first usage. The surrounding scale, semantic
- * mapping, spacing, radius, elevation, typography roles, and motion values were
- * accepted in the isolated Visual Proof. P0/P1, Motion, Patterns, Creative,
- * Decorative, visual acceptance, AT/device, provider, and production gates
- * remain separate. Human-facing UI is sans-first; technical type remains an
- * explicit semantic role using the same Space Grotesk family in v1.0.
+ * mapping, spacing, radius, elevation, typography roles, and motion values are
+ * summarized in DESIGN.md. Historical proof acceptance is archived; route
+ * visual acceptance, AT/device, provider, and production gates remain separate.
+ * Human-facing UI is sans-first; technical type uses Space Grotesk in v1.0.
  */
 :root {
   /* Brand scale: --brand-500 is the locked Niuva Blue identity value. */

@@ -3,7 +3,7 @@ import { connection } from "next/server";
 
 import { PublicShell } from "@/components/niuva/public-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
-import { AuLink } from "@/components/ui/AuLink";
+import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import {
   getCurrentCustomer,
   isCustomerAuthAvailable,
@@ -88,9 +88,9 @@ export async function CustomerAuthPage({
 
             {authAvailable ? (
               <div className="mt-8 space-y-4">
-                <AuLink href={oauthUrl} className="min-h-12 w-full sm:w-auto">
+                <NiuvaLink href={oauthUrl} className="min-h-12 w-full sm:w-auto">
                   Lanjutkan dengan Google
-                </AuLink>
+                </NiuvaLink>
                 <p className="text-sm text-muted-foreground">
                   {isRegister
                     ? "Login Google pertama akan membuat profil Customer secara otomatis."
@@ -106,13 +106,13 @@ export async function CustomerAuthPage({
               />
             )}
 
-            <AuLink
+            <NiuvaLink
               href={`${alternatePath}?returnTo=${encodeURIComponent(returnTo)}`}
               variant="link"
               className="mt-6 min-h-11 px-0"
             >
               {alternateLabel}
-            </AuLink>
+            </NiuvaLink>
           </div>
         </section>
       </main>

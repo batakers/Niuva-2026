@@ -1,9 +1,9 @@
 import Image from "next/image";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
+import { typographySystemTokens as type } from "@/design/typography";
 import { PublicShell } from "@/components/niuva/public-shell";
-import { AuLink } from "@/components/ui/AuLink";
+import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Icon } from "@/components/ui/Icon";
 import { isPreviewParameter } from "@/features/frontend-preview/scenarios";
 import { getProjectPreviewBySlug } from "@/features/frontend-preview/server";
@@ -57,9 +57,9 @@ export default async function ProjectDetail({ params, searchParams }: {
   return (
     <PublicShell scope="project-detail">
       <main className="mx-auto max-w-public px-5 py-12 sm:px-8 sm:py-16" id="main-content">
-        <AuLink className="min-h-11" href={`/projects${previewSuffix}`} size="sm" variant="outline">
+        <NiuvaLink className="min-h-11" href={`/projects${previewSuffix}`} size="sm" variant="outline">
           ← Semua projects{scenario === "examples" ? " contoh" : ""}
-        </AuLink>
+        </NiuvaLink>
 
         {isPreview && (
           <p className="mt-8 rounded-lg border border-info-border bg-info-background p-4 text-sm text-info">
@@ -123,7 +123,7 @@ export default async function ProjectDetail({ params, searchParams }: {
             <p className="mb-6 text-base leading-7 text-muted-foreground">
               Setiap kebutuhan membawa batasan yang berbeda. Ceritakan tujuan dan informasi awal yang sudah tersedia.
             </p>
-            <AuLink className="min-h-11" href="/project-brief">Buat project brief</AuLink>
+            <NiuvaLink className="min-h-11" href="/project-brief">Buat project brief</NiuvaLink>
           </div>
         </section>
       </main>
