@@ -78,6 +78,10 @@ test("Project Brief persists to Action Queue and continues to local demo checkou
   await page.getByRole("button", { name: "Buat order demo" }).click();
   await expect(page.getByText("Order demo tersimpan.")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText(/tersimpan di database lokal/)).toBeVisible();
+  await page.getByRole("link", { name: "Lihat status order" }).click();
+  await expect(page).toHaveURL(/\/orders\/[^/?]+$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Menunggu pembayaran" })).toBeVisible();
+  await expect(page.getByText("Projection server terotorisasi token.")).toBeVisible();
 
   expect(externalProviderRequests).toEqual([]);
 });
