@@ -40,7 +40,7 @@ export default async function AdminCustomPrintDetailPage({ params }: Readonly<{ 
     loadPricing(access),
     loadActivePricing(access),
   ]);
-  if (request === null) return <AdminDataUnavailableView role={access.profile.role} title="Detail custom print belum dapat dimuat" />;
+  if (request === null) return <AdminDataUnavailableView active="custom-print" role={access.profile.role} title="Detail custom print belum dapat dimuat" />;
   const review = request.review;
   const hasDraft = request.quotes.some((quote) => quote.status === "DRAFT");
 

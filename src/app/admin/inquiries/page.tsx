@@ -17,7 +17,7 @@ export default async function AdminInquiriesPage({ searchParams }: Readonly<{ se
   const access = await loadAdminAccess();
   if (access === null) return <AdminAccessUnavailableView />;
   const result = await loadInquiries(access, page);
-  if (result === null) return <AdminDataUnavailableView role={access.profile.role} title="B2B inquiries belum dapat dimuat" />;
+  if (result === null) return <AdminDataUnavailableView active="inquiries" role={access.profile.role} title="B2B inquiries belum dapat dimuat" />;
 
   return (
     <AdminShell active="inquiries" role={result.role}>

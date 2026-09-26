@@ -1,5 +1,6 @@
 import {
   projectActionQueueSignals,
+  type ActionQueueGroup,
   type ActionQueueResult,
   type ActionQueueSignal,
 } from "./action-queue";
@@ -23,10 +24,10 @@ export class ActionQueueService {
       dependencies.repository ?? new PrismaActionQueueRepository();
   }
 
-  async list(): Promise<ActionQueueResult> {
+  async list(group: ActionQueueGroup = "all"): Promise<ActionQueueResult> {
     const signals: readonly ActionQueueSignal[] =
       await this.repository.listSignals();
 
-    return projectActionQueueSignals(signals, this.now());
+    return projectActionQueueSignals(signals, this.now(), group);
   }
 }

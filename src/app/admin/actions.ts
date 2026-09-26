@@ -26,6 +26,11 @@ export type AdminAction = (
   formData: FormData,
 ) => Promise<AdminActionState>;
 
+function revalidateAdminWork(): void {
+  revalidatePath("/admin");
+  revalidatePath("/admin/queue");
+}
+
 const orderStatuses = new Set<OrderStatus>([
   "CANCELLED",
   "COMPLETED",
@@ -62,7 +67,7 @@ export const transitionOrderAction: AdminAction = async (_previous, formData) =>
     await new OrderStatusService().transition(orderId, nextStatus);
     revalidatePath(`/admin/orders/${orderId}`);
     revalidatePath("/admin/orders");
-    revalidatePath("/admin");
+    revalidateAdminWork();
     return successState("Status order berhasil diperbarui.");
   } catch (error) {
     return errorStateFrom(error);
@@ -100,7 +105,7 @@ export const createCustomShippingPaymentAction: AdminAction = async (_previous, 
     });
     revalidatePath(`/admin/orders/${orderId}`);
     revalidatePath("/admin/orders");
-    revalidatePath("/admin");
+    revalidateAdminWork();
     return successState(
       "Rate shipping custom dan payment attempt berhasil disiapkan. Tautan provider tersimpan di server.",
       result.payment.redirectUrl,
@@ -121,6 +126,7 @@ export const recordShipmentMetadataAction: AdminAction = async (_previous, formD
     });
     revalidatePath(`/admin/orders/${orderId}`);
     revalidatePath("/admin/orders");
+    revalidateAdminWork();
     return successState("Kurir dan nomor resi berhasil dicatat.");
   } catch (error) {
     return errorStateFrom(error);
@@ -144,6 +150,7 @@ export const saveCustomShippingAddressAction: AdminAction = async (_previous, fo
     });
     revalidatePath(`/admin/orders/${orderId}`);
     revalidatePath("/admin/orders");
+    revalidateAdminWork();
     return successState("Alamat shipping custom berhasil disimpan.");
   } catch (error) {
     return errorStateFrom(error);
@@ -189,7 +196,7 @@ export const recordCustomPrintReviewAction: AdminAction = async (_previous, form
     });
     revalidatePath(`/admin/custom-print/${requestId}`);
     revalidatePath("/admin/custom-print");
-    revalidatePath("/admin");
+    revalidateAdminWork();
     return successState("Review slicer berhasil disimpan.");
   } catch (error) {
     return errorStateFrom(error);
@@ -210,7 +217,7 @@ export const createQuoteDraftAction: AdminAction = async (_previous, formData) =
     });
     revalidatePath(`/admin/custom-print/${requestId}`);
     revalidatePath("/admin/custom-print");
-    revalidatePath("/admin");
+    revalidateAdminWork();
     return successState("Draft quote berhasil dibuat.");
   } catch (error) {
     return errorStateFrom(error);
@@ -225,7 +232,7 @@ export const activatePricingRuleAction: AdminAction = async (_previous, formData
     });
     revalidatePath("/admin/pricing");
     revalidatePath("/admin/custom-print");
-    revalidatePath("/admin");
+    revalidateAdminWork();
     return successState(
       result.idempotent
         ? `Pricing rule ${result.code} v${result.version} sudah aktif; tidak ada perubahan.`
@@ -244,7 +251,7 @@ export const sendQuoteAction: AdminAction = async (_previous, formData) => {
     const result = await new QuoteService().send(quoteId);
     revalidatePath(`/admin/custom-print/${requestId}`);
     revalidatePath("/admin/custom-print");
-    revalidatePath("/admin");
+    revalidateAdminWork();
     return successState("Quote diterbitkan. Bagikan tautan ini secara manual melalui kanal yang disepakati.", `/quote/${result.accessToken.token}`);
   } catch (error) {
     return errorStateFrom(error);
@@ -395,7 +402,7 @@ export const transitionInquiryAction: AdminAction = async (_previous, formData) 
     await new InquiryService().transitionStatus(inquiryId, current as InquiryStatus, next as InquiryStatus);
     revalidatePath(`/admin/inquiries/${inquiryId}`);
     revalidatePath("/admin/inquiries");
-    revalidatePath("/admin");
+    revalidateAdminWork();
     return successState("Status inquiry berhasil diperbarui.");
   } catch (error) {
     return errorStateFrom(error);

@@ -24,7 +24,7 @@ export default async function AdminInquiryDetailPage({ params }: Readonly<{ para
   const access = await loadAdminAccess();
   if (access === null) return <AdminAccessUnavailableView />;
   const inquiry = await loadInquiry(access, id);
-  if (inquiry === null) return <AdminDataUnavailableView role={access.profile.role} title="Detail inquiry belum dapat dimuat" />;
+  if (inquiry === null) return <AdminDataUnavailableView active="inquiries" role={access.profile.role} title="Detail inquiry belum dapat dimuat" />;
   const current = inquiry.status as InquiryStatus;
   const nextStatuses = INQUIRY_TRANSITIONS[current] ?? [];
 

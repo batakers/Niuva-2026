@@ -27,7 +27,7 @@ Use this as the short build-facing version of the PRD. Do not paste the entire P
 - **Private Custom 3D File Upload** — STL/3MF/OBJ plus manual-review STEP/STP; private bucket, random key, validation, expiring access, tenant isolation, and unit/scale confirmation.
 - **Custom Print Review & Pricing v1** — Operator enters verified material, weight, duration, configuration, and notes; Decimal calculation stores full breakdown, snapshots, rule version, and final HALF_UP total.
 - **Order Status** — Secure token/reference access, human-readable retail/custom states, audit history, no internal notes, and rejected invalid transitions.
-- **Thin Admin Dashboard** — Authenticated Action Queue plus orders, inquiries, custom reviews, products/stock, portfolio, and pricing operations with minimum audit information.
+- **Thin Admin Dashboard** — Authenticated operational Overview at `/admin`, full Action Queue at `/admin/queue`, plus orders, inquiries, custom reviews, products/stock, portfolio, and pricing operations with minimum audit information.
 - **Transactional Email** — Order received, payment confirmed, quote ready, shipped, and relevant admin notifications; delivery failure cannot corrupt transactional state.
 
 ## Nice-To-Have Features
@@ -39,7 +39,7 @@ Use this as the short build-facing version of the PRD. Do not paste the entire P
 - Courier booking from admin.
 - Richer order email templates.
 - Verified order-status search.
-- Basic analytics dashboard.
+- Analitik bisnis lanjutan di luar aktivitas operasional 30 hari.
 
 These may not delay P0.
 

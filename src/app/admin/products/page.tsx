@@ -28,7 +28,7 @@ export default async function AdminProductsPage({
   if (access === null) return <AdminAccessUnavailableView />;
 
   const result = await loadProducts(access, page);
-  if (result === null) return <AdminDataUnavailableView role={access.profile.role} title="Products belum dapat dimuat" />;
+  if (result === null) return <AdminDataUnavailableView active="products" role={access.profile.role} title="Products belum dapat dimuat" />;
   const published = result.items.filter((item) => item.isPublished).length;
   const variants = result.items.flatMap((item) => item.variants);
   const lowStock = variants.filter((variant) => variant.isActive && variant.stockOnHand >= 0 && variant.stockOnHand <= 3).length;

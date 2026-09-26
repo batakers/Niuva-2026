@@ -636,7 +636,7 @@ Cancelled
 
 ### 10. Thin Admin Dashboard
 
-- **What:** Operational dashboard minimum untuk menjalankan MVP.
+- **What:** Overview operasional dan Action Queue untuk menjalankan MVP. Owner menyetujui prototype visual terpisah pada 2026-09-26; penerimaan visual route live masih menunggu review.
 - **User Story:** Sebagai Owner/Admin, saya ingin mengetahui order mana yang membutuhkan tindakan agar saya dapat mengoperasikan bisnis tanpa membuka database atau source code.
 - **Priority:** P0 — Critical
 
@@ -644,7 +644,8 @@ Cancelled
 
 ```text
 /admin
-├── Action Queue
+├── Overview Dashboard (jumlah pekerjaan terbuka, tiga hitungan status, aktivitas 30 hari, lima prioritas, tabel kerja)
+├── /admin/queue — Action Queue lengkap, maksimal 50 item per kelompok
 ├── Orders
 ├── B2B Inquiries
 ├── Custom Print Reviews
@@ -652,6 +653,8 @@ Cancelled
 ├── Portfolio
 └── Pricing Rules
 ```
+
+Overview dan Action Queue membaca proyeksi server setelah otorisasi `AdminProfile` aktif. Jumlah pekerjaan terbuka dihitung sebelum batas 50 item. Kelompok `all`, `inquiries`, `custom-print`, dan `orders` difilter di server sebelum batas hasil. Grafik menghitung brief, permintaan custom, dan order yang **dibuat** per hari kalender selama 30 hari termasuk hari ini menurut `Asia/Jakarta`; hari tanpa aktivitas bernilai nol. Overview tidak memuat identitas kontak, alamat, file privat, rincian pembayaran, atau JSON provider. Data itu tetap berada pada detail berizin.
 
 #### Action Queue Examples
 
@@ -703,7 +706,7 @@ Minimum email:
 - Courier booking dari dashboard.
 - Richer order email templates.
 - Customer order-status search dengan verification.
-- Basic analytics dashboard.
+- Analitik bisnis lanjutan di luar aktivitas operasional 30 hari.
 
 Fitur ini tidak boleh menunda P0.
 

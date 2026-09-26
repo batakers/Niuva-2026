@@ -33,7 +33,7 @@ export default async function AdminOrdersPage({
   if (access === null) return <AdminAccessUnavailableView />;
 
   const result = await loadOrders(access, page);
-  if (result === null) return <AdminDataUnavailableView role={access.profile.role} title="Orders belum dapat dimuat" />;
+  if (result === null) return <AdminDataUnavailableView active="orders" role={access.profile.role} title="Orders belum dapat dimuat" />;
   return (
       <AdminShell active="orders" role={result.role}>
         <main id="main-content" data-admin-surface="orders">

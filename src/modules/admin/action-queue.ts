@@ -1,4 +1,14 @@
+import { z } from "zod";
+
 export const ACTION_QUEUE_LIMIT = 50;
+export const ACTION_QUEUE_GROUPS = ["all", "inquiries", "custom-print", "orders"] as const;
+const actionQueueGroupSchema = z.enum(ACTION_QUEUE_GROUPS);
+export type ActionQueueGroup = z.infer<typeof actionQueueGroupSchema>;
+
+export function parseActionQueueGroup(value: unknown): ActionQueueGroup {
+  const parsed = actionQueueGroupSchema.safeParse(value);
+  return parsed.success ? parsed.data : "all";
+}
 
 export type ActionQueueKind =
   | "B2B_INQUIRY"
@@ -14,12 +24,14 @@ export type ActionQueueSignal = Readonly<{
   kind: ActionQueueKind;
   reference: string;
   sourceUpdatedAt: Date;
+  targetId?: string;
   workflowKey?: string;
 }>;
 
 export type ActionQueueItem = Readonly<{
   attention: "STANDARD" | "EXCEPTION";
   id: string;
+  href: string;
   kind: ActionQueueKind;
   nextAction: string;
   reference: string;
@@ -28,8 +40,12 @@ export type ActionQueueItem = Readonly<{
 }>;
 
 export type ActionQueueResult = Readonly<{
+  filteredTotal: number;
   generatedAt: Date;
+  group: ActionQueueGroup;
   items: readonly ActionQueueItem[];
+  priorityItems: readonly ActionQueueItem[];
+  totalOpen: number;
 }>;
 
 type ActionQueueCopy = Readonly<{
@@ -79,6 +95,7 @@ const ACTION_QUEUE_COPY = {
 export function projectActionQueueSignals(
   signals: readonly ActionQueueSignal[],
   generatedAt: Date,
+  group: ActionQueueGroup = "all",
 ): ActionQueueResult {
   const draftWorkflowKeys = new Set(
     signals.flatMap((signal) =>
@@ -109,15 +126,29 @@ export function projectActionQueueSignals(
     }
   }
 
-  const items = Array.from(uniqueSignals.values())
+  const allItems = Array.from(uniqueSignals.values())
     .map(toActionQueueItem)
-    .sort(compareActionQueueItems)
-    .slice(0, ACTION_QUEUE_LIMIT);
+    .sort(compareActionQueueItems);
+  const filteredItems = allItems.filter((item) =>
+    group === "all" || actionQueueGroupForKind(item.kind) === group,
+  );
 
   return {
+    filteredTotal: filteredItems.length,
     generatedAt,
-    items,
+    group,
+    items: filteredItems.slice(0, ACTION_QUEUE_LIMIT),
+    priorityItems: allItems.slice(0, 5),
+    totalOpen: allItems.length,
   };
+}
+
+function actionQueueGroupForKind(kind: ActionQueueKind): Exclude<ActionQueueGroup, "all"> {
+  if (kind === "B2B_INQUIRY") return "inquiries";
+  if (kind === "CUSTOM_PRINT_REVIEW" || kind === "QUOTE_PREPARATION" || kind === "QUOTE_SEND") {
+    return "custom-print";
+  }
+  return "orders";
 }
 
 function toActionQueueItem(signal: ActionQueueSignal): ActionQueueItem {
@@ -125,6 +156,7 @@ function toActionQueueItem(signal: ActionQueueSignal): ActionQueueItem {
 
   return {
     attention: copy.attention,
+    href: actionQueueHref(signal),
     id: `action-queue:${signal.kind}:${signal.entityId}`,
     kind: signal.kind,
     nextAction: copy.nextAction,
@@ -132,6 +164,27 @@ function toActionQueueItem(signal: ActionQueueSignal): ActionQueueItem {
     sourceUpdatedAt: signal.sourceUpdatedAt,
     title: copy.title,
   };
+}
+
+function actionQueueHref(signal: ActionQueueSignal): string {
+  switch (signal.kind) {
+    case "B2B_INQUIRY":
+      return `/admin/inquiries/${encodeURIComponent(signal.entityId)}`;
+    case "CUSTOM_PRINT_REVIEW":
+    case "QUOTE_PREPARATION":
+      return `/admin/custom-print/${encodeURIComponent(signal.entityId)}`;
+    case "QUOTE_SEND":
+      return signal.targetId
+        ? `/admin/custom-print/${encodeURIComponent(signal.targetId)}`
+        : "/admin/custom-print";
+    case "ORDER_PROCESSING":
+    case "PACKAGE_MEASUREMENT":
+      return `/admin/orders/${encodeURIComponent(signal.entityId)}`;
+    case "SHIPPING_EXCEPTION":
+      return signal.targetId
+        ? `/admin/orders/${encodeURIComponent(signal.targetId)}`
+        : "/admin/orders";
+  }
 }
 
 function compareActionQueueItems(

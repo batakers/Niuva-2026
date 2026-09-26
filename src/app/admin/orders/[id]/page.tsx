@@ -57,7 +57,7 @@ export default async function AdminOrderDetailPage({
   const access = await loadAdminAccess();
   if (access === null) return <AdminAccessUnavailableView />;
   const order = await loadOrder(access, id);
-  if (order === null) return <AdminDataUnavailableView role={access.profile.role} title="Detail order belum dapat dimuat" />;
+  if (order === null) return <AdminDataUnavailableView active="orders" role={access.profile.role} title="Detail order belum dapat dimuat" />;
 
   const currentStatus = order.status as OrderStatus;
   const transitions = order.orderType === "RETAIL" ? RETAIL_ORDER_TRANSITIONS : CUSTOM_ORDER_TRANSITIONS;

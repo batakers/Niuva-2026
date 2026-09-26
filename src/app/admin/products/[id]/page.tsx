@@ -27,7 +27,7 @@ export default async function AdminProductDetailPage({ params }: Readonly<{ para
   const access = await loadAdminAccess();
   if (access === null) return <AdminAccessUnavailableView />;
   const product = await loadProduct(access, id);
-  if (product === null) return <AdminDataUnavailableView role={access.profile.role} title="Detail produk belum dapat dimuat" />;
+  if (product === null) return <AdminDataUnavailableView active="products" role={access.profile.role} title="Detail produk belum dapat dimuat" />;
 
   return (
     <AdminShell active="products" role={access.profile.role}>

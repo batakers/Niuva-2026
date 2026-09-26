@@ -28,7 +28,7 @@ export default async function AdminCustomPrintPage({
   if (access === null) return <AdminAccessUnavailableView />;
 
   const result = await loadCustomPrintRequests(access, page);
-  if (result === null) return <AdminDataUnavailableView role={access.profile.role} title="Request custom print belum dapat dimuat" />;
+  if (result === null) return <AdminDataUnavailableView active="custom-print" role={access.profile.role} title="Request custom print belum dapat dimuat" />;
   const waitingReview = result.items.filter((item) => item.status === "SUBMITTED").length;
   const waitingQuote = result.items.filter((item) => item.status === "QUOTE_READY").length;
 

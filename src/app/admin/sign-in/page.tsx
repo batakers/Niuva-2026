@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ClerkDegraded, ClerkFailed, ClerkLoaded, ClerkLoading, SignIn } from "@clerk/nextjs";
+import AuLogo from "@/components/ui/AuLogo";
 
 export const metadata: Metadata = {
   title: "Admin sign-in · Niuva",
@@ -33,18 +34,22 @@ export default function AdminSignInPage() {
   const clerkConfigured = hasClerkPublishableKey();
 
   return (
-    <main className="min-h-screen bg-background px-5 py-12 text-foreground sm:px-8 sm:py-16" id="main-content">
-      <div className="mx-auto grid w-full max-w-6xl gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(22rem,1fr)] lg:items-start lg:gap-16">
-        <section className="min-w-0 space-y-6 lg:pt-8">
+    <main className="min-h-dvh bg-neutral-100 px-4 py-6 text-foreground sm:px-8 sm:py-10" id="main-content">
+      <div className="mx-auto w-full max-w-5xl rounded-xl border border-border bg-card p-5 sm:p-8">
+        <header className="flex flex-wrap items-center gap-3 border-b border-border pb-5">
           <Link
-            className="inline-flex rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="inline-flex rounded-lg bg-neutral-900 px-2 py-2 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             href="/"
           >
-            <span className="text-sm font-semibold tracking-[0.08em] text-brand-700">NIUVA / ADMIN</span>
+            <AuLogo className="h-6 w-auto" priority />
           </Link>
+          <span className="text-sm font-medium text-muted-foreground">Operations / Admin</span>
+        </header>
+        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(22rem,1fr)] lg:items-start lg:gap-12">
+        <section className="min-w-0 space-y-6 lg:pt-4">
           <div>
             <p className="text-sm font-medium text-muted-foreground">Ruang operasional</p>
-            <h1 className="mt-3 max-w-xl text-4xl font-semibold tracking-tight sm:text-5xl">
+            <h1 className="mt-3 max-w-xl text-3xl font-semibold tracking-tight sm:text-4xl">
               Masuk untuk mengelola operasi Niuva.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground">
@@ -53,7 +58,7 @@ export default function AdminSignInPage() {
           </div>
         </section>
 
-        <section aria-labelledby="admin-sign-in-title" className="min-w-0 rounded-2xl border border-border bg-card p-5 shadow-floating sm:p-8">
+        <section aria-labelledby="admin-sign-in-title" className="min-w-0 rounded-xl border border-border bg-background p-5 sm:p-8">
           <h2 className="sr-only" id="admin-sign-in-title">Form masuk admin</h2>
           {clerkConfigured ? (
             <>
@@ -175,6 +180,7 @@ export default function AdminSignInPage() {
             </div>
           )}
         </section>
+        </div>
       </div>
     </main>
   );
