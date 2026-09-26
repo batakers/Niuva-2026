@@ -5,6 +5,10 @@ import type { AdminAccess } from "@/lib/auth/clerk";
 import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
 import { appError } from "@/modules/shared/errors";
 
+vi.mock("@/components/niuva/admin-session-actions", () => ({
+  AdminSessionActions: () => null,
+}));
+
 const authMocks = vi.hoisted(() => ({
   requireAdmin: vi.fn(),
 }));
@@ -34,6 +38,7 @@ vi.mock("next/server", () => ({
 }));
 
 import AdminPage from "@/app/admin/page";
+import { AdminShell } from "@/components/niuva/admin-shell";
 
 beforeEach(() => {
   authMocks.requireAdmin.mockReset();
@@ -47,6 +52,20 @@ beforeEach(() => {
 });
 
 describe("admin access view", () => {
+  it("marks global Admin visual acceptance approved while exposing the approved foundation", () => {
+    render(
+      <AdminShell active="queue" role="OWNER">
+        <main>Admin content</main>
+      </AdminShell>,
+    );
+
+    const shell = document.querySelector("[data-foundation-scope='admin']");
+    expect(shell).toHaveAttribute("data-foundation-propagation", "approved");
+    expect(shell).toHaveAttribute("data-typography-propagation", "approved");
+    expect(shell).toHaveAttribute("data-product-screen-proof-status", "approved-owner");
+    expect(screen.getByText("Admin content")).toBeInTheDocument();
+  });
+
   it("renders no protected role or preview content when access is unavailable", () => {
     render(<AdminAccessUnavailableView />);
 

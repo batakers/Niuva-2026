@@ -8,5 +8,9 @@ export default function AdminLayout({ children }: Readonly<{ children: ReactNode
     return children;
   }
 
-  return <ClerkProvider publishableKey={publishableKey}>{children}</ClerkProvider>;
+  return (
+    <ClerkProvider dynamic publishableKey={publishableKey}>
+      {children}
+    </ClerkProvider>
+  );
 }

@@ -33,7 +33,7 @@ colors:
   destructive-border: "#DC2626"
 
 typography:
-  status: "approved v1.0; foundation/styleguide only; product propagation paused"
+  status: "approved v1.0; Foundation/Typography globally authorized by DS-DEC-019; component propagation remains scoped"
   fallbackPolicy:
     decisionStatus: "APPROVED"
     decisionRef: "DS-DEC-011-FALLBACK-POLICY"
@@ -44,7 +44,7 @@ typography:
     metricAdjustment: "NOT APPLICABLE for current scope; future use is DEFERRED until named proof demonstrates wrapping or readability drift"
     fontSizeAdjust: "NOT APPLICABLE for current scope; future use is DEFERRED until named proof"
     excludedSubstitutes: ["Inter", "SF Pro"]
-    scope: "foundation/styleguide typography policy; product propagation and runtime font-loading are separate evidence gates"
+    scope: "Foundation/Typography global product-screen authorization; visual acceptance and runtime font-loading remain separate evidence gates"
   primary:
     fontFamily: "Space Grotesk, Arial, Helvetica, sans-serif"
     usage: "UI, body, product, and data"
@@ -1821,7 +1821,9 @@ DS-DEC-003-LOADING untuk detail perilaku loading. DS-DEC-006-CONTROLS `APPROVED`
 untuk kebijakan hit target control yang tersisa. DS-DEC-014 `APPROVED` untuk
 menutup batch treatment Apple yang tidak berlaku bagi scope Niuva. DS-DEC-015
 `APPROVED` untuk menutup batas scope keputusan Batch A: Niuva MVP dan AUiS
-styleguide saat ini, dengan propagasi product screen tetap menjadi gate terpisah.
+styleguide saat ini. DS-DEC-019 kemudian mengotorisasi Foundation/Typography v1.0
+untuk seluruh product screens tanpa mengubah visual acceptance, AT/device,
+provider/production gates, atau promotion status component.
 DS-DEC-016 `APPROVED` untuk policy baseline kontrak controls, badge, navigation,
 card/patterns, footer, dan links. DS-DEC-018 kemudian memfinalkan exact defaults
 untuk current scope; proof, runtime, dan implementasi tetap terpisah sebagai
@@ -1862,6 +1864,7 @@ bawah hanya evidence atau gate terpisah.
 | ID | Area / status saat ini | Keputusan final | Follow-up evidence / batas |
 |---|---|---|---|
 | DS-DEC-018-DESIGN-DECISION-CLOSURE | Current-scope design closure / `APPROVED` | Semua keputusan desain Niuva MVP dan AUiS styleguide saat ini final; Apple-only treatment yang tidak dibutuhkan `NOT APPLICABLE` | Runtime/AT `UNVERIFIED`; named route/media proof `DEFERRED`; product/provider/production `SEPARATE GATE`; tidak ada current-scope decision yang belum dipilih |
+| DS-DEC-019-DESIGN-SYSTEM-FOUNDATION-PROPAGATION | Foundation/Typography propagation authorization / `APPROVED` | Owner mengotorisasi pada 2026-09-25 penggunaan Foundation dan Typography System v1.0 pada seluruh product screens, termasuk PublicShell dan AdminShell; Space Grotesk menjadi family global dan Fraunces tetap explicit editorial accent | Otorisasi ini tidak memperluas visual acceptance, physical-device/AT, provider, production readiness, atau promotion P0/P1, Motion, Patterns, Creative, Decorative, dan OptionChip; evidence tersebut tetap `UNVERIFIED`, `DEFERRED`, atau `SEPARATE GATE` sesuai scope |
 
 | ID | Area / kelengkapan | Kandidat atau keputusan yang diperlukan | Syarat penutupan |
 |---|---|---|---|
@@ -1932,7 +1935,8 @@ memfinalkan exact current-scope defaults. Evidence dapat tetap `PARTIAL` atau
 acceptance belum tersedia. Prioritas follow-up adalah evidence tersebut, bukan
 menambah varian Apple atau token baru. Butir 013 tetap `DEFERRED` dan bukan
 backlog implementasi wajib. Proof tidak boleh mengubah keputusan lain secara
-diam-diam.
+diam-diam. DS-DEC-019 adalah otorisasi propagasi Foundation/Typography saja; ia
+tidak mempromosikan layer komponen atau menutup gate evidence lain.
 
 ## Appendix A — Niuva Governance and Approval Boundaries
 

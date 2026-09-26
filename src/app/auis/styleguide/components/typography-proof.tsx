@@ -45,6 +45,7 @@ export function TypographyProof() {
       className="scroll-mt-8 space-y-7"
       data-proof-scope="styleguide-only"
       data-typography-proof
+      data-typography-propagation={typographySystemMeta.propagation}
       data-typography-status={typographySystemMeta.status}
       data-typography-version={typographySystemMeta.version}
       id="typography"
@@ -60,11 +61,13 @@ export function TypographyProof() {
           <p className={`${bodyToken.className} text-muted-foreground`}>
             Typography System v1.0 sudah disetujui. Scale, responsive steps,
             weight, tracking, line-height, dan axis Fraunces kini menjadi
-            kontrak foundation; penerapannya tetap dibatasi pada styleguide.
+            kontrak foundation yang diotorisasi untuk seluruh product screens;
+            visual acceptance, AT/device, provider, dan production tetap gate
+            terpisah.
           </p>
         </div>
         <Badge className="justify-self-start" variant="outline">
-          APPROVED v1.0 · no propagation
+          APPROVED v1.0 · global Foundation/Typography
         </Badge>
       </header>
 
@@ -495,16 +498,17 @@ export function TypographyProof() {
 
       <div
         className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-brand-300 bg-brand-50 px-5 py-4"
-        data-typography-approval="approved-no-propagation"
+        data-typography-approval="approved-global-authorization"
         role="status"
       >
         <div>
           <p className="font-semibold text-brand-950">Typography System v1.0 disetujui owner.</p>
           <p className="mt-1 text-sm text-brand-900/75">
-            Kontrak terkunci di foundation/styleguide; global tokens dan product screens belum dipropagasi.
+            Kontrak global diaktifkan untuk Foundation/Typography v1.0. Ini
+            tidak memperluas visual acceptance atau promosi komponen lain.
           </p>
         </div>
-        <Badge variant="outline">Approved · propagation paused</Badge>
+        <Badge variant="outline">Approved · global authorization</Badge>
       </div>
     </section>
   );

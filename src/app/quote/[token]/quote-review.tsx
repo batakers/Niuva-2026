@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Check, Clock3, FileLock2, ShieldCheck } from "lucide-react";
 import { z } from "zod";
 
 import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
@@ -10,6 +9,7 @@ import { StatusNotice, type StatusNoticeTone } from "@/components/niuva/status-n
 import { useHydrated } from "@/components/niuva/use-hydrated";
 import { AuLink } from "@/components/ui/AuLink";
 import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/Icon";
 import type { QuotePreview, QuotePreviewState } from "@/features/frontend-preview/quote";
 
 type Decision = "accept" | "decline" | null;
@@ -313,7 +313,7 @@ export function QuoteReview({
 
             <section aria-labelledby="quote-scope-title">
               <div className="flex items-center gap-3">
-                <FileLock2 aria-hidden="true" className="size-5 text-brand-700" />
+                <Icon aria-hidden="true" className="size-5 text-brand-700" name="file-lock-2" />
                 <h2 className={`${type.heading.className}`} id="quote-scope-title">Scope yang ditawarkan</h2>
               </div>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -331,7 +331,7 @@ export function QuoteReview({
 
             <section aria-labelledby="quote-assumptions-title">
               <div className="flex items-center gap-3">
-                <ShieldCheck aria-hidden="true" className="size-5 text-brand-700" />
+                <Icon aria-hidden="true" className="size-5 text-brand-700" name="shield-check" />
                 <h2 className={`${type.heading.className}`} id="quote-assumptions-title">Asumsi yang diverifikasi</h2>
               </div>
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -346,7 +346,7 @@ export function QuoteReview({
             </section>
 
             <div className="flex gap-3 border-l-2 border-brand-300 pl-4 text-sm leading-6 text-muted-foreground">
-              <Check aria-hidden="true" className="mt-1 size-4 shrink-0 text-brand-700" />
+              <Icon aria-hidden="true" className="mt-1 size-4 shrink-0 text-brand-700" name="check" />
               <p>Quote dikunci saat dikirim. Masa berlaku tujuh hari dihitung dari waktu kirim, bukan dari umur draft.</p>
             </div>
           </div>
@@ -375,7 +375,7 @@ export function QuoteReview({
               {state === "valid" && !isPreview ? (
                 <div className="mt-5">
                   <div className="flex items-start gap-3 text-sm leading-6 text-muted-foreground">
-                    <Clock3 aria-hidden="true" className="mt-1 size-4 shrink-0 text-brand-700" />
+                    <Icon aria-hidden="true" className="mt-1 size-4 shrink-0 text-brand-700" name="clock-3" />
                     <p>Keputusan diperiksa server dengan token, expiry, versi terbaru, dan snapshot harga.</p>
                   </div>
                   <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -390,7 +390,7 @@ export function QuoteReview({
               ) : state === "valid" ? (
                 <div className="mt-5">
                   <div className="flex items-start gap-3 text-sm leading-6 text-muted-foreground">
-                    <Clock3 aria-hidden="true" className="mt-1 size-4 shrink-0 text-brand-700" />
+                    <Icon aria-hidden="true" className="mt-1 size-4 shrink-0 text-brand-700" name="clock-3" />
                     <p>Dikirim {quote.sentAt}. Keputusan nyata selalu diverifikasi ulang oleh server.</p>
                   </div>
                   <div className="mt-5 grid gap-3 sm:grid-cols-2">

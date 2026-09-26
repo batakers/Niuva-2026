@@ -121,11 +121,11 @@ export default function StyleguidePage() {
           <AlertDescription>
             Revised UI Foundation, Space Grotesk, Fraunces, scale, responsive
             steps, weight, tracking, line-height, dan axis policy sudah
-            disetujui untuk styleguide-only. P0/P1, Motion System v1, dan empat Pattern proof sudah
+            diotorisasi untuk seluruh product screens. P0/P1, Motion System v1, dan empat Pattern proof sudah
             melewati visual proof desktop/mobile dan diterima untuk
-            styleguide-only. Proof product screen untuk homepage dan
-            `/project-brief` masih menunggu penerimaan visual owner; kedua route
-            belum menjadi surface resmi dan checkout/admin tetap tertutup.
+            styleguide-only. Visual acceptance tetap scoped pada proof homepage
+            dan `/project-brief`; checkout/admin, AT/device, provider, dan
+            production tetap gate terpisah.
           </AlertDescription>
         </Alert>
       </header>
@@ -326,16 +326,16 @@ export default function StyleguidePage() {
             Source primitive resmi berada di <code>src/components/ui</code>;
             kontrak komponen dan pola khusus Niuva didokumentasikan di
             <code className="break-all">src/app/auis/styleguide/registry/component-contracts.md</code>.
-            Typography System v1.0 dan visual P0/P1 sudah diterima untuk
-            styleguide-only. Screen propagation tetap ditahan sampai ada task
-            page/route yang ter-scope.
+            Typography System v1.0 diotorisasi secara global melalui DS-DEC-019;
+            visual proof tetap berada di route styleguide dan tidak mempromosikan
+            P0/P1, Motion, Patterns, Creative, atau Decorative.
           </p>
           <Separator className="my-5" />
           <div className="mb-4 flex flex-wrap gap-2">
             <Badge>Typography v1.0 · approved</Badge>
             <Badge>P0 visual · approved</Badge>
             <Badge>P1 visual · approved</Badge>
-            <Badge variant="outline">Product propagation · paused</Badge>
+            <Badge variant="outline">Foundation/Typography · global authorized</Badge>
           </div>
           <div
             className="flex flex-wrap gap-2"

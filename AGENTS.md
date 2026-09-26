@@ -12,7 +12,7 @@
 
 - **What this is:** Website operasional responsif yang menyatukan company profile dan project brief B2B, retail ready-made, serta custom 3D print berbasis review operator.
 - **Who it is for:** Calon klien B2B, customer retail/B2C, serta Owner/Admin Niuva yang bukan pengguna teknis.
-- **Current phase:** Foundation plus non-provider/non-production readiness closure. The revised UI Foundation Visual Proof, P0/P1 Design System, Motion System, and pattern proofs are approved for styleguide-only scope; `DESIGN.md` still records product propagation as paused/open. Public, catalog, authenticated-admin, and quote evidence in `docs/frontend/mvp-release-readiness.md` is local/loopback/non-production only. Product-screen propagation, new UI/UX changes, checkout/admin expansion, Creative/Decorative, bulk propagation, provider activation, and production acceptance remain separate gates.
+- **Current phase:** Foundation/Typography v1.0 propagation is authorized globally by DS-DEC-019 for all product screens, including PublicShell and AdminShell. The revised UI Foundation Visual Proof, P0/P1 Design System, Motion System, and Pattern proofs remain separately scoped; visual acceptance, physical-device/AT, provider, and production readiness are not implied. Public, catalog, authenticated-admin, and quote evidence in `docs/frontend/mvp-release-readiness.md` is local/loopback/non-production only. P0/P1 component promotion, Motion, Patterns, Creative/Decorative, provider activation, and production acceptance remain separate gates.
 
 ## Commands
 
@@ -100,9 +100,9 @@ user request and the authority order above.
 - Custom-print shipping is priced only after final package measurement.
 - The approved logo system locks logo colors; the accepted UI Foundation tokens
   are recorded in `src/app/globals.css` and
-  `src/app/auis/styleguide/foundation/tokens.ts`. Use the logo source during
-  future UI work, and do not bypass the Design System contract checkpoint when
-  propagating those tokens to product screens.
+  `src/app/auis/styleguide/foundation/tokens.ts`. DS-DEC-019 authorizes the
+  Foundation/Typography v1.0 baseline globally, while component contracts and
+  visual/AT/device/provider/production gates remain separately governed.
 - Public pages, checkout, and admin share one Niuva identity but have different
   density and motion needs. Passing tests/build is not visual approval.
 - Route handlers and Server Actions own request/response boundaries only.

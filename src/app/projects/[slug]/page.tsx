@@ -1,10 +1,10 @@
 import Image from "next/image";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ImageOff } from "lucide-react";
 import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { AuLink } from "@/components/ui/AuLink";
+import { Icon } from "@/components/ui/Icon";
 import { isPreviewParameter } from "@/features/frontend-preview/scenarios";
 import { getProjectPreviewBySlug } from "@/features/frontend-preview/server";
 
@@ -97,7 +97,7 @@ export default async function ProjectDetail({ params, searchParams }: {
           </div>
         ) : (
           <div className="flex aspect-video items-center justify-center gap-3 rounded-xl border border-border bg-muted text-muted-foreground">
-            <ImageOff aria-hidden="true" className="size-6" />
+            <Icon aria-hidden="true" className="size-6" name="image-off" />
             <p className="text-sm">Media project belum tersedia</p>
           </div>
         )}

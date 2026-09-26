@@ -52,6 +52,8 @@ export function DesignSystemArchitecture() {
     <section
       className="scroll-mt-8 space-y-6"
       data-design-system-architecture
+      data-design-system-propagation={designSystemMeta.productScreenPropagationMode}
+      data-design-system-propagation-scope={designSystemMeta.productScreenPropagationScope.join(",")}
       data-design-system-scope={designSystemMeta.scope}
       data-design-system-status={designSystemMeta.status}
       data-design-system-version={designSystemMeta.version}
@@ -74,7 +76,7 @@ export function DesignSystemArchitecture() {
             <Badge>Architecture v1.0</Badge>
             <Badge variant="secondary">Styleguide only</Badge>
             <Badge variant="outline">Product proof pending</Badge>
-            <Badge variant="outline">Propagation paused</Badge>
+            <Badge variant="outline">Foundation/Typography global</Badge>
           </div>
         </div>
       </div>
@@ -90,11 +92,11 @@ export function DesignSystemArchitecture() {
             <p className="font-semibold">Boundary keputusan</p>
             <p>
               Architecture v1 mendokumentasikan arah dan registry di route ini.
-              Tidak menambah dependency, tidak membuka global token, dan belum
-              memberi izin propagasi product screen. Homepage dan
-              `/project-brief` masih berada pada proof yang menunggu acceptance;
-              checkout, admin, Creative, Decorative, dan screen lain tetap
-              membutuhkan gate terpisah.
+              Tidak menambah dependency. DS-DEC-019 mengotorisasi Foundation dan
+              Typography v1.0 pada seluruh product screens, termasuk checkout dan
+              admin, tetapi tidak mengubah visual acceptance proof homepage dan
+              `/project-brief`, tidak mempromosikan P0/P1, dan tidak membuka
+              Motion, Patterns, Creative, atau Decorative.
             </p>
           </div>
         </div>

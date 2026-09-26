@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { Box, CircleDollarSign, FileLock2, PackageCheck, ShieldCheck } from "lucide-react";
 
 import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
 import { OrderStatusTimeline } from "@/components/niuva/order-status-timeline";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/Icon";
 import type { OrderStatusPreview, OrderStatusPreviewScenario } from "@/features/frontend-preview/order-status";
 
 function NextAction({ action, payment }: Readonly<{
@@ -83,7 +83,7 @@ export function OrderStatus({
           <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
             <section aria-labelledby="order-timeline-title" className="lg:col-span-7">
               <div className="mb-6 flex items-start gap-3">
-                <PackageCheck aria-hidden="true" className="mt-1 size-5 shrink-0 text-brand-700" />
+                <Icon aria-hidden="true" className="mt-1 size-5 shrink-0 text-brand-700" name="package-check" />
                 <div>
                   <h2 className={type.heading.className} id="order-timeline-title">Perjalanan order</h2>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">Timeline publik menampilkan tahap customer, bukan transition atau catatan internal operator.</p>
@@ -101,7 +101,7 @@ export function OrderStatus({
             <aside aria-label="Ringkasan dan langkah berikutnya" className="space-y-6 lg:col-span-5 lg:sticky lg:top-8 lg:self-start">
               <section className="rounded-xl border border-border bg-card p-5 shadow-card" aria-labelledby="order-summary-title">
                 <div className="flex items-center gap-3">
-                  <Box aria-hidden="true" className="size-5 text-brand-700" />
+                  <Icon aria-hidden="true" className="size-5 text-brand-700" name="box" />
                   <h2 className="text-base font-semibold" id="order-summary-title">Ringkasan aman</h2>
                 </div>
                 <p className="mt-3 text-sm leading-6 text-muted-foreground">Alamat lengkap, kontak customer, file privat, dan catatan operator tidak ditampilkan.</p>
@@ -133,7 +133,7 @@ export function OrderStatus({
               {order.shipment ? (
                 <section className="rounded-xl border border-border bg-card p-5" aria-labelledby="shipment-title">
                   <div className="flex items-center gap-3">
-                    <CircleDollarSign aria-hidden="true" className="size-5 text-brand-700" />
+                    <Icon aria-hidden="true" className="size-5 text-brand-700" name="circle-dollar-sign" />
                     <h2 className="text-base font-semibold" id="shipment-title">Pengiriman</h2>
                   </div>
                   <dl className="mt-4 grid gap-3 text-sm">
@@ -145,12 +145,12 @@ export function OrderStatus({
               ) : null}
 
               <div className="flex gap-3 border-l-2 border-brand-300 pl-4 text-sm leading-6 text-muted-foreground">
-                <ShieldCheck aria-hidden="true" className="mt-1 size-4 shrink-0 text-brand-700" />
+                <Icon aria-hidden="true" className="mt-1 size-4 shrink-0 text-brand-700" name="shield-check" />
                 <p>Butuh bantuan? Siapkan nomor order saat menghubungi Niuva melalui kanal konfirmasi yang Anda terima.</p>
               </div>
 
               <div className="flex gap-3 text-xs leading-5 text-muted-foreground">
-                <FileLock2 aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                <Icon aria-hidden="true" className="mt-0.5 size-4 shrink-0" name="file-lock-2" />
                 <p>Status paid, shipping, dan cancellation pada alur nyata hanya berasal dari service server dan webhook terverifikasi.</p>
               </div>
             </aside>

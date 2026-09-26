@@ -66,7 +66,9 @@ export const typographyCoreRoleOrder = [
 
 export const typographySystemMeta = {
   approvedAt: "2026-08-29",
-  propagation: "styleguide-only",
+  propagation: "global-authorized",
+  propagationDecision: "DS-DEC-019-DESIGN-SYSTEM-FOUNDATION-PROPAGATION",
+  propagationScope: "global-product-screens",
   status: "approved",
   version: "1.0",
 } as const;
@@ -78,8 +80,9 @@ export const typographyScalePolicy = {
 } as const;
 
 /**
- * Typography System v1.0 yang disetujui owner. Kontrak tetap hanya berlaku di
- * foundation/styleguide sampai ada task propagasi product screen yang eksplisit.
+ * Typography System v1.0 yang disetujui owner. DS-DEC-019 mengotorisasi
+ * Foundation/Typography untuk seluruh product screens; visual acceptance,
+ * AT/device, provider, dan production tetap menjadi gate terpisah.
  */
 export const typographySystemTokens = {
   display: {

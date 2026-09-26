@@ -6,7 +6,7 @@
 - **One-line positioning:** Niuva Inovasi Utama adalah mitra inovasi dan pengembangan produk end-to-end yang membantu perusahaan mengubah ide menjadi solusi teknologi dan produk kreatif bernilai tinggi melalui riset, desain, engineering, prototyping, hingga dukungan manufaktur.
 - **Primary mark:** `/assets/brand/niuva-logo-horizontal-dark.svg`
 - **Logo source:** `docs/source/brand/Niuva_Logo_System_v1.0/SVG/Horizontal/niuva-logo-horizontal-dark.svg`
-- **Setup status:** Brand established from owner interview; the revised UI Foundation Visual Proof was approved on 2026-09-03 for styleguide-only scope; Typography System v1.0 was approved on 2026-08-29; Design System Architecture & Registry v1 was documented on 2026-09-02; the initial P0/P1 visual gate was approved on 2026-09-02 for styleguide-only scope; Motion System v1 CSS-first and four Niuva Pattern proofs were approved on 2026-09-03 for styleguide-only scope; the scoped product-screen proof for `/` and `/project-brief` is authorized but still pending visual acceptance; checkout/admin, Creative/Decorative, and bulk propagation remain paused; Voice bootstrapped from owner positioning and product documents.
+- **Setup status:** Brand established from owner interview; the revised UI Foundation Visual Proof was approved on 2026-09-03 for styleguide-only scope; Typography System v1.0 was approved on 2026-08-29; Design System Architecture & Registry v1 was documented on 2026-09-02; DS-DEC-019 on 2026-09-25 authorizes Foundation/Typography v1.0 globally across product screens; the initial P0/P1 visual gate, Motion System v1 CSS-first, and four Niuva Pattern proofs remain styleguide-only; visual acceptance, physical-device/AT, provider, and production readiness remain separate gates; Voice bootstrapped from owner positioning and product documents.
 
 ## Foundation status
 
@@ -71,7 +71,7 @@
 - **Retained non-typography baseline:** Spacing rhythm, radius roles, elevation,
   motion, and reduced-motion behavior remain accepted. Typography System v1.0
   is locked in `src/app/auis/styleguide/foundation/typography-proof.ts` and
-  loaded only inside the nested styleguide layout. Motion System v1 is
+  loaded from the root font contract with a styleguide proof view. Motion System v1 is
   CSS-first and approved for styleguide-only use; no runtime motion dependency
   was added.
 - **Review state:** Visual Proof at `/auis/styleguide` and the P0/P1 Design
@@ -80,9 +80,10 @@
   are now approved for styleguide-only scope; the Motion System v1 proof and
   four flow-based Patterns are also approved for styleguide-only use. The
   revised Foundation Visual Proof is approved for this named styleguide scope;
-  the scoped product-screen proof for `/` and `/project-brief` is authorized but
-  still pending visual acceptance. Checkout/admin, Creative/Decorative, and
-  bulk propagation remain separate gates.
+  DS-DEC-019 authorizes Foundation/Typography globally, while the scoped
+  product-screen proof for `/` and `/project-brief` remains the named visual
+  acceptance record. Checkout/admin visual acceptance, Creative/Decorative,
+  provider, and production gates remain separate.
 
 ## Language & locale
 

@@ -1,20 +1,11 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { connection } from "next/server";
-import {
-  ArrowDown,
-  Check,
-  FileBox,
-  LockKeyhole,
-  PackageCheck,
-  ReceiptText,
-  ScanSearch,
-} from "lucide-react";
-
 import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { AuLink } from "@/components/ui/AuLink";
+import { Icon, type IconName } from "@/components/ui/Icon";
 import { getServerCapabilities } from "@/lib/env/server";
 import { CUSTOM_FLOW_PRODUCT_OPTIONS } from "@/modules/custom-print/product-intake";
 import { CUSTOM_FILE_MAX_BYTES } from "@/modules/policy/privacy";
@@ -30,27 +21,31 @@ const workflow = [
     label: "File dan konfigurasi",
     description:
       "Anda menyiapkan model, unit atau skala, material, jumlah, dan catatan yang membantu pemeriksaan.",
-    icon: FileBox,
+    icon: "file-box",
   },
   {
     label: "Review dan slicing operator",
     description:
       "Operator memeriksa file lalu mencatat berat, durasi, material, konfigurasi, dan temuan yang relevan dari slicer.",
-    icon: ScanSearch,
+    icon: "scan-search",
   },
   {
     label: "Quote dan persetujuan",
     description:
       "Niuva menyusun quote dari hasil review. Produksi belum berjalan sebelum quote disetujui dan pembayaran terverifikasi.",
-    icon: ReceiptText,
+    icon: "receipt-text",
   },
   {
     label: "Produksi dan QC",
     description:
       "Pekerjaan masuk produksi sesuai konfigurasi yang disepakati, lalu melalui finishing dan quality control.",
-    icon: PackageCheck,
+    icon: "package-check",
   },
-] as const;
+] as const satisfies readonly Readonly<{
+  description: string;
+  icon: IconName;
+  label: string;
+}>[];
 
 const preparationItems = [
   "Konfirmasi unit atau skala model, terutama untuk STL.",
@@ -94,7 +89,7 @@ export default async function CustomPrintPage() {
               <div className="mt-8 flex flex-wrap gap-3">
                 <AuLink className="min-h-11 gap-2" href="#request-readiness">
                   Siapkan request
-                  <ArrowDown aria-hidden="true" className="size-4" />
+                  <Icon aria-hidden="true" className="size-4" name="arrow-down" />
                 </AuLink>
                 <AuLink className="min-h-11" href="#workflow" variant="outline">
                   Pahami proses
@@ -133,10 +128,10 @@ export default async function CustomPrintPage() {
             </div>
 
             <ol className="border-t border-border">
-              {workflow.map(({ description, icon: StepIcon, label }) => (
+              {workflow.map(({ description, icon, label }) => (
                 <li className="grid gap-4 border-b border-border py-7 sm:grid-cols-[3rem_minmax(0,1fr)]" key={label}>
                   <span className="flex size-11 items-center justify-center rounded-lg border border-brand-300 bg-brand-100 text-brand-800">
-                    <StepIcon aria-hidden="true" className="size-5" />
+                    <Icon aria-hidden="true" className="size-5" name={icon} />
                   </span>
                   <div>
                     <h3 className={type.subheading.className}>{label}</h3>
@@ -215,7 +210,7 @@ export default async function CustomPrintPage() {
                 <ul className="mt-6 space-y-4">
                   {preparationItems.map((item) => (
                     <li className="flex gap-3 text-sm leading-6 text-neutral-300" key={item}>
-                      <Check aria-hidden="true" className="mt-1 size-4 shrink-0 text-brand-300" />
+                      <Icon aria-hidden="true" className="mt-1 size-4 shrink-0 text-brand-300" name="check" />
                       <span>{item}</span>
                     </li>
                   ))}
@@ -235,15 +230,15 @@ export default async function CustomPrintPage() {
             </div>
             <dl className="divide-y divide-border border-y border-border">
               <div className="grid gap-2 py-5 sm:grid-cols-[10rem_minmax(0,1fr)]">
-                <dt className="flex items-center gap-2 text-sm font-semibold"><LockKeyhole aria-hidden="true" className="size-4 text-brand-700" /> Akses file</dt>
+                <dt className="flex items-center gap-2 text-sm font-semibold"><Icon aria-hidden="true" className="size-4 text-brand-700" name="lock-keyhole" /> Akses file</dt>
                 <dd className="text-sm leading-6 text-muted-foreground">Upload produksi akan memakai penyimpanan privat dan akses singkat untuk pihak berwenang.</dd>
               </div>
               <div className="grid gap-2 py-5 sm:grid-cols-[10rem_minmax(0,1fr)]">
-                <dt className="flex items-center gap-2 text-sm font-semibold"><ScanSearch aria-hidden="true" className="size-4 text-brand-700" /> Harga</dt>
+                <dt className="flex items-center gap-2 text-sm font-semibold"><Icon aria-hidden="true" className="size-4 text-brand-700" name="scan-search" /> Harga</dt>
                 <dd className="text-sm leading-6 text-muted-foreground">Tidak ada harga final instan dari geometri. Quote disusun setelah input slicer diverifikasi operator.</dd>
               </div>
               <div className="grid gap-2 py-5 sm:grid-cols-[10rem_minmax(0,1fr)]">
-                <dt className="flex items-center gap-2 text-sm font-semibold"><PackageCheck aria-hidden="true" className="size-4 text-brand-700" /> Pengiriman</dt>
+                <dt className="flex items-center gap-2 text-sm font-semibold"><Icon aria-hidden="true" className="size-4 text-brand-700" name="package-check" /> Pengiriman</dt>
                 <dd className="text-sm leading-6 text-muted-foreground">Biaya pengiriman custom dihitung setelah produksi, QC, dan ukuran paket final tersedia.</dd>
               </div>
             </dl>

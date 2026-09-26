@@ -27,6 +27,14 @@ test("AUiS styleguide exposes the Niuva Visual Proof", async ({ page }) => {
     "data-design-system-scope",
     "styleguide-only",
   );
+  await expect(page.locator("[data-design-system-architecture]")).toHaveAttribute(
+    "data-design-system-propagation",
+    "global-foundation-typography-authorized",
+  );
+  await expect(page.locator("[data-design-system-architecture]")).toHaveAttribute(
+    "data-design-system-propagation-scope",
+    "foundation,typography",
+  );
   await expect(page.locator("[data-design-system-layer]")).toHaveCount(8);
   await expect(page.locator("[data-design-system-layer='foundation']")).toHaveAttribute(
     "data-design-system-layer-status",
@@ -135,7 +143,7 @@ test("AUiS styleguide exposes the Niuva Visual Proof", async ({ page }) => {
   expect(Math.max(...secondQueueRowFooterTops) - Math.min(...secondQueueRowFooterTops)).toBeLessThanOrEqual(1);
   await expect(page.locator("[data-contract-status='approved']")).toBeVisible();
   await expect(page.locator("[data-contract-scope='styleguide-only']")).toBeVisible();
-  await expect(page.getByText("Product propagation · paused")).toBeVisible();
+  await expect(page.getByText("Foundation/Typography · global authorized")).toBeVisible();
   await expect(page.locator("[data-proof-surface='public']").getByRole("button", { name: "Diskusikan proyek" })).toBeVisible();
   expect(consoleErrors).toEqual([]);
 });
@@ -180,12 +188,12 @@ test("AUiS styleguide keeps the mobile proof within the viewport and exposes upl
   }
 });
 
-test("typography proof records styleguide approval and explicit public propagation", async ({ page }) => {
+test("typography proof records global Foundation/Typography authorization", async ({ page }) => {
   await page.goto("/auis/styleguide");
 
   const typographyProof = page.locator("[data-typography-proof]");
   await expect(typographyProof).toBeVisible();
-  await expect(page.locator("[data-typography-scope='styleguide-only']")).toBeVisible();
+  await expect(page.locator("[data-typography-scope='global-authorized']")).toBeVisible();
   await expect(typographyProof).toHaveAttribute("data-typography-status", "approved");
   await expect(typographyProof).toHaveAttribute("data-typography-version", "1.0");
   await expect(typographyProof.locator("[data-responsive-step]")).toHaveCount(3);
@@ -193,8 +201,9 @@ test("typography proof records styleguide approval and explicit public propagati
     "default · tidak dimuat",
   );
   await expect(
-    typographyProof.locator("[data-typography-approval='approved-no-propagation']"),
+    typographyProof.locator("[data-typography-approval='approved-global-authorization']"),
   ).toBeVisible();
+  await expect(typographyProof).toHaveAttribute("data-typography-propagation", "global-authorized");
 
   for (const context of ["homepage", "case-study", "checkout", "dashboard"]) {
     await expect(
@@ -217,6 +226,64 @@ test("typography proof records styleguide approval and explicit public propagati
   expect(productFontFamily).not.toContain("Fraunces");
   await expect(page.locator("[data-motion-system]")).toHaveCount(0);
   await expect(page.locator("[data-pattern-showcase]")).toHaveCount(0);
+});
+
+test("primitive controls honor the responsive geometry and wrapping contract", async ({ page }) => {
+  await page.goto("/auis/styleguide");
+
+  const controls = page.locator("[data-core-primitive-showcase]");
+  const buttons = controls.getByRole("button");
+  const buttonHeights = await buttons.evaluateAll((elements) =>
+    elements.map((element) => Math.round(element.getBoundingClientRect().height)),
+  );
+  expect(buttonHeights.length).toBeGreaterThan(0);
+  expect(Math.min(...buttonHeights)).toBeGreaterThanOrEqual(44);
+
+  const input = page.locator("#foundation-example");
+  const select = controls.locator("[data-slot='select-trigger']");
+  await expect(input).toHaveCSS("min-height", "44px");
+  await expect(select).toHaveCSS("min-height", "44px");
+  expect(
+    await input.evaluate((element) => Math.round(element.getBoundingClientRect().height)),
+  ).toBeGreaterThanOrEqual(44);
+  expect(
+    await select.evaluate((element) => Math.round(element.getBoundingClientRect().height)),
+  ).toBeGreaterThanOrEqual(44);
+
+  const statusActions = page.locator(
+    "[data-component-showcase='p0'] [data-component='status-notice'] [data-slot='button']",
+  );
+  const statusActionHeights = await statusActions.evaluateAll((elements) =>
+    elements.map((element) => Math.round(element.getBoundingClientRect().height)),
+  );
+  expect(statusActionHeights.length).toBeGreaterThan(0);
+  expect(Math.min(...statusActionHeights)).toBeGreaterThanOrEqual(44);
+
+  const badges = page.locator("[data-component-showcase='p0'] [data-slot='badge']");
+  const badgeMetrics = await badges.evaluateAll((elements) =>
+    elements.map((element) => ({
+      clientWidth: element.clientWidth,
+      height: Math.round(element.getBoundingClientRect().height),
+      scrollWidth: element.scrollWidth,
+    })),
+  );
+  expect(badgeMetrics.length).toBeGreaterThan(0);
+  expect(Math.min(...badgeMetrics.map(({ height }) => height))).toBeGreaterThanOrEqual(24);
+  expect(badgeMetrics.every(({ clientWidth, scrollWidth }) => scrollWidth <= clientWidth)).toBe(true);
+  const badge = badges.first();
+  await expect(badge).toHaveCSS("min-height", "24px");
+  await expect(badge).toHaveCSS("max-width", "100%");
+  await expect(badge).toHaveCSS("white-space", "normal");
+  await expect(badge).toHaveCSS("overflow", "visible");
+
+  for (const width of [320, 390, 768, 1280]) {
+    await page.setViewportSize({ height: 900, width });
+    await page.goto("/auis/styleguide");
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+      `styleguide at ${width}px`,
+    ).toBe(true);
+  }
 });
 
 test("Typography System v1.0 keeps its compact, standard, and wide contract", async ({ page }) => {

@@ -21,6 +21,52 @@ test("public navigation supports mobile menu, escape, skip link and real routes"
   await expect(page).toHaveURL(/\/project-brief$/);
 });
 
+test("public navigation exposes active cues on exact, dynamic, and mobile routes", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+
+  const routeCases = [
+    { label: "Layanan", path: "/services" },
+    { label: "Projects", path: "/projects/smart-drop-box-pg" },
+    { label: "Shop", path: "/shop/contoh-dock-modular-meja?preview=examples" },
+    { label: "Custom Print", path: "/custom-print/request" },
+    { label: "Cart", path: "/cart?preview=examples" },
+  ] as const;
+
+  for (const routeCase of routeCases) {
+    await page.goto(routeCase.path);
+    const nav = page.getByRole("navigation", { name: "Navigasi utama" });
+    const active = nav.locator('a[aria-current="page"]');
+    await expect(active, routeCase.path).toHaveCount(1);
+    await expect(active, routeCase.path).toHaveText(routeCase.label);
+    await expect.poll(
+      () => active.evaluate((element) => getComputedStyle(element, "::after").height),
+      { message: `active cue height for ${routeCase.path}` },
+    ).toBe("2px");
+    await expect.poll(
+      () => active.evaluate((element) => getComputedStyle(element, "::after").opacity),
+      { message: `active cue opacity for ${routeCase.path}` },
+    ).toBe("1");
+  }
+
+  await page.goto("/");
+  await expect(page.getByRole("navigation", { name: "Navigasi utama" }).locator('a[aria-current="page"]')).toHaveCount(0);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/shop/contoh-dock-modular-meja?preview=examples");
+  const toggle = page.getByRole("button", { name: "Buka menu" });
+  await toggle.click();
+  const mobileActive = page
+    .getByRole("navigation", { name: "Navigasi utama" })
+    .locator('a[aria-current="page"]');
+  await expect(mobileActive).toHaveText("Shop");
+  await expect(mobileActive).toBeVisible();
+  await expect(mobileActive).toHaveCSS("min-height", "44px");
+  expect(await mobileActive.evaluate((element) => getComputedStyle(element, "::after").height)).toBe("2px");
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+  ).toBe(true);
+});
+
 test("published projects filter and navigate, while local examples retain their preview recovery states", async ({ page }) => {
   await page.goto("/projects");
   await expect(page.getByRole("status")).toContainText("17 project");
@@ -92,6 +138,11 @@ test("public company and service routes render approved content", async ({ page 
   page.on("pageerror", error => errors.push(error.message));
 
   await page.goto("/");
+  const homepageShell = page.locator("[data-homepage]");
+  await expect(homepageShell).toHaveAttribute("data-foundation-propagation", "approved");
+  await expect(homepageShell).toHaveAttribute("data-typography-propagation", "approved");
+  await expect(homepageShell).toHaveAttribute("data-typography-version", "1.0");
+  await expect(homepageShell).toHaveCSS("font-family", /Space Grotesk/);
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /index, follow/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Mitra pengembangan produk dari riset hingga prototipe.",
@@ -124,6 +175,31 @@ test("public company and service routes render approved content", async ({ page 
   }
 
   expect(errors).toEqual([]);
+});
+
+test("Foundation/Typography authorization is present on product PublicShell routes", async ({ page }) => {
+  test.slow();
+  const paths = [
+    "/",
+    "/services",
+    "/projects",
+    "/shop?preview=examples",
+    "/shop/contoh-dock-modular-meja?preview=examples",
+    "/cart?preview=examples",
+    "/checkout?preview=examples&state=ready",
+    "/custom-print",
+    "/custom-print/request",
+    "/quote/preview-quote?preview=examples",
+    "/orders/preview-order?preview=examples",
+  ];
+
+  for (const path of paths) {
+    await page.goto(path);
+    const shell = page.locator("[data-foundation-propagation='approved']").first();
+    await expect(shell, path).toHaveAttribute("data-typography-propagation", "approved");
+    await expect(shell, path).toHaveAttribute("data-typography-version", "1.0");
+    await expect(shell, path).toHaveCSS("font-family", /Space Grotesk/);
+  }
 });
 
 test("project brief persists through the API and offers a reference-based WhatsApp handoff", async ({ page }) => {

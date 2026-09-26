@@ -40,8 +40,8 @@ export default async function AdminPricingPage({
 
   if (access === null) return <AdminAccessUnavailableView />;
 
-  const result = await loadPricing(access, page);
-  if (result === null) {
+  const pricing = await loadPricing(access, page);
+  if (pricing === null) {
     return (
       <AdminDataUnavailableView
         role={access.profile.role}
@@ -50,12 +50,13 @@ export default async function AdminPricingPage({
     );
   }
 
-  const activeRule = result.items.find((item) => item.status === "ACTIVE");
-  const active = activeRule === undefined ? 0 : 1;
+  const { activeRule, result } = pricing;
+  const active = activeRule === null ? 0 : 1;
+  const visibleInactive = result.items.filter((item) => item.status !== "ACTIVE").length;
 
   return (
     <AdminShell active="pricing" role={result.role}>
-      <main className="space-y-8" data-admin-surface="pricing" id="main-content">
+      <main className="min-w-0 space-y-8" data-admin-surface="pricing" id="main-content">
         <header className="border-b border-border pb-6">
           <p className="text-sm font-medium text-brand-700">Niuva / Operations</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">
@@ -75,11 +76,11 @@ export default async function AdminPricingPage({
           <Summary label="Active" value={String(active)} />
           <Summary
             label="Draft / retired"
-            value={String(result.items.length - active)}
+            value={String(visibleInactive)}
           />
         </section>
 
-        {access.profile.role === "OWNER" && activeRule === undefined ? (
+        {access.profile.role === "OWNER" && activeRule === null ? (
           <section
             aria-labelledby="pricing-activation-title"
             className="rounded-xl border border-warning-border bg-warning-background p-5 sm:p-6"
@@ -124,7 +125,7 @@ export default async function AdminPricingPage({
               </label>
               <label className="flex min-h-11 items-start gap-3 text-sm leading-6">
                 <input
-                  className="mt-1 size-5 accent-[var(--color-brand-700)]"
+                  className="mt-1 size-5 accent-primary"
                   name="confirmation"
                   required
                   type="checkbox"
@@ -137,7 +138,7 @@ export default async function AdminPricingPage({
               </label>
             </AdminActionForm>
           </section>
-        ) : activeRule !== undefined ? (
+        ) : activeRule !== null ? (
           <StatusNotice
             tone="success"
             title="CUSTOM_PRINT_V1 aktif"
@@ -145,7 +146,7 @@ export default async function AdminPricingPage({
           />
         ) : null}
 
-        <section aria-labelledby="pricing-list-title">
+        <section aria-labelledby="pricing-list-title" className="min-w-0">
           <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
             <div>
               <h2 className="text-xl font-semibold" id="pricing-list-title">
@@ -162,13 +163,15 @@ export default async function AdminPricingPage({
           {result.items.length === 0 ? (
             <div className="mt-6">
               <StatusNotice
-                tone="warning"
-                title="Belum ada pricing rule"
-                description="Quote custom print belum dapat dibuat sampai Owner menyediakan dan menyetujui rule pricing."
+                tone={activeRule === null && result.page === 1 ? "warning" : "info"}
+                title={activeRule === null && result.page === 1 ? "Belum ada pricing rule" : "Tidak ada versi rule di halaman ini"}
+                description={activeRule === null && result.page === 1
+                  ? "Quote custom print belum dapat dibuat sampai Owner menyediakan dan menyetujui rule pricing."
+                  : "Periksa halaman sebelumnya untuk melihat versi rule yang tersedia."}
               />
             </div>
           ) : (
-            <div className="mt-6 grid gap-4">
+            <div className="mt-6 grid min-w-0 gap-4">
               {result.items.map((item) => (
                 <PricingCard item={item} key={item.id} />
               ))}
@@ -202,11 +205,22 @@ async function loadAdminAccess(): Promise<AdminAccess | null> {
 async function loadPricing(
   access: AdminAccess,
   page: number,
-): Promise<Awaited<ReturnType<AdminOperationsService["listPricingRules"]>> | null> {
+): Promise<
+  | Readonly<{
+      activeRule: AdminPricingRuleRow | null;
+      result: Awaited<ReturnType<AdminOperationsService["listPricingRules"]>>;
+    }>
+  | null
+> {
   try {
-    return await new AdminOperationsService({
+    const service = new AdminOperationsService({
       authorize: async () => access,
-    }).listPricingRules({ page });
+    });
+    const [result, activeRule] = await Promise.all([
+      service.listPricingRules({ page }),
+      service.getActivePricingRule(),
+    ]);
+    return { activeRule, result };
   } catch {
     return null;
   }
@@ -230,13 +244,13 @@ function PricingCard({ item }: Readonly<{ item: AdminPricingRuleRow }>) {
   const definition = safeJson(item.definitionJson);
 
   return (
-    <article className="rounded-xl border border-border bg-card p-5 sm:p-6">
+    <article className="min-w-0 rounded-xl border border-border bg-card p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="font-mono text-sm font-semibold">
+        <div className="min-w-0">
+          <p className="break-words font-mono text-sm font-semibold">
             {item.code} · v{item.version}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 break-words text-xs text-muted-foreground">
             Dibuat {dateFormatter.format(item.createdAt)} · diperbarui {dateFormatter.format(item.updatedAt)}
           </p>
         </div>
@@ -250,7 +264,11 @@ function PricingCard({ item }: Readonly<{ item: AdminPricingRuleRow }>) {
           {item.status}
         </span>
       </div>
-      <pre className="mt-5 max-h-72 overflow-auto rounded-lg border border-border bg-muted p-4 font-mono text-xs leading-5 text-foreground">
+      <pre
+        aria-label={`Definisi ${item.code} versi ${item.version}`}
+        className="mt-5 max-h-72 max-w-full overflow-auto rounded-lg border border-border bg-muted p-4 font-mono text-xs leading-5 text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        tabIndex={0}
+      >
         {definition}
       </pre>
       <p className="mt-4 text-xs text-muted-foreground">

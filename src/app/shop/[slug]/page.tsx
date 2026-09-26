@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
-import { ImageOff } from "lucide-react";
 import Image from "next/image";
 import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { AuLink } from "@/components/ui/AuLink";
+import { Icon } from "@/components/ui/Icon";
 import { getLiveShopProduct, getShopProductPreview } from "@/features/frontend-preview/server";
 import { ProductSelection } from "./product-selection";
 
@@ -104,7 +104,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                   />
                 ) : (
                   <div>
-                    <ImageOff aria-hidden="true" className="mx-auto size-8" />
+                    <Icon aria-hidden="true" className="mx-auto size-8" name="image-off" />
                     <p className="mt-4 font-medium text-foreground">Foto produk belum disertakan</p>
                     <p className="mx-auto mt-2 max-w-sm text-sm leading-6">Slot ini menunggu foto launch dan izin publikasi. Tidak ada gambar sintetis yang diperlakukan sebagai produk nyata.</p>
                   </div>
