@@ -1,12 +1,12 @@
 # New visual work
 
-Use this flow for a new surface or a replacement visual identity. PRODUCT.md owns product truth. DESIGN.md owns durable visual decisions. A surface brief keeps strategy that belongs to one route or artifact. Complete [init.md](init.md) first when PRODUCT.md is missing; a missing DESIGN.md does not route back to init.
+Use this flow for a requested new surface or product-wide visual identity replacement. An existing named Niuva route redesign follows the route-first workflow in `AGENTS.md`, without this playbook's concept-selection or comp-approval rounds, unless the user specifically requests a separate concept or prototype. PRODUCT.md owns product truth. DESIGN.md owns durable visual decisions. A surface brief keeps strategy that belongs to one route or artifact. Complete [init.md](init.md) first when PRODUCT.md is missing; a missing DESIGN.md does not route back to init.
 
 ## 1. Decide what is already true
 
 Read DESIGN.md, representative code, tokens, components, and assets.
 
-- **Redesign:** preserve product truth, content, function, constraints, and explicit brand commitments; replace the old visual world rather than polishing it. The old look is evidence of what the subject is, not authority over what it becomes.
+- **Product-wide visual identity replacement:** preserve product truth, content, function, constraints, and explicit brand commitments; replace the old visual world rather than polishing it. The old look is evidence of what the subject is, not authority over what it becomes.
 - **Established world:** inherit it. A missing DESIGN.md does not erase a coherent identity already in code; document that identity instead of inventing a replacement.
 - **Incomplete brand:** preserve confirmed assets and recognizable traits, then expand the system with the user for this surface.
 - **No visual authority:** create a new world with the user.
@@ -30,7 +30,7 @@ Across modes, ask what success looks like, what must remain untouched, and what 
 
 Inherit its world and composition. Resolve only the new purpose, content, hierarchy, states, interaction, and how the addition joins the surrounding experience. No concept tournament, and no DESIGN.md change unless the user approves a durable system change.
 
-### Create a whole surface inside an established world
+### Create a new whole surface inside an established world
 
 Keep the visual system fixed. Derive five to seven materially different structures from the content, task, and user behavior, ordered by resonance. For a genuinely open whole page, screen, or flow, run:
 

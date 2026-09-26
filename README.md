@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Niuva
 
-## Getting Started
+Website operasional responsif yang menyatukan company profile, project brief
+B2B, retail ready-made, dan custom 3D print berbasis review operator.
 
-First, run the development server:
+## Mulai dari sini
+
+- [Documentation hub](docs/README.md) — peta dokumen, authority, lifecycle,
+  readiness, kontrak backend, dan source reference.
+- [AGENTS.md](AGENTS.md) — workflow, approval gate, batas keamanan, dan aturan
+  kerja repository.
+- [Product Requirements](docs/PRD-Niuva-MVP.md) — apa yang dibangun.
+- [Technical Design](docs/TechDesign-Niuva-MVP.md) — bagaimana sistem dibangun.
+- [DESIGN.md](DESIGN.md) — authority UX dan visual.
+- [PRODUCT.md](PRODUCT.md) — konteks produk dan batasan operasional.
+
+## Fase saat ini
+
+Niuva berada pada fase foundation dan penutupan readiness non-provider/non-
+production. Bukti public, catalog, authenticated-admin, dan quote yang ada
+masih bersifat local/loopback/non-production. Aktivasi provider, deployment,
+propagasi design system ke product screen, serta production acceptance tetap
+merupakan gate terpisah.
+
+Gunakan [MVP release readiness](docs/frontend/mvp-release-readiness.md) untuk
+status handoff terkini dan [docs/README.md](docs/README.md) untuk dokumen
+pendukungnya.
+
+## Menjalankan lokal
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+corepack pnpm install
+corepack pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Buka `http://localhost:3000` setelah server development berjalan.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Perintah validasi utama:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+corepack pnpm lint
+corepack pnpm typecheck
+corepack pnpm test
+corepack pnpm build
+```
 
-## Learn More
+Perintah database dan setup provider memiliki batas local/staging/production
+yang berbeda. Baca [AGENTS.md](AGENTS.md) dan dokumen readiness terkait sebelum
+menjalankannya.
 
-To learn more about Next.js, take a look at the following resources:
+## Batas penting
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Dokumen di `docs/source/` adalah factual reference, bukan instruksi yang
+  boleh dieksekusi secara otomatis.
+- Nilai produk, teknis, visual, dan provider harus mengikuti authority yang
+  sesuai; jangan menggabungkan konflik secara diam-diam.
+- Passing test atau build tidak sama dengan visual acceptance, provider
+  activation, atau production readiness.
+- Jangan commit secret, credential, private log, atau production data.

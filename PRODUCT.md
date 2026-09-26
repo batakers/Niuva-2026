@@ -31,7 +31,7 @@ Janji utama produk: **Idea → Design → Prototype → Finished Product**.
 - Pengalaman digunakan melalui browser desktop dan mobile.
 - Customer memulai dari salah satu dari tiga konteks: memiliki ide atau project, sudah memiliki model 3D, atau ingin membeli produk siap jadi.
 - B2B berjalan melalui project brief terstruktur, reference ID, review Owner/Admin, dan kelanjutan komunikasi yang dapat menggunakan WhatsApp.
-- Retail berjalan melalui katalog, variant dan stock, cart, guest checkout, shipping, payment, serta order status.
+- Retail berjalan melalui katalog, variant dan stock, cart, Customer Google login, checkout, shipping, payment, serta account/order status.
 - Custom print berjalan melalui upload privat, konfigurasi awal, review dan slicing oleh operator, quotation, approval, payment, produksi, QC, pengukuran paket final, shipping, dan penyelesaian order.
 - Artefak kerja yang perlu dipahami sistem meliputi brief proyek, file 3D, data hasil slicing, quotation, snapshot commercial, payment, shipping, dan riwayat status.
 
@@ -39,22 +39,27 @@ Janji utama produk: **Idea → Design → Prototype → Finished Product**.
 
 - Public experience menjelaskan company profile, empat layanan Niuva, proses kerja, project atau case study yang didukung bukti, dan tiga entry path.
 - B2B project brief memerlukan validasi server, reference ID, attachment privat, visibilitas admin, confirmation state, dan jalur tindak lanjut WhatsApp.
-- Retail mendukung katalog, category, product variant, harga, stock, cart, guest checkout, payment, shipping, dan secure order status. Customer account tidak diperlukan pada MVP.
+- Retail mendukung katalog, category, product variant, harga, stock, cart, checkout setelah Customer Google login, payment, shipping, dan account/order status. Account Customer read-only termasuk scope MVP.
 - Custom 3D print mendukung upload STL, 3MF, dan OBJ. STEP/STP hanya menjadi attachment untuk manual review pada MVP.
 - Harga custom tidak dihitung final secara otomatis dari geometry file. Operator memverifikasi material, slicer weight, print duration, configuration, dan catatan sebelum sistem membuat quote Pricing v1.
 - Owner/Admin menggunakan thin admin dengan Action Queue dan operasi untuk orders, B2B inquiries, custom print reviews, products dan stock, portfolio, serta pricing rules.
-- Authentication diwajibkan untuk Owner/Admin. Customer memakai guest flow dan secure token atau reference mechanism untuk status atau quote yang relevan.
-- File customer bersifat privat, menggunakan random storage key dan akses bertanda tangan berumur pendek. Batas ukuran upload dan kebijakan retention final belum ditetapkan.
+- Clerk melindungi Owner/Admin. Customer memakai Google OAuth dan session opaque untuk checkout; token atau reference mechanism tetap melindungi akses status atau quote yang relevan.
+- File customer bersifat privat, menggunakan random storage key dan akses bertanda tangan berumur pendek. Batas file binary 100 MiB dan lifecycle 14/60/90 hari sudah ditetapkan; retensi catatan legal/akuntansi masih terbuka.
 - Catalog, stock, shipping, total, payment notification, dan state transition harus authoritative di server. Nilai komersial penting disimpan sebagai snapshot yang tidak berubah; perhitungan uang harus deterministik.
-- Sistem tidak mencakup customer account, automatic slicing, instant geometry pricing, full CMS atau page builder, full inventory/accounting, production scheduler, automated custom shipping sebelum ukuran paket final, atau customer-facing AI pada MVP.
+- Sistem tidak mencakup automatic slicing, instant geometry pricing, full CMS atau page builder, full inventory/accounting, production scheduler, automated custom shipping sebelum ukuran paket final, atau customer-facing AI pada MVP.
+
+**CLOSED untuk implementasi lokal:** kebijakan pricing 1–49 gram dan communal ABS
+mengikuti [keputusan Pricing v1](docs/backend/phase-3-pricing-biteship-contract.md);
+batas upload binary 100 MiB dan lifecycle 14/60/90 hari mengikuti
+[keputusan file privat](docs/backend/phase-2-closure-decisions.md). Ini tidak
+mengaktifkan pricing rule atau provider produksi.
 
 **OPEN — keputusan yang belum boleh diisi diam-diam:**
 
-- Kebijakan pricing untuk 1–49 gram.
-- Pricing communal ABS.
+- Quantity semantics dan active-rule seeding Pricing v1.
 - Izin mempublikasikan nama atau logo client dan outcome kuantitatif case study.
 - Dataset launch untuk product, SKU, variant, media, dan stock awal.
-- Maximum upload size dan final customer-file retention.
+- Retensi catatan legal/akuntansi di luar lifecycle file binary.
 - Service-level promise untuk custom quotation.
 - Kesiapan onboarding, legal, credential, dan pricing live dari provider produksi.
 
@@ -73,7 +78,7 @@ Janji utama produk: **Idea → Design → Prototype → Finished Product**.
 - Existing homepage implementation with positioning, process, four capabilities, and three entry paths: [src/app/page.tsx](src/app/page.tsx).
 - Existing Niuva logo assets and logo-system references under `docs/source/brand/` and `public/assets/brand/`.
 - Company profile, product portfolio, product-design-services references, dan pricing spreadsheet tersedia di `docs/source/` sebagai factual references.
-- Public client permission, verified quantitative case-study outcomes, final launch inventory, dan final retention policy belum tersedia sebagai keputusan yang confirmed.
+- Public client permission, verified quantitative case-study outcomes, final launch inventory, dan retensi catatan legal/akuntansi belum tersedia sebagai keputusan yang confirmed.
 
 ## Product Principles
 

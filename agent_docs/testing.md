@@ -80,5 +80,9 @@ session without a critical blocker.
 
 - Use `Generate → Render → Inspect → Refine → Test` for user-visible work.
 - Check token compliance, component reuse, real Niuva content, desktop, mobile, keyboard, focus, loading, empty, validation, error, success, and reduced motion.
-- UI Foundation / Visual Proof requires explicit user acceptance before patterns are propagated across all screens.
+- A clear request authorizes implementation on its named routes or components;
+  verify the result without an automatic Owner review. Broad propagation needs
+  a clearly requested scope and technical checks. If the user explicitly asks
+  for visual review, one integrated review may cover every named layer shown
+  and tested; otherwise report visual acceptance as unreviewed.
 - A green build or test suite is technical evidence, not visual approval.
