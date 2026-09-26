@@ -6,6 +6,11 @@ const mocks = vi.hoisted(() => ({
   createMidtransProvider: vi.fn(),
   getRate: vi.fn(),
   getRates: vi.fn(),
+  requireCustomer: vi.fn(),
+}));
+
+vi.mock("@/lib/auth/customer", () => ({
+  requireCustomer: mocks.requireCustomer,
 }));
 
 vi.mock("@/modules/shipping/biteship", () => ({
@@ -51,8 +56,16 @@ beforeEach(() => {
   mocks.createMidtransProvider.mockReset();
   mocks.getRate.mockReset();
   mocks.getRates.mockReset();
+  mocks.requireCustomer.mockReset();
   mocks.createBiteshipProvider.mockReturnValue({ getRates: vi.fn() });
   mocks.createMidtransProvider.mockReturnValue({ createPayment: vi.fn() });
+  mocks.requireCustomer.mockResolvedValue({
+    avatarUrl: null,
+    displayName: "Google Customer",
+    email: "customer@example.com",
+    id: "customer-id",
+    normalizedEmail: "customer@example.com",
+  });
 });
 
 describe("retail shipping and checkout HTTP boundaries", () => {
@@ -155,6 +168,10 @@ describe("retail shipping and checkout HTTP boundaries", () => {
       paymentAttemptId: "payment-attempt-id",
       totalRp: "262500",
     });
-    expect(mocks.checkoutCreate).toHaveBeenCalledWith(checkoutPayload);
+    expect(mocks.checkoutCreate).toHaveBeenCalledWith(checkoutPayload, {
+      customerId: "customer-id",
+      displayName: "Google Customer",
+      email: "customer@example.com",
+    });
   });
 });

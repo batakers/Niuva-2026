@@ -11,14 +11,14 @@
 - Must ship:
   - Company profile, empat layanan, selected case studies, dan tiga entry paths.
   - B2B project brief dengan reference ID, private attachment, admin visibility, dan WhatsApp continuation.
-  - Ready-made catalog, variant/stock, cart, guest checkout, Biteship rate, Midtrans payment, dan secure order status.
+  - Ready-made catalog, variant/stock, cart, Customer Google login, mandatory Customer checkout, Biteship rate, Midtrans payment, dan secure order status.
   - Private custom 3D upload, operator slicing/review, deterministic Pricing v1, immutable quote, payment, production/QC, dan post-measurement shipping.
   - Thin Admin dengan Action Queue, order/inquiry/custom-print/product-stock/portfolio/pricing operations.
   - Transactional email, audit trail minimum, monitoring, accessibility basics, dan mobile/desktop verification.
 - Not in v1:
-  - Customer accounts, automatic slicing, dan instant final geometry pricing.
+  - Password/email Customer auth, editable profiles, automatic slicing, dan instant final geometry pricing.
   - Full CMS/page builder, advanced inventory, accounting dashboard, and production scheduler.
-  - Membership automation, rental booking, automated custom shipping before final measurement, dan customer-facing AI.
+  - Password/email Customer auth, membership automation, rental booking, automated custom shipping before final measurement, dan customer-facing AI.
   - Microservices, Kubernetes, event bus, multi-region, dan dedicated search infrastructure.
 
 ## Principles

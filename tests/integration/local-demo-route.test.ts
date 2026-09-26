@@ -1,4 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { vi } from "vitest";
+
+const customerAuthMocks = vi.hoisted(() => ({
+  requireCustomer: vi.fn(),
+}));
+
+vi.mock("@/lib/auth/customer", () => ({
+  requireCustomer: customerAuthMocks.requireCustomer,
+}));
 
 import { Prisma } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
@@ -29,6 +38,20 @@ beforeAll(async () => {
   testEnvironment.NIUVA_RUNTIME_MODE = "demo";
   testEnvironment.NODE_ENV = "test";
   await seedLocalDemoCatalog(prisma);
+  const customer = await prisma.customer.create({
+    data: {
+      email: "local-demo-customer@example.test",
+      googleSubject: "local-demo-google-customer",
+      normalizedEmail: "local-demo-customer@example.test",
+    },
+  });
+  customerAuthMocks.requireCustomer.mockResolvedValue({
+    avatarUrl: null,
+    displayName: "Local Demo Customer",
+    email: customer.email,
+    id: customer.id,
+    normalizedEmail: customer.normalizedEmail,
+  });
 });
 
 afterAll(async () => {

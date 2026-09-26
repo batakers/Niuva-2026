@@ -13,7 +13,7 @@ yang dicatat.
 
 | Gate | Status saat ini | Evidence | Batas yang masih berlaku |
 | --- | --- | --- | --- |
-| Checkout | `VERIFIED_LOCAL_TECHNICAL` | `tests/e2e/checkout.spec.ts`: guest handoff, required-field focus, rate unavailable/stale recovery, payment pending/error preservation, responsive 320/390/768/1024/1280/1440 | Tidak membuktikan pembayaran, shipping, webhook, provider, atau production acceptance |
+| Checkout | `VERIFIED_LOCAL_TECHNICAL` | Customer-session boundary, required-field focus, rate unavailable/stale recovery, payment pending/error preservation, responsive 320/390/768/1024/1280/1440 | Tidak membuktikan pembayaran, shipping, webhook, provider, Google live callback, atau production acceptance |
 | Admin fail-closed | `VERIFIED_LOCAL_TECHNICAL` | `tests/e2e/admin-access.spec.ts` dan `tests/e2e/admin-action-queue.spec.ts`: missing Clerk configuration returns 503 without queue or fixture data | Live Clerk identity, active `AdminProfile`, and authenticated Owner smoke remain non-production gates |
 | Admin authenticated surface | `ACCEPTED_NON_PRODUCTION` (historical) | Existing acceptance recorded in `docs/frontend/mvp-release-readiness.md` for `/admin`, lists, and populated details at desktop/mobile | Historical evidence is not re-used as current-batch visual acceptance; named Admin surfaces in this batch remain `UNVERIFIED` |
 | Provider adapters | `LOCAL_MOCK_VERIFIED` | Backend provider/auth/action-queue suite passes; local integration uses guarded fixtures and no live provider call | Biteship, Midtrans, WhatsApp, and Resend activation require Owner/provider inputs; R2 evidence is non-production only |

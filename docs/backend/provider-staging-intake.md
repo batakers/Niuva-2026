@@ -19,6 +19,7 @@ status kosong/non-empty, tanpa mencetak nilainya.
 | `.env.staging` | Tidak ada | Staging environment belum disiapkan |
 | `.env.production` | Tidak ada | Production environment belum disiapkan |
 | Clerk | Dua key non-empty | Live development smoke tetap perlu user test dan `AdminProfile` aktif |
+| Customer Google OAuth | Group baru; status live belum diverifikasi | Live `/login`/`/register` smoke tetap perlu Google Development credentials, test account, dan redirect URI yang tepat |
 | R2 | Semua tujuh field group non-empty | Validitas resource, private access, CORS, dan lifecycle harus diverifikasi ulang sebelum klaim baru |
 | Midtrans | Group blank/absent | Belum siap sandbox smoke |
 | Biteship | Group blank/absent | Belum siap rates/shipping smoke |
@@ -38,6 +39,7 @@ environment non-production; jangan ditempelkan ke tabel.
 | --- | --- | --- |
 | Scope environment | Nama environment `development` atau `staging`, owner teknis, dan tanggal smoke | `OPEN` |
 | Clerk | Development instance, exact test user ID, role (`OWNER`/`ADMIN`), dan database loopback yang dipakai | `OPEN` untuk live smoke |
+| Customer Google OAuth | Development project/client, authorized redirect URI, test account, callback owner, dan tanggal smoke | `OPEN` untuk live smoke; secret tidak dikirim melalui chat |
 | Midtrans | Sandbox account, public HTTPS notification URL, test order reference, expiry/cleanup owner | `OPEN` |
 | Biteship | Test account, origin area ID, courier allowlist, destination fixture, dan package dimensions | `OPEN` |
 | R2 | Development account/bucket names, endpoint, exact `APP_URL` CORS origin, cleanup owner | `PARTIAL`; resource presence ada, re-verification diperlukan |
@@ -59,6 +61,18 @@ environment non-production; jangan ditempelkan ke tabel.
    penolakan user tanpa profile aktif.
 4. Setelah smoke, profile test dinonaktifkan atau dihapus dan key dirotasi bila
    kebijakan instance mengharuskannya.
+
+### Customer Google OAuth
+
+1. Owner menyediakan `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, dan
+   `GOOGLE_REDIRECT_URI` langsung pada environment non-production. Jangan
+   menempelkan nilainya ke issue, chat, atau repository.
+2. Pastikan redirect URI dan origin/consent configuration Google cocok persis
+   dengan environment yang diuji.
+3. Dengan Google Development account, smoke `/login` → `/account`,
+   `/register` → `/account`, logout, legacy-order auto-link, dan checkout.
+4. Automated OAuth tests tetap menggunakan mock adapter; mock pass bukan bukti
+   live Google acceptance.
 
 ### R2
 

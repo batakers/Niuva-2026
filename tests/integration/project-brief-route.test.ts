@@ -7,6 +7,13 @@ const checkoutProviderMocks = vi.hoisted(() => ({
   createPayment: vi.fn(),
   getRates: vi.fn(),
 }));
+const customerAuthMocks = vi.hoisted(() => ({
+  requireCustomer: vi.fn(),
+}));
+
+vi.mock("@/lib/auth/customer", () => ({
+  requireCustomer: customerAuthMocks.requireCustomer,
+}));
 
 vi.mock("@/modules/shipping/biteship", () => ({
   createBiteshipRateGatewayFromEnvironment:
@@ -34,6 +41,8 @@ async function cleanIntegrationDatabase(): Promise<void> {
   await prisma.$executeRaw`
     TRUNCATE TABLE
       "audit_logs",
+      "customer_sessions",
+      "customers",
       "idempotency_records",
       "payment_events",
       "payment_attempts",
@@ -65,6 +74,20 @@ async function cleanIntegrationDatabase(): Promise<void> {
 
 beforeEach(async () => {
   await cleanIntegrationDatabase();
+  const customer = await prisma.customer.create({
+    data: {
+      email: "integration-customer@example.test",
+      googleSubject: "integration-google-customer",
+      normalizedEmail: "integration-customer@example.test",
+    },
+  });
+  customerAuthMocks.requireCustomer.mockResolvedValue({
+    avatarUrl: null,
+    displayName: "Integration Customer",
+    email: customer.email,
+    id: customer.id,
+    normalizedEmail: customer.normalizedEmail,
+  });
   checkoutProviderMocks.createBiteshipProvider.mockReset();
   checkoutProviderMocks.createMidtransProvider.mockReset();
   checkoutProviderMocks.createPayment.mockReset();

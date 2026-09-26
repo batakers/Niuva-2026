@@ -18,13 +18,21 @@
 
 Niuva MVP akan dibangun sebagai **modular monolith** menggunakan **Next.js 16.3 + TypeScript** dan managed services.
 
+> **Scope expansion addendum — 25 September 2026:** Customer authentication
+> menggunakan custom Google OAuth/OIDC terverifikasi, terpisah dari Clerk yang
+> tetap khusus Owner/Admin. `/login` dan `/register` adalah entry point yang
+> sama; `/account` read-only menampilkan profil dan seluruh order. Checkout dan
+> shipping rates wajib Customer session di semua runtime termasuk demo/preview.
+> Google credential serta redirect URI hanya disediakan di environment
+> non-production dan tidak boleh masuk repository atau chat.
+
 Satu codebase akan menangani:
 
 - public company profile;
 - services dan case studies;
 - B2B project brief;
 - ready-made retail catalog;
-- cart + guest checkout;
+- cart + Customer checkout setelah Google login;
 - Midtrans payment;
 - Biteship shipping rates;
 - custom 3D print request;
@@ -34,9 +42,10 @@ Satu codebase akan menangani:
 - secure order status;
 - thin operational admin;
 - transactional email;
-- monitoring dan audit trail minimum.
+- monitoring dan audit trail minimum;
+- Customer Google OAuth, opaque session, dan account order history.
 
-Architecture ini sengaja **tidak** memakai microservices, Kubernetes, message broker besar, full CMS, server-side slicer, atau customer account pada MVP.
+Architecture ini sengaja **tidak** memakai microservices, Kubernetes, message broker besar, full CMS, server-side slicer, atau password-based customer auth pada MVP.
 
 Prinsip utama:
 
@@ -56,7 +65,7 @@ Technical Design ini harus menjaga requirement berikut:
 2. Minimal 3 end-to-end test transaction harus berhasil sebelum launch.
 3. B2B inquiry harus dapat `Submit Project Brief → masuk admin → dapat ditindaklanjuti`.
 4. Custom print tidak menggunakan automatic final pricing dari geometry file; operator slicing dan memasukkan verified weight + duration.
-5. Customer account tidak wajib.
+5. Customer login Google wajib sebelum checkout; account hanya read-only pada scope pertama.
 6. File custom 3D harus private.
 7. Payment redirect/browser callback bukan source of truth.
 8. Owner/admin non-IT harus dapat mengoperasikan website.
@@ -143,7 +152,10 @@ Gunakan database terpisah untuk staging dan production. Preview deployments tida
 | Auth.js | More control | More auth configuration responsibility | Valid alternative |
 | Custom auth | Full control | Unnecessary security risk | Reject |
 
-Customer tetap guest checkout.
+Clerk tetap hanya untuk Admin. Customer memakai Google OAuth custom dengan
+OIDC ID-token verification, state + PKCE, dan session opaque yang hash-nya
+disimpan di database selama 30 hari. Tidak ada password atau Google access
+token yang disimpan. `/login` dan `/register` menuju flow yang sama.
 
 ## 4.6 Object Storage
 
@@ -536,7 +548,8 @@ Satu deployable app; modularitas hanya untuk domain separation.
 - Historical quote/order snapshots immutable after commitment.
 - External provider IDs unique where possible.
 - State changes auditable.
-- PII access limited to authenticated admin paths.
+- PII access dibatasi ke authenticated Admin atau Customer owner pada order
+  history-nya masing-masing.
 
 ## 12.2 Core tables
 
@@ -551,6 +564,34 @@ is_active BOOLEAN
 created_at TIMESTAMPTZ
 updated_at TIMESTAMPTZ
 ```
+
+### `customers` dan `customer_sessions`
+
+```text
+customers:
+  id UUID PK
+  google_subject TEXT UNIQUE NOT NULL
+  email TEXT NOT NULL
+  normalized_email TEXT UNIQUE NOT NULL
+  display_name TEXT NULL
+  avatar_url TEXT NULL
+  last_login_at TIMESTAMPTZ NULL
+  created_at TIMESTAMPTZ
+  updated_at TIMESTAMPTZ
+
+customer_sessions:
+  id UUID PK
+  customer_id UUID FK
+  token_hash TEXT UNIQUE NOT NULL
+  expires_at TIMESTAMPTZ
+  revoked_at TIMESTAMPTZ NULL
+  created_at TIMESTAMPTZ
+```
+
+`orders.customer_id` nullable untuk migration additive dan auto-link order
+guest lama saat login Google pertama. Hanya order yang belum memiliki owner
+dan emailnya sama setelah `trim().toLowerCase()` yang ditautkan; order milik
+Customer lain tidak pernah ditimpa.
 
 ### `services`
 
@@ -1201,6 +1242,9 @@ Audit at minimum:
 Public:
 
 ```text
+GET  /api/auth/google/start
+GET  /api/auth/google/callback
+POST /api/auth/logout
 POST /api/project-brief
 POST /api/custom-print/requests
 POST /api/uploads/intents
@@ -1211,7 +1255,12 @@ GET  /orders/[token]                # server-rendered order status
 GET  /quote/[token]                 # server-rendered quote review
 ```
 
-The first six mutation paths above are the current runtime surface. The
+`/api/shipping/rates` dan `/api/checkout` menolak request tanpa Customer
+session. Quote-token, custom request, dan order-token status tetap berada pada
+boundary token masing-masing; autentikasi Customer tidak diperluas ke route
+tersebut.
+
+The mutation paths above are the current runtime surface. The
 checkout route composes order creation and the sandbox payment handoff in one
 server-owned transaction boundary; the older split `/api/checkout/orders` and
 `/api/payments/:orderId/create` names are not implemented routes. Order and
@@ -1256,6 +1305,15 @@ Customer gets clear language. Technical logs get correlation ID. Never expose ra
 ## Authentication / authorization
 
 - Clerk for admin authentication.
+- Custom Google OAuth/OIDC for Customer authentication only.
+- `/login` and `/register` share one Google flow; validate `state`, PKCE,
+  Google issuer, audience, expiry, and `email_verified` before identity use.
+- Store only an opaque random Customer session token in an `httpOnly`,
+  `SameSite=Lax` cookie; store its hash in `customer_sessions` for 30 days and
+  revoke it on logout.
+- `/account`, shipping rates, and checkout require the Customer session. The
+  checkout server uses email/name from the session, never browser identity
+  fields.
 - App DB stores Niuva role.
 - Protect `/admin` server-side.
 - Every admin mutation re-checks authorization.
@@ -1268,6 +1326,9 @@ Server-only:
 ```text
 DATABASE_URL
 CLERK_SECRET_KEY
+GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET
+GOOGLE_REDIRECT_URI
 MIDTRANS_SERVER_KEY
 BITESHIP_API_KEY
 R2_ACCESS_KEY_ID
@@ -1412,10 +1473,12 @@ State tests: invalid transition rejected; stale webhook cannot revert paid; canc
 
 ## Required E2E
 
-1. Retail normal flow.
-2. Retail variant/destination variation.
-3. Custom print → quote → payment → production → shipping payment.
-4. Separate B2B brief → admin visibility.
+1. Customer `/login` → Google boundary → `/account`.
+2. Customer `/register` → Google boundary → `/account` and logout.
+3. Retail normal flow after Customer login.
+4. Retail variant/destination variation after Customer login.
+5. Custom print → quote → payment → production → shipping payment.
+6. Separate B2B brief → admin visibility.
 
 ## Failure tests
 
@@ -1751,7 +1814,7 @@ First growth actions: optimize queries, indexes, pagination, provider limits, pa
 
 Consider isolated slicer worker only when real usage proves it, e.g. >20–30 custom reviews/week or operator spends >5h/week on repetitive slicing and Niuva has frozen machine/material/process profiles.
 
-Add customer accounts only after repeat-order need appears. Add headless CMS only after current CRUD becomes bottleneck.
+Expand Customer auth only after a new approved identity/recovery requirement appears. Add headless CMS only after current CRUD becomes bottleneck.
 
 ---
 
@@ -1946,7 +2009,10 @@ Pricing and quotas are time-sensitive and must be re-checked immediately before 
 
 ## Timeline vs complexity
 
-**Only with scope discipline.** The timeline works because no customer account, auto slicer, full CMS, advanced inventory, workflow engine, or microservices are in MVP.
+**Only with scope discipline.** The timeline works because Customer auth is
+Google-only and read-only, without password/recovery/editable-profile scope;
+auto slicer, full CMS, advanced inventory, workflow engine, and microservices
+remain out of MVP.
 
 ## Highest-risk security boundaries
 
@@ -1966,7 +2032,7 @@ Pricing and quotas are time-sensitive and must be re-checked immediately before 
 - Target platform: web
 - Budget: Rp1.000.000 first month; target <= Rp500.000/month recurring
 - Timeline: 1-4 weeks
-- Chosen stack: Next.js 16.3 + TypeScript + Node.js 24 LTS; Tailwind CSS + shadcn/ui/Base UI; Neon PostgreSQL + Prisma; Vercel Pro; Cloudflare R2; Clerk; Midtrans Snap; Biteship; Resend; Sentry
+- Chosen stack: Next.js 16.3 + TypeScript + Node.js 24 LTS; Tailwind CSS + shadcn/ui/Base UI; Neon PostgreSQL + Prisma; Vercel Pro; Cloudflare R2; Clerk Admin; Google OAuth Customer; Midtrans Snap; Biteship; Resend; Sentry
 - UI architecture: semantic design tokens + shared shadcn/Niuva components + Base UI primitives + Motion + Lucide + Embla + TanStack Table + React Hook Form/Zod
 - AI coding tool: VS Code + Codex
 - Product AI: none
@@ -1984,7 +2050,7 @@ Pricing and quotas are time-sensitive and must be re-checked immediately before 
     "frontend": "Next.js 16.3 App Router + TypeScript",
     "backend": "Next.js 16.3 server runtime on Node.js 24 LTS",
     "database": "Neon PostgreSQL + Prisma",
-    "auth": "Clerk for admin only; guest checkout for customers",
+    "auth": "Clerk for admin only; Google OAuth and mandatory Customer session for checkout",
     "styling": "Tailwind CSS + shadcn/ui with Base UI primitives",
     "deployment": "Vercel Pro"
   },

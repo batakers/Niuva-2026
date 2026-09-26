@@ -12,8 +12,8 @@ async function seedCheckout(page: Page) {
 }
 
 async function fillCheckout(page: Page) {
-  await page.getByLabel("Nama pemesan").fill("Pemesan Contoh");
-  await page.getByLabel(/Email/).fill("pemesan@example.test");
+  await expect(page.getByLabel(/Nama pemesan/)).toHaveValue("Demo Customer");
+  await expect(page.getByLabel("Email terverifikasi")).toHaveValue("demo-customer@example.test");
   await page.getByLabel("Nomor WhatsApp pemesan").fill("+6281234567890");
   await page.getByLabel("Nama penerima").fill("Penerima Contoh");
   await page.getByLabel("Nomor WhatsApp penerima").fill("+6281234567890");
@@ -24,16 +24,30 @@ async function fillCheckout(page: Page) {
   await page.getByLabel("Kode pos").fill("40132");
 }
 
+async function loginWithLocalGoogle(page: Page, returnTo = "/checkout") {
+  await page.goto(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+  await page.getByRole("link", { name: "Lanjutkan dengan Google" }).click();
+  await expect(page).toHaveURL(new RegExp(`${returnTo.replaceAll("/", "\\/")}(?:\\?.*)?$`));
+}
+
 test.beforeEach(async ({ page }) => {
   await seedCheckout(page);
+  await loginWithLocalGoogle(page);
 });
 
-test("cart hands a valid development preview to guest checkout", async ({ page }) => {
+test("cart hands a valid development preview to authenticated Customer checkout", async ({ page }) => {
   await page.goto("/cart?preview=examples");
   await page.getByRole("link", { name: "Lanjut ke checkout" }).click();
   await expect(page).toHaveURL(/\/checkout\?preview=examples&state=ready$/);
   await expect(page.getByRole("heading", { level: 1, name: "Satu pemeriksaan lagi sebelum transaksi dimulai." })).toBeVisible();
   await expect(page.getByText("Dock modular meja")).toBeVisible();
+});
+
+test("checkout redirects an unauthenticated Customer to Google login", async ({ page }) => {
+  await page.context().clearCookies();
+  await page.goto("/checkout?preview=examples&state=ready");
+  await expect(page).toHaveURL(/\/login\?returnTo=(?:%2F|\/)checkout$/);
+  await expect(page.getByRole("link", { name: "Lanjutkan dengan Google" })).toBeVisible();
 });
 
 test("checkout validates required fields and never calls provider boundaries", async ({ page }) => {
@@ -84,7 +98,7 @@ for (const [state, message] of [
     await page.getByRole("radio", { name: /Regular/ }).click();
     await page.getByRole("button", { name: "Tinjau checkout" }).click();
     await expect(page.getByText(message)).toBeVisible();
-    await expect(page.getByLabel("Nama pemesan")).toHaveValue("Pemesan Contoh");
+    await expect(page.getByLabel(/Nama pemesan/)).toHaveValue("Demo Customer");
   });
 }
 

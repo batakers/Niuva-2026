@@ -64,7 +64,7 @@ export function getContentSecurityPolicy(
     "object-src 'none'",
     "frame-ancestors 'none'",
     "form-action 'self'",
-    "img-src 'self' data: blob:",
+    "img-src 'self' https://*.googleusercontent.com data: blob:",
     "font-src 'self' data:",
     "media-src 'self'",
     "manifest-src 'self'",
