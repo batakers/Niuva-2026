@@ -37,6 +37,7 @@ export const navigation: NavSection[] = [
     items: [
       { name: "Semantic states", href: "/auis/styleguide#semantic-proof" },
       { name: "Contrast", href: "/auis/styleguide#contrast-proof" },
+      { name: "Admin dashboard preview", href: "/auis/styleguide#admin-dashboard-preview" },
       { name: "Acceptance state", href: "/auis/styleguide#review-state" },
     ],
   },
