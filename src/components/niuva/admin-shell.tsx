@@ -36,10 +36,12 @@ const roleLabels: Record<AdminRole, string> = {
 export function AdminShell({
   active,
   children,
+  productScreenProofStatus = "pending-owner-review",
   role,
 }: Readonly<{
   active: AdminArea;
   children: ReactNode;
+  productScreenProofStatus?: "approved-owner" | "pending-owner-review";
   role: AdminRole;
 }>) {
   const manageActive = manageNavigation.some((item) => item.area === active);
@@ -48,7 +50,7 @@ export function AdminShell({
       className="min-h-dvh bg-neutral-100 text-foreground"
       data-foundation-propagation="approved"
       data-foundation-scope="admin"
-      data-product-screen-proof-status="pending-owner-review"
+      data-product-screen-proof-status={productScreenProofStatus}
       data-typography-propagation="approved"
       data-typography-version="1.0"
     >

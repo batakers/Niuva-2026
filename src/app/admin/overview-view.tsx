@@ -25,7 +25,7 @@ export function AdminOverviewView({
   const work = queue.items.slice(0, visibleWorkLimit);
 
   return (
-    <AdminShell active="overview" role={role}>
+    <AdminShell active="overview" productScreenProofStatus="approved-owner" role={role}>
       <main className="space-y-6" data-admin-surface="overview" id="main-content">
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -107,7 +107,7 @@ function ActivityChart({ days }: Readonly<{ days: readonly DashboardDay[] }>) {
       <div aria-hidden="true" className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground">
         {series.map((item) => <span className="inline-flex items-center gap-2" key={item.key}><span className={`size-2.5 rounded-sm ${item.className}`} />{item.label}</span>)}
       </div>
-      <div className="mt-5 overflow-x-auto pb-2">
+      <div className="mt-5 contain-paint overflow-x-auto pb-2">
         <div aria-hidden="true" className="grid min-w-[38rem] grid-cols-[repeat(30,minmax(0,1fr))] items-end gap-1 border-b border-border pb-2">
           {days.map((day, index) => (
             <div className="flex h-32 items-end justify-center gap-px" key={day.date} title={`${day.date}: ${day.inquiries} brief, ${day.customPrint} custom, ${day.orders} order`}>
@@ -118,11 +118,13 @@ function ActivityChart({ days }: Readonly<{ days: readonly DashboardDay[] }>) {
         </div>
         <div aria-hidden="true" className="mt-2 flex min-w-[38rem] justify-between text-[10px] text-muted-foreground"><span>{days[0]?.date.slice(5)}</span><span>{days[14]?.date.slice(5)}</span><span>{days[29]?.date.slice(5)}</span></div>
       </div>
-      <table className="sr-only">
-        <caption>Jumlah brief, permintaan custom print, dan order yang dibuat selama 30 hari</caption>
-        <thead><tr><th scope="col">Tanggal Jakarta</th><th scope="col">Brief</th><th scope="col">Custom print</th><th scope="col">Order</th></tr></thead>
-        <tbody>{days.map((day) => <tr key={day.date}><th scope="row">{day.date}</th><td>{day.inquiries}</td><td>{day.customPrint}</td><td>{day.orders}</td></tr>)}</tbody>
-      </table>
+      <div className="sr-only contain-paint">
+        <table className="w-px table-fixed break-all whitespace-normal">
+          <caption>Jumlah brief, permintaan custom print, dan order yang dibuat selama 30 hari</caption>
+          <thead><tr><th scope="col">Tanggal Jakarta</th><th scope="col">Brief</th><th scope="col">Custom print</th><th scope="col">Order</th></tr></thead>
+          <tbody>{days.map((day) => <tr key={day.date}><th scope="row">{day.date}</th><td>{day.inquiries}</td><td>{day.customPrint}</td><td>{day.orders}</td></tr>)}</tbody>
+        </table>
+      </div>
     </section>
   );
 }

@@ -121,7 +121,7 @@ export default function AdminSignInPage() {
                       },
                       socialButtonsBlockButton: {
                         minHeight: "44px",
-                        padding: "12px 16px",
+                        padding: "12px 8px",
                         boxShadow: "none !important",
                         border: "1px solid var(--border) !important",
                         borderColor: "var(--border)",
