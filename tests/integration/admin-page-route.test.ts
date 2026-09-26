@@ -141,6 +141,7 @@ describe("Admin page route integration", () => {
       projectGoal: "Verify filtered queue",
       publicTokenHash: "admin-queue-group-token-hash",
       referenceNumber: "INQ-20260914-GROUP001",
+      referenceLink: "https://example.test/queue-group-fixture",
       targetQuantity: "1 prototype",
     } });
 

@@ -48,7 +48,7 @@ export function AdminShell({
       className="min-h-dvh bg-neutral-100 text-foreground"
       data-foundation-propagation="approved"
       data-foundation-scope="admin"
-      data-product-screen-proof-status="approved-owner"
+      data-product-screen-proof-status="pending-owner-review"
       data-typography-propagation="approved"
       data-typography-version="1.0"
     >

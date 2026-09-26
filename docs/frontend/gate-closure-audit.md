@@ -493,6 +493,17 @@ Acceptance ini hanya untuk bukti browser lokal/non-production. Physical-device
 dan AT, provider, deployment, production, serta promosi P0/P1, Motion, Patterns,
 Creative, Decorative, dan OptionChip tetap memiliki gate masing-masing.
 
+## Redesain dashboard Admin live — 2026-09-26
+
+Acceptance Owner di atas berlaku untuk tampilan Admin yang direview pada saat itu.
+Redesain `/admin` sebagai Overview dan `/admin/queue` sebagai Action Queue
+memerlukan review visual Owner tersendiri pada tampilan live terautentikasi.
+Status redesain ini **UNVERIFIED / PENDING_OWNER_REVIEW** karena lingkungan
+Clerk dan `AdminProfile` aktif untuk bukti browser tersebut belum tersedia.
+Runtime marker `AdminShell` kini `pending-owner-review`; approval Foundation dan
+Typography v1.0 tetap berlaku. Preview sintetis di styleguide dan hasil tes
+otomatis tidak menggantikan penerimaan visual live.
+
 ## Required next evidence
 
 1. Owner supplies the exact non-production provider accounts, callback origins,

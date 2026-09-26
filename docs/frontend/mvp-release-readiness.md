@@ -25,6 +25,7 @@ dan Midtrans masih berada di gate terpisah.
 | Clerk authorization | `READY_NON_PRODUCTION` | active Owner smoke, unknown/inactive profile denial, dan restore state tercatat di task map; test boundary blank-credential tetap terpisah dari server yang sedang memakai Clerk |
 | Customer Google OAuth | `IMPLEMENTED_LOCAL_MOCK_PENDING_LIVE` | `/login`, `/register`, `/account`, DB session, safe return, auto-link, logout, dan mandatory checkout boundary teruji lokal; Google Development credentials dan live callback belum diverifikasi |
 | Authenticated admin visual | `ACCEPTED_NON_PRODUCTION` | desktop/mobile acceptance untuk shell, list, detail yang memiliki data; custom-print detail tetap empty karena tidak ada request nyata |
+| Redesigned live Admin Overview + Action Queue | `UNVERIFIED / PENDING_OWNER_REVIEW` | acceptance lama di atas terbatas pada tampilan yang direview; redesain `/admin` dan `/admin/queue` masih memerlukan review Owner dengan Clerk dan `AdminProfile` aktif |
 | Catalog/public Shop | `ACCEPTED_LOOPBACK` | 3 ready-made published, 5 custom-flow draft, 34 varian, 50 JPG; gallery fallback disetujui Owner |
 | Custom Print + quote/order | `ACCEPTED_LOOPBACK_SYNTHETIC` | quote route-bound, accept → `WAITING_PAYMENT`, decline regression |
 | R2 upload | `PASSED_NON_PRODUCTION_SMOKE` | `PENDING → UPLOADED → VERIFIED`, exact-origin CORS, cleanup selesai |
