@@ -124,7 +124,7 @@ export default async function AdminPricingPage({
               </label>
               <label className="flex min-h-11 items-start gap-3 text-sm leading-6">
                 <input
-                  className="mt-1 size-5 accent-[var(--color-brand-700)]"
+                  className="mt-1 size-5 accent-primary"
                   name="confirmation"
                   required
                   type="checkbox"

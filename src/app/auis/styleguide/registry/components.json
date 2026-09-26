@@ -7,7 +7,10 @@
     "approvedAt": "2026-09-02",
     "scope": "styleguide-only",
     "source": "src/app/auis/styleguide/registry/design-system.ts",
-    "productScreenPropagationAllowed": false,
+    "productScreenPropagationAllowed": true,
+    "productScreenPropagationDecision": "DS-DEC-019-DESIGN-SYSTEM-FOUNDATION-PROPAGATION",
+    "productScreenPropagationMode": "global-foundation-typography-authorized",
+    "productScreenPropagationScope": ["foundation", "typography"],
     "productScreenProof": {
       "status": "authorized-proof",
       "routes": ["/", "/project-brief"],
@@ -16,8 +19,8 @@
       "evidenceTest": "tests/e2e/product-route-proof.spec.ts",
       "viewports": [320, 390, 768, 1280],
       "visualAcceptance": "approved-owner",
-      "visualAcceptanceAt": "2026-09-22",
-      "acceptanceScope": "Owner accepted the named previews for / and /project-brief; no global product-screen propagation",
+      "visualAcceptanceAt": "2026-09-25",
+      "acceptanceScope": "Owner accepted the named previews for / and /project-brief on 2026-09-22 and accepted the 2026-09-25 post-remediation revalidation across 320/390/768/1280, including the build-only homepage media fallback and the 20px confidentiality checkbox with a clickable label; DS-DEC-019 authorizes Foundation/Typography globally without expanding visual acceptance or Official component promotion",
       "checkoutAdminIncluded": false,
       "creativeDecorativeIncluded": false,
       "screenPropagationAllowed": false
@@ -58,14 +61,18 @@
     "visualReviewScope": "styleguide-only",
     "source": "src/app/globals.css",
     "proofRoute": "/auis/styleguide",
-    "screenPropagationAllowed": false,
+    "screenPropagationAllowed": true,
+    "screenPropagationScope": "global-product-screens",
+    "screenPropagationDecision": "DS-DEC-019-DESIGN-SYSTEM-FOUNDATION-PROPAGATION",
     "typography": {
       "status": "approved",
       "version": "1.0",
       "approvedAt": "2026-08-29",
-      "scope": "foundation-styleguide-only",
+      "scope": "foundation-global-authorized",
       "source": "src/app/auis/styleguide/foundation/typography-proof.ts",
-      "screenPropagationAllowed": false
+      "screenPropagationAllowed": true,
+      "screenPropagationScope": "global-product-screens",
+      "screenPropagationDecision": "DS-DEC-019-DESIGN-SYSTEM-FOUNDATION-PROPAGATION"
     }
   },
   "contract": {

@@ -3,11 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowUpRight, ImageOff } from "lucide-react";
 import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { useHydrated } from "@/components/niuva/use-hydrated";
 import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/input";
 import type { ProjectPreviewItem, ProjectPreviewMode } from "@/features/frontend-preview/types";
 
@@ -41,7 +41,7 @@ function ProjectMedia({
 
   return (
     <div className="flex aspect-video flex-col items-center justify-center gap-3 rounded-lg border border-border bg-muted px-5 text-center text-muted-foreground">
-      <ImageOff aria-hidden="true" className="size-7" />
+      <Icon aria-hidden="true" className="size-7" name="image-off" />
       <span className="text-sm">
         {project.detailReadiness === "card-only"
           ? "Media Selected Works belum dikurasi"
@@ -153,7 +153,7 @@ export function ProjectList({ projects, previewMode = null }: ProjectListProps) 
                       <p className="mt-5 text-sm text-brand-700">{project.serviceLabel}</p>
                       <h3 className={`${type.subheading.className} mt-2 flex items-start justify-between gap-4`}>
                         {project.title}
-                        <ArrowUpRight aria-hidden="true" className="mt-1 size-5 shrink-0" />
+                        <Icon aria-hidden="true" className="mt-1 size-5 shrink-0" name="arrow-up-right" />
                       </h3>
                       <p className="mt-3 text-sm leading-6 text-muted-foreground">{project.summary}</p>
                       <span className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4">

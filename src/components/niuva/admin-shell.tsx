@@ -38,7 +38,14 @@ export function AdminShell({
   role: AdminRole;
 }>) {
   return (
-    <div className="min-h-screen bg-muted text-foreground">
+    <div
+      className="min-h-screen bg-muted text-foreground"
+      data-foundation-propagation="approved"
+      data-foundation-scope="admin"
+      data-product-screen-proof-status="pending-owner-review"
+      data-typography-propagation="approved"
+      data-typography-version="1.0"
+    >
       <div className="mx-auto grid max-w-admin gap-6 px-5 py-6 sm:px-8 sm:py-8 lg:grid-cols-[15rem_minmax(0,1fr)]">
         <aside className="dark h-fit rounded-xl bg-background p-4 text-foreground lg:sticky lg:top-6" aria-label="Navigasi admin">
           <Link href="/admin" aria-label="Niuva Admin, kembali ke Action Queue" className="inline-flex rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">

@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ImageOff, Minus, Plus, Trash2 } from "lucide-react";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { AuLink } from "@/components/ui/AuLink";
 import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/input";
 import {
   EMPTY_CART,
@@ -170,13 +170,13 @@ export function CartItems({
               if (!product || !variant) {
                 return (
                   <article key={cart.variantId} className="grid gap-5 border-b border-border py-6 sm:grid-cols-[7rem_minmax(0,1fr)]">
-                    <div className="flex aspect-[4/3] items-center justify-center rounded-xl border border-border bg-muted text-muted-foreground"><ImageOff aria-hidden="true" className="size-6" /></div>
+                    <div className="flex aspect-[4/3] items-center justify-center rounded-xl border border-border bg-muted text-muted-foreground"><Icon aria-hidden="true" className="size-6" name="image-off" /></div>
                     <div className="min-w-0">
                       <h3 className="font-semibold">Varian belum dapat dikenali</h3>
                       <p className="mt-2 text-sm leading-6 text-muted-foreground">Item tetap tersimpan sebagai ID dan jumlah, tetapi data produk tidak tersedia untuk ditampilkan atau dihitung.</p>
                       <p className="mt-2 text-xs text-muted-foreground">Jumlah tersimpan: {cart.quantity}</p>
                       <Button type="button" variant="destructive" className="mt-4 min-h-11 cursor-pointer" onClick={() => persist(removeCartItem(snapshot, cart.variantId))}>
-                        <Trash2 aria-hidden="true" /> Hapus item
+                        <Icon aria-hidden="true" name="trash-2" /> Hapus item
                       </Button>
                     </div>
                   </article>
@@ -187,7 +187,7 @@ export function CartItems({
               const hasStockIssue = cart.quantity > variant.stockOnHand;
               return (
                 <article key={cart.variantId} className="grid gap-5 border-b border-border py-6 sm:grid-cols-[7rem_minmax(0,1fr)]">
-                  <div className="flex aspect-[4/3] items-center justify-center rounded-xl border border-border bg-muted text-muted-foreground"><ImageOff aria-hidden="true" className="size-6" /></div>
+                  <div className="flex aspect-[4/3] items-center justify-center rounded-xl border border-border bg-muted text-muted-foreground"><Icon aria-hidden="true" className="size-6" name="image-off" /></div>
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
@@ -212,16 +212,16 @@ export function CartItems({
                         <label htmlFor={`cart-quantity-${cart.variantId}`} className="mb-2 block text-sm font-medium">Jumlah</label>
                         <div className="flex items-center gap-2">
                           <Button type="button" variant="outline" size="icon" className="size-11 cursor-pointer" aria-label={`Kurangi jumlah ${product.name}, ${variant.name}`} disabled={cart.quantity <= 1} onClick={() => updateQuantity(cart.variantId, cart.quantity - 1, displayMaximum)}>
-                            <Minus aria-hidden="true" />
+                            <Icon aria-hidden="true" name="minus" />
                           </Button>
                           <Input id={`cart-quantity-${cart.variantId}`} type="number" inputMode="numeric" min={1} max={displayMaximum} aria-label={`Jumlah ${product.name}, ${variant.name}`} className="h-11 w-20 text-center text-base tabular-nums" value={cart.quantity} onChange={event => updateQuantity(cart.variantId, Number.parseInt(event.target.value, 10), displayMaximum)} />
                           <Button type="button" variant="outline" size="icon" className="size-11 cursor-pointer" aria-label={`Tambah jumlah ${product.name}, ${variant.name}`} disabled={cart.quantity >= displayMaximum} onClick={() => updateQuantity(cart.variantId, cart.quantity + 1, displayMaximum)}>
-                            <Plus aria-hidden="true" />
+                            <Icon aria-hidden="true" name="plus" />
                           </Button>
                         </div>
                       </div>
                       <Button type="button" variant="destructive" className="min-h-11 cursor-pointer" onClick={() => persist(removeCartItem(snapshot, cart.variantId))}>
-                        <Trash2 aria-hidden="true" /> Hapus
+                        <Icon aria-hidden="true" name="trash-2" /> Hapus
                       </Button>
                     </div>
                   </div>

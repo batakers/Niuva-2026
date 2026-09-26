@@ -1,14 +1,11 @@
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
-import { Fraunces, Space_Grotesk } from "next/font/google";
 import AuLogo from "@/components/ui/AuLogo";
 import { AuLink } from "@/components/ui/AuLink";
 import { publicCompanyProfile } from "@/features/public/company-content";
 import { isLocalDemoMode } from "@/lib/env/server";
 import { PublicNavigation } from "./public-navigation";
 
-const sans = Space_Grotesk({ display: "swap", subsets: ["latin"], variable: "--font-public-sans", weight: "variable" });
-const editorial = Fraunces({ axes: ["opsz"], display: "swap", subsets: ["latin"], variable: "--font-public-editorial", weight: "variable" });
 const typography = {
   "--font-auis-proof-sans": "var(--font-public-sans)", "--font-auis-proof-serif": "var(--font-public-editorial)",
   "--font-body": "var(--font-public-sans)", "--font-body-token": "var(--font-public-sans)",
@@ -51,9 +48,9 @@ export function PublicShell({
     : "pending-owner-review";
 
   return (
-    <div className={`${sans.variable} ${editorial.variable} min-h-screen bg-background text-foreground`}
+    <div className="min-h-screen bg-background text-foreground"
       style={typography} data-foundation-propagation="approved" data-foundation-scope={scope}
-      data-product-screen-proof-status={productRouteProofStatus} data-typography-version="1.0"
+      data-product-screen-proof-status={productRouteProofStatus} data-typography-propagation="approved" data-typography-version="1.0"
       data-runtime-mode={demoMode ? "demo" : "standard"}
       data-homepage={scope === "homepage" ? "" : undefined}
       data-project-brief={scope === "project-brief" ? "" : undefined}

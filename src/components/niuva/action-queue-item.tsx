@@ -89,7 +89,7 @@ export function ActionQueueItem({
             </p>
             <h3 className="mt-1 text-sm leading-snug font-semibold">{summary}</h3>
           </div>
-          <Badge className={cn("shrink-0", statusClasses[status])} variant="outline">
+          <Badge className={cn("max-w-full", statusClasses[status])} variant="outline">
             {statusLabels[status]}
           </Badge>
         </div>

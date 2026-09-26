@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Minus, Plus } from "lucide-react";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { VariantSelector } from "@/components/niuva/variant-selector";
 import { useHydrated } from "@/components/niuva/use-hydrated";
 import { AuLink } from "@/components/ui/AuLink";
 import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/input";
 import { addCartItem, readCart, writeCart } from "@/features/cart/cart-state";
 import type { PublicShopProduct } from "@/features/frontend-preview/types";
@@ -103,14 +103,14 @@ export function ProductSelection({ product, previewEnabled = true }: { product: 
           <div className="flex items-center gap-2">
             <Button type="button" variant="outline" size="icon" className="size-11 cursor-pointer" aria-label="Kurangi jumlah"
               disabled={!hydrated || !selected || quantity <= 1} onClick={() => changeQuantity(quantity - 1)}>
-              <Minus aria-hidden="true" />
+              <Icon aria-hidden="true" name="minus" />
             </Button>
             <Input id="product-quantity" type="number" inputMode="numeric" min={1} max={selected?.stockOnHand ?? 1}
               className="h-11 w-20 text-center text-base tabular-nums" value={quantity} disabled={!hydrated || !selected}
               onChange={event => changeQuantity(Number.parseInt(event.target.value, 10) || 1)} />
             <Button type="button" variant="outline" size="icon" className="size-11 cursor-pointer" aria-label="Tambah jumlah"
               disabled={!hydrated || !selected || quantity >= selected.stockOnHand} onClick={() => changeQuantity(quantity + 1)}>
-              <Plus aria-hidden="true" />
+              <Icon aria-hidden="true" name="plus" />
             </Button>
           </div>
         </div>

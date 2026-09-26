@@ -5,14 +5,16 @@
 
 /*
  * Niuva UI Foundation — baseline tokens retained; revised styleguide proof
- * approved for styleguide-only use on 2026-09-03.
+ * approved for styleguide-only use on 2026-09-03; Foundation and Typography
+ * propagation was authorized globally on 2026-09-25 by DS-DEC-019.
  *
  * Evidence: Niuva Logo System v1.0 locks --brand-500 (#6390BB), the light
  * wordmark foreground, and light-first usage. The surrounding scale, semantic
  * mapping, spacing, radius, elevation, typography roles, and motion values were
- * accepted in the isolated Visual Proof. Product-screen propagation remains a
- * separate gate. Human-facing UI is sans-first, while technical type is opt-in
- * for genuinely machine-readable values.
+ * accepted in the isolated Visual Proof. P0/P1, Motion, Patterns, Creative,
+ * Decorative, visual acceptance, AT/device, provider, and production gates
+ * remain separate. Human-facing UI is sans-first; technical type remains an
+ * explicit semantic role using the same Space Grotesk family in v1.0.
  */
 :root {
   /* Brand scale: --brand-500 is the locked Niuva Blue identity value. */
@@ -102,9 +104,9 @@
   --ease-standard-token: cubic-bezier(0.2, 0, 0, 1);
   --ease-emphasis-token: cubic-bezier(0.2, 0.8, 0.2, 1);
   /* Human-facing UI is sans-first; technical type is an explicit exception. */
-  --font-display-token: var(--font-geist-sans);
-  --font-body-token: var(--font-geist-sans);
-  --font-technical-token: var(--font-geist-mono);
+  --font-display-token: var(--font-public-sans);
+  --font-body-token: var(--font-public-sans);
+  --font-technical-token: var(--font-public-sans);
 
   --sidebar: var(--neutral-100);
   --sidebar-foreground: var(--neutral-900);
@@ -249,8 +251,8 @@
   --spacing-section: var(--section-gap-token);
   --spacing-content: var(--content-gap-token);
   --spacing-card: var(--card-gap-token);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-public-sans);
+  --font-mono: var(--font-public-sans);
   --font-display: var(--font-display-token);
   --font-body: var(--font-body-token);
   --font-technical: var(--font-technical-token);

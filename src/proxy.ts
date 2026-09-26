@@ -19,15 +19,21 @@ export function hasClerkAdminCredentials(
   );
 }
 
-const adminProxy = clerkMiddleware(async (auth, request) => {
-  const pathname = request.nextUrl.pathname;
+const adminProxy = clerkMiddleware(
+  async (auth, request) => {
+    const pathname = request.nextUrl.pathname;
 
-  if (pathname === "/admin/sign-in" || pathname === "/admin/sign-in/") {
-    return;
-  }
+    if (pathname === "/admin/sign-in" || pathname === "/admin/sign-in/") {
+      return;
+    }
 
-  await auth.protect({ unauthenticatedUrl: "/admin/sign-in" });
-});
+    const unauthenticatedUrl = new URL("/admin/sign-in", request.url).toString();
+    await auth.protect({ unauthenticatedUrl });
+  },
+  {
+    contentSecurityPolicy: { strict: true },
+  },
+);
 
 export function createAdminAuthUnavailableResponse(): NextResponse {
   return NextResponse.json(

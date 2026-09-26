@@ -1,11 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ImageOff, SearchX } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useHydrated } from "@/components/niuva/use-hydrated";
 import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/input";
 import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
 import type { PublicShopProduct } from "@/features/frontend-preview/types";
@@ -66,7 +66,7 @@ export function ProductGrid({ products, previewEnabled = false }: { products: re
       <p role="status" className="py-5 text-sm text-muted-foreground">{filtered.length} {previewEnabled ? "produk contoh" : "produk"}</p>
       {filtered.length === 0 ? (
         <div className="flex min-h-72 flex-col items-start justify-center border-y border-border py-10">
-          <SearchX aria-hidden="true" className="size-7 text-muted-foreground" />
+          <Icon aria-hidden="true" className="size-7 text-muted-foreground" name="search-x" />
           <h2 className={`${type.subheading.className} mt-5`}>Tidak ada produk yang cocok.</h2>
           <p className="mt-2 max-w-lg text-sm leading-6 text-muted-foreground">Ubah kata pencarian atau tampilkan kembali semua kategori.</p>
           <Button type="button" variant="outline" className="mt-5 min-h-11 cursor-pointer" onClick={resetFilters}>Hapus filter</Button>
@@ -92,7 +92,7 @@ export function ProductGrid({ products, previewEnabled = false }: { products: re
                       />
                     ) : (
                       <div className="text-center">
-                        <ImageOff aria-hidden="true" className="mx-auto size-7" />
+                        <Icon aria-hidden="true" className="mx-auto size-7" name="image-off" />
                         <p className="mt-3 text-sm">Foto produk belum disertakan</p>
                       </div>
                     )}

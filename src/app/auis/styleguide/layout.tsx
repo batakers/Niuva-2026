@@ -1,6 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
-import { Fraunces, Space_Grotesk } from "next/font/google";
 
 import AuLogo from "@/components/ui/AuLogo";
 
@@ -10,31 +9,18 @@ type StyleguideLayoutProps = Readonly<{
   children: ReactNode;
 }>;
 
-const spaceGrotesk = Space_Grotesk({
-  display: "swap",
-  subsets: ["latin"],
-  variable: "--font-auis-proof-sans",
-  weight: "variable",
-});
-
-const fraunces = Fraunces({
-  axes: ["opsz"],
-  display: "swap",
-  subsets: ["latin"],
-  variable: "--font-auis-proof-serif",
-  weight: "variable",
-});
-
 const styleguideTypography = {
-  "--font-body": "var(--font-auis-proof-sans)",
-  "--font-body-token": "var(--font-auis-proof-sans)",
-  "--font-display": "var(--font-auis-proof-sans)",
-  "--font-display-token": "var(--font-auis-proof-sans)",
-  "--font-mono": "var(--font-auis-proof-sans)",
-  "--font-sans": "var(--font-auis-proof-sans)",
-  "--font-technical": "var(--font-auis-proof-sans)",
-  "--font-technical-token": "var(--font-auis-proof-sans)",
-  fontFamily: "var(--font-auis-proof-sans), Arial, Helvetica, sans-serif",
+  "--font-auis-proof-sans": "var(--font-public-sans)",
+  "--font-auis-proof-serif": "var(--font-public-editorial)",
+  "--font-body": "var(--font-public-sans)",
+  "--font-body-token": "var(--font-public-sans)",
+  "--font-display": "var(--font-public-sans)",
+  "--font-display-token": "var(--font-public-sans)",
+  "--font-mono": "var(--font-public-sans)",
+  "--font-sans": "var(--font-public-sans)",
+  "--font-technical": "var(--font-public-sans)",
+  "--font-technical-token": "var(--font-public-sans)",
+  fontFamily: "var(--font-public-sans), Arial, Helvetica, sans-serif",
 } as CSSProperties;
 
 const styleguideMotion = {
@@ -45,8 +31,9 @@ const styleguideMotion = {
 export default function StyleguideLayout({ children }: StyleguideLayoutProps) {
   return (
     <div
-      className={`${spaceGrotesk.variable} ${fraunces.variable} min-h-screen bg-background text-foreground lg:grid lg:grid-cols-[16rem_minmax(0,1fr)]`}
-      data-typography-scope="styleguide-only"
+      className="min-h-screen bg-background text-foreground lg:grid lg:grid-cols-[16rem_minmax(0,1fr)]"
+      data-typography-scope="global-authorized"
+      data-typography-visual-proof-scope="styleguide-only"
       style={{ ...styleguideTypography, ...styleguideMotion }}
     >
       <aside className="dark border-b border-border bg-sidebar text-sidebar-foreground lg:sticky lg:top-0 lg:h-screen lg:border-r lg:border-b-0">
@@ -83,8 +70,9 @@ export default function StyleguideLayout({ children }: StyleguideLayoutProps) {
           </nav>
 
           <p className="mt-auto text-xs leading-5 text-sidebar-foreground/60">
-            Typography System v1.0, Motion, dan Patterns disetujui untuk
-            styleguide. Propagasi product screens tetap memiliki gate terpisah.
+            Typography System v1.0 diotorisasi untuk seluruh product screens;
+            visual acceptance, AT/device, provider, dan production tetap gate
+            terpisah. Motion dan Patterns tetap styleguide-only.
           </p>
         </div>
       </aside>

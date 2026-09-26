@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Check, FileSearch, ShieldCheck } from "lucide-react";
 import { connection } from "next/server";
 
 import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { AuLink } from "@/components/ui/AuLink";
+import { Icon } from "@/components/ui/Icon";
 import { getServerCapabilities } from "@/lib/env/server";
 import {
   CUSTOM_FLOW_PRODUCT_OPTIONS,
@@ -68,13 +68,13 @@ export default async function CustomPrintRequestPage({
 
             <aside className="rounded-xl bg-brand-950 p-6 text-neutral-50 lg:col-span-5" aria-labelledby="readiness-title">
               <div className="flex items-center gap-3">
-                <FileSearch aria-hidden="true" className="size-5 text-brand-300" />
+                <Icon aria-hidden="true" className="size-5 text-brand-300" name="file-search" />
                 <h2 className="text-base font-semibold" id="readiness-title">Yang perlu disiapkan</h2>
               </div>
               <ul className="mt-5 space-y-3">
                 {readinessItems.map((item) => (
                   <li className="flex gap-3 text-sm leading-6 text-neutral-300" key={item}>
-                    <Check aria-hidden="true" className="mt-1 size-4 shrink-0 text-brand-300" />
+                    <Icon aria-hidden="true" className="mt-1 size-4 shrink-0 text-brand-300" name="check" />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -98,7 +98,7 @@ export default async function CustomPrintRequestPage({
                 </p>
               </div>
               <div className="rounded-xl border border-border bg-card p-5">
-                <ShieldCheck aria-hidden="true" className="size-6 text-brand-700" />
+                <Icon aria-hidden="true" className="size-6 text-brand-700" name="shield-check" />
                 <h3 className="mt-4 text-base font-semibold">Review manusia tetap wajib</h3>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   {liveEnabled

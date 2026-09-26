@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { ArrowUpRight } from "lucide-react";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { AuLink } from "@/components/ui/AuLink";
+import { Icon } from "@/components/ui/Icon";
 import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
 import { publicServices } from "@/features/public/company-content";
 
@@ -42,7 +42,7 @@ export default function ServicesPage() {
               <h1 className={`${type.display.className} mt-4 max-w-xl`}>Dukungan yang mengikuti tahap proyek Anda.</h1></div>
             <div className="max-w-lg space-y-6 lg:pl-10">
               <p className="text-lg leading-8 text-muted-foreground">Ada yang dimulai dari pertanyaan. Ada yang sudah berbentuk sketsa, model, atau prototype. Kita mulai dari konteks itu.</p>
-              <AuLink href="/project-brief" className="min-h-11 gap-2">Diskusikan kebutuhan <ArrowUpRight aria-hidden="true" className="size-4" /></AuLink>
+              <AuLink href="/project-brief" className="min-h-11 gap-2">Diskusikan kebutuhan <Icon aria-hidden="true" className="size-4" name="arrow-up-right" /></AuLink>
             </div>
           </div>
         </section>
