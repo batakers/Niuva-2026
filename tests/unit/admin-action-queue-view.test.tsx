@@ -48,6 +48,7 @@ describe("AdminActionQueueView", () => {
       />,
     );
 
+    expect(document.querySelector("[data-foundation-scope='admin']")).toHaveAttribute("data-product-screen-proof-status", "approved-owner");
     expect(
       screen.getByRole("heading", { level: 1, name: "Action Queue" }),
     ).toBeInTheDocument();
@@ -78,6 +79,7 @@ describe("AdminActionQueueView", () => {
   it("renders a safe recovery state when the queue cannot be read", () => {
     render(<AdminActionQueueErrorView role="ADMIN" />);
 
+    expect(document.querySelector("[data-foundation-scope='admin']")).toHaveAttribute("data-product-screen-proof-status", "pending-owner-review");
     expect(
       screen.getByRole("heading", {
         level: 1,

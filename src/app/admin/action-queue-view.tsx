@@ -9,7 +9,7 @@ export function AdminActionQueueView({
   role,
 }: Readonly<{ result: ActionQueueResult; role: AdminRole }>) {
   return (
-    <AdminShell active="queue" role={role}>
+    <AdminShell active="queue" productScreenProofStatus="approved-owner" role={role}>
       <main className="space-y-6" data-admin-surface="queue" id="main-content">
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div>

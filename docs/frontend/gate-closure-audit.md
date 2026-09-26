@@ -502,11 +502,71 @@ Creative, Decorative, dan OptionChip tetap memiliki gate masing-masing.
 Acceptance Owner di atas berlaku untuk tampilan Admin yang direview pada saat itu.
 Redesain `/admin` sebagai Overview dan `/admin/queue` sebagai Action Queue
 memerlukan review visual Owner tersendiri pada tampilan live terautentikasi.
-Status redesain ini **UNVERIFIED / PENDING_OWNER_REVIEW** karena lingkungan
-Clerk dan `AdminProfile` aktif untuk bukti browser tersebut belum tersedia.
+Pada saat catatan awal ini ditulis, status redesain **UNVERIFIED /
+PENDING_OWNER_REVIEW** karena lingkungan Clerk dan `AdminProfile` aktif untuk
+bukti browser tersebut belum tersedia.
 Runtime marker `AdminShell` kini `pending-owner-review`; approval Foundation dan
 Typography v1.0 tetap berlaku. Preview sintetis di styleguide dan hasil tes
 otomatis tidak menggantikan penerimaan visual live.
+
+## Review teknis browser redesain Admin live — 2026-09-26
+
+Status: **REVIEWED_LOCAL / PENDING_OWNER_REVIEW**. Checkout `main` pada PR #26
+dibuka melalui Next dev port 3100, PostgreSQL development loopback yang sudah
+ada, serta sesi Clerk Owner dengan `AdminProfile` aktif di Chrome. Tidak ada
+migrasi, reseed, perubahan credential, atau tindakan operasional yang dijalankan.
+
+- Delapan route daftar (`/admin`, `/admin/queue`, Orders, Custom Print,
+  Inquiries, Products, Portfolio, Pricing) dan lima route detail dengan record
+  tersedia diperiksa pada 320×900, 390×900, 768×900, dan 1280×900. Semua
+  menampilkan heading yang sesuai tanpa overflow horizontal dokumen.
+- Menu mobile membuka Action Queue dan menandai route aktif. Filter queue
+  `Orders` menunjukkan keadaan kosong; `B2B Inquiries` menunjukkan record;
+  nilai `group` tidak valid kembali ke `Semua`. Tautan antrean menuju detail
+  inquiry internal. Pada overview terfilter `Orders`, lima prioritas tetap
+  mengikuti antrean tanpa filter. Fokus keyboard pada menu mobile memiliki
+  ring yang terlihat.
+- Overview live memuat empat metrik, grafik 30 hari, lima prioritas, dan
+  tabel kerja. Pemeriksaan markup pada data lokal tidak menemukan pola email,
+  telepon, alamat, atau label payload provider; 31 tautannya tetap internal.
+  Keadaan memuat terlihat pada navigasi; keadaan kosong dan error aman
+  tercakup oleh test unit Admin. Kegagalan database tidak dipaksakan pada sesi
+  browser agar data development yang sedang dipakai tidak terganggu.
+- `/admin/sign-in` dengan form Clerk diperiksa pada keempat viewport. Pada
+  320px label Google semula terpotong; padding visual tombol dikoreksi, dan
+  label kini lengkap tanpa overflow pada seluruh viewport.
+- Grafik overview semula melebarkan dokumen mobile melalui tabel aksesibilitas
+  dan area gulir 30 hari. Konten kini terkurung di panel; dokumen tidak
+  melebar, area grafik tetap dapat digulir, dan tabel tetap hadir sebagai
+  tabel aksesibel. Browser tab Admin tidak mencatat console error.
+- Emulasi `prefers-reduced-motion: reduce` melalui Chromium headless lulus
+  pada preview sintetis dan sign-in: media query aktif, transition duration
+  dipendekkan, dan tidak ada overflow. Emulasi tersebut belum dijalankan pada
+  sesi terautentikasi. Playwright E2E default tidak dijalankan karena skrip
+  servernya menjalankan migration, yang tidak termasuk task ini.
+
+`corepack pnpm lint` lulus (0 error, 147 warning existing), 11/11 test unit
+Admin dan 154/154 test backend lulus, serta `typecheck`, `build`, dan
+`git diff --check` lulus. Bukti ini adalah review teknis lokal, belum
+penerimaan visual Owner untuk redesain. Marker `AdminShell` tetap
+`pending-owner-review`; physical-device/AT, provider, deployment, dan
+production tetap gate terpisah.
+
+## Penerimaan visual Owner untuk Dashboard Admin live — 2026-09-27
+
+Status terbaru: **OWNER_VISUAL_ACCEPTED_LOCAL** untuk tampilan normal dan kosong
+Overview `/admin` serta Action Queue `/admin/queue` yang ditunjukkan dalam
+review lokal di atas. Setelah diminta meninjau Dashboard Admin live pada desktop
+dan mobile, Owner menjawab "ya diterima dan tidak ada masalah". Bukti teknis
+review mencakup 320, 390, 768, dan 1280 px; jawaban Owner menerima hasil
+visual tersebut tanpa revisi.
+
+Marker `data-product-screen-proof-status="approved-owner"` sekarang hanya
+diberikan pada view normal Overview dan Action Queue. View error keduanya,
+daftar/detail modul Admin lain, dan sign-in tetap pada status review tersendiri;
+penerimaan ini tidak menutup emulasi reduced motion pada sesi terautentikasi,
+kegagalan database dalam browser, physical-device/AT, provider, deployment,
+atau production. Catatan acceptance Admin sebelum redesain tetap historis.
 
 ## Required next evidence
 

@@ -28,6 +28,7 @@ describe("AdminOverviewView", () => {
 
     render(<AdminOverviewView dashboard={dashboard} queue={queue} role="OWNER" />);
 
+    expect(document.querySelector("[data-foundation-scope='admin']")).toHaveAttribute("data-product-screen-proof-status", "approved-owner");
     expect(screen.getByRole("heading", { level: 1, name: "Overview" })).toBeInTheDocument();
     expect(screen.getByRole("table", { name: /Jumlah brief/ })).toBeInTheDocument();
     expect(screen.getByText("Antrean pekerjaan sedang kosong.")).toBeInTheDocument();
