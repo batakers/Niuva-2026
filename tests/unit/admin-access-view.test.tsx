@@ -52,7 +52,7 @@ beforeEach(() => {
 });
 
 describe("admin access view", () => {
-  it("keeps Admin visual acceptance unverified while exposing the approved foundation", () => {
+  it("marks global Admin visual acceptance approved while exposing the approved foundation", () => {
     render(
       <AdminShell active="queue" role="OWNER">
         <main>Admin content</main>
@@ -62,7 +62,7 @@ describe("admin access view", () => {
     const shell = document.querySelector("[data-foundation-scope='admin']");
     expect(shell).toHaveAttribute("data-foundation-propagation", "approved");
     expect(shell).toHaveAttribute("data-typography-propagation", "approved");
-    expect(shell).toHaveAttribute("data-product-screen-proof-status", "pending-owner-review");
+    expect(shell).toHaveAttribute("data-product-screen-proof-status", "approved-owner");
     expect(screen.getByText("Admin content")).toBeInTheDocument();
   });
 
