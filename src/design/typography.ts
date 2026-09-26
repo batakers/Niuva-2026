@@ -20,6 +20,6 @@ export const typographySystemTokens = {
   },
   "editorial-accent": {
     className:
-      "text-[28px] font-medium leading-[35px] tracking-[-0.01em] sm:text-[32px] sm:leading-[39px] xl:text-[36px] xl:leading-[43px]",
+      "[font-family:var(--font-public-editorial),Georgia,serif] text-[28px] font-medium leading-[35px] tracking-[-0.01em] sm:text-[32px] sm:leading-[39px] xl:text-[36px] xl:leading-[43px]",
   },
 } as const;
