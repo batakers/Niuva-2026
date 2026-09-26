@@ -29,7 +29,10 @@
 - Prefer a maintainable modular monolith and managed services over speculative infrastructure.
 - Preserve customer-file privacy and immutable commercial snapshots.
 - Use real Niuva evidence. Never invent client outcomes, inventory, pricing decisions, or brand tokens.
-- Approve UI Foundation / Visual Proof before expanding the interface.
+- Use the approved UI Foundation and component contracts. Complete and verify
+  the clearly requested route or component without serial Owner review. Seek
+  visual acceptance only if the user explicitly requests it; otherwise report
+  the named scope as visually unreviewed.
 - Verify user-visible work in desktop/mobile browsers, including loading, empty, validation, error, success, keyboard, focus, and reduced-motion states.
 
 ## Source authority

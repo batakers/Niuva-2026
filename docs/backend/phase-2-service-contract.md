@@ -95,6 +95,11 @@ Retail orders are rejected by this path.
 
 ## Closure decisions
 
+`OPEN-PRICE-001` and `OPEN-PRICE-002` below are historical Phase 2 IDs, not
+current open pricing decisions. Their policies were closed for local
+implementation by [the Phase 3 Pricing v1 addendum](phase-3-pricing-biteship-contract.md);
+an approved active rule is still required before calculation or activation.
+
 | ID | Decision | Current effect |
 | --- | --- | --- |
 | CLOSED-ARC-001 | Reservation/payment expiry and late settlement | Retail is 30 minutes; custom payment is 24 hours; late settlement never reopens a cancelled order and requires full refund handling. |
@@ -102,8 +107,8 @@ Retail orders are rejected by this path.
 | CLOSED-ARC-003 | Cancellation/refund | Unpaid cancellation is allowed; paid cancellation/refund is Owner-only, full, and unavailable through generic status mutation. Partial refund is outside MVP. |
 | CLOSED-ARC-004 | Custom request/order ownership | Revalidated acceptance atomically approves the request and creates the payable custom order. |
 | CLOSED-ARC-005 | Admin permission matrix | Routine operations are OWNER/ADMIN; finance, role, pricing activation, and policy mutations are OWNER-only. |
-| OPEN-PRICE-001 | 1–49 g pricing | Calculation fails closed unless the caller supplies an approved rule policy. |
-| OPEN-PRICE-002 | Communal ABS pricing | Calculation fails closed; no communal pricing is invented. |
+| OPEN-PRICE-001 (historical; CLOSED by Phase 3) | 1–49 g pricing | No 50 g minimum; calculation still fails closed without an approved active rule. |
+| OPEN-PRICE-002 (historical; CLOSED by Phase 3) | Communal ABS pricing | PLA Rp500/g and ABS Rp700/g are material-only; calculation still fails closed without an approved active rule. |
 | CLOSED-FILE-001 | Maximum custom-file size and retention | 100 MiB per file; 14/60/90-day lifecycle schedule with legal-hold exception. |
 
 ## Verification and database safety

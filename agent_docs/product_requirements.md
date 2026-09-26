@@ -72,7 +72,10 @@ These may not delay P0.
 
 - Tone: Professional, Innovative, Precise, Creative, Trustworthy.
 - Direction: Precision Industrial + Creative Accent using real Niuva project, product, workshop, process, and material evidence.
-- Use the existing blue/white identity as input, but do not invent permanent colors or typography before UI Foundation approval.
+- Use the approved UI Foundation/Typography and semantic component contracts;
+  do not invent permanent colors or typography. Implement and verify the
+  requested UI scope without automatic Owner review; record visual acceptance
+  only if the user explicitly requests and accepts a review of that scope.
 - Avoid generic SaaS composition, indiscriminate cards, gradients, glassmorphism, glowing borders, decorative blobs, and oversized pills.
 - Public pages may be expressive; checkout/payment stay predictable; admin stays operational.
 - Target WCAG 2.1 AA basics, responsive desktop/mobile behavior, visible focus, descriptive errors, and reduced motion.
@@ -84,11 +87,17 @@ These may not delay P0.
 - Reliability outranks visual quality; visual quality outranks speculative scalability.
 - Never cut public positioning, project brief, catalog core, custom request/operator quote, payment, basic shipping, thin admin, security/private files, or order status.
 
-## Decisions required before production
+## Decisions and gates before production
 
-- Pricing policy for 1–49 g and communal ABS.
-- Maximum upload size and final customer-file retention.
+Pricing v1 for 1–49 g and communal ABS is closed for local implementation in
+`docs/backend/phase-3-pricing-biteship-contract.md`. The 100 MiB binary upload
+limit and 14/60/90-day lifecycle are closed in
+`docs/backend/phase-2-closure-decisions.md`. Active pricing-rule seeding and
+provider activation remain separate gates.
+
+- Legal/accounting record retention outside the binary-file lifecycle.
 - Permission to publish client names/logos and factual case-study outcomes.
 - Initial launch products, variants, images, and stock.
 - Custom quotation service-level promise.
-- Provider onboarding/readiness and live pricing for Midtrans, Biteship, R2, Clerk, Neon, Resend, Sentry, and Vercel.
+- Provider onboarding/readiness and live pricing where applicable for Midtrans,
+  Biteship, R2, Clerk, Google OAuth, Neon, Resend, Sentry, and Vercel.
