@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
-import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
+import { typographySystemTokens as type } from "@/design/typography";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
-import { AuLink } from "@/components/ui/AuLink";
+import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { getLiveShopProducts, getShopPreview } from "@/features/frontend-preview/server";
 import { requireCustomer } from "@/lib/auth/customer";
 import { getServerCapabilities, isLocalDemoMode } from "@/lib/env/server";
@@ -41,7 +41,7 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
                 tone="warning"
                 title="Login Customer belum tersedia."
                 description="Checkout membutuhkan Google login Customer. Lengkapi konfigurasi OAuth non-production sebelum melanjutkan."
-                action={<AuLink href="/login?returnTo=/checkout" className="min-h-11">Buka halaman login</AuLink>}
+                action={<NiuvaLink href="/login?returnTo=/checkout" className="min-h-11">Buka halaman login</NiuvaLink>}
               />
             </div>
           </main>

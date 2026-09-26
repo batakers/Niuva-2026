@@ -129,7 +129,7 @@ Started: 2026-09-06. Updated: 2026-09-20. Status: **UI_IMPLEMENTED**, **ADMIN_IN
 
 | Task | Result | Local review |
 | --- | --- | --- |
-| FE-00 | Scoped component contract; historical styleguide acceptance retained separately | `src/app/auis/styleguide/registry/component-contracts.md` |
+| FE-00 | Scoped component contract; historical proof acceptance retained separately | [DESIGN.md](../../DESIGN.md) (active); [historical contract](../archive/auis-retired/component-contracts.md) |
 | FE-01 | Typed synthetic fixtures, server-side development gate, explicit scenarios | `/projects?preview=examples`, `empty`, `loading`, `error` |
 | FE-02 | Shared typography, dark-surface logo, header/footer, mobile menu, skip link, Escape/focus | Every public page |
 | FE-03 | Existing homepage direction retained; available routes linked, Shop linked after FE-08 | `/` |

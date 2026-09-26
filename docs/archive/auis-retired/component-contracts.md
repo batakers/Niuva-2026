@@ -5,7 +5,8 @@ Foundation status: **Foundation visual proof approved for styleguide-only on
 2026-09-03; Foundation/Typography global propagation authorized by DS-DEC-019
 on 2026-09-25.**
 Implementation status: **P0/P1 components are visually approved for the
-styleguide; P0/P1 component propagation remains separately blocked.**
+styleguide; this approval alone does not authorize blanket product-screen
+propagation. A named user request authorizes implementation on its routes.**
 `OptionChip` implementation is approved as a styleguide-only extension on
 2026-09-21. Owner accepted the named visual proof on 2026-09-22; scoped
 Chromium/browser semantics acceptance is verified, while cross-browser/physical
@@ -22,6 +23,13 @@ was approved for the styleguide on 2026-09-02. The revised Foundation visual
 proof was approved for styleguide-only use on 2026-09-03. Motion System v1 and
 the four Pattern proofs were also approved for styleguide-only usage on
 2026-09-03.
+
+`DESIGN.md` owns shared visual policy; this registry documents reusable
+contracts and historical proof. Page-only composition stays in its product
+route. A redesign of a named page is implemented and verified there without
+first making a styleguide preview or registering every page-local component.
+Use the styleguide when a Design System showcase, separate proof, or isolated
+prototype is explicitly requested.
 
 ## Architecture v1
 
@@ -94,9 +102,11 @@ The architecture registry is recorded in
 | `07 Patterns` | Repeatable journey compositions. | Compose official components; no new tokens, primitives, or domain rules. | Approved proofs for styleguide-only |
 | `08 Governance` | Provenance, promotion, accessibility, visual proof, performance, changelog, and deprecation. | Typed registry, JSON summary, and contract documentation. | Implemented |
 
-The promotion path is `reference → candidate → proof → approved → official`.
-`Official` is a separate product-screen authorization state; Architecture v1
-does not grant it.
+The promotion path `reference → candidate → proof → approved → official`
+classifies evidence for a shared Design System contract. It is not a sequence
+of Owner approvals before a named route can be edited. Proof may be gathered
+on the requested product route. `Approved` requires an explicit Owner visual
+acceptance; `Official` describes broader shared use beyond the named scope.
 
 ### Scoped Foundation + Primitive/Core audit
 
@@ -239,7 +249,9 @@ names or create duplicate wrappers merely to satisfy the registry.
 
 These are the first components derived from the product journeys. All eight
 contracts below are implemented and visually approved for the styleguide-only
-proof; new visual defaults still require a separate review.
+proof. New shared defaults need a documented contract and relevant proof;
+Owner visual review occurs only if requested. Page-local variants can be
+implemented and verified within the named route without a separate review.
 P0 means the component supports a core journey and P1 means it is a later
 reusable boundary.
 

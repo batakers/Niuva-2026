@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
-import { AuLink } from "@/components/ui/AuLink";
-import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
+import { NiuvaLink } from "@/components/ui/NiuvaLink";
+import { typographySystemTokens as type } from "@/design/typography";
 import { getLiveShopProducts, getShopPreview } from "@/features/frontend-preview/server";
 import { ProductGrid } from "./product-grid";
 
@@ -53,16 +53,16 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
               <p className="text-sm font-semibold">Preview lokal, data sintetis dan bukan inventory Niuva</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {[["examples", "Contoh"], ["empty", "Kosong"], ["loading", "Memuat"], ["error", "Gagal"]].map(([value, label]) => (
-                  <AuLink key={value} href={`/shop?preview=${value}`} variant="outline" size="sm" className="min-h-11" aria-current={scenario === value ? "page" : undefined}>{label}</AuLink>
+                  <NiuvaLink key={value} href={`/shop?preview=${value}`} variant="outline" size="sm" className="min-h-11" aria-current={scenario === value ? "page" : undefined}>{label}</NiuvaLink>
                 ))}
               </div>
             </aside>
           )}
 
           {liveCatalogError ? (
-            <StatusNotice tone="error" title="Katalog live belum dapat dimuat." description="Sumber data produk sedang tidak dapat dijangkau. Tidak ada transaksi yang dibuat; coba muat ulang atau gunakan preview contoh." action={<AuLink href="/shop" variant="outline" className="min-h-11">Muat ulang</AuLink>} />
+            <StatusNotice tone="error" title="Katalog live belum dapat dimuat." description="Sumber data produk sedang tidak dapat dijangkau. Tidak ada transaksi yang dibuat; coba muat ulang atau gunakan preview contoh." action={<NiuvaLink href="/shop" variant="outline" className="min-h-11">Muat ulang</NiuvaLink>} />
           ) : liveCatalogUnavailable ? (
-            <StatusNotice tone="warning" title="Katalog live belum terhubung." description="Database katalog belum tersedia pada runtime ini. Gunakan preview contoh untuk meninjau tampilan; data preview bukan inventory nyata." action={<AuLink href="/shop?preview=examples" variant="outline" className="min-h-11">Buka preview contoh</AuLink>} />
+            <StatusNotice tone="warning" title="Katalog live belum terhubung." description="Database katalog belum tersedia pada runtime ini. Gunakan preview contoh untuk meninjau tampilan; data preview bukan inventory nyata." action={<NiuvaLink href="/shop?preview=examples" variant="outline" className="min-h-11">Buka preview contoh</NiuvaLink>} />
           ) : scenario === "loading" ? (
             <div role="status" aria-label="Memuat katalog" className="space-y-5 py-8">
               <p className="text-sm text-muted-foreground">Memuat katalog contoh…</p>
@@ -71,9 +71,9 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
               </div>
             </div>
           ) : scenario === "error" ? (
-            <StatusNotice tone="error" title="Katalog belum dapat dimuat." description="Muat kembali untuk meninjau alur pemulihan. Tidak ada transaksi yang dibuat." action={<AuLink href="/shop?preview=examples" variant="outline" className="min-h-11">Coba lagi</AuLink>} />
+            <StatusNotice tone="error" title="Katalog belum dapat dimuat." description="Muat kembali untuk meninjau alur pemulihan. Tidak ada transaksi yang dibuat." action={<NiuvaLink href="/shop?preview=examples" variant="outline" className="min-h-11">Coba lagi</NiuvaLink>} />
           ) : products.length === 0 ? (
-            <StatusNotice tone="info" title="Katalog ready-made belum dipublikasikan." description="Produk, foto, varian, dan stok akan muncul setelah dataset launch mendapat persetujuan publikasi." action={<AuLink href="/services" variant="outline" className="min-h-11">Lihat layanan</AuLink>} />
+            <StatusNotice tone="info" title="Katalog ready-made belum dipublikasikan." description="Produk, foto, varian, dan stok akan muncul setelah dataset launch mendapat persetujuan publikasi." action={<NiuvaLink href="/services" variant="outline" className="min-h-11">Lihat layanan</NiuvaLink>} />
           ) : (
             <ProductGrid products={products} previewEnabled={scenario === "examples"} />
           )}

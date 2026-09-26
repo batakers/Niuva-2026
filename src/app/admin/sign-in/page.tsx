@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ClerkDegraded, ClerkFailed, ClerkLoaded, ClerkLoading, SignIn } from "@clerk/nextjs";
-import AuLogo from "@/components/ui/AuLogo";
+import NiuvaLogo from "@/components/ui/NiuvaLogo";
 
 export const metadata: Metadata = {
   title: "Admin sign-in · Niuva",
@@ -41,7 +41,7 @@ export default function AdminSignInPage() {
             className="inline-flex rounded-lg bg-neutral-900 px-2 py-2 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             href="/"
           >
-            <AuLogo className="h-6 w-auto" priority />
+            <NiuvaLogo className="h-6 w-auto" priority />
           </Link>
           <span className="text-sm font-medium text-muted-foreground">Operations / Admin</span>
         </header>

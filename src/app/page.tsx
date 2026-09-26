@@ -5,9 +5,9 @@ import type { ReactNode } from "react";
 import { connection } from "next/server";
 import { PublicShell } from "@/components/niuva/public-shell";
 
-import { typographySystemTokens } from "@/app/auis/styleguide/foundation/typography-proof";
+import { typographySystemTokens } from "@/design/typography";
 import { EvidenceCard } from "@/components/niuva";
-import { AuLink } from "@/components/ui/AuLink";
+import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Icon } from "@/components/ui/Icon";
 import { getProjectPreview } from "@/features/frontend-preview/server";
 import { publicCompanyProfile, publicServices } from "@/features/public/company-content";
@@ -101,14 +101,14 @@ export default async function Home() {
                   {publicCompanyProfile.supportingCopy}
                 </p>
                 <div className="mt-8 flex flex-wrap items-center gap-3">
-                  <AuLink
+                  <NiuvaLink
                     className="gap-2"
                     href="/project-brief"
                     size="lg"
                   >
                     Diskusikan Proyek
                     <PathArrow />
-                  </AuLink>
+                  </NiuvaLink>
                   <Link
                     className="inline-flex h-9 items-center gap-2 rounded-lg border border-neutral-600 px-3 text-sm font-medium text-neutral-50 transition-colors hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                     href="#process"
@@ -372,10 +372,10 @@ export default async function Home() {
                 <p className="max-w-2xl text-base leading-7 text-muted-foreground">
                   Cerita berikut berasal dari materi yang sudah disetujui untuk publikasi. Klaim dibatasi pada bukti yang tersedia, bukan asumsi tentang deployment atau performa.
                 </p>
-                <AuLink href="/projects" variant="outline" className="min-h-11 shrink-0 gap-2">
+                <NiuvaLink href="/projects" variant="outline" className="min-h-11 shrink-0 gap-2">
                   Lihat semua project
                   <PathArrow />
-                </AuLink>
+                </NiuvaLink>
               </div>
             </div>
 

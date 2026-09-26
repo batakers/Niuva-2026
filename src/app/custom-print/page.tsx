@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { connection } from "next/server";
-import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
+import { typographySystemTokens as type } from "@/design/typography";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
-import { AuLink } from "@/components/ui/AuLink";
+import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { getServerCapabilities } from "@/lib/env/server";
 import { CUSTOM_FLOW_PRODUCT_OPTIONS } from "@/modules/custom-print/product-intake";
@@ -87,13 +87,13 @@ export default async function CustomPrintPage() {
                 File ditinjau dan dislicing operator sebelum Niuva menyusun quote yang dapat Anda setujui.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <AuLink className="min-h-11 gap-2" href="#request-readiness">
+                <NiuvaLink className="min-h-11 gap-2" href="#request-readiness">
                   Siapkan request
                   <Icon aria-hidden="true" className="size-4" name="arrow-down" />
-                </AuLink>
-                <AuLink className="min-h-11" href="#workflow" variant="outline">
+                </NiuvaLink>
+                <NiuvaLink className="min-h-11" href="#workflow" variant="outline">
                   Pahami proses
-                </AuLink>
+                </NiuvaLink>
               </div>
             </div>
 
@@ -165,9 +165,9 @@ export default async function CustomPrintPage() {
                     <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground">
                       Varian referensi: {product.variantNames.join(", ")}.
                     </p>
-                    <AuLink className="mt-5 min-h-11 w-full" href={`/custom-print/request?product=${encodeURIComponent(product.sourceProductId)}`}>
+                    <NiuvaLink className="mt-5 min-h-11 w-full" href={`/custom-print/request?product=${encodeURIComponent(product.sourceProductId)}`}>
                       Ajukan intake custom
-                    </AuLink>
+                    </NiuvaLink>
                   </div>
                 </article>
               ))}
@@ -267,9 +267,9 @@ export default async function CustomPrintPage() {
                   ? "Anda dapat menguji metadata, konfigurasi, progres, dan pemulihan secara lokal. Tidak ada file atau request yang dikirim."
                   : "Upload custom print belum diaktifkan. Silakan diskusikan kebutuhan Anda melalui project brief."}
               action={liveEnabled || previewEnabled
-                ? <AuLink className="min-h-11" href="/custom-print/request">Mulai request</AuLink>
+                ? <NiuvaLink className="min-h-11" href="/custom-print/request">Mulai request</NiuvaLink>
                 : undefined}
-              secondaryAction={<AuLink className="min-h-11" href="/project-brief" variant="outline">Diskusikan kebutuhan khusus</AuLink>}
+              secondaryAction={<NiuvaLink className="min-h-11" href="/project-brief" variant="outline">Diskusikan kebutuhan khusus</NiuvaLink>}
             />
           </div>
         </section>

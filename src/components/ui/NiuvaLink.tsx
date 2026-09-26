@@ -5,7 +5,7 @@ import type { VariantProps } from "class-variance-authority";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type AuLinkProps = Omit<
+type NiuvaLinkProps = Omit<
   AnchorHTMLAttributes<HTMLAnchorElement>,
   "children" | "className" | "href"
 > &
@@ -15,14 +15,14 @@ type AuLinkProps = Omit<
     href: string;
   };
 
-export function AuLink({
+export function NiuvaLink({
   children,
   className,
   href,
   size = "default",
   variant = "default",
   ...anchorProps
-}: AuLinkProps) {
+}: NiuvaLinkProps) {
   return (
     <Link
       className={cn(buttonVariants({ size, variant }), className)}

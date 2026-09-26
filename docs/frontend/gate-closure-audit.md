@@ -4,6 +4,10 @@ Status: **PARTIAL — local technical gates verified; external acceptance gates 
 
 Tanggal pemeriksaan: **2026-09-22**
 
+Catatan 2026-09-27: route dan test AUiS yang disebut di bawah telah dipensiunkan.
+Hasil pemeriksaan dan penerimaan historis tetap berlaku hanya untuk surface
+yang diperiksa pada tanggal di atas; route produk aktif diperiksa pada route aslinya.
+
 Dokumen ini memisahkan evidence yang dapat dijalankan di checkout lokal dari
 acceptance yang membutuhkan Owner, perangkat nyata, akun provider, atau
 deployment production. Tidak ada provider yang diaktifkan dan tidak ada secret

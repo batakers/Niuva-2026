@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { AuLink } from "@/components/ui/AuLink";
+import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Icon } from "@/components/ui/Icon";
 import { useHydrated } from "./use-hydrated";
 
@@ -71,9 +71,9 @@ export function PublicNavigation() {
             );
           })}
         </div>
-        <AuLink href="/project-brief" size="sm" className="mt-2 w-full justify-center md:hidden" onClick={() => setOpen(false)}>
+        <NiuvaLink href="/project-brief" size="sm" className="mt-2 w-full justify-center md:hidden" onClick={() => setOpen(false)}>
           Diskusikan Proyek
-        </AuLink>
+        </NiuvaLink>
       </nav>
     </div>
   );

@@ -7,7 +7,7 @@ import { useHydrated } from "@/components/niuva/use-hydrated";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/input";
-import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
+import { typographySystemTokens as type } from "@/design/typography";
 import type { PublicShopProduct } from "@/features/frontend-preview/types";
 
 const rupiah = new Intl.NumberFormat("id-ID", {

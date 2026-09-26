@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 
-import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
+import { typographySystemTokens as type } from "@/design/typography";
 import { PublicShell } from "@/components/niuva/public-shell";
-import { AuLink } from "@/components/ui/AuLink";
+import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Icon } from "@/components/ui/Icon";
 import { getServerCapabilities } from "@/lib/env/server";
 import {
@@ -108,7 +108,7 @@ export default async function CustomPrintRequestPage({
                       : "Capability upload belum aktif; tidak ada status produksi yang dibuat dari halaman ini."}
                 </p>
               </div>
-              <AuLink className="min-h-11" href="/custom-print" variant="outline">Kembali ke penjelasan proses</AuLink>
+              <NiuvaLink className="min-h-11" href="/custom-print" variant="outline">Kembali ke penjelasan proses</NiuvaLink>
             </aside>
 
             <div className="lg:col-span-8">

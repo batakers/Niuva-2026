@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { isLocalDemoMode } from "@/lib/env/server";
-import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
+import { typographySystemTokens as type } from "@/design/typography";
 import { BriefForm } from "./brief-form";
 
 export const metadata: Metadata = { title: "Project brief · Niuva", description: "Susun konteks, tujuan, dan referensi awal untuk percakapan proyek bersama Niuva." };

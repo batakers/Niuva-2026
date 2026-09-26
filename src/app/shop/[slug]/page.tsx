@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import Image from "next/image";
-import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
+import { typographySystemTokens as type } from "@/design/typography";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
-import { AuLink } from "@/components/ui/AuLink";
+import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Icon } from "@/components/ui/Icon";
 import { getLiveShopProduct, getShopProductPreview } from "@/features/frontend-preview/server";
 import { ProductSelection } from "./product-selection";
@@ -56,7 +56,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
         <main id="main-content" className="mx-auto max-w-public px-5 py-14 sm:px-8 sm:py-20">
           <h1 className={`${type.heading.className} max-w-3xl`}>Detail produk belum dapat dimuat.</h1>
           <div className="mt-8 max-w-2xl">
-            <StatusNotice tone="error" title="Terjadi gangguan pada preview." description="Tidak ada pilihan atau transaksi yang dibuat. Muat kembali data contoh untuk melanjutkan peninjauan." action={<AuLink href={`/shop/${slug}?preview=examples`} variant="outline" className="min-h-11">Coba lagi</AuLink>} />
+            <StatusNotice tone="error" title="Terjadi gangguan pada preview." description="Tidak ada pilihan atau transaksi yang dibuat. Muat kembali data contoh untuk melanjutkan peninjauan." action={<NiuvaLink href={`/shop/${slug}?preview=examples`} variant="outline" className="min-h-11">Coba lagi</NiuvaLink>} />
           </div>
         </main>
       </PublicShell>
@@ -72,7 +72,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
               tone={liveCatalogError ? "error" : "warning"}
               title={liveCatalogError ? "Sumber katalog sedang tidak tersedia." : "Katalog live belum terhubung."}
               description={liveCatalogError ? "Data produk tidak dapat diperiksa saat ini. Tidak ada pilihan atau transaksi yang dibuat." : "Gunakan preview contoh untuk meninjau alur tampilan. Preview tidak mewakili inventory nyata."}
-              action={<AuLink href={liveCatalogError ? `/shop/${slug}` : "/shop?preview=examples"} variant="outline" className="min-h-11">{liveCatalogError ? "Muat ulang" : "Buka preview contoh"}</AuLink>}
+              action={<NiuvaLink href={liveCatalogError ? `/shop/${slug}` : "/shop?preview=examples"} variant="outline" className="min-h-11">{liveCatalogError ? "Muat ulang" : "Buka preview contoh"}</NiuvaLink>}
             />
           </div>
         </main>
@@ -88,7 +88,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     <PublicShell functionalStatus={scenario === "examples" ? "frontend-preview" : "server-backed"} scope="product-detail">
       <main id="main-content" className="overflow-x-hidden">
         <div className="mx-auto max-w-public px-5 py-8 sm:px-8 sm:py-12">
-          <AuLink href={scenario === "examples" ? "/shop?preview=examples" : "/shop"} variant="link" className="min-h-11 px-0">Kembali ke Shop</AuLink>
+          <NiuvaLink href={scenario === "examples" ? "/shop?preview=examples" : "/shop"} variant="link" className="min-h-11 px-0">Kembali ke Shop</NiuvaLink>
 
           <div className="mt-5 grid gap-10 lg:grid-cols-12 lg:gap-12">
             <section aria-label="Gallery produk" className="min-w-0 lg:col-span-7">

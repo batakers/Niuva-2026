@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
+import { typographySystemTokens as type } from "@/design/typography";
 import { OrderStatusTimeline } from "@/components/niuva/order-status-timeline";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { Button } from "@/components/ui/button";

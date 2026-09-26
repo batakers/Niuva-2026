@@ -4,7 +4,7 @@ import type {
 } from "@/modules/admin/action-queue";
 
 import { PublicShell } from "@/components/niuva/public-shell";
-import { AuLink } from "@/components/ui/AuLink";
+import { NiuvaLink } from "@/components/ui/NiuvaLink";
 
 const DATE_FORMATTER = new Intl.DateTimeFormat("id-ID", {
   dateStyle: "medium",
@@ -66,8 +66,8 @@ export function LocalDemoActionQueueView({
           )}
 
           <div className="mt-6 flex flex-wrap gap-2">
-            <AuLink href="/project-brief" variant="outline" className="min-h-11">Kirim brief lain</AuLink>
-            <AuLink href="/shop" variant="outline" className="min-h-11">Lanjut ke katalog demo</AuLink>
+            <NiuvaLink href="/project-brief" variant="outline" className="min-h-11">Kirim brief lain</NiuvaLink>
+            <NiuvaLink href="/shop" variant="outline" className="min-h-11">Lanjut ke katalog demo</NiuvaLink>
           </div>
           <p className="mt-4 text-xs leading-5 text-muted-foreground" role="status">
             Data lokal dibuat {DATE_FORMATTER.format(result.generatedAt)}.

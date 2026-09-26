@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
-import { typographySystemTokens as type } from "@/app/auis/styleguide/foundation/typography-proof";
+import { typographySystemTokens as type } from "@/design/typography";
 import { PublicShell } from "@/components/niuva/public-shell";
-import { AuLink } from "@/components/ui/AuLink";
+import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { getLiveShopProducts, getShopPreview } from "@/features/frontend-preview/server";
 import type { PreviewScenario } from "@/features/frontend-preview/types";
 import { getServerCapabilities, isLocalDemoMode } from "@/lib/env/server";
@@ -70,7 +70,7 @@ export default async function CartPage({ searchParams }: CartPageProps) {
               <p className="text-sm font-semibold">Preview lokal, data produk sintetis dan bukan inventory Niuva</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {[["examples", "Contoh"], ["empty", "Data produk kosong"], ["loading", "Data produk memuat"], ["error", "Data produk gagal"]].map(([value, label]) => (
-                  <AuLink key={value} href={`/cart?preview=${value}`} variant="outline" size="sm" className="min-h-11" aria-current={scenario === value ? "page" : undefined}>{label}</AuLink>
+                  <NiuvaLink key={value} href={`/cart?preview=${value}`} variant="outline" size="sm" className="min-h-11" aria-current={scenario === value ? "page" : undefined}>{label}</NiuvaLink>
                 ))}
               </div>
             </aside>
