@@ -17,7 +17,7 @@ function fillRequiredFields() {
   fireEvent.change(screen.getByLabelText(/^Nama/), { target: { value: "Kontak contoh" } });
   fireEvent.change(screen.getByLabelText(/^Email/), { target: { value: "example@example.test" } });
   fireEvent.change(screen.getByLabelText(/^Nomor WhatsApp/), { target: { value: "+628000000000" } });
-  fireEvent.click(screen.getByRole("checkbox"));
+  fireEvent.click(screen.getByLabelText(/^Persetujuan pemrosesan/));
 }
 
 afterEach(() => {
@@ -94,6 +94,55 @@ describe("custom request frontend preview", () => {
 });
 
 describe("custom request live private upload", () => {
+  it("sends slicer inputs only, reports field errors, and shows the server-saved amount", async () => {
+    const calls: Array<{ url: string; body?: BodyInit | null }> = [];
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      calls.push({ url, body: init?.body });
+      if (url.endsWith("/api/uploads/intents")) return Response.json({
+        expiresAt: "2026-09-14T01:00:00.000Z", fileId: "2b7f3c1a-18f7-4d91-8b86-8d98fcd0f7f4",
+        requiredHeaders: { "content-type": "model/stl" }, uploadToken: "private-upload-token",
+        uploadUrl: "https://r2.example.test/private/upload",
+      }, { status: 201 });
+      if (url === "https://r2.example.test/private/upload") return new Response(null, { status: 200 });
+      if (url.endsWith("/api/uploads/confirm")) return Response.json({
+        fileId: "2b7f3c1a-18f7-4d91-8b86-8d98fcd0f7f4", status: "UPLOADED",
+      });
+      if (url.endsWith("/api/custom-print/preview-estimate")) return Response.json({ status: "READY",
+        materialSubtotalRp: "1000", machineSubtotalRp: "5000", finalTotalRp: "6000", ruleVersion: 1 });
+      if (url.endsWith("/api/custom-print/requests")) return Response.json({
+        requestId: "f7896ef5-5e7b-4921-88b2-370030d7dace",
+        referenceNumber: "CPR-20260914-ABCDEFGH",
+        customerPreview: { materialSubtotalRp: "2000", machineSubtotalRp: "10000", finalTotalRp: "12000" },
+      }, { status: 201 });
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    });
+
+    render(<RequestForm liveEnabled />);
+    chooseFile();
+    await waitFor(() => expect(document.querySelector("[data-component='file-upload-field']"))?.toHaveAttribute("data-status", "accepted"));
+    fillRequiredFields();
+    fireEvent.click(screen.getByLabelText("Saya ingin menyertakan input slicer untuk simulasi komponen."));
+    fireEvent.change(screen.getByLabelText("Berat hasil slicer per unit (g)"), { target: { value: "NaN" } });
+    fireEvent.change(screen.getByLabelText("Durasi per unit (jam)"), { target: { value: "1" } });
+    fireEvent.click(screen.getByLabelText("Saya mengisi angka dari slicer sendiri"));
+    fireEvent.click(screen.getByRole("button", { name: "Lihat simulasi komponen" }));
+    expect(screen.getByText("Masukkan berat positif per unit dari slicer.")).toBeVisible();
+    expect(calls.some((call) => call.url.endsWith("/api/custom-print/preview-estimate"))).toBe(false);
+    fireEvent.change(screen.getByLabelText("Berat hasil slicer per unit (g)"), { target: { value: "1" } });
+    fireEvent.click(screen.getByRole("button", { name: "Lihat simulasi komponen" }));
+    await waitFor(() => expect(screen.getByText(/Total komponen indikatif/)).toHaveTextContent("Rp 6.000"));
+    fireEvent.submit(screen.getByRole("form", { name: "Form request custom print" }));
+    await waitFor(() => expect(screen.getByText(/Simulasi biaya awal yang tersimpan bersama request/)).toHaveTextContent("Rp 12.000"));
+    expect(screen.getByText(/Nilai tersimpan berbeda dari simulasi sebelumnya/)).toBeVisible();
+    const submission = calls.find((call) => call.url.endsWith("/api/custom-print/requests"));
+    expect(JSON.parse(String(submission?.body))).toMatchObject({ customerPreviewInput: {
+      source: "CUSTOMER_DECLARED_SLICER", weightGramsPerUnit: "1", printDurationSecondsPerUnit: 3600,
+    } });
+    expect(String(submission?.body)).not.toContain("6000");
+    expect(String(submission?.body)).not.toContain("pricingRule");
+  });
+
   it("uploads directly to the private URL, confirms metadata, then submits only the file ID", async () => {
     const calls: Array<{ body?: BodyInit | null; headers?: HeadersInit; method?: string; url: string }> = [];
     const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {

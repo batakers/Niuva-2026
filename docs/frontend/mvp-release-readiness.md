@@ -8,6 +8,10 @@ Dokumen ini adalah ledger status terkini untuk handoff. Checklist fase lama di
 untuk status saat ini gunakan tabel di bawah dan
 [`operational-readiness-report.md`](./operational-readiness-report.md).
 
+## Addendum penerimaan visual Owner — 2026-09-27
+
+Owner menyatakan telah meninjau manual dan menyetujui tampilan **Layanan dan MAKE** hasil irisan Target IA, serta tampilan **Account dan Admin**. Catatan ini mencakup permukaan yang disebut; daftar viewport dan state visual tidak diberikan sebagai bukti terpisah. Pengujian pada perangkat fisik/AT, aktivasi provider, deployment, dan kesiapan produksi tetap memerlukan bukti terpisah.
+
 ## Keputusan readiness
 
 Jalur teknis MVP yang tidak membutuhkan provider eksternal sudah diaudit dan

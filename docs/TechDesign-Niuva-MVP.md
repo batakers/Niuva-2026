@@ -32,6 +32,45 @@ Niuva MVP akan dibangun sebagai **modular monolith** menggunakan **Next.js 16.3 
 > lama; record baru mengisinya dari sesi server. Detail dan mutasi akun selalu
 > memfilter `customer_id`. Aturan teknis lanjutannya ada di bagian berikut.
 
+> **Addendum Target IA — 27 September 2026:** `publicServices` tetap sumber
+> copy empat route `/services/[slug]`; `listPublishedPortfolioProjects()`
+> adalah boundary public projection untuk project terkait. MAKE menambahkan
+> endpoint simulasi pra-review dan snapshot nullable di request, terpisah dari
+> tabel estimasi operator. Kontrak rinci ada pada bagian berikut.
+
+## Kontrak teknis Customer Pre-Review Simulation
+
+1. `POST /api/custom-print/preview-estimate` memerlukan sesi Customer, origin
+   sah, batas laju, dan response `private, no-store`. File harus berada di
+   bucket privat, dimiliki akun, belum dihapus, belum diklaim, dan berstatus
+   `UPLOADED`. Hanya `.stl`, `.obj`, `.3mf` yang layak. `.step`/`.stp`, foto,
+   material di luar PLA/ABS, atau filamen selain stok Niuva tidak mendapat
+   nominal. Endpoint tidak membaca isi model atau URL referensi.
+2. Input angka berasal dari hasil slicer customer **per unit**: berat Decimal
+   positif dan durasi detik bilangan bulat aman positif. Jumlah bilangan bulat
+   positif berasal dari form. Server menetapkan `NIUVA_STOCK`, mencari aturan
+   `ACTIVE` dengan kode `CUSTOM_PRINT_V1`, dan menghitung hanya jika hasilnya
+   tepat satu, definisi valid, dan semantik jumlah `PER_UNIT`. Nol/lebih dari
+   satu aturan, konfigurasi tidak valid, atau data yang kurang menghasilkan
+   `REVIEW_REQUIRED`; tidak ada fallback. Rumus menggunakan
+   `calculatePrintQuote()` yang sama dengan pricing operator dan Decimal,
+   dengan pembulatan pada total akhir.
+3. Klien hanya boleh mengirim `customerPreviewInput` opsional, bukan nominal
+   atau versi aturan. Saat submit MODEL_READY, repository membaca ulang file
+   dan aturan dalam transaksi yang mengikat file serta membuat request, lalu
+   menghitung ulang. Kolom aditif `custom_print_requests.customer_preview_snapshot`
+   (`customerPreviewSnapshot Json?`) menyimpan `kind`, sumber customer,
+   file/ekstensi, input per unit dan jumlah, ID/kode/versi/**definition**
+   aturan, hasil Decimal sebagai string, serta waktu. Response submit memakai
+   hasil yang tersimpan; audit request mencatat keberadaan snapshot dan versi.
+   Jika aturan tak lagi layak, request tetap dikirim tanpa simulasi.
+4. Snapshot ini tidak membuat/memakai `CustomPrintEstimate` dan tidak pernah
+   menjadi input review, estimasi operator, validasi quote, order, ongkir, atau
+   pembayaran. Account menampilkan simulasi awal sebagai riwayat belum
+   diverifikasi, lalu estimasi produksi operator sebagai angka utama ketika
+   tersedia; quotation adalah penawaran terpisah. Admin menampilkan input
+   customer terpisah dari hasil slicer yang diverifikasi operator.
+
 ## Kontrak teknis Customer work, estimasi, ongkir kasar, dan B2B quote
 
 1. **Klaim legacy:** token route-bound diverifikasi terhadap hash dan scope

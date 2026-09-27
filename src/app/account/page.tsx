@@ -16,6 +16,7 @@ import {
   type CustomerAccount,
 } from "@/modules/customer-auth/repository";
 import { CustomerWorkRepository } from "@/modules/customer-work/repository";
+import { readCustomerPreviewSnapshot } from "@/modules/custom-print/customer-preview";
 import { ClaimForm } from "./claim-form";
 
 export const metadata: Metadata = {
@@ -154,7 +155,10 @@ export default async function AccountPage() {
           </Card>
           <Card>
             <CardHeader><CardTitle>MAKE</CardTitle><CardDescription>Request custom print, estimasi pascareview, dan quote.</CardDescription></CardHeader>
-            <CardContent>{work.requests.length === 0 ? <p className="text-sm text-muted-foreground">Belum ada request MAKE.</p> : <div className="divide-y divide-border">{work.requests.map((request) => <Link className="block py-4 first:pt-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700" href={`/account/make/${request.id}`} key={request.id}><span className="font-semibold">{request.referenceNumber}</span><span className="mt-1 block text-sm text-muted-foreground">{request.status} · {dateFormatter.format(request.createdAt)} · {request.estimates[0] ? `${formatRupiah(request.estimates[0].lowerRp.toFixed(0))}–${formatRupiah(request.estimates[0].upperRp.toFixed(0))}` : "Perlu review"}{request.quotes[0] ? ` · Quote v${request.quotes[0].version}: ${request.quotes[0].status}` : ""}</span></Link>)}</div>}</CardContent>
+            <CardContent>{work.requests.length === 0 ? <p className="text-sm text-muted-foreground">Belum ada request MAKE.</p> : <div className="divide-y divide-border">{work.requests.map((request) => {
+              const customerPreview = readCustomerPreviewSnapshot(request.customerPreviewSnapshot);
+              return <Link className="block py-4 first:pt-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700" href={`/account/make/${request.id}`} key={request.id}><span className="font-semibold">{request.referenceNumber}</span><span className="mt-1 block text-sm text-muted-foreground">{request.status} · {dateFormatter.format(request.createdAt)} · {request.estimates[0] ? `Estimasi operator ${formatRupiah(request.estimates[0].lowerRp.toFixed(0))}–${formatRupiah(request.estimates[0].upperRp.toFixed(0))}` : customerPreview ? `Simulasi awal ${formatRupiah(customerPreview.result.finalTotalRp)} · belum diverifikasi` : "Perlu review"}{request.quotes[0] ? ` · Quote v${request.quotes[0].version}: ${request.quotes[0].status}` : ""}</span></Link>;
+            })}</div>}</CardContent>
           </Card>
           <Card>
             <CardHeader><CardTitle>Tautkan pekerjaan lama</CardTitle><CardDescription>Gunakan token dari tautan privat yang diterbitkan sebelum pekerjaan Anda dimiliki akun. Satu token hanya dapat dipakai sekali.</CardDescription></CardHeader>

@@ -2,6 +2,11 @@ import { defineConfig } from "@playwright/test";
 
 const ciTestDatabaseUrl =
   "postgresql://niuva_test@127.0.0.1:5432/niuva_test?schema=public";
+const e2ePort = Number(process.env.NIUVA_E2E_PORT ?? 3000);
+if (!Number.isSafeInteger(e2ePort) || e2ePort < 1024 || e2ePort > 65535) {
+  throw new Error("NIUVA_E2E_PORT harus port lokal yang valid.");
+}
+const e2eBaseUrl = `http://localhost:${e2ePort}`;
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -15,15 +20,15 @@ export default defineConfig({
   workers: 1,
   reporter: [["list"]],
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: e2eBaseUrl,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
   webServer: {
     command: process.env.CI
-      ? "corepack pnpm exec next dev -p 3000"
+      ? `corepack pnpm exec next dev -p ${e2ePort}`
       : "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/local-e2e-web.ps1",
-    url: "http://localhost:3000",
+    url: e2eBaseUrl,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     stdout: "ignore",
@@ -36,7 +41,7 @@ export default defineConfig({
             GOOGLE_CLIENT_ID: "local-e2e-google-client",
             GOOGLE_CLIENT_SECRET: "local-e2e-google-secret",
             GOOGLE_REDIRECT_URI:
-              "http://localhost:3000/api/auth/google/callback",
+              `${e2eBaseUrl}/api/auth/google/callback`,
             NIUVA_NEXT_DIST_DIR: ".next-e2e",
           }
         : {}),

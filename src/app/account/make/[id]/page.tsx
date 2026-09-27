@@ -11,6 +11,7 @@ import { getServerCapabilities } from "@/lib/env/server";
 import { CustomerWorkRepository } from "@/modules/customer-work/repository";
 import { isModelExtension } from "@/modules/custom-print/file-types";
 import { additionalCostSchema, isEstimateCurrent } from "@/modules/custom-print/estimate";
+import { readCustomerPreviewSnapshot } from "@/modules/custom-print/customer-preview";
 import { isAppError } from "@/modules/shared/errors";
 import { AppendModelForm } from "@/app/custom-print/requests/[token]/append-model-form";
 import { QuoteDecision } from "./quote-decision";
@@ -49,6 +50,7 @@ export default async function AccountMakePage({ params }: PageProps<"/account/ma
   const estimate = request.estimates[0] && isEstimateCurrent(request.estimates[0].snapshot, request.review?.updatedAt)
     ? request.estimates[0] : undefined;
   const estimateComponents = estimate ? estimateComponentsSchema.safeParse(estimate.snapshot) : null;
+  const customerPreview = readCustomerPreviewSnapshot(request.customerPreviewSnapshot);
   return <PublicShell scope="account" functionalStatus="server-backed"><main id="main-content" className="mx-auto max-w-public px-5 py-12 sm:px-8">
     <Link className="text-sm underline underline-offset-4" href="/account">Kembali ke akun</Link>
     <p className="mt-8 text-sm font-medium text-brand-700">MAKE · {request.referenceNumber}</p>
@@ -59,10 +61,10 @@ export default async function AccountMakePage({ params }: PageProps<"/account/ma
       <div><dt className="text-sm text-muted-foreground">Model terverifikasi</dt><dd className="mt-1 font-medium">{modelReady ? "Sudah tersedia" : "Belum tersedia"}</dd></div>
       <div><dt className="text-sm text-muted-foreground">File diterima</dt><dd className="mt-1 font-medium">{request.files.map(({ file }) => file.extension.toUpperCase()).join(" · ") || "Belum ada"}</dd></div>
     </dl>
-    <h2 className="mt-10 text-xl font-semibold">Estimasi produksi</h2>
+    <h2 className="mt-10 text-xl font-semibold">Estimasi produksi operator</h2>
     {estimate ? <div className="mt-3 rounded-xl border border-border bg-card p-6">
       <p className="text-2xl font-semibold">Rp {estimate.lowerRp.toFixed(0)}–Rp {estimate.upperRp.toFixed(0)}</p>
-      <p className="mt-2 text-sm text-muted-foreground">Estimasi awal, bukan harga final. Versi {estimate.version}; ongkir belum termasuk.</p>
+      <p className="mt-2 text-sm text-muted-foreground">Kisaran setelah review operator, bukan harga final. Versi {estimate.version}; ongkir belum termasuk.</p>
       {estimateComponents?.success ? <>
         <h3 className="mt-6 font-semibold">Komponen yang tercakup</h3>
         <dl className="mt-3 space-y-2 text-sm">
@@ -74,6 +76,11 @@ export default async function AccountMakePage({ params }: PageProps<"/account/ma
         <p className="mt-4 text-sm text-muted-foreground">Dasar review: {estimateComponents.data.pricingInputs.weightGrams} g, {estimateComponents.data.pricingInputs.printDurationSeconds} detik, {estimateComponents.data.pricingInputs.material}, {estimateComponents.data.pricingInputs.quantity} unit, sumber filamen {estimateComponents.data.pricingInputs.filamentSource}.</p>
       </> : null}
     </div> : <div className="mt-3"><StatusNotice title="Perlu review" description="Kisaran produksi akan muncul setelah operator memverifikasi model, hasil slicer, aturan harga, dan seluruh biaya pekerjaan." tone="info" /></div>}
+    {customerPreview ? <section className="mt-8 rounded-xl border border-border bg-card p-6" aria-labelledby="customer-preview-history-title">
+      <h2 className="text-lg font-semibold" id="customer-preview-history-title">Simulasi biaya awal Anda</h2>
+      <p className="mt-2 text-xl font-semibold">Rp {customerPreview.result.finalTotalRp}</p>
+      <p className="mt-2 text-sm text-muted-foreground">Dari berat {customerPreview.input.weightGramsPerUnit} g dan durasi {customerPreview.input.printDurationSecondsPerUnit} detik per unit untuk {customerPreview.input.quantity} unit, berdasarkan slicer Anda. Belum diverifikasi operator; hanya komponen material dan waktu mesin, tanpa biaya lain atau ongkir.</p>
+    </section> : null}
     <h2 className="mt-10 text-xl font-semibold">Quote</h2>
     {request.quotes.filter((quote) => quote.status !== "DRAFT").length === 0 ? <p className="mt-3 text-muted-foreground">Quote belum dikirim.</p> : request.quotes.filter((quote) => quote.status !== "DRAFT").map((quote) => {
       const extras = quoteExtrasSchema.safeParse(quote.calculationSnapshot);

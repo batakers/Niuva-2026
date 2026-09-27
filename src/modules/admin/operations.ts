@@ -173,6 +173,7 @@ export type AdminOrderDetail = Readonly<{
 }>;
 
 export type AdminCustomPrintDetail = Readonly<{
+  customerPreviewSnapshot: unknown;
   colorRequested: string | null;
   createdAt: Date;
   customerEmail: string;
@@ -704,6 +705,7 @@ export class AdminOperationsService {
     const request = await this.prisma.customPrintRequest.findUnique({
       where: { id: requestId },
       select: {
+        customerPreviewSnapshot: true,
         colorRequested: true,
         createdAt: true,
         customerEmail: true,
@@ -767,6 +769,7 @@ export class AdminOperationsService {
     if (request === null) return null;
 
     return {
+      customerPreviewSnapshot: request.customerPreviewSnapshot,
       colorRequested: request.colorRequested,
       createdAt: request.createdAt,
       customerEmail: request.customerEmail,

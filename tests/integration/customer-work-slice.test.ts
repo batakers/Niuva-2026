@@ -6,6 +6,8 @@ import type { AdminAccess } from "@/lib/auth/clerk";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { CustomerWorkRepository } from "@/modules/customer-work/repository";
 import { CustomPrintAccessService } from "@/modules/custom-print/access-service";
+import { CustomerPreviewService } from "@/modules/custom-print/customer-preview-service";
+import { readCustomerPreviewSnapshot } from "@/modules/custom-print/customer-preview";
 import { CustomPrintEstimateService } from "@/modules/custom-print/estimate";
 import { CustomPrintService } from "@/modules/custom-print/service";
 import { B2BQuoteService } from "@/modules/inquiry/b2b-quote";
@@ -35,10 +37,11 @@ async function admin(): Promise<AdminAccess> {
   const profile = await prisma.adminProfile.create({ data: { clerkUserId: `admin_${randomUUID()}`, isActive: true, role: "OWNER" } });
   return { clerkUserId: profile.clerkUserId, profile };
 }
-async function uploaded(extension: "stl" | "jpg", uploadedByCustomerId?: string) {
+async function uploaded(extension: "stl" | "obj" | "3mf" | "step" | "stp" | "jpg" | "png", uploadedByCustomerId?: string) {
   const id = randomUUID();
   return prisma.storedFile.create({ data: { id, bucketScope: "PRIVATE_CUSTOMER", extension,
-    mimeType: extension === "stl" ? "model/stl" : "image/jpeg", originalName: `input.${extension}`,
+    mimeType: extension === "jpg" ? "image/jpeg" : extension === "png" ? "image/png" : `model/${extension}`,
+    originalName: `input.${extension}`,
     sizeBytes: BigInt(16), storageKey: `private/customer/${id}`, uploadStatus: "UPLOADED",
     uploadedByCustomerId } });
 }
@@ -51,6 +54,87 @@ beforeEach(clean);
 afterAll(clean);
 
 describe("Customer ownership and commercial slice", () => {
+  it("permits simulation only for the authenticated owner's unclaimed uploaded mesh and exactly one active rule", async () => {
+    const owner = await customer(email);
+    const other = await customer("other@example.test");
+    const access = await admin();
+    const service = new CustomerPreviewService(undefined, () => true);
+    const model = await uploaded("stl", owner.id);
+    const input = { fileId: model.id, materialRequested: "PLA", quantity: 2,
+      customerPreviewInput: { source: "CUSTOMER_DECLARED_SLICER", weightGramsPerUnit: "1.5",
+        printDurationSecondsPerUnit: 3_600 } };
+    await expect(service.preview(input, other.id)).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect((await service.preview(input, owner.id)).status).toBe("REVIEW_REQUIRED");
+    await activeRule(access.profile.id);
+    expect(await service.preview(input, owner.id)).toMatchObject({ status: "READY", finalTotalRp: "13000" });
+    for (const extension of ["obj", "3mf", "step", "stp", "jpg", "png"] as const) {
+      const file = await uploaded(extension, owner.id);
+      expect((await service.preview({ ...input, fileId: file.id }, owner.id)).status,
+        extension).toBe(["obj", "3mf"].includes(extension) ? "READY" : "REVIEW_REQUIRED");
+    }
+    const pending = await uploaded("stl", owner.id);
+    await prisma.storedFile.update({ where: { id: pending.id }, data: { uploadStatus: "PENDING" } });
+    await expect(service.preview({ ...input, fileId: pending.id }, owner.id)).rejects.toMatchObject({ code: "CONFLICT" });
+    const deleted = await uploaded("stl", owner.id);
+    await prisma.storedFile.update({ where: { id: deleted.id }, data: { deletedAt: new Date() } });
+    await expect(service.preview({ ...input, fileId: deleted.id }, owner.id)).rejects.toMatchObject({ code: "CONFLICT" });
+    await prisma.pricingRuleVersion.create({ data: { code: "CUSTOM_PRINT_V1", version: 2,
+      definitionJson: CUSTOM_PRINT_V1_PER_UNIT_POLICY, status: "ACTIVE", approvedAt: new Date(),
+      approvedByAdminId: access.profile.id } });
+    expect((await service.preview(input, owner.id)).status).toBe("REVIEW_REQUIRED");
+    expect((await new CustomerPreviewService(undefined, () => false).preview(input, owner.id)).status).toBe("REVIEW_REQUIRED");
+  });
+
+  it("recalculates the saved snapshot at submit, preserves text intake without R2, and excludes claimed files", async () => {
+    const owner = await customer(email);
+    const access = await admin();
+    await activeRule(access.profile.id);
+    const model = await uploaded("stl", owner.id);
+    const previewInput = { source: "CUSTOMER_DECLARED_SLICER" as const,
+      weightGramsPerUnit: "1", printDurationSecondsPerUnit: 3_600 };
+    const service = new CustomerPreviewService(undefined, () => true);
+    const preview = await service.preview({ fileId: model.id, materialRequested: "PLA", quantity: 1,
+      customerPreviewInput: previewInput }, owner.id);
+    expect(preview).toMatchObject({ status: "READY", finalTotalRp: "6000" });
+    const submitted = await new CustomPrintService().submit({ ...makeInput, intakeMode: "MODEL_READY",
+      fileIds: [model.id], materialRequested: "PLA", unitConfirmation: "MILLIMETER_CONFIRMED",
+      customerPreviewInput: previewInput }, { id: owner.id, email: owner.email });
+    const saved = readCustomerPreviewSnapshot((await prisma.customPrintRequest.findUniqueOrThrow({
+      where: { id: submitted.request.id },
+    })).customerPreviewSnapshot);
+    expect(saved).toMatchObject({ kind: "CUSTOMER_PRE_REVIEW_V1", fileId: model.id,
+      input: { quantity: 2, filamentSource: "NIUVA_STOCK" },
+      result: { finalTotalRp: "12000" } });
+    expect(saved?.pricingRule.definition).toEqual(CUSTOM_PRINT_V1_PER_UNIT_POLICY);
+    expect((await prisma.auditLog.findFirstOrThrow({ where: { entityId: submitted.request.id,
+      action: "custom-print.request.submitted" } })).afterJson).toMatchObject({
+      customerPreviewStored: true, customerPreviewRuleVersion: 1,
+    });
+    expect((await new CustomerWorkRepository().request(owner.id, submitted.request.id))?.customerPreviewSnapshot).toEqual(saved);
+    await expect(service.preview({ fileId: model.id, materialRequested: "PLA", quantity: 1,
+      customerPreviewInput: previewInput }, owner.id)).rejects.toMatchObject({ code: "CONFLICT" });
+    expect(await prisma.customPrintEstimate.count()).toBe(0);
+    const textOnly = await new CustomPrintService().submit(makeInput, { id: owner.id, email: owner.email });
+    expect((await prisma.customPrintRequest.findUniqueOrThrow({ where: { id: textOnly.request.id } })).customerPreviewSnapshot).toBeNull();
+  });
+
+  it("fails closed when the active rule changes after preview but still accepts the MAKE request", async () => {
+    const owner = await customer(email);
+    const access = await admin();
+    const rule = await activeRule(access.profile.id);
+    const model = await uploaded("stl", owner.id);
+    const slicer = { source: "CUSTOMER_DECLARED_SLICER" as const, weightGramsPerUnit: "1",
+      printDurationSecondsPerUnit: 3_600 };
+    expect((await new CustomerPreviewService(undefined, () => true).preview({ fileId: model.id,
+      materialRequested: "PLA", quantity: 2, customerPreviewInput: slicer }, owner.id)).status).toBe("READY");
+    await prisma.pricingRuleVersion.update({ where: { id: rule.id }, data: { status: "RETIRED" } });
+    const submitted = await new CustomPrintService().submit({ ...makeInput, intakeMode: "MODEL_READY",
+      fileIds: [model.id], materialRequested: "PLA", unitConfirmation: "MILLIMETER_CONFIRMED",
+      customerPreviewInput: slicer }, { id: owner.id, email: owner.email });
+    expect((await prisma.customPrintRequest.findUniqueOrThrow({ where: { id: submitted.request.id } })).customerPreviewSnapshot).toBeNull();
+    expect(await prisma.customPrintEstimate.count()).toBe(0);
+  });
+
   it("claims an old inquiry once under contention, rotates its token, and never infers ownership from email", async () => {
     const owner = await customer(email);
     const other = await customer("other@example.test");
@@ -157,10 +241,17 @@ describe("Customer ownership and commercial slice", () => {
     const rule = await activeRule(access.profile.id);
     const model = await uploaded("stl", owner.id);
     const request = await new CustomPrintService().submit({ ...makeInput, intakeMode: "MODEL_READY", fileIds: [model.id],
-      materialRequested: "PLA", notes: "Model tersedia", unitConfirmation: "MILLIMETER_CONFIRMED" }, { id: owner.id, email: owner.email });
+      materialRequested: "PLA", notes: "Model tersedia", unitConfirmation: "MILLIMETER_CONFIRMED",
+      customerPreviewInput: { source: "CUSTOMER_DECLARED_SLICER", weightGramsPerUnit: "1",
+        printDurationSecondsPerUnit: 3_600 } }, { id: owner.id, email: owner.email });
+    expect(readCustomerPreviewSnapshot((await prisma.customPrintRequest.findUniqueOrThrow({
+      where: { id: request.request.id },
+    })).customerPreviewSnapshot)?.result.finalTotalRp).toBe("12000");
     await new CustomPrintService({ authorizeAdmin: async () => access }).recordReview({ requestId: request.request.id,
       materialCode: "PLA", quantity: 2, verifiedWeightG: "12.5", printDurationSeconds: 900 });
-    const quoteService = new QuoteService({ authorizeAdmin: async () => access });
+    const createPayment = vi.fn().mockResolvedValue({ token: "local-test-payment-token" });
+    const quoteService = new QuoteService({ authorizeAdmin: async () => access,
+      paymentProvider: { provider: "TEST", createPayment } });
     await expect(quoteService.createDraft({ requestId: request.request.id, pricingRuleVersionId: rule.id,
       materialCode: "PLA", filamentSource: "NIUVA_STOCK" })).rejects.toMatchObject({ code: "QUOTE_NOT_READY" });
     const estimates = new CustomPrintEstimateService({ authorizeAdmin: async () => access });
@@ -173,6 +264,8 @@ describe("Customer ownership and commercial slice", () => {
     const quote = await prisma.customPrintQuote.findUniqueOrThrow({ where: { id: draft.quote.id } });
     expect(quote.additionalSubtotalRp.toString()).toBe("50000");
     expect(quote.finalTotalRp.toString()).toBe("77500");
+    expect(quote.materialSubtotalRp.toString()).not.toBe("2000");
+    expect(quote.finalTotalRp.toString()).not.toBe("12000");
     await quoteService.send(quote.id);
     await expect(quoteService.accept({ quoteId: quote.id, token: "wrong" })).rejects.toMatchObject({ code: "UNAUTHORIZED" });
     await expect(quoteService.accept({ quoteId: quote.id }, randomUUID())).rejects.toMatchObject({ code: "UNAUTHORIZED" });
@@ -182,6 +275,10 @@ describe("Customer ownership and commercial slice", () => {
     expect(order.customerId).toBe(owner.id);
     expect(order.shippingTotalRp.toString()).toBe("0");
     expect(order.grandTotalRp.toString()).toBe("77500");
+    expect(order.grandTotalRp.toString()).not.toBe("12000");
+    expect(createPayment).toHaveBeenCalledWith(expect.objectContaining({ amountRp: "77500" }));
+    const attempt = await prisma.paymentAttempt.findFirstOrThrow({ where: { orderId: order.id } });
+    expect(attempt.amountRp.toString()).toBe("77500");
     expect((await quoteService.accept({ quoteId: quote.id }, owner.id)).kind).toBe("ALREADY_ACCEPTED");
   });
 
