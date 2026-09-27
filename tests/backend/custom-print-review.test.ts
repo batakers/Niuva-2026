@@ -30,7 +30,7 @@ describe("custom print slicer review write", () => {
         return { id: "request-1", referenceNumber: "CPR-TEST" };
       },
       async findRequestForReview() {
-        return { id: requestId, quantity: 1, status: currentStatus };
+        return { id: requestId, intakeMode: "MODEL_READY", modelReady: true, quantity: 1, status: currentStatus };
       },
       async findUploadReadyFileIds() {
         return [];
@@ -87,5 +87,27 @@ describe("custom print slicer review write", () => {
         expect.objectContaining({ action: "state.transition" }),
       ]),
     );
+  });
+
+  it("blocks slicer review for a reference request until a verified model is attached", async () => {
+    const requestId = "2773cf03-7d66-4cea-b743-96f4eaaa939c";
+    let saveCalled = false;
+    const repository: CustomPrintServiceRepository = {
+      async create() { return { id: requestId, referenceNumber: "CPR-TEST" }; },
+      async findRequestForReview() { return { id: requestId, intakeMode: "REFERENCE_ONLY", modelReady: false, quantity: 1, status: "SUBMITTED" }; },
+      async findUploadReadyFileIds() { return []; },
+      async referenceExists() { return false; },
+      async saveReview() { saveCalled = true; },
+      async updateStatusIfCurrent() { return null; },
+    };
+    const service = new CustomPrintService({ authorizeAdmin: async () => owner, repository });
+    await expect(service.recordReview({
+      materialCode: "PLA",
+      printDurationSeconds: 900,
+      quantity: 1,
+      requestId,
+      verifiedWeightG: "12.5",
+    })).rejects.toMatchObject({ code: "CONFLICT" });
+    expect(saveCalled).toBe(false);
   });
 });

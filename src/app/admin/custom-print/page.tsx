@@ -108,6 +108,8 @@ function RequestCard({ item }: Readonly<{ item: AdminCustomPrintRequestRow }>) {
         <div><dt className="text-xs text-muted-foreground">Jumlah</dt><dd className="mt-1 font-medium tabular-nums">{item.quantity} unit</dd></div>
         <div><dt className="text-xs text-muted-foreground">File privat</dt><dd className="mt-1 font-medium">{item.fileCount} file terverifikasi</dd></div>
         <div><dt className="text-xs text-muted-foreground">Quote terakhir</dt><dd className="mt-1 font-medium">{item.latestQuote ? `${item.latestQuote.quoteNumber} · v${item.latestQuote.version}` : "Belum ada"}</dd></div>
+        <div><dt className="text-xs text-muted-foreground">Mode intake</dt><dd className="mt-1 font-medium">{item.intakeMode === "REFERENCE_ONLY" ? "Baru punya referensi" : "Model siap"}</dd></div>
+        <div><dt className="text-xs text-muted-foreground">Model 3D/CAD</dt><dd className="mt-1 font-medium">{item.modelReady ? "Terverifikasi" : "Belum tersedia"}</dd></div>
       </dl>
       <p className="mt-5 text-xs leading-5 text-muted-foreground">Diperbarui {dateFormatter.format(item.updatedAt)}. <Link className="font-semibold text-brand-700 underline-offset-4 hover:underline" href={`/admin/custom-print/${item.id}`}>Buka detail dan aksi</Link>.</p>
     </article>

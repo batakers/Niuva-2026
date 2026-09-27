@@ -62,7 +62,7 @@ export default function ServicesPage() {
                   <div className="py-4"><dt className="text-sm font-semibold">Yang bisa Anda bawa</dt><dd className="mt-2 text-sm leading-6 text-muted-foreground">{service.inputs}</dd></div>
                   <div className="py-4"><dt className="text-sm font-semibold">Arah pembahasan</dt><dd className="mt-2 text-sm leading-6 text-muted-foreground">{service.outputs}</dd></div>
                 </dl>
-                <NiuvaLink className="min-h-11" href="/project-brief" variant="outline" aria-label={`Buat brief untuk ${service.title.toLowerCase()}`}>Buat brief layanan ini</NiuvaLink>
+                <NiuvaLink className="min-h-11" href={`/project-brief?service=${encodeURIComponent(service.slug)}`} variant="outline" aria-label={`Buat brief untuk ${service.title.toLowerCase()}`}>Buat brief layanan ini</NiuvaLink>
               </div>
             </section>
           ))}

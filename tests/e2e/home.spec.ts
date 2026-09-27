@@ -67,7 +67,7 @@ test("authorized Foundation proof records scoped owner visual acceptance", async
   );
   await expect(page.getByLabel(/Perusahaan atau tim/)).not.toHaveAttribute("required");
   await expect(page.getByLabel(/Nomor WhatsApp/)).toHaveAttribute("required");
-  await expect(page.getByLabel(/Target waktu/)).toHaveAttribute("required");
+  await expect(page.getByLabel(/Target waktu/)).not.toHaveAttribute("required");
   await expect(page.locator("[data-motion-system]")).toHaveCount(0);
   await expect(page.locator("[data-pattern-showcase]")).toHaveCount(0);
 });

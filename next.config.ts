@@ -11,6 +11,13 @@ const nextConfig: NextConfig = {
         headers: getSecurityHeaders(),
         source: "/:path*",
       },
+      {
+        headers: [
+          { key: "Cache-Control", value: "private, no-store" },
+          { key: "Referrer-Policy", value: "no-referrer" },
+        ],
+        source: "/custom-print/requests/:token",
+      },
     ];
   },
 };

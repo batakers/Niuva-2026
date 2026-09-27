@@ -6,11 +6,13 @@ import { b2bInquiryInputSchema } from "@/modules/inquiry/schema";
 import { createPublicWhatsAppHref } from "@/features/public/company-content";
 import { FormField } from "@/components/niuva/form-field";
 import { FileUploadField } from "@/components/niuva/file-upload-field";
+import { PrivateUploadField } from "@/components/niuva/private-upload-field";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { briefFieldGroups } from "./brief-fields";
+import { CUSTOM_FILE_MAX_BYTES } from "@/modules/policy/privacy";
 
 const controlClass = "min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 py-2 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 type Result = "idle" | "pending" | "success" | "error";
@@ -44,15 +46,21 @@ function readServerFieldErrors(value: unknown): Record<string, string> {
 
 export function BriefForm({
   demoMode = false,
+  initialService,
   previewEnabled = false,
+  uploadsEnabled = false,
 }: {
   demoMode?: boolean;
+  initialService?: string;
   previewEnabled?: boolean;
+  uploadsEnabled?: boolean;
 }) {
   const hydrated = useHydrated();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [result, setResult] = useState<Result>("idle");
   const [referenceNumber, setReferenceNumber] = useState<string | null>(null);
+  const [uploadedFileId, setUploadedFileId] = useState<string>();
+  const [uploadBusy, setUploadBusy] = useState(false);
   const [scenario, setScenario] = useState<"success" | "error">("success");
   const statusRef = useRef<HTMLDivElement>(null);
   const pending = useRef(false);
@@ -64,12 +72,14 @@ export function BriefForm({
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (pending.current) return;
+    if (pending.current || uploadBusy) return;
     const formData = new FormData(event.currentTarget);
     const currentStage = String(formData.get("currentStage") ?? "");
     const referenceRequired = currentStage !== "IDEA";
     const parsed = b2bInquiryInputSchema.safeParse({
-      ...Object.fromEntries(formData), confidentialityAck: formData.get("confidentialityAck") === "on",
+      ...Object.fromEntries(formData),
+      ...(uploadedFileId === undefined ? {} : { attachmentFileIds: [uploadedFileId] }),
+      confidentialityAck: formData.get("confidentialityAck") === "on",
     });
     setResult("idle");
     setReferenceNumber(null);
@@ -85,8 +95,8 @@ export function BriefForm({
       }
       // Zod can stop before the reference cross-field refinement when consent
       // is invalid. Show both actionable omissions in the same form pass.
-      if (referenceRequired && !String(formData.get("referenceLink") ?? "").trim()) {
-        fields.referenceLink = "Masukkan link referensi yang valid, termasuk https://.";
+      if (referenceRequired && uploadedFileId === undefined && !String(formData.get("referenceLink") ?? "").trim()) {
+        fields.referenceLink = "Masukkan link referensi atau unggah lampiran privat.";
       }
       setErrors(fields);
       return;
@@ -165,7 +175,7 @@ export function BriefForm({
         {previewEnabled && result === "success" && <StatusNotice tone="success" title="Simulasi brief berhasil." description="Informasi lolos validasi. Ini hanya preview; belum ada inquiry, nomor referensi, atau pesan yang dikirim ke Niuva." />}
         {previewEnabled && result === "error" && <StatusNotice tone="error" title="Simulasi pengiriman gagal." description="Isian tetap tersedia. Pilih skenario berhasil lalu coba kembali untuk meninjau alur pemulihan." />}
         {!previewEnabled && result === "success" && referenceNumber && <StatusNotice tone="success" title="Brief tersimpan." description={demoMode ? `Referensi ${referenceNumber} tercatat di database demo lokal. WhatsApp masih berupa deep-link; tidak ada pesan otomatis yang dikirim.` : `Referensi ${referenceNumber} sudah tercatat. Tim Niuva dapat meninjau konteks ini sebelum percakapan lanjutan.`}
-          action={<div className="flex flex-wrap gap-2"><a href={createPublicWhatsAppHref(referenceNumber)} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">Lanjutkan lewat WhatsApp</a>{demoMode ? <NiuvaLink href="/demo/action-queue" variant="outline" className="min-h-11">Lihat Action Queue demo</NiuvaLink> : null}</div>} />}
+          action={<div className="flex flex-wrap gap-2"><a href={createPublicWhatsAppHref(referenceNumber)} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center rounded-lg border border-border px-4 text-sm font-medium focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">Lanjutkan lewat WhatsApp</a>{demoMode ? <NiuvaLink href="/demo/action-queue" variant="outline" className="min-h-11">Lihat Action Queue demo</NiuvaLink> : null}</div>} />}
         {!previewEnabled && result === "error" && <StatusNotice tone="error" title="Project brief belum terkirim." description="Isian tetap tersedia. Coba kirim lagi setelah layanan kembali tersedia." action={<Button type="button" variant="outline" className="min-h-11" onClick={() => setResult("idle")}>Coba lagi</Button>} />}
       </div>
       <fieldset disabled={result === "pending"} className="min-w-0 space-y-8">
@@ -176,7 +186,7 @@ export function BriefForm({
             {group.fields.map(field => <FormField key={field.name} id={`brief-${field.name}`} label={field.label}
               required={field.required} description={field.description} error={errors[field.name]}
               className={["description", "projectGoal", "referenceLink"].includes(field.name) ? "sm:col-span-2" : undefined}>
-              {field.type === "select" ? <select name={field.name} required={field.required} defaultValue="" className={controlClass}>
+              {field.type === "select" ? <select name={field.name} required={field.required} defaultValue={field.name === "preferredService" ? initialService ?? "" : ""} className={controlClass}>
                 <option value="">{field.required ? "Pilih tahap" : "Belum ditentukan"}</option>
                 {field.options?.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
               </select> : field.type === "textarea" ? <textarea name={field.name} required={field.required} rows={4} className={controlClass} /> :
@@ -184,15 +194,27 @@ export function BriefForm({
             </FormField>)}
           </div>
         </section>)}
-        <FileUploadField label="Lampiran referensi — belum tersedia" acceptedExtensions={[".stl", ".3mf", ".obj", ".step", ".stp"]}
-          maxSizeLabel="100 MiB" description="Penyimpanan privat belum terhubung. Gunakan link referensi di atas; tidak ada file yang diunggah dari halaman ini." disabled />
+        {uploadsEnabled && !previewEnabled ? (
+          <PrivateUploadField
+            acceptedExtensions={[".stl", ".3mf", ".obj", ".step", ".stp", ".jpg", ".jpeg", ".png"]}
+            description="Lampiran privat opsional. Pada tahap selain ide, cukup pilih lampiran atau isi link referensi."
+            id="brief-attachmentFileIds"
+            label="Lampiran referensi"
+            maxBytes={CUSTOM_FILE_MAX_BYTES}
+            onBusyChange={setUploadBusy}
+            onFileChange={(fileId) => setUploadedFileId(fileId)}
+          />
+        ) : (
+          <FileUploadField label="Lampiran referensi — belum tersedia" acceptedExtensions={[".stl", ".3mf", ".obj", ".step", ".stp", ".jpg", ".jpeg", ".png"]}
+            maxSizeLabel="100 MiB" description="Upload privat belum tersedia pada runtime ini. Gunakan link referensi; tahap ide dapat dikirim tanpa referensi." disabled />
+        )}
         <FormField id="brief-confidentialityAck" label="Persetujuan kerahasiaan" required error={errors.confidentialityAck}
           description="Saya berhak membagikan referensi ini untuk peninjauan kebutuhan proyek oleh Niuva.">
           <input type="checkbox" name="confidentialityAck" required className="size-5 accent-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" />
         </FormField>
       </fieldset>
       <div className="mt-8 border-t border-border pt-6">
-        <Button type="submit" size="lg" disabled={!hydrated || result === "pending"} className="min-h-11 w-full sm:w-auto">
+        <Button type="submit" size="lg" disabled={!hydrated || uploadBusy || result === "pending"} className="min-h-11 w-full sm:w-auto">
           {result === "pending" ? (previewEnabled ? "Memproses simulasi…" : "Mengirim brief…") : previewEnabled ? "Uji brief (simulasi)" : "Kirim project brief"}
         </Button>
         <noscript><p className="mt-3 text-sm">Aktifkan JavaScript untuk memeriksa dan mengirim formulir.</p></noscript>

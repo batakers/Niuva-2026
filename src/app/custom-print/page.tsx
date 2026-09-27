@@ -20,7 +20,7 @@ const workflow = [
   {
     label: "File dan konfigurasi",
     description:
-      "Anda menyiapkan model, unit atau skala, material, jumlah, dan catatan yang membantu pemeriksaan.",
+      "Mulai dari model 3D/CAD atau deskripsi dan referensi. Unit model, material, jumlah, dan catatan membantu pemeriksaan saat tersedia.",
     icon: "file-box",
   },
   {
@@ -58,8 +58,11 @@ export default async function CustomPrintPage() {
   await connection();
 
   let liveEnabled = false;
+  let databaseEnabled = false;
   try {
-    liveEnabled = getServerCapabilities().customUploads;
+    const capabilities = getServerCapabilities();
+    liveEnabled = capabilities.customUploads;
+    databaseEnabled = capabilities.database;
   } catch {
     // Incomplete provider configuration keeps the public page fail-closed.
   }
@@ -84,7 +87,7 @@ export default async function CustomPrintPage() {
                 Review dulu. Baru produksi.
               </h1>
               <p className="mt-5 max-w-xl text-base leading-7 text-neutral-300">
-                File ditinjau dan dislicing operator sebelum Niuva menyusun quote yang dapat Anda setujui.
+                Mulai dari model siap atau referensi awal. Operator meninjau kebutuhan dan hasil slicing sebelum Niuva menyusun quote yang dapat Anda setujui.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <NiuvaLink className="min-h-11 gap-2" href="#request-readiness">
@@ -249,27 +252,31 @@ export default async function CustomPrintPage() {
           <div className="mx-auto grid max-w-public gap-8 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[minmax(0,0.9fr)_minmax(24rem,1.1fr)] lg:items-center">
             <div>
               <p className="text-sm font-medium text-brand-700">Langkah berikutnya</p>
-              <h2 className={`${type.heading.className} mt-3`} id="request-title">Siapkan konteksnya sekarang, kirim saat form tersedia.</h2>
+              <h2 className={`${type.heading.className} mt-3`} id="request-title">Pilih titik mulai sesuai yang sudah Anda punya.</h2>
               <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground">
-                Form khusus akan menangani file, konfigurasi, kontak, progres, validasi, dan pemulihan tanpa klaim upload palsu.
+                Model siap masuk review file. Jika baru punya sketsa, foto, atau kebutuhan awal, kirim referensi dan tambahkan model pada request yang sama nanti.
               </p>
             </div>
             <StatusNotice
               tone="info"
-              title={liveEnabled
-                ? "Form request siap untuk upload privat."
+              title={databaseEnabled
+                ? "Referensi awal dapat dikirim untuk ditriase operator."
                 : previewEnabled
-                  ? "Form request siap untuk preview."
-                  : "Form request belum tersedia."}
-              description={liveEnabled
-                ? "Metadata dan file diteruskan ke storage privat untuk pemeriksaan operator. Harga dan kelayakan cetak tetap menunggu review."
+                  ? "Form model siap untuk preview lokal."
+                  : "Form request menunggu database."}
+              description={databaseEnabled
+                ? liveEnabled
+                  ? "Mulai dengan referensi atau unggah model secara privat. Kelayakan cetak dan quote tetap menunggu review operator."
+                  : "Kirim deskripsi dan link tanpa upload. Foto dan model baru dapat diunggah setelah storage privat tersedia."
                 : previewEnabled
-                  ? "Anda dapat menguji metadata, konfigurasi, progres, dan pemulihan secara lokal. Tidak ada file atau request yang dikirim."
-                  : "Upload custom print belum diaktifkan. Silakan diskusikan kebutuhan Anda melalui project brief."}
-              action={liveEnabled || previewEnabled
-                ? <NiuvaLink className="min-h-11" href="/custom-print/request">Mulai request</NiuvaLink>
+                  ? "Preview model hanya menguji metadata lokal; tidak membuat request nyata."
+                  : "Pengiriman request belum tersedia. Anda tetap dapat menjelaskan kebutuhan melalui Project Brief saat layanan itu aktif."}
+              action={databaseEnabled
+                ? <NiuvaLink className="min-h-11" href="/custom-print/request?mode=reference">Mulai dari referensi</NiuvaLink>
+                : liveEnabled || previewEnabled
+                  ? <NiuvaLink className="min-h-11" href="/custom-print/request">Saya punya model</NiuvaLink>
                 : undefined}
-              secondaryAction={<NiuvaLink className="min-h-11" href="/project-brief" variant="outline">Diskusikan kebutuhan khusus</NiuvaLink>}
+              secondaryAction={<NiuvaLink className="min-h-11" href={liveEnabled ? "/custom-print/request" : "/project-brief"} variant="outline">{liveEnabled ? "Saya punya model" : "Diskusikan kebutuhan khusus"}</NiuvaLink>}
             />
           </div>
         </section>

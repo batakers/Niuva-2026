@@ -61,6 +61,8 @@ export interface CustomPrintServiceRepository {
   ): Promise<Readonly<{ id: string; referenceNumber: string }>>;
   findRequestForReview(requestId: string): Promise<Readonly<{
     id: string;
+    intakeMode: "MODEL_READY" | "REFERENCE_ONLY";
+    modelReady: boolean;
     quantity: number;
     status:
       | "APPROVED"
@@ -169,6 +171,7 @@ export class CustomPrintService {
       action: "custom-print.request.submitted",
       actorType: "SYSTEM",
       afterJson: {
+        intakeMode: parsed.intakeMode,
         productInterest: parsed.productInterest,
         referenceNumber,
       },
@@ -236,6 +239,12 @@ export class CustomPrintService {
     if (request.status !== "SUBMITTED" && request.status !== "UNDER_REVIEW") {
       throw appError("CONFLICT", {
         message: "Review hanya dapat dicatat sebelum quote siap.",
+      });
+    }
+
+    if (request.intakeMode === "REFERENCE_ONLY" && !request.modelReady) {
+      throw appError("CONFLICT", {
+        message: "Model 3D/CAD terverifikasi diperlukan sebelum review slicer.",
       });
     }
 

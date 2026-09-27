@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 
@@ -149,6 +150,7 @@ export function RequestForm({
   const [scenario, setScenario] = useState<UploadScenario>("accepted");
   const [result, setResult] = useState<SubmitResult>("idle");
   const [referenceNumber, setReferenceNumber] = useState<string>();
+  const [accessToken, setAccessToken] = useState<string>();
   const [serverError, setServerError] = useState<string>();
   const pending = useRef(false);
   const scenarioRef = useRef<UploadScenario>("accepted");
@@ -292,6 +294,7 @@ export function RequestForm({
     setFileError(undefined);
     setResult("idle");
     setReferenceNumber(undefined);
+    setAccessToken(undefined);
     setServerError(undefined);
     setErrors((current) => {
       const next = { ...current };
@@ -395,6 +398,7 @@ export function RequestForm({
     setProgress(undefined);
     setResult("idle");
     setReferenceNumber(undefined);
+    setAccessToken(undefined);
     setServerError(undefined);
     pending.current = false;
   }
@@ -470,6 +474,7 @@ export function RequestForm({
       .then((response) => {
         pending.current = false;
         setReferenceNumber(response.referenceNumber);
+        setAccessToken(response.accessToken);
         setResult("ready");
       })
       .catch((error) => {
@@ -579,12 +584,16 @@ export function RequestForm({
         {result === "ready" && isLive && referenceNumber ? (
           <StatusNotice
             action={
+              <div className="flex flex-wrap gap-3">
+              {accessToken ? <Link className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={"/custom-print/requests/" + accessToken}>Lihat status privat</Link> : null}
               <a
                 className="inline-flex min-h-11 items-center rounded-lg border border-success-border bg-background px-4 py-2 text-sm font-semibold text-success underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                 href={createPublicWhatsAppHref(referenceNumber)}
+                rel="noreferrer"
               >
                 Lanjutkan melalui WhatsApp
               </a>
+              </div>
             }
             description={`Referensi ${referenceNumber} sudah tercatat. Operator akan meninjau file dan konteks request Anda.`}
             title="Request tersimpan untuk review operator."

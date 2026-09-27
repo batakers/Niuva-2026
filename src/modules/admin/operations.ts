@@ -3,6 +3,8 @@ import "server-only";
 import type { AdminRole, PrismaClient } from "@/generated/prisma/client";
 import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
 import { getPrismaClient } from "@/lib/db/prisma";
+import { publicServices } from "@/features/public/company-content";
+import { isModelExtension, isReferencePhotoExtension } from "@/modules/custom-print/file-types";
 import { requireAdminPermission, type AdminPermission } from "./permissions";
 
 export type AdminOrderRow = Readonly<{
@@ -24,6 +26,8 @@ export type AdminCustomPrintRequestRow = Readonly<{
   customerEmail: string;
   customerName: string;
   fileCount: number;
+  intakeMode: "MODEL_READY" | "REFERENCE_ONLY";
+  modelReady: boolean;
   id: string;
   latestQuote: Readonly<{
     quoteNumber: string;
@@ -175,6 +179,9 @@ export type AdminCustomPrintDetail = Readonly<{
   customerName: string;
   customerPhone: string;
   fileCount: number;
+  intakeMode: "MODEL_READY" | "REFERENCE_ONLY";
+  modelReady: boolean;
+  photoCount: number;
   files: readonly Readonly<{
     extension: string;
     id: string;
@@ -199,6 +206,7 @@ export type AdminCustomPrintDetail = Readonly<{
     version: number;
   }>[];
   referenceNumber: string;
+  referenceLink: string | null;
   review: Readonly<{
     configurationJson: unknown;
     materialCode: string;
@@ -388,8 +396,9 @@ export class AdminOperationsService {
         createdAt: true,
         customerEmail: true,
         customerName: true,
-        files: { select: { fileId: true } },
+        files: { select: { file: { select: { extension: true, uploadStatus: true } } } },
         id: true,
+        intakeMode: true,
         materialRequested: true,
         quantity: true,
         quotes: {
@@ -415,6 +424,8 @@ export class AdminOperationsService {
         customerName: row.customerName,
         fileCount: row.files.length,
         id: row.id,
+        intakeMode: row.intakeMode,
+        modelReady: row.files.some(({ file }) => file.uploadStatus === "VERIFIED" && isModelExtension(file.extension)),
         latestQuote: row.quotes[0] ?? null,
         materialRequested: row.materialRequested,
         quantity: row.quantity,
@@ -713,6 +724,7 @@ export class AdminOperationsService {
           },
         },
         id: true,
+        intakeMode: true,
         materialRequested: true,
         notes: true,
         quantity: true,
@@ -730,6 +742,7 @@ export class AdminOperationsService {
           },
         },
         referenceNumber: true,
+        referenceLink: true,
         review: {
           select: {
             configurationJson: true,
@@ -756,6 +769,9 @@ export class AdminOperationsService {
       customerName: request.customerName,
       customerPhone: request.customerPhone,
       fileCount: request.files.length,
+      intakeMode: request.intakeMode,
+      modelReady: request.files.some(({ file }) => file.uploadStatus === "VERIFIED" && isModelExtension(file.extension)),
+      photoCount: request.files.filter(({ file }) => file.uploadStatus === "VERIFIED" && isReferencePhotoExtension(file.extension)).length,
       files: request.files.map(({ file }) => ({
         extension: file.extension,
         id: file.id,
@@ -780,6 +796,7 @@ export class AdminOperationsService {
         version: quote.version,
       })),
       referenceNumber: request.referenceNumber,
+      referenceLink: request.referenceLink,
       review: request.review === null
         ? null
         : {
@@ -962,6 +979,7 @@ export class AdminOperationsService {
     if (inquiry === null) return null;
     return {
       ...inquiry,
+      preferredService: publicServices.find((service) => service.slug === inquiry.preferredService)?.title ?? inquiry.preferredService,
       files: inquiry.files.map(({ file }) => ({
         extension: file.extension,
         id: file.id,

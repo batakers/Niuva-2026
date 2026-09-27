@@ -256,8 +256,6 @@ Required:
   - Existing Product
 - Description
 - Target quantity
-- Target deadline
-- File/reference upload or link
 - Confidentiality acknowledgment
 
 Optional:
@@ -265,6 +263,8 @@ Optional:
 - Company
 - Budget range
 - Preferred service
+- Target deadline, jika sudah diketahui
+- File/reference upload or link pada tahap IDEA; pada tahap lain salah satunya wajib
 
 ### After Submission
 
@@ -491,6 +491,13 @@ Pricing engine kemudian menghasilkan quotation berdasarkan **Pricing v1**.
 - **What:** Customer dapat mengirim file desain secara privat.
 - **User Story:** Sebagai customer custom print, saya ingin mengupload model dengan aman agar Niuva dapat melakukan review dan quotation.
 - **Priority:** P0 — Critical
+
+#### Intake awal berbasis referensi
+
+- Customer dapat memilih `MODEL_READY` untuk file model 3D/CAD atau `REFERENCE_ONLY` bila baru memiliki deskripsi, sketsa, foto, atau link. Klien lama tanpa mode tetap masuk `MODEL_READY`.
+- Pada `REFERENCE_ONLY`, deskripsi kebutuhan dan perkiraan jumlah wajib. Material boleh dinyatakan perlu rekomendasi. Link HTTPS dan satu foto JPG/JPEG/PNG privat (maksimal 10 MiB) opsional; tanpa storage privat, deskripsi/link tetap dapat dikirim selama database tersedia.
+- Request mendapat nomor referensi dan tautan status privat. Pemegang token dapat menambahkan model pada request referensi yang sama sebelum review slicer; STL meminta konfirmasi unit/skala ketika model ditambahkan. Token dapat diterbitkan ulang oleh Admin setelah verifikasi identitas manual dan token lama dicabut.
+- Foto, link, dan deskripsi hanya bahan triase. Review slicer dan quote membutuhkan model 3D/CAD terverifikasi serta penilaian operator. Intake ini tidak otomatis menjadi pekerjaan desain berbayar, quote, atau order.
 
 #### Initial File Support
 

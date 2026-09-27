@@ -5,6 +5,7 @@ import type { OrderStatus } from "@/generated/prisma/client";
 import type { InquiryStatus } from "@/generated/prisma/client";
 import { CatalogService } from "@/modules/catalog/service";
 import { CustomPrintService } from "@/modules/custom-print/service";
+import { CustomPrintAccessService } from "@/modules/custom-print/access-service";
 import { PrivateFileDownloadService } from "@/modules/files/download-service";
 import { InquiryService } from "@/modules/inquiry/service";
 import { OrderStatusService } from "@/modules/order/status-service";
@@ -203,6 +204,24 @@ export const recordCustomPrintReviewAction: AdminAction = async (_previous, form
   }
 };
 
+export const reissueCustomPrintRequestTokenAction: AdminAction = async (_previous, formData) => {
+  const requestId = text(formData, "requestId");
+  if (!requestId) return errorState("Request tidak ditemukan.");
+  if (text(formData, "identityVerified") !== "yes") {
+    return errorState("Konfirmasi verifikasi identitas customer diperlukan.");
+  }
+  try {
+    const accessToken = await new CustomPrintAccessService().reissuePublicToken(requestId);
+    revalidatePath(`/admin/custom-print/${requestId}`);
+    return successState(
+      "Token request baru diterbitkan; token lama sudah tidak berlaku. Bagikan tautan hanya setelah identitas customer diverifikasi secara manual.",
+      `/custom-print/requests/${accessToken.token}`,
+    );
+  } catch (error) {
+    return errorStateFrom(error);
+  }
+};
+
 export const createQuoteDraftAction: AdminAction = async (_previous, formData) => {
   const requestId = text(formData, "requestId");
   const configurationJson = optionalJsonObject(formData, "configurationJson");
@@ -252,7 +271,7 @@ export const sendQuoteAction: AdminAction = async (_previous, formData) => {
     revalidatePath(`/admin/custom-print/${requestId}`);
     revalidatePath("/admin/custom-print");
     revalidateAdminWork();
-    return successState("Quote diterbitkan. Bagikan tautan ini secara manual melalui kanal yang disepakati.", `/quote/${result.accessToken.token}`);
+    return successState("Quote diterbitkan. Bagikan tautan ini secara manual melalui kanal yang disepakati.", "/quote/" + result.accessToken.token);
   } catch (error) {
     return errorStateFrom(error);
   }

@@ -20,11 +20,11 @@ export const briefFieldGroups: readonly { title: string; fields: readonly BriefF
     ] },
     { name: "description", label: "Ceritakan kebutuhan dan batasannya", type: "textarea", required: true, description: "Misalnya fungsi, pengguna, material, atau keputusan yang perlu ditinjau." },
     { name: "targetQuantity", label: "Target jumlah", required: true, description: "Boleh berupa perkiraan, misalnya 1 prototype atau 20–30 unit." },
-    { name: "targetDeadline", label: "Target waktu", type: "date", required: true },
+    { name: "targetDeadline", label: "Target waktu (jika sudah tahu)", type: "date", description: "Boleh dikosongkan bila tanggal belum ditentukan." },
   ] },
   { title: "Referensi dan preferensi", fields: [
-    { name: "referenceLink", label: "Link referensi", type: "url", description: "Opsional untuk tahap ide. Jika sudah ada, gunakan link yang dapat Anda bagikan; upload file belum tersedia pada tahap ini." },
+    { name: "referenceLink", label: "Link referensi", type: "url", description: "Opsional untuk tahap ide. Pada tahap lain, berikan link atau lampiran privat." },
     { name: "budgetRange", label: "Rentang anggaran (opsional)" },
-    { name: "preferredService", label: "Dukungan yang dicari (opsional)", type: "select", options: publicServices.map(service => ({ value: service.title, label: service.title })) },
+    { name: "preferredService", label: "Dukungan yang dicari (opsional)", type: "select", options: publicServices.map(service => ({ value: service.slug, label: service.title })) },
   ] },
 ];
