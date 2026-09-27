@@ -43,7 +43,7 @@ test("custom request exposes the active capability without accidental mutations"
   await page.getByLabel("Jumlah").fill("2");
   await page.getByLabel("Unit atau skala").selectOption("MILLIMETER_CONFIRMED");
   await page.getByLabel("Nama").fill("Kontak contoh");
-  await expect(page.getByLabel("Email", { exact: true })).toHaveValue("demo-customer@example.test");
+  await expect(page.getByLabel(/^Email/)).toHaveValue("demo-customer@example.test");
   await page.getByLabel("Nomor WhatsApp").fill("+628000000000");
   await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "Uji request tanpa mengirim" }).click();
