@@ -5,6 +5,8 @@ const clerkMocks = vi.hoisted(() => ({
   auth: vi.fn(),
 }));
 
+vi.mock("server-only", () => ({}));
+
 const environmentMocks = vi.hoisted(() => ({
   getServerCapabilities: vi.fn(),
 }));
@@ -32,6 +34,7 @@ vi.mock("next/server", () => ({
 
 import AdminPage from "@/app/admin/page";
 import AdminQueuePage from "@/app/admin/queue/page";
+import AdminStockHistoryPage from "@/app/admin/products/[id]/stock/[variantId]/page";
 import { getPrismaClient } from "@/lib/db/prisma";
 
 const prisma = getPrismaClient();
@@ -91,6 +94,32 @@ beforeEach(async () => {
 afterAll(cleanIntegrationDatabase);
 
 describe("Admin page route integration", () => {
+  it("renders the protected stock history with physical, reserved and available balances", async () => {
+    await prisma.adminProfile.create({
+      data: { clerkUserId: ownerClerkUserId, isActive: true, role: "OWNER", displayName: "Owner" },
+    });
+    const product = await prisma.product.create({
+      data: { description: "Stok route", name: "Produk stok", slug: "admin-stock-route" },
+    });
+    const variant = await prisma.productVariant.create({
+      data: { productId: product.id, sku: "ADMIN-STOCK-ROUTE", name: "Biru", priceRp: "10000", stockOnHand: 4, weightGrams: "10" },
+    });
+    await prisma.stockMovement.create({ data: {
+      variantId: variant.id, kind: "OPENING_BALANCE", delta: 4, balanceBefore: 0, balanceAfter: 4,
+    } });
+    const markup = renderToStaticMarkup(await AdminStockHistoryPage({
+      params: Promise.resolve({ id: product.id, variantId: variant.id }),
+      searchParams: Promise.resolve({}),
+    }));
+    expect(markup).toContain("Riwayat stok varian");
+    expect(markup).toContain("Stok fisik");
+    expect(markup).toContain("Reservasi aktif");
+    expect(markup).toContain("Tersedia");
+    expect(markup).toContain("Saldo awal");
+    expect(markup).toContain("ADMIN-STOCK-ROUTE");
+    expect(markup).not.toContain("Akses admin belum tersedia");
+  });
+
   it("resolves the Clerk test identity through AdminProfile and renders database-backed work", async () => {
     await prisma.adminProfile.create({
       data: {

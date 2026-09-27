@@ -8,6 +8,7 @@ import {
 } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { lockVariant } from "@/modules/inventory/repository";
+import { recordStockMovement } from "@/modules/inventory/movement";
 
 import {
   getMidtransPaymentStatus,
@@ -511,19 +512,34 @@ async function consumeRetailReservations(
     return false;
   }
 
+  const balances = new Map<string, number>();
   for (const reservation of reservations) {
-    const variant = await lockVariant(transaction, reservation.variantId);
-
-    if (variant.stockOnHand < reservation.quantity) {
+    const remaining = balances.get(reservation.variantId)
+      ?? (await lockVariant(transaction, reservation.variantId)).stockOnHand;
+    if (remaining < reservation.quantity) {
       return false;
     }
+    balances.set(reservation.variantId, remaining - reservation.quantity);
   }
 
+  const consumedBalances = new Map<string, number>();
   for (const reservation of reservations) {
-    await transaction.productVariant.update({
+    const balanceBefore = consumedBalances.get(reservation.variantId)
+      ?? (await lockVariant(transaction, reservation.variantId)).stockOnHand;
+    const variant = await transaction.productVariant.update({
       where: { id: reservation.variantId },
       data: { stockOnHand: { decrement: reservation.quantity } },
+      select: { stockOnHand: true },
     });
+    await recordStockMovement(transaction, {
+      balanceBefore,
+      balanceAfter: variant.stockOnHand,
+      kind: "ORDER_CONSUMPTION",
+      orderId,
+      reservationId: reservation.id,
+      variantId: reservation.variantId,
+    });
+    consumedBalances.set(reservation.variantId, variant.stockOnHand);
     const consumed = await transaction.stockReservation.updateMany({
       where: { id: reservation.id, status: "ACTIVE" },
       data: { status: "CONSUMED" },

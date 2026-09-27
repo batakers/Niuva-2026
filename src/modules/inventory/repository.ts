@@ -3,6 +3,10 @@ import { getPrismaClient } from "@/lib/db/prisma";
 import { appError } from "@/modules/shared/errors";
 
 import { transitionReservation } from "./transitions";
+import { lockVariant } from "./lock-variant";
+import { recordStockMovement, setStockWithinTransaction } from "./movement";
+
+export { lockVariant } from "./lock-variant";
 
 export type ReservationRecord = Readonly<{
   expiresAt: Date;
@@ -40,40 +44,13 @@ export interface InventoryRepositoryPort {
   }>): Promise<ReservationRecord>;
   updateStock?(
     variantId: string,
-    stockOnHand: number,
+    input: Readonly<{ adminId: string; expectedStockOnHand: number; reason: string; stockOnHand: number }>,
   ): Promise<StockAdjustmentResult>;
   transition(
     reservationId: string,
     next: StockReservationStatus,
     now?: Date,
   ): Promise<ReservationTransitionResult>;
-}
-
-type LockedVariant = Readonly<{
-  id: string;
-  stockOnHand: number;
-}>;
-
-export async function lockVariant(
-  transaction: Prisma.TransactionClient,
-  variantId: string,
-): Promise<LockedVariant> {
-  const rows = await transaction.$queryRaw<LockedVariant[]>(
-    Prisma.sql`
-      SELECT "id", "stock_on_hand" AS "stockOnHand"
-      FROM "product_variants"
-      WHERE "id" = ${variantId}::uuid
-      FOR UPDATE
-    `,
-  );
-
-  const variant = rows[0];
-
-  if (variant === undefined) {
-    throw appError("NOT_FOUND");
-  }
-
-  return variant;
 }
 
 export async function reserveWithinTransaction(
@@ -192,37 +169,14 @@ export class InventoryRepository implements InventoryRepositoryPort {
 
   async updateStock(
     variantId: string,
-    stockOnHand: number,
+    input: Readonly<{ adminId: string; expectedStockOnHand: number; reason: string; stockOnHand: number }>,
   ): Promise<StockAdjustmentResult> {
-    return this.prisma.$transaction(async (transaction) => {
-      const current = await lockVariant(transaction, variantId);
-      const reserved = await transaction.stockReservation.aggregate({
-        where: {
-          expiresAt: { gt: new Date() },
-          status: "ACTIVE",
-          variantId,
-        },
-        _sum: { quantity: true },
-      });
-
-      if (stockOnHand < (reserved._sum.quantity ?? 0)) {
-        throw appError("CONFLICT", {
-          message: "Stok fisik tidak boleh lebih kecil dari reservasi aktif.",
-        });
-      }
-
-      const updated = await transaction.productVariant.update({
-        where: { id: variantId },
-        data: { stockOnHand },
-        select: { id: true, stockOnHand: true },
-      });
-
-      return {
-        id: updated.id,
-        previousStockOnHand: current.stockOnHand,
-        stockOnHand: updated.stockOnHand,
-      };
-    });
+    return this.prisma.$transaction((transaction) => setStockWithinTransaction(transaction, {
+      ...input,
+      auditAction: "inventory.stock.adjusted",
+      kind: "MANUAL_ADJUSTMENT",
+      variantId,
+    }));
   }
 
   async transition(
@@ -281,9 +235,18 @@ export class InventoryRepository implements InventoryRepositoryPort {
           throw appError("OUT_OF_STOCK");
         }
 
-        await transaction.productVariant.update({
+        const updatedVariant = await transaction.productVariant.update({
           where: { id: current.variantId },
           data: { stockOnHand: { decrement: current.quantity } },
+          select: { stockOnHand: true },
+        });
+        await recordStockMovement(transaction, {
+          balanceBefore: variant.stockOnHand,
+          balanceAfter: updatedVariant.stockOnHand,
+          kind: "ORDER_CONSUMPTION",
+          orderId: current.orderId,
+          reservationId: current.id,
+          variantId: current.variantId,
         });
       }
 

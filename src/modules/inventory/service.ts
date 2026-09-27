@@ -1,4 +1,5 @@
 import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
+import { z } from "zod";
 import { recordAudit, type AuditRecorder, createTransitionAuditRecorder } from "@/modules/shared/audit";
 import { appError } from "@/modules/shared/errors";
 import { requireAdminPermission } from "@/modules/admin/permissions";
@@ -10,6 +11,13 @@ import {
   type ReservationTransitionResult,
 } from "./repository";
 import { transitionReservation } from "./transitions";
+import { parseWithValidation } from "@/modules/shared/validation";
+
+const manualAdjustmentSchema = z.object({
+  expectedStockOnHand: z.int().nonnegative().max(2_147_483_647),
+  reason: z.string().trim().min(1).max(500),
+  stockOnHand: z.int().nonnegative().max(2_147_483_647),
+});
 
 type AuthorizeAdmin = () => Promise<AdminAccess>;
 
@@ -78,31 +86,17 @@ export class InventoryService {
     return released;
   }
 
-  async adjustStock(variantId: string, stockOnHand: number) {
+  async adjustStock(variantId: string, input: unknown) {
+    const parsed = parseWithValidation(manualAdjustmentSchema, input);
     const admin = await this.authorizeAdmin();
     requireAdminPermission(admin, "INVENTORY_ADJUST");
-    if (!Number.isSafeInteger(stockOnHand) || stockOnHand < 0) {
-      throw appError("VALIDATION_ERROR", {
-        details: { stockOnHand: "Stok harus bilangan bulat nonnegatif." },
-      });
-    }
 
     const repository = this.repositoryFactory();
     if (repository.updateStock === undefined) {
       throw appError("INTERNAL_ERROR");
     }
 
-    const updated = await repository.updateStock(variantId, stockOnHand);
-    await recordAudit(this.audit, {
-      action: "inventory.stock.adjusted",
-      actorId: admin.profile.id,
-      actorType: "ADMIN",
-      afterJson: { stockOnHand: updated.stockOnHand },
-      beforeJson: { stockOnHand: updated.previousStockOnHand },
-      entityId: updated.id,
-      entityType: "ProductVariant",
-    });
-    return updated;
+    return repository.updateStock(variantId, { ...parsed, adminId: admin.profile.id });
   }
 
   private async transitionReservation(

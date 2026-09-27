@@ -38,6 +38,36 @@ Niuva MVP akan dibangun sebagai **modular monolith** menggunakan **Next.js 16.3 
 > endpoint simulasi pra-review dan snapshot nullable di request, terpisah dari
 > tabel estimasi operator. Kontrak rinci ada pada bagian berikut.
 
+> **Addendum riwayat stok — 27 September 2026:** `stock_movements` menjadi
+> ledger perubahan `stock_on_hand` per varian sejak saldo pembuka migrasi.
+> Kontrak transaksi dan pembacaan Admin dijabarkan di bawah.
+
+## Kontrak teknis ledger stok fisik
+
+1. Migrasi aditif membuat `StockMovement` dengan varian, jenis peristiwa,
+   `delta`, `balanceBefore`, `balanceAfter`, waktu, Admin/alasan opsional, dan
+   referensi order/reservasi bila dikonsumsi. CHECK SQL menjaga aritmetika dan
+   sumber per jenis; `reservationId` unik untuk mencegah konsumsi ganda.
+   Migrasi mengisi satu `OPENING_BALANCE` bertanggal untuk setiap varian lama,
+   termasuk saldo nol. Saldo historis sebelum itu tidak diklaim lengkap.
+2. Pembuatan varian, seed katalog/demo, penyesuaian Admin, konsumsi langsung,
+   dan webhook retail menulis saldo dan gerakan dalam **transaksi yang sama**.
+   Seed berulang dengan saldo sama tidak membuat gerakan. Admin mengirim saldo
+   yang terlihat sebagai `expectedStockOnHand`; repository mengunci varian,
+   memeriksa reservasi aktif dan versi saldo, lalu menyimpan gerakan beserta
+   audit Admin secara atomik. Alasan wajib, panjang maksimal 500 karakter.
+3. Webhook menghitung total seluruh reservasi aktif per varian sebelum
+   pengurangan. Setiap reservasi sukses menghasilkan satu gerakan
+   `ORDER_CONSUMPTION`; retry/idempotency tidak menambahnya lagi. Reservasi
+   dibuat/dilepas tanpa gerakan stok fisik. Refund tidak menambah saldo
+   otomatis; koreksi fisik melalui penyesuaian Admin beralasan.
+4. Pembacaan riwayat Admin memakai izin `AUDIT_READ`, memfilter product dan
+   variant ID, membatasi 50 entri per halaman, serta menampilkan stok fisik,
+   reservasi aktif, dan tersedia. Halaman bersifat request-time dan `noindex`.
+   Rekonsiliasi sejak saldo pembuka adalah jumlah `delta` seluruh gerakan
+   sama dengan `stockOnHand`; mutasi langsung di luar jalur aplikasi tidak
+   termasuk kontrak ini.
+
 ## Kontrak teknis Customer Pre-Review Simulation
 
 1. `POST /api/custom-print/preview-estimate` memerlukan sesi Customer, origin

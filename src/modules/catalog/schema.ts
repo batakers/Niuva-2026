@@ -3,6 +3,7 @@ import { z } from "zod";
 const requiredText = z.string().trim().min(1);
 const slug = z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 const nonNegativeInteger = z.int().nonnegative();
+const stockCount = nonNegativeInteger.max(2_147_483_647);
 const nonNegativeDecimal = z.string().trim().regex(/^\d+(?:\.\d{1,6})?$/);
 const nonNegativeMoney = z.string().trim().regex(/^\d+$/);
 const publicMediaStorageKey = z
@@ -40,7 +41,7 @@ export const createVariantSchema = z.object({
   priceRp: nonNegativeMoney,
   productId: z.uuid(),
   sku: requiredText,
-  stockOnHand: nonNegativeInteger.default(0),
+  stockOnHand: stockCount.default(0),
   weightGrams: nonNegativeDecimal,
   widthCm: nonNegativeDecimal.optional(),
 });
@@ -61,7 +62,9 @@ export const updateVariantSchema = z
   });
 
 export const updateStockSchema = z.object({
-  stockOnHand: nonNegativeInteger,
+  stockOnHand: stockCount,
+  expectedStockOnHand: stockCount,
+  reason: requiredText.max(500),
 });
 
 export const replaceProductMediaSchema = z.object({

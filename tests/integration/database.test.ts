@@ -387,6 +387,9 @@ describe("isolated PostgreSQL integration harness", () => {
     await expect(prisma.productVariant.findUnique({ where: { id: variant.id } })).resolves.toMatchObject({
       stockOnHand: 0,
     });
+    await expect(prisma.stockMovement.findMany({ where: { variantId: variant.id } })).resolves.toMatchObject([
+      { kind: "ORDER_CONSUMPTION", reservationId: payable.reservationId, balanceBefore: 1, balanceAfter: 0, delta: -1 },
+    ]);
     await expect(prisma.paymentEvent.count()).resolves.toBe(1);
 
     const lateVariant = await createWebhookFixtureVariant("WEBHOOK-LATE", 1);
@@ -419,9 +422,60 @@ describe("isolated PostgreSQL integration harness", () => {
     await expect(
       prisma.stockReservation.findUnique({ where: { id: late.reservationId } }),
     ).resolves.toMatchObject({ status: "RELEASED" });
+    await expect(prisma.stockMovement.count({ where: { variantId: lateVariant.id } })).resolves.toBe(0);
     await expect(
       prisma.productVariant.findUnique({ where: { id: lateVariant.id } }),
     ).resolves.toMatchObject({ stockOnHand: 1 });
+  });
+
+  it("consumes two reservations of one variant without overselling or duplicate movements", async () => {
+    const now = new Date("2026-09-05T08:00:00.000Z");
+    const variant = await createWebhookFixtureVariant("WEBHOOK-MULTI", 2);
+    const order = await prisma.order.create({
+      data: {
+        customerEmail: "client@example.test",
+        customerName: "Client",
+        customerPhone: "+628000000000",
+        grandTotalRp: "25000",
+        itemsSubtotalRp: "25000",
+        orderNumber: "ORD-WEBHOOK-MULTI",
+        orderType: "RETAIL",
+        publicTokenHash: "order-token-multi",
+        shippingTotalRp: "0",
+      },
+    });
+    const expiresAt = new Date(now.getTime() + 30 * 60_000);
+    await prisma.stockReservation.createMany({ data: [
+      { expiresAt, orderId: order.id, quantity: 1, variantId: variant.id },
+      { expiresAt, orderId: order.id, quantity: 1, variantId: variant.id },
+    ] });
+    await prisma.paymentAttempt.create({ data: {
+      amountRp: "25000",
+      createdAt: new Date(expiresAt.getTime() - 60_000),
+      expiresAt,
+      orderId: order.id,
+      providerOrderId: "PAY-WEBHOOK-MULTI",
+      purpose: "ORDER_TOTAL",
+    } });
+    const service = new PaymentWebhookService({
+      audit: async () => undefined,
+      now: () => now,
+      repository: new PaymentWebhookRepository(prisma),
+      serverKey: "midtrans-server-key",
+    });
+    const payload = signedPaymentPayload({
+      gross_amount: "25000.00",
+      order_id: "PAY-WEBHOOK-MULTI",
+      transaction_id: "transaction-multi",
+      transaction_status: "settlement",
+    });
+    await expect(service.handleMidtransNotification(payload)).resolves.toMatchObject({ kind: "PROCESSED" });
+    await expect(service.handleMidtransNotification(payload)).resolves.toMatchObject({ kind: "DUPLICATE" });
+    await expect(prisma.stockMovement.findMany({ where: { variantId: variant.id }, orderBy: { createdAt: "asc" } })).resolves.toMatchObject([
+      { kind: "ORDER_CONSUMPTION", delta: -1, balanceBefore: 2, balanceAfter: 1 },
+      { kind: "ORDER_CONSUMPTION", delta: -1, balanceBefore: 1, balanceAfter: 0 },
+    ]);
+    await expect(prisma.productVariant.findUniqueOrThrow({ where: { id: variant.id } })).resolves.toMatchObject({ stockOnHand: 0 });
   });
 
   it("persists a retail checkout vertical slice and replays it idempotently", async () => {
