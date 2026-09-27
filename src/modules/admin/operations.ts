@@ -176,6 +176,7 @@ export type AdminCustomPrintDetail = Readonly<{
   colorRequested: string | null;
   createdAt: Date;
   customerEmail: string;
+  customerId: string | null;
   customerName: string;
   customerPhone: string;
   fileCount: number;
@@ -214,6 +215,7 @@ export type AdminCustomPrintDetail = Readonly<{
     printDurationSeconds: number;
     quantity: number;
     reviewedAt: Date;
+    updatedAt: Date;
     verifiedWeightG: string;
   }> | null;
   status: string;
@@ -705,6 +707,7 @@ export class AdminOperationsService {
         colorRequested: true,
         createdAt: true,
         customerEmail: true,
+        customerId: true,
         customerName: true,
         customerPhone: true,
         files: {
@@ -751,6 +754,7 @@ export class AdminOperationsService {
             printDurationSeconds: true,
             quantity: true,
             reviewedAt: true,
+            updatedAt: true,
             verifiedWeightG: true,
           },
         },
@@ -766,6 +770,7 @@ export class AdminOperationsService {
       colorRequested: request.colorRequested,
       createdAt: request.createdAt,
       customerEmail: request.customerEmail,
+      customerId: request.customerId,
       customerName: request.customerName,
       customerPhone: request.customerPhone,
       fileCount: request.files.length,
@@ -806,6 +811,7 @@ export class AdminOperationsService {
             printDurationSeconds: request.review.printDurationSeconds,
             quantity: request.review.quantity,
             reviewedAt: request.review.reviewedAt,
+            updatedAt: request.review.updatedAt,
             verifiedWeightG: request.review.verifiedWeightG.toString(),
           },
       status: request.status,

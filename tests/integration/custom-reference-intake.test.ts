@@ -1,5 +1,11 @@
 import { randomUUID } from "node:crypto";
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+const customerAuthMocks = vi.hoisted(() => ({ requireCustomer: vi.fn() }));
+vi.mock("@/lib/auth/customer", () => ({
+  getCurrentCustomer: async () => null,
+  requireCustomer: customerAuthMocks.requireCustomer,
+}));
 
 import { POST as postCustomPrint } from "@/app/api/custom-print/requests/route";
 import { POST as postAppendModel } from "@/app/api/custom-print/requests/[token]/files/route";
@@ -7,8 +13,10 @@ import { getPrismaClient } from "@/lib/db/prisma";
 import type { AdminAccess } from "@/lib/auth/clerk";
 import { CustomPrintAccessService } from "@/modules/custom-print/access-service";
 import { CustomPrintService } from "@/modules/custom-print/service";
+import { CustomerWorkRepository } from "@/modules/customer-work/repository";
 import { CUSTOM_PRINT_V1_PER_UNIT_POLICY } from "@/modules/pricing/policy";
 import { QuoteService } from "@/modules/quote/service";
+import { appError } from "@/modules/shared/errors";
 
 const prisma = getPrismaClient();
 const baseInput = {
@@ -61,12 +69,32 @@ function reviewInput(requestId: string) {
   };
 }
 
+let routeCustomerId: string;
 beforeEach(async () => {
   await clean();
+  const customer = await prisma.customer.create({ data: {
+    email: "reference-account@example.test", normalizedEmail: "reference-account@example.test",
+    googleSubject: `reference-${randomUUID()}`,
+  } });
+  routeCustomerId = customer.id;
+  customerAuthMocks.requireCustomer.mockReset();
+  customerAuthMocks.requireCustomer.mockResolvedValue({ id: customer.id, email: customer.email,
+    normalizedEmail: customer.normalizedEmail, displayName: null, avatarUrl: null });
 });
 afterAll(clean);
 
 describe("reference-only custom request persistence", () => {
+  it("rejects text-only MAKE without a Customer session", async () => {
+    customerAuthMocks.requireCustomer.mockRejectedValueOnce(appError("UNAUTHORIZED"));
+    const response = await postCustomPrint(new Request("http://127.0.0.1:3000/api/custom-print/requests", {
+      body: JSON.stringify({ ...baseInput, intakeMode: "REFERENCE_ONLY", notes: "Deskripsi awal" }),
+      headers: { "content-type": "application/json", origin: "http://127.0.0.1:3000" },
+      method: "POST",
+    }));
+    expect(response.status).toBe(401);
+    await expect(prisma.customPrintRequest.count()).resolves.toBe(0);
+  });
+
   it("accepts a text-only request through the public route without invoking upload", async () => {
     const response = await postCustomPrint(new Request("http://127.0.0.1:3000/api/custom-print/requests", {
       body: JSON.stringify({
@@ -79,7 +107,7 @@ describe("reference-only custom request persistence", () => {
       method: "POST",
     }));
     expect(response.status).toBe(201);
-    const body = (await response.json()) as { accessToken: string; referenceNumber: string };
+    const body = (await response.json()) as { requestId: string; referenceNumber: string };
     const request = await prisma.customPrintRequest.findUniqueOrThrow({
       include: { files: true },
       where: { referenceNumber: body.referenceNumber },
@@ -88,10 +116,14 @@ describe("reference-only custom request persistence", () => {
       intakeMode: "REFERENCE_ONLY",
       referenceLink: "https://example.test/sketch",
       status: "SUBMITTED",
-      customerEmail: baseInput.customerEmail,
+      customerId: routeCustomerId,
+      customerEmail: "reference-account@example.test",
     });
     expect(request.files).toHaveLength(0);
-    expect((await new CustomPrintAccessService().getStatus(body.accessToken)).modelReady).toBe(false);
+    const status = await new CustomerWorkRepository().request(routeCustomerId, body.requestId);
+    expect(status).toMatchObject({ referenceNumber: body.referenceNumber, intakeMode: "REFERENCE_ONLY" });
+    expect(body).not.toHaveProperty("accessToken");
+    await expect(new CustomPrintAccessService().getStatus(body.referenceNumber)).rejects.toMatchObject({ code: "UNAUTHORIZED" });
   });
 
   it("preserves the legacy model mode and never treats a private photo as sliceable", async () => {

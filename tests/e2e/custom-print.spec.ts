@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
+import { loginCustomer } from "./helpers/customer";
 
 test("custom print landing explains the operator-reviewed path without instant-price claims", async ({ page }) => {
+  await loginCustomer(page);
   await page.goto("/custom-print");
 
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
@@ -29,6 +31,7 @@ test("custom print landing explains the operator-reviewed path without instant-p
 });
 
 test("custom draft cards route to a preselected intake without checkout", async ({ page }) => {
+  await loginCustomer(page);
   await page.goto("/custom-print");
 
   await expect(page.getByRole("heading", { name: "Pilih referensi, lalu biarkan operator mengunci detailnya." })).toBeVisible();

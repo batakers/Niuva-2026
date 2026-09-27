@@ -108,17 +108,26 @@ describe("security response headers", () => {
     R2_SECRET_ACCESS_KEY: "secret-key",
   };
 
-  it("marks tokenized custom request pages private and uncached", async () => {
+  it("marks private customer pages and tokenized requests uncached", async () => {
     const rules = await nextConfig.headers?.();
     const requestStatusRule = rules?.find(
       ({ source }) => source === "/custom-print/requests/:token",
     );
+    const accountRule = rules?.find(({ source }) => source === "/account/:path*");
 
     expect(requestStatusRule?.headers).toContainEqual({
       key: "Cache-Control",
       value: "private, no-store",
     });
     expect(requestStatusRule?.headers).toContainEqual({
+      key: "Referrer-Policy",
+      value: "no-referrer",
+    });
+    expect(accountRule?.headers).toContainEqual({
+      key: "Cache-Control",
+      value: "private, no-store",
+    });
+    expect(accountRule?.headers).toContainEqual({
       key: "Referrer-Policy",
       value: "no-referrer",
     });

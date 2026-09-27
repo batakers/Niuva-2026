@@ -296,6 +296,21 @@ describe("Phase 3 private upload boundary", () => {
     ).rejects.toMatchObject({ code: "UPLOAD_REJECTED" });
     expect(repository.records).toHaveLength(0);
   });
+
+  it("allows private reference photos up to 10 MiB and rejects larger images", async () => {
+    const { repository, service } = createUploadService();
+    await expect(service.createIntent({
+      mimeType: "image/jpeg",
+      originalName: "sketsa.jpeg",
+      sizeBytes: 10 * 1_024 * 1_024,
+    })).resolves.toMatchObject({ requiredHeaders: { "content-type": "image/jpeg" } });
+    await expect(service.createIntent({
+      mimeType: "image/png",
+      originalName: "sketsa.png",
+      sizeBytes: 10 * 1_024 * 1_024 + 1,
+    })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(repository.records.size).toBe(1);
+  });
 });
 
 function signedMidtransPayload(

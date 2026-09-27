@@ -24,6 +24,7 @@ export type CreatePendingFileInput = Readonly<{
   sizeBytes: bigint;
   uploadExpiresAt: Date;
   uploadTokenHash: string;
+  uploadedByCustomerId?: string;
 }>;
 
 export type PendingFileForConfirmation = Readonly<{
@@ -69,6 +70,7 @@ export class StoredFileRepository {
         uploadExpiresAt: input.uploadExpiresAt,
         uploadStatus: "PENDING",
         uploadTokenHash: input.uploadTokenHash,
+        uploadedByCustomerId: input.uploadedByCustomerId,
       },
     });
   }

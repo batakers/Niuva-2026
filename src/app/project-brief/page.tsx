@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import { redirect } from "next/navigation";
+import { requireCustomer } from "@/lib/auth/customer";
+import { isAppError } from "@/modules/shared/errors";
 import { PublicShell } from "@/components/niuva/public-shell";
+import { StatusNotice } from "@/components/niuva/status-notice";
 import { isLocalDemoMode, getServerCapabilities } from "@/lib/env/server";
 import { typographySystemTokens as type } from "@/design/typography";
 import { publicServices } from "@/features/public/company-content";
@@ -15,6 +19,14 @@ export default async function ProjectBriefPage({ searchParams }: Readonly<{
   const params = await searchParams;
   const serviceSlug = Array.isArray(params.service) ? params.service[0] : params.service;
   const initialService = publicServices.find((service) => service.slug === serviceSlug)?.slug;
+  const returnTo = initialService ? `/project-brief?service=${encodeURIComponent(initialService)}` : "/project-brief";
+  let customer;
+  try { customer = await requireCustomer(); }
+  catch (error) {
+    if (isAppError(error) && error.code === "UNAUTHORIZED") redirect(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+    if (isAppError(error) && error.code === "CUSTOMER_AUTH_UNAVAILABLE") return <PublicShell scope="project-brief" functionalStatus="capability-gated"><main id="main-content" className="mx-auto max-w-public px-5 py-16 sm:px-8"><StatusNotice title="Login Customer belum tersedia" description="Project Brief memerlukan login Google Customer sebelum dapat dikirim pada runtime ini." tone="warning" /></main></PublicShell>;
+    throw error;
+  }
   const demoMode = isLocalDemoMode();
   let uploadsEnabled = false;
   try {
@@ -44,7 +56,7 @@ export default async function ProjectBriefPage({ searchParams }: Readonly<{
               </ul>
             </div>
           </div>
-          <BriefForm demoMode={demoMode} initialService={initialService} uploadsEnabled={uploadsEnabled} />
+          <BriefForm customerEmail={customer.email} demoMode={demoMode} initialService={initialService} uploadsEnabled={uploadsEnabled} />
         </section>
         <section className="border-t border-border bg-card">
           <div className="mx-auto grid max-w-public gap-8 px-5 py-12 sm:px-8 md:grid-cols-2">

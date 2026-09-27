@@ -1,4 +1,5 @@
 import { readJsonBody } from "@/lib/http/body";
+import { requireCustomer } from "@/lib/auth/customer";
 import { assertPublicMutationRequest } from "@/lib/http/public-mutation";
 import {
   apiError,
@@ -23,16 +24,17 @@ export async function POST(request: Request) {
 
   try {
     assertPublicMutationRequest(request, projectBriefRateLimiter);
+    const customer = await requireCustomer();
     const payload = await readJsonBody(request, {
       maxBytes: PROJECT_BRIEF_MAX_BODY_BYTES,
     });
     const result = await new InquiryService({
       notificationFactory: createInquiryAdminNotificationFromEnvironment,
-    }).submit(payload);
+    }).submit(payload, customer);
 
     return apiSuccess(
       {
-        accessToken: result.accessToken.token,
+        inquiryId: result.inquiry.id,
         referenceNumber: result.inquiry.referenceNumber,
       },
       { correlationId, status: 201 },

@@ -10,6 +10,8 @@ import {
   createQuoteDraftAction,
   downloadPrivateFileAction,
   recordCustomPrintReviewAction,
+  publishCustomPrintEstimateAction,
+  saveEstimatedCustomPackageAction,
   reissueCustomPrintRequestTokenAction,
   reissueQuoteTokenAction,
   sendQuoteAction,
@@ -21,6 +23,7 @@ import {
   AdminOperationsService,
   type AdminCustomPrintDetail,
 } from "@/modules/admin/operations";
+import { CustomPrintEstimateService, isEstimateCurrent } from "@/modules/custom-print/estimate";
 
 export const metadata: Metadata = {
   title: "Custom print detail admin · Niuva",
@@ -36,13 +39,15 @@ export default async function AdminCustomPrintDetailPage({ params }: Readonly<{ 
   if (!z.uuid().safeParse(id).success) notFound();
   const access = await loadAdminAccess();
   if (access === null) return <AdminAccessUnavailableView />;
-  const [request, pricing, activeRule] = await Promise.all([
+  const [request, pricing, activeRule, latestEstimate] = await Promise.all([
     loadRequest(access, id),
     loadPricing(access),
     loadActivePricing(access),
+    new CustomPrintEstimateService({ authorizeAdmin: async () => access }).latestForAdmin(id),
   ]);
   if (request === null) return <AdminDataUnavailableView active="custom-print" role={access.profile.role} title="Detail custom print belum dapat dimuat" />;
   const review = request.review;
+  const estimateCurrent = latestEstimate !== null && isEstimateCurrent(latestEstimate.snapshot, review?.updatedAt);
   const hasDraft = request.quotes.some((quote) => quote.status === "DRAFT");
   const referenceLink = safeHttpsUrl(request.referenceLink);
 
@@ -76,11 +81,11 @@ export default async function AdminCustomPrintDetailPage({ params }: Readonly<{ 
 
         <section aria-labelledby="request-access-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
           <h2 className="text-xl font-semibold" id="request-access-title">Akses status privat customer</h2>
-          <><p className="mt-2 text-sm leading-6 text-muted-foreground">Jika customer kehilangan tautan, verifikasi identitas melalui proses manual sebelum menerbitkan token baru. Token lama langsung tidak berlaku. Tautan baru dibagikan manual; tidak ada pesan otomatis.</p>
+          {request.customerId === null ? <><p className="mt-2 text-sm leading-6 text-muted-foreground">Jika customer kehilangan tautan, verifikasi identitas melalui proses manual sebelum menerbitkan token baru. Token lama langsung tidak berlaku. Tautan baru dibagikan manual; tidak ada pesan otomatis.</p>
           <AdminActionForm action={reissueCustomPrintRequestTokenAction} className="mt-5" confirmMessage="Token lama akan langsung dicabut. Identitas customer sudah diverifikasi secara manual?" submitLabel="Terbitkan ulang tautan request" successLinkLabel="Buka tautan request baru">
             <input name="requestId" type="hidden" value={request.id} />
             <label className="flex items-start gap-3 text-sm leading-6"><input className="mt-1 size-4" name="identityVerified" required type="checkbox" value="yes" /><span>Saya sudah memverifikasi identitas customer melalui proses manual.</span></label>
-          </AdminActionForm></>
+          </AdminActionForm></> : <p className="mt-2 text-sm leading-6 text-muted-foreground">Request ini dimiliki akun Customer. Status dan keputusan quote tersedia di akun; token lama tidak dapat diterbitkan ulang.</p>}
         </section>
 
         <section aria-labelledby="review-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
@@ -88,8 +93,8 @@ export default async function AdminCustomPrintDetailPage({ params }: Readonly<{ 
           <p className="mt-2 text-sm leading-6 text-muted-foreground">Catat berat dan durasi yang sudah diverifikasi. Quantity harus sama dengan request agar quote dapat dihitung server.</p>
           {request.intakeMode === "REFERENCE_ONLY" && !request.modelReady ? (
             <StatusNotice className="mt-5" tone="info" title="Menunggu model 3D/CAD terverifikasi" description="Foto dan link referensi membantu triase, tetapi belum dapat dislicing. Customer dapat menambahkan model lewat tautan privat pada request yang sama." />
-          ) : ["SUBMITTED", "UNDER_REVIEW"].includes(request.status) ? (
-            <AdminActionForm action={recordCustomPrintReviewAction} className="mt-5" submitLabel={review ? "Revisi review slicer" : "Simpan review slicer"}>
+          ) : ["SUBMITTED", "UNDER_REVIEW", "QUOTE_READY", "QUOTE_SENT"].includes(request.status) ? (
+            <AdminActionForm action={recordCustomPrintReviewAction} className="mt-5" confirmMessage={review ? "Merevisi review akan menahan quote sampai estimasi versi baru terbit. Lanjutkan?" : undefined} submitLabel={review ? "Revisi review slicer" : "Simpan review slicer"}>
               <input name="requestId" type="hidden" value={request.id} />
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <Field label="Berat terverifikasi (g)" name="verifiedWeightG" required type="text" value={review?.verifiedWeightG ?? ""} />
@@ -107,12 +112,33 @@ export default async function AdminCustomPrintDetailPage({ params }: Readonly<{ 
           )}
         </section>
 
+        <section aria-labelledby="estimate-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
+          <h2 className="text-xl font-semibold" id="estimate-title">Estimasi produksi pascareview</h2>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">Operator menilai seluruh biaya pekerjaan sebelum kisaran 100%–130% dipublikasikan. Faktor awal ini belum terkalibrasi oleh riwayat pekerjaan. Ongkir tidak termasuk.</p>
+          {latestEstimate ? <p className="mt-4 rounded-lg border border-info-border bg-info-background p-4 text-sm font-medium text-info">Versi {latestEstimate.version} · {currencyFormatter.format(BigInt(latestEstimate.lowerRp.toFixed(0)))}–{currencyFormatter.format(BigInt(latestEstimate.upperRp.toFixed(0)))} · terbit {dateFormatter.format(latestEstimate.publishedAt)}{estimateCurrent ? "" : " · review berubah, terbitkan versi baru"}</p> : <StatusNotice className="mt-4" title="Perlu review" description="Belum ada estimasi terbit untuk request ini." tone="info" />}
+          {review && activeRule && request.modelReady && ["QUOTE_READY", "QUOTE_SENT"].includes(request.status) ? <AdminActionForm action={publishCustomPrintEstimateAction} className="mt-5" submitLabel={latestEstimate ? "Terbitkan versi estimasi baru" : "Terbitkan estimasi"}>
+            <input name="requestId" type="hidden" value={request.id} /><input name="pricingRuleVersionId" type="hidden" value={activeRule.id} />
+            <label className="grid gap-2 text-sm font-medium" htmlFor="estimate-filament"><span>Sumber filamen hasil penilaian</span><select className={inputClass} id="estimate-filament" name="filamentSource" required><option value="NIUVA_STOCK">Stok Niuva</option><option value="COMMUNAL">Komunal</option><option value="CUSTOMER_OWN">Punya customer</option></select></label>
+            <label className="grid gap-2 text-sm font-medium" htmlFor="estimate-extra"><span>Pos biaya tambahan bernama</span><textarea className={textareaClass} id="estimate-extra" name="additionalCostsText" placeholder={"Setup | 50000\nFinishing | 25000"} rows={3} /><span className="font-normal text-muted-foreground">Satu pos per baris: Nama | nominal IDR bulat positif. Isi semua pos yang berlaku.</span></label>
+            <label className="flex items-start gap-3 text-sm"><input className="mt-1 size-4" name="noAdditionalCosts" type="checkbox" value="yes" /><span>Saya sudah menilai pekerjaan ini dan menyatakan tidak ada pos biaya tambahan.</span></label>
+          </AdminActionForm> : <p className="mt-4 text-sm text-muted-foreground">Model, review slicer, dan pricing rule aktif diperlukan sebelum estimasi.</p>}
+        </section>
+
+        <section aria-labelledby="rough-package-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
+          <h2 className="text-xl font-semibold" id="rough-package-title">Paket perkiraan untuk cek ongkir</h2>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">Customer dapat meminta rate testing dari akun setelah paket perkiraan terisi. Ongkir kasar tidak masuk quote, order, atau pembayaran.</p>
+          <AdminActionForm action={saveEstimatedCustomPackageAction} className="mt-5" submitLabel="Simpan paket perkiraan">
+            <input name="requestId" type="hidden" value={request.id} />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5"><Field label="Berat (g)" name="weightGrams" required type="number" value="" /><Field label="Panjang (cm)" name="lengthCm" required type="number" value="" /><Field label="Lebar (cm)" name="widthCm" required type="number" value="" /><Field label="Tinggi (cm)" name="heightCm" required type="number" value="" /><Field label="Nilai paket (IDR)" name="declaredValueRp" required type="number" value="" /></div>
+          </AdminActionForm>
+        </section>
+
         <section aria-labelledby="quote-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
           <h2 className="text-xl font-semibold" id="quote-title">Quote & pricing rule</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">Setelah diterbitkan, snapshot quote menjadi immutable. Tautan ini disiapkan untuk dibagikan manual melalui kanal customer yang disepakati; Niuva belum mengirimkannya otomatis.</p>
           {pricing === null ? <StatusNotice className="mt-4" tone="warning" title="Pricing rules belum dapat dimuat" description="Draft quote ditahan sampai daftar aturan harga dapat dibaca oleh admin." /> : activeRule === null ? <StatusNotice className="mt-4" tone="warning" title="Belum ada pricing rule aktif" description="Owner harus mengaktifkan rule yang disetujui sebelum operator membuat quote." /> : <>
             <div className="mt-4 rounded-lg border border-info-border bg-info-background p-4 text-sm"><p className="font-semibold text-info">Rule aktif: {activeRule.code} v{activeRule.version}</p><p className="mt-1 text-info">Quote akan menyimpan snapshot rule ini. Perubahan rule baru tidak mengubah quote yang sudah dikirim.</p></div>
-            {review && !hasDraft && (request.status === "QUOTE_READY" || request.status === "QUOTE_SENT") ? <AdminActionForm action={createQuoteDraftAction} className="mt-5" submitLabel="Buat draft quote"><input name="requestId" type="hidden" value={request.id} /><input name="pricingRuleVersionId" type="hidden" value={activeRule.id} /><div className="grid gap-4 sm:grid-cols-2"><label className="grid gap-2 text-sm font-medium" htmlFor="quote-material"><span>Material</span><select className={inputClass} defaultValue={review.materialCode} id="quote-material" name="materialCode"><option value="PLA">PLA</option><option value="ABS">ABS</option></select></label><label className="grid gap-2 text-sm font-medium" htmlFor="filament-source"><span>Sumber filament</span><select className={inputClass} id="filament-source" defaultValue="NIUVA_STOCK" name="filamentSource"><option value="NIUVA_STOCK">Stok Niuva</option><option value="COMMUNAL">Komunal</option><option value="CUSTOMER_OWN">Punya customer</option></select></label></div><label className="grid gap-2 text-sm font-medium" htmlFor="quote-config"><span>Konfigurasi tambahan <span className="font-normal text-muted-foreground">(opsional)</span></span><textarea className={`${textareaClass} font-mono`} id="quote-config" name="configurationJson" rows={3} /></label></AdminActionForm> : <p className="mt-5 text-sm text-muted-foreground">{hasDraft ? "Draft quote sudah tersedia. Kirim draft tersebut atau terbitkan versi baru setelah workflow sebelumnya selesai." : "Simpan review slicer dan pastikan request berstatus Quote Ready sebelum membuat draft."}</p>}
+            {review && !hasDraft && estimateCurrent && (request.status === "QUOTE_READY" || request.status === "QUOTE_SENT") ? <AdminActionForm action={createQuoteDraftAction} className="mt-5" submitLabel="Buat draft quote"><input name="requestId" type="hidden" value={request.id} /><input name="pricingRuleVersionId" type="hidden" value={activeRule.id} /><div className="grid gap-4 sm:grid-cols-2"><label className="grid gap-2 text-sm font-medium" htmlFor="quote-material"><span>Material</span><select className={inputClass} defaultValue={review.materialCode} id="quote-material" name="materialCode"><option value="PLA">PLA</option><option value="ABS">ABS</option></select></label><label className="grid gap-2 text-sm font-medium" htmlFor="filament-source"><span>Sumber filamen sesuai estimasi</span><select className={inputClass} id="filament-source" name="filamentSource"><option value="NIUVA_STOCK">Stok Niuva</option><option value="COMMUNAL">Komunal</option><option value="CUSTOMER_OWN">Punya customer</option></select></label></div><label className="grid gap-2 text-sm font-medium" htmlFor="quote-config"><span>Konfigurasi tambahan <span className="font-normal text-muted-foreground">(opsional)</span></span><textarea className={`${textareaClass} font-mono`} id="quote-config" name="configurationJson" rows={3} /></label></AdminActionForm> : <p className="mt-5 text-sm text-muted-foreground">{hasDraft ? "Draft quote sudah tersedia. Kirim draft tersebut atau terbitkan versi baru setelah workflow sebelumnya selesai." : "Terbitkan estimasi setelah review slicer sebelum membuat draft."}</p>}
           </>}
 
           <div className="mt-6 border-t border-border pt-5">
@@ -148,7 +174,7 @@ export default async function AdminCustomPrintDetailPage({ params }: Readonly<{ 
                           <input name="quoteId" type="hidden" value={quote.id} />
                           <input name="requestId" type="hidden" value={request.id} />
                         </AdminActionForm>
-                      ) : quote.status === "SENT" ? (
+                      ) : quote.status === "SENT" && request.customerId === null ? (
                         <AdminActionForm
                           action={reissueQuoteTokenAction}
                           confirmMessage="Terbitkan tautan quote baru dan cabut token lama?"

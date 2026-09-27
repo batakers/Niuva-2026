@@ -34,6 +34,7 @@ import { requireAdminForSession } from "@/lib/auth/clerk";
 import { POST as postCheckout } from "@/app/api/checkout/route";
 import { POST as postProjectBrief } from "@/app/api/project-brief/route";
 import { POST as postShippingRates } from "@/app/api/shipping/rates/route";
+import { appError } from "@/modules/shared/errors";
 
 const prisma = getPrismaClient();
 
@@ -81,6 +82,7 @@ beforeEach(async () => {
       normalizedEmail: "integration-customer@example.test",
     },
   });
+  customerAuthMocks.requireCustomer.mockReset();
   customerAuthMocks.requireCustomer.mockResolvedValue({
     avatarUrl: null,
     displayName: "Integration Customer",
@@ -102,6 +104,17 @@ beforeEach(async () => {
 afterAll(cleanIntegrationDatabase);
 
 describe("Project Brief route integration", () => {
+  it("rejects a brief without a Customer session before storing anything", async () => {
+    customerAuthMocks.requireCustomer.mockRejectedValueOnce(appError("UNAUTHORIZED"));
+    const response = await postProjectBrief(new Request("http://127.0.0.1:3000/api/project-brief", {
+      body: JSON.stringify({ confidentialityAck: true, currentStage: "IDEA", description: "Ide awal" }),
+      headers: { "content-type": "application/json", origin: "http://127.0.0.1:3000" },
+      method: "POST",
+    }));
+    expect(response.status).toBe(401);
+    await expect(prisma.b2BInquiry.count()).resolves.toBe(0);
+  });
+
   it("stores an IDEA brief without a target date or reference", async () => {
     const payload = {
       confidentialityAck: true,
@@ -158,8 +171,8 @@ describe("Project Brief route integration", () => {
     expect(response.headers.get("x-correlation-id")).toMatch(/^[0-9a-f-]{36}$/);
 
     const body = (await response.json()) as Record<string, unknown>;
-    expect(typeof body.accessToken).toBe("string");
-    expect(body.accessToken).not.toBe("");
+    expect(typeof body.inquiryId).toBe("string");
+    expect(body).not.toHaveProperty("accessToken");
     expect(body.referenceNumber).toMatch(/^INQ-[0-9]{8}-[A-Z0-9]{8}$/);
 
     const referenceNumber = body.referenceNumber;
@@ -187,7 +200,7 @@ describe("Project Brief route integration", () => {
 
     expect(inquiry).toMatchObject({
       currentStage: "CAD",
-      email: "integration@example.test",
+      email: "integration-customer@example.test",
       name: "Integration Client",
       referenceLink: "https://example.test/reference",
       referenceNumber,

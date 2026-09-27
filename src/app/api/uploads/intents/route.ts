@@ -7,6 +7,7 @@ import {
 } from "@/lib/http/response";
 import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
 import { UploadService } from "@/modules/files/upload-service";
+import { getCurrentCustomer } from "@/lib/auth/customer";
 
 export const runtime = "nodejs";
 
@@ -25,7 +26,8 @@ export async function POST(request: Request) {
     const payload = await readJsonBody(request, {
       maxBytes: UPLOAD_INTENT_MAX_BODY_BYTES,
     });
-    const result = await new UploadService().createIntent(payload);
+    const customer = await getCurrentCustomer();
+    const result = await new UploadService().createIntent(payload, customer?.id);
 
     return apiSuccess(
       {

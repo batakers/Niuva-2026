@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { z } from "zod";
 
-import { CUSTOM_FILE_MAX_BYTES } from "@/modules/policy/privacy";
+import { CUSTOM_FILE_MAX_BYTES, REFERENCE_PHOTO_MAX_BYTES } from "@/modules/policy/privacy";
 import { appError, isAppError } from "@/modules/shared/errors";
 import { recordAudit, type AuditRecorder } from "@/modules/shared/audit";
 import {
@@ -26,7 +26,10 @@ const UPLOAD_INTENT_TTL_MS = 10 * 60 * 1_000;
 
 const PRIVATE_FILE_TYPES = {
   "3mf": ["model/3mf", "application/vnd.ms-3mfdocument"],
+  jpeg: ["image/jpeg"],
+  jpg: ["image/jpeg"],
   obj: ["model/obj", "text/plain"],
+  png: ["image/png"],
   step: ["model/step", "application/step"],
   stl: ["model/stl", "application/sla", "application/vnd.ms-pki.stl"],
   stp: ["model/step", "application/step"],
@@ -108,7 +111,7 @@ export class UploadService {
       dependencies.storage ?? createR2PrivateObjectStorageFromEnvironment();
   }
 
-  async createIntent(input: unknown): Promise<UploadIntentResult> {
+  async createIntent(input: unknown, uploadedByCustomerId?: string): Promise<UploadIntentResult> {
     const file = normalizePrivateFile(input);
     const now = this.clock();
     const expiresAt = new Date(now.getTime() + UPLOAD_INTENT_TTL_MS);
@@ -131,6 +134,7 @@ export class UploadService {
       sizeBytes: file.sizeBytes,
       uploadExpiresAt: expiresAt,
       uploadTokenHash: uploadToken.tokenHash,
+      uploadedByCustomerId,
     });
 
     try {
@@ -299,6 +303,12 @@ function normalizePrivateFile(input: unknown): NormalizedPrivateFile {
 
   const typedExtension = extension as PrivateFileExtension;
   const mimeType = parsed.mimeType.toLowerCase();
+
+  if (["jpeg", "jpg", "png"].includes(typedExtension) && parsed.sizeBytes > REFERENCE_PHOTO_MAX_BYTES) {
+    throw appError("VALIDATION_ERROR", {
+      details: { sizeBytes: "Foto referensi tidak boleh melebihi 10 MiB." },
+    });
+  }
 
   if (!PRIVATE_FILE_TYPES[typedExtension].includes(mimeType as never)) {
     throw appError("UPLOAD_REJECTED", {

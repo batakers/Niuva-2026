@@ -49,6 +49,8 @@ describe("customer auth core", () => {
   it("allows only internal return paths", () => {
     expect(safeCustomerReturnTo("/checkout")).toBe("/checkout");
     expect(safeCustomerReturnTo("/account?tab=orders")).toBe("/account?tab=orders");
+    expect(safeCustomerReturnTo("/project-brief?service=research-development")).toBe("/project-brief?service=research-development");
+    expect(safeCustomerReturnTo("/custom-print/request?mode=reference")).toBe("/custom-print/request?mode=reference");
     expect(safeCustomerReturnTo("https://attacker.example/steal")).toBe("/account");
     expect(safeCustomerReturnTo("//attacker.example/steal")).toBe("/account");
     expect(safeCustomerReturnTo("/admin")).toBe("/account");

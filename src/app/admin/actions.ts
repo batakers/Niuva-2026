@@ -6,14 +6,17 @@ import type { InquiryStatus } from "@/generated/prisma/client";
 import { CatalogService } from "@/modules/catalog/service";
 import { CustomPrintService } from "@/modules/custom-print/service";
 import { CustomPrintAccessService } from "@/modules/custom-print/access-service";
+import { CustomPrintEstimateService } from "@/modules/custom-print/estimate";
 import { PrivateFileDownloadService } from "@/modules/files/download-service";
 import { InquiryService } from "@/modules/inquiry/service";
+import { B2BQuoteService } from "@/modules/inquiry/b2b-quote";
 import { OrderStatusService } from "@/modules/order/status-service";
 import { PortfolioService } from "@/modules/portfolio/service";
 import { PricingRuleAdminService } from "@/modules/pricing/admin-service";
 import { QuoteService } from "@/modules/quote/service";
 import { createCustomShippingProviderForRuntime, createPaymentProviderForRuntime } from "@/modules/providers/runtime";
 import { ShippingService } from "@/modules/shipping/service";
+import { RoughCustomShippingService } from "@/modules/shipping/rough-custom";
 import { isAppError, toAppError } from "@/modules/shared/errors";
 
 export type AdminActionState = Readonly<{
@@ -204,6 +207,43 @@ export const recordCustomPrintReviewAction: AdminAction = async (_previous, form
   }
 };
 
+export const publishCustomPrintEstimateAction: AdminAction = async (_previous, formData) => {
+  const requestId = text(formData, "requestId");
+  const noAdditionalCosts = formData.get("noAdditionalCosts") === "yes";
+  const lines = text(formData, "additionalCostsText").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const additionalCosts = lines.map((line) => {
+    const separator = line.lastIndexOf("|");
+    return separator < 0 ? { name: line, amountRp: "" } : {
+      name: line.slice(0, separator).trim(), amountRp: line.slice(separator + 1).trim(),
+    };
+  });
+  try {
+    await new CustomPrintEstimateService().publish({
+      requestId, pricingRuleVersionId: text(formData, "pricingRuleVersionId"),
+      filamentSource: text(formData, "filamentSource"), additionalCosts, noAdditionalCosts,
+    });
+    revalidatePath(`/admin/custom-print/${requestId}`);
+    revalidatePath(`/account/make/${requestId}`);
+    return successState("Estimasi produksi baru diterbitkan. Kisaran ini belum terkalibrasi oleh riwayat pekerjaan.");
+  } catch (error) { return errorStateFrom(error); }
+};
+
+export const saveEstimatedCustomPackageAction: AdminAction = async (_previous, formData) => {
+  const requestId = text(formData, "requestId");
+  try {
+    await new RoughCustomShippingService().saveEstimatedPackage(requestId, {
+      weightGrams: numberValue(formData, "weightGrams"),
+      lengthCm: numberValue(formData, "lengthCm"),
+      widthCm: numberValue(formData, "widthCm"),
+      heightCm: numberValue(formData, "heightCm"),
+      declaredValueRp: numberValue(formData, "declaredValueRp"),
+    });
+    revalidatePath(`/admin/custom-print/${requestId}`);
+    revalidatePath(`/account/make/${requestId}`);
+    return successState("Paket perkiraan disimpan untuk cek ongkir kasar. Ini tidak mengubah quote atau order.");
+  } catch (error) { return errorStateFrom(error); }
+};
+
 export const reissueCustomPrintRequestTokenAction: AdminAction = async (_previous, formData) => {
   const requestId = text(formData, "requestId");
   if (!requestId) return errorState("Request tidak ditemukan.");
@@ -269,9 +309,12 @@ export const sendQuoteAction: AdminAction = async (_previous, formData) => {
   try {
     const result = await new QuoteService().send(quoteId);
     revalidatePath(`/admin/custom-print/${requestId}`);
+    revalidatePath(`/account/make/${requestId}`);
     revalidatePath("/admin/custom-print");
     revalidateAdminWork();
-    return successState("Quote diterbitkan. Bagikan tautan ini secara manual melalui kanal yang disepakati.", "/quote/" + result.accessToken.token);
+    return result.accountOwned
+      ? successState("Quote diterbitkan di akun customer. Customer dapat memberi keputusan dari halaman MAKE.")
+      : successState("Quote historis diterbitkan. Bagikan tautan privat ini secara manual.", `/quote/${result.accessToken.token}`);
   } catch (error) {
     return errorStateFrom(error);
   }
@@ -426,6 +469,23 @@ export const transitionInquiryAction: AdminAction = async (_previous, formData) 
   } catch (error) {
     return errorStateFrom(error);
   }
+};
+
+export const sendB2BQuoteAction: AdminAction = async (_previous, formData) => {
+  const inquiryId = text(formData, "inquiryId");
+  const lineItems = text(formData, "lineItemsText").split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((line) => {
+    const separator = line.lastIndexOf("|");
+    return separator < 0 ? { name: line, amountRp: "" } : {
+      name: line.slice(0, separator).trim(), amountRp: line.slice(separator + 1).trim(),
+    };
+  });
+  try {
+    await new B2BQuoteService().send({ inquiryId, scope: text(formData, "scope"),
+      assumptions: text(formData, "assumptions"), lineItems, validUntil: text(formData, "validUntil") });
+    revalidatePath(`/admin/inquiries/${inquiryId}`);
+    revalidatePath(`/account/inquiries/${inquiryId}`);
+    return successState("Proposal B2B versi baru dikirim ke akun customer. Persetujuan tidak membuat order atau pembayaran.");
+  } catch (error) { return errorStateFrom(error); }
 };
 
 function text(formData: FormData, name: string): string {

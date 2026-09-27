@@ -10,7 +10,7 @@ import { CUSTOM_FILE_MAX_BYTES } from "@/modules/policy/privacy";
 
 const controlClass = "min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
-export function AppendModelForm({ token }: Readonly<{ token: string }>) {
+export function AppendModelForm({ token, requestId }: Readonly<{ token?: string; requestId?: string }>) {
   const router = useRouter();
   const [fileId, setFileId] = useState<string>();
   const [extension, setExtension] = useState<string>();
@@ -33,7 +33,9 @@ export function AppendModelForm({ token }: Readonly<{ token: string }>) {
     setPending(true);
     setMessage(undefined);
     try {
-      const endpoint = "/api/custom-print/requests/" + encodeURIComponent(token) + "/files";
+      const endpoint = requestId === undefined
+        ? `/api/custom-print/requests/${encodeURIComponent(token ?? "")}/files`
+        : `/api/account/make/${encodeURIComponent(requestId)}/model`;
       const response = await fetch(endpoint, {
         body: JSON.stringify({ fileId, ...(unitConfirmation ? { unitConfirmation } : {}) }),
         headers: { "content-type": "application/json" },

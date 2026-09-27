@@ -19,6 +19,8 @@ import { appError, isAppError } from "@/modules/shared/errors";
 import { createUniqueHumanReference } from "@/modules/shared/reference";
 import { parseWithValidation } from "@/modules/shared/validation";
 import { calculatePrintQuote } from "@/modules/pricing/calculator";
+import { roundFinalTotal } from "@/modules/pricing/rounding";
+import { calculateProductionRange, additionalCostSchema } from "@/modules/custom-print/estimate";
 import {
   CUSTOM_PRINT_V1_RULE_CODE,
   CUSTOM_PRINT_V1_RULE_VERSION,
@@ -60,13 +62,14 @@ export const createQuoteDraftSchema = z.object({
 export const acceptQuoteSchema = z.object({
   now: z.date().optional(),
   quoteId: z.uuid(),
-  token: z.string().trim().min(1),
+  token: z.string().trim().min(1).optional(),
 });
 
 type AuthorizeAdmin = () => Promise<AdminAccess>;
 
 export interface QuoteServiceRepository {
   acceptAndCreatePayableOrder(input: Readonly<{
+    customerId?: string;
     now: Date;
     orderId: string;
     orderNumber: string;
@@ -75,11 +78,13 @@ export interface QuoteServiceRepository {
     version: number;
   }>): Promise<AcceptedCustomOrder>;
   createDraft(input: Readonly<{
+    additionalSubtotalRp?: Prisma.Decimal;
     calculationSnapshot: Prisma.InputJsonObject;
     createdByAdminId: string;
     expiresAt?: Date;
     finalTotalRp: Prisma.Decimal;
     id: string;
+    estimateId?: string;
     machineSubtotalRp: Prisma.Decimal;
     materialCode: string;
     materialSubtotalRp: Prisma.Decimal;
@@ -106,6 +111,10 @@ export interface QuoteServiceRepository {
   }> | null>;
   findDraftForRequest?(requestId: string): Promise<Readonly<{ id: string }> | null>;
   findLatestVersion(requestId: string): Promise<number | null>;
+  findLatestEstimate?(requestId: string): Promise<Readonly<{
+    id: string; version: number; pricingRuleVersionId: string; snapshot: unknown;
+    lowerRp: Prisma.Decimal; upperRp: Prisma.Decimal; additionalSubtotalRp: Prisma.Decimal;
+  }> | null>;
   paymentProviderOrderIdExists?(providerOrderId: string): Promise<boolean>;
   prepareOrderPayment?(input: Readonly<{
     now: Date;
@@ -115,6 +124,7 @@ export interface QuoteServiceRepository {
     paymentProviderOrderId: string;
   }>): Promise<CustomOrderPaymentPreparation>;
   findRequestForReview(requestId: string): Promise<Readonly<{
+    customerId?: string | null;
     id: string;
     quantity: number;
     status: "APPROVED" | "CANCELLED" | "DECLINED" | "QUOTE_READY" | "QUOTE_SENT" | "SUBMITTED" | "UNDER_REVIEW";
@@ -142,6 +152,7 @@ export interface QuoteServiceRepository {
     currentStatus: "ACCEPTED" | "DECLINED" | "DRAFT" | "EXPIRED" | "SENT",
     nextStatus: "ACCEPTED" | "DECLINED" | "DRAFT" | "EXPIRED" | "SENT",
     timestamp: Date,
+    authorization?: Readonly<{ customerId?: string }>,
   ): Promise<Readonly<{ id: string; status: "ACCEPTED" | "DECLINED" | "DRAFT" | "EXPIRED" | "SENT" }> | null>;
 }
 
@@ -278,6 +289,39 @@ export class QuoteService {
     }
 
     const calculation = calculateFromReview(parsed, review, pricingPolicy);
+    const estimate = repository.findLatestEstimate === undefined ? null : await repository.findLatestEstimate(parsed.requestId);
+    if (estimate === null && request.customerId != null) {
+      throw appError("QUOTE_NOT_READY", { message: "Terbitkan estimasi produksi sebelum membuat quote akun customer." });
+    }
+    const estimateSnapshot = estimate === null ? null : estimateQuoteSnapshotSchema.safeParse(estimate.snapshot);
+    if (estimate !== null && (estimateSnapshot === null || !estimateSnapshot.success ||
+      estimate.pricingRuleVersionId !== parsed.pricingRuleVersionId ||
+      estimateSnapshot.data.pricingInputs.filamentSource !== parsed.filamentSource ||
+      estimateSnapshot.data.pricingInputs.material !== parsed.materialCode ||
+      estimateSnapshot.data.pricingInputs.weightGrams !== review.verifiedWeightG.toString() ||
+      estimateSnapshot.data.pricingInputs.printDurationSeconds !== review.printDurationSeconds ||
+      estimateSnapshot.data.pricingInputs.quantity !== review.quantity ||
+      estimateSnapshot.data.reviewUpdatedAt !== review.updatedAt.toISOString())) {
+      throw appError("QUOTE_NOT_READY", { message: "Review, sumber filamen, atau pricing berubah; terbitkan estimasi baru." });
+    }
+    const additionalCosts = estimateSnapshot?.success ? estimateSnapshot.data.additionalCosts : [];
+    const production = calculateProductionRange({
+      filamentSource: parsed.filamentSource,
+      material: parsed.materialCode,
+      policy: pricingPolicy,
+      printDurationSeconds: review.printDurationSeconds,
+      quantity: review.quantity,
+      weightGrams: review.verifiedWeightG.toString(),
+    }, additionalCosts);
+    const finalTotalRp = production.lowerRp;
+    if (estimate !== null && (finalTotalRp.lt(estimate.lowerRp) || finalTotalRp.gt(estimate.upperRp))) {
+      throw appError("VALIDATION_ERROR", { details: { finalTotalRp: "Total quote harus berada dalam kisaran estimasi terbaru." } });
+    }
+    if (estimate !== null && (production.lowerRp.eq(estimate.lowerRp) === false ||
+      production.upperRp.eq(estimate.upperRp) === false ||
+      production.additionalSubtotalRp.eq(estimate.additionalSubtotalRp) === false)) {
+      throw appError("CONFLICT", { message: "Snapshot estimasi tidak sesuai perhitungan Pricing v1." });
+    }
     const now = this.clock();
 
     const version = nextVersion(await repository.findLatestVersion(parsed.requestId));
@@ -300,9 +344,20 @@ export class QuoteService {
         pricingPolicy,
         pricingRule,
         review,
+        estimate === null ? undefined : {
+          additionalCosts,
+          additionalSubtotalRp: production.additionalSubtotalRp.toString(),
+          estimateId: estimate.id,
+          estimateVersion: estimate.version,
+          finalTotalRp: finalTotalRp.toFixed(0),
+          lowerRp: estimate.lowerRp.toFixed(0),
+          upperRp: estimate.upperRp.toFixed(0),
+        },
       ),
       createdByAdminId: admin.profile.id,
-      finalTotalRp: calculation.finalTotalRp,
+      additionalSubtotalRp: production.additionalSubtotalRp,
+      estimateId: estimate?.id,
+      finalTotalRp,
       id,
       machineSubtotalRp: calculation.machineSubtotalRp,
       materialCode: parsed.materialCode,
@@ -313,7 +368,7 @@ export class QuoteService {
       quantity: review.quantity,
       quoteNumber,
       requestId: parsed.requestId,
-      unroundedTotalRp: calculation.unroundedTotalRp,
+      unroundedTotalRp: production.unroundedTotalRp,
       verifiedWeightG: new Decimal(review.verifiedWeightG.toString()),
       version,
     });
@@ -323,7 +378,7 @@ export class QuoteService {
       actorId: admin.profile.id,
       actorType: "ADMIN",
       afterJson: {
-        finalTotalRp: calculation.finalTotalRp.toString(),
+        finalTotalRp: finalTotalRp.toString(),
         pricingRuleCode: pricingRule.code,
         pricingRuleVersion: pricingRule.version,
         quoteNumber,
@@ -396,10 +451,10 @@ export class QuoteService {
       entityType: "CustomPrintQuote",
     });
 
-    return { ...sent, accessToken };
+    return { ...sent, accessToken, accountOwned: quote.request.customerId != null };
   }
 
-  async accept(input: unknown): Promise<AcceptedQuote> {
+  async accept(input: unknown, customerId?: string): Promise<AcceptedQuote> {
     const parsed = parseWithValidation(acceptQuoteSchema, input);
     const now = parsed.now ?? this.clock();
     const repository = this.repositoryFactory();
@@ -409,24 +464,28 @@ export class QuoteService {
       throw appError("UNAUTHORIZED");
     }
 
-    try {
-      verifyAccessToken({
-        entityId: quote.id,
-        expectedHash: quote.publicTokenHash,
-        expiresAt: quote.expiresAt ?? undefined,
-        now,
-        scope: "CUSTOM_PRINT_QUOTE",
-        token: parsed.token,
-      });
-    } catch (error) {
-      if (isAppError(error) && error.code === "UNAUTHORIZED") {
-        throw error;
+    if (customerId === undefined) {
+      if (quote.request.customerId != null || parsed.token === undefined) throw appError("UNAUTHORIZED");
+      try {
+        verifyAccessToken({
+          entityId: quote.id,
+          expectedHash: quote.publicTokenHash,
+          expiresAt: quote.expiresAt ?? undefined,
+          now,
+          scope: "CUSTOM_PRINT_QUOTE",
+          token: parsed.token,
+        });
+      } catch (error) {
+        if (isAppError(error) && error.code === "UNAUTHORIZED") throw error;
+        throw appError("UNAUTHORIZED");
       }
+    } else if (quote.request.customerId !== customerId) {
       throw appError("UNAUTHORIZED");
     }
 
     if (quote.status === "ACCEPTED") {
       const existing = await repository.acceptAndCreatePayableOrder({
+        customerId,
         now,
         orderId: randomUUID(),
         orderNumber: "REPLAY",
@@ -535,6 +594,7 @@ export class QuoteService {
       randomBytes: this.randomBytes,
     });
     const accepted = await repository.acceptAndCreatePayableOrder({
+      customerId,
       now,
       orderId,
       orderNumber,
@@ -669,6 +729,7 @@ export class QuoteService {
     if (quote === null) {
       throw appError("UNAUTHORIZED");
     }
+    if (quote.request.customerId != null) throw appError("UNAUTHORIZED");
 
     // An expired quote remains readable as a safe, read-only projection so the
     // customer gets a useful recovery message. Accept/decline still verifies
@@ -756,6 +817,11 @@ export class QuoteService {
           label: "Waktu mesin",
           value: quote.machineSubtotalRp.toFixed(0),
         },
+        ...(snapshot.data.estimate?.additionalCosts.map((cost) => ({
+          detail: "Pos biaya yang dinilai operator dan dibekukan pada estimasi.",
+          label: cost.name,
+          value: cost.amountRp,
+        })) ?? []),
       ],
       quoteNumber: quote.quoteNumber ?? `Quote ${quote.version}`,
       requestReference: quote.request.referenceNumber ?? quote.requestId,
@@ -775,8 +841,8 @@ export class QuoteService {
   async decline(input: Readonly<{
     now?: Date;
     quoteId: string;
-    token: string;
-  }>): Promise<Readonly<{ id: string; status: "DECLINED" }>> {
+    token?: string;
+  }>, customerId?: string): Promise<Readonly<{ id: string; status: "DECLINED" }>> {
     const now = input.now ?? this.clock();
     const repository = this.repositoryFactory();
     const quote = await repository.findForAcceptance(input.quoteId);
@@ -785,14 +851,14 @@ export class QuoteService {
       throw appError("UNAUTHORIZED");
     }
 
-    verifyAccessToken({
-      entityId: quote.id,
-      expectedHash: quote.publicTokenHash,
-      expiresAt: quote.expiresAt ?? undefined,
-      now,
-      scope: "CUSTOM_PRINT_QUOTE",
-      token: input.token,
-    });
+    if (customerId === undefined) {
+      if (quote.request.customerId != null || input.token === undefined) throw appError("UNAUTHORIZED");
+      verifyAccessToken({
+        entityId: quote.id, expectedHash: quote.publicTokenHash,
+        expiresAt: quote.expiresAt ?? undefined, now,
+        scope: "CUSTOM_PRINT_QUOTE", token: input.token,
+      });
+    } else if (quote.request.customerId !== customerId) throw appError("UNAUTHORIZED");
 
     if (quote.status === "DECLINED") {
       return { id: quote.id, status: "DECLINED" };
@@ -801,6 +867,7 @@ export class QuoteService {
     if (quote.status !== "SENT") {
       throw appError("QUOTE_NOT_READY");
     }
+    if (quote.expiresAt === null || now >= quote.expiresAt) throw appError("QUOTE_NOT_READY", { message: "Quote sudah kedaluwarsa." });
 
     const latestVersion = await repository.findLatestVersion(quote.requestId);
     if (latestVersion !== quote.version) {
@@ -826,6 +893,7 @@ export class QuoteService {
       "SENT",
       "DECLINED",
       now,
+      { customerId },
     );
 
     if (declined === null) {
@@ -912,6 +980,7 @@ export class QuoteService {
     const repository = this.tokenRepositoryFactory();
     const quote = await repository.findForTokenReissue(quoteId);
     if (quote === null) throw appError("NOT_FOUND");
+    if (quote.request?.customerId != null) throw appError("QUOTE_NOT_READY", { message: "Quote milik akun diputuskan melalui akun customer." });
     if (quote.status !== "SENT") {
       throw appError("QUOTE_NOT_READY", {
         message: "Tautan baru hanya dapat diterbitkan untuk quote yang sudah dikirim.",
@@ -999,8 +1068,18 @@ function createCalculationSnapshot(
   policy: CustomPrintPricingPolicy,
   pricingRule: Readonly<{ code: string; version: number }>,
   review: CustomPrintReviewRecord,
+  estimate?: Readonly<{
+    additionalCosts: readonly z.infer<typeof additionalCostSchema>[];
+    additionalSubtotalRp: string;
+    estimateId: string;
+    estimateVersion: number;
+    finalTotalRp: string;
+    lowerRp: string;
+    upperRp: string;
+  }>,
 ): Prisma.InputJsonObject {
   const snapshot: Prisma.InputJsonObject = {
+    ...(estimate === undefined ? {} : { estimate }),
     filamentSource: input.filamentSource,
     material: input.materialCode,
     policy,
@@ -1037,11 +1116,22 @@ function assertQuoteStillMatchesCalculation(quote: QuoteForAcceptance): void {
   }
 
   const calculation = calculatePrintQuote(snapshot.data);
+  const extra = snapshot.data.estimate;
+  const additionalSubtotal = extra === undefined ? new Decimal(0) :
+    extra.additionalCosts.reduce((sum, cost) => sum.plus(cost.amountRp), new Decimal(0));
+  const unrounded = calculation.unroundedTotalRp.plus(additionalSubtotal);
+  const final = extra === undefined ? calculation.finalTotalRp : new Decimal(extra.finalTotalRp);
   const matches =
-    calculation.finalTotalRp.eq(quote.finalTotalRp) &&
+    final.eq(quote.finalTotalRp) &&
+    final.eq(roundFinalTotal(unrounded)) &&
     calculation.machineSubtotalRp.eq(quote.machineSubtotalRp) &&
     calculation.materialSubtotalRp.eq(quote.materialSubtotalRp) &&
-    calculation.unroundedTotalRp.eq(quote.unroundedTotalRp) &&
+    unrounded.eq(quote.unroundedTotalRp) &&
+    (quote.additionalSubtotalRp === undefined || additionalSubtotal.eq(quote.additionalSubtotalRp)) &&
+    (extra === undefined || (quote.estimateId === extra.estimateId &&
+      additionalSubtotal.eq(extra.additionalSubtotalRp) &&
+      roundFinalTotal(unrounded.times("1.30")).eq(extra.upperRp) &&
+      final.gte(extra.lowerRp) && final.lte(extra.upperRp))) &&
     new Decimal(snapshot.data.weightGrams).eq(quote.verifiedWeightG) &&
     snapshot.data.quantity === quote.quantity &&
     snapshot.data.printDurationSeconds === quote.printDurationSeconds &&
@@ -1055,6 +1145,15 @@ function assertQuoteStillMatchesCalculation(quote: QuoteForAcceptance): void {
 }
 
 const quoteCalculationSnapshotSchema = z.object({
+  estimate: z.object({
+    additionalCosts: z.array(additionalCostSchema),
+    additionalSubtotalRp: z.string().regex(/^\d+(?:\.\d+)?$/),
+    estimateId: z.uuid(),
+    estimateVersion: z.int().positive(),
+    finalTotalRp: z.string().regex(/^\d+$/),
+    lowerRp: z.string().regex(/^\d+$/),
+    upperRp: z.string().regex(/^\d+$/),
+  }).optional(),
   configurationJson: safeConfigurationSchema.optional(),
   filamentSource: z.enum(["NIUVA_STOCK", "CUSTOMER_OWN", "COMMUNAL"]),
   material: z.enum(["PLA", "ABS"]),
@@ -1068,6 +1167,18 @@ const quoteCalculationSnapshotSchema = z.object({
     .strict(),
   quantity: z.int().positive(),
   weightGrams: z.string().regex(/^\d+(?:\.\d{1,6})?$/),
+});
+
+const estimateQuoteSnapshotSchema = z.object({
+  additionalCosts: z.array(additionalCostSchema),
+  reviewUpdatedAt: z.iso.datetime(),
+  pricingInputs: z.object({
+    filamentSource: z.enum(["NIUVA_STOCK", "CUSTOMER_OWN", "COMMUNAL"]),
+    material: z.enum(["PLA", "ABS"]),
+    printDurationSeconds: z.int().nonnegative(),
+    quantity: z.int().positive(),
+    weightGrams: z.string(),
+  }),
 });
 
 function formatPrintDuration(seconds: number): string {

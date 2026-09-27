@@ -123,7 +123,7 @@ describe("custom request live private upload", () => {
 
       if (url.endsWith("/api/custom-print/requests")) {
         return Response.json({
-          accessToken: "request-token-that-never-renders",
+          requestId: "f7896ef5-5e7b-4921-88b2-370030d7dace",
           referenceNumber: "CPR-20260914-ABCDEFGH",
         }, { status: 201 });
       }
@@ -139,11 +139,11 @@ describe("custom request live private upload", () => {
     fireEvent.submit(screen.getByRole("form", { name: "Form request custom print" }));
 
     await waitFor(() => expect(screen.getByText("Request tersimpan untuk review operator.")).toBeVisible());
+    expect(screen.getByRole("link", { name: "Lihat status di akun" })).toHaveAttribute("href", "/account/make/f7896ef5-5e7b-4921-88b2-370030d7dace");
     expect(screen.getByRole("link", { name: "Lanjutkan melalui WhatsApp" })).toHaveAttribute(
       "href",
       expect.stringContaining("wa.me"),
     );
-    expect(screen.queryByText("request-token-that-never-renders")).not.toBeInTheDocument();
     expect(screen.queryByText("upload-token-that-never-renders")).not.toBeInTheDocument();
 
     expect(calls.map(({ method, url }) => `${method ?? "GET"} ${url}`)).toEqual([

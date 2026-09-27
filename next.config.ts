@@ -18,6 +18,13 @@ const nextConfig: NextConfig = {
         ],
         source: "/custom-print/requests/:token",
       },
+      {
+        headers: [
+          { key: "Cache-Control", value: "private, no-store" },
+          { key: "Referrer-Policy", value: "no-referrer" },
+        ],
+        source: "/account/:path*",
+      },
     ];
   },
 };

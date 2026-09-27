@@ -38,15 +38,17 @@ const referenceFieldsSchema = z.object({
     z.iso.date().optional(),
   ),
 });
-const responseSchema = z.object({ accessToken: z.string().min(1), referenceNumber: z.string().min(1) });
+const responseSchema = z.object({ requestId: z.uuid(), referenceNumber: z.string().min(1) });
 type FieldName = keyof z.infer<typeof referenceFieldsSchema> | "rightsAck";
 
 export function ReferenceRequestForm({
+  customerEmail,
   databaseEnabled,
   initialProductInterest,
   productOptions,
   uploadsEnabled,
 }: Readonly<{
+  customerEmail?: string;
   databaseEnabled: boolean;
   initialProductInterest?: string;
   productOptions: readonly CustomFlowProductOption[];
@@ -58,7 +60,7 @@ export function ReferenceRequestForm({
   const [errors, setErrors] = useState<Partial<Record<FieldName, string>>>({});
   const [result, setResult] = useState<"idle" | "pending" | "success" | "error">("idle");
   const [referenceNumber, setReferenceNumber] = useState<string>();
-  const [accessToken, setAccessToken] = useState<string>();
+  const [requestId, setRequestId] = useState<string>();
   const statusRef = useRef<HTMLDivElement>(null);
   const pending = useRef(false);
 
@@ -107,7 +109,7 @@ export function ReferenceRequestForm({
       if (!response.ok) throw new Error("Request belum tersimpan. Periksa isian lalu coba lagi.");
       const saved = responseSchema.parse(await response.json());
       setReferenceNumber(saved.referenceNumber);
-      setAccessToken(saved.accessToken);
+      setRequestId(saved.requestId);
       setResult("success");
     } catch {
       setResult("error");
@@ -125,12 +127,12 @@ export function ReferenceRequestForm({
     <div className="my-6 rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" ref={statusRef} tabIndex={-1}>
       {Object.keys(errors).length > 0 && <div className="rounded-lg border border-destructive-border bg-destructive-background p-4 text-destructive" role="alert">Periksa field yang ditandai sebelum mengirim.</div>}
       {result === "pending" && <p className="text-sm text-muted-foreground" role="status">Menyimpan referensi untuk review operator…</p>}
-      {result === "success" && referenceNumber && accessToken && <StatusNotice
+      {result === "success" && referenceNumber && requestId && <StatusNotice
         action={<div className="flex flex-wrap gap-3">
-          <Link className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={"/custom-print/requests/" + accessToken}>Lihat status privat dan tambah model nanti</Link>
+          <Link className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/account/make/${requestId}`}>Lihat status dan tambah model di akun</Link>
           <a className="inline-flex min-h-11 items-center rounded-lg border border-border px-4 py-2 text-sm font-semibold focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={createPublicWhatsAppHref(referenceNumber)} rel="noreferrer">Lanjutkan via WhatsApp</a>
         </div>}
-        description={"Referensi " + referenceNumber + " tersimpan. Simpan tautan privat; model dapat ditambahkan pada request yang sama nanti. Operator akan meninjau konteks lebih dahulu."}
+        description={`Referensi ${referenceNumber} tersimpan di akun Anda. Model dapat ditambahkan pada request yang sama. Operator akan meninjau konteks lebih dahulu.`}
         title="Referensi masuk ke Niuva"
         tone="success"
       />}
@@ -188,7 +190,7 @@ export function ReferenceRequestForm({
         <h3 className="border-b border-border pb-3 text-base font-semibold">Kontak untuk review</h3>
         <div className="grid gap-5 sm:grid-cols-2">
           <FormField error={errors.customerName} id="reference-customerName" label="Nama" required><Input autoComplete="name" className={controlClass} name="customerName" required /></FormField>
-          <FormField error={errors.customerEmail} id="reference-customerEmail" label="Email" required><Input autoComplete="email" className={controlClass} name="customerEmail" required type="email" /></FormField>
+          <FormField error={errors.customerEmail} id="reference-customerEmail" label="Email akun Google" required><Input autoComplete="email" className={controlClass} defaultValue={customerEmail} name="customerEmail" readOnly={customerEmail !== undefined} required type="email" /></FormField>
           <FormField className="sm:col-span-2" error={errors.customerPhone} id="reference-customerPhone" label="Nomor WhatsApp" required><Input autoComplete="tel" className={controlClass} name="customerPhone" required type="tel" /></FormField>
         </div>
         <FormField description="Saya berhak membagikan deskripsi, link, atau foto ini untuk pemeriksaan oleh Niuva." error={errors.rightsAck} id="reference-rightsAck" label="Persetujuan pemrosesan" required>

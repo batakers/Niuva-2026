@@ -1,4 +1,9 @@
 import { expect, test } from "@playwright/test";
+import { loginCustomer } from "./helpers/customer";
+
+test.beforeEach(async ({ page }) => {
+  await loginCustomer(page);
+});
 
 test("public navigation supports mobile menu, escape, skip link and real routes", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -82,6 +87,7 @@ test("published projects filter and navigate, while local examples retain their 
   await page.goto("/projects/slug-tidak-ada");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Cerita ini belum dapat ditampilkan.");
   await page.getByRole("link", { name: "Kembali ke Projects" }).click();
+  if (process.env.NIUVA_E2E_PREVIEW_DISABLED === "true") return;
   await page.getByRole("link", { name: "Contoh sintetis", exact: true }).click();
   await expect(page.locator("article")).toHaveCount(2);
   await page.getByLabel("Layanan", { exact: true }).selectOption("Desain dan prototyping");
@@ -123,6 +129,10 @@ test("published project reference keeps evidence boundaries and proof media avai
   await expect(page.getByRole("heading", { name: "Konteks dan tantangan" })).toHaveCount(0);
   await expect(page.getByText("Challenge dan process rinci sengaja tidak ditampilkan")).toBeVisible();
 
+  if (process.env.NIUVA_E2E_PREVIEW_DISABLED === "true") {
+    expect(errors).toEqual([]);
+    return;
+  }
   const proof = await request.get("/api/frontend-preview/media/cs-01");
   expect(proof.status()).toBe(200);
   expect(proof.headers()["content-type"]).toBe("image/png");
@@ -189,8 +199,10 @@ test("Foundation/Typography authorization is present on product PublicShell rout
     "/checkout?preview=examples&state=ready",
     "/custom-print",
     "/custom-print/request",
-    "/quote/preview-quote?preview=examples",
-    "/orders/preview-order?preview=examples",
+    ...(process.env.NIUVA_E2E_PREVIEW_DISABLED === "true" ? [] : [
+      "/quote/preview-quote?preview=examples",
+      "/orders/preview-order?preview=examples",
+    ]),
   ];
 
   for (const path of paths) {
@@ -210,13 +222,13 @@ test("project brief persists through the API and offers a reference-based WhatsA
     await route.fulfill({
       status: 201,
       contentType: "application/json",
-      body: JSON.stringify({ accessToken: "opaque-access-token", referenceNumber: "INQ-20260913-ABCDEFGH" }),
+      body: JSON.stringify({ inquiryId: "51194c92-0b89-420e-88df-73ed2deeeab4", referenceNumber: "INQ-20260913-ABCDEFGH" }),
     });
   });
   await page.goto("/project-brief");
   await page.getByRole("button", { name: "Kirim project brief" }).click();
   await expect(page.getByRole("alert").filter({ hasText: "Periksa kembali brief Anda." })).toBeVisible();
-  for (const [name,value] of Object.entries({ name: "Kontak contoh", email: "example@example.test", phone: "+628000000000", projectGoal: "Meninjau prototype", description: "Skenario pengujian frontend.", targetQuantity: "1 prototype", targetDeadline: "2026-10-01", referenceLink: "https://example.test/reference" })) await page.getByRole("form", { name: "Form project brief" }).locator(`[name="${name}"]`).fill(value);
+  for (const [name,value] of Object.entries({ name: "Kontak contoh", phone: "+628000000000", projectGoal: "Meninjau prototype", description: "Skenario pengujian frontend.", targetQuantity: "1 prototype", targetDeadline: "2026-10-01", referenceLink: "https://example.test/reference" })) await page.getByRole("form", { name: "Form project brief" }).locator(`[name="${name}"]`).fill(value);
   await page.locator('[name="currentStage"]').selectOption("CAD");
   await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "Kirim project brief" }).click();
@@ -229,7 +241,7 @@ test("project brief persists through the API and offers a reference-based WhatsA
   await expect(page.getByText("opaque-access-token")).toHaveCount(0);
   expect(capturedBody).toMatchObject({
     name: "Kontak contoh",
-    email: "example@example.test",
+    email: "demo-customer@example.test",
     projectGoal: "Meninjau prototype",
     currentStage: "CAD",
     confidentialityAck: true,

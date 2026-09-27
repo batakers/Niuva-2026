@@ -233,6 +233,20 @@ export class CustomerAuthRepository implements CustomerAuthRepositoryPort {
     };
   }
 
+  async getOrderForCustomer(customerId: string, orderId: string) {
+    return this.prisma.order.findFirst({
+      where: { id: orderId, customerId },
+      select: { id: true, orderNumber: true, orderType: true, status: true,
+        createdAt: true, itemsSubtotalRp: true, shippingTotalRp: true, grandTotalRp: true,
+        items: { select: { nameSnapshot: true, quantity: true, lineTotalRp: true } },
+        paymentAttempts: { orderBy: { createdAt: "desc" }, take: 1,
+          select: { status: true, expiresAt: true, redirectUrl: true, amountRp: true } },
+        shipments: { orderBy: { createdAt: "desc" }, take: 1,
+          select: { status: true, courierCode: true, serviceCode: true, trackingNumber: true } },
+      },
+    });
+  }
+
   private async linkUnownedOrders(
     transaction: Prisma.TransactionClient,
     customerId: string,

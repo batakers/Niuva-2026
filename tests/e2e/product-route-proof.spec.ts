@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { loginCustomer } from "./helpers/customer";
 
 const proofWidths = [320, 390, 768, 1280] as const;
 
@@ -63,7 +64,7 @@ async function assertHomepageMedia(page: Page) {
 async function fillRequiredBriefFields(page: Page) {
   const form = page.getByRole("form", { name: "Form project brief" });
   await form.getByLabel("Nama kontak").fill("Route proof contact");
-  await form.getByLabel("Email").fill("route-proof@example.test");
+  await expect(form.locator('[name="email"]')).toHaveValue("demo-customer@example.test");
   await form.getByLabel("Nomor WhatsApp").fill("+628000000001");
   await form.getByLabel("Apa yang ingin dicapai?").fill("Memeriksa alur proof route.");
   await form.getByLabel("Tahap saat ini").selectOption("CAD");
@@ -75,6 +76,7 @@ async function fillRequiredBriefFields(page: Page) {
 }
 
 test("authorized product routes have named responsive and semantic proof", async ({ page }) => {
+  await loginCustomer(page);
   const consoleErrors: string[] = [];
   const pageErrors: string[] = [];
   page.on("console", (message) => {

@@ -4,6 +4,8 @@ import { connection } from "next/server";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   getCurrentCustomer,
   isCustomerAuthAvailable,
@@ -88,9 +90,9 @@ export async function CustomerAuthPage({
 
             {authAvailable ? (
               <div className="mt-8 space-y-4">
-                <NiuvaLink href={oauthUrl} className="min-h-12 w-full sm:w-auto">
+                <a href={oauthUrl} className={cn(buttonVariants(), "min-h-12 w-full sm:w-auto")}>
                   Lanjutkan dengan Google
-                </NiuvaLink>
+                </a>
                 <p className="text-sm text-muted-foreground">
                   {isRegister
                     ? "Login Google pertama akan membuat profil Customer secara otomatis."

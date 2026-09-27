@@ -7,6 +7,12 @@ const storageMock = vi.hoisted(() => ({
   headObject: vi.fn(),
   lastKey: undefined as string | undefined,
 }));
+const customerAuthMock = vi.hoisted(() => ({ id: "" }));
+
+vi.mock("@/lib/auth/customer", () => ({
+  requireCustomer: async () => ({ id: customerAuthMock.id, email: "upload@example.test" }),
+  getCurrentCustomer: async () => ({ id: customerAuthMock.id, email: "upload@example.test" }),
+}));
 
 vi.mock("@/modules/files/r2", () => ({
   createR2PrivateObjectStorageFromEnvironment: () => ({
@@ -53,7 +59,9 @@ async function cleanIntegrationDatabase(): Promise<void> {
       "portfolio_projects",
       "services",
       "pricing_rule_versions",
-      "admin_profiles"
+      "admin_profiles",
+      "customer_sessions",
+      "customers"
     RESTART IDENTITY CASCADE
   `;
 }
@@ -71,6 +79,14 @@ function publicRequest(path: string, payload: unknown): Request {
 
 beforeEach(async () => {
   await cleanIntegrationDatabase();
+  const customer = await prisma.customer.create({
+    data: {
+      email: "upload@example.test",
+      googleSubject: "private-upload-route-customer",
+      normalizedEmail: "upload@example.test",
+    },
+  });
+  customerAuthMock.id = customer.id;
   storageMock.createUploadUrl.mockReset();
   storageMock.deleteObject.mockReset();
   storageMock.headObject.mockReset();
@@ -111,10 +127,11 @@ describe("Private upload route integration", () => {
       select: {
         storageKey: true,
         uploadStatus: true,
+        uploadedByCustomerId: true,
       },
       where: { id: fileId },
     });
-    expect(pending).toMatchObject({ uploadStatus: "PENDING" });
+    expect(pending).toMatchObject({ uploadStatus: "PENDING", uploadedByCustomerId: customerAuthMock.id });
     expect(pending?.storageKey).toMatch(/^private\/customer\//);
     expect(storageMock.lastKey).toBe(pending?.storageKey);
 
@@ -147,6 +164,22 @@ describe("Private upload route integration", () => {
       uploadStatus: "UPLOADED",
       uploadTokenHash: null,
     });
+
+    const uploaderId = customerAuthMock.id;
+    const other = await prisma.customer.create({
+      data: { email: "other-upload@example.test", normalizedEmail: "other-upload@example.test",
+        googleSubject: "other-private-upload-route-customer" },
+    });
+    customerAuthMock.id = other.id;
+    const foreignResponse = await postCustomPrint(
+      publicRequest("/api/custom-print/requests", {
+        customerEmail: "other-upload@example.test", customerName: "Other Customer",
+        customerPhone: "+628000000000", fileIds: [fileId], materialRequested: "PLA", quantity: 1,
+      }),
+    );
+    expect(foreignResponse.status).toBe(409);
+    expect(await prisma.customPrintRequest.count()).toBe(0);
+    customerAuthMock.id = uploaderId;
 
     const requestResponse = await postCustomPrint(
       publicRequest("/api/custom-print/requests", {

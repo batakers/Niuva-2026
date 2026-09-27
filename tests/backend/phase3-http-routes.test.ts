@@ -15,6 +15,11 @@ vi.mock("@/modules/files/upload-service", () => ({
   },
 }));
 
+vi.mock("@/lib/auth/customer", () => ({
+  getCurrentCustomer: async () => ({ id: "80c93342-dc64-4426-b5bd-f1bda83f1720", email: "client@example.test" }),
+  requireCustomer: async () => ({ id: "80c93342-dc64-4426-b5bd-f1bda83f1720", email: "client@example.test" }),
+}));
+
 vi.mock("@/modules/inquiry/service", () => ({
   InquiryService: class {
     submit = mocks.inquirySubmit;
@@ -85,11 +90,11 @@ describe("Phase 3 public HTTP boundaries", () => {
   it("keeps public routes thin while returning only public-safe service values", async () => {
     mocks.inquirySubmit.mockResolvedValue({
       accessToken: { token: "inquiry-token" },
-      inquiry: { referenceNumber: "INQ-20260905-ABCDEFGH" },
+      inquiry: { id: "51194c92-0b89-420e-88df-73ed2deeeab4", referenceNumber: "INQ-20260905-ABCDEFGH" },
     });
     mocks.customSubmit.mockResolvedValue({
       accessToken: { token: "custom-token" },
-      request: { referenceNumber: "CPR-20260905-ABCDEFGH" },
+      request: { id: "f60e715e-c94e-489d-bc69-b28ab2f6ed33", referenceNumber: "CPR-20260905-ABCDEFGH" },
     });
     mocks.createIntent.mockResolvedValue({
       expiresAt: new Date("2026-09-05T08:10:00.000Z"),
@@ -125,15 +130,18 @@ describe("Phase 3 public HTTP boundaries", () => {
 
     expect(projectBrief.status).toBe(201);
     await expect(projectBrief.json()).resolves.toEqual({
-      accessToken: "inquiry-token",
+      inquiryId: "51194c92-0b89-420e-88df-73ed2deeeab4",
       referenceNumber: "INQ-20260905-ABCDEFGH",
     });
     expect(customPrint.status).toBe(201);
     await expect(customPrint.json()).resolves.toEqual({
-      accessToken: "custom-token",
+      requestId: "f60e715e-c94e-489d-bc69-b28ab2f6ed33",
       referenceNumber: "CPR-20260905-ABCDEFGH",
     });
     expect(intent.status).toBe(201);
+    expect(mocks.createIntent).toHaveBeenCalledWith({
+      mimeType: "model/stl", originalName: "model.stl", sizeBytes: 3,
+    }, "80c93342-dc64-4426-b5bd-f1bda83f1720");
     await expect(intent.json()).resolves.toMatchObject({
       fileId: "2b7f3c1a-18f7-4d91-8b86-8d98fcd0f7f4",
       uploadToken: "upload-token",
