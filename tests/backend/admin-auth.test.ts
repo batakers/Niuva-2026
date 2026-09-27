@@ -99,8 +99,12 @@ describe("admin authorization", () => {
 });
 
 describe("admin proxy", () => {
-  it("matches only the admin route boundary", () => {
-    expect(config.matcher).toEqual(["/admin/:path*", "/api/admin/:path*"]);
+  it("matches admin routes and private custom request status pages", () => {
+    expect(config.matcher).toEqual([
+      "/admin/:path*",
+      "/api/admin/:path*",
+      "/custom-print/requests/:token",
+    ]);
     expect(
       unstable_doesMiddlewareMatch({
         config,
@@ -127,6 +131,20 @@ describe("admin proxy", () => {
         config,
         nextConfig: {},
         url: "/project-brief",
+      }),
+    ).toBe(false);
+    expect(
+      unstable_doesMiddlewareMatch({
+        config,
+        nextConfig: {},
+        url: "/custom-print/requests/private-token",
+      }),
+    ).toBe(true);
+    expect(
+      unstable_doesMiddlewareMatch({
+        config,
+        nextConfig: {},
+        url: "/custom-print/requests/private-token/files",
       }),
     ).toBe(false);
   });
