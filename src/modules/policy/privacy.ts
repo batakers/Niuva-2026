@@ -1,6 +1,7 @@
 const DAY_MS = 24 * 60 * 60 * 1_000;
 
 export const CUSTOM_FILE_MAX_BYTES = 100 * 1_024 * 1_024;
+export const REFERENCE_PHOTO_MAX_BYTES = 10 * 1_024 * 1_024;
 
 export const NIUVA_MVP_FILE_RETENTION = {
   abandonedOrRejectedUploadMs: 14 * DAY_MS,

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { publicServices } from "@/features/public/company-content";
 
 const requiredText = z.string().trim().min(1);
 const optionalText = z.preprocess(
@@ -9,6 +10,16 @@ const optionalHttpUrl = z
   .union([z.url({ protocol: /^https?$/ }), z.literal("")])
   .optional()
   .transform((value) => (value === "" ? undefined : value));
+const optionalDate = z.preprocess(
+  (value) => (value === "" ? undefined : value),
+  z.iso.date().optional(),
+);
+const optionalPublicService = z.preprocess(
+  (value) => (value === "" ? undefined : value),
+  z.string().refine((value) => publicServices.some((service) => service.slug === value), {
+    message: "Pilih salah satu layanan Niuva yang tersedia.",
+  }).optional(),
+);
 
 const inquiryStages = [
   "IDEA",
@@ -29,10 +40,10 @@ export const b2bInquiryInputSchema = z
     email: z.email(),
     name: requiredText,
     phone: requiredText,
-    preferredService: optionalText,
+    preferredService: optionalPublicService,
     projectGoal: requiredText,
     referenceLink: optionalHttpUrl,
-    targetDeadline: z.iso.date(),
+    targetDeadline: optionalDate,
     targetQuantity: requiredText,
   })
   .superRefine((input, context) => {

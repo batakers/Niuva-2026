@@ -204,7 +204,7 @@ export default async function Home() {
               >
                 <div className="flex items-start justify-between gap-4">
                   <span className="text-xs font-medium text-brand-800">
-                    Project
+                    DEVELOP · Project
                   </span>
                   <PathArrow />
                 </div>
@@ -230,14 +230,14 @@ export default async function Home() {
                 >
                   <div className="flex items-start justify-between gap-4">
                     <span className="text-xs font-medium text-brand-700">
-                      Custom print
+                      MAKE · Custom print
                     </span>
                     <PathArrow />
                   </div>
                   <div className="mt-8">
-                    <h3 className={subheadingToken}>Sudah punya model 3D?</h3>
+                    <h3 className={subheadingToken}>Ingin membuat dari model atau referensi?</h3>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      Pahami format file, review operator, quote, dan tahapan produksi sebelum menyiapkan request.
+                      Kirim model 3D yang siap diperiksa, atau mulai dari sketsa, foto, dan kebutuhan awal. Operator meninjau sebelum quote.
                     </p>
                   </div>
                 </Link>
@@ -248,14 +248,14 @@ export default async function Home() {
                 >
                   <div className="flex items-start justify-between gap-4">
                     <span className="text-xs font-medium text-brand-700">
-                      Ready-made
+                      BUY · Ready-made
                     </span>
                     <PathArrow />
                   </div>
                   <div className="mt-8">
                     <h3 className={subheadingToken}>Mau produk siap beli?</h3>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      Lihat katalog ready-made dan status ketersediaannya. Pembelian diaktifkan setelah detail produk dan cart selesai.
+                      Pilih produk dan varian yang tersedia, lalu lanjutkan melalui cart dan checkout saat layanan transaksi aktif.
                     </p>
                   </div>
                   <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold">

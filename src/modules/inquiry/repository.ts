@@ -56,7 +56,9 @@ export class B2BInquiryRepository {
           projectGoal: input.projectGoal,
           referenceLink: input.referenceLink,
           referenceNumber: input.referenceNumber,
-          targetDeadline: new Date(`${input.targetDeadline}T00:00:00.000Z`),
+          targetDeadline: input.targetDeadline === undefined
+            ? null
+            : new Date(`${input.targetDeadline}T00:00:00.000Z`),
           targetQuantity: input.targetQuantity,
           ...(input.id === undefined ? {} : { id: input.id }),
           publicTokenHash: input.publicTokenHash,

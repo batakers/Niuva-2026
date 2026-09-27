@@ -102,6 +102,35 @@ beforeEach(async () => {
 afterAll(cleanIntegrationDatabase);
 
 describe("Project Brief route integration", () => {
+  it("stores an IDEA brief without a target date or reference", async () => {
+    const payload = {
+      confidentialityAck: true,
+      currentStage: "IDEA",
+      description: "Gagasan awal untuk diskusi.",
+      email: "idea@example.test",
+      name: "Idea Client",
+      phone: "+628000000000",
+      preferredService: "research-development",
+      projectGoal: "Mencari arah prototipe",
+      targetQuantity: "Belum pasti, sekitar satu prototipe",
+    };
+    const response = await postProjectBrief(new Request("http://127.0.0.1:3000/api/project-brief", {
+      body: JSON.stringify(payload),
+      headers: { "content-type": "application/json", origin: "http://127.0.0.1:3000" },
+      method: "POST",
+    }));
+    expect(response.status).toBe(201);
+    const body = (await response.json()) as { referenceNumber: string };
+    await expect(prisma.b2BInquiry.findUniqueOrThrow({
+      select: { preferredService: true, referenceLink: true, targetDeadline: true },
+      where: { referenceNumber: body.referenceNumber },
+    })).resolves.toEqual({
+      preferredService: "research-development",
+      referenceLink: null,
+      targetDeadline: null,
+    });
+  });
+
   it("persists a valid brief and exposes it to the Action Queue", async () => {
     const response = await postProjectBrief(
       new Request("http://127.0.0.1:3000/api/project-brief", {

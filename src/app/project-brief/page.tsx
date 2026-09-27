@@ -1,13 +1,27 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { PublicShell } from "@/components/niuva/public-shell";
-import { isLocalDemoMode } from "@/lib/env/server";
+import { isLocalDemoMode, getServerCapabilities } from "@/lib/env/server";
 import { typographySystemTokens as type } from "@/design/typography";
+import { publicServices } from "@/features/public/company-content";
 import { BriefForm } from "./brief-form";
 
 export const metadata: Metadata = { title: "Project brief · Niuva", description: "Susun konteks, tujuan, dan referensi awal untuk percakapan proyek bersama Niuva." };
 
-export default function ProjectBriefPage() {
+export default async function ProjectBriefPage({ searchParams }: Readonly<{
+  searchParams: Promise<{ service?: string | string[] }>;
+}>) {
+  await connection();
+  const params = await searchParams;
+  const serviceSlug = Array.isArray(params.service) ? params.service[0] : params.service;
+  const initialService = publicServices.find((service) => service.slug === serviceSlug)?.slug;
   const demoMode = isLocalDemoMode();
+  let uploadsEnabled = false;
+  try {
+    uploadsEnabled = getServerCapabilities().customUploads;
+  } catch {
+    // Upload stays disabled for incomplete private-storage configuration.
+  }
 
   return (
     <PublicShell scope="project-brief">
@@ -25,12 +39,12 @@ export default function ProjectBriefPage() {
               <h2 className={type.subheading.className}>Yang perlu disiapkan</h2>
               <ul className="mt-4 space-y-3 text-sm leading-6 text-muted-foreground">
                 <li>Tujuan, tahap saat ini, dan batasan proyek.</li>
-                <li>Perkiraan jumlah serta tanggal target.</li>
-                <li>Jika sudah ada, link referensi yang dapat Anda bagikan.</li>
+                <li>Perkiraan jumlah; tanggal target boleh menyusul jika belum diketahui.</li>
+                <li>Pada tahap selain ide, siapkan link atau lampiran referensi.</li>
               </ul>
             </div>
           </div>
-          <BriefForm demoMode={demoMode} />
+          <BriefForm demoMode={demoMode} initialService={initialService} uploadsEnabled={uploadsEnabled} />
         </section>
         <section className="border-t border-border bg-card">
           <div className="mx-auto grid max-w-public gap-8 px-5 py-12 sm:px-8 md:grid-cols-2">

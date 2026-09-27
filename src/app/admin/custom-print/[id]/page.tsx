@@ -10,6 +10,7 @@ import {
   createQuoteDraftAction,
   downloadPrivateFileAction,
   recordCustomPrintReviewAction,
+  reissueCustomPrintRequestTokenAction,
   reissueQuoteTokenAction,
   sendQuoteAction,
 } from "@/app/admin/actions";
@@ -43,6 +44,7 @@ export default async function AdminCustomPrintDetailPage({ params }: Readonly<{ 
   if (request === null) return <AdminDataUnavailableView active="custom-print" role={access.profile.role} title="Detail custom print belum dapat dimuat" />;
   const review = request.review;
   const hasDraft = request.quotes.some((quote) => quote.status === "DRAFT");
+  const referenceLink = safeHttpsUrl(request.referenceLink);
 
   return (
     <AdminShell active="custom-print" role={access.profile.role}>
@@ -62,21 +64,39 @@ export default async function AdminCustomPrintDetailPage({ params }: Readonly<{ 
             <Info label="Telepon" value={request.customerPhone} />
             <Info label="Material / warna" value={`${request.materialRequested}${request.colorRequested ? ` · ${request.colorRequested}` : ""}`} />
             <Info label="Jumlah" value={`${request.quantity} unit`} />
+            <Info label="Mode intake" value={request.intakeMode === "REFERENCE_ONLY" ? "Baru punya referensi" : "Model siap"} />
+            <Info label="Model 3D/CAD" value={request.modelReady ? "Tersedia dan terverifikasi" : "Belum tersedia"} />
+            <Info label="Foto referensi" value={`${request.photoCount} foto privat`} />
+            <Info label="Unit / skala" value={request.unitConfirmation ? formatStatus(request.unitConfirmation) : "Belum dikonfirmasi"} />
           </dl>
+          {referenceLink ? <p className="mt-5 break-words border-t border-border pt-4 text-sm">Link referensi: <a className="font-medium text-brand-700 underline underline-offset-4 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={referenceLink} rel="noopener noreferrer" target="_blank">Buka referensi customer</a></p> : null}
           {request.notes ? <div className="mt-5 border-t border-border pt-4 text-sm leading-6"><p className="text-xs text-muted-foreground">Catatan customer</p><p className="mt-1 whitespace-pre-wrap">{request.notes}</p></div> : null}
           <div className="mt-5 border-t border-border pt-4"><p className="text-xs text-muted-foreground">File terverifikasi</p>{request.files.length === 0 ? <p className="mt-1 text-sm text-muted-foreground">Tidak ada file terikat.</p> : <ul className="mt-2 grid gap-2 text-sm sm:grid-cols-2">{request.files.map((file) => <li className="rounded-lg border border-border px-3 py-2" key={file.id}><span className="font-medium">{file.originalName}</span><span className="mt-1 block text-xs text-muted-foreground">{file.extension.toUpperCase()} · {formatBytes(file.sizeBytes)} · {formatStatus(file.status)}</span>{file.status === "VERIFIED" ? <AdminActionForm action={downloadPrivateFileAction} className="mt-3" submitLabel="Buat tautan unduh"><input name="fileId" type="hidden" value={file.id} /><input name="ownerId" type="hidden" value={request.id} /><input name="ownerType" type="hidden" value="CUSTOM_PRINT_REQUEST" /></AdminActionForm> : null}</li>)}</ul>}<p className="mt-3 text-xs text-muted-foreground">URL dan storage key file privat tidak ditampilkan di browser admin. Tautan unduh dibuat ulang dan kedaluwarsa dalam lima menit.</p></div>
+        </section>
+
+        <section aria-labelledby="request-access-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
+          <h2 className="text-xl font-semibold" id="request-access-title">Akses status privat customer</h2>
+          <><p className="mt-2 text-sm leading-6 text-muted-foreground">Jika customer kehilangan tautan, verifikasi identitas melalui proses manual sebelum menerbitkan token baru. Token lama langsung tidak berlaku. Tautan baru dibagikan manual; tidak ada pesan otomatis.</p>
+          <AdminActionForm action={reissueCustomPrintRequestTokenAction} className="mt-5" confirmMessage="Token lama akan langsung dicabut. Identitas customer sudah diverifikasi secara manual?" submitLabel="Terbitkan ulang tautan request" successLinkLabel="Buka tautan request baru">
+            <input name="requestId" type="hidden" value={request.id} />
+            <label className="flex items-start gap-3 text-sm leading-6"><input className="mt-1 size-4" name="identityVerified" required type="checkbox" value="yes" /><span>Saya sudah memverifikasi identitas customer melalui proses manual.</span></label>
+          </AdminActionForm></>
         </section>
 
         <section aria-labelledby="review-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
           <h2 className="text-xl font-semibold" id="review-title">Review slicer operator</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">Catat berat dan durasi yang sudah diverifikasi. Quantity harus sama dengan request agar quote dapat dihitung server.</p>
-          {request.status === "SUBMITTED" || request.status === "UNDER_REVIEW" ? (
-            <AdminActionForm action={recordCustomPrintReviewAction} className="mt-5" submitLabel="Simpan review slicer">
+          {request.intakeMode === "REFERENCE_ONLY" && !request.modelReady ? (
+            <StatusNotice className="mt-5" tone="info" title="Menunggu model 3D/CAD terverifikasi" description="Foto dan link referensi membantu triase, tetapi belum dapat dislicing. Customer dapat menambahkan model lewat tautan privat pada request yang sama." />
+          ) : ["SUBMITTED", "UNDER_REVIEW"].includes(request.status) ? (
+            <AdminActionForm action={recordCustomPrintReviewAction} className="mt-5" submitLabel={review ? "Revisi review slicer" : "Simpan review slicer"}>
               <input name="requestId" type="hidden" value={request.id} />
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <Field label="Berat terverifikasi (g)" name="verifiedWeightG" required type="text" value={review?.verifiedWeightG ?? ""} />
                 <Field label="Durasi print (detik)" name="printDurationSeconds" required type="number" value={String(review?.printDurationSeconds ?? "")} />
-                <Field label="Material code" name="materialCode" required type="text" value={review?.materialCode ?? request.materialRequested.toUpperCase()} />
+                {request.materialRequested === "NEEDS_RECOMMENDATION" && review === null
+                  ? <label className="grid gap-2 text-sm font-medium" htmlFor="materialCode"><span>Material code</span><select className={inputClass} defaultValue="" id="materialCode" name="materialCode" required><option disabled value="">Pilih setelah review</option><option value="PLA">PLA</option><option value="ABS">ABS</option></select></label>
+                  : <Field label="Material code" name="materialCode" required type="text" value={review?.materialCode ?? request.materialRequested.toUpperCase()} />}
                 <Field label="Quantity" name="quantity" required type="number" value={String(review?.quantity ?? request.quantity)} />
               </div>
               <label className="grid gap-2 text-sm font-medium" htmlFor="review-notes"><span>Catatan review</span><textarea className={textareaClass} defaultValue={review?.notes ?? ""} id="review-notes" name="notes" rows={3} /></label>
@@ -92,7 +112,7 @@ export default async function AdminCustomPrintDetailPage({ params }: Readonly<{ 
           <p className="mt-2 text-sm leading-6 text-muted-foreground">Setelah diterbitkan, snapshot quote menjadi immutable. Tautan ini disiapkan untuk dibagikan manual melalui kanal customer yang disepakati; Niuva belum mengirimkannya otomatis.</p>
           {pricing === null ? <StatusNotice className="mt-4" tone="warning" title="Pricing rules belum dapat dimuat" description="Draft quote ditahan sampai daftar aturan harga dapat dibaca oleh admin." /> : activeRule === null ? <StatusNotice className="mt-4" tone="warning" title="Belum ada pricing rule aktif" description="Owner harus mengaktifkan rule yang disetujui sebelum operator membuat quote." /> : <>
             <div className="mt-4 rounded-lg border border-info-border bg-info-background p-4 text-sm"><p className="font-semibold text-info">Rule aktif: {activeRule.code} v{activeRule.version}</p><p className="mt-1 text-info">Quote akan menyimpan snapshot rule ini. Perubahan rule baru tidak mengubah quote yang sudah dikirim.</p></div>
-            {review && !hasDraft && (request.status === "QUOTE_READY" || request.status === "QUOTE_SENT") ? <AdminActionForm action={createQuoteDraftAction} className="mt-5" submitLabel="Buat draft quote"><input name="requestId" type="hidden" value={request.id} /><input name="pricingRuleVersionId" type="hidden" value={activeRule.id} /><div className="grid gap-4 sm:grid-cols-2"><label className="grid gap-2 text-sm font-medium" htmlFor="quote-material"><span>Material</span><select className={inputClass} defaultValue={review.materialCode} id="quote-material" name="materialCode"><option value="PLA">PLA</option><option value="ABS">ABS</option></select></label><label className="grid gap-2 text-sm font-medium" htmlFor="filament-source"><span>Sumber filament</span><select className={inputClass} defaultValue="NIUVA_STOCK" id="filament-source" name="filamentSource"><option value="NIUVA_STOCK">Stok Niuva</option><option value="COMMUNAL">Komunal</option><option value="CUSTOMER_OWN">Punya customer</option></select></label></div><label className="grid gap-2 text-sm font-medium" htmlFor="quote-config"><span>Konfigurasi tambahan <span className="font-normal text-muted-foreground">(opsional)</span></span><textarea className={`${textareaClass} font-mono`} id="quote-config" name="configurationJson" rows={3} /></label></AdminActionForm> : <p className="mt-5 text-sm text-muted-foreground">{hasDraft ? "Draft quote sudah tersedia. Kirim draft tersebut atau terbitkan versi baru setelah workflow sebelumnya selesai." : "Simpan review slicer dan pastikan request berstatus Quote Ready sebelum membuat draft."}</p>}
+            {review && !hasDraft && (request.status === "QUOTE_READY" || request.status === "QUOTE_SENT") ? <AdminActionForm action={createQuoteDraftAction} className="mt-5" submitLabel="Buat draft quote"><input name="requestId" type="hidden" value={request.id} /><input name="pricingRuleVersionId" type="hidden" value={activeRule.id} /><div className="grid gap-4 sm:grid-cols-2"><label className="grid gap-2 text-sm font-medium" htmlFor="quote-material"><span>Material</span><select className={inputClass} defaultValue={review.materialCode} id="quote-material" name="materialCode"><option value="PLA">PLA</option><option value="ABS">ABS</option></select></label><label className="grid gap-2 text-sm font-medium" htmlFor="filament-source"><span>Sumber filament</span><select className={inputClass} id="filament-source" defaultValue="NIUVA_STOCK" name="filamentSource"><option value="NIUVA_STOCK">Stok Niuva</option><option value="COMMUNAL">Komunal</option><option value="CUSTOMER_OWN">Punya customer</option></select></label></div><label className="grid gap-2 text-sm font-medium" htmlFor="quote-config"><span>Konfigurasi tambahan <span className="font-normal text-muted-foreground">(opsional)</span></span><textarea className={`${textareaClass} font-mono`} id="quote-config" name="configurationJson" rows={3} /></label></AdminActionForm> : <p className="mt-5 text-sm text-muted-foreground">{hasDraft ? "Draft quote sudah tersedia. Kirim draft tersebut atau terbitkan versi baru setelah workflow sebelumnya selesai." : "Simpan review slicer dan pastikan request berstatus Quote Ready sebelum membuat draft."}</p>}
           </>}
 
           <div className="mt-6 border-t border-border pt-5">
@@ -158,5 +178,6 @@ function Info({ label, value }: Readonly<{ label: string; value: string }>) { re
 function Field({ label, name, required, type, value }: Readonly<{ label: string; name: string; required?: boolean; type: string; value: string }>) { return <label className="grid gap-2 text-sm font-medium" htmlFor={name}><span>{label}</span><input className={inputClass} defaultValue={value} id={name} name={name} required={required} type={type} /></label>; }
 function formatStatus(value: string): string { return value.toLocaleLowerCase("id").split("_").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" "); }
 function formatBytes(value: string): string { const bytes = Number(value); if (!Number.isFinite(bytes)) return `${value} byte`; if (bytes < 1024) return `${bytes} byte`; if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KiB`; return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`; }
+function safeHttpsUrl(value: string | null): string | null { if (!value) return null; try { const url = new URL(value); return url.protocol === "https:" && !url.username && !url.password ? url.href : null; } catch { return null; } }
 const inputClass = "min-h-11 rounded-lg border border-input bg-background px-3 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm";
 const textareaClass = "min-h-24 rounded-lg border border-input bg-background px-3 py-2 text-base leading-6 outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm";

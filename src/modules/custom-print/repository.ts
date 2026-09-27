@@ -7,6 +7,7 @@ import { getPrismaClient } from "@/lib/db/prisma";
 import { appError } from "@/modules/shared/errors";
 
 import type { CustomPrintRequestInput } from "./schema";
+import { isModelExtension, isReferencePhotoExtension } from "./file-types";
 
 export type CreateCustomPrintRequestInput = CustomPrintRequestInput &
   Readonly<{
@@ -156,10 +157,23 @@ export class CustomPrintRequestRepository {
   }
 
   async findRequestForReview(requestId: string) {
-    return this.prisma.customPrintRequest.findUnique({
+    const request = await this.prisma.customPrintRequest.findUnique({
       where: { id: requestId },
-      select: { id: true, quantity: true, status: true },
+      select: {
+        id: true,
+        intakeMode: true,
+        quantity: true,
+        status: true,
+        files: { select: { file: { select: { extension: true, uploadStatus: true } } } },
+      },
     });
+    return request === null ? null : {
+      id: request.id,
+      intakeMode: request.intakeMode,
+      modelReady: request.files.some(({ file }) => file.uploadStatus === "VERIFIED" && isModelExtension(file.extension)),
+      quantity: request.quantity,
+      status: request.status,
+    };
   }
 
   async create(input: CreateCustomPrintRequestInput) {
@@ -170,7 +184,7 @@ export class CustomPrintRequestRepository {
           id: { in: [...new Set(input.fileIds)] },
           uploadStatus: "UPLOADED",
         },
-        select: { id: true },
+        select: { extension: true, id: true },
       });
 
       if (files.length !== new Set(input.fileIds).size) {
@@ -179,9 +193,18 @@ export class CustomPrintRequestRepository {
         });
       }
 
+      if (input.intakeMode === "MODEL_READY" && !files.every((file) => isModelExtension(file.extension))) {
+        throw appError("VALIDATION_ERROR", { message: "Mode model siap hanya menerima file model 3D/CAD." });
+      }
+      if (input.intakeMode === "REFERENCE_ONLY" && !files.every((file) => isReferencePhotoExtension(file.extension))) {
+        throw appError("VALIDATION_ERROR", { message: "Mode referensi hanya menerima satu foto JPG atau PNG." });
+      }
+
       const request = await transaction.customPrintRequest.create({
         data: {
           colorRequested: input.colorRequested,
+          intakeMode: input.intakeMode,
+          referenceLink: input.referenceLink,
           customerEmail: input.customerEmail,
           customerName: input.customerName,
           customerPhone: input.customerPhone,
@@ -258,30 +281,136 @@ export class CustomPrintRequestRepository {
   }
 
   async saveReview(input: CustomPrintReviewInput): Promise<CustomPrintReviewRecord> {
-    return this.prisma.customPrintReview.upsert({
-      where: { requestId: input.requestId },
-      create: {
-        configurationJson: input.configurationJson,
-        materialCode: input.materialCode,
-        notes: input.notes,
-        printDurationSeconds: input.printDurationSeconds,
-        quantity: input.quantity,
-        requestId: input.requestId,
-        reviewedAt: input.reviewedAt,
-        reviewedByAdminId: input.reviewedByAdminId,
-        verifiedWeightG: input.verifiedWeightG,
-      },
-      update: {
-        configurationJson: input.configurationJson,
-        materialCode: input.materialCode,
-        notes: input.notes,
-        printDurationSeconds: input.printDurationSeconds,
-        quantity: input.quantity,
-        reviewedAt: input.reviewedAt,
-        reviewedByAdminId: input.reviewedByAdminId,
-        verifiedWeightG: input.verifiedWeightG,
+    return this.prisma.$transaction(async (transaction) => {
+      await transaction.$queryRaw(
+        Prisma.sql`SELECT "id" FROM "custom_print_requests" WHERE "id" = ${input.requestId}::uuid FOR UPDATE`,
+      );
+      const request = await transaction.customPrintRequest.findUnique({
+        where: { id: input.requestId },
+        select: {
+          intakeMode: true,
+          status: true,
+          files: { select: { file: { select: { extension: true, uploadStatus: true } } } },
+        },
+      });
+      if (request === null) throw appError("NOT_FOUND");
+      if (!["SUBMITTED", "UNDER_REVIEW"].includes(request.status)) {
+        throw appError("CONFLICT", { message: "Review hanya dapat dicatat sebelum quote siap." });
+      }
+      if (request.intakeMode === "REFERENCE_ONLY" &&
+        !request.files.some(({ file }) => file.uploadStatus === "VERIFIED" && isModelExtension(file.extension))) {
+        throw appError("CONFLICT", { message: "Model 3D/CAD terverifikasi diperlukan sebelum review slicer." });
+      }
+      return transaction.customPrintReview.upsert({
+        where: { requestId: input.requestId },
+        create: {
+          configurationJson: input.configurationJson,
+          materialCode: input.materialCode,
+          notes: input.notes,
+          printDurationSeconds: input.printDurationSeconds,
+          quantity: input.quantity,
+          requestId: input.requestId,
+          reviewedAt: input.reviewedAt,
+          reviewedByAdminId: input.reviewedByAdminId,
+          verifiedWeightG: input.verifiedWeightG,
+        },
+        update: {
+          configurationJson: input.configurationJson,
+          materialCode: input.materialCode,
+          notes: input.notes,
+          printDurationSeconds: input.printDurationSeconds,
+          quantity: input.quantity,
+          reviewedAt: input.reviewedAt,
+          reviewedByAdminId: input.reviewedByAdminId,
+          verifiedWeightG: input.verifiedWeightG,
+        },
+      });
+    });
+  }
+
+  async findForPublicAccess(requestId: string) {
+    return this.prisma.customPrintRequest.findUnique({
+      where: { id: requestId },
+      select: {
+        id: true,
+        intakeMode: true,
+        publicTokenHash: true,
+        referenceNumber: true,
+        status: true,
+        files: {
+          select: { file: { select: { extension: true, uploadStatus: true } } },
+        },
       },
     });
+  }
+
+  async attachVerifiedModel(input: Readonly<{
+    currentTokenHash: string;
+    fileId: string;
+    requestId: string;
+    unitConfirmation?: string;
+  }>): Promise<void> {
+    await this.prisma.$transaction(async (transaction) => {
+      await transaction.$queryRaw(
+        Prisma.sql`SELECT "id" FROM "custom_print_requests" WHERE "id" = ${input.requestId}::uuid FOR UPDATE`,
+      );
+      const request = await transaction.customPrintRequest.findUnique({
+        where: { id: input.requestId },
+        select: {
+          intakeMode: true,
+          publicTokenHash: true,
+          review: { select: { id: true } },
+          status: true,
+        },
+      });
+      if (request === null || request.publicTokenHash !== input.currentTokenHash) {
+        throw appError("UNAUTHORIZED");
+      }
+      if (request.intakeMode !== "REFERENCE_ONLY" ||
+        !["SUBMITTED", "UNDER_REVIEW"].includes(request.status) || request.review !== null) {
+        throw appError("CONFLICT", { message: "Request tidak dapat menerima model setelah review slicer." });
+      }
+      const file = await transaction.storedFile.findUnique({
+        where: { id: input.fileId },
+        select: { bucketScope: true, extension: true, uploadStatus: true },
+      });
+      if (file === null || file.bucketScope !== "PRIVATE_CUSTOMER" ||
+        file.uploadStatus !== "UPLOADED" || !isModelExtension(file.extension)) {
+        throw appError("CONFLICT", { message: "File model belum siap dihubungkan ke request." });
+      }
+
+      if (file.extension === "stl" && input.unitConfirmation === undefined) {
+        throw appError("VALIDATION_ERROR", { details: { unitConfirmation: "Konfirmasi unit diperlukan untuk STL." } });
+      }
+      await transaction.customPrintRequestFile.create({
+        data: { requestId: input.requestId, fileId: input.fileId },
+      });
+      const verified = await transaction.storedFile.updateMany({
+        where: { id: input.fileId, uploadStatus: "UPLOADED" },
+        data: { uploadStatus: "VERIFIED", verifiedAt: new Date() },
+      });
+      if (verified.count !== 1) {
+        throw appError("CONFLICT", { message: "File berubah sebelum terikat ke request." });
+      }
+      if (input.unitConfirmation !== undefined) {
+        await transaction.customPrintRequest.update({
+          where: { id: input.requestId },
+          data: { unitConfirmation: input.unitConfirmation },
+        });
+      }
+    });
+  }
+
+  async rotatePublicToken(input: Readonly<{
+    currentHash: string;
+    nextHash: string;
+    requestId: string;
+  }>): Promise<boolean> {
+    const updated = await this.prisma.customPrintRequest.updateMany({
+      where: { id: input.requestId, publicTokenHash: input.currentHash },
+      data: { publicTokenHash: input.nextHash },
+    });
+    return updated.count === 1;
   }
 
   async findReview(requestId: string): Promise<CustomPrintReviewRecord | null> {

@@ -119,6 +119,11 @@ enum CustomPrintRequestStatus {
   CANCELLED
 }
 
+enum CustomPrintIntakeMode {
+  MODEL_READY
+  REFERENCE_ONLY
+}
+
 enum CustomPrintQuoteStatus {
   DRAFT
   SENT
@@ -528,6 +533,8 @@ model B2BInquiryFile {
 model CustomPrintRequest {
   id                String                   @id @default(uuid()) @db.Uuid
   referenceNumber   String                   @unique @map("reference_number")
+  intakeMode        CustomPrintIntakeMode    @default(MODEL_READY) @map("intake_mode")
+  referenceLink     String?                  @map("reference_link")
   customerName      String                   @map("customer_name")
   customerEmail     String                   @map("customer_email")
   customerPhone     String                   @map("customer_phone")
