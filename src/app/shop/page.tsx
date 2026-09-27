@@ -37,28 +37,17 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
       : "frontend-preview" as const;
 
   return (
-    <PublicShell functionalStatus={functionalStatus} scope="shop">
+    <PublicShell functionalStatus={functionalStatus} scope="shop" headerAction={{ href: "#catalog", label: "Lihat Produk" }}>
       <main id="main-content">
         <section className="border-b border-border bg-card">
-          <div className="mx-auto max-w-public px-5 py-14 sm:px-8 sm:py-20">
+          <div className="mx-auto max-w-public px-5 py-9 sm:px-8 sm:py-12">
             <p className="text-sm font-medium text-brand-700">Ready-made</p>
-            <h1 className={`${type.heading.className} mt-4 max-w-3xl`}>Produk ready-made, dengan status yang jelas.</h1>
-            <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground">Telusuri produk, harga awal, dan ketersediaan sebelum memilih varian pada halaman detail.</p>
+            <h1 className={`${type.heading.className} mt-3 max-w-3xl`}>Produk ready-made, dengan status yang jelas.</h1>
+            <p className="mt-3 max-w-xl text-base leading-7 text-muted-foreground">Lihat produk yang tersedia, lalu periksa varian, harga, dan stok sebelum menambahkannya ke cart.</p>
           </div>
         </section>
 
-        <div className="mx-auto max-w-public px-5 py-10 sm:px-8 sm:py-14">
-          {process.env.NODE_ENV === "development" && !liveEnabled && (
-            <aside aria-label="Preview katalog" className="mb-8 rounded-lg border border-info-border bg-info-background p-4 text-info">
-              <p className="text-sm font-semibold">Preview lokal, data sintetis dan bukan inventory Niuva</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {[["examples", "Contoh"], ["empty", "Kosong"], ["loading", "Memuat"], ["error", "Gagal"]].map(([value, label]) => (
-                  <NiuvaLink key={value} href={`/shop?preview=${value}`} variant="outline" size="sm" className="min-h-11" aria-current={scenario === value ? "page" : undefined}>{label}</NiuvaLink>
-                ))}
-              </div>
-            </aside>
-          )}
-
+        <div className="mx-auto max-w-public scroll-mt-8 px-5 py-8 sm:px-8 sm:py-10" id="catalog">
           {liveCatalogError ? (
             <StatusNotice tone="error" title="Katalog live belum dapat dimuat." description="Sumber data produk sedang tidak dapat dijangkau. Tidak ada transaksi yang dibuat; coba muat ulang atau gunakan preview contoh." action={<NiuvaLink href="/shop" variant="outline" className="min-h-11">Muat ulang</NiuvaLink>} />
           ) : liveCatalogUnavailable ? (
@@ -76,6 +65,16 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
             <StatusNotice tone="info" title="Katalog ready-made belum dipublikasikan." description="Produk, foto, varian, dan stok akan muncul setelah dataset launch mendapat persetujuan publikasi." action={<NiuvaLink href="/services" variant="outline" className="min-h-11">Lihat layanan</NiuvaLink>} />
           ) : (
             <ProductGrid products={products} previewEnabled={scenario === "examples"} />
+          )}
+          {process.env.NODE_ENV === "development" && !liveEnabled && (
+            <aside aria-label="Preview katalog" className="mt-12 rounded-lg border border-info-border bg-info-background p-4 text-info">
+              <p className="text-sm font-semibold">Preview lokal, data sintetis dan bukan inventory Niuva</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {[["examples", "Contoh"], ["empty", "Kosong"], ["loading", "Memuat"], ["error", "Gagal"]].map(([value, label]) => (
+                  <NiuvaLink key={value} href={`/shop?preview=${value}`} variant="outline" size="sm" className="min-h-11" aria-current={scenario === value ? "page" : undefined}>{label}</NiuvaLink>
+                ))}
+              </div>
+            </aside>
           )}
         </div>
       </main>

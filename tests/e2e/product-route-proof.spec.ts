@@ -23,7 +23,7 @@ async function assertRouteShell(page: Page, route: string, width: number) {
   await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
   await expect(page.locator("[data-product-screen-proof-status]")).toHaveAttribute(
     "data-product-screen-proof-status",
-    "approved-owner",
+    route === "/" ? "pending-owner-review" : "approved-owner",
   );
   await assertNoHorizontalOverflow(page, route, width);
 }

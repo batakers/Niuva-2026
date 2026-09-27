@@ -18,8 +18,13 @@ test("public homepage exposes the Niuva narrative and entry paths", async ({ pag
   await expect(page.locator("[data-homepage] .font-technical")).toHaveCount(0);
   await expect(page.locator("[data-homepage] .uppercase")).toHaveCount(0);
 
-  await page.getByRole("link", { name: "Lihat cara kerja" }).click();
-  await expect(page).toHaveURL(/#process$/);
+  await expect(page.locator("[data-home-section='project-proof']")).toBeVisible();
+  const sectionOrder = await page.locator("main > [data-home-section]").evaluateAll((sections) =>
+    sections.map((section) => section.getAttribute("data-home-section")),
+  );
+  expect(sectionOrder.slice(0, 4)).toEqual(["hero", "entry-paths", "project-proof", "capabilities"]);
+  await page.getByRole("link", { name: "Lihat bukti proyek" }).click();
+  await expect(page).toHaveURL(/#project-proof$/);
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();
@@ -34,14 +39,14 @@ test("public homepage exposes the Niuva narrative and entry paths", async ({ pag
   await expect(navigation.getByRole("link", { name: "Cara kerja", exact: true })).toHaveCount(0);
 });
 
-test("authorized Foundation proof records scoped owner visual acceptance", async ({ page }) => {
+test("Foundation proof keeps redesigned Home pending visual review and Project Brief accepted", async ({ page }) => {
   await loginCustomer(page);
   await page.goto("/");
 
   const homepage = page.locator("[data-homepage]");
   await expect(homepage).toHaveAttribute("data-foundation-propagation", "approved");
   await expect(homepage).toHaveAttribute("data-foundation-scope", "homepage");
-  await expect(homepage).toHaveAttribute("data-product-screen-proof-status", "approved-owner");
+  await expect(homepage).toHaveAttribute("data-product-screen-proof-status", "pending-owner-review");
   await expect(homepage).toHaveAttribute("data-typography-version", "1.0");
   const homepageFont = await homepage.evaluate(
     (element) => window.getComputedStyle(element).fontFamily,

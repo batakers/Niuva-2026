@@ -86,21 +86,21 @@ export default async function Home() {
           id="hero"
         >
           <div className="mx-auto max-w-public px-5 sm:px-8">
-            <div className="grid gap-12 py-16 sm:py-24 lg:grid-cols-[minmax(0,1.08fr)_minmax(20rem,0.92fr)] lg:items-end lg:gap-16 lg:py-28">
+            <div className="grid gap-8 py-10 sm:py-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-center lg:gap-12">
               <div className="max-w-3xl">
                 <SectionMarker className="text-brand-300">
                   Niuva · mitra pengembangan produk
                 </SectionMarker>
                 <h1
-                  className={`${displayToken} mt-5 max-w-4xl text-neutral-50`}
+                  className={`${displayToken} mt-4 max-w-4xl text-neutral-50`}
                   id="hero-title"
                 >
                   {publicCompanyProfile.headline}
                 </h1>
-                <p className="mt-6 max-w-2xl text-base leading-7 text-neutral-300 sm:text-lg sm:leading-8">
+                <p className="mt-4 max-w-2xl text-base leading-7 text-neutral-300 sm:text-lg sm:leading-8">
                   {publicCompanyProfile.supportingCopy}
                 </p>
-                <div className="mt-8 flex flex-wrap items-center gap-3">
+                <div className="mt-6 flex flex-wrap items-center gap-3">
                   <NiuvaLink
                     className="gap-2"
                     href="/project-brief"
@@ -110,65 +110,36 @@ export default async function Home() {
                     <PathArrow />
                   </NiuvaLink>
                   <Link
-                    className="inline-flex h-9 items-center gap-2 rounded-lg border border-neutral-600 px-3 text-sm font-medium text-neutral-50 transition-colors hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                    href="#process"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-neutral-600 px-4 text-sm font-medium text-neutral-50 transition-colors hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                    href="#project-proof"
                   >
-                    Lihat cara kerja
+                    Lihat bukti proyek
                     <Icon aria-hidden="true" className="size-4" name="arrow-right" />
                   </Link>
                 </div>
               </div>
 
-              <div
-                aria-labelledby="process-preview-title"
-                className="rounded-xl border border-neutral-700 bg-neutral-800/80 p-5 shadow-floating sm:p-6"
+              <Link
+                className="group block rounded-xl border border-neutral-700 bg-card p-3 text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand-300 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
+                href="/projects/konsep-desain-eksterior-motor-ev-pindad"
               >
-                <div className="flex items-center justify-between gap-4 border-b border-neutral-700 pb-4">
-                  <p className="text-xs font-medium text-brand-300">
-                    Alur kerja Niuva
-                  </p>
-                  <p className="text-xs text-neutral-400">
-                    4 tahap
-                  </p>
-                </div>
-                <h2 className="sr-only" id="process-preview-title">
-                  Empat tahapan alur kerja Niuva
-                </h2>
-                <ol aria-label="Alur dari ide menjadi produk nyata" className="mt-2">
-                  {processSteps.map((step) => (
-                    <li
-                      className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-4 border-b border-neutral-700 py-4 last:border-b-0"
-                      key={step.number}
-                    >
-                      <span className="text-sm font-medium tabular-nums text-brand-300">{step.number}</span>
-                      <div>
-                        <div className="flex flex-wrap items-baseline justify-between gap-2">
-                          <h3 className="font-display text-lg font-semibold text-neutral-50">
-                            {step.name}
-                          </h3>
-                          <span className="text-xs text-neutral-400">
-                            Tahap
-                          </span>
-                        </div>
-                        <p className="mt-1 text-sm leading-6 text-neutral-300">{step.description}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-                <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 border-t border-neutral-700 pt-4 text-xs text-neutral-400">
-                  <span>Riset</span>
-                  <span>Design</span>
-                  <span>Engineering</span>
-                  <span>Prototyping</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-700 py-5 text-sm text-neutral-300">
-              <span>Presisi dalam proses, ruang untuk eksplorasi.</span>
-              <span className="text-xs text-brand-300">
-                Bukti konkret · keputusan terarah
-              </span>
+                <figure>
+                  <div className="relative aspect-[5/4] overflow-hidden rounded-lg bg-white">
+                    <Image
+                      alt="Visualisasi samping konsep motor listrik berwarna hijau"
+                      className="object-contain"
+                      fill
+                      priority
+                      sizes="(min-width: 1024px) 45vw, 100vw"
+                      src="/media/portfolio/cs-02-motor-ev.png"
+                    />
+                  </div>
+                  <figcaption className="flex flex-wrap items-center justify-between gap-2 px-1 pt-3 text-sm">
+                    <span>Konsep desain eksterior motor EV</span>
+                    <span className="inline-flex items-center gap-1 font-semibold text-brand-300 underline-offset-4 group-hover:underline">Lihat cerita proyek <PathArrow /></span>
+                  </figcaption>
+                </figure>
+              </Link>
             </div>
           </div>
         </section>
@@ -269,6 +240,66 @@ export default async function Home() {
         </section>
 
         <section
+          aria-labelledby="project-proof-title"
+          className="border-b border-border bg-card py-16 sm:py-20"
+          data-home-section="project-proof"
+          id="project-proof"
+        >
+          <div className="mx-auto max-w-public px-5 sm:px-8">
+            <div className="grid gap-8 lg:grid-cols-[minmax(14rem,0.55fr)_minmax(0,1fr)] lg:items-end lg:gap-16">
+              <div>
+                <SectionMarker>Bukti proyek terpilih</SectionMarker>
+                <h2 className={`${headingToken} mt-3 max-w-xl`} id="project-proof-title">
+                  Lihat bagaimana keputusan menjadi artefak yang dapat ditinjau.
+                </h2>
+              </div>
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <p className="max-w-2xl text-base leading-7 text-muted-foreground">
+                  Cerita berikut berasal dari materi yang sudah disetujui untuk publikasi. Klaim dibatasi pada bukti yang tersedia, bukan asumsi tentang deployment atau performa.
+                </p>
+                <NiuvaLink href="/projects" variant="outline" className="min-h-11 shrink-0 gap-2">
+                  Lihat semua project
+                  <PathArrow />
+                </NiuvaLink>
+              </div>
+            </div>
+
+            {selectedProjects.length === 0 ? (
+              <div className="mt-10 rounded-xl border border-info-border bg-info-background p-5 text-sm leading-6 text-info" role="status">
+                Bukti project terpilih belum tersedia pada runtime ini. Halaman Projects tetap menjadi tempat rujukan saat record published siap ditampilkan.
+              </div>
+            ) : (
+              <div className="mt-10 grid gap-6 lg:grid-cols-3">
+                {selectedProjects.map((project) => {
+                  const cover = project.media.find((media) => media.url !== undefined);
+                  return (
+                    <article className="group min-w-0" key={project.id}>
+                      <Link className="block rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/projects/${project.slug}`}>
+                        <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-muted">
+                          {cover?.url ? (
+                            <Image alt={cover.altText} className="object-cover transition-transform [transition-duration:var(--duration-normal-token)] [transition-timing-function:var(--ease-standard-token)] group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100" fill sizes="(min-width: 1024px) 30vw, 100vw" src={cover.url} />
+                          ) : (
+                            <div className="flex h-full items-center justify-center px-5 text-center text-sm text-muted-foreground">Media project belum tersedia</div>
+                          )}
+                        </div>
+                        <div className="mt-5">
+                          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-brand-700">
+                            <span>{project.serviceLabel}</span>
+                            {project.year ? <span>{project.year}</span> : null}
+                          </div>
+                          <h3 className={`${subheadingToken} mt-2 underline-offset-4 group-hover:underline`}>{project.title}</h3>
+                          <p className="mt-3 text-sm leading-6 text-muted-foreground">{project.summary}</p>
+                        </div>
+                      </Link>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section
           aria-labelledby="capabilities-title"
           className="scroll-mt-6 bg-background py-16 sm:py-20"
           data-home-section="capabilities"
@@ -351,66 +382,6 @@ export default async function Home() {
                 ))}
               </ol>
             </div>
-          </div>
-        </section>
-
-        <section
-          aria-labelledby="project-proof-title"
-          className="border-b border-border bg-card py-16 sm:py-20"
-          data-home-section="project-proof"
-          id="project-proof"
-        >
-          <div className="mx-auto max-w-public px-5 sm:px-8">
-            <div className="grid gap-8 lg:grid-cols-[minmax(14rem,0.55fr)_minmax(0,1fr)] lg:items-end lg:gap-16">
-              <div>
-                <SectionMarker>Bukti proyek terpilih</SectionMarker>
-                <h2 className={`${headingToken} mt-3 max-w-xl`} id="project-proof-title">
-                  Lihat bagaimana keputusan menjadi artefak yang dapat ditinjau.
-                </h2>
-              </div>
-              <div className="flex flex-wrap items-end justify-between gap-4">
-                <p className="max-w-2xl text-base leading-7 text-muted-foreground">
-                  Cerita berikut berasal dari materi yang sudah disetujui untuk publikasi. Klaim dibatasi pada bukti yang tersedia, bukan asumsi tentang deployment atau performa.
-                </p>
-                <NiuvaLink href="/projects" variant="outline" className="min-h-11 shrink-0 gap-2">
-                  Lihat semua project
-                  <PathArrow />
-                </NiuvaLink>
-              </div>
-            </div>
-
-            {selectedProjects.length === 0 ? (
-              <div className="mt-10 rounded-xl border border-info-border bg-info-background p-5 text-sm leading-6 text-info" role="status">
-                Bukti project terpilih belum tersedia pada runtime ini. Halaman Projects tetap menjadi tempat rujukan saat record published siap ditampilkan.
-              </div>
-            ) : (
-              <div className="mt-10 grid gap-6 lg:grid-cols-3">
-                {selectedProjects.map((project) => {
-                  const cover = project.media.find((media) => media.url !== undefined);
-                  return (
-                    <article className="group min-w-0" key={project.id}>
-                      <Link className="block rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/projects/${project.slug}`}>
-                        <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-muted">
-                          {cover?.url ? (
-                            <Image alt={cover.altText} className="object-cover transition-transform [transition-duration:var(--duration-normal-token)] [transition-timing-function:var(--ease-standard-token)] group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100" fill sizes="(min-width: 1024px) 30vw, 100vw" src={cover.url} />
-                          ) : (
-                            <div className="flex h-full items-center justify-center px-5 text-center text-sm text-muted-foreground">Media project belum tersedia</div>
-                          )}
-                        </div>
-                        <div className="mt-5">
-                          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-brand-700">
-                            <span>{project.serviceLabel}</span>
-                            {project.year ? <span>{project.year}</span> : null}
-                          </div>
-                          <h3 className={`${subheadingToken} mt-2 underline-offset-4 group-hover:underline`}>{project.title}</h3>
-                          <p className="mt-3 text-sm leading-6 text-muted-foreground">{project.summary}</p>
-                        </div>
-                      </Link>
-                    </article>
-                  );
-                })}
-              </div>
-            )}
           </div>
         </section>
 

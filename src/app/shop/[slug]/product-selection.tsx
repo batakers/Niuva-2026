@@ -59,7 +59,7 @@ export function ProductSelection({ product, previewEnabled = true }: { product: 
   }
 
   return (
-    <section aria-labelledby="purchase-options-title" className="mt-8 border-t border-border pt-7">
+    <section aria-labelledby="purchase-options-title" className="mt-8 scroll-mt-8 border-t border-border pt-7" id="purchase-options">
       <h2 id="purchase-options-title" className="text-lg font-semibold">Pilih varian dan jumlah</h2>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">
         Harga dan ketersediaan mengikuti varian. Keduanya akan diverifikasi kembali oleh server saat checkout tersedia.
