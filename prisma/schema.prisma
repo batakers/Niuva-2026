@@ -97,6 +97,13 @@ enum StockReservationStatus {
   RELEASED
 }
 
+enum StockMovementKind {
+  OPENING_BALANCE
+  CATALOG_IMPORT
+  MANUAL_ADJUSTMENT
+  ORDER_CONSUMPTION
+}
+
 enum StorageBucketScope {
   PRIVATE_CUSTOMER
   PUBLIC_MEDIA
@@ -159,6 +166,7 @@ model AdminProfile {
   publishedEstimates   CustomPrintEstimate[] @relation("CustomPrintEstimatePublishedBy")
   customPrintReviews   CustomPrintReview[]  @relation("CustomPrintReviewAdmin")
   approvedPricingRules PricingRuleVersion[] @relation("PricingRuleApprovedBy")
+  stockMovements       StockMovement[]      @relation("StockMovementAdmin")
 
   @@index([isActive, role])
   @@map("admin_profiles")
@@ -261,6 +269,7 @@ model ProductVariant {
   product      Product             @relation(fields: [productId], references: [id], onDelete: Restrict)
   orderItems   OrderItem[]
   reservations StockReservation[]
+  stockMovements StockMovement[]
 
   @@index([productId, isActive])
   @@map("product_variants")
@@ -336,6 +345,7 @@ model Order {
   items           OrderItem[]
   paymentAttempts PaymentAttempt[]
   reservations    StockReservation[]
+  stockMovements   StockMovement[]
   shipmentRates   ShipmentRateSnapshot[]
   shipments       Shipment[]
   customer        Customer?               @relation(fields: [customerId], references: [id], onDelete: SetNull)
@@ -398,10 +408,33 @@ model StockReservation {
   createdAt DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
   order     Order                  @relation(fields: [orderId], references: [id], onDelete: Restrict)
   variant   ProductVariant         @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  stockMovement StockMovement?
 
   @@index([variantId, status, expiresAt])
   @@index([orderId])
   @@map("stock_reservations")
+}
+
+model StockMovement {
+  id            String            @id @default(uuid()) @db.Uuid
+  variantId     String            @map("variant_id") @db.Uuid
+  kind          StockMovementKind
+  delta         Int
+  balanceBefore Int               @map("balance_before")
+  balanceAfter  Int               @map("balance_after")
+  adminId       String?           @map("admin_id") @db.Uuid
+  reason        String?
+  orderId       String?           @map("order_id") @db.Uuid
+  reservationId String?           @unique @map("reservation_id") @db.Uuid
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  variant       ProductVariant    @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  admin         AdminProfile?     @relation("StockMovementAdmin", fields: [adminId], references: [id], onDelete: Restrict)
+  order         Order?            @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  reservation   StockReservation? @relation(fields: [reservationId], references: [id], onDelete: Restrict)
+
+  @@index([variantId, createdAt, id])
+  @@index([orderId])
+  @@map("stock_movements")
 }
 
 model ShipmentRateSnapshot {

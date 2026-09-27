@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { AdminRole, PrismaClient } from "@/generated/prisma/client";
+import { Prisma, type AdminRole, type PrismaClient } from "@/generated/prisma/client";
 import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { publicServices } from "@/features/public/company-content";
@@ -249,6 +249,32 @@ export type AdminProductDetail = Readonly<{
     weightGrams: string;
     widthCm: string | null;
   }>[];
+}>;
+
+export type AdminStockHistory = Readonly<{
+  product: Readonly<{ id: string; name: string }>;
+  variant: Readonly<{
+    id: string;
+    name: string;
+    sku: string;
+    stockOnHand: number;
+    reserved: number;
+    available: number;
+  }>;
+  movements: readonly Readonly<{
+    id: string;
+    kind: string;
+    delta: number;
+    balanceBefore: number;
+    balanceAfter: number;
+    reason: string | null;
+    adminName: string | null;
+    orderId: string | null;
+    orderNumber: string | null;
+    createdAt: Date;
+  }>[];
+  hasNext: boolean;
+  page: number;
 }>;
 
 export type AdminPortfolioDetail = Readonly<{
@@ -879,6 +905,71 @@ export class AdminOperationsService {
         widthCm: variant.widthCm?.toString() ?? null,
       })),
     };
+  }
+
+  async getStockHistory(productId: string, variantId: string, input: AdminListInput = {}): Promise<AdminStockHistory | null> {
+    await this.authorizeWith("AUDIT_READ");
+    const page = normalizePage(input.page);
+    return this.prisma.$transaction(async (transaction) => {
+      const variant = await transaction.productVariant.findFirst({
+        where: { id: variantId, productId },
+        select: {
+          id: true,
+          name: true,
+          sku: true,
+          stockOnHand: true,
+          product: { select: { id: true, name: true } },
+        },
+      });
+      if (variant === null) return null;
+      const reserved = await transaction.stockReservation.aggregate({
+        where: { variantId, status: "ACTIVE", expiresAt: { gt: this.now() } },
+        _sum: { quantity: true },
+      });
+      const movements = await transaction.stockMovement.findMany({
+        where: { variantId },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        skip: (page - 1) * ADMIN_PAGE_SIZE,
+        take: ADMIN_PAGE_SIZE + 1,
+        select: {
+          id: true,
+          kind: true,
+          delta: true,
+          balanceBefore: true,
+          balanceAfter: true,
+          reason: true,
+          createdAt: true,
+          admin: { select: { displayName: true } },
+          order: { select: { id: true, orderNumber: true } },
+        },
+      });
+      const reservedQuantity = reserved._sum.quantity ?? 0;
+      return {
+        product: variant.product,
+        variant: {
+          id: variant.id,
+          name: variant.name,
+          sku: variant.sku,
+          stockOnHand: variant.stockOnHand,
+          reserved: reservedQuantity,
+          available: Math.max(0, variant.stockOnHand - reservedQuantity),
+        },
+        movements: movements.slice(0, ADMIN_PAGE_SIZE).map((movement) => ({
+          id: movement.id,
+          kind: movement.kind,
+          delta: movement.delta,
+          balanceBefore: movement.balanceBefore,
+          balanceAfter: movement.balanceAfter,
+          reason: movement.reason,
+          adminName: movement.admin === null ? null : movement.admin.displayName ?? "Admin",
+          orderId: movement.order?.id ?? null,
+          orderNumber: movement.order?.orderNumber ?? null,
+          createdAt: movement.createdAt,
+        })),
+        hasNext: movements.length > ADMIN_PAGE_SIZE,
+        page,
+      };
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
   }
 
   async getPortfolio(

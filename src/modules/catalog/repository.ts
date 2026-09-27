@@ -1,6 +1,6 @@
 import { Prisma, type PrismaClient } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
-import { lockVariant } from "@/modules/inventory/repository";
+import { recordStockMovement, setStockWithinTransaction } from "@/modules/inventory/movement";
 import { appError } from "@/modules/shared/errors";
 
 import type {
@@ -45,7 +45,7 @@ export type AdminProductPublishCheck = Readonly<{
 
 export interface CatalogRepositoryPort {
   createProduct(input: CreateProductInput): Promise<Readonly<{ id: string }>>;
-  createVariant(input: CreateVariantInput): Promise<Readonly<{ id: string }>>;
+  createVariant(input: CreateVariantInput, adminId?: string): Promise<Readonly<{ id: string }>>;
   findPublishedProductBySlug(slug: string): Promise<PublicCatalogProduct | null>;
   findPublishedProducts(): Promise<readonly PublicCatalogProduct[]>;
   findAdminProductForPublish?(productId: string): Promise<AdminProductPublishCheck | null>;
@@ -60,7 +60,7 @@ export interface CatalogRepositoryPort {
   ): Promise<Readonly<{ id: string }>>;
   updateStock(
     variantId: string,
-    stockOnHand: number,
+    input: Readonly<{ adminId: string; expectedStockOnHand: number; reason: string; stockOnHand: number }>,
   ): Promise<StockMutationResult>;
   updateVariant(
     variantId: string,
@@ -211,21 +211,43 @@ export class CatalogRepository implements CatalogRepositoryPort {
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   }
 
-  async createVariant(input: CreateVariantInput) {
-    return this.prisma.productVariant.create({
-      data: {
-        heightCm: input.heightCm,
-        isActive: input.isActive,
-        lengthCm: input.lengthCm,
-        name: input.name,
-        priceRp: input.priceRp,
-        productId: input.productId,
-        sku: input.sku,
-        stockOnHand: input.stockOnHand,
-        weightGrams: input.weightGrams,
-        widthCm: input.widthCm,
-      },
-      select: { id: true },
+  async createVariant(input: CreateVariantInput, adminId?: string) {
+    return this.prisma.$transaction(async (transaction) => {
+      const created = await transaction.productVariant.create({
+        data: {
+          heightCm: input.heightCm,
+          isActive: input.isActive,
+          lengthCm: input.lengthCm,
+          name: input.name,
+          priceRp: input.priceRp,
+          productId: input.productId,
+          sku: input.sku,
+          stockOnHand: input.stockOnHand,
+          weightGrams: input.weightGrams,
+          widthCm: input.widthCm,
+        },
+        select: { id: true },
+      });
+      await recordStockMovement(transaction, {
+        adminId,
+        balanceBefore: 0,
+        balanceAfter: input.stockOnHand,
+        kind: "OPENING_BALANCE",
+        variantId: created.id,
+      });
+      if (adminId) {
+        await transaction.auditLog.create({
+          data: {
+            action: "catalog.variant.created",
+            actorId: adminId,
+            actorType: "ADMIN",
+            afterJson: { isActive: input.isActive, productId: input.productId, sku: input.sku, stockOnHand: input.stockOnHand },
+            entityId: created.id,
+            entityType: "ProductVariant",
+          },
+        });
+      }
+      return created;
     });
   }
 
@@ -319,42 +341,13 @@ export class CatalogRepository implements CatalogRepositoryPort {
 
   async updateStock(
     variantId: string,
-    stockOnHand: number,
+    input: Readonly<{ adminId: string; expectedStockOnHand: number; reason: string; stockOnHand: number }>,
   ): Promise<StockMutationResult> {
-    if (!Number.isSafeInteger(stockOnHand) || stockOnHand < 0) {
-      throw appError("VALIDATION_ERROR", {
-        details: { stockOnHand: "Stok harus bilangan bulat nonnegatif." },
-      });
-    }
-
-    return this.prisma.$transaction(async (transaction) => {
-      const current = await lockVariant(transaction, variantId);
-      const reserved = await transaction.stockReservation.aggregate({
-        where: {
-          expiresAt: { gt: new Date() },
-          status: "ACTIVE",
-          variantId,
-        },
-        _sum: { quantity: true },
-      });
-
-      if (stockOnHand < (reserved._sum.quantity ?? 0)) {
-        throw appError("CONFLICT", {
-          message: "Stok fisik tidak boleh lebih kecil dari reservasi aktif.",
-        });
-      }
-
-      const updated = await transaction.productVariant.update({
-        where: { id: variantId },
-        data: { stockOnHand },
-        select: { id: true, stockOnHand: true },
-      });
-
-      return {
-        id: updated.id,
-        previousStockOnHand: current.stockOnHand,
-        stockOnHand: updated.stockOnHand,
-      };
-    });
+    return this.prisma.$transaction((transaction) => setStockWithinTransaction(transaction, {
+      ...input,
+      auditAction: "catalog.stock.adjusted",
+      kind: "MANUAL_ADJUSTMENT",
+      variantId,
+    }));
   }
 }

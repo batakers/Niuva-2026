@@ -12,6 +12,8 @@ untuk status saat ini gunakan tabel di bawah dan
 
 Owner menyatakan telah meninjau manual dan menyetujui tampilan **Layanan dan MAKE** hasil irisan Target IA, serta tampilan **Account dan Admin**. Catatan ini mencakup permukaan yang disebut; daftar viewport dan state visual tidak diberikan sebagai bukti terpisah. Pengujian pada perangkat fisik/AT, aktivasi provider, deployment, dan kesiapan produksi tetap memerlukan bukti terpisah.
 
+Owner secara khusus juga menyetujui tampilan **riwayat stok per varian** yang baru. Catatan ini tidak menyertakan daftar viewport atau state visual yang ditinjau.
+
 ## Keputusan readiness
 
 Jalur teknis MVP yang tidak membutuhkan provider eksternal sudah diaudit dan

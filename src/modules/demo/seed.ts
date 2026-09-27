@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@/generated/prisma/client";
+import { recordStockMovement, setStockWithinTransaction } from "@/modules/inventory/movement";
 
 export const LOCAL_DEMO_CATEGORY_SLUG = "local-demo-ready-made";
 export const LOCAL_DEMO_PRODUCT_SLUG = "local-demo-desk-organizer";
@@ -52,33 +53,54 @@ export async function seedLocalDemoCatalog(
       },
       select: { id: true },
     });
-    const variant = await tx.productVariant.upsert({
+    const existingVariant = await tx.productVariant.findUnique({
       where: { sku: LOCAL_DEMO_VARIANT_SKU },
-      create: {
-        heightCm: "5",
-        isActive: true,
-        lengthCm: "18",
-        name: "Abu-abu · Demo",
-        priceRp: "185000",
-        productId: product.id,
-        sku: LOCAL_DEMO_VARIANT_SKU,
-        stockOnHand: 100,
-        weightGrams: "650",
-        widthCm: "12",
-      },
-      update: {
-        heightCm: "5",
-        isActive: true,
-        lengthCm: "18",
-        name: "Abu-abu · Demo",
-        priceRp: "185000",
-        productId: product.id,
-        stockOnHand: 100,
-        weightGrams: "650",
-        widthCm: "12",
-      },
       select: { id: true },
     });
+    const variant = existingVariant === null
+      ? await tx.productVariant.create({
+          data: {
+            heightCm: "5",
+            isActive: true,
+            lengthCm: "18",
+            name: "Abu-abu · Demo",
+            priceRp: "185000",
+            productId: product.id,
+            sku: LOCAL_DEMO_VARIANT_SKU,
+            stockOnHand: 100,
+            weightGrams: "650",
+            widthCm: "12",
+          },
+          select: { id: true },
+        })
+      : await tx.productVariant.update({
+          where: { id: existingVariant.id },
+          data: {
+            heightCm: "5",
+            isActive: true,
+            lengthCm: "18",
+            name: "Abu-abu · Demo",
+            priceRp: "185000",
+            productId: product.id,
+            weightGrams: "650",
+            widthCm: "12",
+          },
+          select: { id: true },
+        });
+    if (existingVariant === null) {
+      await recordStockMovement(tx, {
+        balanceBefore: 0,
+        balanceAfter: 100,
+        kind: "OPENING_BALANCE",
+        variantId: variant.id,
+      });
+    } else {
+      await setStockWithinTransaction(tx, {
+        kind: "CATALOG_IMPORT",
+        stockOnHand: 100,
+        variantId: variant.id,
+      });
+    }
 
     return {
       categoryId: category.id,

@@ -112,22 +112,7 @@ export class CatalogService {
     const parsed = parseWithValidation(createVariantSchema, input);
     const admin = await this.authorizeAdmin();
     requireAdminPermission(admin, "CATALOG_WRITE");
-    const created = await this.repositoryFactory().createVariant(parsed);
-
-    await recordAudit(this.audit, {
-      action: "catalog.variant.created",
-      actorId: admin.profile.id,
-      actorType: "ADMIN",
-      afterJson: {
-        isActive: parsed.isActive,
-        productId: parsed.productId,
-        sku: parsed.sku,
-      },
-      entityId: created.id,
-      entityType: "ProductVariant",
-    });
-
-    return created;
+    return this.repositoryFactory().createVariant(parsed, admin.profile.id);
   }
 
   async updateVariant(variantId: string, input: unknown) {
@@ -154,19 +139,8 @@ export class CatalogService {
     requireAdminPermission(admin, "INVENTORY_ADJUST");
     const updated = await this.repositoryFactory().updateStock(
       variantId,
-      parsed.stockOnHand,
+      { ...parsed, adminId: admin.profile.id },
     );
-
-    await recordAudit(this.audit, {
-      action: "catalog.stock.adjusted",
-      actorId: admin.profile.id,
-      actorType: "ADMIN",
-      afterJson: { stockOnHand: updated.stockOnHand },
-      beforeJson: { stockOnHand: updated.previousStockOnHand },
-      entityId: updated.id,
-      entityType: "ProductVariant",
-    });
-
     return updated;
   }
 

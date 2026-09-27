@@ -33,6 +33,27 @@
 > model mesh yang sudah diunggah serta input slicer customer. Kontraknya di
 > bawah melengkapi, tanpa mengganti, estimasi operator dan quote final.
 
+> **Addendum riwayat stok — 27 September 2026:** Admin dapat memeriksa
+> perubahan saldo stok fisik per varian sejak saldo pembuka migrasi. Riwayat
+> mencakup pembuatan varian, impor katalog, penyesuaian Admin, dan konsumsi
+> order. Riwayat sebelum saldo pembuka tidak direkonstruksi.
+
+### Riwayat perubahan stok varian
+
+- Setiap perubahan `stockOnHand` menghasilkan satu entri berisi jenis,
+  selisih, saldo sebelum/sesudah, waktu, dan sumber. Penyesuaian manual wajib
+  menyimpan alasan dan pelaku Admin; konsumsi stok menautkan order dan
+  reservasi yang bersangkutan. Saldo pembuka bertanggal adalah batas awal
+  rekonsiliasi bagi varian yang sudah ada saat migrasi.
+- Admin melihat stok fisik, reservasi aktif, dan jumlah tersedia sebagai tiga
+  angka terpisah, serta riwayat berpaginasi per varian. Form menolak saldo
+  lama, penyesuaian tanpa perubahan, dan hasil yang lebih kecil dari reservasi
+  aktif. Perubahan stok dan riwayatnya harus atomik.
+- Pembuatan atau pelepasan reservasi hanya mengubah jumlah tersedia; saldo
+  fisik berubah saat reservasi dikonsumsi. Refund tidak otomatis menambah stok;
+  pengembalian fisik, jika terjadi, dicatat sebagai penyesuaian Admin dengan
+  alasan. Ini tetap riwayat stok sederhana, bukan warehouse ledger lengkap.
+
 ### Customer Pre-Review Simulation dan IA layanan
 
 - `/services/[slug]` hanya untuk empat layanan publik yang disetujui. Input
@@ -795,7 +816,8 @@ Minimum email:
 - Basic 3D model preview.
 - Simple product category filtering.
 - Promo/announcement CRUD.
-- Basic inventory adjustment history.
+- Basic inventory adjustment history — diimplementasikan lokal sebagai
+  riwayat seluruh perubahan saldo stok fisik sejak saldo pembuka.
 - Courier booking dari dashboard.
 - Richer order email templates.
 - Customer order-status search dengan verification.

@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@/generated/prisma/client";
 import { z } from "zod";
+import { recordStockMovement, setStockWithinTransaction } from "@/modules/inventory/movement";
 
 const slug = z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 const text = z.string().trim().min(1);
@@ -23,7 +24,7 @@ const seedVariantSchema = z.object({
   name: text,
   priceRp: money,
   sku: text,
-  stockOnHand: z.int().nonnegative(),
+  stockOnHand: z.int().nonnegative().max(2_147_483_647),
   weightGrams: decimal,
   widthCm: decimal.optional(),
 });
@@ -137,35 +138,51 @@ export async function seedCatalog(
       });
 
       for (const variant of product.variants) {
-        const existing = await tx.productVariant.findUnique({ where: { sku: variant.sku }, select: { productId: true } });
+        const existing = await tx.productVariant.findUnique({ where: { sku: variant.sku }, select: { id: true, productId: true } });
         if (existing !== null && existing.productId !== persisted.id) {
           throw new Error(`SKU ${variant.sku} sudah terikat ke produk lain.`);
         }
-        await tx.productVariant.upsert({
-          where: { sku: variant.sku },
-          create: {
-            heightCm: variant.heightCm,
-            isActive: variant.isActive,
-            lengthCm: variant.lengthCm,
-            name: variant.name,
-            priceRp: variant.priceRp,
-            productId: persisted.id,
-            sku: variant.sku,
+        if (existing === null) {
+          const created = await tx.productVariant.create({
+            data: {
+              heightCm: variant.heightCm,
+              isActive: variant.isActive,
+              lengthCm: variant.lengthCm,
+              name: variant.name,
+              priceRp: variant.priceRp,
+              productId: persisted.id,
+              sku: variant.sku,
+              stockOnHand: variant.stockOnHand,
+              weightGrams: variant.weightGrams,
+              widthCm: variant.widthCm,
+            },
+            select: { id: true },
+          });
+          await recordStockMovement(tx, {
+            balanceBefore: 0,
+            balanceAfter: variant.stockOnHand,
+            kind: "OPENING_BALANCE",
+            variantId: created.id,
+          });
+        } else {
+          await tx.productVariant.update({
+            where: { id: existing.id },
+            data: {
+              heightCm: variant.heightCm,
+              isActive: variant.isActive,
+              lengthCm: variant.lengthCm,
+              name: variant.name,
+              priceRp: variant.priceRp,
+              weightGrams: variant.weightGrams,
+              widthCm: variant.widthCm,
+            },
+          });
+          await setStockWithinTransaction(tx, {
+            kind: "CATALOG_IMPORT",
             stockOnHand: variant.stockOnHand,
-            weightGrams: variant.weightGrams,
-            widthCm: variant.widthCm,
-          },
-          update: {
-            heightCm: variant.heightCm,
-            isActive: variant.isActive,
-            lengthCm: variant.lengthCm,
-            name: variant.name,
-            priceRp: variant.priceRp,
-            stockOnHand: variant.stockOnHand,
-            weightGrams: variant.weightGrams,
-            widthCm: variant.widthCm,
-          },
-        });
+            variantId: existing.id,
+          });
+        }
         variantCount += 1;
       }
 

@@ -388,8 +388,11 @@ export const adjustStockAction: AdminAction = async (_previous, formData) => {
   try {
     await new CatalogService().setStock(variantId, {
       stockOnHand: numberValue(formData, "stockOnHand"),
+      expectedStockOnHand: numberValue(formData, "expectedStockOnHand"),
+      reason: text(formData, "reason"),
     });
     revalidatePath(`/admin/products/${productId}`);
+    revalidatePath(`/admin/products/${productId}/stock/${variantId}`);
     revalidatePath("/admin/products");
     revalidatePath("/shop");
     return successState("Stok berhasil disesuaikan.");

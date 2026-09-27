@@ -45,9 +45,10 @@ function auditRecorder() {
 }
 
 describe("Phase 2 catalog and inventory services", () => {
-  it("keeps catalog mutations behind admin authorization and audits stock changes", async () => {
+  it("keeps stock changes behind admin authorization and passes audit context into the transaction", async () => {
     const audit = auditRecorder();
     let calls = 0;
+    let stockInput: unknown;
     const repository: CatalogRepositoryPort = {
       async createProduct() {
         return { id: "product-1" };
@@ -67,8 +68,9 @@ describe("Phase 2 catalog and inventory services", () => {
       async updateProduct() {
         return { id: "product-1" };
       },
-      async updateStock() {
+      async updateStock(_variantId, input) {
         calls += 1;
+        stockInput = input;
         return { id: "variant-1", previousStockOnHand: 2, stockOnHand: 5 };
       },
       async updateVariant() {
@@ -82,18 +84,42 @@ describe("Phase 2 catalog and inventory services", () => {
     });
 
     await expect(
-      service.setStock("variant-1", { stockOnHand: 5 }),
+      service.setStock("variant-1", { stockOnHand: 5, expectedStockOnHand: 2, reason: "Stok diterima dari pemasok" }),
     ).resolves.toEqual({
       id: "variant-1",
       previousStockOnHand: 2,
       stockOnHand: 5,
     });
     expect(calls).toBe(1);
-    expect(audit.events.at(-1)).toMatchObject({
-      action: "catalog.stock.adjusted",
-      actorType: "ADMIN",
-      entityId: "variant-1",
+    expect(stockInput).toEqual({
+      adminId: admin.profile.id,
+      expectedStockOnHand: 2,
+      reason: "Stok diterima dari pemasok",
+      stockOnHand: 5,
     });
+    expect(audit.events).toEqual([]);
+    for (const stockOnHand of [-1, 2_147_483_648, Number.NaN, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1]) {
+      await expect(service.setStock("variant-1", {
+        expectedStockOnHand: 2,
+        reason: "Koreksi",
+        stockOnHand,
+      })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    }
+    await expect(service.setStock("variant-1", {
+      expectedStockOnHand: 2,
+      reason: "   ",
+      stockOnHand: 6,
+    })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    const denied = new CatalogService({
+      authorizeAdmin: async () => ({ ...admin, profile: { ...admin.profile, isActive: false } }),
+      repository,
+    });
+    await expect(denied.setStock("variant-1", {
+      expectedStockOnHand: 2,
+      reason: "Koreksi",
+      stockOnHand: 6,
+    })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(calls).toBe(1);
   });
 
   it("records idempotent reservation consumption without decrementing twice", async () => {
