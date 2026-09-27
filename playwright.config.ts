@@ -5,6 +5,7 @@ const ciTestDatabaseUrl =
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  globalSetup: "./tests/e2e/global-setup.ts",
   testIgnore: /local-demo\.spec\.ts/,
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),

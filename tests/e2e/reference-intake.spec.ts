@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
+import { loginCustomer } from "./helpers/customer";
 
 test("DEVELOP service selection stays editable and ignores unknown slugs", async ({ page }) => {
+  await loginCustomer(page);
   await page.goto("/services");
   const serviceLink = page.locator('a[href="/project-brief?service=research-development"]').first();
   await expect(serviceLink).toBeVisible();
@@ -15,6 +17,7 @@ test("DEVELOP service selection stays editable and ignores unknown slugs", async
 });
 
 test("MAKE reference intake works without private storage when database is available", async ({ page }) => {
+  await loginCustomer(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/custom-print/request?mode=reference");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Mulai dari referensi, lanjutkan sampai model siap.");
@@ -35,24 +38,25 @@ test("MAKE reference intake works without private storage when database is avail
   await page.getByLabel("Perkiraan jumlah").fill("2");
   await page.getByLabel("Material awal").selectOption("NEEDS_RECOMMENDATION");
   await page.locator('input[name="customerName"]').fill("Pelanggan Referensi");
-  await page.locator('input[name="customerEmail"]').fill("reference@example.test");
+  await expect(page.locator('input[name="customerEmail"]')).toHaveValue("demo-customer@example.test");
   await page.getByLabel("Nomor WhatsApp").fill("+628000000000");
   await page.locator('input[name="rightsAck"]').check();
   await page.getByRole("button", { name: "Ajukan referensi untuk review" }).click();
   await expect(page.getByText("Referensi masuk ke Niuva")).toBeVisible();
-  const statusLink = page.getByRole("link", { name: "Lihat status privat dan tambah model nanti" });
+  const statusLink = page.getByRole("link", { name: "Lihat status dan tambah model di akun" });
   const href = await statusLink.getAttribute("href");
-  expect(href).toMatch(/^\/custom-print\/requests\/.+/);
+  expect(href).toMatch(/^\/account\/make\/[0-9a-f-]{36}$/);
   const response = await page.goto(href!);
   expect(response?.status()).toBe(200);
   const cacheControl = response?.headers()["cache-control"] ?? "";
-  // Next's development server forces no-cache; production uses the private no-store route rule.
+  // Next's development server forces no-cache; production uses the private no-store account rule.
   expect(cacheControl).toMatch(/(?:no-store|no-cache)/);
   expect(response?.headers()["referrer-policy"]).toBe("no-referrer");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
   await expect(page.getByText("Belum ada", { exact: true })).toBeVisible();
+  await expect(page.getByText("Model terverifikasi")).toBeVisible();
   await expect(page.getByText("Belum tersedia", { exact: true }).first()).toBeVisible();
-  await expect(page.getByText("reference@example.test")).toHaveCount(0);
+  await expect(page.getByText("demo-customer@example.test")).toHaveCount(0);
 
   for (const width of [320, 390, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 });

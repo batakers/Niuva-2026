@@ -3,6 +3,7 @@ import { assertPublicMutationRequest } from "@/lib/http/public-mutation";
 import { apiError, apiSuccess, createCorrelationId } from "@/lib/http/response";
 import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
 import { CustomPrintAccessService } from "@/modules/custom-print/access-service";
+import { getCurrentCustomer } from "@/lib/auth/customer";
 
 export const runtime = "nodejs";
 
@@ -15,7 +16,8 @@ export async function POST(request: Request, context: RouteContext<"/api/custom-
     const { token } = await context.params;
     const payload = await readJsonBody(request, { maxBytes: 4 * 1_024 });
     const data = typeof payload === "object" && payload !== null ? payload : {};
-    const result = await new CustomPrintAccessService().appendModel({ ...data, token });
+    const customer = await getCurrentCustomer();
+    const result = await new CustomPrintAccessService().appendModel({ ...data, token }, customer?.id);
     const response = apiSuccess(result, { correlationId, status: 201 });
     response.headers.set("Cache-Control", "private, no-store");
     return response;

@@ -8,7 +8,12 @@ export const CUSTOMER_OAUTH_STATE_COOKIE = "niuva_customer_oauth_state";
 export const CUSTOMER_OAUTH_VERIFIER_COOKIE = "niuva_customer_oauth_verifier";
 export const CUSTOMER_OAUTH_RETURN_TO_COOKIE = "niuva_customer_oauth_return_to";
 export const CUSTOMER_OAUTH_STATE_MAX_AGE_SECONDS = 10 * 60;
-const CUSTOMER_RETURN_TO_PATHS = new Set(["/account", "/checkout"]);
+const CUSTOMER_RETURN_TO_PATHS = new Set([
+  "/account",
+  "/checkout",
+  "/project-brief",
+  "/custom-print/request",
+]);
 
 const googleIdentitySchema = z.object({
   sub: z.string().trim().min(1),

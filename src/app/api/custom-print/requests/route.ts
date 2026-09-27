@@ -1,4 +1,5 @@
 import { readJsonBody } from "@/lib/http/body";
+import { requireCustomer } from "@/lib/auth/customer";
 import { assertPublicMutationRequest } from "@/lib/http/public-mutation";
 import {
   apiError,
@@ -23,16 +24,17 @@ export async function POST(request: Request) {
 
   try {
     assertPublicMutationRequest(request, customPrintRequestRateLimiter);
+    const customer = await requireCustomer();
     const payload = await readJsonBody(request, {
       maxBytes: CUSTOM_PRINT_REQUEST_MAX_BODY_BYTES,
     });
     const result = await new CustomPrintService({
       notificationFactory: createCustomPrintAdminNotificationFromEnvironment,
-    }).submit(payload);
+    }).submit(payload, customer);
 
     return apiSuccess(
       {
-        accessToken: result.accessToken.token,
+        requestId: result.request.id,
         referenceNumber: result.request.referenceNumber,
       },
       { correlationId, status: 201 },

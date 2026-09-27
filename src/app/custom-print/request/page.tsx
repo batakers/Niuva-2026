@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import { redirect } from "next/navigation";
+import { requireCustomer } from "@/lib/auth/customer";
+import { isAppError } from "@/modules/shared/errors";
 
 import { typographySystemTokens as type } from "@/design/typography";
 import { PublicShell } from "@/components/niuva/public-shell";
+import { StatusNotice } from "@/components/niuva/status-notice";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Icon } from "@/components/ui/Icon";
 import { getServerCapabilities } from "@/lib/env/server";
@@ -40,6 +44,18 @@ export default async function CustomPrintRequestPage({
   const initialProductInterest = productParam !== undefined && getCustomFlowProductOption(productParam) !== null
     ? productParam
     : undefined;
+  const returnParams = new URLSearchParams();
+  if (referenceMode) returnParams.set("mode", "reference");
+  if (initialProductInterest) returnParams.set("product", initialProductInterest);
+  const returnTo = `/custom-print/request${returnParams.size > 0 ? `?${returnParams.toString()}` : ""}`;
+  let customer;
+  try { customer = await requireCustomer(); }
+  catch (error) {
+    if (isAppError(error) && error.code === "UNAUTHORIZED") redirect(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+    if (isAppError(error) && error.code === "CUSTOMER_AUTH_UNAVAILABLE") return <PublicShell scope="custom-request" functionalStatus="capability-gated"><main id="main-content" className="mx-auto max-w-public px-5 py-16 sm:px-8"><StatusNotice title="Login Customer belum tersedia" description="Request MAKE memerlukan login Google Customer sebelum dapat dikirim pada runtime ini." tone="warning" /></main></PublicShell>;
+    throw error;
+  }
+
   let liveEnabled = false;
   let databaseEnabled = false;
   try {
@@ -132,11 +148,13 @@ export default async function CustomPrintRequestPage({
 
             <div className="lg:col-span-8">
               {referenceMode ? <ReferenceRequestForm
+                  customerEmail={customer.email}
                   databaseEnabled={databaseEnabled}
                   initialProductInterest={initialProductInterest}
                   productOptions={CUSTOM_FLOW_PRODUCT_OPTIONS}
                   uploadsEnabled={liveEnabled}
                 /> : <RequestForm
+                  customerEmail={customer.email}
                   initialProductInterest={initialProductInterest}
                   liveEnabled={liveEnabled}
                   previewEnabled={previewEnabled}

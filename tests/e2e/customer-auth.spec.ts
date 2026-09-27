@@ -1,10 +1,16 @@
 import { expect, test } from "@playwright/test";
 
 test("account redirects an unauthenticated Customer to Google login", async ({ page }) => {
+  const prematureOAuthStarts: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/api/auth/google/start")) prematureOAuthStarts.push(request.url());
+  });
   await page.goto("/account");
 
   await expect(page).toHaveURL(/\/login\?returnTo=(?:%2F|\/)account$/);
   await expect(page.getByRole("link", { name: "Lanjutkan dengan Google" })).toBeVisible();
+  await page.waitForTimeout(250);
+  expect(prematureOAuthStarts).toEqual([]);
 });
 
 test("register uses the Google boundary, opens Account, and logout revokes access", async ({ page }) => {
@@ -12,7 +18,7 @@ test("register uses the Google boundary, opens Account, and logout revokes acces
   await page.getByRole("link", { name: "Lanjutkan dengan Google" }).click();
 
   await expect(page).toHaveURL(/\/account$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Profil dan order Anda." })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Pekerjaan dan order Anda." })).toBeVisible();
   await expect(page.getByText("demo-customer@example.test")).toBeVisible();
 
   await page.getByRole("button", { name: "Logout" }).click();

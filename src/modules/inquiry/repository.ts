@@ -6,6 +6,7 @@ import type { B2BInquiryInput } from "./schema";
 
 type InquiryCreateInput = B2BInquiryInput &
   Readonly<{
+    customerId?: string;
     id?: string;
     publicTokenHash: string;
     referenceNumber: string;
@@ -47,6 +48,7 @@ export class B2BInquiryRepository {
           budgetRange: input.budgetRange,
           company: input.company,
           confidentialityAck: input.confidentialityAck,
+          customerId: input.customerId,
           currentStage: input.currentStage,
           description: input.description,
           email: input.email,
@@ -66,7 +68,7 @@ export class B2BInquiryRepository {
       });
 
       if (input.attachmentFileIds !== undefined) {
-        await this.attachFiles(transaction, inquiry.id, input.attachmentFileIds);
+        await this.attachFiles(transaction, inquiry.id, input.attachmentFileIds, input.customerId);
       }
 
       return inquiry;
@@ -97,12 +99,14 @@ export class B2BInquiryRepository {
     transaction: Prisma.TransactionClient,
     inquiryId: string,
     fileIds: readonly string[],
+    customerId?: string,
   ): Promise<void> {
     const availableFiles = await transaction.storedFile.findMany({
       where: {
         bucketScope: "PRIVATE_CUSTOMER",
         id: { in: [...new Set(fileIds)] },
         uploadStatus: "UPLOADED",
+        uploadedByCustomerId: customerId ?? null,
       },
       select: { id: true },
     });
@@ -124,6 +128,7 @@ export class B2BInquiryRepository {
       where: {
         id: { in: availableFiles.map((file) => file.id) },
         uploadStatus: "UPLOADED",
+        uploadedByCustomerId: customerId ?? null,
       },
       data: {
         uploadStatus: "VERIFIED",

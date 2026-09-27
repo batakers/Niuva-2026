@@ -18,6 +18,54 @@
 > environment non-production yang disetujui; secret tidak masuk repository atau
 > chat.
 
+> **Addendum irisan kedua — 27 September 2026:** Customer Google login wajib
+> sebelum mengirim Project Brief dan MAKE. Akun menampilkan inquiry, custom
+> request, proposal/quote, serta order; keputusan quote dilakukan oleh pemilik
+> akun. Ketentuan lengkap ada pada bagian "Customer work, estimasi, dan
+> proposal B2B" di bawah. Addendum ini menggantikan batas `/account` yang
+> sebelumnya hanya profil dan order.
+
+### Customer work, estimasi, dan proposal B2B — irisan kedua
+
+- Inquiry dan MAKE baru langsung dimiliki satu Customer dari sesi Google.
+  Kontak operator tetap diisi form, sedangkan email yang disimpan berasal dari
+  sesi terverifikasi. Record lama hanya dapat diklaim sekali dengan token privat
+  yang pernah diterbitkan; kecocokan email saja tidak cukup. Klaim mencabut
+  token lama. Akses bersama antaranggota perusahaan belum termasuk.
+- `/account` menampilkan daftar/detail status Project Brief, MAKE, quote, dan
+  order. Pemilik request referensi dapat menambahkan model pada request yang
+  sama. Tanpa R2, request referensi berbasis deskripsi/link tetap dapat dikirim
+  jika database dan login tersedia.
+- MAKE menampilkan **Perlu review** sampai model terverifikasi, slicer operator
+  tercatat, Pricing v1 aktif, dan semua biaya pekerjaan dinilai. Operator
+  mengisi pos tambahan bernama atau menyatakan secara eksplisit bahwa tidak
+  ada pos tambahan. Dasar Pricing v1 ditambah pos itu secara Decimal; kisaran
+  produksi non-mengikat adalah **100%–130%** dengan pembulatan total akhir.
+  Faktor ini kebijakan awal Owner dan belum terbukti terkalibrasi oleh riwayat
+  pekerjaan. Setiap publikasi menyimpan versi dan snapshot sumber input,
+  pricing rule, pos biaya, serta operator. Revisi memerlukan versi baru.
+- Quote custom final tetap tindakan operator, memakai pos yang dibekukan, dan
+  harus berada dalam kisaran estimasi terbaru. Customer pemilik dapat menerima
+  atau menolak quote terbaru dari akun. Order payable hanya dibuat oleh
+  penerimaan quote yang valid; order langsung dimiliki Customer tersebut.
+  Pada irisan ini total quote mengikuti total biaya yang telah dinilai operator;
+  perubahan nominal memerlukan estimasi baru dengan pos biaya yang jelas.
+  Token quote historis tetap berlaku hanya untuk record yang belum diklaim.
+  Klaim request lama juga menautkan order custom lama yang masih belum memiliki
+  pemilik, selama tidak ada order dari request tersebut milik akun lain.
+- Ongkir kasar memakai berat, dimensi, dan nilai paket perkiraan dari operator
+  serta tujuan yang diisi Customer saat meminta rate. Opsi kurir dari Biteship
+  testing ditampilkan sebagai rentang terpisah bersama asumsi paket dan waktu
+  pengecekan. Jika data/provider testing tidak tersedia, tampilkan **Ongkir
+  menyusul**. Angka kasar tidak masuk estimasi produksi, quote, order, atau
+  pembayaran; ongkir yang ditagih tetap dari paket final. Check Rates testing
+  memiliki biaya per panggilan, sehingga cache dan pembatasan frekuensi wajib.
+- Proposal B2B adalah scope, asumsi, pos IDR, total, dan masa berlaku yang
+  diterbitkan operator sebagai versi snapshot. Pemilik inquiry menerima atau
+  menolaknya di akun; persetujuan tercatat dengan akun, versi, dan waktu untuk
+  tindak lanjut manual. Ini tidak membuat order, invoice, kontrak, atau
+  pembayaran. Status inquiry WON/LOST tetap diputuskan Admin.
+
 ### Launch Goal
 
 MVP Niuva bertujuan membuat website yang benar-benar dapat digunakan secara operasional, bukan hanya menjadi prototype visual.
@@ -723,9 +771,10 @@ Fitur ini tidak boleh menunda P0.
 
 ### Customer Account
 
-Scope baru yang sudah diimplementasikan untuk Customer Google OAuth. Profil
-read-only, riwayat order, logout, dan session opaque 30 hari termasuk scope;
-edit profil, password login, dan account recovery tetap di luar scope.
+Customer Account kini mencakup pemantauan inquiry, MAKE, quote, dan order serta
+keputusan quote sesuai addendum irisan kedua. Edit profil, password login,
+account recovery, dan kepemilikan bersama antaranggota perusahaan tetap di
+luar scope.
 
 ### Automatic Browser/Server Slicing
 

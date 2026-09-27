@@ -8,9 +8,11 @@ import { appError } from "@/modules/shared/errors";
 
 import type { CustomPrintRequestInput } from "./schema";
 import { isModelExtension, isReferencePhotoExtension } from "./file-types";
+import { isEstimateCurrent } from "./estimate";
 
 export type CreateCustomPrintRequestInput = CustomPrintRequestInput &
   Readonly<{
+    customerId?: string;
     id?: string;
     publicTokenHash: string;
     referenceNumber: string;
@@ -37,11 +39,14 @@ export type CustomPrintReviewRecord = Readonly<{
   quantity: number;
   requestId: string;
   reviewedAt: Date;
+  updatedAt: Date;
   reviewedByAdminId: string;
   verifiedWeightG: Prisma.Decimal;
 }>;
 
 export type CreateDraftQuoteInput = Readonly<{
+  additionalSubtotalRp?: Prisma.Decimal;
+  estimateId?: string;
   calculationSnapshot: Prisma.InputJsonObject;
   createdByAdminId: string;
   expiresAt?: Date;
@@ -62,7 +67,9 @@ export type CreateDraftQuoteInput = Readonly<{
 }>;
 
 export type QuoteForAcceptance = Readonly<{
+  additionalSubtotalRp?: Prisma.Decimal;
   calculationSnapshot: Prisma.JsonValue;
+  estimateId?: string | null;
   expiresAt: Date | null;
   finalTotalRp: Prisma.Decimal;
   id: string;
@@ -74,6 +81,7 @@ export type QuoteForAcceptance = Readonly<{
   quoteNumber?: string;
   quantity: number;
   request: Readonly<{
+    customerId?: string | null;
     customerEmail: string;
     customerName: string;
     customerPhone: string;
@@ -88,6 +96,7 @@ export type QuoteForAcceptance = Readonly<{
 }>;
 
 export type QuoteTokenForReissue = Readonly<{
+  request?: Readonly<{ customerId: string | null }>;
   expiresAt: Date | null;
   id: string;
   publicTokenHash: string;
@@ -115,6 +124,7 @@ export type CustomOrderPaymentPreparation = Readonly<{
 }>;
 
 export type CustomPrintRequestReviewSummary = Readonly<{
+  customerId?: string | null;
   id: string;
   quantity: number;
   status:
@@ -183,6 +193,7 @@ export class CustomPrintRequestRepository {
           bucketScope: "PRIVATE_CUSTOMER",
           id: { in: [...new Set(input.fileIds)] },
           uploadStatus: "UPLOADED",
+          uploadedByCustomerId: input.customerId ?? null,
         },
         select: { extension: true, id: true },
       });
@@ -206,6 +217,7 @@ export class CustomPrintRequestRepository {
           intakeMode: input.intakeMode,
           referenceLink: input.referenceLink,
           customerEmail: input.customerEmail,
+          customerId: input.customerId,
           customerName: input.customerName,
           customerPhone: input.customerPhone,
           materialRequested: input.materialRequested,
@@ -294,8 +306,8 @@ export class CustomPrintRequestRepository {
         },
       });
       if (request === null) throw appError("NOT_FOUND");
-      if (!["SUBMITTED", "UNDER_REVIEW"].includes(request.status)) {
-        throw appError("CONFLICT", { message: "Review hanya dapat dicatat sebelum quote siap." });
+      if (!["SUBMITTED", "UNDER_REVIEW", "QUOTE_READY", "QUOTE_SENT"].includes(request.status)) {
+        throw appError("CONFLICT", { message: "Status request tidak lagi menerima review slicer." });
       }
       if (request.intakeMode === "REFERENCE_ONLY" &&
         !request.files.some(({ file }) => file.uploadStatus === "VERIFIED" && isModelExtension(file.extension))) {
@@ -333,6 +345,7 @@ export class CustomPrintRequestRepository {
       where: { id: requestId },
       select: {
         id: true,
+        customerId: true,
         intakeMode: true,
         publicTokenHash: true,
         referenceNumber: true,
@@ -345,7 +358,9 @@ export class CustomPrintRequestRepository {
   }
 
   async attachVerifiedModel(input: Readonly<{
-    currentTokenHash: string;
+    currentTokenHash?: string;
+    customerId?: string;
+    uploadingCustomerId?: string;
     fileId: string;
     requestId: string;
     unitConfirmation?: string;
@@ -357,13 +372,17 @@ export class CustomPrintRequestRepository {
       const request = await transaction.customPrintRequest.findUnique({
         where: { id: input.requestId },
         select: {
+          customerId: true,
           intakeMode: true,
           publicTokenHash: true,
           review: { select: { id: true } },
           status: true,
         },
       });
-      if (request === null || request.publicTokenHash !== input.currentTokenHash) {
+      if (request === null ||
+        (input.customerId === undefined && input.currentTokenHash === undefined) ||
+        (input.customerId !== undefined && request.customerId !== input.customerId) ||
+        (input.currentTokenHash !== undefined && request.publicTokenHash !== input.currentTokenHash)) {
         throw appError("UNAUTHORIZED");
       }
       if (request.intakeMode !== "REFERENCE_ONLY" ||
@@ -372,13 +391,17 @@ export class CustomPrintRequestRepository {
       }
       const file = await transaction.storedFile.findUnique({
         where: { id: input.fileId },
-        select: { bucketScope: true, extension: true, uploadStatus: true },
+        select: { bucketScope: true, extension: true, uploadStatus: true, uploadedByCustomerId: true },
       });
       if (file === null || file.bucketScope !== "PRIVATE_CUSTOMER" ||
         file.uploadStatus !== "UPLOADED" || !isModelExtension(file.extension)) {
         throw appError("CONFLICT", { message: "File model belum siap dihubungkan ke request." });
       }
-
+      if (input.customerId !== undefined
+        ? file.uploadedByCustomerId !== input.customerId
+        : file.uploadedByCustomerId !== null && file.uploadedByCustomerId !== input.uploadingCustomerId) {
+        throw appError("UNAUTHORIZED");
+      }
       if (file.extension === "stl" && input.unitConfirmation === undefined) {
         throw appError("VALIDATION_ERROR", { details: { unitConfirmation: "Konfirmasi unit diperlukan untuk STL." } });
       }
@@ -461,6 +484,25 @@ export class CustomPrintQuoteRepository {
         throw appError("PRICING_RULE_NOT_APPROVED");
       }
 
+      const latestEstimate = await transaction.customPrintEstimate.findFirst({
+        where: { requestId: input.requestId }, orderBy: { version: "desc" },
+        select: { id: true, lowerRp: true, upperRp: true, snapshot: true },
+      });
+      const request = await transaction.customPrintRequest.findUnique({
+        where: { id: input.requestId },
+        select: { customerId: true, review: { select: { updatedAt: true } } },
+      });
+      if (latestEstimate !== null && !isEstimateCurrent(latestEstimate.snapshot, request?.review?.updatedAt)) {
+        throw appError("QUOTE_NOT_READY", { message: "Review berubah; terbitkan estimasi versi baru." });
+      }
+      if (latestEstimate !== null && (input.estimateId !== latestEstimate.id ||
+        input.finalTotalRp.lt(latestEstimate.lowerRp) || input.finalTotalRp.gt(latestEstimate.upperRp))) {
+        throw appError("QUOTE_NOT_READY", { message: "Draft quote harus memakai estimasi terbaru dan kisarannya." });
+      }
+      if (latestEstimate === null) {
+        if (request?.customerId != null) throw appError("QUOTE_NOT_READY", { message: "Terbitkan estimasi sebelum membuat quote akun customer." });
+      }
+
       const existingDraft = await transaction.customPrintQuote.findFirst({
         where: { requestId: input.requestId, status: "DRAFT" },
         select: { id: true },
@@ -473,9 +515,11 @@ export class CustomPrintQuoteRepository {
 
       const quote = await transaction.customPrintQuote.create({
         data: {
+          additionalSubtotalRp: input.additionalSubtotalRp,
           calculationSnapshot: input.calculationSnapshot,
           createdByAdminId: input.createdByAdminId,
           expiresAt: input.expiresAt,
+          estimateId: input.estimateId,
           finalTotalRp: input.finalTotalRp,
           id: input.id,
           machineSubtotalRp: input.machineSubtotalRp,
@@ -533,12 +577,20 @@ export class CustomPrintQuoteRepository {
   ): Promise<CustomPrintRequestReviewSummary | null> {
     return this.prisma.customPrintRequest.findUnique({
       where: { id: requestId },
-      select: { id: true, quantity: true, status: true },
+      select: { customerId: true, id: true, quantity: true, status: true },
     });
   }
 
   async findReview(requestId: string): Promise<CustomPrintReviewRecord | null> {
     return this.prisma.customPrintReview.findUnique({ where: { requestId } });
+  }
+
+  async findLatestEstimate(requestId: string) {
+    return this.prisma.customPrintEstimate.findFirst({
+      where: { requestId }, orderBy: { version: "desc" },
+      select: { id: true, version: true, pricingRuleVersionId: true, snapshot: true,
+        lowerRp: true, upperRp: true, additionalSubtotalRp: true },
+    });
   }
 
   async sendIfCurrent(
@@ -548,9 +600,15 @@ export class CustomPrintQuoteRepository {
     publicTokenHash: string,
   ) {
     return this.prisma.$transaction(async (transaction) => {
+      const quoteHint = await transaction.customPrintQuote.findUnique({
+        where: { id: quoteId }, select: { requestId: true },
+      });
+      if (quoteHint === null) throw appError("NOT_FOUND");
+      await transaction.$queryRaw(Prisma.sql`SELECT "id" FROM "custom_print_requests" WHERE "id" = ${quoteHint.requestId}::uuid FOR UPDATE`);
       const quote = await transaction.customPrintQuote.findUnique({
         where: { id: quoteId },
-        select: { requestId: true, status: true },
+        select: { estimateId: true, finalTotalRp: true, requestId: true, status: true,
+          request: { select: { customerId: true, review: { select: { updatedAt: true } } } } },
       });
 
       if (quote === null) {
@@ -559,6 +617,20 @@ export class CustomPrintQuoteRepository {
 
       if (quote.status !== "DRAFT") {
         throw appError("QUOTE_NOT_READY");
+      }
+      const latestEstimate = await transaction.customPrintEstimate.findFirst({
+        where: { requestId: quote.requestId }, orderBy: { version: "desc" },
+        select: { id: true, lowerRp: true, upperRp: true, snapshot: true },
+      });
+      if (latestEstimate !== null && !isEstimateCurrent(latestEstimate.snapshot, quote.request.review?.updatedAt)) {
+        throw appError("QUOTE_NOT_READY", { message: "Review berubah; terbitkan estimasi versi baru." });
+      }
+      if (latestEstimate !== null && (quote.estimateId !== latestEstimate.id ||
+        quote.finalTotalRp.lt(latestEstimate.lowerRp) || quote.finalTotalRp.gt(latestEstimate.upperRp))) {
+        throw appError("QUOTE_NOT_READY", { message: "Quote harus memakai estimasi terbaru dan berada di dalam kisarannya." });
+      }
+      if (latestEstimate === null && quote.request.customerId !== null) {
+        throw appError("QUOTE_NOT_READY", { message: "Terbitkan estimasi sebelum quote akun customer." });
       }
 
       const updatedQuote = await transaction.customPrintQuote.updateMany({
@@ -607,7 +679,9 @@ export class CustomPrintQuoteRepository {
     const quote = await this.prisma.customPrintQuote.findUnique({
       where: { id: quoteId },
       select: {
+        additionalSubtotalRp: true,
         calculationSnapshot: true,
+        estimateId: true,
         expiresAt: true,
         finalTotalRp: true,
         id: true,
@@ -620,6 +694,7 @@ export class CustomPrintQuoteRepository {
         quantity: true,
         request: {
           select: {
+            customerId: true,
             customerEmail: true,
             customerName: true,
             customerPhone: true,
@@ -642,9 +717,11 @@ export class CustomPrintQuoteRepository {
     currentStatus: "ACCEPTED" | "DECLINED" | "DRAFT" | "EXPIRED" | "SENT",
     nextStatus: "ACCEPTED" | "DECLINED" | "DRAFT" | "EXPIRED" | "SENT",
     timestamp: Date,
+    authorization?: Readonly<{ customerId?: string }>,
   ) {
     const updated = await this.prisma.customPrintQuote.updateMany({
-      where: { id: quoteId, status: currentStatus },
+      where: { id: quoteId, status: currentStatus,
+        ...(authorization === undefined ? {} : { request: { customerId: authorization.customerId ?? null } }) },
       data: {
         acceptedAt: nextStatus === "ACCEPTED" ? timestamp : undefined,
         sentAt: nextStatus === "SENT" ? timestamp : undefined,
@@ -663,6 +740,7 @@ export class CustomPrintQuoteRepository {
   }
 
   async acceptAndCreatePayableOrder(input: Readonly<{
+    customerId?: string;
     orderId: string;
     orderNumber: string;
     orderPublicTokenHash: string;
@@ -671,17 +749,23 @@ export class CustomPrintQuoteRepository {
     version: number;
   }>): Promise<AcceptedCustomOrder> {
     return this.prisma.$transaction(async (transaction) => {
+      const quoteHint = await transaction.customPrintQuote.findUnique({ where: { id: input.quoteId }, select: { requestId: true } });
+      if (quoteHint === null) throw appError("NOT_FOUND");
+      await transaction.$queryRaw(Prisma.sql`SELECT "id" FROM "custom_print_requests" WHERE "id" = ${quoteHint.requestId}::uuid FOR UPDATE`);
       const quote = await transaction.customPrintQuote.findUnique({
         where: { id: input.quoteId },
         select: {
+          estimateId: true,
           finalTotalRp: true,
           id: true,
           request: {
             select: {
+              customerId: true,
               customerEmail: true,
               customerName: true,
               customerPhone: true,
               referenceNumber: true,
+              review: { select: { updatedAt: true } },
             },
           },
           requestId: true,
@@ -694,6 +778,9 @@ export class CustomPrintQuoteRepository {
 
       if (quote === null) {
         throw appError("NOT_FOUND");
+      }
+      if (input.customerId === undefined ? quote.request.customerId !== null : quote.request.customerId !== input.customerId) {
+        throw appError("UNAUTHORIZED");
       }
 
       if (quote.status === "ACCEPTED") {
@@ -731,6 +818,17 @@ export class CustomPrintQuoteRepository {
           message: "Quote ini sudah disupersede oleh versi yang lebih baru.",
         });
       }
+      const latestEstimate = await transaction.customPrintEstimate.findFirst({
+        where: { requestId: quote.requestId }, orderBy: { version: "desc" },
+        select: { id: true, lowerRp: true, upperRp: true, snapshot: true },
+      });
+      if (latestEstimate !== null && !isEstimateCurrent(latestEstimate.snapshot, quote.request.review?.updatedAt)) {
+        throw appError("QUOTE_NOT_READY", { message: "Review berubah; terbitkan estimasi versi baru." });
+      }
+      if (latestEstimate !== null && (quote.estimateId !== latestEstimate.id ||
+        quote.finalTotalRp.lt(latestEstimate.lowerRp) || quote.finalTotalRp.gt(latestEstimate.upperRp))) {
+        throw appError("QUOTE_NOT_READY", { message: "Estimasi telah direvisi; terbitkan quote baru." });
+      }
 
       const updated = await transaction.customPrintQuote.updateMany({
         where: { id: input.quoteId, status: "SENT" },
@@ -756,6 +854,7 @@ export class CustomPrintQuoteRepository {
 
       await transaction.order.create({
         data: {
+          customerId: quote.request.customerId,
           customerEmail: quote.request.customerEmail,
           customerName: quote.request.customerName,
           customerPhone: quote.request.customerPhone,
@@ -988,6 +1087,7 @@ export class CustomPrintQuoteRepository {
         id: true,
         publicTokenHash: true,
         quoteNumber: true,
+        request: { select: { customerId: true } },
         status: true,
       },
     });

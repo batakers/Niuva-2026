@@ -14,6 +14,7 @@ enum AdminRole {
 
 enum AuditActorType {
   ADMIN
+  CUSTOMER
   SYSTEM
   WEBHOOK
 }
@@ -132,6 +133,13 @@ enum CustomPrintQuoteStatus {
   EXPIRED
 }
 
+enum B2BQuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  DECLINED
+}
+
 enum IdempotencyStatus {
   IN_PROGRESS
   COMPLETED
@@ -147,6 +155,8 @@ model AdminProfile {
   createdAt            DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt            DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
   createdQuotes        CustomPrintQuote[]   @relation("CustomPrintQuoteCreatedBy")
+  createdB2BQuotes     B2BQuote[]           @relation("B2BQuoteCreatedBy")
+  publishedEstimates   CustomPrintEstimate[] @relation("CustomPrintEstimatePublishedBy")
   customPrintReviews   CustomPrintReview[]  @relation("CustomPrintReviewAdmin")
   approvedPricingRules PricingRuleVersion[] @relation("PricingRuleApprovedBy")
 
@@ -281,6 +291,10 @@ model Customer {
   updatedAt       DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
   orders          Order[]
   sessions        CustomerSession[]
+  inquiries       B2BInquiry[]
+  customRequests  CustomPrintRequest[]
+  uploadedFiles    StoredFile[] @relation("CustomerUploadedFiles")
+  decidedB2BQuotes B2BQuote[] @relation("B2BQuoteDecidedBy")
 
   @@map("customers")
 }
@@ -487,11 +501,15 @@ model B2BInquiry {
   confidentialityAck Boolean          @map("confidentiality_ack")
   status             InquiryStatus    @default(NEW)
   publicTokenHash    String           @unique @map("public_token_hash")
+  customerId         String?          @map("customer_id") @db.Uuid
   createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt          DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
   files              B2BInquiryFile[]
+  customer           Customer?        @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  quotes             B2BQuote[]
 
   @@index([status, createdAt])
+  @@index([customerId, createdAt])
   @@map("b2b_inquiries")
 }
 
@@ -505,6 +523,7 @@ model StoredFile {
   sizeBytes               BigInt                    @map("size_bytes")
   sha256                  String?
   uploadTokenHash         String?                   @unique @map("upload_token_hash")
+  uploadedByCustomerId    String?                   @map("uploaded_by_customer_id") @db.Uuid
   uploadExpiresAt         DateTime?                 @map("upload_expires_at") @db.Timestamptz(6)
   uploadedAt              DateTime?                 @map("uploaded_at") @db.Timestamptz(6)
   uploadStatus            StoredFileStatus          @default(PENDING) @map("upload_status")
@@ -513,9 +532,11 @@ model StoredFile {
   deletedAt               DateTime?                 @map("deleted_at") @db.Timestamptz(6)
   b2bInquiryLinks         B2BInquiryFile[]
   customPrintRequestLinks CustomPrintRequestFile[]
+  uploadedByCustomer      Customer?                 @relation("CustomerUploadedFiles", fields: [uploadedByCustomerId], references: [id], onDelete: SetNull)
 
   @@index([uploadStatus, createdAt])
   @@index([uploadStatus, uploadExpiresAt])
+  @@index([uploadedByCustomerId, uploadStatus])
   @@map("stored_files")
 }
 
@@ -545,13 +566,18 @@ model CustomPrintRequest {
   unitConfirmation  String?                  @map("unit_confirmation")
   status            CustomPrintRequestStatus @default(SUBMITTED)
   publicTokenHash   String                   @unique @map("public_token_hash")
+  customerId        String?                  @map("customer_id") @db.Uuid
+  estimatedPackage  Json?                    @map("estimated_package")
   createdAt         DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt         DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(6)
   files             CustomPrintRequestFile[]
   quotes            CustomPrintQuote[]
   review            CustomPrintReview?
+  customer          Customer?                @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  estimates         CustomPrintEstimate[]
 
   @@index([status, createdAt])
+  @@index([customerId, createdAt])
   @@map("custom_print_requests")
 }
 
@@ -598,6 +624,7 @@ model PricingRuleVersion {
   updatedAt         DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
   approvedByAdmin   AdminProfile?      @relation("PricingRuleApprovedBy", fields: [approvedByAdminId], references: [id], onDelete: SetNull)
   quotes            CustomPrintQuote[]
+  estimates         CustomPrintEstimate[]
 
   @@unique([code, version])
   @@index([status, createdAt])
@@ -616,9 +643,11 @@ model CustomPrintQuote {
   quantity             Int
   materialSubtotalRp   Decimal                @map("material_subtotal_rp") @db.Decimal(18, 6)
   machineSubtotalRp    Decimal                @map("machine_subtotal_rp") @db.Decimal(18, 6)
+  additionalSubtotalRp Decimal                @default(0) @map("additional_subtotal_rp") @db.Decimal(18, 6)
   unroundedTotalRp     Decimal                @map("unrounded_total_rp") @db.Decimal(18, 6)
   finalTotalRp         Decimal                @map("final_total_rp") @db.Decimal(18, 0)
   calculationSnapshot  Json                   @map("calculation_snapshot")
+  estimateId           String?                @map("estimate_id") @db.Uuid
   status               CustomPrintQuoteStatus @default(DRAFT)
   publicTokenHash      String                 @unique @map("public_token_hash")
   expiresAt            DateTime?              @map("expires_at") @db.Timestamptz(6)
@@ -629,11 +658,58 @@ model CustomPrintQuote {
   request              CustomPrintRequest     @relation(fields: [requestId], references: [id], onDelete: Restrict)
   pricingRuleVersion   PricingRuleVersion     @relation(fields: [pricingRuleVersionId], references: [id], onDelete: Restrict)
   createdByAdmin       AdminProfile           @relation("CustomPrintQuoteCreatedBy", fields: [createdByAdminId], references: [id], onDelete: Restrict)
+  estimate             CustomPrintEstimate?   @relation(fields: [estimateId], references: [id], onDelete: Restrict)
   orderItems           OrderItem[]
 
   @@unique([requestId, version])
   @@index([requestId, status])
   @@map("custom_print_quotes")
+}
+
+model CustomPrintEstimate {
+  id                 String             @id @default(uuid()) @db.Uuid
+  requestId          String             @map("request_id") @db.Uuid
+  version            Int
+  pricingRuleVersionId String           @map("pricing_rule_version_id") @db.Uuid
+  snapshot           Json
+  baselineRp         Decimal            @map("baseline_rp") @db.Decimal(18, 6)
+  additionalSubtotalRp Decimal          @map("additional_subtotal_rp") @db.Decimal(18, 6)
+  lowerRp            Decimal            @map("lower_rp") @db.Decimal(18, 0)
+  upperRp            Decimal            @map("upper_rp") @db.Decimal(18, 0)
+  publishedByAdminId String             @map("published_by_admin_id") @db.Uuid
+  publishedAt        DateTime           @default(now()) @map("published_at") @db.Timestamptz(6)
+  request            CustomPrintRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  pricingRuleVersion PricingRuleVersion @relation(fields: [pricingRuleVersionId], references: [id], onDelete: Restrict)
+  publishedByAdmin   AdminProfile       @relation("CustomPrintEstimatePublishedBy", fields: [publishedByAdminId], references: [id], onDelete: Restrict)
+  quotes             CustomPrintQuote[]
+
+  @@unique([requestId, version])
+  @@index([requestId, publishedAt])
+  @@map("custom_print_estimates")
+}
+
+model B2BQuote {
+  id                  String         @id @default(uuid()) @db.Uuid
+  inquiryId           String         @map("inquiry_id") @db.Uuid
+  version             Int
+  status              B2BQuoteStatus @default(DRAFT)
+  scope               String
+  assumptions         String
+  lineItems           Json           @map("line_items")
+  totalRp             Decimal        @map("total_rp") @db.Decimal(18, 0)
+  validUntil          DateTime       @map("valid_until") @db.Timestamptz(6)
+  createdByAdminId    String         @map("created_by_admin_id") @db.Uuid
+  decidedByCustomerId String?        @map("decided_by_customer_id") @db.Uuid
+  createdAt           DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  sentAt              DateTime?      @map("sent_at") @db.Timestamptz(6)
+  decidedAt           DateTime?      @map("decided_at") @db.Timestamptz(6)
+  inquiry             B2BInquiry     @relation(fields: [inquiryId], references: [id], onDelete: Restrict)
+  createdByAdmin      AdminProfile   @relation("B2BQuoteCreatedBy", fields: [createdByAdminId], references: [id], onDelete: Restrict)
+  decidedByCustomer   Customer?      @relation("B2BQuoteDecidedBy", fields: [decidedByCustomerId], references: [id], onDelete: SetNull)
+
+  @@unique([inquiryId, version])
+  @@index([inquiryId, status])
+  @@map("b2b_quotes")
 }
 
 model AuditLog {

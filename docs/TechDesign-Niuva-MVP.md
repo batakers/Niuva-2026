@@ -26,6 +26,54 @@ Niuva MVP akan dibangun sebagai **modular monolith** menggunakan **Next.js 16.3 
 > Google credential serta redirect URI hanya disediakan di environment
 > non-production dan tidak boleh masuk repository atau chat.
 
+> **Addendum irisan kedua — 27 September 2026:** `POST /api/project-brief`
+> dan `POST /api/custom-print/requests` wajib Customer session. Inquiry dan
+> custom request mempunyai `customer_id` nullable untuk kompatibilitas data
+> lama; record baru mengisinya dari sesi server. Detail dan mutasi akun selalu
+> memfilter `customer_id`. Aturan teknis lanjutannya ada di bagian berikut.
+
+## Kontrak teknis Customer work, estimasi, ongkir kasar, dan B2B quote
+
+1. **Klaim legacy:** token route-bound diverifikasi terhadap hash dan scope
+   tersimpan. Transaksi mengunci row inquiry/request, hanya menerima
+   `customer_id IS NULL`, mengisi pemilik, lalu mengganti hash token. Email
+   tidak dipakai untuk klaim. Order custom historis yang terhubung ditautkan
+   pada transaksi yang sama bila belum dimiliki akun lain. Pembacaan dan perubahan akun memeriksa pemilik;
+   halaman bertoken dan akun tidak di-cache serta `noindex`.
+   Intent upload baru mencatat Customer pengunggah bila ada sesi; submit brief,
+   submit MAKE, dan penambahan model dari akun hanya boleh mengikat file
+   `UPLOADED` milik Customer yang sama. Tautan token legacy tetap dapat
+   mengikat file lama tanpa pemilik upload, atau file milik Customer yang
+   sedang login; file Customer lain ditolak.
+2. **Estimasi MAKE:** `custom_print_estimates` adalah snapshot versi aditif.
+   Publikasi mengunci request, memverifikasi file model 3D/CAD berstatus
+   VERIFIED, review slicer, pricing rule ACTIVE, dan penilaian pos biaya.
+   Kalkulasi Pricing v1 memakai Decimal; pos tambahan positif dijumlahkan
+   sebelum `roundFinalTotal(total × 1.00)` dan
+   `roundFinalTotal(total × 1.30)`. Snapshot menyimpan review, policy,
+   berat/durasi/material/jumlah/sumber filamen, pos biaya, faktor, dan Admin.
+   Quote draft/send/accept memeriksa estimasi terbaru dan batasnya. Quote
+   juga memeriksa versi review yang disnapshot. Revisi review menahan kisaran
+   pada akun sampai estimasi baru terbit; publikasi versi baru mengakhiri draft
+   quote yang belum dikirim. Quote mengikuti total biaya yang telah dibekukan, sehingga perubahan nominal
+   memerlukan estimasi versi baru dengan pos biaya eksplisit. Quote lama tanpa
+   estimasi tetap kompatibel untuk record historis belum dimiliki.
+3. **Custom quote akun:** tindakan accept/decline memerlukan sesi Customer
+   dan kepemilikan request. Jalur token menolak quote milik akun. Acceptance
+   tetap memeriksa versi/expiry/snapshot dan membuat order secara transaksional
+   dengan `customer_id`; alur pembayaran yang sama tetap berlaku.
+4. **Ongkir kasar:** `estimated_package` JSON pada custom request memuat
+   berat, dimensi, dan nilai paket perkiraan operator. Tujuan dikirim Customer
+   melalui POST eksplisit, tidak ditambahkan ke quote/order. Adapter Rates
+   Biteship hanya menerima testing key, menyaring kurir allowlist, memakai
+   cache server singkat dan limiter per Customer/request; data/provider yang hilang menghasilkan
+   status menyusul. Rate final order tetap berasal dari pengukuran paket final.
+5. **B2B quote:** `b2b_quotes` menyimpan versi, scope, asumsi, line items
+   IDR, total Decimal, expiry wajib, status, Admin penerbit dan Customer
+   pemutus. Pengiriman mengunci inquiry; keputusan mengunci inquiry dan
+   memeriksa pemilik, versi terbaru, expiry, serta status SENT. Keputusan
+   tidak membuat order/payment atau otomatis mengubah WON/LOST.
+
 Satu codebase akan menangani:
 
 - public company profile;
@@ -1255,10 +1303,11 @@ GET  /orders/[token]                # server-rendered order status
 GET  /quote/[token]                 # server-rendered quote review
 ```
 
-`/api/shipping/rates` dan `/api/checkout` menolak request tanpa Customer
-session. Quote-token, custom request, dan order-token status tetap berada pada
-boundary token masing-masing; autentikasi Customer tidak diperluas ke route
-tersebut.
+`/api/shipping/rates`, `/api/checkout`, `/api/project-brief`, dan
+`/api/custom-print/requests` menolak request tanpa Customer session. Quote
+serta custom request milik akun diputuskan/dilanjutkan dari `/account` dengan
+cek kepemilikan; token quote dan request historis hanya untuk record yang
+belum diklaim. Order-token status tetap mempunyai boundary token sendiri.
 
 The mutation paths above are the current runtime surface. The
 checkout route composes order creation and the sandbox payment handoff in one

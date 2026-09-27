@@ -44,6 +44,7 @@ export type InquiryNotificationFactory = () =>
 export interface InquiryServiceRepository {
   create(
     input: B2BInquiryInput & Readonly<{
+      customerId?: string;
       id: string;
       publicTokenHash: string;
       referenceNumber: string;
@@ -99,8 +100,10 @@ export class InquiryService {
       dependencies.repository ?? new B2BInquiryRepository();
   }
 
-  async submit(input: unknown): Promise<SubmittedInquiry> {
-    const parsed = parseWithValidation(b2bInquiryInputSchema, input);
+  async submit(input: unknown, customer?: Readonly<{ id: string; email: string }>): Promise<SubmittedInquiry> {
+    const canonicalInput = customer === undefined || typeof input !== "object" || input === null || Array.isArray(input)
+      ? input : { ...input, email: customer.email };
+    const parsed = parseWithValidation(b2bInquiryInputSchema, canonicalInput);
     const repository = this.repositoryFactory();
     const requestedFileIds = parsed.attachmentFileIds ?? [];
     const uploadReadyFileIds = await repository.findUploadReadyFileIds(requestedFileIds);
@@ -126,6 +129,7 @@ export class InquiryService {
     });
     const inquiry = await repository.create({
       ...parsed,
+      ...(customer === undefined ? {} : { customerId: customer.id, email: customer.email }),
       attachmentFileIds: [...uploadReadyFileIds],
       id,
       publicTokenHash: accessToken.tokenHash,

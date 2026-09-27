@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
+import { loginCustomer } from "./helpers/customer";
 
 test("custom request exposes the active capability without accidental mutations", async ({ page }) => {
+  await loginCustomer(page);
   const mutations: string[] = [];
   page.on("request", (request) => {
     if (request.method() === "POST" && /\/api\/(uploads|custom-print)/.test(request.url())) {
@@ -41,7 +43,7 @@ test("custom request exposes the active capability without accidental mutations"
   await page.getByLabel("Jumlah").fill("2");
   await page.getByLabel("Unit atau skala").selectOption("MILLIMETER_CONFIRMED");
   await page.getByLabel("Nama").fill("Kontak contoh");
-  await page.getByLabel("Email").fill("example@example.test");
+  await expect(page.getByLabel(/^Email/)).toHaveValue("demo-customer@example.test");
   await page.getByLabel("Nomor WhatsApp").fill("+628000000000");
   await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "Uji request tanpa mengirim" }).click();
@@ -52,6 +54,7 @@ test("custom request exposes the active capability without accidental mutations"
 });
 
 test("custom request recovers from a simulated file failure", async ({ page }) => {
+  await loginCustomer(page);
   await page.goto("/custom-print/request");
   const functionalStatus = await page.locator("[data-product-screen-functional]").getAttribute("data-product-screen-functional");
   test.skip(functionalStatus !== "frontend-preview", "File failure simulation is a development preview-only control.");
@@ -73,6 +76,7 @@ test("custom request recovers from a simulated file failure", async ({ page }) =
 });
 
 test("custom request stays readable across supported viewports", async ({ page }) => {
+  await loginCustomer(page);
   await page.setViewportSize({ width: 320, height: 900 });
   await page.goto("/custom-print/request");
   for (const width of [320, 390, 768, 1024, 1280, 1440]) {

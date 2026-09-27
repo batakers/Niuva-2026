@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { loginCustomer } from "./helpers/customer";
 
 test("public homepage exposes the Niuva narrative and entry paths", async ({ page }) => {
   await page.goto("/");
@@ -34,6 +35,7 @@ test("public homepage exposes the Niuva narrative and entry paths", async ({ pag
 });
 
 test("authorized Foundation proof records scoped owner visual acceptance", async ({ page }) => {
+  await loginCustomer(page);
   await page.goto("/");
 
   const homepage = page.locator("[data-homepage]");

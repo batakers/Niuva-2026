@@ -66,7 +66,7 @@ const uploadConfirmationResponseSchema = z.object({
 });
 
 const customRequestResponseSchema = z.object({
-  accessToken: z.string().min(1),
+  requestId: z.uuid(),
   referenceNumber: z.string().min(1),
 });
 
@@ -123,11 +123,13 @@ function fileMetadata(file: File) {
 }
 
 export function RequestForm({
+  customerEmail,
   liveEnabled = false,
   previewEnabled = false,
   initialProductInterest,
   productOptions = [],
 }: {
+  customerEmail?: string;
   liveEnabled?: boolean;
   previewEnabled?: boolean;
   initialProductInterest?: string;
@@ -150,7 +152,7 @@ export function RequestForm({
   const [scenario, setScenario] = useState<UploadScenario>("accepted");
   const [result, setResult] = useState<SubmitResult>("idle");
   const [referenceNumber, setReferenceNumber] = useState<string>();
-  const [accessToken, setAccessToken] = useState<string>();
+  const [requestId, setRequestId] = useState<string>();
   const [serverError, setServerError] = useState<string>();
   const pending = useRef(false);
   const scenarioRef = useRef<UploadScenario>("accepted");
@@ -294,7 +296,7 @@ export function RequestForm({
     setFileError(undefined);
     setResult("idle");
     setReferenceNumber(undefined);
-    setAccessToken(undefined);
+    setRequestId(undefined);
     setServerError(undefined);
     setErrors((current) => {
       const next = { ...current };
@@ -398,7 +400,7 @@ export function RequestForm({
     setProgress(undefined);
     setResult("idle");
     setReferenceNumber(undefined);
-    setAccessToken(undefined);
+    setRequestId(undefined);
     setServerError(undefined);
     pending.current = false;
   }
@@ -474,7 +476,7 @@ export function RequestForm({
       .then((response) => {
         pending.current = false;
         setReferenceNumber(response.referenceNumber);
-        setAccessToken(response.accessToken);
+        setRequestId(response.requestId);
         setResult("ready");
       })
       .catch((error) => {
@@ -585,7 +587,7 @@ export function RequestForm({
           <StatusNotice
             action={
               <div className="flex flex-wrap gap-3">
-              {accessToken ? <Link className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={"/custom-print/requests/" + accessToken}>Lihat status privat</Link> : null}
+              {requestId ? <Link className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/account/make/${requestId}`}>Lihat status di akun</Link> : null}
               <a
                 className="inline-flex min-h-11 items-center rounded-lg border border-success-border bg-background px-4 py-2 text-sm font-semibold text-success underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                 href={createPublicWhatsAppHref(referenceNumber)}
@@ -735,7 +737,7 @@ export function RequestForm({
               <Input autoComplete="name" className={controlClass} name="customerName" required />
             </FormField>
             <FormField error={errors.customerEmail} id="custom-customerEmail" label="Email" required>
-              <Input autoComplete="email" className={controlClass} name="customerEmail" required type="email" />
+              <Input autoComplete="email" className={controlClass} defaultValue={customerEmail} name="customerEmail" readOnly={customerEmail !== undefined} required type="email" />
             </FormField>
             <FormField className="sm:col-span-2" error={errors.customerPhone} id="custom-customerPhone" label="Nomor WhatsApp" required>
               <Input autoComplete="tel" className={controlClass} name="customerPhone" required type="tel" />

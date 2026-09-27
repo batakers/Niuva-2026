@@ -54,6 +54,7 @@ type AuthorizeAdmin = () => Promise<AdminAccess>;
 export interface CustomPrintServiceRepository {
   create(
     input: CustomPrintRequestInput & Readonly<{
+      customerId?: string;
       id: string;
       publicTokenHash: string;
       referenceNumber: string;
@@ -133,8 +134,10 @@ export class CustomPrintService {
       dependencies.repository ?? new CustomPrintRequestRepository();
   }
 
-  async submit(input: unknown): Promise<CustomPrintSubmission> {
-    const parsed = parseWithValidation(customPrintRequestInputSchema, input);
+  async submit(input: unknown, customer?: Readonly<{ id: string; email: string }>): Promise<CustomPrintSubmission> {
+    const canonicalInput = customer === undefined || typeof input !== "object" || input === null || Array.isArray(input)
+      ? input : { ...input, customerEmail: customer.email };
+    const parsed = parseWithValidation(customPrintRequestInputSchema, canonicalInput);
     const repository = this.repositoryFactory();
     const requestedFileIds = parsed.fileIds;
     const uploadReadyFileIds = await repository.findUploadReadyFileIds(requestedFileIds);
@@ -160,6 +163,7 @@ export class CustomPrintService {
     const notes = formatCustomPrintIntakeNotes(parsed);
     const request = await repository.create({
       ...parsed,
+      ...(customer === undefined ? {} : { customerId: customer.id, customerEmail: customer.email }),
       fileIds: [...uploadReadyFileIds],
       id,
       notes,
@@ -236,9 +240,15 @@ export class CustomPrintService {
       throw appError("NOT_FOUND");
     }
 
-    if (request.status !== "SUBMITTED" && request.status !== "UNDER_REVIEW") {
+    if (!["SUBMITTED", "UNDER_REVIEW", "QUOTE_READY", "QUOTE_SENT"].includes(request.status)) {
       throw appError("CONFLICT", {
-        message: "Review hanya dapat dicatat sebelum quote siap.",
+        message: "Review tidak dapat diubah setelah request selesai atau dibatalkan.",
+      });
+    }
+
+    if (request.intakeMode === "REFERENCE_ONLY" && !request.modelReady) {
+      throw appError("CONFLICT", {
+        message: "Model 3D/CAD terverifikasi diperlukan sebelum review slicer.",
       });
     }
 
@@ -271,10 +281,13 @@ export class CustomPrintService {
     };
 
     await repository.saveReview(review);
-    await this.persistStatus(repository, request.id, "UNDER_REVIEW", "QUOTE_READY", admin);
+    if (request.status === "SUBMITTED" || request.status === "UNDER_REVIEW") {
+      await this.persistStatus(repository, request.id, "UNDER_REVIEW", "QUOTE_READY", admin);
+    }
 
     await recordAudit(this.audit, {
-      action: "custom-print.review.completed",
+      action: request.status === "QUOTE_READY" || request.status === "QUOTE_SENT"
+        ? "custom-print.review.revised" : "custom-print.review.completed",
       actorId: admin.profile.id,
       actorType: "ADMIN",
       afterJson: {

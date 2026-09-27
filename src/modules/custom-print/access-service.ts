@@ -25,6 +25,7 @@ const appendModelSchema = z.object({
     "NEEDS_OPERATOR_HELP",
   ]).optional(),
 });
+const appendAccountModelSchema = appendModelSchema.omit({ token: true }).extend({ requestId: z.uuid() });
 
 type Repository = Pick<CustomPrintRequestRepository,
   "attachVerifiedModel" | "findForPublicAccess" | "rotatePublicToken">;
@@ -44,7 +45,7 @@ export class CustomPrintAccessService {
     const requestId = getRouteAccessTokenEntityId(token);
     if (requestId === null) throw appError("UNAUTHORIZED");
     const request = await this.repository.findForPublicAccess(requestId);
-    if (request === null) throw appError("UNAUTHORIZED");
+    if (request === null || request.customerId !== null) throw appError("UNAUTHORIZED");
     verifyAccessToken({
       entityId: request.id,
       expectedHash: request.publicTokenHash,
@@ -65,7 +66,7 @@ export class CustomPrintAccessService {
     };
   }
 
-  async appendModel(input: unknown) {
+  async appendModel(input: unknown, uploadingCustomerId?: string) {
     const parsed = parseWithValidation(appendModelSchema, input);
     const requestId = getRouteAccessTokenEntityId(parsed.token);
     if (requestId === null) throw appError("UNAUTHORIZED");
@@ -79,6 +80,7 @@ export class CustomPrintAccessService {
       fileId: parsed.fileId,
       requestId,
       unitConfirmation: parsed.unitConfirmation,
+      uploadingCustomerId,
     });
     await recordAudit(this.dependencies.audit, {
       action: "custom-print.request.model-attached",
@@ -91,12 +93,28 @@ export class CustomPrintAccessService {
     return { referenceNumber: (await this.getStatus(parsed.token)).referenceNumber };
   }
 
+  async appendAccountModel(input: unknown, customerId: string) {
+    const parsed = parseWithValidation(appendAccountModelSchema, input);
+    await this.repository.attachVerifiedModel({ ...parsed, customerId });
+    await recordAudit(this.dependencies.audit, {
+      action: "custom-print.request.model-attached",
+      actorId: customerId,
+      actorType: "CUSTOMER",
+      afterJson: { status: "VERIFIED" },
+      entityId: parsed.requestId,
+      entityType: "CustomPrintRequest",
+      metadata: { operation: "account-append-model" },
+    });
+    return { requestId: parsed.requestId };
+  }
+
   async reissuePublicToken(requestIdInput: unknown): Promise<IssuedAccessToken> {
     const requestId = parseWithValidation(z.uuid(), requestIdInput);
     const admin = await (this.dependencies.authorizeAdmin ?? requireAdmin)();
     requireAdminPermission(admin, "CUSTOM_PRINT_REVIEW");
     const request = await this.repository.findForPublicAccess(requestId);
     if (request === null) throw appError("NOT_FOUND");
+    if (request.customerId !== null) throw appError("CONFLICT", { message: "Request ini sudah dimiliki akun customer." });
     const accessToken = issueAccessToken({
       entityId: requestId,
       includeEntityId: true,

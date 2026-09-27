@@ -93,6 +93,22 @@ describe("B2B inquiry contract", () => {
         referenceLink: undefined,
       }).success,
     ).toBe(true);
+    expect(b2bInquiryInputSchema.safeParse({
+      ...input,
+      targetDeadline: "",
+    }).success).toBe(true);
+    expect(b2bInquiryInputSchema.safeParse({
+      ...input,
+      targetDeadline: undefined,
+    }).success).toBe(true);
+    expect(b2bInquiryInputSchema.safeParse({
+      ...input,
+      preferredService: "invalid-service",
+    }).success).toBe(false);
+    expect(b2bInquiryInputSchema.safeParse({
+      ...input,
+      preferredService: "design-prototyping",
+    }).success).toBe(true);
   });
 });
 
@@ -121,6 +137,48 @@ describe("custom-print intake and pricing boundaries", () => {
         weightGrams: "0",
       }),
     ).not.toThrow();
+  });
+
+  it("keeps legacy model mode and accepts text-only reference mode without an estimated price", () => {
+    const common = {
+      customerEmail: "client@example.test",
+      customerName: "Client",
+      customerPhone: "+628000000000",
+      materialRequested: "NEEDS_RECOMMENDATION",
+      quantity: 3,
+    };
+    const oldClient = customPrintRequestInputSchema.safeParse({
+      ...common,
+      fileIds: ["2b7f3c1a-18f7-4d91-8b86-8d98fcd0f7f4"],
+    });
+    expect(oldClient.success && oldClient.data.intakeMode).toBe("MODEL_READY");
+    expect(customPrintRequestInputSchema.safeParse({ ...common, fileIds: [] }).success).toBe(false);
+
+    const reference = customPrintRequestInputSchema.safeParse({
+      ...common,
+      intakeMode: "REFERENCE_ONLY",
+      notes: "Butuh penutup alat dari sketsa",
+      referenceLink: "https://example.test/sketch",
+    });
+    expect(reference.success).toBe(true);
+    if (reference.success) expect(reference.data.fileIds).toEqual([]);
+    expect(customPrintRequestInputSchema.safeParse({
+      ...common,
+      intakeMode: "REFERENCE_ONLY",
+      notes: "",
+    }).success).toBe(false);
+    expect(customPrintRequestInputSchema.safeParse({
+      ...common,
+      intakeMode: "REFERENCE_ONLY",
+      notes: "Deskripsi",
+      referenceLink: "http://example.test/sketch",
+    }).success).toBe(false);
+    expect(customPrintRequestInputSchema.safeParse({
+      ...common,
+      intakeMode: "REFERENCE_ONLY",
+      notes: "Deskripsi",
+      unitConfirmation: "MILLIMETER_CONFIRMED",
+    }).success).toBe(false);
   });
 });
 
