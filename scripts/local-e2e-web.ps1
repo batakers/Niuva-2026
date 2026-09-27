@@ -36,13 +36,15 @@ try {
   $env:DEMO_DATABASE_URL = $env:TEST_DATABASE_URL
   $env:NIUVA_RUNTIME_MODE = ""
   $env:NODE_ENV = "test"
+  $e2ePort = if ([string]::IsNullOrWhiteSpace($env:NIUVA_E2E_PORT)) { 3000 } else { [int]$env:NIUVA_E2E_PORT }
+  if ($e2ePort -lt 1024 -or $e2ePort -gt 65535) { throw "NIUVA_E2E_PORT tidak valid." }
   $env:GOOGLE_CLIENT_ID = "local-e2e-google-client"
   $env:GOOGLE_CLIENT_SECRET = "local-e2e-google-secret"
-  $env:GOOGLE_REDIRECT_URI = "http://localhost:3000/api/auth/google/callback"
+  $env:GOOGLE_REDIRECT_URI = "http://localhost:$e2ePort/api/auth/google/callback"
   $env:NIUVA_CUSTOMER_AUTH_MOCK = "true"
   $env:NIUVA_NEXT_DIST_DIR = ".next-e2e"
 
-  & corepack pnpm exec next dev -p 3000
+  & corepack pnpm exec next dev -p $e2ePort
   if ($LASTEXITCODE -ne 0) {
     throw "Next E2E server gagal berjalan."
   }

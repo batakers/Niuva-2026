@@ -568,6 +568,7 @@ model CustomPrintRequest {
   publicTokenHash   String                   @unique @map("public_token_hash")
   customerId        String?                  @map("customer_id") @db.Uuid
   estimatedPackage  Json?                    @map("estimated_package")
+  customerPreviewSnapshot Json?             @map("customer_preview_snapshot")
   createdAt         DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt         DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(6)
   files             CustomPrintRequestFile[]

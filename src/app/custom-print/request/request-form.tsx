@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { createPublicWhatsAppHref } from "@/features/public/company-content";
 import type { CustomFlowProductOption } from "@/modules/custom-print/product-intake";
 import { CUSTOM_FILE_MAX_BYTES } from "@/modules/policy/privacy";
+import type { CustomerPreviewInput } from "@/modules/custom-print/customer-preview";
 
 const acceptedExtensions = [".stl", ".3mf", ".obj", ".step", ".stp"] as const;
 const maxFileSizeLabel = `${CUSTOM_FILE_MAX_BYTES / 1_024 / 1_024} MiB`;
@@ -46,7 +47,8 @@ const requestPreviewSchema = z.object({
   unitConfirmation: z.string().trim().min(1),
 });
 
-type PreviewFieldName = keyof z.infer<typeof requestPreviewSchema> | "file" | "rightsAck";
+type PreviewFieldName = keyof z.infer<typeof requestPreviewSchema> | "file" | "rightsAck" |
+  "previewWeightG" | "previewHours" | "previewMinutes" | "previewSource";
 type PreviewErrors = Partial<Record<PreviewFieldName, string>>;
 type UploadScenario = "accepted" | "failed" | "expired";
 type SubmitResult = "idle" | "pending" | "ready" | "unavailable" | "error";
@@ -68,7 +70,57 @@ const uploadConfirmationResponseSchema = z.object({
 const customRequestResponseSchema = z.object({
   requestId: z.uuid(),
   referenceNumber: z.string().min(1),
+  customerPreview: z.object({
+    materialSubtotalRp: z.string(),
+    machineSubtotalRp: z.string(),
+    finalTotalRp: z.string(),
+  }).nullish(),
 });
+
+const customerPreviewResponseSchema = z.discriminatedUnion("status", [
+  z.object({ status: z.literal("REVIEW_REQUIRED") }),
+  z.object({ status: z.literal("READY"), materialSubtotalRp: z.string(),
+    machineSubtotalRp: z.string(), finalTotalRp: z.string(), ruleVersion: z.number().int() }),
+]);
+
+const rupiah = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 });
+const decimalDigits = new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 });
+
+function formatExactRupiah(value: string): string {
+  const [whole, fractional] = value.split(".");
+  return `Rp ${decimalDigits.format(BigInt(whole))}${fractional ? `,${fractional}` : ""}`;
+}
+
+function readCustomerPreviewInput(formData: FormData): { input?: CustomerPreviewInput; errors: PreviewErrors } {
+  if (formData.get("customerPreviewEnabled") !== "on") return { errors: {} };
+  const errors: PreviewErrors = {};
+  const weight = String(formData.get("previewWeightG") ?? "").trim();
+  const hoursText = String(formData.get("previewHours") ?? "").trim();
+  const minutesText = String(formData.get("previewMinutes") ?? "").trim();
+  const hours = Number(hoursText);
+  const minutes = Number(minutesText);
+  if (!/^\d{1,6}(?:\.\d{1,6})?$/.test(weight) || Number(weight) <= 0) {
+    errors.previewWeightG = "Masukkan berat positif per unit dari slicer.";
+  }
+  if (!/^\d+$/.test(hoursText) || !Number.isSafeInteger(hours) || hours < 0) {
+    errors.previewHours = "Masukkan jam berupa bilangan bulat tidak negatif.";
+  }
+  if (!/^\d+$/.test(minutesText) || !Number.isSafeInteger(minutes) || minutes < 0 || minutes > 59) {
+    errors.previewMinutes = "Masukkan menit dari 0 sampai 59.";
+  }
+  const seconds = (hours * 60 + minutes) * 60;
+  if (!errors.previewHours && !errors.previewMinutes && (!Number.isSafeInteger(seconds) || seconds <= 0)) {
+    errors.previewMinutes = "Durasi per unit harus lebih dari nol dan dalam batas angka aman.";
+  }
+  if (formData.get("previewSource") !== "on") {
+    errors.previewSource = "Konfirmasi sumber angka dari slicer Anda.";
+  }
+  return Object.keys(errors).length > 0 ? { errors } : {
+    errors,
+    input: { source: "CUSTOMER_DECLARED_SLICER", weightGramsPerUnit: weight,
+      printDurationSecondsPerUnit: seconds },
+  };
+}
 
 const supportedMimeTypes: Record<string, readonly string[]> = {
   ".3mf": ["model/3mf", "application/vnd.ms-3mfdocument"],
@@ -100,6 +152,10 @@ const fieldLabels: Record<PreviewFieldName, string> = {
   productInterest: "Produk referensi",
   quantity: "Jumlah",
   rightsAck: "Persetujuan pemrosesan",
+  previewWeightG: "Berat per unit",
+  previewHours: "Jam per unit",
+  previewMinutes: "Menit per unit",
+  previewSource: "Sumber hasil slicer",
   requestedSize: "Ukuran target",
   targetDeadline: "Target diperlukan",
   unitConfirmation: "Unit atau skala",
@@ -154,7 +210,14 @@ export function RequestForm({
   const [referenceNumber, setReferenceNumber] = useState<string>();
   const [requestId, setRequestId] = useState<string>();
   const [serverError, setServerError] = useState<string>();
+  const [previewStatus, setPreviewStatus] = useState<"idle" | "pending" | "ready" | "review" | "error">("idle");
+  const [previewResult, setPreviewResult] = useState<z.infer<typeof customerPreviewResponseSchema> | null>(null);
+  const [previewError, setPreviewError] = useState<string>();
+  const [savedPreview, setSavedPreview] = useState<z.infer<typeof customRequestResponseSchema>["customerPreview"]>();
+  const [previewOptedIn, setPreviewOptedIn] = useState(false);
   const pending = useRef(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const previewOperationRef = useRef(0);
   const scenarioRef = useRef<UploadScenario>("accepted");
   const statusRef = useRef<HTMLDivElement>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -187,6 +250,13 @@ export function RequestForm({
     uploadAbortRef.current = null;
     uploadOperationRef.current += 1;
     setUploadedFileId(undefined);
+  }
+
+  function invalidatePreview() {
+    previewOperationRef.current += 1;
+    setPreviewStatus("idle");
+    setPreviewResult(null);
+    setPreviewError(undefined);
   }
 
   function isCurrentUpload(operationId: number) {
@@ -248,6 +318,7 @@ export function RequestForm({
   }
 
   function simulateFile(nextFile: File, nextScenario: UploadScenario = scenarioRef.current) {
+    invalidatePreview();
     clearTimers();
     setFile(nextFile);
     setFileError(undefined);
@@ -290,6 +361,7 @@ export function RequestForm({
   }
 
   async function uploadFile(nextFile: File) {
+    invalidatePreview();
     resetLiveUpload();
     clearTimers();
     setFile(nextFile);
@@ -392,6 +464,7 @@ export function RequestForm({
   }
 
   function removeFile() {
+    invalidatePreview();
     clearTimers();
     resetLiveUpload();
     setFile(null);
@@ -405,9 +478,50 @@ export function RequestForm({
     pending.current = false;
   }
 
-  async function submitLiveRequest(parsed: z.infer<typeof requestPreviewSchema>, fileId: string) {
+  async function previewCustomerComponents() {
+    const form = formRef.current;
+    if (!form || !isLive) return;
+    const formData = new FormData(form);
+    const preview = readCustomerPreviewInput(formData);
+    setErrors(preview.errors);
+    if (!preview.input) {
+      setPreviewStatus("review");
+      return;
+    }
+    const materialRequested = String(formData.get("materialRequested") ?? "");
+    const quantity = Number(formData.get("quantity"));
+    if (!uploadedFileId || !file || ![".stl", ".obj", ".3mf"].includes(fileExtension(file.name)) ||
+      !["PLA", "ABS"].includes(materialRequested) || !Number.isSafeInteger(quantity) || quantity <= 0) {
+      setPreviewStatus("review");
+      return;
+    }
+    const operationId = ++previewOperationRef.current;
+    setPreviewStatus("pending");
+    setPreviewError(undefined);
+    try {
+      const response = await fetch("/api/custom-print/preview-estimate", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ fileId: uploadedFileId, materialRequested, quantity,
+          customerPreviewInput: preview.input }),
+      });
+      const result = await readApiResponse(response, customerPreviewResponseSchema,
+        "Simulasi belum dapat dihitung. Anda tetap dapat mengajukan request untuk review.");
+      if (previewOperationRef.current !== operationId) return;
+      setPreviewResult(result);
+      setPreviewStatus(result.status === "READY" ? "ready" : "review");
+    } catch (error) {
+      if (previewOperationRef.current !== operationId) return;
+      setPreviewError(error instanceof ClientRequestError ? error.message : "Simulasi belum tersedia.");
+      setPreviewStatus("error");
+    }
+  }
+
+  async function submitLiveRequest(parsed: z.infer<typeof requestPreviewSchema>, fileId: string,
+    customerPreviewInput?: CustomerPreviewInput) {
     const response = await fetch("/api/custom-print/requests", {
-      body: JSON.stringify({ ...parsed, fileIds: [fileId] }),
+      body: JSON.stringify({ ...parsed, fileIds: [fileId],
+        ...(customerPreviewInput === undefined ? {} : { customerPreviewInput }) }),
       headers: { "content-type": "application/json" },
       method: "POST",
     });
@@ -425,6 +539,8 @@ export function RequestForm({
     const formData = new FormData(event.currentTarget);
     const parsed = requestPreviewSchema.safeParse(Object.fromEntries(formData));
     const nextErrors: PreviewErrors = {};
+    const preview = readCustomerPreviewInput(formData);
+    Object.assign(nextErrors, preview.errors);
     const fileIdForSubmit = uploadedFileId;
 
     if (!parsed.success) {
@@ -472,11 +588,12 @@ export function RequestForm({
 
     if (fileIdForSubmit === undefined) return;
 
-    void submitLiveRequest(parsed.data, fileIdForSubmit)
+    void submitLiveRequest(parsed.data, fileIdForSubmit, preview.input)
       .then((response) => {
         pending.current = false;
         setReferenceNumber(response.referenceNumber);
         setRequestId(response.requestId);
+        setSavedPreview(response.customerPreview);
         setResult("ready");
       })
       .catch((error) => {
@@ -496,6 +613,7 @@ export function RequestForm({
       data-custom-request-form
       noValidate
       onSubmit={submit}
+      ref={formRef}
     >
       <div className="border-b border-border pb-6">
         <h2 className="text-xl font-semibold">Lengkapi konteks untuk review.</h2>
@@ -584,7 +702,7 @@ export function RequestForm({
           />
         ) : null}
         {result === "ready" && isLive && referenceNumber ? (
-          <StatusNotice
+          <div className="space-y-3"><StatusNotice
             action={
               <div className="flex flex-wrap gap-3">
               {requestId ? <Link className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/account/make/${requestId}`}>Lihat status di akun</Link> : null}
@@ -601,6 +719,7 @@ export function RequestForm({
             title="Request tersimpan untuk review operator."
             tone="success"
           />
+          {savedPreview ? <p className="rounded-lg border border-info-border bg-info-background p-4 text-sm text-info">Simulasi biaya awal yang tersimpan bersama request: <strong>{rupiah.format(BigInt(savedPreview.finalTotalRp))}</strong>. Angka ini berasal dari input slicer Anda dan belum diverifikasi operator.{previewResult?.status === "READY" && previewResult.finalTotalRp !== savedPreview.finalTotalRp ? " Nilai tersimpan berbeda dari simulasi sebelumnya karena server menghitung ulang saat request dikirim." : ""}</p> : previewOptedIn ? <p className="text-sm text-muted-foreground">Simulasi biaya awal belum tersedia untuk request ini. Operator akan meninjau file dan biaya pekerjaan.</p> : null}</div>
         ) : null}
         {result === "unavailable" ? (
           <StatusNotice
@@ -618,7 +737,7 @@ export function RequestForm({
         ) : null}
       </div>
 
-      <fieldset className="min-w-0 space-y-8" disabled={mode === "unavailable" || result === "pending"}>
+      <fieldset className="min-w-0 space-y-8" disabled={mode === "unavailable" || result === "pending" || result === "ready"}>
         <legend className="sr-only">Informasi request custom print</legend>
 
         <section className="space-y-5" aria-labelledby="file-section-title">
@@ -693,7 +812,7 @@ export function RequestForm({
           <h3 className="border-b border-border pb-3 text-base font-semibold" id="configuration-section-title">Konfigurasi awal</h3>
           <div className="grid gap-5 sm:grid-cols-2">
             <FormField description="Operator akan memverifikasi pilihan ini saat review." error={errors.materialRequested} id="custom-materialRequested" label="Material" required>
-              <select className={controlClass} defaultValue="" name="materialRequested" required>
+              <select className={controlClass} defaultValue="" name="materialRequested" onChange={invalidatePreview} required>
                 <option value="">Pilih kebutuhan material</option>
                 <option value="PLA">PLA</option>
                 <option value="ABS">ABS</option>
@@ -705,7 +824,7 @@ export function RequestForm({
               <Input className={controlClass} name="colorRequested" />
             </FormField>
             <FormField error={errors.quantity} id="custom-quantity" label="Jumlah" required>
-              <Input className={controlClass} inputMode="numeric" min={1} name="quantity" required type="number" />
+              <Input className={controlClass} inputMode="numeric" min={1} name="quantity" onChange={invalidatePreview} required type="number" />
             </FormField>
             <FormField error={errors.requestedSize} id="custom-requestedSize" label="Ukuran target (opsional)">
               <Input className={controlClass} name="requestedSize" placeholder="Contoh: 8 cm atau mengikuti referensi" />
@@ -728,6 +847,44 @@ export function RequestForm({
               <textarea className={controlClass} name="notes" rows={4} />
             </FormField>
           </div>
+        </section>
+
+        <section className="space-y-5" aria-labelledby="customer-preview-title">
+          <div>
+            <h3 className="border-b border-border pb-3 text-base font-semibold" id="customer-preview-title">Simulasi biaya awal (opsional)</h3>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">Gunakan berat dan durasi cetak <strong>per unit</strong> dari slicer Anda. Jumlah pada konfigurasi akan dihitung otomatis. Simulasi hanya mencakup material PLA/ABS dengan filament stok Niuva dan waktu mesin.</p>
+          </div>
+          {!isLive && <StatusNotice title="Perlu review" description="Simulasi memerlukan upload model privat yang aktif. Anda tetap dapat memulai dari referensi awal saat database tersedia." tone="info" />}
+          <label className="flex min-h-11 items-start gap-3 text-sm font-medium">
+            <input className="mt-1 size-5 accent-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" disabled={!isLive} name="customerPreviewEnabled" onChange={(event) => { setPreviewOptedIn(event.target.checked); invalidatePreview(); }} type="checkbox" />
+            <span>Saya ingin menyertakan input slicer untuk simulasi komponen.</span>
+          </label>
+          <fieldset className="space-y-5" disabled={!isLive || !previewOptedIn}>
+            <legend className="sr-only">Input slicer per unit</legend>
+            <div className="grid gap-5 sm:grid-cols-3">
+              <FormField description="Gram untuk satu unit, bukan total pesanan." error={errors.previewWeightG} id="custom-previewWeightG" label="Berat hasil slicer per unit (g)">
+                <Input className={controlClass} inputMode="decimal" name="previewWeightG" onChange={invalidatePreview} placeholder="Contoh: 18.4" type="text" />
+              </FormField>
+              <FormField error={errors.previewHours} id="custom-previewHours" label="Durasi per unit (jam)">
+                <Input className={controlClass} defaultValue="0" min={0} name="previewHours" onChange={invalidatePreview} type="number" />
+              </FormField>
+              <FormField error={errors.previewMinutes} id="custom-previewMinutes" label="Durasi per unit (menit)">
+                <Input className={controlClass} defaultValue="0" max={59} min={0} name="previewMinutes" onChange={invalidatePreview} type="number" />
+              </FormField>
+            </div>
+            <FormField description="Berat dan durasi berasal dari hasil slicer Anda untuk satu unit model ini. Operator belum memverifikasinya." error={errors.previewSource} id="custom-previewSource" label="Saya mengisi angka dari slicer sendiri">
+              <input className="size-5 accent-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" name="previewSource" onChange={invalidatePreview} type="checkbox" />
+            </FormField>
+            <Button className="min-h-11" disabled={fileBusy || previewStatus === "pending"} onClick={() => void previewCustomerComponents()} type="button" variant="outline">{previewStatus === "pending" ? "Menghitung…" : "Lihat simulasi komponen"}</Button>
+            <div aria-live="polite">
+              {previewStatus === "ready" && previewResult?.status === "READY" ? <div className="rounded-lg border border-info-border bg-info-background p-5 text-info">
+                <p className="font-semibold">Simulasi biaya awal</p>
+                <dl className="mt-4 space-y-2 text-sm"><div className="flex justify-between gap-3"><dt>Material</dt><dd>{formatExactRupiah(previewResult.materialSubtotalRp)}</dd></div><div className="flex justify-between gap-3"><dt>Waktu mesin</dt><dd>{formatExactRupiah(previewResult.machineSubtotalRp)}</dd></div></dl>
+                <p className="mt-4 border-t border-info-border pt-3 text-lg font-semibold">Total komponen indikatif {rupiah.format(BigInt(previewResult.finalTotalRp))}</p>
+                <p className="mt-2 text-sm leading-6">Estimasi awal, bukan harga final. Setup, finishing, biaya lain, dan ongkir belum termasuk. File serta konfigurasi diperiksa operator sebelum quotation diterbitkan.</p>
+              </div> : previewStatus === "review" ? <p className="text-sm text-muted-foreground">Perlu review. Simulasi hanya tampil untuk STL/OBJ/3MF, PLA/ABS stok Niuva, dan input slicer per unit yang lengkap.</p> : previewStatus === "error" ? <p className="text-sm text-destructive" role="alert">{previewError}</p> : null}
+            </div>
+          </fieldset>
         </section>
 
         <section className="space-y-5" aria-labelledby="contact-section-title">
@@ -758,13 +915,13 @@ export function RequestForm({
       <div className="mt-8 border-t border-border pt-6">
         <Button
           className="min-h-11 w-full sm:w-auto"
-          disabled={!hydrated || mode === "unavailable" || fileBusy || result === "pending"}
+          disabled={!hydrated || mode === "unavailable" || fileBusy || result === "pending" || result === "ready"}
           size="lg"
           type="submit"
         >
           {result === "pending"
             ? isPreview ? "Memeriksa preview" : "Mengirim request"
-            : isPreview ? "Uji request tanpa mengirim" : isLive ? "Kirim untuk review operator" : "Pengiriman belum tersedia"}
+            : isPreview ? "Uji request tanpa mengirim" : isLive ? "Ajukan untuk Review" : "Pengiriman belum tersedia"}
         </Button>
         <noscript><p className="mt-3 text-sm">Aktifkan JavaScript untuk mengirim file dan request secara aman.</p></noscript>
       </div>

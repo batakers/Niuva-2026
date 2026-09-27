@@ -65,6 +65,7 @@ export class CustomerWorkRepository {
       this.prisma.customPrintRequest.findMany({
         where: { customerId }, orderBy: { createdAt: "desc" },
         select: { id: true, referenceNumber: true, status: true, intakeMode: true, createdAt: true,
+          customerPreviewSnapshot: true,
           review: { select: { updatedAt: true } },
           quotes: { where: { status: { not: "DRAFT" } }, orderBy: { version: "desc" }, take: 1,
             select: { id: true, status: true, version: true } },
@@ -90,7 +91,8 @@ export class CustomerWorkRepository {
     return this.prisma.customPrintRequest.findFirst({
       where: { id, customerId },
       select: { id: true, referenceNumber: true, status: true, intakeMode: true, referenceLink: true,
-        notes: true, materialRequested: true, quantity: true, estimatedPackage: true, createdAt: true,
+        notes: true, materialRequested: true, quantity: true, estimatedPackage: true,
+        customerPreviewSnapshot: true, createdAt: true,
         review: { select: { updatedAt: true } },
         files: { select: { file: { select: { extension: true, uploadStatus: true } } } },
         estimates: { orderBy: { version: "desc" }, take: 1, select: { id: true, version: true, lowerRp: true,

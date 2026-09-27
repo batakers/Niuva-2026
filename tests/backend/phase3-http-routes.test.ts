@@ -4,6 +4,8 @@ const mocks = vi.hoisted(() => ({
   confirmUpload: vi.fn(),
   createIntent: vi.fn(),
   customSubmit: vi.fn(),
+  customerAuth: vi.fn(),
+  customerPreview: vi.fn(),
   inquirySubmit: vi.fn(),
   webhookHandle: vi.fn(),
 }));
@@ -17,7 +19,11 @@ vi.mock("@/modules/files/upload-service", () => ({
 
 vi.mock("@/lib/auth/customer", () => ({
   getCurrentCustomer: async () => ({ id: "80c93342-dc64-4426-b5bd-f1bda83f1720", email: "client@example.test" }),
-  requireCustomer: async () => ({ id: "80c93342-dc64-4426-b5bd-f1bda83f1720", email: "client@example.test" }),
+  requireCustomer: () => mocks.customerAuth(),
+}));
+
+vi.mock("@/modules/custom-print/customer-preview-service", () => ({
+  CustomerPreviewService: class { preview = mocks.customerPreview; },
 }));
 
 vi.mock("@/modules/inquiry/service", () => ({
@@ -44,10 +50,12 @@ vi.mock("@/modules/payment/webhook-service", () => ({
 }));
 
 import { POST as postCustomPrint } from "@/app/api/custom-print/requests/route";
+import { POST as postCustomerPreview } from "@/app/api/custom-print/preview-estimate/route";
 import { POST as postProjectBrief } from "@/app/api/project-brief/route";
 import { POST as postUploadConfirmation } from "@/app/api/uploads/confirm/route";
 import { POST as postUploadIntent } from "@/app/api/uploads/intents/route";
 import { POST as postMidtransWebhook } from "@/app/api/webhooks/midtrans/route";
+import { appError } from "@/modules/shared/errors";
 
 function publicRequest(path: string, payload: unknown, includeOrigin = true): Request {
   const url = `https://app.example.test${path}`;
@@ -66,11 +74,29 @@ beforeEach(() => {
   mocks.confirmUpload.mockReset();
   mocks.createIntent.mockReset();
   mocks.customSubmit.mockReset();
+  mocks.customerAuth.mockReset().mockResolvedValue({ id: "80c93342-dc64-4426-b5bd-f1bda83f1720", email: "client@example.test" });
+  mocks.customerPreview.mockReset();
   mocks.inquirySubmit.mockReset();
   mocks.webhookHandle.mockReset();
 });
 
 describe("Phase 3 public HTTP boundaries", () => {
+  it("requires a Customer session and never caches the preview response", async () => {
+    const payload = { fileId: "2b7f3c1a-18f7-4d91-8b86-8d98fcd0f7f4", materialRequested: "PLA", quantity: 1,
+      customerPreviewInput: { source: "CUSTOMER_DECLARED_SLICER", weightGramsPerUnit: "1",
+        printDurationSecondsPerUnit: 3_600 } };
+    mocks.customerAuth.mockRejectedValueOnce(appError("UNAUTHORIZED"));
+    const denied = await postCustomerPreview(publicRequest("/api/custom-print/preview-estimate", payload));
+    expect(denied.status).toBe(401);
+    expect(denied.headers.get("cache-control")).toBe("private, no-store");
+    expect(mocks.customerPreview).not.toHaveBeenCalled();
+    mocks.customerPreview.mockResolvedValue({ status: "REVIEW_REQUIRED" });
+    const allowed = await postCustomerPreview(publicRequest("/api/custom-print/preview-estimate", payload));
+    expect(allowed.status).toBe(200);
+    expect(allowed.headers.get("cache-control")).toBe("private, no-store");
+    expect(mocks.customerPreview).toHaveBeenCalledWith(payload, "80c93342-dc64-4426-b5bd-f1bda83f1720");
+  });
+
   it("rejects cross-origin upload intent before reaching a service", async () => {
     const response = await postUploadIntent(
       publicRequest(

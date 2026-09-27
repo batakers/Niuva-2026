@@ -8,7 +8,7 @@ import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { getServerCapabilities } from "@/lib/env/server";
 import { CUSTOM_FLOW_PRODUCT_OPTIONS } from "@/modules/custom-print/product-intake";
-import { CUSTOM_FILE_MAX_BYTES } from "@/modules/policy/privacy";
+import { CUSTOM_FILE_MAX_BYTES, REFERENCE_PHOTO_MAX_BYTES } from "@/modules/policy/privacy";
 
 export const metadata: Metadata = {
   title: "Custom 3D Print · Niuva",
@@ -54,6 +54,25 @@ const preparationItems = [
   "Pastikan Anda berhak mengirim dan memproses file tersebut.",
 ] as const;
 
+const commonQuestions = [
+  {
+    question: "Saya baru punya sketsa atau foto. Bisa mulai?",
+    answer: "Bisa. Pilih mode referensi awal, jelaskan kebutuhan dan perkiraan jumlah, lalu tambahkan link HTTPS atau satu foto bila tersedia. Model dapat ditambahkan pada request yang sama lewat akun saat siap.",
+  },
+  {
+    question: "Apakah semua file menghasilkan simulasi biaya?",
+    answer: "Tidak. STL, OBJ, dan 3MF dapat dipakai untuk simulasi komponen hanya jika Anda juga mempunyai berat dan durasi per unit dari slicer sendiri, memilih PLA atau ABS dan filament stok Niuva. STEP dan STP tetap masuk review manual.",
+  },
+  {
+    question: "Apakah simulasi atau estimasi awal adalah harga final?",
+    answer: "Bukan. Simulasi customer hanya memuat komponen material dan waktu mesin. Operator memeriksa file, konfigurasi, dan biaya lain sebelum menerbitkan estimasi produksi dan quotation. Ongkir dihitung terpisah dari ukuran paket final.",
+  },
+  {
+    question: "Kapan pekerjaan menjadi order?",
+    answer: "Request masuk review operator lebih dulu. Setelah quotation dikirim, Anda dapat menerima atau menolaknya dari akun. Order custom baru dibuat dari quotation yang diterima dan divalidasi ulang.",
+  },
+] as const;
+
 export default async function CustomPrintPage() {
   await connection();
 
@@ -75,6 +94,7 @@ export default async function CustomPrintPage() {
       : "capability-gated" as const;
 
   const maxFileSizeLabel = `${CUSTOM_FILE_MAX_BYTES / 1_024 / 1_024} MiB`;
+  const maxPhotoSizeLabel = `${REFERENCE_PHOTO_MAX_BYTES / 1_024 / 1_024} MiB`;
 
   return (
     <PublicShell functionalStatus={functionalStatus} scope="custom-print">
@@ -126,7 +146,7 @@ export default async function CustomPrintPage() {
                 Keputusan penting tidak diserahkan pada tebakan browser.
               </h2>
               <p className="mt-5 max-w-md text-base leading-7 text-muted-foreground">
-                Model adalah titik awal. Operator tetap memverifikasi hasil slicing sebelum harga dan produksi dapat bergerak.
+                Model atau referensi awal dapat menjadi titik mulai. Operator tetap memverifikasi model dan hasil slicing sebelum estimasi produksi atau quote diterbitkan.
               </p>
             </div>
 
@@ -169,7 +189,7 @@ export default async function CustomPrintPage() {
                       Varian referensi: {product.variantNames.join(", ")}.
                     </p>
                     <NiuvaLink className="mt-5 min-h-11 w-full" href={`/custom-print/request?product=${encodeURIComponent(product.sourceProductId)}`}>
-                      Ajukan intake custom
+                      Ajukan untuk Review
                     </NiuvaLink>
                   </div>
                 </article>
@@ -203,7 +223,7 @@ export default async function CustomPrintPage() {
                   </div>
                 </div>
                 <div className="mt-8 border-t border-border pt-6 text-sm leading-6 text-muted-foreground">
-                  Batas ukuran file adalah {maxFileSizeLabel} per file. Ekstensi dan MIME tetap divalidasi; file besar atau tidak sesuai format akan ditolak sebelum review.
+                  Batas model adalah {maxFileSizeLabel} per file. Foto referensi opsional JPG, JPEG, atau PNG dibatasi {maxPhotoSizeLabel}. Ekstensi dan MIME tetap divalidasi sebelum review.
                 </div>
               </div>
 
@@ -223,6 +243,27 @@ export default async function CustomPrintPage() {
           </div>
         </section>
 
+        <section className="border-b border-border bg-card" aria-labelledby="modes-title">
+          <div className="mx-auto max-w-public px-5 py-16 sm:px-8 sm:py-20">
+            <p className="text-sm font-medium text-brand-700">Dua titik mulai MAKE</p>
+            <h2 className={`${type.heading.className} mt-3`} id="modes-title">Pilih sesuai bahan yang sudah Anda miliki.</h2>
+            <div className="mt-10 grid gap-8 border-t border-border md:grid-cols-2 md:gap-12">
+              <div className="pt-7">
+                <h3 className={type.subheading.className}>Saya punya model 3D/CAD</h3>
+                <p className="mt-3 leading-7 text-muted-foreground">Unggah model privat, konfirmasi unit atau skala, lalu beri material dan perkiraan jumlah. STL, OBJ, dan 3MF dapat disertai berat serta durasi per unit dari slicer Anda untuk simulasi komponen opsional. STEP/STP diperiksa manual.</p>
+                <p className="mt-3 text-sm font-medium">{liveEnabled ? "Upload privat tersedia pada runtime ini." : "Upload model sedang tidak tersedia pada runtime ini."}</p>
+                {liveEnabled && <NiuvaLink className="mt-5 min-h-11" href="/custom-print/request">Siapkan model untuk review</NiuvaLink>}
+              </div>
+              <div className="border-t border-border pt-7 md:border-l md:border-t-0 md:pl-12">
+                <h3 className={type.subheading.className}>Saya baru punya referensi</h3>
+                <p className="mt-3 leading-7 text-muted-foreground">Ceritakan fungsi dan kebutuhan awal beserta perkiraan jumlah. Link HTTPS dan satu foto privat bersifat opsional. Nomor referensi tetap sama ketika model ditambahkan kemudian.</p>
+                <p className="mt-3 text-sm font-medium">{databaseEnabled ? liveEnabled ? "Deskripsi, link, dan foto dapat dikirim." : "Deskripsi dan link dapat dikirim tanpa upload foto." : "Pengiriman menunggu database tersedia."}</p>
+                {databaseEnabled && <NiuvaLink className="mt-5 min-h-11" href="/custom-print/request?mode=reference" variant="outline">Ajukan referensi untuk review</NiuvaLink>}
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="border-b border-border bg-card" aria-labelledby="boundaries-title">
           <div className="mx-auto grid max-w-public gap-10 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-2 lg:items-start">
             <div>
@@ -234,17 +275,29 @@ export default async function CustomPrintPage() {
             <dl className="divide-y divide-border border-y border-border">
               <div className="grid gap-2 py-5 sm:grid-cols-[10rem_minmax(0,1fr)]">
                 <dt className="flex items-center gap-2 text-sm font-semibold"><Icon aria-hidden="true" className="size-4 text-brand-700" name="lock-keyhole" /> Akses file</dt>
-                <dd className="text-sm leading-6 text-muted-foreground">Upload produksi akan memakai penyimpanan privat dan akses singkat untuk pihak berwenang.</dd>
+                <dd className="text-sm leading-6 text-muted-foreground">Saat upload aktif, file customer disimpan privat dan Admin mengaksesnya melalui tautan singkat.</dd>
               </div>
               <div className="grid gap-2 py-5 sm:grid-cols-[10rem_minmax(0,1fr)]">
                 <dt className="flex items-center gap-2 text-sm font-semibold"><Icon aria-hidden="true" className="size-4 text-brand-700" name="scan-search" /> Harga</dt>
-                <dd className="text-sm leading-6 text-muted-foreground">Tidak ada harga final instan dari geometri. Quote disusun setelah input slicer diverifikasi operator.</dd>
+                <dd className="text-sm leading-6 text-muted-foreground">Estimasi awal, bukan harga final. Tidak ada harga final instan dari geometri. Quote disusun setelah input slicer diverifikasi operator dan biaya pekerjaan dinilai.</dd>
               </div>
               <div className="grid gap-2 py-5 sm:grid-cols-[10rem_minmax(0,1fr)]">
                 <dt className="flex items-center gap-2 text-sm font-semibold"><Icon aria-hidden="true" className="size-4 text-brand-700" name="package-check" /> Pengiriman</dt>
                 <dd className="text-sm leading-6 text-muted-foreground">Biaya pengiriman custom dihitung setelah produksi, QC, dan ukuran paket final tersedia.</dd>
               </div>
             </dl>
+          </div>
+        </section>
+
+        <section className="border-b border-border bg-background" aria-labelledby="faq-title">
+          <div className="mx-auto grid max-w-public gap-8 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] lg:gap-16">
+            <div><p className="text-sm font-medium text-brand-700">Sebelum mengajukan</p><h2 className={`${type.heading.className} mt-3`} id="faq-title">Pertanyaan yang sering muncul.</h2></div>
+            <div className="divide-y divide-border border-y border-border">
+              {commonQuestions.map(({ question, answer }) => <details className="group py-5" key={question}>
+                <summary className="min-h-11 cursor-pointer py-2 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700">{question}</summary>
+                <p className="max-w-2xl pb-2 pr-4 text-sm leading-7 text-muted-foreground">{answer}</p>
+              </details>)}
+            </div>
           </div>
         </section>
 

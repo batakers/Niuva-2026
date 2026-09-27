@@ -4,11 +4,13 @@ import {
   type PrismaClient,
 } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
-import { appError } from "@/modules/shared/errors";
+import { appError, isAppError } from "@/modules/shared/errors";
 
 import type { CustomPrintRequestInput } from "./schema";
 import { isModelExtension, isReferencePhotoExtension } from "./file-types";
 import { isEstimateCurrent } from "./estimate";
+import { calculateCustomerPreviewSnapshot } from "./customer-preview";
+import { CUSTOM_PRINT_V1_RULE_CODE } from "@/modules/pricing/policy";
 
 export type CreateCustomPrintRequestInput = CustomPrintRequestInput &
   Readonly<{
@@ -140,6 +142,23 @@ export type CustomPrintRequestReviewSummary = Readonly<{
 export class CustomPrintRequestRepository {
   constructor(private readonly prisma: PrismaClient = getPrismaClient()) {}
 
+  async findCustomerPreviewFile(fileId: string, customerId: string) {
+    return this.prisma.storedFile.findFirst({
+      where: { id: fileId, uploadedByCustomerId: customerId, bucketScope: "PRIVATE_CUSTOMER" },
+      select: { id: true, extension: true, uploadStatus: true, deletedAt: true,
+        customPrintRequestLinks: { select: { requestId: true }, take: 1 },
+        b2bInquiryLinks: { select: { inquiryId: true }, take: 1 } },
+    });
+  }
+
+  async findActiveCustomerPreviewRules() {
+    return this.prisma.pricingRuleVersion.findMany({
+      where: { code: CUSTOM_PRINT_V1_RULE_CODE, status: "ACTIVE" },
+      take: 2,
+      select: { id: true, code: true, version: true, definitionJson: true },
+    });
+  }
+
   async referenceExists(referenceNumber: string): Promise<boolean> {
     const request = await this.prisma.customPrintRequest.findUnique({
       where: { referenceNumber },
@@ -191,6 +210,7 @@ export class CustomPrintRequestRepository {
       const files = await transaction.storedFile.findMany({
         where: {
           bucketScope: "PRIVATE_CUSTOMER",
+          deletedAt: null,
           id: { in: [...new Set(input.fileIds)] },
           uploadStatus: "UPLOADED",
           uploadedByCustomerId: input.customerId ?? null,
@@ -211,8 +231,32 @@ export class CustomPrintRequestRepository {
         throw appError("VALIDATION_ERROR", { message: "Mode referensi hanya menerima satu foto JPG atau PNG." });
       }
 
+      let customerPreviewSnapshot = null;
+      if (input.intakeMode === "MODEL_READY" && input.customerPreviewInput !== undefined && files.length === 1) {
+        const rules = await transaction.pricingRuleVersion.findMany({
+          where: { code: CUSTOM_PRINT_V1_RULE_CODE, status: "ACTIVE" },
+          take: 2,
+          select: { id: true, code: true, version: true, definitionJson: true },
+        });
+        if (rules.length === 1) {
+          try {
+            customerPreviewSnapshot = calculateCustomerPreviewSnapshot({
+              fileId: files[0].id,
+              fileExtension: files[0].extension,
+              materialRequested: input.materialRequested,
+              quantity: input.quantity,
+              customerPreviewInput: input.customerPreviewInput,
+              rule: rules[0],
+            });
+          } catch (error) {
+            if (!isAppError(error) || error.code !== "PRICING_RULE_NOT_APPROVED") throw error;
+          }
+        }
+      }
+
       const request = await transaction.customPrintRequest.create({
         data: {
+          customerPreviewSnapshot: customerPreviewSnapshot ?? undefined,
           colorRequested: input.colorRequested,
           intakeMode: input.intakeMode,
           referenceLink: input.referenceLink,

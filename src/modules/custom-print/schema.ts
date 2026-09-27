@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { customProductInterestInputSchema } from "./product-intake";
+import { customerPreviewInputSchema } from "./customer-preview";
 
 const requiredText = z.string().trim().min(1);
 const optionalText = z.preprocess(
@@ -36,6 +37,7 @@ export const customPrintRequestInputSchema = z
       ...commonFields,
       fileIds: z.array(z.uuid()).min(1),
       intakeMode: z.literal("MODEL_READY").default("MODEL_READY"),
+      customerPreviewInput: customerPreviewInputSchema.optional(),
       notes: optionalText,
     }),
     z.object({

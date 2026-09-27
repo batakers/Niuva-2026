@@ -24,11 +24,13 @@ test("custom request exposes the active capability without accidental mutations"
   if (functionalStatus === "capability-gated") {
     await expect(page.getByText("Pengiriman privat belum tersedia.")).toBeVisible();
     await expect(page.getByLabel("File model 3D *")).toBeDisabled();
+    await expect(page.getByText("Simulasi memerlukan upload model privat yang aktif.", { exact: false })).toBeVisible();
     expect(mutations).toEqual([]);
     return;
   }
 
   expect(functionalStatus).toBe("frontend-preview");
+  await expect(page.getByRole("heading", { name: "Simulasi biaya awal (opsional)" })).toBeVisible();
   const fileInput = page.getByLabel("File model 3D *");
   await expect(fileInput).toBeEnabled();
   await fileInput.setInputFiles({
@@ -45,12 +47,24 @@ test("custom request exposes the active capability without accidental mutations"
   await page.getByLabel("Nama").fill("Kontak contoh");
   await expect(page.getByLabel(/^Email/)).toHaveValue("demo-customer@example.test");
   await page.getByLabel("Nomor WhatsApp").fill("+628000000000");
-  await page.getByRole("checkbox").check();
+  await page.getByLabel("Persetujuan pemrosesan").check();
   await page.getByRole("button", { name: "Uji request tanpa mengirim" }).click();
 
   await expect(page.getByText("Preview request siap ditinjau.")).toBeVisible();
   await expect(page.getByLabel("Nama")).toHaveValue("Kontak contoh");
   expect(mutations).toEqual([]);
+});
+
+test("MAKE guidance explains both intakes, manual CAD review, and the three price stages", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/custom-print");
+  await expect(page.getByText("Saya punya model 3D/CAD")).toBeVisible();
+  await expect(page.getByText("Saya baru punya referensi")).toBeVisible();
+  await expect(page.getByText(/STEP.*STP/).first()).toBeVisible();
+  await expect(page.getByText("Estimasi awal, bukan harga final.", { exact: false }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /Ajukan untuk Review/ }).first()).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
 test("custom request recovers from a simulated file failure", async ({ page }) => {

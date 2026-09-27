@@ -8,6 +8,7 @@ import {
 } from "@/lib/http/response";
 import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
 import { CustomPrintService } from "@/modules/custom-print/service";
+import { readCustomerPreviewSnapshot } from "@/modules/custom-print/customer-preview";
 import { createCustomPrintAdminNotificationFromEnvironment } from "@/modules/notifications/resend";
 
 export const runtime = "nodejs";
@@ -31,11 +32,17 @@ export async function POST(request: Request) {
     const result = await new CustomPrintService({
       notificationFactory: createCustomPrintAdminNotificationFromEnvironment,
     }).submit(payload, customer);
+    const customerPreview = readCustomerPreviewSnapshot(result.request.customerPreviewSnapshot);
 
     return apiSuccess(
       {
         requestId: result.request.id,
         referenceNumber: result.request.referenceNumber,
+        ...(customerPreview === null ? {} : { customerPreview: {
+          materialSubtotalRp: customerPreview.result.materialSubtotalRp,
+          machineSubtotalRp: customerPreview.result.machineSubtotalRp,
+          finalTotalRp: customerPreview.result.finalTotalRp,
+        } }),
       },
       { correlationId, status: 201 },
     );

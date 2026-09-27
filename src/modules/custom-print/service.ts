@@ -26,6 +26,7 @@ import {
   type CustomPrintRequestInput,
 } from "./schema";
 import { formatCustomPrintIntakeNotes } from "./product-intake";
+import { readCustomerPreviewSnapshot } from "./customer-preview";
 import { transitionCustomPrintRequest } from "./transitions";
 
 const reviewConfigurationValue = z.union([
@@ -59,7 +60,7 @@ export interface CustomPrintServiceRepository {
       publicTokenHash: string;
       referenceNumber: string;
     }>,
-  ): Promise<Readonly<{ id: string; referenceNumber: string }>>;
+  ): Promise<Readonly<{ id: string; referenceNumber: string; customerPreviewSnapshot?: unknown }>>;
   findRequestForReview(requestId: string): Promise<Readonly<{
     id: string;
     intakeMode: "MODEL_READY" | "REFERENCE_ONLY";
@@ -95,7 +96,7 @@ type CustomPrintRequestStatus =
 
 export type CustomPrintSubmission = Readonly<{
   accessToken: IssuedAccessToken;
-  request: Readonly<{ id: string; referenceNumber: string }>;
+  request: Readonly<{ id: string; referenceNumber: string; customerPreviewSnapshot?: unknown }>;
 }>;
 
 export type CustomPrintNotificationScheduler = (input: Readonly<{
@@ -170,6 +171,7 @@ export class CustomPrintService {
       publicTokenHash: accessToken.tokenHash,
       referenceNumber,
     });
+    const customerPreview = readCustomerPreviewSnapshot(request.customerPreviewSnapshot);
 
     await recordAudit(this.audit, {
       action: "custom-print.request.submitted",
@@ -178,6 +180,8 @@ export class CustomPrintService {
         intakeMode: parsed.intakeMode,
         productInterest: parsed.productInterest,
         referenceNumber,
+        customerPreviewStored: customerPreview !== null,
+        customerPreviewRuleVersion: customerPreview?.pricingRule.version,
       },
       entityId: request.id,
       entityType: "CustomPrintRequest",

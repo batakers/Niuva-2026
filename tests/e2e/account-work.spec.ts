@@ -147,7 +147,7 @@ test("account displays reviewed MAKE components and declines the latest quote", 
           additionalSubtotalRp: "50000", lowerRp: "77500", upperRp: "100750", finalTotalRp: "77500" } },
     } });
     await page.goto(`/account/make/${request.id}`);
-    await expect(page.getByText("Estimasi awal, bukan harga final.", { exact: false })).toBeVisible();
+    await expect(page.getByText("Kisaran setelah review operator, bukan harga final.", { exact: false })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Komponen yang tercakup" })).toBeVisible();
     await expect(page.getByText("Setup")).toHaveCount(2);
     await page.getByRole("button", { name: "Tolak quote" }).click();

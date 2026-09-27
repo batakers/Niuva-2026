@@ -35,9 +35,9 @@ test("custom draft cards route to a preselected intake without checkout", async 
   await page.goto("/custom-print");
 
   await expect(page.getByRole("heading", { name: "Pilih referensi, lalu biarkan operator mengunci detailnya." })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Ajukan intake custom" })).toHaveCount(5);
+  await expect(page.getByRole("link", { name: "Ajukan untuk Review" })).toHaveCount(5);
 
-  await page.getByRole("link", { name: "Ajukan intake custom" }).first().click();
+  await page.getByRole("link", { name: "Ajukan untuk Review" }).first().click();
   await expect(page).toHaveURL(/\/custom-print\/request\?product=103726333343$/);
   await expect(page.getByLabel("Produk yang diminati")).toHaveValue("103726333343");
   await expect(page.getByText("tidak ada checkout langsung", { exact: false })).toBeVisible();

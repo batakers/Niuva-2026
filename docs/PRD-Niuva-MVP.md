@@ -25,6 +25,44 @@
 > proposal B2B" di bawah. Addendum ini menggantikan batas `/account` yang
 > sebelumnya hanya profil dan order.
 
+> **Addendum Target IA — 27 September 2026:** Empat layanan publik memiliki
+> detail route dari copy `publicServices`, dengan Project Brief yang terisi
+> sesuai layanan tetapi tetap dapat diganti. Project terkait hanya ditautkan
+> jika sudah terbit dan memiliki detail yang disetujui. MAKE menjelaskan dua
+> mode intake dan menyediakan simulasi biaya komponen awal opsional untuk
+> model mesh yang sudah diunggah serta input slicer customer. Kontraknya di
+> bawah melengkapi, tanpa mengganti, estimasi operator dan quote final.
+
+### Customer Pre-Review Simulation dan IA layanan
+
+- `/services/[slug]` hanya untuk empat layanan publik yang disetujui. Input
+  yang dibutuhkan dan CTA Project Brief disajikan sesuai layanan. Project
+  `card-only` tetap dapat tampil sebagai kartu di `/projects`, tetapi tidak
+  ditautkan sebagai halaman detail dari layanan. Project tidak terbit tidak
+  muncul di publik.
+- Pada `MODEL_READY`, customer boleh memasukkan berat gram dan durasi cetak
+  **per unit** dari slicer sendiri. Material PLA/ABS dan jumlah berasal dari
+  form; simulasi menggunakan filament stok Niuva. Input ini bersifat opsional.
+  `.stl`, `.obj`, dan `.3mf` yang sudah diunggah secara privat dapat
+  menghasilkan simulasi bila tepat satu aturan Pricing v1 aktif valid.
+  `.step`/`.stp`, foto, `REFERENCE_ONLY`, data yang belum lengkap, atau aturan
+  harga yang tidak memenuhi syarat menghasilkan **Perlu review**. Tidak ada
+  slicing atau analisis geometri otomatis oleh Niuva.
+- **Simulasi biaya awal** hanya menunjukkan komponen material dan waktu mesin
+  indikatif dari angka customer. **Estimasi awal, bukan harga final.** Saat
+  submit, server menghitung ulang dan menyimpan hasil saat itu bersama request;
+  angka yang mungkin pernah tampil di browser bukan otoritas. Snapshot awal
+  tetap terlihat sebagai riwayat dan ditandai belum diverifikasi.
+- Tiga tingkat harga tetap terpisah: (1) simulasi komponen customer sebelum
+  review, (2) estimasi produksi operator 100%–130% setelah review dan penilaian
+  biaya, (3) quotation komersial final. Simulasi customer tidak menentukan
+  estimasi operator, quote, order, ongkir, atau nominal pembayaran. Revisi dan
+  keputusan komersial mengikuti kontrak irisan kedua.
+- Tanpa R2, mode referensi berbasis deskripsi/link masih dapat dikirim selama
+  database serta login tersedia. Upload foto, model siap, dan simulasi yang
+  memerlukan file tampil sesuai kapabilitas environment. Status DEVELOP pada
+  akun adalah status inquiry/proposal, bukan pelacakan eksekusi proyek B2B.
+
 ### Customer work, estimasi, dan proposal B2B — irisan kedua
 
 - Inquiry dan MAKE baru langsung dimiliki satu Customer dari sesi Google.

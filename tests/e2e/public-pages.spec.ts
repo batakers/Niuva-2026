@@ -187,6 +187,35 @@ test("public company and service routes render approved content", async ({ page 
   expect(errors).toEqual([]);
 });
 
+test("four service details lead to an editable contextual brief and only approved project details", async ({ page, request }) => {
+  const slugs = ["research-development", "consultant-workshop", "design-prototyping", "apparel-merchandise"];
+  for (const slug of slugs) {
+    const response = await request.get(`/services/${slug}`);
+    expect(response.status(), slug).toBe(200);
+  }
+  expect((await request.get("/services/layanan-tidak-ada")).status()).toBe(404);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/services/design-prototyping");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Design & Prototyping");
+  await expect(page.getByRole("link", { name: "Lihat project" }).first()).toBeVisible();
+  await expect(page.locator('a[href="/projects/smart-drop-box-pg"]')).toHaveCount(1);
+  await expect(page.locator('a[href="/projects/elips-tandem-bike"]')).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  const cta = page.getByRole("link", { name: "Diskusikan layanan ini" });
+  await expect(cta).toHaveAttribute("href", "/project-brief?service=design-prototyping");
+  await cta.focus();
+  await expect(cta).toBeFocused();
+  await page.setViewportSize({ width: 1280, height: 900 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await cta.click();
+  const selection = page.locator('[name="preferredService"]');
+  await expect(selection).toHaveValue("design-prototyping");
+  await selection.selectOption("research-development");
+  await expect(selection).toHaveValue("research-development");
+});
+
 test("Foundation/Typography authorization is present on product PublicShell routes", async ({ page }) => {
   test.slow();
   const paths = [
