@@ -39,7 +39,9 @@ test("Google login returns to a selected Project Brief and stores an IDEA brief 
   await expect(page.getByText("Belum diketahui")).toBeVisible();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
   const response = await page.reload();
-  expect(response?.headers()["cache-control"]).toContain("no-store");
+  const cacheControl = response?.headers()["cache-control"] ?? "";
+  // Next's development server forces no-cache; production uses the private no-store account rule.
+  expect(cacheControl).toMatch(/(?:no-store|no-cache)/);
   expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(true);
   for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: 900 });
@@ -77,7 +79,13 @@ test("account shows and decides an operator B2B proposal without creating an ord
     await page.goto(`/account/inquiries/${inquiry.id}`);
     await expect(page.getByText("Rancang prototipe browser untuk validasi.")).toBeVisible();
     await expect(page.getByText("Total Rp 1250000")).toBeVisible();
+    const decisionResponse = page.waitForResponse(
+      (response) => response.request().method() === "POST" &&
+        new URL(response.url()).pathname === `/api/account/inquiries/${inquiry.id}/quotes/${quote.id}/decision`,
+      { timeout: 15_000 },
+    );
     await page.getByRole("button", { name: "Setujui proposal" }).click();
+    expect((await decisionResponse).status()).toBe(200);
     await expect(page.getByText("Proposal disetujui untuk tindak lanjut manual.", { exact: false })).toBeVisible();
     await expect.poll(async () => (await prisma.b2BQuote.findUniqueOrThrow({ where: { id: quote.id } })).status).toBe("ACCEPTED");
     expect((await prisma.b2BQuote.findUniqueOrThrow({ where: { id: quote.id } })).decidedByCustomerId).toBe(owner.id);

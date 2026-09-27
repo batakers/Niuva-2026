@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { loginCustomer } from "./helpers/customer";
 
 const storageKey = "niuva.cart.v1";
 
@@ -24,15 +25,9 @@ async function fillCheckout(page: Page) {
   await page.getByLabel("Kode pos").fill("40132");
 }
 
-async function loginWithLocalGoogle(page: Page, returnTo = "/checkout") {
-  await page.goto(`/login?returnTo=${encodeURIComponent(returnTo)}`);
-  await page.getByRole("link", { name: "Lanjutkan dengan Google" }).click();
-  await expect(page).toHaveURL(new RegExp(`${returnTo.replaceAll("/", "\\/")}(?:\\?.*)?$`));
-}
-
 test.beforeEach(async ({ page }) => {
   await seedCheckout(page);
-  await loginWithLocalGoogle(page);
+  await loginCustomer(page);
 });
 
 test("cart hands a valid development preview to authenticated Customer checkout", async ({ page }) => {
