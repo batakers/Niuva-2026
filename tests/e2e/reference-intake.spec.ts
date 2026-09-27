@@ -50,7 +50,7 @@ test("MAKE reference intake works without private storage when database is avail
   expect(cacheControl).toMatch(/(?:no-store|no-cache)/);
   expect(response?.headers()["referrer-policy"]).toBe("no-referrer");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
-  await expect(page.getByText("Belum ada file model 3D/CAD")).toBeVisible();
+  await expect(page.getByText("Belum ada", { exact: true })).toBeVisible();
   await expect(page.getByText("Belum tersedia", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("reference@example.test")).toHaveCount(0);
 
