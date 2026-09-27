@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/input";
 import { typographySystemTokens as type } from "@/design/typography";
+import { getShopDisplayCopy } from "@/features/public/shop-display-copy";
 import type { PublicShopProduct } from "@/features/frontend-preview/types";
 
 const rupiah = new Intl.NumberFormat("id-ID", {
@@ -37,8 +38,11 @@ export function ProductGrid({ products, previewEnabled = false }: { products: re
   const [query, setQuery] = useState("");
   const categories = useMemo(() => [...new Map(products.flatMap(product => product.category ? [[product.category.slug, product.category.name] as const] : [])).entries()], [products]);
   const normalizedQuery = query.trim().toLocaleLowerCase("id");
-  const filtered = products.filter(product => (category === "all" || product.category?.slug === category)
-    && (!normalizedQuery || `${product.name} ${product.description}`.toLocaleLowerCase("id").includes(normalizedQuery)));
+  const filtered = products.filter(product => {
+    const display = getShopDisplayCopy(product);
+    return (category === "all" || product.category?.slug === category)
+      && (!normalizedQuery || `${display.name} ${display.summary} ${product.name} ${product.description}`.toLocaleLowerCase("id").includes(normalizedQuery));
+  });
 
   function resetFilters() {
     setCategory("all");
@@ -72,22 +76,23 @@ export function ProductGrid({ products, previewEnabled = false }: { products: re
           <Button type="button" variant="outline" className="mt-5 min-h-11 cursor-pointer" onClick={resetFilters}>Hapus filter</Button>
         </div>
       ) : (
-        <div className="grid gap-x-8 gap-y-12 md:grid-cols-2">
+        <div className="grid gap-x-6 gap-y-10 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map(product => {
             const stock = availability(product);
             const price = productPrice(product);
             const cover = product.media.find(media => media.url !== undefined);
+            const display = getShopDisplayCopy(product);
             const href = `/shop/${product.slug}${previewEnabled ? "?preview=examples" : ""}`;
             return (
               <article key={product.id} className="min-w-0">
                 <Link href={href} className="group block rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
-                  <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-xl border border-border bg-muted text-muted-foreground transition-colors duration-200 group-hover:border-brand-400 group-hover:bg-brand-50">
+                  <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-xl border border-border bg-card text-muted-foreground transition-colors duration-200 group-hover:border-brand-400">
                     {cover?.url ? (
                       <Image
                         alt={cover.altText || product.name}
-                        className="object-cover transition-transform [transition-duration:var(--duration-normal-token)] [transition-timing-function:var(--ease-standard-token)] group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                        className="object-contain transition-transform [transition-duration:var(--duration-normal-token)] [transition-timing-function:var(--ease-standard-token)] group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                         fill
-                        sizes="(min-width: 768px) 50vw, 100vw"
+                        sizes="(min-width: 1280px) 30vw, (min-width: 768px) 50vw, 100vw"
                         src={cover.url}
                       />
                     ) : (
@@ -100,17 +105,17 @@ export function ProductGrid({ products, previewEnabled = false }: { products: re
                   <div className="mt-5 flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <p className="text-sm text-brand-700">{product.category?.name ?? "Tanpa kategori"}</p>
-                      <h2 className={`${type.subheading.className} mt-2 line-clamp-3 underline-offset-4 group-hover:underline`}>{product.name}</h2>
+                      <h2 className={`${type.subheading.className} mt-2 line-clamp-3 underline-offset-4 group-hover:underline`}>{display.name}</h2>
                     </div>
                     <span className={`shrink-0 rounded-md border px-2.5 py-1 text-xs font-medium ${stock.available ? "border-success-border bg-success-background text-success" : "border-warning-border bg-warning-background text-warning"}`}>{stock.label}</span>
                   </div>
-                  <p className="mt-3 line-clamp-4 max-w-xl text-sm leading-6 text-muted-foreground">{product.description}</p>
+                  <p className="mt-3 line-clamp-3 max-w-xl text-sm leading-6 text-muted-foreground">{display.summary}</p>
                   <div className="mt-5 flex flex-wrap items-end justify-between gap-3 border-t border-border pt-4">
                     <div>
                       <p className="text-xs text-muted-foreground">Mulai dari</p>
                       <p className="mt-1 text-lg font-semibold tabular-nums">{price ?? "Harga belum tersedia"}</p>
                     </div>
-                    <p className="max-w-48 text-right text-xs leading-5 text-muted-foreground">Buka detail untuk memilih varian dan jumlah.</p>
+                    <p className="text-right text-xs font-semibold leading-5 text-brand-800">Lihat detail dan varian →</p>
                   </div>
                 </Link>
               </article>

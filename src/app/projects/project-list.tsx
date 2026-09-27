@@ -26,10 +26,10 @@ function ProjectMedia({
   const cover = project.media[0];
   if (cover?.url) {
     return (
-      <div className="relative aspect-video overflow-hidden rounded-lg border border-border bg-muted">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-card lg:aspect-auto lg:h-80">
         <Image
           alt={cover.altText}
-          className="object-cover"
+          className="object-contain"
           fill
           sizes="(min-width: 768px) 50vw, 100vw"
           src={cover.url}
@@ -40,7 +40,7 @@ function ProjectMedia({
   }
 
   return (
-    <div className="flex aspect-video flex-col items-center justify-center gap-3 rounded-lg border border-border bg-muted px-5 text-center text-muted-foreground">
+    <div className="flex aspect-[4/3] flex-col items-center justify-center gap-3 rounded-xl border border-border bg-muted px-5 text-center text-muted-foreground lg:aspect-auto lg:h-80">
       <Icon aria-hidden="true" className="size-7" name="image-off" />
       <span className="text-sm">
         {project.detailReadiness === "card-only"
@@ -142,16 +142,16 @@ export function ProjectList({ projects, previewMode = null }: ProjectListProps) 
                   Urutan ini bersifat editorial, bukan kronologis. Detail hanya ditampilkan sejauh bukti yang tersedia.
                 </p>
               </div>
-              <div className="grid gap-x-10 gap-y-12 md:grid-cols-2">
-                {featuredProjects.map(project => (
-                  <article className="min-w-0" key={project.id}>
+              <div className="grid gap-x-8 gap-y-12 md:grid-cols-2 lg:grid-flow-dense lg:grid-cols-12">
+                {featuredProjects.map((project, index) => (
+                  <article className={`min-w-0 ${index % 4 === 0 || index % 4 === 3 ? "lg:col-span-7" : "lg:col-span-5"}`} key={project.id}>
                     <Link
                       className="group block rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                       href={`/projects/${project.slug}${previewSuffix}`}
                     >
                       <ProjectMedia isPreview={isPreview} project={project} />
                       <p className="mt-5 text-sm text-brand-700">{project.serviceLabel}</p>
-                      <h3 className={`${type.subheading.className} mt-2 flex items-start justify-between gap-4`}>
+                      <h3 className={`${index === 0 ? type.heading.className : type.subheading.className} mt-2 flex items-start justify-between gap-4`}>
                         {project.title}
                         <Icon aria-hidden="true" className="mt-1 size-5 shrink-0" name="arrow-up-right" />
                       </h3>

@@ -78,10 +78,12 @@ export default async function CustomPrintPage() {
 
   let liveEnabled = false;
   let databaseEnabled = false;
+  let customerAuthEnabled = false;
   try {
     const capabilities = getServerCapabilities();
     liveEnabled = capabilities.customUploads;
     databaseEnabled = capabilities.database;
+    customerAuthEnabled = capabilities.database && capabilities.customerGoogle;
   } catch {
     // Incomplete provider configuration keeps the public page fail-closed.
   }
@@ -97,10 +99,10 @@ export default async function CustomPrintPage() {
   const maxPhotoSizeLabel = `${REFERENCE_PHOTO_MAX_BYTES / 1_024 / 1_024} MiB`;
 
   return (
-    <PublicShell functionalStatus={functionalStatus} scope="custom-print">
+    <PublicShell functionalStatus={functionalStatus} scope="custom-print" headerAction={{ href: "#start-custom", label: "Pilih titik mulai" }}>
       <main id="main-content" data-custom-print>
         <section className="dark overflow-hidden border-b border-border bg-background text-foreground">
-          <div className="mx-auto grid max-w-public gap-10 px-5 py-14 sm:px-8 sm:py-20 lg:grid-cols-[minmax(0,0.9fr)_minmax(28rem,1.1fr)] lg:items-center">
+          <div className="mx-auto grid max-w-public gap-8 px-5 py-10 sm:px-8 sm:py-14 lg:grid-cols-[minmax(0,0.9fr)_minmax(28rem,1.1fr)] lg:items-center">
             <div className="max-w-2xl">
               <p className="text-sm font-medium text-brand-300">Custom 3D Print</p>
               <h1 className={`${type.display.className} mt-4 text-balance`}>
@@ -109,9 +111,9 @@ export default async function CustomPrintPage() {
               <p className="mt-5 max-w-xl text-base leading-7 text-neutral-300">
                 Mulai dari model siap atau referensi awal. Operator meninjau kebutuhan dan hasil slicing sebelum Niuva menyusun quote yang dapat Anda setujui.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <NiuvaLink className="min-h-11 gap-2" href="#request-readiness">
-                  Siapkan request
+              <div className="mt-6 flex flex-wrap gap-3">
+                <NiuvaLink className="min-h-11 gap-2" href="#start-custom">
+                  Pilih titik mulai
                   <Icon aria-hidden="true" className="size-4" name="arrow-down" />
                 </NiuvaLink>
                 <NiuvaLink className="min-h-11" href="#workflow" variant="outline">
@@ -138,62 +140,24 @@ export default async function CustomPrintPage() {
           </div>
         </section>
 
-        <section className="border-b border-border bg-card" id="workflow" aria-labelledby="workflow-title">
-          <div className="mx-auto grid max-w-public gap-10 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[minmax(16rem,0.55fr)_minmax(0,1fr)] lg:gap-16">
-            <div className="lg:sticky lg:top-8 lg:self-start">
-              <p className="text-sm font-medium text-brand-700">Alur yang dapat ditinjau</p>
-              <h2 className={`${type.heading.className} mt-3`} id="workflow-title">
-                Keputusan penting tidak diserahkan pada tebakan browser.
-              </h2>
-              <p className="mt-5 max-w-md text-base leading-7 text-muted-foreground">
-                Model atau referensi awal dapat menjadi titik mulai. Operator tetap memverifikasi model dan hasil slicing sebelum estimasi produksi atau quote diterbitkan.
-              </p>
-            </div>
-
-            <ol className="border-t border-border">
-              {workflow.map(({ description, icon, label }) => (
-                <li className="grid gap-4 border-b border-border py-7 sm:grid-cols-[3rem_minmax(0,1fr)]" key={label}>
-                  <span className="flex size-11 items-center justify-center rounded-lg border border-brand-300 bg-brand-100 text-brand-800">
-                    <Icon aria-hidden="true" className="size-5" name={icon} />
-                  </span>
-                  <div>
-                    <h3 className={type.subheading.className}>{label}</h3>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{description}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        <section className="border-b border-border bg-background" aria-labelledby="custom-products-title">
-          <div className="mx-auto max-w-public px-5 py-16 sm:px-8 sm:py-20">
-            <div className="max-w-3xl">
-              <p className="text-sm font-medium text-brand-700">Inspirasi produk custom</p>
-              <h2 className={`${type.heading.className} mt-3`} id="custom-products-title">
-                Pilih referensi, lalu biarkan operator mengunci detailnya.
-              </h2>
-              <p className="mt-5 text-base leading-7 text-muted-foreground">
-                Lima produk berikut memiliki foto referensi, tetapi tetap draft karena membutuhkan konteks custom, review, dan quote. Harga pada katalog bukan checkout otomatis untuk alur ini.
-              </p>
-            </div>
-            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {CUSTOM_FLOW_PRODUCT_OPTIONS.map((product) => (
-                <article className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card" key={product.sourceProductId}>
-                  <div className="relative aspect-[4/3] bg-muted">
-                    {product.imagePath ? <Image alt={`Foto referensi ${product.name}`} className="object-cover" fill sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw" src={product.imagePath} /> : null}
-                  </div>
-                  <div className="flex flex-1 flex-col p-5">
-                    <h3 className="text-base font-semibold leading-6">{product.name}</h3>
-                    <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground">
-                      Varian referensi: {product.variantNames.join(", ")}.
-                    </p>
-                    <NiuvaLink className="mt-5 min-h-11 w-full" href={`/custom-print/request?product=${encodeURIComponent(product.sourceProductId)}`}>
-                      Ajukan untuk Review
-                    </NiuvaLink>
-                  </div>
-                </article>
-              ))}
+        <section className="scroll-mt-8 border-b border-border bg-card" id="start-custom" aria-labelledby="modes-title">
+          <div className="mx-auto max-w-public px-5 py-12 sm:px-8 sm:py-16">
+            <p className="text-sm font-medium text-brand-700">Dua titik mulai MAKE</p>
+            <h2 className={`${type.heading.className} mt-3`} id="modes-title">Pilih sesuai bahan yang sudah Anda miliki.</h2>
+            {!customerAuthEnabled ? <div className="mt-6 max-w-3xl"><StatusNotice tone="warning" title="Login Google Customer belum tersedia pada runtime ini." description="Anda dapat mempelajari pilihan dan prosesnya. Pengiriman request menunggu login Customer tersedia; tidak ada file atau kebutuhan yang akan dikirim dari halaman ini." /></div> : null}
+            <div className="mt-10 grid gap-8 border-t border-border md:grid-cols-2 md:gap-12">
+              <div className="pt-7">
+                <h3 className={type.subheading.className}>Saya punya model 3D/CAD</h3>
+                <p className="mt-3 leading-7 text-muted-foreground">Unggah model privat, konfirmasi unit atau skala, lalu beri material dan perkiraan jumlah. STL, OBJ, dan 3MF dapat disertai berat serta durasi per unit dari slicer Anda untuk simulasi komponen opsional. STEP/STP diperiksa manual.</p>
+                <p className="mt-3 text-sm font-medium">{liveEnabled ? "Upload privat tersedia pada runtime ini." : "Upload model sedang tidak tersedia pada runtime ini."}</p>
+                {customerAuthEnabled && liveEnabled && <NiuvaLink className="mt-5 min-h-11" href="/custom-print/request">Siapkan model untuk review</NiuvaLink>}
+              </div>
+              <div className="border-t border-border pt-7 md:border-l md:border-t-0 md:pl-12">
+                <h3 className={type.subheading.className}>Saya baru punya referensi</h3>
+                <p className="mt-3 leading-7 text-muted-foreground">Ceritakan fungsi dan kebutuhan awal beserta perkiraan jumlah. Link HTTPS dan satu foto privat bersifat opsional. Nomor referensi tetap sama ketika model ditambahkan kemudian.</p>
+                <p className="mt-3 text-sm font-medium">{databaseEnabled ? liveEnabled ? "Deskripsi, link, dan foto dapat dikirim." : "Deskripsi dan link dapat dikirim tanpa upload foto." : "Pengiriman menunggu database tersedia."}</p>
+                {customerAuthEnabled && databaseEnabled && <NiuvaLink className="mt-5 min-h-11" href="/custom-print/request?mode=reference" variant="outline">Ajukan referensi untuk review</NiuvaLink>}
+              </div>
             </div>
           </div>
         </section>
@@ -243,23 +207,62 @@ export default async function CustomPrintPage() {
           </div>
         </section>
 
-        <section className="border-b border-border bg-card" aria-labelledby="modes-title">
+        <section className="border-b border-border bg-card" id="workflow" aria-labelledby="workflow-title">
+          <div className="mx-auto grid max-w-public gap-10 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[minmax(16rem,0.55fr)_minmax(0,1fr)] lg:gap-16">
+            <div className="lg:sticky lg:top-8 lg:self-start">
+              <p className="text-sm font-medium text-brand-700">Alur yang dapat ditinjau</p>
+              <h2 className={`${type.heading.className} mt-3`} id="workflow-title">
+                Keputusan penting tidak diserahkan pada tebakan browser.
+              </h2>
+              <p className="mt-5 max-w-md text-base leading-7 text-muted-foreground">
+                Model atau referensi awal dapat menjadi titik mulai. Operator tetap memverifikasi model dan hasil slicing sebelum estimasi produksi atau quote diterbitkan.
+              </p>
+            </div>
+
+            <ol className="border-t border-border">
+              {workflow.map(({ description, icon, label }) => (
+                <li className="grid gap-4 border-b border-border py-7 sm:grid-cols-[3rem_minmax(0,1fr)]" key={label}>
+                  <span className="flex size-11 items-center justify-center rounded-lg border border-brand-300 bg-brand-100 text-brand-800">
+                    <Icon aria-hidden="true" className="size-5" name={icon} />
+                  </span>
+                  <div>
+                    <h3 className={type.subheading.className}>{label}</h3>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{description}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        <section className="border-b border-border bg-background" aria-labelledby="custom-products-title">
           <div className="mx-auto max-w-public px-5 py-16 sm:px-8 sm:py-20">
-            <p className="text-sm font-medium text-brand-700">Dua titik mulai MAKE</p>
-            <h2 className={`${type.heading.className} mt-3`} id="modes-title">Pilih sesuai bahan yang sudah Anda miliki.</h2>
-            <div className="mt-10 grid gap-8 border-t border-border md:grid-cols-2 md:gap-12">
-              <div className="pt-7">
-                <h3 className={type.subheading.className}>Saya punya model 3D/CAD</h3>
-                <p className="mt-3 leading-7 text-muted-foreground">Unggah model privat, konfirmasi unit atau skala, lalu beri material dan perkiraan jumlah. STL, OBJ, dan 3MF dapat disertai berat serta durasi per unit dari slicer Anda untuk simulasi komponen opsional. STEP/STP diperiksa manual.</p>
-                <p className="mt-3 text-sm font-medium">{liveEnabled ? "Upload privat tersedia pada runtime ini." : "Upload model sedang tidak tersedia pada runtime ini."}</p>
-                {liveEnabled && <NiuvaLink className="mt-5 min-h-11" href="/custom-print/request">Siapkan model untuk review</NiuvaLink>}
-              </div>
-              <div className="border-t border-border pt-7 md:border-l md:border-t-0 md:pl-12">
-                <h3 className={type.subheading.className}>Saya baru punya referensi</h3>
-                <p className="mt-3 leading-7 text-muted-foreground">Ceritakan fungsi dan kebutuhan awal beserta perkiraan jumlah. Link HTTPS dan satu foto privat bersifat opsional. Nomor referensi tetap sama ketika model ditambahkan kemudian.</p>
-                <p className="mt-3 text-sm font-medium">{databaseEnabled ? liveEnabled ? "Deskripsi, link, dan foto dapat dikirim." : "Deskripsi dan link dapat dikirim tanpa upload foto." : "Pengiriman menunggu database tersedia."}</p>
-                {databaseEnabled && <NiuvaLink className="mt-5 min-h-11" href="/custom-print/request?mode=reference" variant="outline">Ajukan referensi untuk review</NiuvaLink>}
-              </div>
+            <div className="max-w-3xl">
+              <p className="text-sm font-medium text-brand-700">Inspirasi produk custom</p>
+              <h2 className={`${type.heading.className} mt-3`} id="custom-products-title">
+                Pilih referensi, lalu biarkan operator mengunci detailnya.
+              </h2>
+              <p className="mt-5 text-base leading-7 text-muted-foreground">
+                Lima produk berikut memiliki foto referensi, tetapi tetap draft karena membutuhkan konteks custom, review, dan quote. Harga pada katalog bukan checkout otomatis untuk alur ini.
+              </p>
+            </div>
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {CUSTOM_FLOW_PRODUCT_OPTIONS.map((product) => (
+                <article className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card" key={product.sourceProductId}>
+                  <div className="relative aspect-[4/3] bg-muted">
+                    {product.imagePath ? <Image alt={`Foto referensi ${product.name}`} className="object-contain" fill sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw" src={product.imagePath} /> : null}
+                  </div>
+                  <div className="flex flex-1 flex-col p-5">
+                    <h3 className="text-base font-semibold leading-6">{product.name}</h3>
+                    <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground">
+                      Varian referensi: {product.variantNames.join(", ")}.
+                    </p>
+                    {customerAuthEnabled ? <NiuvaLink className="mt-5 min-h-11 w-full" href={`/custom-print/request?product=${encodeURIComponent(product.sourceProductId)}`}>
+                      Ajukan untuk Review
+                    </NiuvaLink> : <p className="mt-5 border-t border-border pt-4 text-sm leading-6 text-muted-foreground">Pengajuan menunggu login Google Customer tersedia.</p>}
+                  </div>
+                </article>
+              ))}
             </div>
           </div>
         </section>
@@ -312,24 +315,28 @@ export default async function CustomPrintPage() {
             </div>
             <StatusNotice
               tone="info"
-              title={databaseEnabled
+              title={!customerAuthEnabled
+                ? "Pengiriman menunggu login Google Customer."
+                : databaseEnabled
                 ? "Referensi awal dapat dikirim untuk ditriase operator."
                 : previewEnabled
                   ? "Form model siap untuk preview lokal."
                   : "Form request menunggu database."}
-              description={databaseEnabled
+              description={!customerAuthEnabled
+                ? "Pilihan dan proses dapat Anda pelajari sekarang. Request belum dapat dikirim pada runtime ini."
+                : databaseEnabled
                 ? liveEnabled
                   ? "Mulai dengan referensi atau unggah model secara privat. Kelayakan cetak dan quote tetap menunggu review operator."
                   : "Kirim deskripsi dan link tanpa upload. Foto dan model baru dapat diunggah setelah storage privat tersedia."
                 : previewEnabled
                   ? "Preview model hanya menguji metadata lokal; tidak membuat request nyata."
                   : "Pengiriman request belum tersedia. Anda tetap dapat menjelaskan kebutuhan melalui Project Brief saat layanan itu aktif."}
-              action={databaseEnabled
+              action={customerAuthEnabled && databaseEnabled
                 ? <NiuvaLink className="min-h-11" href="/custom-print/request?mode=reference">Mulai dari referensi</NiuvaLink>
-                : liveEnabled || previewEnabled
+                : customerAuthEnabled && (liveEnabled || previewEnabled)
                   ? <NiuvaLink className="min-h-11" href="/custom-print/request">Saya punya model</NiuvaLink>
-                : undefined}
-              secondaryAction={<NiuvaLink className="min-h-11" href={liveEnabled ? "/custom-print/request" : "/project-brief"} variant="outline">{liveEnabled ? "Saya punya model" : "Diskusikan kebutuhan khusus"}</NiuvaLink>}
+                  : undefined}
+              secondaryAction={customerAuthEnabled ? <NiuvaLink className="min-h-11" href={liveEnabled ? "/custom-print/request" : "/project-brief"} variant="outline">{liveEnabled ? "Saya punya model" : "Diskusikan kebutuhan khusus"}</NiuvaLink> : undefined}
             />
           </div>
         </section>

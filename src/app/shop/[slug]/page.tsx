@@ -8,6 +8,7 @@ import { StatusNotice } from "@/components/niuva/status-notice";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Icon } from "@/components/ui/Icon";
 import { getLiveShopProduct, getShopProductPreview } from "@/features/frontend-preview/server";
+import { getShopDisplayCopy } from "@/features/public/shop-display-copy";
 import { ProductSelection } from "./product-selection";
 
 export const metadata: Metadata = {
@@ -82,10 +83,19 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   if (!product) notFound();
 
   const cover = product.media.find((media) => media.url !== undefined);
-  const supportingMedia = product.media.filter((media) => media !== cover).slice(0, 2);
+  const supportingMedia = product.media.filter((media) => media !== cover && media.url !== undefined);
+  const display = getShopDisplayCopy(product);
+  const startingPrice = product.variants.length > 0
+    ? product.variants.reduce((current, variant) => {
+      const price = BigInt(variant.priceRp);
+      return price < current ? price : current;
+    }, BigInt(product.variants[0].priceRp))
+    : null;
+  const hasStock = product.variants.some((variant) => variant.stockOnHand > 0);
+  const rupiah = new Intl.NumberFormat("id-ID", { currency: "IDR", maximumFractionDigits: 0, style: "currency" });
 
   return (
-    <PublicShell functionalStatus={scenario === "examples" ? "frontend-preview" : "server-backed"} scope="product-detail">
+    <PublicShell functionalStatus={scenario === "examples" ? "frontend-preview" : "server-backed"} scope="product-detail" headerAction={{ href: "#purchase-options", label: "Pilih Varian" }}>
       <main id="main-content" className="overflow-x-hidden">
         <div className="mx-auto max-w-public px-5 py-8 sm:px-8 sm:py-12">
           <NiuvaLink href={scenario === "examples" ? "/shop?preview=examples" : "/shop"} variant="link" className="min-h-11 px-0">Kembali ke Shop</NiuvaLink>
@@ -96,7 +106,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                 {cover?.url ? (
                   <Image
                     alt={cover.altText || product.name}
-                    className="object-cover"
+                    className="object-contain"
                     fill
                     priority
                     sizes="(min-width: 1024px) 58vw, 100vw"
@@ -110,26 +120,16 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                   </div>
                 )}
               </div>
-              <div className="mt-4 grid grid-cols-2 gap-4" aria-label="Slot gallery tambahan">
-                {["Detail bentuk", "Skala penggunaan"].map((label, index) => {
-                  const media = supportingMedia[index];
-                  return (
-                    <div key={label} className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-xl border border-border bg-card p-4 text-center text-xs text-muted-foreground">
-                      {media?.url ? (
-                        <Image alt={media.altText || `${product.name} · ${label}`} className="object-cover" fill sizes="(min-width: 1024px) 28vw, 50vw" src={media.url} />
-                      ) : (
-                        <span>{label}<br />Foto belum tersedia</span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
             </section>
 
             <article className="min-w-0 lg:col-span-5 lg:pt-2">
               <p className="text-sm font-medium text-brand-700">{product.category?.name ?? "Ready-made"}</p>
-              <h1 className={`${type.heading.className} mt-3 max-w-3xl`}>{product.name}</h1>
-              <p className="mt-5 text-base leading-7 text-muted-foreground">{product.description}</p>
+              <h1 className={`${type.heading.className} mt-3 max-w-3xl`}>{display.name}</h1>
+              <p className="mt-4 text-base leading-7 text-muted-foreground">{display.summary}</p>
+              <div className="mt-6 flex flex-wrap items-end justify-between gap-4 border-y border-border py-4">
+                <div><p className="text-xs text-muted-foreground">{product.variants.length > 1 ? "Mulai dari" : "Harga"}</p><p className="mt-1 text-2xl font-semibold tabular-nums">{startingPrice === null ? "Harga belum tersedia" : rupiah.format(startingPrice)}</p></div>
+                <p className={`rounded-md border px-3 py-1.5 text-sm font-medium ${hasStock ? "border-success-border bg-success-background text-success" : "border-warning-border bg-warning-background text-warning"}`}>{hasStock ? "Ada varian tersedia" : "Stok habis"}</p>
+              </div>
 
               <ProductSelection product={product} previewEnabled={scenario === "examples"} />
 
@@ -142,6 +142,22 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
               </section>
             </article>
           </div>
+          {display.curated ? <details className="mt-12 border-y border-border py-4">
+            <summary className="min-h-11 cursor-pointer py-2 text-base font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700">Deskripsi lengkap dan ketentuan katalog</summary>
+            <div className="max-w-3xl border-t border-border pt-5 text-sm leading-7">
+              <p className="font-semibold">Nama produk pada katalog</p>
+              <p className="mt-1 text-muted-foreground">{product.name}</p>
+              <p className="mt-5 whitespace-pre-wrap break-words text-muted-foreground">{product.description}</p>
+            </div>
+          </details> : null}
+          {supportingMedia.length > 0 ? <section aria-labelledby="product-media-title" className="mt-12 border-t border-border pt-8">
+            <h2 id="product-media-title" className="text-lg font-semibold">Foto produk dan varian</h2>
+            <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+              {supportingMedia.map((media) => media.url ? <div key={`${media.sortOrder}-${media.url}`} className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-card">
+                <Image alt={media.altText || product.name} className="object-contain" fill sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 50vw" src={media.url} />
+              </div> : null)}
+            </div>
+          </section> : null}
         </div>
       </main>
     </PublicShell>

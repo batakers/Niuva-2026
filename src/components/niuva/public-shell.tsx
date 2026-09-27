@@ -4,7 +4,7 @@ import NiuvaLogo from "@/components/ui/NiuvaLogo";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { publicCompanyProfile } from "@/features/public/company-content";
 import { isLocalDemoMode } from "@/lib/env/server";
-import { PublicNavigation } from "./public-navigation";
+import { PublicNavigation, type PublicHeaderAction } from "./public-navigation";
 
 const typography = {
   "--font-body": "var(--font-public-sans)", "--font-body-token": "var(--font-public-sans)",
@@ -31,18 +31,25 @@ const defaultFunctionalStatusByScope: Readonly<Record<string, PublicScreenFuncti
   shop: "frontend-preview",
 };
 
+const b2bHeaderScopes = new Set(["homepage", "services", "projects", "project-detail"]);
+
 export function PublicShell({
   children,
   functionalStatus,
+  headerAction,
   scope,
 }: {
   children: ReactNode;
   functionalStatus?: PublicScreenFunctionalStatus;
+  headerAction?: PublicHeaderAction;
   scope: string;
 }) {
   const resolvedFunctionalStatus = functionalStatus ?? defaultFunctionalStatusByScope[scope];
+  const resolvedHeaderAction = headerAction === undefined
+    ? b2bHeaderScopes.has(scope) ? { href: "/project-brief", label: "Diskusikan Proyek" } : null
+    : headerAction;
   const demoMode = isLocalDemoMode();
-  const productRouteProofStatus = scope === "homepage" || scope === "project-brief"
+  const productRouteProofStatus = scope === "project-brief"
     ? "approved-owner"
     : "pending-owner-review";
 
@@ -58,11 +65,11 @@ export function PublicShell({
         Lewati ke konten utama
       </a>
       <header className="dark border-b border-border bg-background text-foreground" data-home-section="header">
-        <div className="mx-auto flex max-w-public flex-wrap items-center gap-3 px-5 py-4 sm:px-8">
+        <div className="mx-auto flex max-w-public flex-wrap items-center gap-3 px-5 py-2.5 sm:px-8">
           <Link href="/" aria-label="Niuva, kembali ke halaman utama" className="shrink-0 rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
             <NiuvaLogo className="h-7 w-auto sm:h-8" priority />
           </Link>
-          <PublicNavigation />
+          <PublicNavigation action={resolvedHeaderAction} />
           {demoMode ? (
             <span
               aria-label="Mode demo lokal aktif"
@@ -73,18 +80,31 @@ export function PublicShell({
               Demo lokal
             </span>
           ) : null}
-          <NiuvaLink href="/project-brief" size="sm" className="min-h-11 hidden md:inline-flex">Diskusikan Proyek</NiuvaLink>
+          {resolvedHeaderAction ? <NiuvaLink href={resolvedHeaderAction.href} size="sm" className="min-h-11 hidden xl:inline-flex">{resolvedHeaderAction.label}</NiuvaLink> : null}
         </div>
       </header>
       {children}
       <footer className="dark border-t border-border bg-background text-foreground" data-home-section="footer">
-        <div className="mx-auto grid max-w-public gap-8 px-5 py-10 sm:px-8 md:grid-cols-[minmax(0,1fr)_minmax(15rem,0.7fr)]">
+        <div className="mx-auto grid max-w-public gap-8 px-5 py-10 sm:px-8 md:grid-cols-[minmax(0,1.2fr)_minmax(10rem,0.6fr)_minmax(13rem,0.8fr)]">
           <div className="space-y-4">
             <Link href="/" aria-label="Niuva, kembali ke halaman utama" className="inline-flex rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"><NiuvaLogo className="h-7 w-auto" /></Link>
             <p className="max-w-md text-sm leading-6 text-muted-foreground">{publicCompanyProfile.supportingCopy}</p>
             <p className="text-xs text-muted-foreground">Niuva Inovasi Utama</p>
           </div>
-          <div className="space-y-6 md:justify-self-end">
+          <nav aria-label="Navigasi footer">
+            <p className="text-sm font-semibold text-foreground">Jelajahi</p>
+            <div className="mt-3 flex flex-col items-start">
+              {[["/services", "Layanan"], ["/projects", "Projects"], ["/custom-print", "Custom Print"], ["/shop", "Shop"], ["/project-brief", "Diskusikan Proyek"]].map(([href, label]) => (
+                <Link key={href} href={href} className="inline-flex min-h-11 items-center rounded-lg text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">{label}</Link>
+              ))}
+            </div>
+          </nav>
+          <div className="space-y-5">
+            <nav aria-label="Akun dan belanja" className="flex flex-wrap gap-x-5 gap-y-1">
+              {[["/cart", "Cart"], ["/account", "Akun"]].map(([href, label]) => (
+                <Link key={href} href={href} className="inline-flex min-h-11 items-center rounded-lg text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">{label}</Link>
+              ))}
+            </nav>
             <address className="max-w-sm text-sm not-italic leading-6 text-muted-foreground">
               <p>{publicCompanyProfile.contact.location}</p>
               <a className="mt-3 block underline underline-offset-4 hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`mailto:${publicCompanyProfile.contact.email}`}>
@@ -94,11 +114,6 @@ export function PublicShell({
                 {publicCompanyProfile.contact.phone}
               </a>
             </address>
-            <nav aria-label="Navigasi footer" className="flex flex-wrap items-start gap-x-6 gap-y-2">
-              {[["/shop", "Shop"], ["/cart", "Cart"], ["/account", "Akun"], ["/custom-print", "Custom Print"], ["/services", "Layanan"], ["/projects", "Projects"], ["/project-brief", "Diskusikan Proyek"]].map(([href, label]) => (
-                <Link key={href} href={href} className="inline-flex min-h-11 items-center rounded-lg text-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">{label}</Link>
-              ))}
-            </nav>
           </div>
         </div>
       </footer>
