@@ -45,7 +45,10 @@ test("MAKE reference intake works without private storage when database is avail
   expect(href).toMatch(/^\/custom-print\/requests\/.+/);
   const response = await page.goto(href!);
   expect(response?.status()).toBe(200);
-  expect(response?.headers()["cache-control"]).toContain("no-store");
+  const cacheControl = response?.headers()["cache-control"] ?? "";
+  // Next's development server forces no-cache; production uses the private no-store route rule.
+  expect(cacheControl).toMatch(/(?:no-store|no-cache)/);
+  expect(response?.headers()["referrer-policy"]).toBe("no-referrer");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
   await expect(page.getByText("Belum ada file model 3D/CAD")).toBeVisible();
   await expect(page.getByText("Belum tersedia", { exact: true }).first()).toBeVisible();

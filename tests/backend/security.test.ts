@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import nextConfig from "../../next.config";
 import { readJsonBody } from "@/lib/http/body";
 import { getContentSecurityPolicy, getSecurityHeaders } from "@/lib/security/headers";
 import {
@@ -106,6 +107,22 @@ describe("security response headers", () => {
     R2_PUBLIC_BUCKET: "niuva-public-development",
     R2_SECRET_ACCESS_KEY: "secret-key",
   };
+
+  it("marks tokenized custom request pages private and uncached", async () => {
+    const rules = await nextConfig.headers?.();
+    const requestStatusRule = rules?.find(
+      ({ source }) => source === "/custom-print/requests/:token",
+    );
+
+    expect(requestStatusRule?.headers).toContainEqual({
+      key: "Cache-Control",
+      value: "private, no-store",
+    });
+    expect(requestStatusRule?.headers).toContainEqual({
+      key: "Referrer-Policy",
+      value: "no-referrer",
+    });
+  });
 
   it("allows a configured R2 HTTPS endpoint only as its canonical connect origin", () => {
     const csp = getContentSecurityPolicy("development", completeR2Environment);

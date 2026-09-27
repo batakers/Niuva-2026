@@ -48,13 +48,6 @@ export function createAdminAuthUnavailableResponse(): NextResponse {
 }
 
 export default function proxy(request: NextRequest, event: NextFetchEvent) {
-  if (request.nextUrl.pathname.startsWith("/custom-print/requests/")) {
-    const response = NextResponse.next();
-    response.headers.set("Cache-Control", "private, no-store");
-    response.headers.set("Referrer-Policy", "no-referrer");
-    return response;
-  }
-
   // Clerk is a defense-in-depth route filter only. Every protected resource
   // must independently call requireAdmin() before reading or mutating data.
   if (!hasClerkAdminCredentials()) {
@@ -65,9 +58,5 @@ export default function proxy(request: NextRequest, event: NextFetchEvent) {
 }
 
 export const config = {
-  matcher: [
-    "/admin/:path*",
-    "/api/admin/:path*",
-    "/custom-print/requests/:token",
-  ],
+  matcher: ["/admin/:path*", "/api/admin/:path*"],
 };
