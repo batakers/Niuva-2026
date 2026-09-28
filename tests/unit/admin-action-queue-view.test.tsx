@@ -48,7 +48,7 @@ describe("AdminActionQueueView", () => {
       />,
     );
 
-    expect(document.querySelector("[data-foundation-scope='admin']")).toHaveAttribute("data-product-screen-proof-status", "approved-owner");
+    expect(document.querySelector("[data-foundation-scope='admin']")).toHaveAttribute("data-product-screen-proof-status", "pending-owner-review");
     expect(
       screen.getByRole("heading", { level: 1, name: "Action Queue" }),
     ).toBeInTheDocument();

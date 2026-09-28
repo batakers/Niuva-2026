@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Space_Grotesk } from "next/font/google";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { PublicPageViewCollector } from "@/components/niuva/public-page-view-collector";
 
 import "./globals.css";
 
@@ -33,7 +34,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${spaceGrotesk.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <TooltipProvider>{children}</TooltipProvider>
+        <TooltipProvider>
+          {process.env.NIUVA_ANALYTICS_ENABLED === "true" ? <PublicPageViewCollector /> : null}
+          {children}
+        </TooltipProvider>
       </body>
     </html>
   );

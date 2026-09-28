@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ActionQueueGroup, ActionQueueItem } from "@/modules/admin/action-queue";
 import { ACTION_QUEUE_GROUPS } from "@/modules/admin/action-queue";
+import type { ReportRange } from "@/modules/analytics/contract";
 
 const groupLabels: Record<ActionQueueGroup, string> = {
   all: "Semua",
@@ -22,14 +23,15 @@ export function formatAdminDate(value: Date): string {
 export function WorkGroupFilters({
   basePath,
   group,
-}: Readonly<{ basePath: string; group: ActionQueueGroup }>) {
+  range,
+}: Readonly<{ basePath: string; group: ActionQueueGroup; range?: ReportRange }>) {
   return (
     <nav aria-label="Filter kelompok pekerjaan" className="flex flex-wrap gap-2">
       {ACTION_QUEUE_GROUPS.map((option) => (
         <Link
           aria-current={option === group ? "page" : undefined}
           className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-medium focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 ${option === group ? "border-brand-700 bg-brand-50 text-brand-900" : "border-border bg-card text-foreground hover:border-brand-400 hover:bg-muted"}`}
-          href={option === "all" ? basePath : `${basePath}?group=${option}`}
+          href={filterHref(basePath, option, range)}
           key={option}
         >
           {groupLabels[option]}
@@ -37,6 +39,14 @@ export function WorkGroupFilters({
       ))}
     </nav>
   );
+}
+
+function filterHref(basePath: string, group: ActionQueueGroup, range?: ReportRange): string {
+  const params = new URLSearchParams();
+  if (group !== "all") params.set("group", group);
+  if (range === "13m") params.set("range", range);
+  const query = params.toString();
+  return query ? `${basePath}?${query}` : basePath;
 }
 
 export function AdminWorkList({

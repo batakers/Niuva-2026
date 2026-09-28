@@ -150,7 +150,8 @@ describe("Admin page route integration", () => {
     expect(nextServerMocks.connection).toHaveBeenCalledOnce();
     expect(markup).toContain("Overview");
     expect(markup).toContain(inquiry.referenceNumber);
-    expect(markup).toContain("Aktivitas 30 hari");
+    expect(markup).toContain("Tren tayangan halaman");
+    expect(markup).toContain("Aktivitas bisnis");
     expect(markup).toContain("Owner");
     expect(markup).not.toContain("admin-page@example.test");
     expect(markup).not.toContain("+628000000000");
