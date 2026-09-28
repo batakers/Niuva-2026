@@ -354,6 +354,7 @@ model Order {
   @@index([customerId, createdAt])
   @@index([customerEmail, createdAt])
   @@index([orderType, status, createdAt])
+  @@index([paidAt])
   @@map("orders")
 }
 
@@ -542,6 +543,7 @@ model B2BInquiry {
   quotes             B2BQuote[]
 
   @@index([status, createdAt])
+  @@index([createdAt])
   @@index([customerId, createdAt])
   @@map("b2b_inquiries")
 }
@@ -611,6 +613,7 @@ model CustomPrintRequest {
   estimates         CustomPrintEstimate[]
 
   @@index([status, createdAt])
+  @@index([createdAt])
   @@index([customerId, createdAt])
   @@map("custom_print_requests")
 }
@@ -760,6 +763,19 @@ model AuditLog {
 
   @@index([entityType, entityId, createdAt])
   @@map("audit_logs")
+}
+
+model AnalyticsDailyPageView {
+  day        DateTime @db.Date
+  routeGroup String   @map("route_group") @db.VarChar(32)
+  source     String   @db.VarChar(24)
+  device     String   @db.VarChar(12)
+  country    String   @db.Char(2)
+  landing    Boolean
+  viewCount  Int      @default(0) @map("view_count")
+
+  @@id([day, routeGroup, source, device, country, landing])
+  @@map("analytics_daily_page_views")
 }
 
 model IdempotencyRecord {

@@ -5,6 +5,8 @@ import { AdminDataUnavailableView } from "@/components/niuva/admin-shell";
 import { ActionQueueService } from "@/modules/admin/action-queue-service";
 import { parseActionQueueGroup } from "@/modules/admin/action-queue";
 import { DashboardService } from "@/modules/admin/dashboard-service";
+import { parseReportRange } from "@/modules/analytics/contract";
+import { AnalyticsService, type AnalyticsReport } from "@/modules/analytics/service";
 import { loadAdminPageAccess } from "./admin-page-access";
 import { AdminOverviewView } from "./overview-view";
 
@@ -15,17 +17,27 @@ export const metadata: Metadata = {
 
 export default async function AdminPage({
   searchParams,
-}: Readonly<{ searchParams: Promise<{ group?: string | string[] }> }>) {
+}: Readonly<{ searchParams: Promise<{ group?: string | string[]; range?: string | string[] }> }>) {
   await connection();
   const access = await loadAdminPageAccess();
   if (access === null) return <AdminAccessUnavailableView />;
 
-  const group = parseActionQueueGroup((await searchParams).group);
-  const result = await loadOverview(group);
+  const params = await searchParams;
+  const group = parseActionQueueGroup(params.group);
+  const range = parseReportRange(params.range);
+  const [result, analytics] = await Promise.all([loadOverview(group), loadAnalytics(range)]);
   if (result === null) {
     return <AdminDataUnavailableView role={access.profile.role} title="Overview belum dapat dimuat" />;
   }
-  return <AdminOverviewView dashboard={result.dashboard} queue={result.queue} role={access.profile.role} />;
+  return <AdminOverviewView analytics={analytics} dashboard={result.dashboard} queue={result.queue} range={range} role={access.profile.role} />;
+}
+
+async function loadAnalytics(range: ReturnType<typeof parseReportRange>): Promise<AnalyticsReport | null> {
+  try {
+    return await new AnalyticsService().load(range);
+  } catch {
+    return null;
+  }
 }
 
 async function loadOverview(group: ReturnType<typeof parseActionQueueGroup>) {

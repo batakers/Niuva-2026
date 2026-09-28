@@ -32,6 +32,33 @@ dan Midtrans masih berada di gate terpisah.
 | Customer Google OAuth | `IMPLEMENTED_LOCAL_MOCK_PENDING_LIVE` | `/login`, `/register`, `/account`, DB session, safe return, auto-link, logout, dan mandatory checkout boundary teruji lokal; Google Development credentials dan live callback belum diverifikasi |
 | Authenticated admin visual | `ACCEPTED_NON_PRODUCTION` | desktop/mobile acceptance untuk shell, list, detail yang memiliki data; custom-print detail tetap empty karena tidak ada request nyata |
 | Redesigned live Admin Overview + Action Queue | `OWNER_VISUAL_ACCEPTED_LOCAL` | Owner menerima tampilan live Dashboard Admin tanpa revisi pada 2026-09-27 setelah review Chrome lokal dengan Clerk Owner dan `AdminProfile` aktif pada 320/390/768/1280 px; cakupan dan batas bukti ada di `gate-closure-audit.md` |
+| Admin Overview Figma adoption + shared Admin shell (2026-09-28) | `IMPLEMENTED_VISUAL_UNREVIEWED` | Komposisi dan shell baru menggantikan tampilan yang diterima pada baris historis di atas. Penerimaan Owner untuk versi baru, perangkat fisik/AT, dan bukti produksi belum ada. |
+| First-party traffic analytics | `IMPLEMENTED_DISABLED_LOCAL_VALIDATED` | Collector default mati; angka traffic dimulai setelah aktivasi. Unit/backend/integration lokal dengan database test lulus; pemberitahuan privasi Owner/legal, uji batas laju edge, dan instruksi deployment/aktivasi terpisah masih diperlukan. |
+
+### Bukti implementasi Admin analytics — 2026-09-28
+
+Worktree terisolasi, database PostgreSQL test pada loopback port 55434, dan
+Clerk development dipakai untuk pemeriksaan lokal. `db:validate`, `typecheck`,
+`build`, serta `git diff --check` lulus. `lint` lulus dengan 0 error dan
+147 warning yang sudah ada di area lain. Unit 115/115, backend 169/169,
+integration 55/55, dan E2E fail-closed tanpa Clerk 1/1 lulus. Integrasi
+analytics mencakup 25 hit serentak pada satu bucket, batas hari Jakarta,
+range 30 hari/13 bulan, tiga hitungan bisnis dari record database, serta
+retensi pada batas bulan.
+
+Route Admin berizin diperiksa di browser pada 320, 390, 768, 1024, 1280, dan
+1440 px: tidak ada scroll horizontal dokumen; navigasi delapan halaman memakai
+sidebar/header bersama; menu mobile, fokus keyboard, empty state, dan
+preservasi `group` saat `range` berubah terlihat. Contoh traffic sementara
+di database test dibersihkan setelah grafik diperiksa. Saat flag dinyalakan
+hanya pada server lokal, pemuatan beranda menghasilkan bucket `home/direct`,
+perpindahan client ke layanan menghasilkan `services/internal`, dan membuka
+`/account` tidak menambah hitungan. Collector lalu dikembalikan mati dan
+agregat test dibersihkan. Pada build tanpa
+kredensial Clerk, `/admin` mengembalikan 503 dan E2E fail-closed lulus.
+Aturan `prefers-reduced-motion` tetap ada di CSS global, tetapi pemeriksaan
+emulasi perangkat fisik dan AT belum dilakukan. Screenshot browser tidak
+menjadi penerimaan visual Owner; statusnya tetap belum ditinjau.
 | Catalog/public Shop | `ACCEPTED_LOOPBACK` | 3 ready-made published, 5 custom-flow draft, 34 varian, 50 JPG; gallery fallback disetujui Owner |
 | Custom Print + quote/order | `ACCEPTED_LOOPBACK_SYNTHETIC` | quote route-bound, accept → `WAITING_PAYMENT`, decline regression |
 | R2 upload | `PASSED_NON_PRODUCTION_SMOKE` | `PENDING → UPLOADED → VERIFIED`, exact-origin CORS, cleanup selesai |

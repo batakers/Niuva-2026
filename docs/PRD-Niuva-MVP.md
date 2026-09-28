@@ -770,6 +770,14 @@ Cancelled
 
 Overview dan Action Queue membaca proyeksi server setelah otorisasi `AdminProfile` aktif. Jumlah pekerjaan terbuka dihitung sebelum batas 50 item. Kelompok `all`, `inquiries`, `custom-print`, dan `orders` difilter di server sebelum batas hasil. Grafik menghitung brief, permintaan custom, dan order yang **dibuat** per hari kalender selama 30 hari termasuk hari ini menurut `Asia/Jakarta`; hari tanpa aktivitas bernilai nol. Overview tidak memuat identitas kontak, alamat, file privat, rincian pembayaran, atau JSON provider. Data itu tetap berada pada detail berizin.
 
+**Addendum Overview analytics — 2026-09-28.** Komposisi baru mengambil ritme frame Dashboard Overview terang dari referensi Figma: sidebar kiri dan header bersama untuk semua halaman Admin, area laporan utama, dan panel kanan untuk lima prioritas Action Queue serta aktivitas operasional terbaru. Warna, tipografi, logo, dan aksesibilitas tetap mengikuti `DESIGN.md`. Bukti penerimaan visual sebelumnya adalah riwayat untuk tampilan lama; tampilan baru belum ditinjau Owner.
+
+Empat metrik utama pada `/admin` ialah tayangan route publik, brief B2B dibuat, permintaan custom print dibuat, dan order dibayar. Tiga metrik bisnis dihitung dari `B2BInquiry.createdAt`, `CustomPrintRequest.createdAt`, dan `Order.paidAt` dalam periode `30d` (awal) atau `13m`; order tetap dihitung setelah statusnya berlanjut. Filter pekerjaan `group` tetap berlaku saat periode berubah. Grafik traffic memakai hitungan agregat harian atau bulanan, diikuti sumber masuk, perangkat, negara, dan kelompok halaman. Angka traffic adalah perkiraan karena bot/pemblokir; tidak ada unique visitors, visits, active users, rasio konversi, atau atribusi order ke sumber traffic.
+
+Pengumpulan `public_page_view` hanya untuk route publik yang diizinkan dan mati secara default. Satu pemuatan/perpindahan route menghasilkan satu hit tanpa visitor ID, cookie analitik, URL penuh, query, token, IP tersimpan, email, atau backfill. Negara dua huruf berasal dari header platform bila tersedia, selain itu `Tidak diketahui`. Agregat yang lebih lama daripada 13 bulan kalender laporan dihapus harian. Aktivasi produksi memerlukan pemberitahuan privasi yang ditinjau Owner/legal dan pembuktian batas laju di edge; lihat [draf pemberitahuan](frontend/analytics-privacy-notice-draft.md).
+
+Estimasi diagnostik kesiapan awal `47/100 (Broken)` berasal dari perencanaan sebelum instrumentasi dan bukan metrik produk yang terukur. Hasil uji lokal tidak mengesahkan kualitas traffic produksi; angka traffic baru boleh dipakai untuk keputusan setelah pengumpulan produksi, pemeriksaan kualitas, dan review privasi selesai.
+
 #### Action Queue Examples
 
 - Custom print menunggu review.
