@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import type {
@@ -58,7 +58,8 @@ describe("AdminActionQueueView", () => {
     expect(screen.getAllByText("Tinjau exception pengiriman")).toHaveLength(2);
     expect(screen.getAllByText("Exception")).toHaveLength(2);
     expect(screen.queryByText("client@example.com")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(within(screen.getByRole("main")).queryByRole("button")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Lipat navigasi Admin" })).toBeInTheDocument();
   });
 
   it("renders a genuine empty state without preview examples", () => {

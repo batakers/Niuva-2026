@@ -80,6 +80,18 @@ repository. [Wireframe specification](wireframes/niuva-mvp-wireframe-spec.md)
 merupakan architecture record; visual treatment dan product propagation tetap
 mengikuti gate yang ditetapkan oleh authority desain.
 
+Sembilan draf di `docs/Niuva Document/` berstatus **Draft v0.3 — REFERENCE**,
+diperiksa 2026-09-30 terhadap `main` pada `9605a96`. Bagian utama menjelaskan
+perilaku runtime dan revisi navigasi pada branch `codex/admin-navigation-docs-v03`.
+Revisi lokal 2026-10-01 menempatkan toggle di footer sidebar, Situs publik di
+header kanan desktop, serta logo lengkap/simbol pada latar putih konsisten;
+tombol ikon saja dan shell memenuhi viewport. Owner menerima visual hasil
+revisi pada Overview Admin lokal pada 2026-10-01. Lampiran menandai
+usulan/model konseptual lama. [Keputusan sesi Owner](Niuva%20Document/NIUVA_Use_Case_Specification.md#9-keputusan-owner-dan-input-terbuka)
+mencatat SLA operasional, batas queue, analytics dan roadmap WhatsApp dengan
+input legal/accounting, biodata resmi dan fakta studi kasus yang masih terbuka. Draf tersebut
+tidak menggantikan PRD, Technical Design, `DESIGN.md`, atau kontrak lifecycle.
+
 ## Inventory lengkap `docs/**/*.md`
 
 | Area | Dokumen | Role | Lifecycle | Kapan dibaca |
@@ -91,6 +103,15 @@ mengikuti gate yang ditetapkan oleh authority desain.
 | Archive | [Design system architecture](archive/auis-retired/design-system-architecture.md) | Retired AUiS architecture | `HISTORICAL` | Untuk provenance arsitektur AUiS; bukan panduan implementasi UI saat ini. |
 | Authority | [PRD-Niuva-MVP.md](PRD-Niuva-MVP.md) | Product requirements | `AUTHORITY` | Saat menilai scope, user journey, requirement, atau out-of-scope. |
 | Authority | [TechDesign-Niuva-MVP.md](TechDesign-Niuva-MVP.md) | Technical design | `AUTHORITY` | Saat menilai architecture, data, security, provider, atau testing. |
+| Diagram | [NIUVA_Use_Case_Diagrams.md](<Niuva Document/NIUVA_Use_Case_Diagrams.md>) | Use case map, Draft v0.3 | `REFERENCE` | Saat menelusuri aktor, tujuan, dan perjalanan lintas area; cek PRD untuk keputusan produk. |
+| Diagram | [NIUVA_Use_Case_Specification.md](<Niuva Document/NIUVA_Use_Case_Specification.md>) | Use case specification, Draft v0.3 | `REFERENCE` | Saat menelusuri skenario dan pengecualian; cek PRD dan kontrak lifecycle. |
+| Diagram | [NIUVA_Activity_Diagram_User_Flow.md](<Niuva Document/NIUVA_Activity_Diagram_User_Flow.md>) | Activity and user flow, Draft v0.3 | `REFERENCE` | Saat membaca jalur Customer, Admin, dan Owner. |
+| Diagram | [NIUVA_Sequence_Diagrams.md](<Niuva Document/NIUVA_Sequence_Diagrams.md>) | Actor and system sequence, Draft v0.3 | `REFERENCE` | Saat membaca interaksi Brief, MAKE, retail, shipping dan analytics pada runtime sumber. |
+| Diagram | [NIUVA_System_Architecture.md](<Niuva Document/NIUVA_System_Architecture.md>) | Runtime architecture explanation, Draft v0.3 | `REFERENCE` | Saat membaca stack terpilih, boundary transaksi/provider, ownership dan analytics. |
+| Diagram | [NIUVA_Domain_Data_Model.md](<Niuva Document/NIUVA_Domain_Data_Model.md>) | Runtime domain and data model, Draft v0.3 | `REFERENCE` | Saat menelusuri model Prisma, stock ledger, estimate/quote, lifecycle dan agregat analytics. |
+| Diagram | [NIUVA_API_Contract.md](<Niuva Document/NIUVA_API_Contract.md>) | Runtime operation inventory, Draft v0.3 | `REFERENCE` | Saat membaca route handler, DTO, response, permission dan Server Actions aktual; kandidat ada di lampiran. |
+| Diagram | [NIUVA_Technical_Sequence_Diagrams.md](<Niuva Document/NIUVA_Technical_Sequence_Diagrams.md>) | Runtime technical sequence, Draft v0.3 | `REFERENCE` | Saat membaca transaksi checkout/webhook, file, estimate/quote dan analytics; contoh lama ada di lampiran. |
+| Diagram | [NIUVA_UI_Flow_Wireframes.md](<Niuva Document/NIUVA_UI_Flow_Wireframes.md>) | Structural UX wireframes, Draft v0.3 | `REFERENCE` | Saat membaca layar, state, Overview analytics dan matriks operasi; visual mengikuti DESIGN.md. |
 | Backend | [CAPABILITY-MAP-admin-rebuild.md](backend/CAPABILITY-MAP-admin-rebuild.md) | Admin implementation map | `ACTIVE` | Saat menilai urutan dan batas rebuild admin. |
 | Backend | [SPEC-action-queue.md](backend/SPEC-action-queue.md) | Admin action-queue specification | `ACTIVE` | Saat mengerjakan atau mereview module action queue. |
 | Backend | [SPEC-admin-access.md](backend/SPEC-admin-access.md) | Admin access specification | `ACTIVE` | Saat mengerjakan atau mereview protected admin entry point. |
@@ -114,6 +135,7 @@ mengikuti gate yang ditetapkan oleh authority desain.
 | Backend | [token-reissue-handoff.md](backend/token-reissue-handoff.md) | Customer-link handoff | `ACTIVE` | Saat menilai reissue dan delivery handoff route-bound link. |
 | Content | [niuva-content-curation-dossier.md](content/niuva-content-curation-dossier.md) | Public content source dossier | `ACTIVE` | Saat menilai claim, evidence label, dan public content integration. |
 | Content | [featured-covers/README.md](content/media-proofs/featured-covers/README.md) | Featured-cover asset index | `REFERENCE` | Saat mencari contact sheet dan asset proof featured covers. |
+| Frontend | [analytics-privacy-notice-draft.md](frontend/analytics-privacy-notice-draft.md) | Analytics privacy notice draft | `REFERENCE` | Saat meninjau pemberitahuan analytics bersama Owner/legal sebelum aktivasi produksi; belum policy approved. |
 | Frontend | [gate-closure-audit.md](frontend/gate-closure-audit.md) | Frontend gate evidence | `ACTIVE` | Saat menilai closure audit untuk checkout, admin, touch, atau provider boundary. |
 | Frontend | [mvp-release-readiness.md](frontend/mvp-release-readiness.md) | Readiness ledger | `ACTIVE` | Saat membutuhkan status handoff terkini dan remaining gates. |
 | Frontend | [operational-readiness-report.md](frontend/operational-readiness-report.md) | Operational readiness report | `ACTIVE` | Saat membutuhkan rincian evidence operasional. |
