@@ -15,7 +15,8 @@
  *     surfaced, and emits once via the harness-specific continuation channel.
  *
  * Contract: never break a turn. Always exit 0. Clean files emit a small ack
- * unless quiet mode is enabled; a clean Stop pass is silent.
+ * unless quiet mode is enabled; a clean Codex Stop emits an empty JSON object,
+ * while other harnesses keep a clean Stop pass silent.
  *
  * Most logic lives in `hook-lib.mjs` so it is unit-testable without a
  * subprocess. This file is the thin stdin/stdout adapter.
@@ -39,6 +40,15 @@ function stdinIsStop(stdinJson) {
   }
 }
 
+function stdinIsCodexStop(stdinJson) {
+  try {
+    const event = JSON.parse(stdinJson);
+    return isStopEvent(event) && typeof event.turn_id === 'string';
+  } catch {
+    return false;
+  }
+}
+
 async function main() {
   // Snapshot the inherited env FIRST so the re-entrancy guard checks the
   // parent's value, not the value we are about to export for any child
@@ -49,7 +59,9 @@ async function main() {
   let stdinJson = '';
   try { stdinJson = await readStdin(); } catch { /* fall through */ }
 
-  const run = stdinIsStop(stdinJson) ? runStopHook : runHook;
+  const stopEvent = stdinIsStop(stdinJson);
+  const codexStopEvent = stopEvent && stdinIsCodexStop(stdinJson);
+  const run = stopEvent ? runStopHook : runHook;
   const result = await run({
     stdinJson,
     env: inheritedEnv,
@@ -59,6 +71,7 @@ async function main() {
   writeAuditLog(process.env, result.audit, process.cwd());
 
   if (result.stdout) process.stdout.write(result.stdout);
+  else if (result.exitCode === 0 && codexStopEvent) process.stdout.write('{}\n');
   process.exit(result.exitCode || 0);
 }
 
