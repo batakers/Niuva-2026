@@ -9,6 +9,10 @@ import { getPrismaClient } from "@/lib/db/prisma";
 import { appError } from "@/modules/shared/errors";
 
 import type { CustomerGoogleIdentity } from "./core";
+import { hashOpaqueToken } from "./core";
+import { assertInternalAccountActive, assertInternalEmail, internalExpiry, type InternalAuthConfig, INTERNAL_TERMS_VERSION, INTERNAL_PRIVACY_VERSION } from "./internal-testing";
+
+export type InternalGoogleRegistration = Readonly<{ config: InternalAuthConfig; consentToken?: string }>;
 
 export type CustomerProfile = Readonly<{
   id: string;
@@ -16,6 +20,7 @@ export type CustomerProfile = Readonly<{
   normalizedEmail: string;
   displayName: string | null;
   avatarUrl: string | null;
+  internalTestExpiresAt?: Date | null;
 }>;
 
 export type CustomerOrder = Readonly<{
@@ -51,19 +56,21 @@ export interface CustomerAuthRepositoryPort {
     identity: CustomerGoogleIdentity,
     now: Date,
     allowCreate?: boolean,
+    internal?: InternalGoogleRegistration,
   ): Promise<CustomerProfile>;
 }
 
 function toCustomerProfile(customer: Pick<
   Customer,
   "id" | "email" | "normalizedEmail" | "displayName" | "avatarUrl"
->): CustomerProfile {
+> & { internalTestExpiresAt?: Date | null }): CustomerProfile {
   return {
     avatarUrl: customer.avatarUrl,
     displayName: customer.displayName,
     email: customer.email,
     id: customer.id,
     normalizedEmail: customer.normalizedEmail,
+    ...(customer.internalTestExpiresAt ? { internalTestExpiresAt: customer.internalTestExpiresAt } : {}),
   };
 }
 
@@ -74,14 +81,18 @@ export class CustomerAuthRepository implements CustomerAuthRepositoryPort {
     identity: CustomerGoogleIdentity,
     now: Date,
     allowCreate = true,
+    internal?: InternalGoogleRegistration,
   ): Promise<CustomerProfile> {
     return this.prisma.$transaction(async (transaction) => {
+      await transaction.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${identity.normalizedEmail}))`;
       const customerBySubject = await transaction.customer.findUnique({
         where: { googleSubject: identity.googleSubject },
       });
       const customerByEmail = await transaction.customer.findUnique({
         where: { normalizedEmail: identity.normalizedEmail },
       });
+      assertInternalAccountActive(customerBySubject?.internalTestExpiresAt, now);
+      assertInternalAccountActive(customerByEmail?.internalTestExpiresAt, now);
 
       if (
         customerBySubject !== null &&
@@ -131,6 +142,16 @@ export class CustomerAuthRepository implements CustomerAuthRepositoryPort {
       }
 
       if (!allowCreate) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
+      let consent: { acceptedAt: Date; termsVersion: string; privacyVersion: string } | undefined;
+      if (internal) {
+        assertInternalEmail(identity.normalizedEmail, "google", internal.config);
+        if (!internal.consentToken) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
+        const proof = await transaction.customerInternalGoogleConsent.findUnique({ where: { tokenHash: hashOpaqueToken(internal.consentToken) } });
+        if (!proof || proof.normalizedEmail !== identity.normalizedEmail || proof.expiresAt <= now || proof.consumedAt || proof.termsVersion !== INTERNAL_TERMS_VERSION || proof.privacyVersion !== INTERNAL_PRIVACY_VERSION) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
+        const claimed = await transaction.customerInternalGoogleConsent.updateMany({ where: { tokenHash: proof.tokenHash, consumedAt: null, expiresAt: { gt: now } }, data: { consumedAt: now } });
+        if (claimed.count !== 1) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
+        consent = proof;
+      }
       const created = await transaction.customer.create({
         data: {
           avatarUrl: identity.avatarUrl,
@@ -140,6 +161,8 @@ export class CustomerAuthRepository implements CustomerAuthRepositoryPort {
           emailVerifiedAt: now,
           lastLoginAt: now,
           normalizedEmail: identity.normalizedEmail,
+          ...(internal ? { internalTestExpiresAt: internalExpiry(now), createdAt: now } : {}),
+          ...(consent ? { consents: { create: { acceptedAt: consent.acceptedAt, termsVersion: consent.termsVersion, privacyVersion: consent.privacyVersion } } } : {}),
         },
       });
 
@@ -171,6 +194,7 @@ export class CustomerAuthRepository implements CustomerAuthRepositoryPort {
         expiresAt: { gt: now },
         revokedAt: null,
         tokenHash,
+        customer: { OR: [{ internalTestExpiresAt: null }, { internalTestExpiresAt: { gt: now } }] },
       },
       select: {
         customer: {
@@ -180,12 +204,13 @@ export class CustomerAuthRepository implements CustomerAuthRepositoryPort {
             email: true,
             id: true,
             normalizedEmail: true,
+            internalTestExpiresAt: true,
           },
         },
       },
     });
 
-    return session === null ? null : session.customer;
+    return session === null ? null : toCustomerProfile(session.customer);
   }
 
   async revokeSession(tokenHash: string, now: Date): Promise<void> {

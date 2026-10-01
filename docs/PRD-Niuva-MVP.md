@@ -1556,7 +1556,7 @@ Google dan menggantikan pembatasan Google saja pada teks historis dokumen ini.
 Register, Login, dan Verifikasi mengikuti struktur Figma dengan identitas Niuva
 serta copy Bahasa Indonesia. Pemulihan password merupakan bagian alur ini.
 
-- Email/password: nama, email, password 15–128 karakter, konfirmasi, dan
+- Email/password: nama, email, password 8–128 karakter, konfirmasi, dan
   persetujuan versi Syarat Layanan/Kebijakan Privasi resmi. Tidak ada sesi atau
   akses pesanan sebelum email diverifikasi; verifikasi tidak otomatis login.
 - Pendaftaran baru belum aktif selama dokumen kebijakan belum disediakan.
@@ -1569,3 +1569,19 @@ serta copy Bahasa Indonesia. Pemulihan password merupakan bagian alur ini.
   test loopback. Runtime normal tidak mengklaim email terkirim tanpa provider.
 - Pengiriman Development nyata memerlukan konfigurasi aman. Aktivasi production,
   provider acceptance, device/AT, dan penerimaan visual tetap terpisah.
+## Addendum pengujian autentikasi internal — 2 Oktober 2026
+
+Owner menyetujui pengujian nyata Google dan email/password untuk dua alamat
+milik sendiri pada Development loopback dengan database lokal `niuva_dev`.
+Pendaftaran dibatasi per metode menggunakan allowlist server dan persetujuan
+Ketentuan Pengujian Internal serta Pemberitahuan Privasi Pengujian berversi.
+Dokumen tersebut tidak membuka pendaftaran publik; dokumen komersial tetap draf
+dan identitas usaha, kontak resmi, pembatalan/refund, serta retensi legal tetap TBD.
+
+Akses akun baru pengujian berakhir 30 hari sejak Customer dibuat; login tidak
+memperpanjang tenggat. Pendaftaran pending memiliki tenggat sendiri 30 hari sejak
+dimulai. Profil, credential, sesi, token, dan persetujuan lokal dibersihkan pada
+jadwal berikutnya yang berhasil. Pesanan, brief, Custom Print, quote, unggahan,
+dan catatan provider tidak termasuk penghapusan akun ini. Akun lama tidak ditandai
+otomatis. Pengiriman Resend nyata dan penerimaan inbox harus dilaporkan terpisah
+dari keberhasilan mock, pemeriksaan otomatis, dan penerimaan visual.

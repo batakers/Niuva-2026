@@ -11,6 +11,7 @@ import {
   createCustomerOAuthState,
 } from "@/modules/customer-auth/core";
 import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
+import { customerAuthOrigin } from "@/modules/customer-auth/origin";
 import {
   createGoogleOAuthAdapter,
   getCustomerGoogleOAuthConfig,
@@ -34,7 +35,7 @@ function loginRedirect(
   error: "auth_failed" | "rate_limited" | "unavailable",
   returnTo: string,
 ): NextResponse {
-  const url = new URL("/login", request.url);
+  const url = new URL("/login", customerAuthOrigin(request));
   url.searchParams.set("error", error);
   url.searchParams.set("returnTo", safeCustomerReturnTo(returnTo));
   return NextResponse.redirect(url);
@@ -56,7 +57,7 @@ export async function GET(request: Request): Promise<Response> {
   try {
     const currentCustomer = await getCurrentCustomer();
     if (currentCustomer !== null) {
-      return NextResponse.redirect(new URL(returnTo, request.url));
+      return NextResponse.redirect(new URL(returnTo, customerAuthOrigin(request)));
     }
 
     const config = getCustomerGoogleOAuthConfig();

@@ -289,6 +289,8 @@ model ProductMedia {
 }
 
 model Customer {
+  internalTestExpiresAt DateTime? @map("internal_test_expires_at") @db.Timestamptz(6)
+  @@index([internalTestExpiresAt])
   id             String            @id @default(uuid()) @db.Uuid
   googleSubject   String?           @unique @map("google_subject")
   emailVerifiedAt DateTime?         @map("email_verified_at") @db.Timestamptz(6)
@@ -807,6 +809,8 @@ model CustomerPasswordCredential {
 }
 
 model CustomerPendingRegistration {
+  internalTestExpiresAt DateTime? @map("internal_test_expires_at") @db.Timestamptz(6)
+  @@index([internalTestExpiresAt])
   id String @id @default(uuid()) @db.Uuid
   handleHash String @unique @map("handle_hash")
   email String
@@ -856,4 +860,16 @@ model CustomerAuthRateLimit {
   count Int
   resetAt DateTime @map("reset_at") @db.Timestamptz(6)
   @@map("customer_auth_rate_limits")
+}
+
+model CustomerInternalGoogleConsent {
+  tokenHash String @id @map("token_hash")
+  normalizedEmail String @map("normalized_email")
+  termsVersion String @map("terms_version")
+  privacyVersion String @map("privacy_version")
+  acceptedAt DateTime @map("accepted_at") @db.Timestamptz(6)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  consumedAt DateTime? @map("consumed_at") @db.Timestamptz(6)
+  @@index([expiresAt])
+  @@map("customer_internal_google_consents")
 }

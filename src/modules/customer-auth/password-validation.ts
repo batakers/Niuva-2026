@@ -1,5 +1,6 @@
 import { z } from "zod";
-export const passwordSchema = z.string().min(15, "Gunakan sedikitnya 15 karakter.").max(128, "Gunakan maksimal 128 karakter.");
+export const CUSTOMER_PASSWORD_MIN_LENGTH = 8;
+export const passwordSchema = z.string().min(CUSTOMER_PASSWORD_MIN_LENGTH, `Gunakan sedikitnya ${CUSTOMER_PASSWORD_MIN_LENGTH} karakter.`).max(128, "Gunakan maksimal 128 karakter.");
 export const emailSchema = z.string().trim().max(254).email("Masukkan alamat email yang valid.");
 export const registrationSchema = z.object({
   name: z.string().trim().min(1, "Masukkan nama lengkap Anda.").max(120),

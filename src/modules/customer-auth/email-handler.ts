@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { ZodError } from "zod";
 import { CustomerEmailService } from "./email-service";
 import { CUSTOMER_SESSION_COOKIE, customerSessionCookieOptions, safeCustomerReturnTo } from "./core";
-import { assertSameOriginRequest } from "@/lib/security/origin";
+import { assertCustomerAuthOrigin, customerAuthOrigin } from "./origin";
 import { appError, toAppError } from "@/modules/shared/errors";
 export const PENDING_REGISTRATION_COOKIE = "niuva_customer_pending";
 export type EmailAction = "register" | "login" | "verify" | "resend" | "forgot-password" | "reset-password";
@@ -15,7 +15,7 @@ export function emailPostHandler(action: EmailAction, factory: () => CustomerEma
     let returnTo = "/account";
     let token: string | undefined;
     try {
-      assertSameOriginRequest(request);
+      assertCustomerAuthOrigin(request);
       if (!request.headers.get("content-type")?.startsWith("application/x-www-form-urlencoded")) throw appError("VALIDATION_ERROR");
       const body = await readBoundedText(request, 8192);
       const form = new URLSearchParams(body);
@@ -49,7 +49,7 @@ export function emailPostHandler(action: EmailAction, factory: () => CustomerEma
         returnTo = await service.reset(token ?? "", input.password, input.confirmPassword, ip);
         destination = "/login"; status = "password_reset";
       }
-      const url = new URL(destination, request.url);
+      const url = new URL(destination, customerAuthOrigin(request));
       if (!session) { url.searchParams.set("returnTo", returnTo); if (status) url.searchParams.set("status", status); }
       const response = json ? NextResponse.json({ destination: url.pathname + url.search + url.hash }) : NextResponse.redirect(url, 303);
       response.headers.set("Cache-Control", "no-store");
@@ -70,7 +70,7 @@ export function emailPostHandler(action: EmailAction, factory: () => CustomerEma
       else if (app.details) Object.assign(fields, app.details);
       const message = error instanceof ZodError ? "Periksa kembali data yang Anda masukkan." : app.message;
       if (json) return NextResponse.json({ message, fields }, { status: error instanceof ZodError ? 422 : app.status, headers: { "Cache-Control": "no-store" } });
-      const url = new URL(pages[action], request.url);
+      const url = new URL(pages[action], customerAuthOrigin(request));
       url.searchParams.set("returnTo", returnTo);
       url.searchParams.set("error", error instanceof ZodError ? "validation" : app.code.toLowerCase());
       if (token && /^[A-Za-z0-9_-]{43}$/.test(token)) url.searchParams.set("token", token);

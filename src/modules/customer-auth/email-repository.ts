@@ -2,6 +2,7 @@ import type { PrismaClient, CustomerPendingRegistration } from "@/generated/pris
 import { getPrismaClient } from "@/lib/db/prisma";
 import { appError } from "@/modules/shared/errors";
 import { hashOpaqueToken } from "./core";
+import { assertInternalAccountActive, assertInternalEmail, internalExpiry, capInternalExpiry, INTERNAL_TERMS_VERSION, INTERNAL_PRIVACY_VERSION } from "./internal-testing";
 
 export class CustomerEmailRepository {
   constructor(readonly prisma: PrismaClient = getPrismaClient()) {}
@@ -18,10 +19,19 @@ export class CustomerEmailRepository {
     return this.prisma.customer.findUnique({ where: { normalizedEmail: email }, include: { passwordCredential: true } });
   }
   findPending(handle: string, now: Date) {
-    return this.prisma.customerPendingRegistration.findFirst({ where: { handleHash: hashOpaqueToken(handle), completedAt: null, expiresAt: { gt: now } } });
+    return this.prisma.customerPendingRegistration.findFirst({ where: { handleHash: hashOpaqueToken(handle), completedAt: null, expiresAt: { gt: now }, OR: [{ internalTestExpiresAt: null }, { internalTestExpiresAt: { gt: now } }] } });
   }
-  async createPending(data: Omit<CustomerPendingRegistration, "id" | "sentAt" | "completedAt" | "deliveryConfirmed">) {
+  async createPending(data: Omit<CustomerPendingRegistration, "id" | "sentAt" | "completedAt" | "deliveryConfirmed" | "internalTestExpiresAt"> & { internalTestExpiresAt?: Date | null }) {
     return this.prisma.customerPendingRegistration.create({ data });
+  }
+  async deliveryDeadline(owner: { pendingId?: string; customerId?: string }, now: Date): Promise<Date | null> {
+    const record = owner.pendingId
+      ? await this.prisma.customerPendingRegistration.findUnique({ where: { id: owner.pendingId } })
+      : owner.customerId ? await this.prisma.customer.findUnique({ where: { id: owner.customerId } }) : null;
+    if (!record) throw appError("VALIDATION_ERROR");
+    assertInternalAccountActive(record.internalTestExpiresAt, now);
+    if (record.internalTestExpiresAt) assertInternalEmail(record.email, "password");
+    return record.internalTestExpiresAt;
   }
   async issueToken(input: { tokenHash: string; purpose: "verify" | "reset"; customerId?: string; pendingId?: string; expiresAt: Date; returnTo: string }, now: Date) {
     return this.prisma.$transaction(async tx => {
@@ -31,9 +41,19 @@ export class CustomerEmailRepository {
       if (input.pendingId) {
         const pending = await tx.customerPendingRegistration.findUnique({ where: { id: input.pendingId } });
         if (!pending || pending.completedAt || pending.expiresAt <= now) throw appError("VALIDATION_ERROR");
+        assertInternalAccountActive(pending.internalTestExpiresAt, now);
+        if (pending.internalTestExpiresAt) assertInternalEmail(pending.email, "password");
+        input.expiresAt = capInternalExpiry(input.expiresAt, pending.internalTestExpiresAt);
         if (pending.sentAt && now.getTime() - pending.sentAt.getTime() < 60000) throw appError("RATE_LIMITED");
         // Reserve resend cooldown before contacting the provider.
         await tx.customerPendingRegistration.update({ where: { id: pending.id }, data: { sentAt: now, deliveryConfirmed: false, expiresAt: input.expiresAt } });
+      }
+      if (input.customerId) {
+        const customer = await tx.customer.findUnique({ where: { id: input.customerId } });
+        if (!customer) throw appError("VALIDATION_ERROR");
+        assertInternalAccountActive(customer.internalTestExpiresAt, now);
+        if (customer.internalTestExpiresAt) assertInternalEmail(customer.email, "password");
+        input.expiresAt = capInternalExpiry(input.expiresAt, customer.internalTestExpiresAt);
       }
       await tx.customerEmailToken.updateMany({ where: { purpose: input.purpose, ...(input.pendingId ? { pendingId: input.pendingId } : { customerId: input.customerId }), consumedAt: null }, data: { consumedAt: now } });
       return tx.customerEmailToken.create({ data: input });
@@ -49,7 +69,10 @@ export class CustomerEmailRepository {
     await this.prisma.customerPendingRegistration.update({ where: { id: pendingId }, data: { deliveryConfirmed: true } });
   }
   findToken(token: string, purpose: string, now: Date) {
-    return this.prisma.customerEmailToken.findFirst({ where: { tokenHash: hashOpaqueToken(token), purpose, consumedAt: null, expiresAt: { gt: now } }, include: { customer: { select: { normalizedEmail: true } } } });
+    return this.prisma.customerEmailToken.findFirst({ where: { tokenHash: hashOpaqueToken(token), purpose, consumedAt: null, expiresAt: { gt: now }, AND: [
+      { OR: [{ customerId: null }, { customer: { OR: [{ internalTestExpiresAt: null }, { internalTestExpiresAt: { gt: now } }] } }] },
+      { OR: [{ pendingId: null }, { pending: { OR: [{ internalTestExpiresAt: null }, { internalTestExpiresAt: { gt: now } }] } }] },
+    ] }, include: { customer: { select: { normalizedEmail: true } } } });
   }
   async consumeVerification(token: string, now: Date) {
     return this.prisma.$transaction(async tx => {
@@ -59,8 +82,14 @@ export class CustomerEmailRepository {
       const claimed = await tx.customerEmailToken.updateMany({ where: { id: record.id, consumedAt: null, expiresAt: { gt: now } }, data: { consumedAt: now } });
       const pending = await tx.customerPendingRegistration.findUnique({ where: { id: record.pendingId } });
       if (!claimed.count || !pending || pending.completedAt || pending.expiresAt <= now) throw appError("VALIDATION_ERROR");
+      assertInternalAccountActive(pending.internalTestExpiresAt, now);
+      if (pending.internalTestExpiresAt) {
+        assertInternalEmail(pending.email, "password");
+        if (pending.termsVersion !== INTERNAL_TERMS_VERSION || pending.privacyVersion !== INTERNAL_PRIVACY_VERSION) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
+      }
       if (await tx.customer.findUnique({ where: { normalizedEmail: pending.normalizedEmail } })) throw appError("CONFLICT");
       const customer = await tx.customer.create({ data: { email: pending.email, normalizedEmail: pending.normalizedEmail, displayName: pending.displayName, emailVerifiedAt: now,
+        ...(pending.internalTestExpiresAt ? { internalTestExpiresAt: internalExpiry(now), createdAt: now } : {}),
         passwordCredential: { create: { passwordHash: pending.passwordHash } },
         consents: { create: { termsVersion: pending.termsVersion, privacyVersion: pending.privacyVersion, acceptedAt: pending.consentAt } } } });
       await tx.customerPendingRegistration.update({ where: { id: pending.id }, data: { completedAt: now } });
@@ -73,6 +102,10 @@ export class CustomerEmailRepository {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${input.customerId}))`;
       const current = await tx.customerPasswordCredential.findUnique({ where: { customerId: input.customerId } });
       if (current?.passwordHash !== input.expectedHash) throw appError("UNAUTHORIZED");
+      const customer = await tx.customer.findUnique({ where: { id: input.customerId } });
+      if (!customer) throw appError("UNAUTHORIZED");
+      assertInternalAccountActive(customer.internalTestExpiresAt, now);
+      input.expiresAt = capInternalExpiry(input.expiresAt, customer.internalTestExpiresAt);
       await tx.customerSession.create({ data: { customerId: input.customerId, tokenHash: input.tokenHash, expiresAt: input.expiresAt } });
       await tx.customer.update({ where: { id: input.customerId }, data: { lastLoginAt: now } });
     });
@@ -84,6 +117,10 @@ export class CustomerEmailRepository {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${record.customerId}))`;
       const claimed = await tx.customerEmailToken.updateMany({ where: { id: record.id, consumedAt: null, expiresAt: { gt: now } }, data: { consumedAt: now } });
       if (!claimed.count) throw appError("VALIDATION_ERROR");
+      const customer = await tx.customer.findUnique({ where: { id: record.customerId } });
+      if (!customer) throw appError("VALIDATION_ERROR");
+      assertInternalAccountActive(customer.internalTestExpiresAt, now);
+      if (customer.internalTestExpiresAt) assertInternalEmail(customer.email, "password");
       await tx.customerPasswordCredential.update({ where: { customerId: record.customerId }, data: { passwordHash } });
       await tx.customerSession.updateMany({ where: { customerId: record.customerId, revokedAt: null }, data: { revokedAt: now } });
       return record.returnTo;

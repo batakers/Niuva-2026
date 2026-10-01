@@ -88,6 +88,10 @@ user request and the authority order above.
   verified email/password) and
   includes a read-only Customer account. Clerk protects Owner/Admin only; do
   not restore the historical guest-checkout scope.
+- Internal Customer Development policy and retention are defined in the
+  2 October 2026 PRD/Tech Design addenda. Internal documents do not authorize
+  public registration; preserve the local allowlist and ordinary-Customer
+  boundary when changing auth or its cleanup job.
 - Browser prices and payment redirects are never authoritative. The server
   revalidates catalog, stock, shipping, totals, and Midtrans notifications.
 - Custom-print geometry does not produce an instant final price. An operator

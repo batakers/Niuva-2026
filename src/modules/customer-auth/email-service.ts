@@ -4,6 +4,7 @@ import { CustomerEmailRepository } from "./email-repository";
 import { createCustomerAuthMailer, type CustomerAuthMailer } from "./email-mailer";
 import { getCustomerAuthLegalDocuments, type CustomerAuthLegalDocuments } from "./legal";
 import { appError } from "@/modules/shared/errors";
+import { assertInternalEmail, getInternalAuthConfig, internalExpiry, capInternalExpiry, assertInternalAccountActive, INTERNAL_TERMS_VERSION } from "./internal-testing";
 
 export class CustomerEmailService {
   constructor(
@@ -23,6 +24,8 @@ export class CustomerEmailService {
     if (!this.legal || !this.mailer) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
     const input = registrationSchema.parse(raw);
     const normalizedEmail = normalizeCustomerEmail(input.email);
+    const internal = getInternalAuthConfig();
+    if (internal || this.legal.terms.version === INTERNAL_TERMS_VERSION) assertInternalEmail(normalizedEmail, "password", internal);
     await this.throttle("register", normalizedEmail, ip);
     const passwordHash = await hashPassword(input.password);
     // Never mutate credentials of an existing account through registration.
@@ -30,7 +33,7 @@ export class CustomerEmailService {
     const now = this.clock();
     const handle = createOpaqueToken();
     const pending = await this.repository.createPending({ handleHash: hashOpaqueToken(handle), email: input.email, normalizedEmail, displayName: input.name, passwordHash,
-      termsVersion: this.legal.terms.version, privacyVersion: this.legal.privacy.version, consentAt: now, expiresAt: new Date(now.getTime() + 86400000) });
+      termsVersion: this.legal.terms.version, privacyVersion: this.legal.privacy.version, consentAt: now, expiresAt: new Date(now.getTime() + 86400000), internalTestExpiresAt: internal ? internalExpiry(now) : null });
     try {
       await this.send("verify", pending.email, safeCustomerReturnTo(input.returnTo), { pendingId: pending.id });
       return { handle, sent: true };
@@ -40,7 +43,8 @@ export class CustomerEmailService {
     if (!this.mailer) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
     const token = createOpaqueToken();
     const now = this.clock();
-    const record = await this.repository.issueToken({ tokenHash: hashOpaqueToken(token), purpose, ...owner, returnTo: safeCustomerReturnTo(returnTo), expiresAt: new Date(now.getTime() + (purpose === "verify" ? 86400000 : 1800000)) }, now);
+    const deadline = await this.repository.deliveryDeadline(owner, now);
+    const record = await this.repository.issueToken({ tokenHash: hashOpaqueToken(token), purpose, ...owner, returnTo: safeCustomerReturnTo(returnTo), expiresAt: capInternalExpiry(new Date(now.getTime() + (purpose === "verify" ? 86400000 : 1800000)), deadline) }, now);
     try { await this.mailer.send({ to, token, purpose, returnTo, idempotencyKey: `customer-${purpose}:${record.id}` }); }
     catch { await this.repository.markDeliveryFailed(record.id, owner.pendingId); throw appError("PROVIDER_UNAVAILABLE"); }
     if (owner.pendingId) await this.repository.confirmDelivery(owner.pendingId);
@@ -53,19 +57,22 @@ export class CustomerEmailService {
     const valid = await verifyPassword(input.password, customer?.passwordCredential?.passwordHash ?? DUMMY_PASSWORD_HASH);
     if (!valid || !customer?.passwordCredential || !customer.emailVerifiedAt) throw appError("UNAUTHORIZED", { message: "Email atau password belum cocok." });
     const now = this.clock();
-    const maxAge = input.remember === "on" ? 2592000 : 86400;
+    assertInternalAccountActive(customer.internalTestExpiresAt, now);
+    const expiresAt = capInternalExpiry(new Date(now.getTime() + (input.remember === "on" ? 2592000 : 86400) * 1000), customer.internalTestExpiresAt);
+    const maxAge = Math.max(0, Math.floor((expiresAt.getTime() - now.getTime()) / 1000));
     const token = createOpaqueToken();
     await this.repository.createPasswordSession({
       customerId: customer.id,
       expectedHash: customer.passwordCredential.passwordHash,
       tokenHash: hashOpaqueToken(token),
-      expiresAt: new Date(now.getTime() + maxAge * 1000),
+      expiresAt,
     }, now);
     return { token, remember: input.remember === "on", maxAge, returnTo: safeCustomerReturnTo(input.returnTo) };
   }
   async resend(handle: string, returnTo: string, ip: string) {
     const pending = await this.repository.findPending(tokenSchema.parse(handle), this.clock());
     if (!pending) throw appError("VALIDATION_ERROR");
+    if (pending.internalTestExpiresAt) assertInternalEmail(pending.email, "password");
     await this.throttle("resend", pending.normalizedEmail, ip);
     await this.send("verify", pending.email, returnTo, { pendingId: pending.id });
   }
@@ -80,7 +87,7 @@ export class CustomerEmailService {
     await this.throttle("forgot-password", email, ip);
     const started = Date.now();
     const customer = await this.repository.findCredential(email);
-    if (customer?.passwordCredential && customer.emailVerifiedAt) {
+    if (customer?.passwordCredential && customer.emailVerifiedAt && (!customer.internalTestExpiresAt || customer.internalTestExpiresAt > this.clock())) {
       try { await this.send("reset", customer.email, returnTo, { customerId: customer.id }); }
       catch { /* Keep account existence and provider outcome private. No success-delivery claim in UI. */ }
     }

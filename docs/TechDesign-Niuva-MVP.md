@@ -2214,6 +2214,9 @@ Google lama, dan menambah credential scrypt, pending registration terpisah,
 rekaman persetujuan, token berhash, dan limiter PostgreSQL. Tidak ada password
 plaintext atau token mentah tersimpan di database. Akun lama/relasi order tetap.
 Scrypt asynchronous memakai N=2^17/r=8/p=1, salt acak 16 byte dan key 64 byte.
+Sesuai revisi Owner 2 Oktober 2026, password baru dan reset menerima 8–128
+karakter, termasuk spasi, tanpa kewajiban kombinasi jenis karakter. Batas minimum
+dibagikan oleh validasi Zod server/client dan kontrol HTML form.
 
 Consume token, pembuatan credential/consent, serta pengikatan order yang belum
 berpemilik dilakukan secara atomik. Advisory lock menyerialkan issue/consume
@@ -2231,3 +2234,30 @@ Dokumen resmi belum tersedia; `getCustomerAuthLegalDocuments` mengembalikan null
 pada runtime normal. Fixture kebijakan dan outbox test hanya tersedia jika
 NODE_ENV=test, mock eksplisit, dan database loopback bernama test. Outbox test
 berada di test-results yang diabaikan Git. Production email tetap nonaktif.
+## Addendum internal Customer auth — 2 Oktober 2026
+
+`NIUVA_INTERNAL_AUTH_ENABLED=true` membutuhkan dua email valid berbeda,
+`NODE_ENV=development`, runtime bukan demo/mock, APP_URL loopback, dan database
+`niuva_dev` di `127.0.0.1`. Config tidak lengkap gagal tertutup. Password dan
+Google tetap terpisah. Normalisasi origin POST auth menerima hanya Origin dan
+Host persis APP_URL ketika mode internal aktif; forwarded headers tidak memilih
+origin. Form native dan JSON menggunakan redirect aman dari origin yang dipercaya.
+POST persetujuan Google dengan JavaScript mengembalikan tujuan relatif untuk
+navigasi browser. Form tanpa JavaScript kembali ke halaman lokal dengan anchor
+lanjutan Google, agar redirect chain tidak melanggar CSP `form-action 'self'`.
+
+Persetujuan Google memakai POST berorigin valid dan bukti acak HttpOnly 10 menit;
+database menyimpan hash, email tujuan, versi dokumen, dan waktu persetujuan.
+Pembuatan Customer/consent dan konsumsi bukti dilakukan atomik; validasi identitas
+Google dan allowlist tetap wajib. Register email tetap pending sampai verifikasi.
+Resend Development memakai key sending-only dan membatasi penerima ke email
+peserta password; tidak mengaktifkan pengiriman production.
+
+Migrasi baru menambah deadline nullable Customer/pending, tanpa backfill akun
+lama. Sesi/token dibatasi deadline, lookup sesi dan operasi reset/verifikasi
+menolak expiry. CLI cleanup hanya menghapus data yang ditandai dan kedaluwarsa,
+memanfaatkan auth Cascade dan business FK SetNull; dry-run tidak memutasi data.
+Scheduler Windows `Niuva-Internal-Auth-Cleanup` berjalan 03.00 WIB, saat logon,
+StartWhenAvailable, retry per jam tiga kali, privilege current-user terbatas.
+Cleanup tetap berjalan setelah flag pendaftaran dimatikan, tetapi selalu menolak
+database di luar Development lokal. Log berisi jumlah/status/kategori saja.
