@@ -50,6 +50,7 @@ export interface CustomerAuthRepositoryPort {
   upsertGoogleCustomer(
     identity: CustomerGoogleIdentity,
     now: Date,
+    allowCreate?: boolean,
   ): Promise<CustomerProfile>;
 }
 
@@ -72,6 +73,7 @@ export class CustomerAuthRepository implements CustomerAuthRepositoryPort {
   async upsertGoogleCustomer(
     identity: CustomerGoogleIdentity,
     now: Date,
+    allowCreate = true,
   ): Promise<CustomerProfile> {
     return this.prisma.$transaction(async (transaction) => {
       const customerBySubject = await transaction.customer.findUnique({
@@ -128,12 +130,14 @@ export class CustomerAuthRepository implements CustomerAuthRepositoryPort {
         throw appError("CONFLICT");
       }
 
+      if (!allowCreate) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
       const created = await transaction.customer.create({
         data: {
           avatarUrl: identity.avatarUrl,
           displayName: identity.displayName,
           email: identity.email,
           googleSubject: identity.googleSubject,
+          emailVerifiedAt: now,
           lastLoginAt: now,
           normalizedEmail: identity.normalizedEmail,
         },

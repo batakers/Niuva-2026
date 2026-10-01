@@ -4,7 +4,7 @@ import { CustomerAuthPage } from "@/components/niuva/customer-auth-page";
 
 export const metadata: Metadata = {
   title: "Daftar Customer · Niuva",
-  description: "Daftar Customer Niuva dengan Google.",
+  description: "Daftar Customer Niuva dengan email/password atau Google.",
 };
 
 export default function RegisterPage({

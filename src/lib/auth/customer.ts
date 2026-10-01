@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 
-import { getDatabaseEnvironment, getServerCapabilities } from "@/lib/env/server";
+import { getDatabaseEnvironment, parseServerEnvironment } from "@/lib/env/server";
 import { appError } from "@/modules/shared/errors";
 import {
   CUSTOMER_SESSION_COOKIE,
@@ -14,13 +14,17 @@ import {
 
 export type CustomerAccess = CustomerProfile;
 
-export function isCustomerAuthAvailable(): boolean {
+export function isCustomerGoogleAuthAvailable(): boolean {
   try {
-    const capabilities = getServerCapabilities();
-    return capabilities.database && capabilities.customerGoogle;
+    const environment = parseServerEnvironment();
+    return Boolean(environment.DATABASE_URL && environment.GOOGLE_CLIENT_ID && environment.GOOGLE_CLIENT_SECRET && environment.GOOGLE_REDIRECT_URI);
   } catch {
     return false;
   }
+}
+
+export function isCustomerAuthAvailable(): boolean {
+  return isCustomerSessionStoreAvailable();
 }
 
 export function isCustomerSessionStoreAvailable(): boolean {

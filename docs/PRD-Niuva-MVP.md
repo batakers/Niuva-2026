@@ -415,9 +415,9 @@ Shop
 → Order Status
 ```
 
-Customer wajib login dengan Google sebelum checkout. `/login` dan `/register`
-adalah dua entry point ke flow OAuth yang sama; tidak ada password atau email
-authentication terpisah. `/account` menampilkan nama, email terverifikasi,
+Customer wajib login sebelum checkout dengan email/password terverifikasi atau Google.
+`/login` dan `/register` menyediakan kedua metode; `/verify-email` menyelesaikan
+pendaftaran email. Clerk tetap khusus Owner/Admin. `/account` menampilkan nama, email terverifikasi,
 avatar opsional, serta riwayat order retail dan custom print secara read-only.
 
 Order guest lama yang belum memiliki Customer dapat ditautkan ketika login
@@ -1547,3 +1547,25 @@ Setelah PRD disetujui:
   ]
 }
 ```
+
+
+## Addendum Customer authentication — 1 Oktober 2026
+
+Keputusan Owner memperluas autentikasi Customer menjadi email/password plus
+Google dan menggantikan pembatasan Google saja pada teks historis dokumen ini.
+Register, Login, dan Verifikasi mengikuti struktur Figma dengan identitas Niuva
+serta copy Bahasa Indonesia. Pemulihan password merupakan bagian alur ini.
+
+- Email/password: nama, email, password 15–128 karakter, konfirmasi, dan
+  persetujuan versi Syarat Layanan/Kebijakan Privasi resmi. Tidak ada sesi atau
+  akses pesanan sebelum email diverifikasi; verifikasi tidak otomatis login.
+- Pendaftaran baru belum aktif selama dokumen kebijakan belum disediakan.
+  Login akun yang sudah ada tetap mengikuti capability metode masing-masing.
+- Login Google tidak menggabungkan akun password yang emailnya sama.
+- Verifikasi berlaku 24 jam; reset 30 menit. Reset mencabut seluruh sesi akun.
+- Ingat saya pada login password: 30 hari; tanpa pilihan itu: cookie sesi browser
+  dengan batas server 24 jam. Google mempertahankan sesi 30 hari.
+- Mock pengiriman dan fixture kebijakan hanya untuk test terisolasi di database
+  test loopback. Runtime normal tidak mengklaim email terkirim tanpa provider.
+- Pengiriman Development nyata memerlukan konfigurasi aman. Aktivasi production,
+  provider acceptance, device/AT, dan penerimaan visual tetap terpisah.

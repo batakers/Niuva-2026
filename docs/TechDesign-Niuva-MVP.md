@@ -2194,3 +2194,40 @@ remain out of MVP.
   "aiScope": "development assistance only; no product AI"
 }
 ```
+
+
+## Addendum Customer email/password — 1 Oktober 2026
+
+Keputusan Owner ini menggantikan batas Google-only/no-password pada scope lama.
+Customer tetap terpisah dari Clerk Owner/Admin; kontrak sesi dan allowlist
+returnTo yang ada dipertahankan. Capability sesi/password tidak bergantung pada
+Google. Provider email Customer menggunakan adapter Resend Development yang ada.
+
+Endpoint POST `/api/auth/email/{register,login,verify,resend,forgot-password,reset-password}`
+menerima form URL-encoded, validasi Zod, pemeriksaan origin, body maksimum 8 KiB,
+dan respons JSON untuk progressive enhancement atau redirect 303 untuk form
+native. Token pada GET tidak dikonsumsi; penyelesaian membutuhkan POST. Halaman
+token memakai origin-referrer/noindex dan tidak memuat collector analytics.
+
+Migrasi baru membuat googleSubject nullable, memberi emailVerifiedAt pada akun
+Google lama, dan menambah credential scrypt, pending registration terpisah,
+rekaman persetujuan, token berhash, dan limiter PostgreSQL. Tidak ada password
+plaintext atau token mentah tersimpan di database. Akun lama/relasi order tetap.
+Scrypt asynchronous memakai N=2^17/r=8/p=1, salt acak 16 byte dan key 64 byte.
+
+Consume token, pembuatan credential/consent, serta pengikatan order yang belum
+berpemilik dilakukan secara atomik. Advisory lock menyerialkan issue/consume
+per tujuan; reset dan pembuatan sesi password berbagi lock akun. Reset mencabut
+sesi. Google/password tidak otomatis ditautkan melalui email yang sama.
+
+Limiter persisten: login 5/email dan 30/IP per 15 menit; register, resend,
+forgot-password dan reset 3/tujuan dan 20/IP per jam; verifikasi 10/token dan
+20/IP per 15 menit. Resend memiliki cooldown 60 detik. Key email/IP dihash.
+Respons pemulihan seragam untuk akun tidak ditemukan, Google-only, dan akun
+password. Token verifikasi 24 jam, reset 30 menit, sekali pakai; resend
+membatalkan token lama. Record kedaluwarsa ditolak tanpa mengubah data bisnis.
+
+Dokumen resmi belum tersedia; `getCustomerAuthLegalDocuments` mengembalikan null
+pada runtime normal. Fixture kebijakan dan outbox test hanya tersedia jika
+NODE_ENV=test, mock eksplisit, dan database loopback bernama test. Outbox test
+berada di test-results yang diabaikan Git. Production email tetap nonaktif.

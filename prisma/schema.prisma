@@ -290,7 +290,11 @@ model ProductMedia {
 
 model Customer {
   id             String            @id @default(uuid()) @db.Uuid
-  googleSubject   String            @unique @map("google_subject")
+  googleSubject   String?           @unique @map("google_subject")
+  emailVerifiedAt DateTime?         @map("email_verified_at") @db.Timestamptz(6)
+  passwordCredential CustomerPasswordCredential?
+  emailTokens CustomerEmailToken[]
+  consents CustomerConsent[]
   email           String
   normalizedEmail  String            @unique @map("normalized_email")
   displayName     String?           @map("display_name")
@@ -793,4 +797,63 @@ model IdempotencyRecord {
   @@unique([scope, idempotencyKey])
   @@index([scope, status, expiresAt])
   @@map("idempotency_records")
+}
+model CustomerPasswordCredential {
+  customerId String @id @map("customer_id") @db.Uuid
+  passwordHash String @map("password_hash")
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  @@map("customer_password_credentials")
+}
+
+model CustomerPendingRegistration {
+  id String @id @default(uuid()) @db.Uuid
+  handleHash String @unique @map("handle_hash")
+  email String
+  normalizedEmail String @map("normalized_email")
+  displayName String @map("display_name")
+  passwordHash String @map("password_hash")
+  termsVersion String @map("terms_version")
+  privacyVersion String @map("privacy_version")
+  consentAt DateTime @map("consent_at") @db.Timestamptz(6)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  deliveryConfirmed Boolean @default(false) @map("delivery_confirmed")
+  sentAt DateTime? @map("sent_at") @db.Timestamptz(6)
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(6)
+  tokens CustomerEmailToken[]
+  @@index([normalizedEmail])
+  @@map("customer_pending_registrations")
+}
+
+model CustomerEmailToken {
+  id String @id @default(uuid()) @db.Uuid
+  tokenHash String @unique @map("token_hash")
+  purpose String
+  customerId String? @map("customer_id") @db.Uuid
+  pendingId String? @map("pending_id") @db.Uuid
+  returnTo String @map("return_to")
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  consumedAt DateTime? @map("consumed_at") @db.Timestamptz(6)
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  pending CustomerPendingRegistration? @relation(fields: [pendingId], references: [id], onDelete: Cascade)
+  @@index([customerId, purpose])
+  @@index([pendingId])
+  @@map("customer_email_tokens")
+}
+
+model CustomerConsent {
+  id String @id @default(uuid()) @db.Uuid
+  customerId String @map("customer_id") @db.Uuid
+  termsVersion String @map("terms_version")
+  privacyVersion String @map("privacy_version")
+  acceptedAt DateTime @map("accepted_at") @db.Timestamptz(6)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  @@map("customer_consents")
+}
+
+model CustomerAuthRateLimit {
+  key String @id
+  count Int
+  resetAt DateTime @map("reset_at") @db.Timestamptz(6)
+  @@map("customer_auth_rate_limits")
 }

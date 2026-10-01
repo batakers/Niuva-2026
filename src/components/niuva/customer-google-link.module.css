@@ -1,0 +1,67 @@
+/* Google's Light action branding, isolated from Niuva's semantic palette.
+   https://developers.google.com/identity/branding-guidelines */
+.action {
+  display: flex;
+  min-height: 48px;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #747775;
+  border-radius: var(--radius-control);
+  background: #fff;
+  color: #1f1f1f;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color var(--duration-fast-token) var(--ease-standard-token);
+}
+
+.action:hover:not(:disabled) {
+  background: #f2f2f2;
+}
+
+.action:active:not(:disabled) {
+  background: #e3e3e3;
+}
+
+.action:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.action:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.action[aria-disabled="true"] {
+  cursor: progress;
+}
+
+.icon {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+.iconAsset {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  width: 40px;
+  height: 40px;
+  max-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action {
+    transition: none;
+  }
+}

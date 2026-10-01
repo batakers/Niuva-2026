@@ -84,7 +84,8 @@ user request and the authority order above.
 
 - The current user-selected guidance level is **C — Somewhere in between**. The
   older `User level: A` metadata in the PRD/Tech Design does not override it.
-- The current PRD addendum requires Customer Google login before checkout and
+- The current PRD addenda require Customer login before checkout (Google or
+  verified email/password) and
   includes a read-only Customer account. Clerk protects Owner/Admin only; do
   not restore the historical guest-checkout scope.
 - Browser prices and payment redirects are never authoritative. The server

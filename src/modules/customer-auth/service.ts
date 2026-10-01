@@ -1,3 +1,4 @@
+import { getCustomerAuthLegalDocuments } from "./legal";
 import {
   CUSTOMER_SESSION_MAX_AGE_SECONDS,
   createOpaqueToken,
@@ -37,7 +38,7 @@ export class CustomerAuthService {
     identity: CustomerGoogleIdentity,
   ): Promise<CustomerLoginResult> {
     const now = this.clock();
-    const customer = await this.repository.upsertGoogleCustomer(identity, now);
+    const customer = await this.repository.upsertGoogleCustomer(identity, now, getCustomerAuthLegalDocuments() !== null);
     const sessionToken = this.randomToken();
     const expiresAt = new Date(
       now.getTime() + CUSTOMER_SESSION_MAX_AGE_SECONDS * 1_000,

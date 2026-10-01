@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getCurrentCustomer, isCustomerAuthAvailable } from "@/lib/auth/customer";
+import { getCurrentCustomer, isCustomerGoogleAuthAvailable } from "@/lib/auth/customer";
 import {
   createPkcePair,
   customerOAuthCookieOptions,
@@ -49,7 +49,7 @@ export async function GET(request: Request): Promise<Response> {
     return loginRedirect(request, "rate_limited", returnTo);
   }
 
-  if (!isCustomerAuthAvailable()) {
+  if (!isCustomerGoogleAuthAvailable()) {
     return loginRedirect(request, "unavailable", returnTo);
   }
 
