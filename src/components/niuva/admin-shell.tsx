@@ -1,13 +1,14 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
-  BarChart3, BriefcaseBusiness, ExternalLink, Images, LayoutDashboard,
+  BriefcaseBusiness, ExternalLink, Images, LayoutDashboard,
   ListTodo, Menu, Package, Printer, ShoppingBag, SlidersHorizontal,
   type LucideIcon,
 } from "lucide-react";
 import type { AdminRole } from "@/generated/prisma/client";
-import NiuvaLogo from "@/components/ui/NiuvaLogo";
 import { AdminSessionActions } from "./admin-session-actions";
+import { AdminSidebarLayout, AdminSidebarLink, AdminSidebarToggle } from "./admin-sidebar";
 
 export type AdminArea =
   | "overview"
@@ -62,35 +63,40 @@ export function AdminShell({
       data-typography-version="1.0"
     >
       <Link className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-card focus:p-3 focus:text-brand-900 focus:shadow-floating" href="#main-content">Lewati ke konten utama</Link>
-      <div className="mx-auto grid min-h-dvh max-w-admin lg:grid-cols-[13.25rem_minmax(0,1fr)]">
-        <aside className="hidden border-r border-sidebar-border bg-card lg:block" aria-label="Navigasi Admin">
-          <div className="sticky top-0 flex h-dvh flex-col overflow-y-auto px-3 py-6">
-            <Link href="/admin" aria-label="Niuva Admin, kembali ke Overview" className="mb-9 inline-flex w-fit rounded-lg bg-neutral-900 px-2 py-2 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
-              <NiuvaLogo className="h-6 w-auto" priority />
+      <AdminSidebarLayout>
+        <aside id="admin-desktop-sidebar" className="hidden border-r border-sidebar-border bg-card lg:block" aria-label="Navigasi Admin">
+          <div className="sticky top-0 flex h-dvh flex-col px-3 py-6 group-data-[sidebar-collapsed=true]/admin-shell:px-2">
+            <Link href="/admin" aria-label="Niuva Admin, kembali ke Overview" className="mb-9 inline-flex min-h-11 w-fit shrink-0 items-center rounded-lg px-2 py-2 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 group-data-[sidebar-collapsed=true]/admin-shell:w-full group-data-[sidebar-collapsed=true]/admin-shell:justify-center group-data-[sidebar-collapsed=true]/admin-shell:px-0">
+              <AdminLogo className="h-6 w-auto group-data-[sidebar-collapsed=true]/admin-shell:hidden" />
+              <Image alt="Niuva simbol biru" className="hidden h-6 w-auto group-data-[sidebar-collapsed=true]/admin-shell:block" height={1098} priority src="/assets/brand/niuva-symbol-blue.svg" width={1093} />
             </Link>
-            <p className="px-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Operasional</p>
-            <nav aria-label="Operasional" className="mt-2 grid gap-1">
-              {primaryNavigation.map((item) => <AdminNavLink active={active} item={item} key={item.area} />)}
-            </nav>
-            <p className="mt-8 px-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Kelola</p>
-            <nav aria-label="Kelola" className="mt-2 grid gap-1">
-              {manageNavigation.map((item) => <AdminNavLink active={active} item={item} key={item.area} />)}
-            </nav>
-            <Link className="mt-auto inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-medium text-brand-700 hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href="/">
-              <ExternalLink aria-hidden="true" className="size-4" /> Situs publik
-            </Link>
+            <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1 group-data-[sidebar-collapsed=true]/admin-shell:[scrollbar-width:none] group-data-[sidebar-collapsed=true]/admin-shell:[&::-webkit-scrollbar]:hidden">
+              <p className="px-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground group-data-[sidebar-collapsed=true]/admin-shell:sr-only">Operasional</p>
+              <nav aria-label="Operasional" className="mt-2 grid gap-1">
+                {primaryNavigation.map((item) => <AdminDesktopNavLink active={active} item={item} key={item.area} />)}
+              </nav>
+              <p className="mt-8 px-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground group-data-[sidebar-collapsed=true]/admin-shell:sr-only">Kelola</p>
+              <nav aria-label="Kelola" className="mt-2 grid gap-1 group-data-[sidebar-collapsed=true]/admin-shell:mt-8">
+                {manageNavigation.map((item) => <AdminDesktopNavLink active={active} item={item} key={item.area} />)}
+              </nav>
+            </div>
+            <div className="mt-4 flex shrink-0 justify-center border-t border-border pt-4">
+              <AdminSidebarToggle />
+            </div>
           </div>
         </aside>
         <div className="min-w-0">
           <header className="border-b border-border bg-card px-4 py-3 sm:px-6 lg:px-8" aria-label="Niuva Admin">
             <div className="flex min-h-11 flex-wrap items-center gap-3">
-              <Link href="/admin" aria-label="Niuva Admin, kembali ke Overview" className="inline-flex rounded-lg bg-neutral-900 px-2 py-2 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 lg:hidden">
-                <NiuvaLogo className="h-6 w-auto" priority />
+              <Link href="/admin" aria-label="Niuva Admin, kembali ke Overview" className="inline-flex min-h-11 items-center rounded-lg px-2 py-2 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 lg:hidden">
+                <AdminLogo className="h-6 w-auto" />
               </Link>
-              <BarChart3 aria-hidden="true" className="hidden size-4 text-brand-700 lg:block" />
               <span className="min-w-0 text-sm font-semibold text-foreground">Admin <span className="text-muted-foreground">/ {currentArea?.label ?? "Overview"}</span></span>
-              <span className="ml-auto rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-foreground">{roleLabels[role]}</span>
-              <AdminSessionActions showLogout={Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)} />
+              <div className="ml-auto flex shrink-0 items-center gap-3">
+                <Link className="hidden min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 lg:inline-flex" href="/"><ExternalLink aria-hidden="true" className="size-4 shrink-0" />Situs publik</Link>
+                <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-foreground">{roleLabels[role]}</span>
+                <AdminSessionActions showLogout={Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)} />
+              </div>
             </div>
             <details className="mt-3 lg:hidden">
               <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
@@ -111,8 +117,21 @@ export function AdminShell({
           </header>
           <div className="min-w-0 px-4 pb-10 pt-6 sm:px-6 lg:px-8">{children}</div>
         </div>
-      </div>
+      </AdminSidebarLayout>
     </div>
+  );
+}
+
+function AdminLogo({ className }: Readonly<{ className: string }>) {
+  return <Image alt="Niuva logo" className={className} height={346} priority src="/assets/brand/niuva-logo-horizontal-light.svg" width={1831} />;
+}
+
+function AdminDesktopNavLink({ active, item }: Readonly<{ active: AdminArea; item: NavigationItem }>) {
+  const Icon = item.icon;
+  return (
+    <AdminSidebarLink active={item.area === active} href={item.href} label={item.label}>
+      <Icon aria-hidden="true" className="size-4 shrink-0" />
+    </AdminSidebarLink>
   );
 }
 
