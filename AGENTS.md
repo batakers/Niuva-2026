@@ -92,6 +92,10 @@ user request and the authority order above.
   2 October 2026 PRD/Tech Design addenda. Internal documents do not authorize
   public registration; preserve the local allowlist and ordinary-Customer
   boundary when changing auth or its cleanup job.
+- Customer privacy Development closure and retention follow the 2 October 2026
+  PRD/Tech Design privacy addenda and `docs/legal/customer-policy-implementation.md`.
+  Preserve lifecycle serialization and closed-business markers; account signup
+  must never restore previously detached history automatically.
 - Browser prices and payment redirects are never authoritative. The server
   revalidates catalog, stock, shipping, totals, and Midtrans notifications.
 - Custom-print geometry does not produce an instant final price. An operator

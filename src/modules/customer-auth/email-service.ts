@@ -24,13 +24,13 @@ export class CustomerEmailService {
     if (!this.legal || !this.mailer) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
     const input = registrationSchema.parse(raw);
     const normalizedEmail = normalizeCustomerEmail(input.email);
+    const now = this.clock();
     const internal = getInternalAuthConfig();
     if (internal || this.legal.terms.version === INTERNAL_TERMS_VERSION) assertInternalEmail(normalizedEmail, "password", internal);
     await this.throttle("register", normalizedEmail, ip);
     const passwordHash = await hashPassword(input.password);
     // Never mutate credentials of an existing account through registration.
     if (await this.repository.findCredential(normalizedEmail)) return { handle: null, sent: false };
-    const now = this.clock();
     const handle = createOpaqueToken();
     const pending = await this.repository.createPending({ handleHash: hashOpaqueToken(handle), email: input.email, normalizedEmail, displayName: input.name, passwordHash,
       termsVersion: this.legal.terms.version, privacyVersion: this.legal.privacy.version, consentAt: now, expiresAt: new Date(now.getTime() + 86400000), internalTestExpiresAt: internal ? internalExpiry(now) : null });

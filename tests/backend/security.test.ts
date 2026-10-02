@@ -109,6 +109,9 @@ describe("security response headers", () => {
   };
 
   it("marks private customer pages and tokenized requests uncached", async () => {
+    const incoming = nextConfig.logging && nextConfig.logging.incomingRequests;
+    const ignores = typeof incoming === "object" ? incoming.ignore ?? [] : [];
+    expect(ignores.some(pattern => pattern.test("/account/privacy/confirm?token=TEST-ONLY"))).toBe(true);
     const rules = await nextConfig.headers?.();
     const requestStatusRule = rules?.find(
       ({ source }) => source === "/custom-print/requests/:token",
@@ -129,7 +132,7 @@ describe("security response headers", () => {
     });
     expect(accountRule?.headers).toContainEqual({
       key: "Referrer-Policy",
-      value: "no-referrer",
+      value: "same-origin",
     });
   });
 

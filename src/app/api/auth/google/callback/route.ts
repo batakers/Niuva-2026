@@ -111,7 +111,7 @@ export async function GET(request: Request): Promise<Response> {
     ).exchangeCode({ code, codeVerifier: verifier });
     const proof = cookieStore.get(INTERNAL_GOOGLE_CONSENT_COOKIE)?.value;
     const service = new CustomerAuthService();
-    const login = proof ? await service.completeGoogleLogin(identity, proof) : await service.completeGoogleLogin(identity);
+    const login = await service.completeGoogleLogin(identity, proof, new Date(Number(state.split(".")[0]) * 1000));
     const response = NextResponse.redirect(customerRedirectUrl(returnTo, request));
     response.cookies.set(
       CUSTOMER_SESSION_COOKIE,

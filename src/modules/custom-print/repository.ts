@@ -5,6 +5,7 @@ import {
 } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { appError, isAppError } from "@/modules/shared/errors";
+import { lockCustomerBusinessWrite, lockCustomerLifecycle } from "@/modules/customer-privacy/lifecycle";
 
 import type { CustomPrintRequestInput } from "./schema";
 import { isModelExtension, isReferencePhotoExtension } from "./file-types";
@@ -207,6 +208,7 @@ export class CustomPrintRequestRepository {
 
   async create(input: CreateCustomPrintRequestInput) {
     return this.prisma.$transaction(async (transaction) => {
+      await lockCustomerBusinessWrite(transaction, input.customerId);
       const files = await transaction.storedFile.findMany({
         where: {
           bucketScope: "PRIVATE_CUSTOMER",
@@ -793,6 +795,8 @@ export class CustomPrintQuoteRepository {
     version: number;
   }>): Promise<AcceptedCustomOrder> {
     return this.prisma.$transaction(async (transaction) => {
+      await lockCustomerLifecycle(transaction);
+      await lockCustomerBusinessWrite(transaction, input.customerId);
       const quoteHint = await transaction.customPrintQuote.findUnique({ where: { id: input.quoteId }, select: { requestId: true } });
       if (quoteHint === null) throw appError("NOT_FOUND");
       await transaction.$queryRaw(Prisma.sql`SELECT "id" FROM "custom_print_requests" WHERE "id" = ${quoteHint.requestId}::uuid FOR UPDATE`);
@@ -806,6 +810,7 @@ export class CustomPrintQuoteRepository {
             select: {
               customerId: true,
               customerEmail: true,
+              accountClosedAt: true,
               customerName: true,
               customerPhone: true,
               referenceNumber: true,
@@ -823,7 +828,7 @@ export class CustomPrintQuoteRepository {
       if (quote === null) {
         throw appError("NOT_FOUND");
       }
-      if (input.customerId === undefined ? quote.request.customerId !== null : quote.request.customerId !== input.customerId) {
+      if (quote.request.accountClosedAt || (input.customerId === undefined ? quote.request.customerId !== null : quote.request.customerId !== input.customerId)) {
         throw appError("UNAUTHORIZED");
       }
 

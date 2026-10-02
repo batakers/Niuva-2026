@@ -1585,3 +1585,26 @@ jadwal berikutnya yang berhasil. Pesanan, brief, Custom Print, quote, unggahan,
 dan catatan provider tidak termasuk penghapusan akun ini. Akun lama tidak ditandai
 otomatis. Pengiriman Resend nyata dan penerimaan inbox harus dilaporkan terpisah
 dari keberhasilan mock, pemeriksaan otomatis, dan penerimaan visual.
+
+## Addendum draf policy dan pusat privasi Customer — 2 Oktober 2026
+
+Identitas PT. NIUVA INOVASI UTAMA, alamat profil Ekraf dan kontak Owner serta
+keputusan keluhan/refund kini tercatat pada draf legal versi v2 di `docs/legal/`.
+Addendum ini menggantikan status TBD atas fakta tersebut pada addendum internal
+sebelumnya, tanpa menerbitkan dokumen resmi atau membuka pendaftaran publik.
+
+Customer Development/test memiliki `/account/privacy`: JSON milik sendiri,
+koreksi, data tambahan, dan penutupan permanen dengan konfirmasi email sekali
+pakai. Owner menangani permintaan di `/admin/privacy`; akses/koreksi memiliki
+tenggat 3×24 jam kalender sejak diterima. SLA keluhan pesanan hari kerja berbeda.
+Penutupan tetap diterima saat pesanan/kasus aktif, mempertahankan kontak
+terverifikasi untuk penyelesaian. Tidak ada pemulihan akun/riwayat otomatis saat
+daftar ulang. Preview draf hanya Owner, tidak masuk persetujuan pendaftaran.
+
+Isi kasus selesai 7 hari, bukti minimum 30 hari, penahanan terdokumentasi dengan
+penanggung jawab dan tanggal peninjauan. Data transaksi dan kelas berkas 14/60/90
+hari tetap terpisah. Detail operasional, provider lokal, batas implementasi dan
+prasyarat publikasi di `docs/legal/customer-policy-implementation.md`. Usia 18,
+retensi pembukuan, backup/provider produksi, proses refund/retur dan tinjauan
+legal merupakan prasyarat publikasi; tahap ini tidak mengubah B2B menjadi WA,
+melakukan refund otomatis, deployment ataupun penerimaan legal.

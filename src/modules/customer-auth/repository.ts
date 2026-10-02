@@ -7,6 +7,7 @@ import {
 } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { appError } from "@/modules/shared/errors";
+import { lockCustomerLifecycle, assertFreshAccountIntent } from "@/modules/customer-privacy/lifecycle";
 
 import type { CustomerGoogleIdentity } from "./core";
 import { hashOpaqueToken } from "./core";
@@ -57,6 +58,7 @@ export interface CustomerAuthRepositoryPort {
     now: Date,
     allowCreate?: boolean,
     internal?: InternalGoogleRegistration,
+    startedAt?: Date,
   ): Promise<CustomerProfile>;
 }
 
@@ -82,8 +84,11 @@ export class CustomerAuthRepository implements CustomerAuthRepositoryPort {
     now: Date,
     allowCreate = true,
     internal?: InternalGoogleRegistration,
+    startedAt = now,
   ): Promise<CustomerProfile> {
     return this.prisma.$transaction(async (transaction) => {
+      await lockCustomerLifecycle(transaction);
+      await assertFreshAccountIntent(transaction, identity.normalizedEmail, startedAt, identity.googleSubject);
       await transaction.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${identity.normalizedEmail}))`;
       const customerBySubject = await transaction.customer.findUnique({
         where: { googleSubject: identity.googleSubject },
@@ -176,12 +181,17 @@ export class CustomerAuthRepository implements CustomerAuthRepositoryPort {
     expiresAt: Date;
     tokenHash: string;
   }>): Promise<void> {
-    await this.prisma.customerSession.create({
+    await this.prisma.$transaction(async tx => {
+      await lockCustomerLifecycle(tx);
+      const customer = await tx.customer.findUnique({ where: { id: input.customerId } });
+      if (!customer) throw appError("UNAUTHORIZED");
+      await tx.customerSession.create({
       data: {
         customerId: input.customerId,
-        expiresAt: input.expiresAt,
+        expiresAt: customer.internalTestExpiresAt && customer.internalTestExpiresAt < input.expiresAt ? customer.internalTestExpiresAt : input.expiresAt,
         tokenHash: input.tokenHash,
       },
+      });
     });
   }
 
@@ -285,6 +295,7 @@ export class CustomerAuthRepository implements CustomerAuthRepositoryPort {
       UPDATE "orders"
       SET "customer_id" = ${customerId}
       WHERE "customer_id" IS NULL
+        AND "account_closed_at" IS NULL
         AND lower(btrim("customer_email")) = ${normalizedEmail}
     `;
   }

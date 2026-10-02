@@ -155,7 +155,7 @@ describe("Customer auth HTTP boundaries", () => {
       email: "customer@example.com",
       googleSubject: "google-sub-123",
       normalizedEmail: "customer@example.com",
-    });
+    }, undefined, expect.any(Date));
   });
 
   it("revokes the current session on same-origin logout and blocks cross-origin logout", async () => {

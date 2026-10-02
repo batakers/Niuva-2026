@@ -2,6 +2,7 @@ import type { PrismaClient, CustomerPendingRegistration } from "@/generated/pris
 import { getPrismaClient } from "@/lib/db/prisma";
 import { appError } from "@/modules/shared/errors";
 import { hashOpaqueToken } from "./core";
+import { lockCustomerLifecycle, assertFreshAccountIntent } from "@/modules/customer-privacy/lifecycle";
 import { assertInternalAccountActive, assertInternalEmail, internalExpiry, capInternalExpiry, INTERNAL_TERMS_VERSION, INTERNAL_PRIVACY_VERSION } from "./internal-testing";
 
 export class CustomerEmailRepository {
@@ -22,7 +23,11 @@ export class CustomerEmailRepository {
     return this.prisma.customerPendingRegistration.findFirst({ where: { handleHash: hashOpaqueToken(handle), completedAt: null, expiresAt: { gt: now }, OR: [{ internalTestExpiresAt: null }, { internalTestExpiresAt: { gt: now } }] } });
   }
   async createPending(data: Omit<CustomerPendingRegistration, "id" | "sentAt" | "completedAt" | "deliveryConfirmed" | "internalTestExpiresAt"> & { internalTestExpiresAt?: Date | null }) {
-    return this.prisma.customerPendingRegistration.create({ data });
+    return this.prisma.$transaction(async tx => {
+      await lockCustomerLifecycle(tx);
+      await assertFreshAccountIntent(tx, data.normalizedEmail, data.consentAt);
+      return tx.customerPendingRegistration.create({ data });
+    });
   }
   async deliveryDeadline(owner: { pendingId?: string; customerId?: string }, now: Date): Promise<Date | null> {
     const record = owner.pendingId
@@ -35,6 +40,7 @@ export class CustomerEmailRepository {
   }
   async issueToken(input: { tokenHash: string; purpose: "verify" | "reset"; customerId?: string; pendingId?: string; expiresAt: Date; returnTo: string }, now: Date) {
     return this.prisma.$transaction(async tx => {
+      await lockCustomerLifecycle(tx);
       // Serialize issue/consume operations for a single destination across workers.
       const key = input.pendingId ?? input.customerId ?? "";
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${key}))`;
@@ -76,12 +82,14 @@ export class CustomerEmailRepository {
   }
   async consumeVerification(token: string, now: Date) {
     return this.prisma.$transaction(async tx => {
+      await lockCustomerLifecycle(tx);
       const record = await tx.customerEmailToken.findUnique({ where: { tokenHash: hashOpaqueToken(token) } });
       if (!record?.pendingId || record.purpose !== "verify") throw appError("VALIDATION_ERROR");
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${record.pendingId}))`;
       const claimed = await tx.customerEmailToken.updateMany({ where: { id: record.id, consumedAt: null, expiresAt: { gt: now } }, data: { consumedAt: now } });
       const pending = await tx.customerPendingRegistration.findUnique({ where: { id: record.pendingId } });
       if (!claimed.count || !pending || pending.completedAt || pending.expiresAt <= now) throw appError("VALIDATION_ERROR");
+      await assertFreshAccountIntent(tx, pending.normalizedEmail, pending.consentAt);
       assertInternalAccountActive(pending.internalTestExpiresAt, now);
       if (pending.internalTestExpiresAt) {
         assertInternalEmail(pending.email, "password");
@@ -93,12 +101,13 @@ export class CustomerEmailRepository {
         passwordCredential: { create: { passwordHash: pending.passwordHash } },
         consents: { create: { termsVersion: pending.termsVersion, privacyVersion: pending.privacyVersion, acceptedAt: pending.consentAt } } } });
       await tx.customerPendingRegistration.update({ where: { id: pending.id }, data: { completedAt: now } });
-      await tx.$executeRaw`UPDATE orders SET customer_id = ${customer.id} WHERE customer_id IS NULL AND lower(btrim(customer_email)) = ${pending.normalizedEmail}`;
+      await tx.$executeRaw`UPDATE orders SET customer_id = ${customer.id} WHERE customer_id IS NULL AND account_closed_at IS NULL AND lower(btrim(customer_email)) = ${pending.normalizedEmail}`;
       return record.returnTo;
     });
   }
   async createPasswordSession(input: { customerId: string; expectedHash: string; tokenHash: string; expiresAt: Date }, now: Date) {
     await this.prisma.$transaction(async tx => {
+      await lockCustomerLifecycle(tx);
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${input.customerId}))`;
       const current = await tx.customerPasswordCredential.findUnique({ where: { customerId: input.customerId } });
       if (current?.passwordHash !== input.expectedHash) throw appError("UNAUTHORIZED");
@@ -112,6 +121,7 @@ export class CustomerEmailRepository {
   }
   async consumeReset(token: string, passwordHash: string, now: Date) {
     return this.prisma.$transaction(async tx => {
+      await lockCustomerLifecycle(tx);
       const record = await tx.customerEmailToken.findUnique({ where: { tokenHash: hashOpaqueToken(token) } });
       if (!record?.customerId || record.purpose !== "reset") throw appError("VALIDATION_ERROR");
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${record.customerId}))`;

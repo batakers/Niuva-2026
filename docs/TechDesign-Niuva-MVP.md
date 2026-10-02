@@ -2261,3 +2261,36 @@ Scheduler Windows `Niuva-Internal-Auth-Cleanup` berjalan 03.00 WIB, saat logon,
 StartWhenAvailable, retry per jam tiga kali, privilege current-user terbatas.
 Cleanup tetap berjalan setelah flag pendaftaran dimatikan, tetapi selalu menolak
 database di luar Development lokal. Log berisi jumlah/status/kategori saja.
+
+## Addendum pusat privasi Customer Development — 2 Oktober 2026
+
+Migrasi `20261002120000_customer_privacy` menambah request privasi, proof email,
+fence closure pseudonim dan `accountClosedAt` pada data bisnis. Migrasi lama
+dipertahankan. Boundary Zod/origin/Host/sesi/rate-limit terpisah dari service dan
+repository; izin `PRIVACY_REQUEST_MANAGE` khusus Owner. Native POST/303 dan
+progressive enhancement memakai kontrak sama. JSON v1 memakai proyeksi aman.
+Halaman akun memakai Referrer-Policy same-origin agar native POST mempertahankan
+Origin (no-referrer menghasilkan Origin:null); situs lain tidak menerima referrer.
+Halaman request tokenized lama tetap no-referrer. Jangan memperbolehkan Origin
+hilang/null sebagai jalan pintas untuk form tanpa JavaScript.
+
+Proof unduh/close: token hash, tujuan/Customer/hash sesi terikat, berlaku 15 menit
+atau batas sesi/akun yang lebih awal; provider gagal tidak mengizinkan tindakan.
+GET read-only, POST konsumsi atomik. Seluruh penerbitan auth/verifikasi/reset,
+claim, cleanup akun dan closure memakai lock transaksi lifecycle yang sama.
+Penulisan checkout/brief/Custom Print milik Customer memeriksa Customer di dalam
+lock yang sama, sehingga closure yang bersaing tidak meninggalkan data bisnis
+tanpa marker. Token quote lama dirotasi, dan penerimaan quote akun tertutup ditolak.
+Closure menghapus Customer/auth dengan Cascade, melepas FK bisnis dengan SetNull,
+merotasi capability lama dan menandai bisnis supaya signup/claim tidak menautkan
+riwayat. Intent lama diblokir fence 30 hari; signup sah berikutnya Customer baru.
+
+Request punya submission key terikat Customer, deadline 72 jam dari penerimaan,
+resolvedAt tidak dapat diulang, contentDeleteAt +7 hari, receiptDeleteAt +30 hari.
+Hold membutuhkan kategori/alasan/Owner/reviewAt maksimal 30 hari ke depan.
+CLI `scripts/cleanup-customer-privacy.ts` dry-run/execute menjaga database
+Development loopback `niuva_dev`, akun aktif dan catatan transaksi. Windows task
+`Niuva-Customer-Privacy-Cleanup` 03.15 WIB/logon dengan retry tiga kali per jam;
+task internal 03.00 tetap ada. Fitur hanya internal Development/test, sementara
+cleanup tetap independen dari flag pendaftaran. Backup/provider/fiskal dan bukti
+publikasi tetap terpisah; inventory dan batas di dokumen implementasi legal.
