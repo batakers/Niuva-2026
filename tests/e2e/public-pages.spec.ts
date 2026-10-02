@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { loginCustomer } from "./helpers/customer";
+import { gotoRenderedPage } from "./helpers/readiness";
 
 test.beforeEach(async ({ page }) => {
   await loginCustomer(page);
@@ -277,19 +278,18 @@ test("project brief persists through the API and offers a reference-based WhatsA
   });
 });
 
-test("public pages keep one main heading and no horizontal overflow across viewports", async ({ page }) => {
-  test.slow();
-  const errors: string[] = [];
-  page.on("pageerror", error => errors.push(error.message));
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  for (const width of [320, 390, 768, 1024, 1280, 1440]) {
+for (const width of [320, 390, 768, 1024, 1280, 1440]) {
+  test(`public pages keep one main heading and no horizontal overflow at ${width}px`, async ({ page }) => {
+    const errors: string[] = [];
+    page.on("pageerror", error => errors.push(error.message));
+    await page.emulateMedia({ reducedMotion: "reduce" });
     await page.setViewportSize({ width, height: 900 });
     for (const path of ["/", "/services", "/projects", "/projects/smart-drop-box-pg", "/projects?preview=examples", "/projects/contoh-enclosure?preview=examples", "/project-brief"]) {
-      await page.goto(path);
+      await gotoRenderedPage(page, path);
       await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
       await expect(page.getByRole("main")).toHaveCount(1);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${path} at ${width}px`).toBe(true);
     }
-  }
-  expect(errors).toEqual([]);
-});
+    expect(errors).toEqual([]);
+  });
+}

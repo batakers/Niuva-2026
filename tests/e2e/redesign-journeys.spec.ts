@@ -28,7 +28,9 @@ test("public navigation keeps the four paths, separate utilities, and contextual
   await page.goto("/");
   const toggle = page.getByRole("button", { name: "Buka menu" });
   await expect(toggle).toBeVisible();
+  await expect(toggle).toBeEnabled();
   await toggle.focus();
+  await expect(toggle).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(navigation.getByRole("link", { name: "Custom Print" })).toBeVisible();
   await page.keyboard.press("Escape");
