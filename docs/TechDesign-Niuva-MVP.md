@@ -2194,3 +2194,103 @@ remain out of MVP.
   "aiScope": "development assistance only; no product AI"
 }
 ```
+
+
+## Addendum Customer email/password — 1 Oktober 2026
+
+Keputusan Owner ini menggantikan batas Google-only/no-password pada scope lama.
+Customer tetap terpisah dari Clerk Owner/Admin; kontrak sesi dan allowlist
+returnTo yang ada dipertahankan. Capability sesi/password tidak bergantung pada
+Google. Provider email Customer menggunakan adapter Resend Development yang ada.
+
+Endpoint POST `/api/auth/email/{register,login,verify,resend,forgot-password,reset-password}`
+menerima form URL-encoded, validasi Zod, pemeriksaan origin, body maksimum 8 KiB,
+dan respons JSON untuk progressive enhancement atau redirect 303 untuk form
+native. Token pada GET tidak dikonsumsi; penyelesaian membutuhkan POST. Halaman
+token memakai origin-referrer/noindex dan tidak memuat collector analytics.
+
+Migrasi baru membuat googleSubject nullable, memberi emailVerifiedAt pada akun
+Google lama, dan menambah credential scrypt, pending registration terpisah,
+rekaman persetujuan, token berhash, dan limiter PostgreSQL. Tidak ada password
+plaintext atau token mentah tersimpan di database. Akun lama/relasi order tetap.
+Scrypt asynchronous memakai N=2^17/r=8/p=1, salt acak 16 byte dan key 64 byte.
+Sesuai revisi Owner 2 Oktober 2026, password baru dan reset menerima 8–128
+karakter, termasuk spasi, tanpa kewajiban kombinasi jenis karakter. Batas minimum
+dibagikan oleh validasi Zod server/client dan kontrol HTML form.
+
+Consume token, pembuatan credential/consent, serta pengikatan order yang belum
+berpemilik dilakukan secara atomik. Advisory lock menyerialkan issue/consume
+per tujuan; reset dan pembuatan sesi password berbagi lock akun. Reset mencabut
+sesi. Google/password tidak otomatis ditautkan melalui email yang sama.
+
+Limiter persisten: login 5/email dan 30/IP per 15 menit; register, resend,
+forgot-password dan reset 3/tujuan dan 20/IP per jam; verifikasi 10/token dan
+20/IP per 15 menit. Resend memiliki cooldown 60 detik. Key email/IP dihash.
+Respons pemulihan seragam untuk akun tidak ditemukan, Google-only, dan akun
+password. Token verifikasi 24 jam, reset 30 menit, sekali pakai; resend
+membatalkan token lama. Record kedaluwarsa ditolak tanpa mengubah data bisnis.
+
+Dokumen resmi belum tersedia; `getCustomerAuthLegalDocuments` mengembalikan null
+pada runtime normal. Fixture kebijakan dan outbox test hanya tersedia jika
+NODE_ENV=test, mock eksplisit, dan database loopback bernama test. Outbox test
+berada di test-results yang diabaikan Git. Production email tetap nonaktif.
+## Addendum internal Customer auth — 2 Oktober 2026
+
+`NIUVA_INTERNAL_AUTH_ENABLED=true` membutuhkan dua email valid berbeda,
+`NODE_ENV=development`, runtime bukan demo/mock, APP_URL loopback, dan database
+`niuva_dev` di `127.0.0.1`. Config tidak lengkap gagal tertutup. Password dan
+Google tetap terpisah. Normalisasi origin POST auth menerima hanya Origin dan
+Host persis APP_URL ketika mode internal aktif; forwarded headers tidak memilih
+origin. Form native dan JSON menggunakan redirect aman dari origin yang dipercaya.
+POST persetujuan Google dengan JavaScript mengembalikan tujuan relatif untuk
+navigasi browser. Form tanpa JavaScript kembali ke halaman lokal dengan anchor
+lanjutan Google, agar redirect chain tidak melanggar CSP `form-action 'self'`.
+
+Persetujuan Google memakai POST berorigin valid dan bukti acak HttpOnly 10 menit;
+database menyimpan hash, email tujuan, versi dokumen, dan waktu persetujuan.
+Pembuatan Customer/consent dan konsumsi bukti dilakukan atomik; validasi identitas
+Google dan allowlist tetap wajib. Register email tetap pending sampai verifikasi.
+Resend Development memakai key sending-only dan membatasi penerima ke email
+peserta password; tidak mengaktifkan pengiriman production.
+
+Migrasi baru menambah deadline nullable Customer/pending, tanpa backfill akun
+lama. Sesi/token dibatasi deadline, lookup sesi dan operasi reset/verifikasi
+menolak expiry. CLI cleanup hanya menghapus data yang ditandai dan kedaluwarsa,
+memanfaatkan auth Cascade dan business FK SetNull; dry-run tidak memutasi data.
+Scheduler Windows `Niuva-Internal-Auth-Cleanup` berjalan 03.00 WIB, saat logon,
+StartWhenAvailable, retry per jam tiga kali, privilege current-user terbatas.
+Cleanup tetap berjalan setelah flag pendaftaran dimatikan, tetapi selalu menolak
+database di luar Development lokal. Log berisi jumlah/status/kategori saja.
+
+## Addendum pusat privasi Customer Development — 2 Oktober 2026
+
+Migrasi `20261002120000_customer_privacy` menambah request privasi, proof email,
+fence closure pseudonim dan `accountClosedAt` pada data bisnis. Migrasi lama
+dipertahankan. Boundary Zod/origin/Host/sesi/rate-limit terpisah dari service dan
+repository; izin `PRIVACY_REQUEST_MANAGE` khusus Owner. Native POST/303 dan
+progressive enhancement memakai kontrak sama. JSON v1 memakai proyeksi aman.
+Halaman akun memakai Referrer-Policy same-origin agar native POST mempertahankan
+Origin (no-referrer menghasilkan Origin:null); situs lain tidak menerima referrer.
+Halaman request tokenized lama tetap no-referrer. Jangan memperbolehkan Origin
+hilang/null sebagai jalan pintas untuk form tanpa JavaScript.
+
+Proof unduh/close: token hash, tujuan/Customer/hash sesi terikat, berlaku 15 menit
+atau batas sesi/akun yang lebih awal; provider gagal tidak mengizinkan tindakan.
+GET read-only, POST konsumsi atomik. Seluruh penerbitan auth/verifikasi/reset,
+claim, cleanup akun dan closure memakai lock transaksi lifecycle yang sama.
+Penulisan checkout/brief/Custom Print milik Customer memeriksa Customer di dalam
+lock yang sama, sehingga closure yang bersaing tidak meninggalkan data bisnis
+tanpa marker. Token quote lama dirotasi, dan penerimaan quote akun tertutup ditolak.
+Closure menghapus Customer/auth dengan Cascade, melepas FK bisnis dengan SetNull,
+merotasi capability lama dan menandai bisnis supaya signup/claim tidak menautkan
+riwayat. Intent lama diblokir fence 30 hari; signup sah berikutnya Customer baru.
+
+Request punya submission key terikat Customer, deadline 72 jam dari penerimaan,
+resolvedAt tidak dapat diulang, contentDeleteAt +7 hari, receiptDeleteAt +30 hari.
+Hold membutuhkan kategori/alasan/Owner/reviewAt maksimal 30 hari ke depan.
+CLI `scripts/cleanup-customer-privacy.ts` dry-run/execute menjaga database
+Development loopback `niuva_dev`, akun aktif dan catatan transaksi. Windows task
+`Niuva-Customer-Privacy-Cleanup` 03.15 WIB/logon dengan retry tiga kali per jam;
+task internal 03.00 tetap ada. Fitur hanya internal Development/test, sementara
+cleanup tetap independen dari flag pendaftaran. Backup/provider/fiskal dan bukti
+publikasi tetap terpisah; inventory dan batas di dokumen implementasi legal.

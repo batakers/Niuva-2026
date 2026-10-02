@@ -76,7 +76,7 @@ export default async function AccountPage() {
               <StatusNotice
                 tone="warning"
                 title="Akun Customer belum tersedia."
-                description="Login Google Customer belum dikonfigurasi pada environment ini."
+                description="Sesi Customer belum dikonfigurasi pada environment ini."
               />
             </div>
           </main>
@@ -102,7 +102,7 @@ export default async function AccountPage() {
               <p className="text-sm font-medium text-brand-700">Akun Customer</p>
               <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">Pekerjaan dan order Anda.</h1>
               <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground">
-                Pantau Project Brief, MAKE, quote, dan order dari satu akun. Profil Google bersifat read-only.
+                Pantau Project Brief, MAKE, quote, dan order dari satu akun. Kelola permintaan terkait data Anda melalui Pusat privasi.
               </p>
             </div>
             <CustomerLogoutButton />
@@ -112,7 +112,7 @@ export default async function AccountPage() {
         <div className="mx-auto grid max-w-public gap-6 px-5 py-10 sm:px-8 sm:py-14 lg:grid-cols-[minmax(15rem,0.7fr)_minmax(0,1.3fr)]">
           <Card className="h-fit">
             <CardHeader>
-              <CardTitle>Profil Google</CardTitle>
+              <CardTitle>Profil Customer</CardTitle>
               <CardDescription>Identitas Customer yang digunakan untuk mengirim brief, MAKE, dan checkout.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
@@ -132,19 +132,20 @@ export default async function AccountPage() {
                 )}
                 <div className="min-w-0">
                   <p className="truncate font-semibold">{account.profile.displayName ?? account.profile.email}</p>
-                  <p className="truncate text-sm text-muted-foreground">Google Customer</p>
+                  <p className="truncate text-sm text-muted-foreground">Customer Niuva</p>
                 </div>
               </div>
               <dl className="space-y-4 text-sm">
                 <div>
                   <dt className="text-muted-foreground">Nama</dt>
-                  <dd className="mt-1 font-medium">{account.profile.displayName ?? "Belum disediakan Google"}</dd>
+                  <dd className="mt-1 font-medium">{account.profile.displayName ?? "Belum disediakan"}</dd>
                 </div>
                 <div>
                   <dt className="text-muted-foreground">Email terverifikasi</dt>
                   <dd className="mt-1 break-all font-medium">{account.profile.email}</dd>
                 </div>
               </dl>
+              <Link href="/account/privacy" className="inline-flex min-h-11 items-center rounded-lg border border-border px-4 py-3 text-sm font-medium text-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">Pusat privasi dan data saya</Link>
             </CardContent>
           </Card>
 
@@ -174,7 +175,7 @@ export default async function AccountPage() {
                 <StatusNotice
                   tone="info"
                   title="Belum ada order tertaut."
-                  description="Order baru akan muncul setelah checkout berhasil atau order lama yang belum memiliki pemilik tertaut berdasarkan email Google terverifikasi."
+                  description="Order baru akan muncul setelah checkout berhasil. Riwayat akun yang telah ditutup tidak ditautkan kembali otomatis."
                 />
               ) : (
                 <div className="divide-y divide-border">

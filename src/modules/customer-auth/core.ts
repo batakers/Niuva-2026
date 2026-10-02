@@ -10,6 +10,7 @@ export const CUSTOMER_OAUTH_RETURN_TO_COOKIE = "niuva_customer_oauth_return_to";
 export const CUSTOMER_OAUTH_STATE_MAX_AGE_SECONDS = 10 * 60;
 const CUSTOMER_RETURN_TO_PATHS = new Set([
   "/account",
+  "/account/privacy",
   "/checkout",
   "/project-brief",
   "/custom-print/request",

@@ -1,0 +1,117 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+const state = vi.hoisted(() => ({ config: { origin: "http://127.0.0.1:3000", googleEmail: "internal-google@example.test", passwordEmail: "internal-password@example.test" } as { origin: string; googleEmail: string; passwordEmail: string } | null }));
+vi.mock("@/modules/customer-auth/internal-testing", async importOriginal => {
+  const original = await importOriginal<typeof import("@/modules/customer-auth/internal-testing")>();
+  return { ...original, getInternalAuthConfig: () => state.config, assertInternalEmail: (email: string, method: "google" | "password", config = state.config) => original.assertInternalEmail(email, method, config) };
+});
+import { getPrismaClient } from "@/lib/db/prisma";
+import { CustomerAuthService } from "@/modules/customer-auth/service";
+import { CustomerAuthRepository } from "@/modules/customer-auth/repository";
+import { CustomerEmailRepository } from "@/modules/customer-auth/email-repository";
+import { CustomerEmailService } from "@/modules/customer-auth/email-service";
+import { InternalGoogleConsentService } from "@/modules/customer-auth/internal-consent";
+import { InternalAuthCleanupRepository } from "@/modules/customer-auth/internal-cleanup";
+import { getCustomerAuthLegalDocuments } from "@/modules/customer-auth/legal";
+import { INTERNAL_AUTH_RETENTION_MS } from "@/modules/customer-auth/internal-testing";
+import { hashOpaqueToken } from "@/modules/customer-auth/core";
+const prisma = getPrismaClient();
+let now = new Date("2026-10-02T00:00:00Z");
+const identity = { googleSubject: "internal-google-test", email: "internal-google@example.test", normalizedEmail: "internal-google@example.test" };
+const repo = new CustomerAuthRepository(prisma);
+const password = "internal test long passphrase";
+let mails: { token: string; to: string }[] = [];
+const emailService = () => new CustomerEmailService(new CustomerEmailRepository(prisma), { async send(mail) { mails.push(mail); } }, getCustomerAuthLegalDocuments(), () => now);
+beforeEach(async () => {
+  state.config = { origin: "http://127.0.0.1:3000", googleEmail: identity.email, passwordEmail: "internal-password@example.test" };
+  now = new Date("2026-10-02T00:00:00Z"); mails = [];
+  await prisma.customerInternalGoogleConsent.deleteMany();
+  await prisma.customerAuthRateLimit.deleteMany();
+  await prisma.customerPendingRegistration.deleteMany();
+  await prisma.order.deleteMany({ where: { orderNumber: { startsWith: "INTERNAL-TEST-" } } });
+  await prisma.b2BInquiry.deleteMany({ where: { referenceNumber: { startsWith: "INTERNAL-TEST-" } } });
+  await prisma.customPrintRequest.deleteMany({ where: { referenceNumber: { startsWith: "INTERNAL-TEST-" } } });
+  await prisma.storedFile.deleteMany({ where: { storageKey: { startsWith: "internal-cleanup-test/" } } });
+  await prisma.customer.deleteMany({ where: { normalizedEmail: { startsWith: "internal-" } } });
+});
+describe("internal Customer PostgreSQL lifecycle", () => {
+  it("requires a bound one-use proof and creates consent/deadline atomically", async () => {
+    const service = new CustomerAuthService({ repository: repo, now: () => now });
+    await expect(service.completeGoogleLogin(identity)).rejects.toMatchObject({ code: "CUSTOMER_AUTH_UNAVAILABLE" });
+    expect(await prisma.customer.count({ where: { normalizedEmail: identity.email } })).toBe(0);
+    const token = await new InternalGoogleConsentService(prisma).accept(now);
+    const login = await service.completeGoogleLogin(identity, token);
+    const customer = await prisma.customer.findUniqueOrThrow({ where: { id: login.customer.id }, include: { consents: true } });
+    expect(customer.internalTestExpiresAt!.getTime() - now.getTime()).toBe(INTERNAL_AUTH_RETENTION_MS);
+    expect(customer.consents).toHaveLength(1);
+    expect((await prisma.customerInternalGoogleConsent.findUniqueOrThrow({ where: { tokenHash: hashOpaqueToken(token) } })).consumedAt).toEqual(now);
+    now = new Date(now.getTime() + 86400000);
+    expect((await service.completeGoogleLogin(identity)).expiresAt).toEqual(customer.internalTestExpiresAt);
+    now = customer.internalTestExpiresAt!;
+    await expect(service.completeGoogleLogin(identity)).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    expect(await repo.findCustomerBySessionTokenHash(hashOpaqueToken(login.sessionToken), now)).toBeNull();
+  });
+  it("rejects expired, reused, wrong-version and wrong-email proofs without creating accounts", async () => {
+    const consent = new InternalGoogleConsentService(prisma);
+    const service = new CustomerAuthService({ repository: repo, now: () => now });
+    for (const change of [{ expiresAt: now }, { consumedAt: now }, { termsVersion: "OLD" }, { privacyVersion: "OLD" }, { normalizedEmail: "someone@example.test" }]) {
+      const token = await consent.accept(now);
+      await prisma.customerInternalGoogleConsent.update({ where: { tokenHash: hashOpaqueToken(token) }, data: change });
+      await expect(service.completeGoogleLogin(identity, token)).rejects.toMatchObject({ code: "CUSTOMER_AUTH_UNAVAILABLE" });
+    }
+    const token = await consent.accept(now);
+    await expect(service.completeGoogleLogin({ ...identity, email: "foreign@example.test", normalizedEmail: "foreign@example.test" }, token)).rejects.toMatchObject({ code: "CUSTOMER_AUTH_UNAVAILABLE" });
+    expect(await prisma.customer.count({ where: { normalizedEmail: identity.email } })).toBe(0);
+  });
+  it("rejects foreign email before pending/provider and caps password sessions/reset", async () => {
+    const service = emailService();
+    const data = { name: "Internal Fixture", email: state.config!.passwordEmail, password, confirmPassword: password, consent: "on" };
+    await expect(service.register({ ...data, email: "foreign@example.test" }, "ip")).rejects.toMatchObject({ code: "CUSTOMER_AUTH_UNAVAILABLE" });
+    expect(mails).toHaveLength(0); expect(await prisma.customerPendingRegistration.count()).toBe(0);
+    await service.register(data, "ip");
+    expect((await prisma.customerPendingRegistration.findFirstOrThrow()).internalTestExpiresAt).toEqual(new Date(now.getTime() + INTERNAL_AUTH_RETENTION_MS));
+    await service.verify(mails[0].token, "ip");
+    const customer = await prisma.customer.findUniqueOrThrow({ where: { normalizedEmail: data.email } });
+    now = new Date(customer.internalTestExpiresAt!.getTime() - 10000);
+    const login = await service.login({ email: data.email, password, remember: "on" }, "ip");
+    expect(login.maxAge).toBe(10);
+    await service.forgot(data.email, "/checkout", "ip");
+    expect((await prisma.customerEmailToken.findUniqueOrThrow({ where: { tokenHash: hashOpaqueToken(mails.at(-1)!.token) } })).expiresAt).toEqual(customer.internalTestExpiresAt);
+    now = customer.internalTestExpiresAt!;
+    await expect(service.login({ email: data.email, password }, "ip")).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    await expect(service.reset(mails.at(-1)!.token, password, password, "ip")).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+  }, 10000);
+  it("fails verification/resend when internal signup is disabled", async () => {
+    const service = emailService();
+    const registration = await service.register({ name: "Internal Fixture", email: state.config!.passwordEmail, password, confirmPassword: password, consent: "on" }, "ip");
+    state.config = null; now = new Date(now.getTime() + 61000);
+    await expect(service.verify(mails[0].token, "ip")).rejects.toMatchObject({ code: "CUSTOMER_AUTH_UNAVAILABLE" });
+    await expect(service.resend(registration.handle!, "/account", "ip")).rejects.toMatchObject({ code: "CUSTOMER_AUTH_UNAVAILABLE" });
+  });
+  it("dry-runs then removes marked auth only, preserves business records and ordinary Customer, remains idempotent", async () => {
+    const customer = await prisma.customer.create({ data: { email: "internal-expired@example.test", normalizedEmail: "internal-expired@example.test", internalTestExpiresAt: now, passwordCredential: { create: { passwordHash: "TEST-HASH" } }, consents: { create: { termsVersion: "TEST", privacyVersion: "TEST", acceptedAt: now } }, sessions: { create: { tokenHash: "INTERNAL-TEST-SESSION", expiresAt: now } }, emailTokens: { create: { tokenHash: "INTERNAL-TEST-RESET", purpose: "reset", returnTo: "/account", expiresAt: now } } } });
+    const ordinary = await prisma.customer.create({ data: { email: "internal-ordinary@example.test", normalizedEmail: "internal-ordinary@example.test" } });
+    const order = await prisma.order.create({ data: { orderNumber: `INTERNAL-TEST-${crypto.randomUUID()}`, customerId: customer.id, customerName: "Test", customerEmail: customer.email, customerPhone: "+6281234567890", orderType: "RETAIL", publicTokenHash: crypto.randomUUID(), grandTotalRp: "1", itemsSubtotalRp: "1", shippingTotalRp: "0" } });
+    const inquiry = await prisma.b2BInquiry.create({ data: { referenceNumber: `INTERNAL-TEST-${crypto.randomUUID()}`, customerId: customer.id, name: "Test", email: customer.email, phone: "+6281234567890", projectGoal: "Fixture cleanup", currentStage: "IDEA", description: "Test-only fixture", targetQuantity: "1", confidentialityAck: true, publicTokenHash: crypto.randomUUID() } });
+    const make = await prisma.customPrintRequest.create({ data: { referenceNumber: `INTERNAL-TEST-${crypto.randomUUID()}`, customerId: customer.id, customerName: "Test", customerEmail: customer.email, customerPhone: "+6281234567890", materialRequested: "PLA", quantity: 1, publicTokenHash: crypto.randomUUID() } });
+    const file = await prisma.storedFile.create({ data: { storageKey: `internal-cleanup-test/${crypto.randomUUID()}`, uploadedByCustomerId: customer.id, bucketScope: "PRIVATE_CUSTOMER", originalName: "fixture.stl", extension: "stl", mimeType: "model/stl", sizeBytes: BigInt(1) } });
+    const pending = await prisma.customerPendingRegistration.create({ data: { handleHash: crypto.randomUUID(), email: "internal-pending@example.test", normalizedEmail: "internal-pending@example.test", displayName: "Test", passwordHash: "TEST", termsVersion: "TEST", privacyVersion: "TEST", consentAt: new Date(now.getTime() - INTERNAL_AUTH_RETENTION_MS), expiresAt: now, internalTestExpiresAt: now, tokens: { create: { tokenHash: crypto.randomUUID(), purpose: "verify", expiresAt: now, returnTo: "/account" } } } });
+    const cleanup = new InternalAuthCleanupRepository(prisma);
+    expect((await cleanup.cleanup(now, true)).customers).toBe(1);
+    expect(await prisma.customer.findUnique({ where: { id: customer.id } })).not.toBeNull();
+    state.config = null;
+    expect((await cleanup.cleanup(now, false)).customers).toBe(1);
+    expect(await prisma.customer.findUnique({ where: { id: customer.id } })).toBeNull();
+    expect(await prisma.customerSession.count({ where: { customerId: customer.id } })).toBe(0);
+    expect(await prisma.customerEmailToken.count({ where: { customerId: customer.id } })).toBe(0);
+    expect(await prisma.customerPasswordCredential.count({ where: { customerId: customer.id } })).toBe(0);
+    expect(await prisma.customerConsent.count({ where: { customerId: customer.id } })).toBe(0);
+    expect((await prisma.order.findUniqueOrThrow({ where: { id: order.id } })).customerId).toBeNull();
+    expect((await prisma.b2BInquiry.findUniqueOrThrow({ where: { id: inquiry.id } })).customerId).toBeNull();
+    expect((await prisma.customPrintRequest.findUniqueOrThrow({ where: { id: make.id } })).customerId).toBeNull();
+    expect((await prisma.storedFile.findUniqueOrThrow({ where: { id: file.id } })).uploadedByCustomerId).toBeNull();
+    expect(await prisma.customerPendingRegistration.findUnique({ where: { id: pending.id } })).toBeNull();
+    expect(await prisma.customerEmailToken.count({ where: { pendingId: pending.id } })).toBe(0);
+    expect(await prisma.customer.findUnique({ where: { id: ordinary.id } })).not.toBeNull();
+    expect((await cleanup.cleanup(now, false)).customers).toBe(0);
+  });
+});

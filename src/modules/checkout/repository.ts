@@ -12,6 +12,7 @@ import {
   reserveWithinTransaction,
 } from "@/modules/inventory/repository";
 import { appError } from "@/modules/shared/errors";
+import { lockCustomerBusinessWrite } from "@/modules/customer-privacy/lifecycle";
 import { createRetailShippingCatalogFingerprint } from "@/modules/shipping/retail-rate-service";
 import { minimizeShippingRatePayload } from "@/modules/shipping/snapshot";
 
@@ -235,6 +236,7 @@ export class CheckoutRepository implements CheckoutRepositoryPort {
 
     return this.prisma.$transaction(async (transaction) => {
       const variants = new Map<string, LockedCatalogVariant>();
+      await lockCustomerBusinessWrite(transaction, input.customerId);
 
       for (const item of sortedItems) {
         await lockVariant(transaction, item.variantId);

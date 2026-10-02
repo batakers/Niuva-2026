@@ -210,7 +210,7 @@ const CAPABILITY_GROUPS: readonly CapabilityGroup[] = [
     name: "Biteship",
   },
   {
-    fields: ["RESEND_API_KEY", "EMAIL_FROM", "ADMIN_NOTIFICATION_EMAIL"],
+    fields: ["RESEND_API_KEY", "EMAIL_FROM"],
     name: "Resend",
   },
   {
@@ -302,7 +302,7 @@ export type DatabaseEnvironment = {
 export function getDatabaseEnvironment(
   source: EnvironmentSource = process.env,
 ): DatabaseEnvironment {
-  const environment = validateStartupEnvironment(source);
+  const environment = parseServerEnvironment(source);
 
   if (environment.DATABASE_URL === undefined) {
     throw new EnvironmentValidationError(["DATABASE_URL"]);

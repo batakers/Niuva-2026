@@ -1,3 +1,5 @@
+import { getCustomerAuthLegalDocuments } from "./legal";
+import { capInternalExpiry, getInternalAuthConfig, assertInternalAccountActive } from "./internal-testing";
 import {
   CUSTOMER_SESSION_MAX_AGE_SECONDS,
   createOpaqueToken,
@@ -35,13 +37,18 @@ export class CustomerAuthService {
 
   async completeGoogleLogin(
     identity: CustomerGoogleIdentity,
+    consentToken?: string,
+    startedAt?: Date,
   ): Promise<CustomerLoginResult> {
     const now = this.clock();
-    const customer = await this.repository.upsertGoogleCustomer(identity, now);
+    const internal = getInternalAuthConfig();
+    const args = [identity, now, getCustomerAuthLegalDocuments() !== null, internal ? { config: internal, consentToken } : undefined] as const;
+    const customer = startedAt ? await this.repository.upsertGoogleCustomer(...args, startedAt) : await this.repository.upsertGoogleCustomer(...args);
+    assertInternalAccountActive(customer.internalTestExpiresAt, now);
     const sessionToken = this.randomToken();
-    const expiresAt = new Date(
+    const expiresAt = capInternalExpiry(new Date(
       now.getTime() + CUSTOMER_SESSION_MAX_AGE_SECONDS * 1_000,
-    );
+    ), customer.internalTestExpiresAt);
 
     await this.repository.createSession({
       customerId: customer.id,

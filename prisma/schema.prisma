@@ -289,8 +289,14 @@ model ProductMedia {
 }
 
 model Customer {
+  internalTestExpiresAt DateTime? @map("internal_test_expires_at") @db.Timestamptz(6)
+  @@index([internalTestExpiresAt])
   id             String            @id @default(uuid()) @db.Uuid
-  googleSubject   String            @unique @map("google_subject")
+  googleSubject   String?           @unique @map("google_subject")
+  emailVerifiedAt DateTime?         @map("email_verified_at") @db.Timestamptz(6)
+  passwordCredential CustomerPasswordCredential?
+  emailTokens CustomerEmailToken[]
+  consents CustomerConsent[]
   email           String
   normalizedEmail  String            @unique @map("normalized_email")
   displayName     String?           @map("display_name")
@@ -304,6 +310,8 @@ model Customer {
   customRequests  CustomPrintRequest[]
   uploadedFiles    StoredFile[] @relation("CustomerUploadedFiles")
   decidedB2BQuotes B2BQuote[] @relation("B2BQuoteDecidedBy")
+  privacyRequests CustomerPrivacyRequest[]
+  privacyConfirmations CustomerPrivacyConfirmation[]
 
   @@map("customers")
 }
@@ -323,6 +331,7 @@ model CustomerSession {
 }
 
 model Order {
+  accountClosedAt DateTime? @map("account_closed_at") @db.Timestamptz(6)
   id              String                  @id @default(uuid()) @db.Uuid
   orderNumber     String                  @unique @map("order_number")
   orderType       OrderType               @map("order_type")
@@ -518,6 +527,7 @@ model PaymentEvent {
 }
 
 model B2BInquiry {
+  accountClosedAt DateTime? @map("account_closed_at") @db.Timestamptz(6)
   id                 String           @id @default(uuid()) @db.Uuid
   referenceNumber    String           @unique @map("reference_number")
   name               String
@@ -587,6 +597,7 @@ model B2BInquiryFile {
 }
 
 model CustomPrintRequest {
+  accountClosedAt DateTime? @map("account_closed_at") @db.Timestamptz(6)
   id                String                   @id @default(uuid()) @db.Uuid
   referenceNumber   String                   @unique @map("reference_number")
   intakeMode        CustomPrintIntakeMode    @default(MODEL_READY) @map("intake_mode")
@@ -793,4 +804,133 @@ model IdempotencyRecord {
   @@unique([scope, idempotencyKey])
   @@index([scope, status, expiresAt])
   @@map("idempotency_records")
+}
+model CustomerPasswordCredential {
+  customerId String @id @map("customer_id") @db.Uuid
+  passwordHash String @map("password_hash")
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  @@map("customer_password_credentials")
+}
+
+model CustomerPendingRegistration {
+  internalTestExpiresAt DateTime? @map("internal_test_expires_at") @db.Timestamptz(6)
+  @@index([internalTestExpiresAt])
+  id String @id @default(uuid()) @db.Uuid
+  handleHash String @unique @map("handle_hash")
+  email String
+  normalizedEmail String @map("normalized_email")
+  displayName String @map("display_name")
+  passwordHash String @map("password_hash")
+  termsVersion String @map("terms_version")
+  privacyVersion String @map("privacy_version")
+  consentAt DateTime @map("consent_at") @db.Timestamptz(6)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  deliveryConfirmed Boolean @default(false) @map("delivery_confirmed")
+  sentAt DateTime? @map("sent_at") @db.Timestamptz(6)
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(6)
+  tokens CustomerEmailToken[]
+  @@index([normalizedEmail])
+  @@map("customer_pending_registrations")
+}
+
+model CustomerEmailToken {
+  id String @id @default(uuid()) @db.Uuid
+  tokenHash String @unique @map("token_hash")
+  purpose String
+  customerId String? @map("customer_id") @db.Uuid
+  pendingId String? @map("pending_id") @db.Uuid
+  returnTo String @map("return_to")
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  consumedAt DateTime? @map("consumed_at") @db.Timestamptz(6)
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  pending CustomerPendingRegistration? @relation(fields: [pendingId], references: [id], onDelete: Cascade)
+  @@index([customerId, purpose])
+  @@index([pendingId])
+  @@map("customer_email_tokens")
+}
+
+model CustomerConsent {
+  id String @id @default(uuid()) @db.Uuid
+  customerId String @map("customer_id") @db.Uuid
+  termsVersion String @map("terms_version")
+  privacyVersion String @map("privacy_version")
+  acceptedAt DateTime @map("accepted_at") @db.Timestamptz(6)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  @@map("customer_consents")
+}
+
+model CustomerAuthRateLimit {
+  key String @id
+  count Int
+  resetAt DateTime @map("reset_at") @db.Timestamptz(6)
+  @@map("customer_auth_rate_limits")
+}
+
+model CustomerInternalGoogleConsent {
+  tokenHash String @id @map("token_hash")
+  normalizedEmail String @map("normalized_email")
+  termsVersion String @map("terms_version")
+  privacyVersion String @map("privacy_version")
+  acceptedAt DateTime @map("accepted_at") @db.Timestamptz(6)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  consumedAt DateTime? @map("consumed_at") @db.Timestamptz(6)
+  @@index([expiresAt])
+  @@map("customer_internal_google_consents")
+}
+
+// No credentials or provider payloads belong in these records.
+model CustomerPrivacyRequest {
+  id String @id @default(uuid()) @db.Uuid
+  referenceNumber String @unique @map("reference_number")
+  submissionKey String @unique @map("submission_key")
+  customerId String? @map("customer_id") @db.Uuid
+  kind String
+  status String @default("OPEN")
+  details String?
+  correction String?
+  contactEmail String? @map("contact_email")
+  response String?
+  outcome String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  dueAt DateTime @map("due_at") @db.Timestamptz(6)
+  resolvedAt DateTime? @map("resolved_at") @db.Timestamptz(6)
+  contentDeleteAt DateTime? @map("content_delete_at") @db.Timestamptz(6)
+  receiptDeleteAt DateTime? @map("receipt_delete_at") @db.Timestamptz(6)
+  contentPurgedAt DateTime? @map("content_purged_at") @db.Timestamptz(6)
+  handledBy String? @map("handled_by") @db.Uuid
+  holdCategory String? @map("hold_category")
+  holdReason String? @map("hold_reason")
+  holdOwnerId String? @map("hold_owner_id") @db.Uuid
+  holdReviewAt DateTime? @map("hold_review_at") @db.Timestamptz(6)
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  @@index([customerId, createdAt])
+  @@index([status, dueAt])
+  @@index([contentDeleteAt, receiptDeleteAt])
+  @@map("customer_privacy_requests")
+}
+
+model CustomerPrivacyConfirmation {
+  id String @id @default(uuid()) @db.Uuid
+  customerId String? @map("customer_id") @db.Uuid
+  sessionHash String @map("session_hash")
+  tokenHash String @unique @map("token_hash")
+  purpose String
+  delivered Boolean @default(false)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  consumedAt DateTime? @map("consumed_at") @db.Timestamptz(6)
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  @@index([expiresAt])
+  @@map("customer_privacy_confirmations")
+}
+
+// Temporary fence against OAuth/registration started before account closure.
+// Digests are pseudonymous security data, removed after 30 days.
+model CustomerClosureFence {
+  identityHash String @id @map("identity_hash")
+  closedAt DateTime @map("closed_at") @db.Timestamptz(6)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  @@index([expiresAt])
+  @@map("customer_closure_fences")
 }

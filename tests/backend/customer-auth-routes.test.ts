@@ -25,6 +25,7 @@ vi.mock("next/headers", () => ({
 vi.mock("@/lib/auth/customer", () => ({
   getCurrentCustomer: mocks.getCurrentCustomer,
   isCustomerAuthAvailable: mocks.isCustomerAuthAvailable,
+  isCustomerGoogleAuthAvailable: mocks.isCustomerAuthAvailable,
   isCustomerSessionStoreAvailable: mocks.isCustomerSessionStoreAvailable,
   requireCustomer: mocks.requireCustomer,
   revokeCurrentCustomerSession: mocks.revokeCurrentCustomerSession,
@@ -138,7 +139,7 @@ describe("Customer auth HTTP boundaries", () => {
     });
 
     const response = await getGoogleCallback(
-      new Request(`https://app.example.test/api/auth/google/callback?code=google-code&state=${encodeURIComponent(state)}`, {
+      new Request(`https://internal.example.test/api/auth/google/callback?code=google-code&state=${encodeURIComponent(state)}`, {
         headers: { "x-forwarded-for": "198.51.100.12" },
       }),
     );
@@ -154,7 +155,7 @@ describe("Customer auth HTTP boundaries", () => {
       email: "customer@example.com",
       googleSubject: "google-sub-123",
       normalizedEmail: "customer@example.com",
-    });
+    }, undefined, expect.any(Date));
   });
 
   it("revokes the current session on same-origin logout and blocks cross-origin logout", async () => {

@@ -16,7 +16,7 @@ function getDeclaredBodySize(request: Request): number | undefined {
   return Number.isSafeInteger(size) ? size : undefined;
 }
 
-async function readBoundedText(request: Request, maxBytes: number): Promise<string> {
+export async function readBoundedText(request: Request, maxBytes: number): Promise<string> {
   const declaredBodySize = getDeclaredBodySize(request);
 
   if (declaredBodySize !== undefined && declaredBodySize > maxBytes) {

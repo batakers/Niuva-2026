@@ -415,9 +415,9 @@ Shop
 → Order Status
 ```
 
-Customer wajib login dengan Google sebelum checkout. `/login` dan `/register`
-adalah dua entry point ke flow OAuth yang sama; tidak ada password atau email
-authentication terpisah. `/account` menampilkan nama, email terverifikasi,
+Customer wajib login sebelum checkout dengan email/password terverifikasi atau Google.
+`/login` dan `/register` menyediakan kedua metode; `/verify-email` menyelesaikan
+pendaftaran email. Clerk tetap khusus Owner/Admin. `/account` menampilkan nama, email terverifikasi,
 avatar opsional, serta riwayat order retail dan custom print secara read-only.
 
 Order guest lama yang belum memiliki Customer dapat ditautkan ketika login
@@ -1547,3 +1547,64 @@ Setelah PRD disetujui:
   ]
 }
 ```
+
+
+## Addendum Customer authentication — 1 Oktober 2026
+
+Keputusan Owner memperluas autentikasi Customer menjadi email/password plus
+Google dan menggantikan pembatasan Google saja pada teks historis dokumen ini.
+Register, Login, dan Verifikasi mengikuti struktur Figma dengan identitas Niuva
+serta copy Bahasa Indonesia. Pemulihan password merupakan bagian alur ini.
+
+- Email/password: nama, email, password 8–128 karakter, konfirmasi, dan
+  persetujuan versi Syarat Layanan/Kebijakan Privasi resmi. Tidak ada sesi atau
+  akses pesanan sebelum email diverifikasi; verifikasi tidak otomatis login.
+- Pendaftaran baru belum aktif selama dokumen kebijakan belum disediakan.
+  Login akun yang sudah ada tetap mengikuti capability metode masing-masing.
+- Login Google tidak menggabungkan akun password yang emailnya sama.
+- Verifikasi berlaku 24 jam; reset 30 menit. Reset mencabut seluruh sesi akun.
+- Ingat saya pada login password: 30 hari; tanpa pilihan itu: cookie sesi browser
+  dengan batas server 24 jam. Google mempertahankan sesi 30 hari.
+- Mock pengiriman dan fixture kebijakan hanya untuk test terisolasi di database
+  test loopback. Runtime normal tidak mengklaim email terkirim tanpa provider.
+- Pengiriman Development nyata memerlukan konfigurasi aman. Aktivasi production,
+  provider acceptance, device/AT, dan penerimaan visual tetap terpisah.
+## Addendum pengujian autentikasi internal — 2 Oktober 2026
+
+Owner menyetujui pengujian nyata Google dan email/password untuk dua alamat
+milik sendiri pada Development loopback dengan database lokal `niuva_dev`.
+Pendaftaran dibatasi per metode menggunakan allowlist server dan persetujuan
+Ketentuan Pengujian Internal serta Pemberitahuan Privasi Pengujian berversi.
+Dokumen tersebut tidak membuka pendaftaran publik; dokumen komersial tetap draf
+dan identitas usaha, kontak resmi, pembatalan/refund, serta retensi legal tetap TBD.
+
+Akses akun baru pengujian berakhir 30 hari sejak Customer dibuat; login tidak
+memperpanjang tenggat. Pendaftaran pending memiliki tenggat sendiri 30 hari sejak
+dimulai. Profil, credential, sesi, token, dan persetujuan lokal dibersihkan pada
+jadwal berikutnya yang berhasil. Pesanan, brief, Custom Print, quote, unggahan,
+dan catatan provider tidak termasuk penghapusan akun ini. Akun lama tidak ditandai
+otomatis. Pengiriman Resend nyata dan penerimaan inbox harus dilaporkan terpisah
+dari keberhasilan mock, pemeriksaan otomatis, dan penerimaan visual.
+
+## Addendum draf policy dan pusat privasi Customer — 2 Oktober 2026
+
+Identitas PT. NIUVA INOVASI UTAMA, alamat profil Ekraf dan kontak Owner serta
+keputusan keluhan/refund kini tercatat pada draf legal versi v2 di `docs/legal/`.
+Addendum ini menggantikan status TBD atas fakta tersebut pada addendum internal
+sebelumnya, tanpa menerbitkan dokumen resmi atau membuka pendaftaran publik.
+
+Customer Development/test memiliki `/account/privacy`: JSON milik sendiri,
+koreksi, data tambahan, dan penutupan permanen dengan konfirmasi email sekali
+pakai. Owner menangani permintaan di `/admin/privacy`; akses/koreksi memiliki
+tenggat 3×24 jam kalender sejak diterima. SLA keluhan pesanan hari kerja berbeda.
+Penutupan tetap diterima saat pesanan/kasus aktif, mempertahankan kontak
+terverifikasi untuk penyelesaian. Tidak ada pemulihan akun/riwayat otomatis saat
+daftar ulang. Preview draf hanya Owner, tidak masuk persetujuan pendaftaran.
+
+Isi kasus selesai 7 hari, bukti minimum 30 hari, penahanan terdokumentasi dengan
+penanggung jawab dan tanggal peninjauan. Data transaksi dan kelas berkas 14/60/90
+hari tetap terpisah. Detail operasional, provider lokal, batas implementasi dan
+prasyarat publikasi di `docs/legal/customer-policy-implementation.md`. Usia 18,
+retensi pembukuan, backup/provider produksi, proses refund/retur dan tinjauan
+legal merupakan prasyarat publikasi; tahap ini tidak mengubah B2B menjadi WA,
+melakukan refund otomatis, deployment ataupun penerimaan legal.

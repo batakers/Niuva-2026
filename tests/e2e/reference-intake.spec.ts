@@ -51,7 +51,8 @@ test("MAKE reference intake works without private storage when database is avail
   const cacheControl = response?.headers()["cache-control"] ?? "";
   // Next's development server forces no-cache; production uses the private no-store account rule.
   expect(cacheControl).toMatch(/(?:no-store|no-cache)/);
-  expect(response?.headers()["referrer-policy"]).toBe("no-referrer");
+  // Account pages retain Origin for native POST forms without sending cross-site referrers.
+  expect(response?.headers()["referrer-policy"]).toBe("same-origin");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
   await expect(page.getByText("Belum ada", { exact: true })).toBeVisible();
   await expect(page.getByText("Model terverifikasi")).toBeVisible();

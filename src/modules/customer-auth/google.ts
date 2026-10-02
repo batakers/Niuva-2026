@@ -97,7 +97,7 @@ export function createGoogleOAuthAdapter(
       const ticket = await client.verifyIdToken({
         audience: config.clientId,
         idToken: tokens.id_token,
-        maxExpiry: 10 * 60,
+        maxExpiry: 2 * 60 * 60,
       });
       const payload = ticket.getPayload();
 

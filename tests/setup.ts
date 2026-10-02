@@ -12,6 +12,7 @@ vi.mock("next/font/google", () => {
 
   return {
     Fraunces: createFont("Fraunces", "--font-public-editorial"),
+    Google_Sans: createFont("Google Sans", "--font-google-action"),
     Space_Grotesk: createFont("Space Grotesk", "--font-public-sans"),
   };
 });

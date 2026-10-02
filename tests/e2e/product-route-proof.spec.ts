@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { loginCustomer } from "./helpers/customer";
+import { expectDecodedImage } from "./helpers/readiness";
 
 const proofWidths = [320, 390, 768, 1280] as const;
 
@@ -46,15 +47,9 @@ async function assertHomepageMedia(page: Page) {
   await expect(media).toHaveCount(3);
 
   for (const image of await media.all()) {
-    await image.scrollIntoViewIfNeeded();
+    await expectDecodedImage(image);
   }
 
-  await expect.poll(
-    () => media.evaluateAll((images) => images.every((image) =>
-      image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0,
-    )),
-    { message: "homepage proof media should load with usable dimensions" },
-  ).toBe(true);
   const altTexts = await media.evaluateAll((images) => images.map((image) =>
     image instanceof HTMLImageElement ? image.alt.trim() : "",
   ));

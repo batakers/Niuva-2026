@@ -1,6 +1,7 @@
 import type { Prisma, PrismaClient } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { appError } from "@/modules/shared/errors";
+import { lockCustomerBusinessWrite } from "@/modules/customer-privacy/lifecycle";
 
 import type { B2BInquiryInput } from "./schema";
 
@@ -43,6 +44,7 @@ export class B2BInquiryRepository {
 
   async create(input: InquiryCreateInput) {
     return this.prisma.$transaction(async (transaction) => {
+      await lockCustomerBusinessWrite(transaction, input.customerId);
       const inquiry = await transaction.b2BInquiry.create({
         data: {
           budgetRange: input.budgetRange,

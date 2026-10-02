@@ -1,7 +1,8 @@
+import { isAppError } from "@/modules/shared/errors";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-import { isCustomerAuthAvailable } from "@/lib/auth/customer";
+import { isCustomerGoogleAuthAvailable } from "@/lib/auth/customer";
 import {
   CUSTOMER_OAUTH_RETURN_TO_COOKIE,
   CUSTOMER_OAUTH_STATE_COOKIE,
@@ -15,6 +16,7 @@ import {
   secureTokenEqual,
 } from "@/modules/customer-auth/core";
 import { CustomerAuthService } from "@/modules/customer-auth/service";
+import { INTERNAL_GOOGLE_CONSENT_COOKIE, getInternalAuthConfig } from "@/modules/customer-auth/internal-testing";
 import { createGoogleOAuthAdapter, getCustomerGoogleOAuthConfig } from "@/modules/customer-auth/google";
 import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
 
@@ -33,13 +35,21 @@ function rateLimitKey(request: Request): string {
 
 function loginRedirect(
   request: Request,
-  error: "auth_failed" | "rate_limited" | "unavailable",
+  error: "auth_failed" | "rate_limited" | "unavailable" | "conflict" | "registration_unavailable",
   returnTo: string,
 ): NextResponse {
-  const url = new URL("/login", request.url);
+  const url = customerRedirectUrl("/login", request);
   url.searchParams.set("error", error);
   url.searchParams.set("returnTo", safeCustomerReturnTo(returnTo));
   return NextResponse.redirect(url);
+}
+
+function customerRedirectUrl(path: string, request: Request): URL {
+  try {
+    return new URL(path, getCustomerGoogleOAuthConfig().redirectUri);
+  } catch {
+    return new URL(path, request.url);
+  }
 }
 
 function clearOAuthCookies(response: NextResponse): void {
@@ -52,6 +62,7 @@ function clearOAuthCookies(response: NextResponse): void {
     CUSTOMER_OAUTH_STATE_COOKIE,
     CUSTOMER_OAUTH_VERIFIER_COOKIE,
     CUSTOMER_OAUTH_RETURN_TO_COOKIE,
+    INTERNAL_GOOGLE_CONSENT_COOKIE,
   ]) {
     response.cookies.set(name, "", options);
   }
@@ -63,7 +74,7 @@ export async function GET(request: Request): Promise<Response> {
   const returnTo = safeCustomerReturnTo(
     cookieStore.get(CUSTOMER_OAUTH_RETURN_TO_COOKIE)?.value,
   );
-  const failedResponse = (error: "auth_failed" | "rate_limited" | "unavailable") => {
+  const failedResponse = (error: "auth_failed" | "rate_limited" | "unavailable" | "conflict" | "registration_unavailable") => {
     const response = loginRedirect(request, error, returnTo);
     clearOAuthCookies(response);
     return response;
@@ -73,7 +84,7 @@ export async function GET(request: Request): Promise<Response> {
     return failedResponse("rate_limited");
   }
 
-  if (!isCustomerAuthAvailable()) {
+  if (!isCustomerGoogleAuthAvailable()) {
     return failedResponse("unavailable");
   }
 
@@ -98,16 +109,23 @@ export async function GET(request: Request): Promise<Response> {
     const identity = await createGoogleOAuthAdapter(
       getCustomerGoogleOAuthConfig(),
     ).exchangeCode({ code, codeVerifier: verifier });
-    const login = await new CustomerAuthService().completeGoogleLogin(identity);
-    const response = NextResponse.redirect(new URL(returnTo, request.url));
+    const proof = cookieStore.get(INTERNAL_GOOGLE_CONSENT_COOKIE)?.value;
+    const service = new CustomerAuthService();
+    const login = await service.completeGoogleLogin(identity, proof, new Date(Number(state.split(".")[0]) * 1000));
+    const response = NextResponse.redirect(customerRedirectUrl(returnTo, request));
     response.cookies.set(
       CUSTOMER_SESSION_COOKIE,
       login.sessionToken,
-      customerSessionCookieOptions(process.env.NODE_ENV === "production"),
+      { ...customerSessionCookieOptions(process.env.NODE_ENV === "production"), maxAge: Math.max(0, Math.floor((login.expiresAt.getTime() - Date.now()) / 1000)) },
     );
     clearOAuthCookies(response);
     return response;
-  } catch {
-    return failedResponse("auth_failed");
+  } catch (error) {
+    if (getInternalAuthConfig() && isAppError(error) && error.code === "CUSTOMER_AUTH_UNAVAILABLE") {
+      const response = NextResponse.redirect(customerRedirectUrl(`/internal-testing/google-consent?returnTo=${encodeURIComponent(returnTo)}&error=registration_unavailable`, request));
+      clearOAuthCookies(response);
+      return response;
+    }
+    return failedResponse(isAppError(error) && error.code === "CONFLICT" ? "conflict" : isAppError(error) && error.code === "CUSTOMER_AUTH_UNAVAILABLE" ? "registration_unavailable" : "auth_failed");
   }
 }

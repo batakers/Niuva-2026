@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   BriefcaseBusiness, ExternalLink, Images, LayoutDashboard,
-  ListTodo, Menu, Package, Printer, ShoppingBag, SlidersHorizontal,
+  ListTodo, Menu, Package, Printer, ShoppingBag, SlidersHorizontal, ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 import type { AdminRole } from "@/generated/prisma/client";
@@ -18,7 +18,9 @@ export type AdminArea =
   | "products"
   | "portfolio"
   | "inquiries"
-  | "pricing";
+  | "pricing"
+  | "privacy";
+// Owner privacy operations share the existing shell, with separate permission.
 
 type NavigationItem = Readonly<{ area: AdminArea; href: string; label: string; icon: LucideIcon }>;
 
@@ -34,6 +36,7 @@ const manageNavigation: readonly NavigationItem[] = [
   { area: "products", href: "/admin/products", label: "Products & Stock", icon: Package },
   { area: "portfolio", href: "/admin/portfolio", label: "Portfolio", icon: Images },
   { area: "pricing", href: "/admin/pricing", label: "Pricing Rules", icon: SlidersHorizontal },
+  { area: "privacy", href: "/admin/privacy", label: "Privasi Customer", icon: ShieldCheck },
 ];
 
 const roleLabels: Record<AdminRole, string> = {
@@ -77,7 +80,7 @@ export function AdminShell({
               </nav>
               <p className="mt-8 px-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground group-data-[sidebar-collapsed=true]/admin-shell:sr-only">Kelola</p>
               <nav aria-label="Kelola" className="mt-2 grid gap-1 group-data-[sidebar-collapsed=true]/admin-shell:mt-8">
-                {manageNavigation.map((item) => <AdminDesktopNavLink active={active} item={item} key={item.area} />)}
+                {manageNavigation.filter(item => item.area !== "privacy" || role === "OWNER").map((item) => <AdminDesktopNavLink active={active} item={item} key={item.area} />)}
               </nav>
             </div>
             <div className="mt-4 flex shrink-0 justify-center border-t border-border pt-4">
@@ -109,7 +112,7 @@ export function AdminShell({
                 </nav>
                 <nav aria-label="Kelola mobile" className="grid gap-1">
                   <p className="px-3 text-xs font-semibold text-muted-foreground">Kelola</p>
-                  {manageNavigation.map((item) => <AdminNavLink active={active} item={item} key={item.area} />)}
+                  {manageNavigation.filter(item => item.area !== "privacy" || role === "OWNER").map((item) => <AdminNavLink active={active} item={item} key={item.area} />)}
                   <Link className="inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm text-brand-700 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href="/"><ExternalLink aria-hidden="true" className="size-4" />Situs publik</Link>
                 </nav>
               </div>
