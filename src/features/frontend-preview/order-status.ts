@@ -34,6 +34,7 @@ export type OrderStatusPreview = Readonly<{
     description: string;
     kind: "none" | "quote" | "payment-unavailable" | "shipping-payment-unavailable" | "support";
     label?: string;
+    quoteHref?: string;
     title: string;
     tone: "success" | "warning" | "info" | "error";
   }>;

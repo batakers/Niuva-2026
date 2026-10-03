@@ -4,8 +4,10 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { z } from "zod";
 
-import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
+import { AdminAccessView } from "@/app/admin/admin-access-view";
 import { AdminActionForm } from "@/app/admin/admin-action-form";
+import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
+import { loadAdminRecord } from "@/app/admin/admin-record-loader";
 import {
   replaceProductMediaAction,
   updateProductAction,
@@ -13,8 +15,7 @@ import {
 } from "@/app/admin/actions";
 import { AdminDataUnavailableView, AdminShell } from "@/components/niuva/admin-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
-import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
-import { AdminOperationsService, type AdminProductDetail } from "@/modules/admin/operations";
+import { AdminOperationsService } from "@/modules/admin/operations";
 import { StockAdjustmentPanel } from "./stock-adjustment-panel";
 
 export const metadata: Metadata = { title: "Product detail admin · Niuva", robots: { follow: false, index: false } };
@@ -22,12 +23,16 @@ const currencyFormatter = new Intl.NumberFormat("id-ID", { currency: "IDR", maxi
 
 export default async function AdminProductDetailPage({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
   await connection();
+  const gate = await loadAdminPageAccess();
+  if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
+  const { access } = gate;
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
-  const access = await loadAdminAccess();
-  if (access === null) return <AdminAccessUnavailableView />;
-  const product = await loadProduct(access, id);
-  if (product === null) return <AdminDataUnavailableView active="products" role={access.profile.role} title="Detail produk belum dapat dimuat" />;
+  const service = new AdminOperationsService({ authorize: async () => access });
+  const result = await loadAdminRecord(() => service.getProduct(id));
+  if (result.status === "not-found") notFound();
+  if (result.status === "unavailable") return <AdminDataUnavailableView active="products" role={access.profile.role} title="Detail produk belum dapat dimuat" />;
+  const product = result.record;
 
   return (
     <AdminShell active="products" role={access.profile.role}>
@@ -65,8 +70,6 @@ export default async function AdminProductDetailPage({ params }: Readonly<{ para
   );
 }
 
-async function loadAdminAccess(): Promise<AdminAccess | null> { try { return await requireAdmin(); } catch { return null; } }
-async function loadProduct(access: AdminAccess, id: string): Promise<AdminProductDetail | null> { try { return await new AdminOperationsService({ authorize: async () => access }).getProduct(id); } catch { return null; } }
 function Field({ id, label, name, required, type = "text", value }: Readonly<{ id?: string; label: string; name: string; required?: boolean; type?: string; value: string }>) { const fieldId = id ?? name; return <label className="grid gap-2 text-sm font-medium" htmlFor={fieldId}><span>{label}</span><input className={inputClass} defaultValue={value} id={fieldId} name={name} required={required} type={type} /></label>; }
 const inputClass = "min-h-11 rounded-lg border border-input bg-background px-3 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm";
 const textareaClass = "min-h-24 rounded-lg border border-input bg-background px-3 py-2 text-base leading-6 outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm";

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 
-import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
+import { AdminAccessView } from "@/app/admin/admin-access-view";
+import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
 import { activatePricingRuleAction } from "@/app/admin/actions";
 import { AdminActionForm } from "@/app/admin/admin-action-form";
 import {
@@ -10,7 +11,7 @@ import {
   AdminShell,
 } from "@/components/niuva/admin-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
-import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/clerk";
 import {
   AdminOperationsService,
   parseAdminPage,
@@ -36,9 +37,9 @@ export default async function AdminPricingPage({
 }: Readonly<{ searchParams: Promise<{ page?: string }> }>) {
   await connection();
   const page = parseAdminPage((await searchParams).page);
-  const access = await loadAdminAccess();
-
-  if (access === null) return <AdminAccessUnavailableView />;
+  const gate = await loadAdminPageAccess();
+  if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
+  const { access } = gate;
 
   const pricing = await loadPricing(access, page);
   if (pricing === null) {
@@ -193,14 +194,6 @@ export default async function AdminPricingPage({
       </main>
     </AdminShell>
   );
-}
-
-async function loadAdminAccess(): Promise<AdminAccess | null> {
-  try {
-    return await requireAdmin();
-  } catch {
-    return null;
-  }
 }
 
 async function loadPricing(

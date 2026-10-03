@@ -3,15 +3,16 @@ import { join } from "node:path";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
-import { requireAdmin } from "@/lib/auth/clerk";
-import { requireAdminPermission } from "@/modules/admin/permissions";
-import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
+import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
+import { AdminAccessView } from "@/app/admin/admin-access-view";
 import { AdminShell } from "@/components/niuva/admin-shell";
 import { typographySystemTokens as type } from "@/design/typography";
 export const metadata: Metadata = { title: "Tinjauan draf policy · Owner Niuva", robots: { index: false, follow: false } };
 export default async function PolicyPreview({ searchParams }: { searchParams: Promise<{ document?: string }> }) {
-  await connection(); let access;
-  try { access = requireAdminPermission(await requireAdmin(), "PRIVACY_REQUEST_MANAGE"); } catch { return <AdminAccessUnavailableView />; }
+  await connection();
+  const gate = await loadAdminPageAccess({ permission: "PRIVACY_REQUEST_MANAGE" });
+  if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
+  const access = gate.access;
   const document = (await searchParams).document === "privacy" ? "privacy" : "terms";
   const source = await readFile(join(process.cwd(), "docs", "legal", `customer-${document}-draft.md`), "utf8");
   return <AdminShell active="privacy" role={access.profile.role}><main id="main-content" className="mx-auto max-w-3xl space-y-6"><Link href="/admin/privacy" className="inline-flex min-h-11 items-center text-primary underline">Kembali ke Privasi Customer</Link><p role="status" className="rounded-lg border border-border bg-card p-4 leading-6">Draf untuk tinjauan Owner. Belum berlaku atau menjadi persetujuan pendaftaran publik.</p><article className="space-y-5 break-words">{source.split(/\r?\n\r?\n/).map((block, index) => {

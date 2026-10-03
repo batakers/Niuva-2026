@@ -3,9 +3,10 @@ import { connection } from "next/server";
 import Link from "next/link";
 
 import { AdminDataUnavailableView, AdminPagination, AdminShell } from "@/components/niuva/admin-shell";
-import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
+import { AdminAccessView } from "@/app/admin/admin-access-view";
+import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
 import { StatusNotice } from "@/components/niuva/status-notice";
-import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/clerk";
 import { AdminOperationsService, parseAdminPage, type AdminOrderRow } from "@/modules/admin/operations";
 
 export const metadata: Metadata = {
@@ -29,8 +30,9 @@ export default async function AdminOrdersPage({
 }: Readonly<{ searchParams: Promise<{ page?: string }> }>) {
   await connection();
   const page = parseAdminPage((await searchParams).page);
-  const access = await loadAdminAccess();
-  if (access === null) return <AdminAccessUnavailableView />;
+  const gate = await loadAdminPageAccess();
+  if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
+  const { access } = gate;
 
   const result = await loadOrders(access, page);
   if (result === null) return <AdminDataUnavailableView active="orders" role={access.profile.role} title="Orders belum dapat dimuat" />;
@@ -94,14 +96,6 @@ export default async function AdminOrdersPage({
         </main>
       </AdminShell>
   );
-}
-
-async function loadAdminAccess(): Promise<AdminAccess | null> {
-  try {
-    return await requireAdmin();
-  } catch {
-    return null;
-  }
 }
 
 async function loadOrders(access: AdminAccess, page: number): Promise<Awaited<ReturnType<AdminOperationsService["listOrders"]>> | null> {

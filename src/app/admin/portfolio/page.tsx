@@ -3,9 +3,10 @@ import { connection } from "next/server";
 import Link from "next/link";
 
 import { AdminDataUnavailableView, AdminPagination, AdminShell } from "@/components/niuva/admin-shell";
-import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
+import { AdminAccessView } from "@/app/admin/admin-access-view";
+import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
 import { StatusNotice } from "@/components/niuva/status-notice";
-import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/clerk";
 import { AdminOperationsService, parseAdminPage, type AdminPortfolioRow } from "@/modules/admin/operations";
 import { isApprovedCardOnlyPortfolioProject } from "@/modules/portfolio/public-content";
 
@@ -25,8 +26,9 @@ export default async function AdminPortfolioPage({
 }: Readonly<{ searchParams: Promise<{ page?: string }> }>) {
   await connection();
   const page = parseAdminPage((await searchParams).page);
-  const access = await loadAdminAccess();
-  if (access === null) return <AdminAccessUnavailableView />;
+  const gate = await loadAdminPageAccess();
+  if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
+  const { access } = gate;
 
   const result = await loadPortfolio(access, page);
   if (result === null) return <AdminDataUnavailableView active="portfolio" role={access.profile.role} title="Portfolio belum dapat dimuat" />;
@@ -71,14 +73,6 @@ export default async function AdminPortfolioPage({
         </main>
       </AdminShell>
   );
-}
-
-async function loadAdminAccess(): Promise<AdminAccess | null> {
-  try {
-    return await requireAdmin();
-  } catch {
-    return null;
-  }
 }
 
 async function loadPortfolio(access: AdminAccess, page: number): Promise<Awaited<ReturnType<AdminOperationsService["listPortfolio"]>> | null> {

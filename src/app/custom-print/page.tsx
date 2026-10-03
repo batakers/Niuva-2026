@@ -144,7 +144,7 @@ export default async function CustomPrintPage() {
           <div className="mx-auto max-w-public px-5 py-12 sm:px-8 sm:py-16">
             <p className="text-sm font-medium text-brand-700">Dua titik mulai MAKE</p>
             <h2 className={`${type.heading.className} mt-3`} id="modes-title">Pilih sesuai bahan yang sudah Anda miliki.</h2>
-            {!customerAuthEnabled ? <div className="mt-6 max-w-3xl"><StatusNotice tone="warning" title="Login Google Customer belum tersedia pada runtime ini." description="Anda dapat mempelajari pilihan dan prosesnya. Pengiriman request menunggu login Customer tersedia; tidak ada file atau kebutuhan yang akan dikirim dari halaman ini." /></div> : null}
+            {!customerAuthEnabled ? <div className="mt-6 max-w-3xl"><StatusNotice tone="warning" title="Login Customer belum tersedia pada runtime ini." description="Anda dapat mempelajari pilihan dan prosesnya. Pengiriman request menunggu login Customer tersedia; tidak ada file atau kebutuhan yang akan dikirim dari halaman ini." /></div> : null}
             <div className="mt-10 grid gap-8 border-t border-border md:grid-cols-2 md:gap-12">
               <div className="pt-7">
                 <h3 className={type.subheading.className}>Saya punya model 3D/CAD</h3>
@@ -259,7 +259,7 @@ export default async function CustomPrintPage() {
                     </p>
                     {customerAuthEnabled ? <NiuvaLink className="mt-5 min-h-11 w-full" href={`/custom-print/request?product=${encodeURIComponent(product.sourceProductId)}`}>
                       Ajukan untuk Review
-                    </NiuvaLink> : <p className="mt-5 border-t border-border pt-4 text-sm leading-6 text-muted-foreground">Pengajuan menunggu login Google Customer tersedia.</p>}
+                    </NiuvaLink> : <p className="mt-5 border-t border-border pt-4 text-sm leading-6 text-muted-foreground">Pengajuan menunggu login Customer tersedia.</p>}
                   </div>
                 </article>
               ))}
@@ -316,7 +316,7 @@ export default async function CustomPrintPage() {
             <StatusNotice
               tone="info"
               title={!customerAuthEnabled
-                ? "Pengiriman menunggu login Google Customer."
+                ? "Pengiriman menunggu login Customer."
                 : databaseEnabled
                 ? "Referensi awal dapat dikirim untuk ditriase operator."
                 : previewEnabled

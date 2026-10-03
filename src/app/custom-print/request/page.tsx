@@ -52,7 +52,7 @@ export default async function CustomPrintRequestPage({
   try { customer = await requireCustomer(); }
   catch (error) {
     if (isAppError(error) && error.code === "UNAUTHORIZED") redirect(`/login?returnTo=${encodeURIComponent(returnTo)}`);
-    if (isAppError(error) && error.code === "CUSTOMER_AUTH_UNAVAILABLE") return <PublicShell scope="custom-request" functionalStatus="capability-gated"><main id="main-content" className="mx-auto max-w-public px-5 py-16 sm:px-8"><StatusNotice title="Login Customer belum tersedia" description="Request MAKE memerlukan login Google Customer sebelum dapat dikirim pada runtime ini." tone="warning" /></main></PublicShell>;
+    if (isAppError(error) && error.code === "CUSTOMER_AUTH_UNAVAILABLE") return <PublicShell scope="custom-request" functionalStatus="capability-gated"><main id="main-content" className="mx-auto max-w-public px-5 py-16 sm:px-8"><StatusNotice title="Login Customer belum tersedia" description="Request MAKE memerlukan login Customer sebelum dapat dikirim pada runtime ini." tone="warning" /></main></PublicShell>;
     throw error;
   }
 

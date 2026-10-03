@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import Link from "next/link";
 
-import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
+import { AdminAccessView } from "@/app/admin/admin-access-view";
+import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
 import { AdminDataUnavailableView, AdminPagination, AdminShell } from "@/components/niuva/admin-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
-import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/clerk";
 import { AdminOperationsService, parseAdminPage, type AdminInquiryRow } from "@/modules/admin/operations";
 
 export const metadata: Metadata = { title: "B2B Inquiries admin · Niuva", robots: { follow: false, index: false } };
@@ -14,8 +15,9 @@ const dateFormatter = new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", ti
 export default async function AdminInquiriesPage({ searchParams }: Readonly<{ searchParams: Promise<{ page?: string }> }>) {
   await connection();
   const page = parseAdminPage((await searchParams).page);
-  const access = await loadAdminAccess();
-  if (access === null) return <AdminAccessUnavailableView />;
+  const gate = await loadAdminPageAccess();
+  if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
+  const { access } = gate;
   const result = await loadInquiries(access, page);
   if (result === null) return <AdminDataUnavailableView active="inquiries" role={access.profile.role} title="B2B inquiries belum dapat dimuat" />;
 
@@ -81,7 +83,6 @@ export default async function AdminInquiriesPage({ searchParams }: Readonly<{ se
   );
 }
 
-async function loadAdminAccess(): Promise<AdminAccess | null> { try { return await requireAdmin(); } catch { return null; } }
 async function loadInquiries(access: AdminAccess, page: number): Promise<Awaited<ReturnType<AdminOperationsService["listInquiries"]>> | null> { try { return await new AdminOperationsService({ authorize: async () => access }).listInquiries({ page }); } catch { return null; } }
 function Summary({ label, value }: Readonly<{ label: string; value: string }>) { return <div className="rounded-xl border border-border bg-card p-4"><p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></div>; }
 function InquiryRow({ item }: Readonly<{ item: AdminInquiryRow }>) { return <tr><th className="px-5 py-4 align-top font-medium" scope="row"><Link className="font-mono text-sm text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/admin/inquiries/${item.id}`}>{item.referenceNumber}</Link><span className="mt-1 block text-xs font-normal text-muted-foreground">{item.company ?? "Tanpa perusahaan"}</span></th><td className="px-5 py-4 align-top"><span className="block font-medium">{item.name}</span><span className="mt-1 block text-xs text-muted-foreground">{item.email}</span></td><td className="px-5 py-4 align-top">{formatStatus(item.currentStage)}</td><td className="px-5 py-4 align-top"><span className="rounded-md border border-brand-300 bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-800">{formatStatus(item.status)}</span></td><td className="px-5 py-4 align-top text-muted-foreground">{item.targetDeadline ? dateFormatter.format(item.targetDeadline) : "—"}</td><td className="px-5 py-4 text-right align-top text-xs text-muted-foreground">{dateFormatter.format(item.updatedAt)}</td></tr>; }

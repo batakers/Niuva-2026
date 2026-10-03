@@ -1,6 +1,12 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 
+import {
+  classifyAdminProxyRequest,
+  createAdminAuthUnavailableHtmlResponse,
+  isAdminSignInPath,
+} from "@/lib/auth/admin-proxy-response";
+
 type ClerkEnvironment = Readonly<{
   CLERK_SECRET_KEY?: string;
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?: string;
@@ -23,7 +29,7 @@ const adminProxy = clerkMiddleware(
   async (auth, request) => {
     const pathname = request.nextUrl.pathname;
 
-    if (pathname === "/admin/sign-in" || pathname === "/admin/sign-in/") {
+    if (isAdminSignInPath(pathname)) {
       return;
     }
 
@@ -51,7 +57,14 @@ export default function proxy(request: NextRequest, event: NextFetchEvent) {
   // Clerk is a defense-in-depth route filter only. Every protected resource
   // must independently call requireAdmin() before reading or mutating data.
   if (!hasClerkAdminCredentials()) {
-    return createAdminAuthUnavailableResponse();
+    const kind = classifyAdminProxyRequest({
+      pathname: request.nextUrl.pathname,
+      accept: request.headers.get("accept"),
+    });
+
+    return kind === "browser-navigation"
+      ? createAdminAuthUnavailableHtmlResponse()
+      : createAdminAuthUnavailableResponse();
   }
 
   return adminProxy(request, event);

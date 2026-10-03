@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { z } from "zod";
 
-import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
+import { AdminAccessView } from "@/app/admin/admin-access-view";
+import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
+import { loadAdminRecord } from "@/app/admin/admin-record-loader";
 import { AdminActionForm } from "@/app/admin/admin-action-form";
 import {
   createQuoteDraftAction,
@@ -18,11 +20,8 @@ import {
 } from "@/app/admin/actions";
 import { AdminDataUnavailableView, AdminShell } from "@/components/niuva/admin-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
-import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
-import {
-  AdminOperationsService,
-  type AdminCustomPrintDetail,
-} from "@/modules/admin/operations";
+import type { AdminAccess } from "@/lib/auth/clerk";
+import { AdminOperationsService } from "@/modules/admin/operations";
 import { CustomPrintEstimateService, isEstimateCurrent } from "@/modules/custom-print/estimate";
 import { readCustomerPreviewSnapshot } from "@/modules/custom-print/customer-preview";
 
@@ -36,17 +35,20 @@ const currencyFormatter = new Intl.NumberFormat("id-ID", { currency: "IDR", maxi
 
 export default async function AdminCustomPrintDetailPage({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
   await connection();
+  const gate = await loadAdminPageAccess();
+  if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
+  const { access } = gate;
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
-  const access = await loadAdminAccess();
-  if (access === null) return <AdminAccessUnavailableView />;
-  const [request, pricing, activeRule, latestEstimate] = await Promise.all([
-    loadRequest(access, id),
+  const [requestResult, pricing, activeRule, latestEstimate] = await Promise.all([
+    loadAdminRecord(() => new AdminOperationsService({ authorize: async () => access }).getCustomPrintRequest(id)),
     loadPricing(access),
     loadActivePricing(access),
     new CustomPrintEstimateService({ authorizeAdmin: async () => access }).latestForAdmin(id),
   ]);
-  if (request === null) return <AdminDataUnavailableView active="custom-print" role={access.profile.role} title="Detail custom print belum dapat dimuat" />;
+  if (requestResult.status === "not-found") notFound();
+  if (requestResult.status === "unavailable") return <AdminDataUnavailableView active="custom-print" role={access.profile.role} title="Detail custom print belum dapat dimuat" />;
+  const request = requestResult.record;
   const review = request.review;
   const estimateCurrent = latestEstimate !== null && isEstimateCurrent(latestEstimate.snapshot, review?.updatedAt);
   const hasDraft = request.quotes.some((quote) => quote.status === "DRAFT");
@@ -213,8 +215,6 @@ export default async function AdminCustomPrintDetailPage({ params }: Readonly<{ 
   );
 }
 
-async function loadAdminAccess(): Promise<AdminAccess | null> { try { return await requireAdmin(); } catch { return null; } }
-async function loadRequest(access: AdminAccess, id: string): Promise<AdminCustomPrintDetail | null> { try { return await new AdminOperationsService({ authorize: async () => access }).getCustomPrintRequest(id); } catch { return null; } }
 async function loadPricing(access: AdminAccess): Promise<Awaited<ReturnType<AdminOperationsService["listPricingRules"]>> | null> { try { return await new AdminOperationsService({ authorize: async () => access }).listPricingRules(); } catch { return null; } }
 async function loadActivePricing(access: AdminAccess): Promise<Awaited<ReturnType<AdminOperationsService["getActivePricingRule"]>> | null> { try { return await new AdminOperationsService({ authorize: async () => access }).getActivePricingRule(); } catch { return null; } }
 function Info({ label, value }: Readonly<{ label: string; value: string }>) { return <div><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-1 break-words font-medium">{value}</dd></div>; }

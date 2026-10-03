@@ -11,6 +11,7 @@ const clerkMocks = vi.hoisted(() => ({
 type ControlProps = Readonly<{ children?: ReactNode }>;
 type ClerkAppearance = Readonly<{
   elements: Readonly<{
+    footerAction: Readonly<{ display: string }>;
     formButtonPrimary: Readonly<{ boxShadow: string; minHeight: string }>;
     formFieldInput: Readonly<{ minHeight: string }>;
     socialButtonsBlockButton: Readonly<{ boxShadow: string; minHeight: string }>;
@@ -43,6 +44,7 @@ vi.mock("@clerk/nextjs", () => ({
       data-form-button-min-height={appearance.elements.formButtonPrimary.minHeight}
       data-form-input-min-height={appearance.elements.formFieldInput.minHeight}
       data-social-button-shadow={appearance.elements.socialButtonsBlockButton.boxShadow}
+      data-footer-action-display={appearance.elements.footerAction.display}
       data-primary={appearance.variables.colorPrimary}
       data-force-redirect-url={forceRedirectUrl}
       data-path={path}
@@ -52,7 +54,7 @@ vi.mock("@clerk/nextjs", () => ({
   ),
 }));
 
-import AdminSignInPage from "@/app/admin/sign-in/page";
+import AdminSignInPage from "@/app/admin/sign-in/[[...sign-in]]/page";
 
 beforeEach(() => {
   clerkMocks.state = "loaded";
@@ -93,6 +95,17 @@ describe("admin sign-in", () => {
     expect(signIn).toHaveAttribute("data-form-input-min-height", "44px");
     expect(signIn).toHaveAttribute("data-primary-button-shadow", "none !important");
     expect(signIn).toHaveAttribute("data-social-button-shadow", "none !important");
+  });
+
+  it("hides the Clerk footer sign-up link while keeping sign-up disabled", () => {
+    render(<AdminSignInPage />);
+
+    const signIn = screen.getByTestId("clerk-sign-in");
+    expect(signIn).toHaveAttribute("data-footer-action-display", "none");
+    expect(signIn).toHaveAttribute("data-with-sign-up", "false");
+    expect(signIn).toHaveAttribute("data-routing", "path");
+    expect(signIn).toHaveAttribute("data-path", "/admin/sign-in");
+    expect(signIn).toHaveAttribute("data-force-redirect-url", "/admin");
   });
 
   it.each(["failed", "degraded"] as const)(

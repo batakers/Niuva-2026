@@ -709,8 +709,8 @@ export function CheckoutForm({
           <legend className="px-2 text-lg font-semibold">1. Kontak pemesan</legend>
           <p className="text-sm leading-6 text-muted-foreground">Checkout membutuhkan akun Customer yang login dengan Google. Tanda * menunjukkan field wajib.</p>
           <div className="grid gap-5 sm:grid-cols-2">
-            <FormField id="checkout-customerName" label="Nama pemesan (Customer)" required error={errors.customerName} description="Diambil dari profil Google dan tidak dapat diubah di checkout." className="sm:col-span-2"><Input name="customerName" autoComplete="name" defaultValue={customer?.displayName ?? customer?.email ?? ""} readOnly required className={controlClass} /></FormField>
-            <FormField id="checkout-customerEmail" label="Email terverifikasi" required error={errors.customerEmail} description="Email ini berasal dari Google session Customer." ><Input name="customerEmail" type="email" autoComplete="email" defaultValue={customer?.email ?? ""} readOnly required className={controlClass} /></FormField>
+            <FormField id="checkout-customerName" label="Nama pemesan (Customer)" required error={errors.customerName} description="Diambil dari akun Customer dan tidak dapat diubah di checkout." className="sm:col-span-2"><Input name="customerName" autoComplete="name" defaultValue={customer?.displayName ?? customer?.email ?? ""} readOnly required className={controlClass} /></FormField>
+            <FormField id="checkout-customerEmail" label="Email terverifikasi" required error={errors.customerEmail} description="Email ini berasal dari akun Customer yang sedang login." ><Input name="customerEmail" type="email" autoComplete="email" defaultValue={customer?.email ?? ""} readOnly required className={controlClass} /></FormField>
             <FormField id="checkout-customerPhone" label="Nomor WhatsApp pemesan" required error={errors.customerPhone}><Input name="customerPhone" type="tel" autoComplete="tel" required className={controlClass} /></FormField>
           </div>
         </fieldset>

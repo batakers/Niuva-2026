@@ -40,7 +40,7 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
               <StatusNotice
                 tone="warning"
                 title="Login Customer belum tersedia."
-                description="Checkout membutuhkan Google login Customer. Lengkapi konfigurasi OAuth non-production sebelum melanjutkan."
+                description="Checkout membutuhkan login Customer. Lengkapi konfigurasi autentikasi non-production sebelum melanjutkan."
                 action={<NiuvaLink href="/login?returnTo=/checkout" className="min-h-11">Buka halaman login</NiuvaLink>}
               />
             </div>
@@ -91,8 +91,8 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
             <h1 className={`${type.heading.className} mt-4 max-w-4xl`}>Satu pemeriksaan lagi sebelum transaksi dimulai.</h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground">
               {liveEnabled
-                ? "Isi nomor kontak dan alamat, muat tarif pengiriman, lalu buat order. Identitas Customer berasal dari Google session; harga, stok, ongkir, dan status pembayaran tetap menjadi kewenangan server."
-                : "Isi nomor kontak dan alamat, pilih simulasi pengiriman, lalu tinjau ringkasan. Identitas Customer berasal dari Google session; harga, stok, ongkir, dan status pembayaran tetap menjadi kewenangan server."}
+                ? "Isi nomor kontak dan alamat, muat tarif pengiriman, lalu buat order. Identitas Customer berasal dari akun yang sedang login; harga, stok, ongkir, dan status pembayaran tetap menjadi kewenangan server."
+                : "Isi nomor kontak dan alamat, pilih simulasi pengiriman, lalu tinjau ringkasan. Identitas Customer berasal dari akun yang sedang login; harga, stok, ongkir, dan status pembayaran tetap menjadi kewenangan server."}
             </p>
           </div>
         </section>
