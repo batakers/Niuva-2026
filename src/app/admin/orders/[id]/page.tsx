@@ -9,7 +9,9 @@ import {
   AdminShell,
 } from "@/components/niuva/admin-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
-import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
+import { AdminAccessView } from "@/app/admin/admin-access-view";
+import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
+import { loadAdminRecord } from "@/app/admin/admin-record-loader";
 import {
   AdminActionForm,
 } from "@/app/admin/admin-action-form";
@@ -20,11 +22,7 @@ import {
   saveCustomShippingAddressAction,
   transitionOrderAction,
 } from "@/app/admin/actions";
-import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
-import {
-  AdminOperationsService,
-  type AdminOrderDetail,
-} from "@/modules/admin/operations";
+import { AdminOperationsService } from "@/modules/admin/operations";
 import type { OrderStatus } from "@/generated/prisma/client";
 import {
   CUSTOM_ORDER_TRANSITIONS,
@@ -52,12 +50,20 @@ export default async function AdminOrderDetailPage({
   params,
 }: Readonly<{ params: Promise<{ id: string }> }>) {
   await connection();
+  const pageAccess = await loadAdminPageAccess();
+  if (pageAccess.kind === "denied") return <AdminAccessView state={pageAccess.state} />;
+  const { access } = pageAccess;
+
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
-  const access = await loadAdminAccess();
-  if (access === null) return <AdminAccessUnavailableView />;
-  const order = await loadOrder(access, id);
-  if (order === null) return <AdminDataUnavailableView active="orders" role={access.profile.role} title="Detail order belum dapat dimuat" />;
+
+  const service = new AdminOperationsService({ authorize: async () => access });
+  const result = await loadAdminRecord(() => service.getOrder(id));
+  if (result.status === "not-found") notFound();
+  if (result.status === "unavailable") {
+    return <AdminDataUnavailableView active="orders" role={access.profile.role} title="Detail order belum dapat dimuat" />;
+  }
+  const order = result.record;
 
   const currentStatus = order.status as OrderStatus;
   const transitions = order.orderType === "RETAIL" ? RETAIL_ORDER_TRANSITIONS : CUSTOM_ORDER_TRANSITIONS;
@@ -192,14 +198,6 @@ export default async function AdminOrderDetailPage({
       </main>
     </AdminShell>
   );
-}
-
-async function loadAdminAccess(): Promise<AdminAccess | null> {
-  try { return await requireAdmin(); } catch { return null; }
-}
-
-async function loadOrder(access: AdminAccess, id: string): Promise<AdminOrderDetail | null> {
-  try { return await new AdminOperationsService({ authorize: async () => access }).getOrder(id); } catch { return null; }
 }
 
 function Info({ label, value }: Readonly<{ label: string; value: string }>) {

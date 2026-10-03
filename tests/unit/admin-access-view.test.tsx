@@ -1,13 +1,27 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AdminAccess } from "@/lib/auth/clerk";
-import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
+import type { AdminAccessState } from "@/app/admin/admin-page-access";
+import { AdminAccessView } from "@/app/admin/admin-access-view";
+import { systemCopy } from "@/components/niuva/system-state-copy";
 import { appError } from "@/modules/shared/errors";
 
 vi.mock("@/components/niuva/admin-session-actions", () => ({
   AdminSessionActions: () => null,
 }));
+
+const clerkMocks = vi.hoisted(() => ({ signOut: vi.fn() }));
+const routerMocks = vi.hoisted(() => ({ refresh: vi.fn() }));
+
+vi.mock("@clerk/nextjs", () => ({
+  useClerk: () => ({ signOut: clerkMocks.signOut }),
+}));
+
+vi.mock("next/navigation", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("next/navigation")>();
+  return { ...actual, useRouter: () => ({ refresh: routerMocks.refresh }) };
+});
 
 const authMocks = vi.hoisted(() => ({
   requireAdmin: vi.fn(),
@@ -49,6 +63,9 @@ import AdminQueuePage from "@/app/admin/queue/page";
 import { AdminShell } from "@/components/niuva/admin-shell";
 
 beforeEach(() => {
+  clerkMocks.signOut.mockReset();
+  clerkMocks.signOut.mockResolvedValue(undefined);
+  routerMocks.refresh.mockReset();
   authMocks.requireAdmin.mockReset();
   nextServerMocks.connection.mockReset();
   nextServerMocks.connection.mockResolvedValue(undefined);
@@ -86,17 +103,108 @@ describe("admin access view", () => {
     expect(screen.getByText("Admin content")).toBeInTheDocument();
   });
 
-  it("renders no protected role or preview content when access is unavailable", () => {
-    render(<AdminAccessUnavailableView />);
+  it("renders UNAUTHENTICATED with a sign-in link, one home link and no other controls", () => {
+    render(<AdminAccessView state="UNAUTHENTICATED" />);
 
-    expect(
-      screen.getByRole("heading", { level: 1, name: "Akses admin belum tersedia" }),
-    ).toBeInTheDocument();
+    const copy = systemCopy.adminAccess.UNAUTHENTICATED;
+    expect(screen.getByRole("heading", { level: 1, name: copy.title })).toBeInTheDocument();
+    expect(screen.getByText(copy.description)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: systemCopy.actions.signIn })).toHaveAttribute("href", "/admin/sign-in");
+    expect(homeLinks()).toHaveLength(1);
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
     expect(screen.queryByText("Owner")).not.toBeInTheDocument();
     expect(screen.queryByText("Development-only preview")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
+
+  it("renders FORBIDDEN with only the sign-out control and one home link", () => {
+    render(<AdminAccessView state="FORBIDDEN" />);
+
+    const copy = systemCopy.adminAccess.FORBIDDEN;
+    expect(screen.getByRole("heading", { level: 1, name: copy.title })).toBeInTheDocument();
+    expect(screen.getByText(copy.description)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: systemCopy.actions.signOut })).toBeEnabled();
+    expect(screen.getAllByRole("button")).toHaveLength(1);
+    expect(homeLinks()).toHaveLength(1);
+    expect(screen.queryByRole("link", { name: systemCopy.actions.signIn })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: systemCopy.actions.reload })).not.toBeInTheDocument();
+  });
+
+  it("renders AUTH_UNAVAILABLE with only the reload control and one home link", () => {
+    render(<AdminAccessView state="AUTH_UNAVAILABLE" />);
+
+    const copy = systemCopy.adminAccess.AUTH_UNAVAILABLE;
+    expect(screen.getByRole("heading", { level: 1, name: copy.title })).toBeInTheDocument();
+    expect(screen.getByText(copy.description)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: systemCopy.actions.reload })).toBeEnabled();
+    expect(screen.getAllByRole("button")).toHaveLength(1);
+    expect(homeLinks()).toHaveLength(1);
+    expect(screen.queryByRole("link", { name: systemCopy.actions.signIn })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: systemCopy.actions.signOut })).not.toBeInTheDocument();
+  });
+
+  it("signs out with a redirect to the public home page", async () => {
+    render(<AdminAccessView state="FORBIDDEN" />);
+
+    fireEvent.click(screen.getByRole("button", { name: systemCopy.actions.signOut }));
+
+    await waitFor(() => expect(clerkMocks.signOut).toHaveBeenCalledWith({ redirectUrl: "/" }));
+    expect(clerkMocks.signOut).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("shows a static alert without raw detail when sign-out fails and keeps the button enabled", async () => {
+    clerkMocks.signOut.mockRejectedValue(new Error("clerk_secret_failure user_leak@example.test"));
+    render(<AdminAccessView state="FORBIDDEN" />);
+
+    fireEvent.click(screen.getByRole("button", { name: systemCopy.actions.signOut }));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(systemCopy.signOutFailed.title);
+    expect(alert).toHaveTextContent(systemCopy.signOutFailed.description);
+    expect(document.body).not.toHaveTextContent("clerk_secret_failure");
+    expect(document.body).not.toHaveTextContent("user_leak@example.test");
+    expect(screen.getByRole("button", { name: systemCopy.actions.signOut })).toBeEnabled();
+  });
+
+  it("refreshes the route on reload and keeps the same state and an active button", async () => {
+    render(<AdminAccessView state="AUTH_UNAVAILABLE" />);
+
+    fireEvent.click(screen.getByRole("button", { name: systemCopy.actions.reload }));
+
+    await waitFor(() => expect(routerMocks.refresh).toHaveBeenCalledOnce());
+    await waitFor(() => expect(screen.getByRole("button", { name: systemCopy.actions.reload })).toBeEnabled());
+    expect(
+      screen.getByRole("heading", { level: 1, name: systemCopy.adminAccess.AUTH_UNAVAILABLE.title }),
+    ).toBeInTheDocument();
+  });
+
+  it.each(["UNAUTHENTICATED", "FORBIDDEN", "AUTH_UNAVAILABLE"] as const)(
+    "renders no email, user id, role or raw error for %s even when the error carries them",
+    async (state: AdminAccessState) => {
+      const errorCode = state === "UNAUTHENTICATED" ? "UNAUTHORIZED" : state;
+      authMocks.requireAdmin.mockRejectedValue(
+        appError(errorCode, {
+          message: "raw_error_message leak@example.test user_leak_123 OWNER",
+          details: { email: "leak@example.test", userId: "user_leak_123", role: "OWNER" },
+        }),
+      );
+
+      render(await AdminPage({ searchParams: Promise.resolve({}) }));
+
+      const text = document.body.textContent ?? "";
+      for (const leaked of ["leak@example.test", "user_leak_123", "raw_error_message", "OWNER"]) {
+        expect(text).not.toContain(leaked);
+      }
+      expect(
+        screen.getByRole("heading", { level: 1, name: systemCopy.adminAccess[state].title }),
+      ).toBeInTheDocument();
+    },
+  );
 });
+
+function homeLinks(): HTMLElement[] {
+  return screen.getAllByRole("link").filter((link) => link.getAttribute("href") === "/");
+}
 
 describe("admin access route", () => {
   it("uses the server authorization boundary before rendering role context", async () => {
@@ -127,7 +235,7 @@ describe("admin access route", () => {
     render(await AdminPage({ searchParams: Promise.resolve({}) }));
 
     expect(
-      screen.getByRole("heading", { level: 1, name: "Akses admin belum tersedia" }),
+      screen.getByRole("heading", { level: 1, name: systemCopy.adminAccess.FORBIDDEN.title }),
     ).toBeInTheDocument();
     expect(screen.queryByText("Owner")).not.toBeInTheDocument();
     expect(queueMocks.list).not.toHaveBeenCalled();
@@ -161,7 +269,7 @@ describe("admin access route", () => {
   it("keeps the new queue route closed without an active Admin profile", async () => {
     authMocks.requireAdmin.mockRejectedValue(appError("FORBIDDEN"));
     render(await AdminQueuePage({ searchParams: Promise.resolve({ group: "orders" }) }));
-    expect(screen.getByRole("heading", { level: 1, name: "Akses admin belum tersedia" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: systemCopy.adminAccess.FORBIDDEN.title })).toBeInTheDocument();
     expect(queueMocks.list).not.toHaveBeenCalled();
   });
 

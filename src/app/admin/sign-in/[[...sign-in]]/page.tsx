@@ -119,6 +119,11 @@ export default function AdminSignInPage() {
                         boxShadow: "none",
                         backgroundColor: "transparent",
                       },
+                      // Presentation only: the authorization boundary stays in
+                      // withSignUp={false} and the Clerk Dashboard.
+                      footerAction: {
+                        display: "none",
+                      },
                       socialButtonsBlockButton: {
                         minHeight: "44px",
                         padding: "12px 8px",

@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import Link from "next/link";
-import { requireAdmin } from "@/lib/auth/clerk";
-import { requireAdminPermission } from "@/modules/admin/permissions";
-import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
+import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
+import { AdminAccessView } from "@/app/admin/admin-access-view";
 import { AdminShell, AdminPagination } from "@/components/niuva/admin-shell";
 import { PrivacyForm, type PrivacyField } from "@/components/niuva/privacy-form";
 import { CustomerPrivacyRepository } from "@/modules/customer-privacy/repository";
@@ -14,7 +13,9 @@ export const metadata: Metadata = { title: "Privasi Customer · Owner Niuva", ro
 const date = new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Jakarta" });
 export default async function OwnerPrivacyPage({ searchParams }: { searchParams: Promise<{ page?: string; error?: string; status?: string; fields?: string; form?: string }> }) {
   await connection();
-  let access; try { access = requireAdminPermission(await requireAdmin(), "PRIVACY_REQUEST_MANAGE"); } catch { return <AdminAccessUnavailableView />; }
+  const gate = await loadAdminPageAccess({ permission: "PRIVACY_REQUEST_MANAGE" });
+  if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
+  const access = gate.access;
   const query = await searchParams;
   const initialErrors: Record<string, string> = {};
   try { const parsed: unknown = JSON.parse(query.fields ?? "{}"); if (parsed && typeof parsed === "object") for (const [key, value] of Object.entries(parsed)) if (["response", "outcome", "fulfilled", "holdReason", "holdReviewAt", "correctedDisplayName"].includes(key) && typeof value === "string") initialErrors[key] = value; } catch { /* Ignore malformed status. */ }

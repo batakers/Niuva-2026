@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
-import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
+import { AdminAccessView } from "@/app/admin/admin-access-view";
 import { AdminDataUnavailableView } from "@/components/niuva/admin-shell";
 import { ActionQueueService } from "@/modules/admin/action-queue-service";
 import { parseActionQueueGroup } from "@/modules/admin/action-queue";
@@ -19,8 +19,9 @@ export default async function AdminPage({
   searchParams,
 }: Readonly<{ searchParams: Promise<{ group?: string | string[]; range?: string | string[] }> }>) {
   await connection();
-  const access = await loadAdminPageAccess();
-  if (access === null) return <AdminAccessUnavailableView />;
+  const gate = await loadAdminPageAccess();
+  if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
+  const { access } = gate;
 
   const params = await searchParams;
   const group = parseActionQueueGroup(params.group);

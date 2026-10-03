@@ -19,6 +19,10 @@ vi.mock("@clerk/nextjs/server", () => ({
   auth: clerkMocks.auth,
 }));
 
+// AdminSignOutButton (client component) calls useClerk(); there is no provider in static rendering.
+vi.mock("@clerk/nextjs", () => ({
+  useClerk: () => ({ signOut: vi.fn() }),
+}));
 vi.mock("@/lib/env/server", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/env/server")>();
 
@@ -35,6 +39,7 @@ vi.mock("next/server", () => ({
 import AdminPage from "@/app/admin/page";
 import AdminQueuePage from "@/app/admin/queue/page";
 import AdminStockHistoryPage from "@/app/admin/products/[id]/stock/[variantId]/page";
+import { systemCopy } from "@/components/niuva/system-state-copy";
 import { getPrismaClient } from "@/lib/db/prisma";
 
 const prisma = getPrismaClient();
@@ -117,7 +122,7 @@ describe("Admin page route integration", () => {
     expect(markup).toContain("Tersedia");
     expect(markup).toContain("Saldo awal");
     expect(markup).toContain("ADMIN-STOCK-ROUTE");
-    expect(markup).not.toContain("Akses admin belum tersedia");
+    expect(markup).not.toContain(systemCopy.adminAccess.FORBIDDEN.title);
   });
 
   it("resolves the Clerk test identity through AdminProfile and renders database-backed work", async () => {
@@ -186,8 +191,24 @@ describe("Admin page route integration", () => {
 
     const markup = renderToStaticMarkup(await AdminPage({ searchParams: Promise.resolve({}) }));
 
-    expect(markup).toContain("Akses admin belum tersedia");
+    expect(markup).toContain(systemCopy.adminAccess.FORBIDDEN.title);
     expect(markup).not.toContain("Action Queue");
     expect(markup).not.toContain("Development-only preview");
+  });
+
+  it("calls notFound() for a valid id without a record instead of the unavailable state", async () => {
+    await prisma.adminProfile.create({
+      data: { clerkUserId: ownerClerkUserId, isActive: true, role: "OWNER", displayName: "Owner" },
+    });
+
+    await expect(
+      AdminStockHistoryPage({
+        params: Promise.resolve({
+          id: "3f1c2a4e-5b6d-4e7f-8a9b-0c1d2e3f4a5b",
+          variantId: "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+        }),
+        searchParams: Promise.resolve({}),
+      }),
+    ).rejects.toMatchObject({ digest: expect.stringContaining("NEXT_HTTP_ERROR_FALLBACK;404") });
   });
 });

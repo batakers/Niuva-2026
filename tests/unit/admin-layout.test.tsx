@@ -15,7 +15,7 @@ vi.mock("@clerk/nextjs", () => ({
   ClerkProvider: clerkMocks.provider,
 }));
 
-import AdminLayout from "@/app/admin/layout";
+import AdminLayout, { metadata } from "@/app/admin/layout";
 
 afterEach(() => {
   clerkMocks.provider.mockClear();
@@ -23,6 +23,10 @@ afterEach(() => {
 });
 
 describe("AdminLayout", () => {
+  it("emits noindex/nofollow robots metadata for every admin page", () => {
+    expect(metadata.robots).toEqual({ index: false, follow: false });
+  });
+
   it("enables Clerk dynamic rendering for strict CSP nonce propagation", () => {
     const children = "admin-content";
     vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "pk_test_example");

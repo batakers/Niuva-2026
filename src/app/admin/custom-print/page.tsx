@@ -3,9 +3,10 @@ import { connection } from "next/server";
 import Link from "next/link";
 
 import { AdminDataUnavailableView, AdminPagination, AdminShell } from "@/components/niuva/admin-shell";
-import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
+import { AdminAccessView } from "@/app/admin/admin-access-view";
+import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
 import { StatusNotice } from "@/components/niuva/status-notice";
-import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/clerk";
 import { AdminOperationsService, parseAdminPage, type AdminCustomPrintRequestRow } from "@/modules/admin/operations";
 
 export const metadata: Metadata = {
@@ -24,8 +25,9 @@ export default async function AdminCustomPrintPage({
 }: Readonly<{ searchParams: Promise<{ page?: string }> }>) {
   await connection();
   const page = parseAdminPage((await searchParams).page);
-  const access = await loadAdminAccess();
-  if (access === null) return <AdminAccessUnavailableView />;
+  const gate = await loadAdminPageAccess();
+  if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
+  const { access } = gate;
 
   const result = await loadCustomPrintRequests(access, page);
   if (result === null) return <AdminDataUnavailableView active="custom-print" role={access.profile.role} title="Request custom print belum dapat dimuat" />;
@@ -70,14 +72,6 @@ export default async function AdminCustomPrintPage({
         </main>
       </AdminShell>
   );
-}
-
-async function loadAdminAccess(): Promise<AdminAccess | null> {
-  try {
-    return await requireAdmin();
-  } catch {
-    return null;
-  }
 }
 
 async function loadCustomPrintRequests(access: AdminAccess, page: number): Promise<Awaited<ReturnType<AdminOperationsService["listCustomPrintRequests"]>> | null> {

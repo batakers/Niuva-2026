@@ -4,10 +4,11 @@ import { connection } from "next/server";
 import Link from "next/link";
 import { z } from "zod";
 
-import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
+import { AdminAccessView } from "@/app/admin/admin-access-view";
+import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
+import { loadAdminRecord } from "@/app/admin/admin-record-loader";
 import { AdminDataUnavailableView, AdminPagination, AdminShell } from "@/components/niuva/admin-shell";
-import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
-import { AdminOperationsService, parseAdminPage, type AdminStockHistory } from "@/modules/admin/operations";
+import { AdminOperationsService, parseAdminPage } from "@/modules/admin/operations";
 
 export const metadata: Metadata = { title: "Riwayat stok · Niuva Admin", robots: { index: false, follow: false } };
 
@@ -32,13 +33,17 @@ export default async function AdminStockHistoryPage({
   searchParams: Promise<{ page?: string }>;
 }>) {
   await connection();
+  const gate = await loadAdminPageAccess();
+  if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
+  const { access } = gate;
   const { id, variantId } = await params;
   if (!z.uuid().safeParse(id).success || !z.uuid().safeParse(variantId).success) notFound();
-  const access = await loadAdminAccess();
-  if (access === null) return <AdminAccessUnavailableView />;
-  const history = await loadHistory(access, id, variantId, parseAdminPage((await searchParams).page));
-  if (history === undefined) return <AdminDataUnavailableView active="products" role={access.profile.role} title="Riwayat stok belum dapat dimuat" />;
-  if (history === null) notFound();
+  const page = parseAdminPage((await searchParams).page);
+  const service = new AdminOperationsService({ authorize: async () => access });
+  const result = await loadAdminRecord(() => service.getStockHistory(id, variantId, { page }));
+  if (result.status === "not-found") notFound();
+  if (result.status === "unavailable") return <AdminDataUnavailableView active="products" role={access.profile.role} title="Riwayat stok belum dapat dimuat" />;
+  const history = result.record;
 
   return (
     <AdminShell active="products" role={access.profile.role}>
@@ -89,12 +94,4 @@ export default async function AdminStockHistoryPage({
 
 function Balance({ label, value }: Readonly<{ label: string; value: number }>) {
   return <div className="rounded-xl border border-border bg-card p-4"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></div>;
-}
-
-async function loadAdminAccess(): Promise<AdminAccess | null> {
-  try { return await requireAdmin(); } catch { return null; }
-}
-
-async function loadHistory(access: AdminAccess, productId: string, variantId: string, page: number): Promise<AdminStockHistory | null | undefined> {
-  try { return await new AdminOperationsService({ authorize: async () => access }).getStockHistory(productId, variantId, { page }); } catch { return undefined; }
 }

@@ -4,6 +4,8 @@ const state = vi.hoisted(() => ({ role: "OWNER", available: true }));
 vi.mock("next/server", () => ({ connection: async () => {} }));
 vi.mock("@/lib/auth/clerk", () => ({ requireAdmin: async () => ({ clerkUserId: "fixture-owner", profile: { id: "00000000-0000-4000-8000-000000000001", role: state.role, isActive: true } }) }));
 vi.mock("@/lib/db/prisma", () => ({ getPrismaClient: () => ({}) }));
+// The forbidden access view renders a client sign-out button that calls useClerk(); static rendering has no provider.
+vi.mock("@clerk/nextjs", () => ({ useClerk: () => ({ signOut: async () => {} }) }));
 vi.mock("@/modules/customer-privacy/core", async original => ({ ...await original<typeof import("@/modules/customer-privacy/core")>(), isCustomerPrivacyAvailable: () => state.available }));
 import OwnerPrivacyPage from "@/app/admin/privacy/page";
 import PolicyPreview from "@/app/admin/privacy/policy/page";

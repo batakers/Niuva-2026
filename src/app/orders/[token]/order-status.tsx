@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 
 import { typographySystemTokens as type } from "@/design/typography";
@@ -7,20 +8,46 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/Icon";
 import type { OrderStatusPreview, OrderStatusPreviewScenario } from "@/features/frontend-preview/order-status";
 
-function NextAction({ action, payment }: Readonly<{
+import { resolveNextActionControl } from "./next-action";
+
+const actionLinkClassName =
+  "inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
+
+function NextAction({ action, payment, isPreview }: Readonly<{
   action: OrderStatusPreview["nextAction"];
+  isPreview?: boolean | undefined;
   payment: OrderStatusPreview["payment"];
 }>) {
+  const resolved = resolveNextActionControl({ action, isPreview, payment });
   const paymentLabel = payment?.purpose === "CUSTOM_SHIPPING"
     ? "Buka pembayaran pengiriman"
     : "Buka pembayaran";
-  const control = payment?.redirectUrl
-    ? <a className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={payment.redirectUrl} rel="noreferrer" target="_blank">{paymentLabel}</a>
-    : action.kind === "quote"
-    ? <Link className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href="/quote/preview-quote?preview=examples">{action.label}</Link>
-    : action.kind === "payment-unavailable" || action.kind === "shipping-payment-unavailable"
-      ? <Button className="min-h-11" disabled type="button">{action.label}</Button>
-      : undefined;
+
+  if (resolved.kind === "quote-unavailable") {
+    return (
+      <StatusNotice
+        description="Niuva belum dapat menampilkan tautan quote untuk order ini. Siapkan nomor order dan minta tautan quote terbaru melalui kanal konfirmasi yang Anda terima."
+        title="Tautan quote belum tersedia"
+        tone="warning"
+      />
+    );
+  }
+
+  let control: ReactNode;
+  switch (resolved.kind) {
+    case "payment-link":
+      control = <a className={actionLinkClassName} href={resolved.href} rel="noreferrer" target="_blank">{resolved.label}</a>;
+      break;
+    case "quote-link":
+      control = <Link className={actionLinkClassName} href={resolved.href}>{resolved.label}</Link>;
+      break;
+    case "disabled":
+      control = <Button className="min-h-11" disabled type="button">{resolved.label}</Button>;
+      break;
+    case "none":
+      control = undefined;
+      break;
+  }
 
   return (
     <StatusNotice
@@ -39,7 +66,7 @@ export function OrderStatus({
   scenario,
   isPreview,
 }: Readonly<{
-  isPreview: boolean;
+  isPreview?: boolean | undefined;
   order: OrderStatusPreview;
   scenario: OrderStatusPreviewScenario;
 }>) {
@@ -128,7 +155,7 @@ export function OrderStatus({
                 </dl>
               </section>
 
-              <NextAction action={order.nextAction} payment={order.payment} />
+              <NextAction action={order.nextAction} isPreview={isPreview} payment={order.payment} />
 
               {order.shipment ? (
                 <section className="rounded-xl border border-border bg-card p-5" aria-labelledby="shipment-title">

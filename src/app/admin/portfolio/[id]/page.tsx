@@ -4,13 +4,14 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { z } from "zod";
 
-import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
+import { AdminAccessView } from "@/app/admin/admin-access-view";
 import { AdminActionForm } from "@/app/admin/admin-action-form";
+import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
+import { loadAdminRecord } from "@/app/admin/admin-record-loader";
 import { replacePortfolioMediaAction, updatePortfolioAction } from "@/app/admin/actions";
 import { AdminDataUnavailableView, AdminShell } from "@/components/niuva/admin-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
-import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
-import { AdminOperationsService, type AdminPortfolioDetail } from "@/modules/admin/operations";
+import { AdminOperationsService } from "@/modules/admin/operations";
 import { isApprovedCardOnlyPortfolioProject } from "@/modules/portfolio/public-content";
 
 export const metadata: Metadata = { title: "Portfolio detail admin · Niuva", robots: { follow: false, index: false } };
@@ -18,12 +19,16 @@ const dateFormatter = new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", ti
 
 export default async function AdminPortfolioDetailPage({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
   await connection();
+  const accessResult = await loadAdminPageAccess();
+  if (accessResult.kind === "denied") return <AdminAccessView state={accessResult.state} />;
+  const { access } = accessResult;
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
-  const access = await loadAdminAccess();
-  if (access === null) return <AdminAccessUnavailableView />;
-  const project = await loadProject(access, id);
-  if (project === null) return <AdminDataUnavailableView active="portfolio" role={access.profile.role} title="Detail portfolio belum dapat dimuat" />;
+  const service = new AdminOperationsService({ authorize: async () => access });
+  const result = await loadAdminRecord(() => service.getPortfolio(id));
+  if (result.status === "not-found") notFound();
+  if (result.status === "unavailable") return <AdminDataUnavailableView active="portfolio" role={access.profile.role} title="Detail portfolio belum dapat dimuat" />;
+  const project = result.record;
   const isCardOnly = isApprovedCardOnlyPortfolioProject(project);
 
   return (
@@ -41,8 +46,6 @@ export default async function AdminPortfolioDetailPage({ params }: Readonly<{ pa
   );
 }
 
-async function loadAdminAccess(): Promise<AdminAccess | null> { try { return await requireAdmin(); } catch { return null; } }
-async function loadProject(access: AdminAccess, id: string): Promise<AdminPortfolioDetail | null> { try { return await new AdminOperationsService({ authorize: async () => access }).getPortfolio(id); } catch { return null; } }
 function Field({ label, name, required, value }: Readonly<{ label: string; name: string; required?: boolean; value: string }>) { return <label className="grid gap-2 text-sm font-medium" htmlFor={name}><span>{label}</span><input className={inputClass} defaultValue={value} id={name} name={name} required={required} type="text" /></label>; }
 const inputClass = "min-h-11 rounded-lg border border-input bg-background px-3 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm";
 const textareaClass = "min-h-24 rounded-lg border border-input bg-background px-3 py-2 text-base leading-6 outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm";

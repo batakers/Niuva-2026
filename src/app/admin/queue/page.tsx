@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
-import { AdminAccessUnavailableView } from "@/app/admin/admin-access-view";
+import { AdminAccessView } from "@/app/admin/admin-access-view";
 import { AdminActionQueueErrorView, AdminActionQueueView } from "@/app/admin/action-queue-view";
 import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
 import { parseActionQueueGroup } from "@/modules/admin/action-queue";
@@ -15,8 +15,9 @@ export default async function AdminQueuePage({
   searchParams,
 }: Readonly<{ searchParams: Promise<{ group?: string | string[] }> }>) {
   await connection();
-  const access = await loadAdminPageAccess();
-  if (access === null) return <AdminAccessUnavailableView />;
+  const gate = await loadAdminPageAccess();
+  if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
+  const { access } = gate;
 
   const group = parseActionQueueGroup((await searchParams).group);
   const result = await loadQueue(group);
