@@ -33,9 +33,11 @@ import {
 import type { MidtransWebhookResult } from "@/modules/payment/webhook-repository";
 
 const NOW = new Date("2026-09-05T08:00:00.000Z");
+const CAD_CONTENT = Buffer.from("solid fixture\nfacet normal 0 0 1\nendsolid fixture\n");
 
 type MutableUploadRecord = {
   bucketScope: "PRIVATE_CUSTOMER";
+  extension: string;
   id: string;
   mimeType: string;
   sizeBytes: bigint;
@@ -51,6 +53,7 @@ class InMemoryUploadRepository implements UploadFileRepository {
   async createPending(input: CreatePendingFileInput) {
     const record: MutableUploadRecord = {
       bucketScope: "PRIVATE_CUSTOMER",
+      extension: input.extension,
       id: input.id,
       mimeType: input.mimeType,
       sizeBytes: input.sizeBytes,
@@ -104,11 +107,12 @@ class InMemoryUploadRepository implements UploadFileRepository {
 }
 
 class FakePrivateObjectStorage implements PrivateObjectStorage {
+  async inspectObject() { return { prefix: CAD_CONTENT, sizeBytes: CAD_CONTENT.length, sha256: "a".repeat(64) }; }
   createCalls: Array<{ contentType: string; expiresInSeconds: number; key: string }> = [];
   deletedKeys: string[] = [];
   headCalls: string[] = [];
   metadata: Readonly<{ contentLength?: number; contentType?: string }> = {
-    contentLength: 3,
+    contentLength: CAD_CONTENT.length,
     contentType: "model/stl",
   };
 
@@ -186,7 +190,7 @@ describe("Phase 3 private upload boundary", () => {
     const intent = await service.createIntent({
       mimeType: "model/stl",
       originalName: "client-housing.stl",
-      sizeBytes: 3,
+      sizeBytes: CAD_CONTENT.length,
     });
     const record = repository.records.get(intent.fileId);
 
@@ -214,7 +218,7 @@ describe("Phase 3 private upload boundary", () => {
     const intent = await service.createIntent({
       mimeType: "model/stl",
       originalName: "client-housing.stl",
-      sizeBytes: 3,
+      sizeBytes: CAD_CONTENT.length,
     });
 
     await expect(
@@ -239,7 +243,7 @@ describe("Phase 3 private upload boundary", () => {
     const mismatchIntent = await mismatch.service.createIntent({
       mimeType: "model/stl",
       originalName: "client-housing.stl",
-      sizeBytes: 3,
+      sizeBytes: CAD_CONTENT.length,
     });
 
     await expect(
@@ -264,7 +268,7 @@ describe("Phase 3 private upload boundary", () => {
     const expiredIntent = await expired.service.createIntent({
       mimeType: "model/stl",
       originalName: "client-housing.stl",
-      sizeBytes: 3,
+      sizeBytes: CAD_CONTENT.length,
     });
     currentTime = new Date(expiredIntent.expiresAt.getTime());
 
@@ -286,14 +290,14 @@ describe("Phase 3 private upload boundary", () => {
       service.createIntent({
         mimeType: "application/octet-stream",
         originalName: "payload.exe",
-        sizeBytes: 3,
+        sizeBytes: CAD_CONTENT.length,
       }),
     ).rejects.toMatchObject({ code: "UPLOAD_REJECTED" });
     await expect(
       service.createIntent({
         mimeType: "image/png",
         originalName: "client-housing.stl",
-        sizeBytes: 3,
+        sizeBytes: CAD_CONTENT.length,
       }),
     ).rejects.toMatchObject({ code: "UPLOAD_REJECTED" });
     expect(repository.records).toHaveLength(0);
@@ -329,7 +333,7 @@ describe("Phase 3 private upload boundary", () => {
     await expect(service.createIntent({
       mimeType: "model/stl",
       originalName: "client-housing.stl",
-      sizeBytes: 3,
+      sizeBytes: CAD_CONTENT.length,
     })).rejects.toMatchObject({ code: "UNAUTHORIZED" });
     expect(createPending).not.toHaveBeenCalled();
     expect(repository.records.size).toBe(0);
@@ -339,7 +343,7 @@ describe("Phase 3 private upload boundary", () => {
   it("attributes the file to the authorized Customer and keeps the token flow session-free", async () => {
     const { repository, service } = createUploadService();
     const createPending = vi.spyOn(repository, "createPending");
-    const input = { mimeType: "model/stl", originalName: "a.stl", sizeBytes: 3 };
+    const input = { mimeType: "model/stl", originalName: "a.stl", sizeBytes: CAD_CONTENT.length };
 
     await service.createIntent(input);
     await service.createIntentForVerifiedRequestAccess(input);

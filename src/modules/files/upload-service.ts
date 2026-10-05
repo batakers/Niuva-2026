@@ -22,6 +22,7 @@ import {
   createR2PrivateObjectStorageFromEnvironment,
   type PrivateObjectStorage,
 } from "./r2";
+import { isCadFileExtension, matchesCadContent } from "./content-inspection";
 
 const UPLOAD_INTENT_TTL_MS = 10 * 60 * 1_000;
 
@@ -251,7 +252,21 @@ export class UploadService {
 
     let sha256: string | undefined;
     const storage = this.storageFactory();
-    if (storage.computeSha256 !== undefined) {
+    if (isCadFileExtension(file.extension)) {
+      try {
+        const inspected = await storage.inspectObject(file.storageKey, CUSTOM_FILE_MAX_BYTES);
+        if (BigInt(inspected.sizeBytes) !== file.sizeBytes || inspected.sizeBytes > CUSTOM_FILE_MAX_BYTES
+          || !/^[0-9a-f]{64}$/.test(inspected.sha256)
+          || !matchesCadContent(file.extension, inspected.prefix, inspected.sizeBytes)) throw appError("UPLOAD_REJECTED");
+        sha256 = inspected.sha256;
+      } catch {
+        await this.rejectAndDelete(file);
+        throw appError("UPLOAD_REJECTED", { details: { file: "Berkas tidak dapat diverifikasi. Periksa format dan ukuran, lalu unggah kembali." } });
+      }
+    } else if (!["png", "jpg", "jpeg"].includes(file.extension)) {
+      await this.rejectAndDelete(file);
+      throw appError("UPLOAD_REJECTED");
+    } else if (storage.computeSha256 !== undefined) {
       try {
         sha256 = await storage.computeSha256(file.storageKey, CUSTOM_FILE_MAX_BYTES);
       } catch {

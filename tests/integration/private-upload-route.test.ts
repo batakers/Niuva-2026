@@ -5,6 +5,7 @@ const storageMock = vi.hoisted(() => ({
   createUploadUrl: vi.fn(),
   deleteObject: vi.fn(),
   computeSha256: vi.fn(),
+  inspectObject: vi.fn(),
   headObject: vi.fn(),
   lastKey: undefined as string | undefined,
 }));
@@ -22,6 +23,7 @@ vi.mock("@/modules/files/r2", () => ({
     deleteObject: storageMock.deleteObject,
     headObject: storageMock.headObject,
     computeSha256: storageMock.computeSha256,
+    inspectObject: storageMock.inspectObject,
   }),
 }));
 
@@ -32,6 +34,7 @@ import { POST as postUploadConfirmation } from "@/app/api/uploads/confirm/route"
 import { POST as postUploadIntent } from "@/app/api/uploads/intents/route";
 
 const prisma = getPrismaClient();
+const CAD_CONTENT = Buffer.from("solid fixture\nfacet normal 0 0 1\nendsolid fixture\n");
 
 async function cleanIntegrationDatabase(): Promise<void> {
   await prisma.$executeRaw`
@@ -93,6 +96,7 @@ beforeEach(async () => {
   storageMock.deleteObject.mockReset();
   storageMock.headObject.mockReset();
   storageMock.computeSha256.mockReset().mockResolvedValue("a".repeat(64));
+  storageMock.inspectObject.mockReset().mockResolvedValue({ prefix: CAD_CONTENT, sizeBytes: CAD_CONTENT.length, sha256: "a".repeat(64) });
   storageMock.lastKey = undefined;
   storageMock.createUploadUrl.mockImplementation(
     async (input: Readonly<{ key: string }>) => {
@@ -105,12 +109,26 @@ beforeEach(async () => {
 afterAll(cleanIntegrationDatabase);
 
 describe("Private upload route integration", () => {
+  it("rejects matching metadata with incorrect CAD content before any uploaded state", async () => {
+    const response = await postUploadIntent(publicRequest("/api/uploads/intents", { mimeType: "model/stl", originalName: "prototype.stl", sizeBytes: CAD_CONTENT.length }));
+    const intent = await response.json() as { fileId: string; uploadToken: string };
+    expect(response.status).toBe(201);
+    storageMock.headObject.mockResolvedValue({ contentLength: CAD_CONTENT.length, contentType: "model/stl" });
+    storageMock.inspectObject.mockResolvedValue({ prefix: Buffer.from("incorrect file content"), sizeBytes: CAD_CONTENT.length, sha256: "a".repeat(64) });
+    const confirmation = await postUploadConfirmation(publicRequest("/api/uploads/confirm", intent));
+    expect(confirmation.status).toBe(422);
+    const body = await confirmation.text();
+    const file = await prisma.storedFile.findUniqueOrThrow({ where: { id: intent.fileId } });
+    expect(file.uploadStatus).toBe("REJECTED"); expect(file.sha256).toBeNull(); expect(file.uploadTokenHash).toBeNull();
+    expect(body).not.toContain(file.storageKey); expect(body).not.toContain(intent.uploadToken);
+    expect(storageMock.deleteObject).toHaveBeenCalledWith(file.storageKey);
+  });
   it("confirms a private object then binds it to a custom request", async () => {
     const intentResponse = await postUploadIntent(
       publicRequest("/api/uploads/intents", {
         mimeType: "model/stl",
         originalName: "prototype.stl",
-        sizeBytes: 3,
+        sizeBytes: CAD_CONTENT.length,
       }),
     );
 
@@ -139,7 +157,7 @@ describe("Private upload route integration", () => {
     expect(storageMock.lastKey).toBe(pending?.storageKey);
 
     storageMock.headObject.mockResolvedValue({
-      contentLength: 3,
+      contentLength: CAD_CONTENT.length,
       contentType: "model/stl",
     });
     const confirmationResponse = await postUploadConfirmation(
@@ -224,7 +242,7 @@ describe("Private upload route integration", () => {
       publicRequest("/api/uploads/intents", {
         mimeType: "model/stl",
         originalName: "brief-reference.stl",
-        sizeBytes: 3,
+        sizeBytes: CAD_CONTENT.length,
       }),
     );
     expect(intentResponse.status).toBe(201);
@@ -242,7 +260,7 @@ describe("Private upload route integration", () => {
     });
     expect(pending).toMatchObject({ uploadStatus: "PENDING" });
     storageMock.headObject.mockResolvedValue({
-      contentLength: 3,
+      contentLength: CAD_CONTENT.length,
       contentType: "model/stl",
     });
 
@@ -309,7 +327,7 @@ describe("Private upload route integration", () => {
       publicRequest("/api/uploads/intents", {
         mimeType: "model/stl",
         originalName: "mismatch.stl",
-        sizeBytes: 3,
+        sizeBytes: CAD_CONTENT.length,
       }),
     );
     expect(intentResponse.status).toBe(201);

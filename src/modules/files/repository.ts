@@ -29,6 +29,7 @@ export type CreatePendingFileInput = Readonly<{
 
 export type PendingFileForConfirmation = Readonly<{
   bucketScope: FileBucketScope;
+  extension: string;
   id: string;
   mimeType: string;
   sizeBytes: bigint;
@@ -82,6 +83,7 @@ export class StoredFileRepository {
       where: { id: fileId },
       select: {
         bucketScope: true,
+        extension: true,
         id: true,
         mimeType: true,
         sizeBytes: true,
