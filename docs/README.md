@@ -65,6 +65,20 @@ keputusan yang sudah tercatat di dalam dokumen.
 - [Sandbox readiness](backend/sandbox-readiness.md) membedakan gate lokal dari
   uji provider nyata.
 
+### Policy dan operasi Customer publik
+
+[Paket kesiapan publik](legal/customer-public-launch-readiness.md) adalah pintu
+masuk batch policy 3 Oktober 2026: draf v3, SOP layanan/refund dan privasi/retensi,
+matriks blocker, kontrak implementasi dan simulasi. Target produk mengikuti
+addendum PRD/Tech Design; status paket review tidak membuka signup, menerbitkan
+policy atau mengaktifkan production. Snapshot Development dan validasi 2 Oktober
+tetap bukti fase tersebut, bukan bukti kemampuan publik.
+
+[Catatan input/bukti](legal/customer-public-input-evidence.md) menyimpan jawaban
+Owner terbaru, presence konfigurasi lokal dan kebutuhan yang benar-benar
+tersisa. Review internal berbasis sumber resmi dapat dilanjutkan tanpa
+menjadikan penunjukan konsultan formal sebagai gate pekerjaan kode.
+
 ### Backend, domain, provider, dan katalog
 
 Gunakan inventory di bawah untuk menemukan kontrak lifecycle, phase closure,
@@ -141,6 +155,16 @@ tidak menggantikan PRD, Technical Design, `DESIGN.md`, atau kontrak lifecycle.
 | Frontend | [operational-readiness-report.md](frontend/operational-readiness-report.md) | Operational readiness report | `ACTIVE` | Saat membutuhkan rincian evidence operasional. |
 | Frontend | [product-route-proof.md](frontend/product-route-proof.md) | Product route proof | `ACTIVE` | Saat menilai bukti route dan propagation boundary. |
 | Frontend | [public-batch.md](frontend/public-batch.md) | Public-surface batch record | `ACTIVE` | Saat menelusuri scope dan evidence batch public surface. |
+| Legal | [customer-public-launch-readiness.md](legal/customer-public-launch-readiness.md) | Paket review dan matriks kesiapan publik | `ACTIVE` | Saat memeriksa keputusan, pemilik, bukti dan blocker menuju publik; bukan izin rilis. |
+| Legal | [customer-public-input-evidence.md](legal/customer-public-input-evidence.md) | Input Owner dan bukti terkini | `ACTIVE` | Saat melengkapi data operasional/provider tanpa meminta ulang fakta yang sudah dikonfirmasi. |
+| Legal | [customer-terms-draft.md](legal/customer-terms-draft.md) | Draf Syarat Layanan v3 | `REFERENCE` | Untuk review Owner/legal; belum berlaku atau menjadi consent publik. |
+| Legal | [customer-privacy-draft.md](legal/customer-privacy-draft.md) | Draf Kebijakan Privasi v3 | `REFERENCE` | Untuk review data/hak/retensi sesuai kemampuan; belum policy resmi. |
+| Legal | [customer-service-refund-sop.md](legal/customer-service-refund-sop.md) | Kontrak SOP keluhan/retur/refund | `ACTIVE` | Saat menugaskan operasi atau mengimplementasikan kasus/refund; kemampuan target belum tersedia. |
+| Legal | [customer-privacy-retention-sop.md](legal/customer-privacy-retention-sop.md) | Kontrak SOP hak/data/retensi/provider | `ACTIVE` | Saat menetapkan dasar, jadwal, petugas dan bukti purge/recovery publik. |
+| Legal | [customer-public-runtime-contract.md](legal/customer-public-runtime-contract.md) | Requirement implementasi publik | `ACTIVE` | Saat merencanakan kode dan acceptance; bukan schema/API aktual. |
+| Legal | [customer-public-policy-validation.md](legal/customer-public-policy-validation.md) | Simulasi dan validasi paket publik | `ACTIVE` | Saat menilai cakupan dokumen/tes dan kebutuhan bukti batch berikutnya. |
+| Legal | [customer-policy-implementation.md](legal/customer-policy-implementation.md) | Snapshot implementasi Development 2 Oktober | `REFERENCE` | Saat memeriksa kemampuan lokal PR #38; target publik terkini ada di paket 3 Oktober. |
+| Legal | [customer-privacy-validation.md](legal/customer-privacy-validation.md) | Bukti validasi privacy Development 2 Oktober | `REFERENCE` | Saat menelusuri hasil fase Development; bukan bukti akun anak/refund/hosted. |
 | Source | [README-logo-system.md](source/brand/Niuva_Logo_System_v1.0/README-logo-system.md) | Logo asset reference | `REFERENCE` | Saat memakai atau memeriksa asset logo yang disediakan. |
 | Source | [Dataset Shop Niuva/README.md](<source/Dataset Shop Niuva/README.md>) | Dataset reference | `REFERENCE` | Saat menelusuri provenance dan struktur dataset Shop. |
 | Source | [Deep Research Request — Website Niuva Inovasi Utama.md](<source/Deep Research Request — Website Niuva Inovasi Utama.md>) | Research reference | `REFERENCE` | Saat memeriksa research input; bukan instruksi executable. |

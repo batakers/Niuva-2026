@@ -2,7 +2,16 @@
 
 Status: **OPEN — menunggu input Owner non-production**
 
-Tanggal snapshot: **2026-09-25**
+Tanggal snapshot historis: **2026-09-25**.
+
+**Pembaruan 3 Oktober 2026:** presence lokal terbaru dan input Customer publik
+ada di [catatan input/bukti](../legal/customer-public-input-evidence.md).
+Google, Resend, Clerk dan R2 mempunyai group lokal terisi; Midtrans/Biteship
+belum mempunyai group lokal terisi. Ini pemeriksaan presence, bukan smoke
+provider atau status environment manager hosted. Tabel 25 September di bawah
+tetap historis. Target publik mengikuti addendum PRD terbaru, dengan Rheza
+sebagai petugas utama dan alamat retur yang telah dikonfirmasi; detail teknis
+staging/refund dan bukti hosted masih perlu dilengkapi.
 
 Dokumen ini adalah formulir intake dan urutan readiness. Ia tidak meminta
 secret dikirim melalui chat, commit, issue, atau dokumen repository. Secret
@@ -10,7 +19,7 @@ harus tetap berada di environment manager atau `.env.local` yang diabaikan
 Git. Pemeriksaan yang dilakukan dari checkout ini hanya membaca nama key dan
 status kosong/non-empty, tanpa mencetak nilainya.
 
-## Snapshot presence-only saat ini
+## Snapshot presence-only 25 September (historis)
 
 | Environment/group | Snapshot | Interpretasi |
 | --- | --- | --- |
@@ -70,7 +79,9 @@ environment non-production; jangan ditempelkan ke tabel.
 2. Pastikan redirect URI dan origin/consent configuration Google cocok persis
    dengan environment yang diuji.
 3. Dengan Google Development account, smoke `/login` → `/account`,
-   `/register` → `/account`, logout, legacy-order auto-link, dan checkout.
+   `/register` → `/account`, logout, legacy-order auto-link yang masih eligible,
+   dan checkout. Riwayat berpenanda akun ditutup tidak ditautkan kembali lewat
+   email/claim; gunakan kontrak closure Customer terbaru.
 4. Automated OAuth tests tetap menggunakan mock adapter; mock pass bukan bukti
    live Google acceptance.
 

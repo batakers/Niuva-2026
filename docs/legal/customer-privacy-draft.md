@@ -1,6 +1,8 @@
 # Draf Kebijakan Privasi Customer Niuva
 
-**Versi:** DRAFT-PRIVACY-2026-10-02-v2. **Status:** draf untuk tinjauan, belum berlaku atau menjadi persetujuan pendaftaran publik. Fitur pusat privasi tahap ini hanya Development lokal/test. Tanggal berlaku: TBD setelah tinjauan serta pemeriksaan prasyarat.
+**Versi:** DRAFT-PRIVACY-2026-10-03-v3. **Status:** draf untuk tinjauan, belum berlaku atau menjadi persetujuan pendaftaran publik. Fitur pusat privasi tahap ini hanya Development lokal/test. Tanggal berlaku ditetapkan setelah persetujuan final serta pemeriksaan prasyarat.
+
+Revisi mengikuti keputusan Owner 3 Oktober 2026: target pendaftaran publik mencakup semua usia serta refund dengan persetujuan Owner dan eksekusi aplikasi. Kelayakan akun anak, mekanisme wali dan kemampuan publik belum diterapkan. [Paket kesiapan publik](customer-public-launch-readiness.md) mencatat penanggung jawab dan bukti yang dibutuhkan sebelum publikasi.
 
 ## 1. Pengendali dan kontak
 
@@ -14,15 +16,19 @@ Kategori layanan: kontak Project Brief B2B, spesifikasi Custom Print, berkas Cus
 
 Kategori keamanan: pembatasan percobaan persisten dengan digest, bukti konfirmasi tindakan, dan metadata audit yang diperlukan. Tujuan: mencegah penyalahgunaan, mengendalikan akses dan menangani insiden. Digest tetap diperlakukan sebagai data pseudonim, bukan data anonim.
 
-TBD sebelum publikasi: pemetaan dasar pemrosesan per tujuan (kontrak, kewajiban hukum, persetujuan atau dasar sah lain); minimisasi setiap field; inventaris log infrastruktur dan cookie; prosedur data sensitif pada unggahan. Persetujuan policy tidak otomatis menjadi dasar untuk semua pemrosesan. Akun minimal 18 tahun; pelaksanaan batas usia belum diterapkan pada tahap ini. Tidak ada promosi Customer dalam lingkup ini.
+Pemetaan data dan calon dasar pemrosesan per tujuan terdapat dalam [SOP privasi dan retensi](customer-privacy-retention-sop.md#pemetaan-data-dan-dasar-pemrosesan). Pemetaan harus ditinjau legal, diminimalkan per field, dan dicocokkan dengan penggunaan nyata sebelum publikasi (PUB-DATA). Penerimaan policy tidak otomatis menjadi dasar untuk semua pemrosesan. Tidak ada promosi Customer dalam lingkup ini.
+
+Target pendaftaran mencakup semua usia tanpa pembatasan umum 18+. Untuk anak, pemrosesan data memerlukan pelindungan khusus dan persetujuan orang tua/wali yang dapat dibuktikan. Penggunaan fitur juga mengikuti kelayakan kelompok usia dan risiko layanan. Data yang mungkin diperlukan untuk mekanisme tersebut terbatas pada hasil verifikasi usia/kelayakan, bukti persetujuan, serta peran wali untuk tujuan yang ditentukan. Mekanisme, minimisasi, dan retensinya belum disahkan atau diterapkan (PUB-AGE, PUB-GUARDIAN); draf ini tidak menyatakan Niuva sudah mengumpulkan tanggal lahir, dokumen identitas, atau biometrik.
+
+Wali yang meminta akses, koreksi, penarikan persetujuan atau penutupan harus diverifikasi kewenangannya dan kepentingan anak dilindungi. Akun wali tidak otomatis memiliki akses ke ekspor atau transaksi anak. Prosedur sengketa kewenangan dan perubahan wali harus diselesaikan sebelum fitur publik tersedia.
 
 ## 3. Provider dan lokasi pemrosesan
 
 Development menggunakan PostgreSQL lokal serta Google OAuth Development. Resend Development digunakan untuk verifikasi/reset dan konfirmasi privasi jika pengiriman diterima provider; penerimaan inbox merupakan bukti terpisah. Akun/password peserta internal berbeda; pengirim tanpa domain terverifikasi dapat memiliki pembatasan penerima dari Resend. Mock hanya pada lingkungan test terisolasi.
 
-R2 privat, Midtrans, Biteship, Clerk Owner/Admin, hosting, database produksi, monitoring, dan analitik harus diinventaris berdasarkan konfigurasi serta bukti penggunaan. Konfigurasi tidak membuktikan provider aktif bagi Customer publik. Inventaris tahap ini ada dalam `docs/legal/customer-policy-implementation.md`, dengan status Development/test/rencana yang dipisahkan.
+R2 privat, Midtrans, Biteship, Clerk Owner/Admin, hosting, database produksi, monitoring, dan analitik harus diinventaris berdasarkan konfigurasi serta bukti penggunaan. Konfigurasi tidak membuktikan provider aktif bagi Customer publik. [Laporan implementasi](customer-policy-implementation.md) merupakan snapshot Development 2 Oktober; [register provider](customer-privacy-retention-sop.md#register-provider-dan-lokasi) membedakan bukti tersebut dari kebutuhan production.
 
-TBD sebelum publikasi: daftar provider produksi dan kategori data yang diterima masing-masing, lokasi pemrosesan, subprocessor, transfer lintas negara dan dasar/perlindungannya, backup serta jadwal hapus, kontak pemroses. Tidak menjanjikan penghapusan data pada Google, Resend, R2 atau backup tanpa bukti. Penutupan akun Niuva tidak menutup akun Google.
+Daftar provider produksi dan kategori data yang diterima masing-masing, lokasi pemrosesan, subprocessor, transfer lintas negara dan dasar/perlindungannya, backup, jadwal hapus, dan kontak pemroses harus dilengkapi sebelum publikasi (PUB-PROVIDER, PUB-BACKUP). Tidak menjanjikan penghapusan data pada Google, Resend, R2 atau backup tanpa bukti. Penutupan akun Niuva tidak menutup akun Google.
 
 ## 4. Hak dan pusat privasi
 
@@ -44,9 +50,11 @@ Bukti minimum keamanan menggunakan digest dan tanggal penutupan selama maksimal 
 
 ## 6. Retensi
 
-Akun publik aktif tersedia sampai ditutup, dengan minimisasi data yang tidak lagi diperlukan. Profil/credential dihapus saat penutupan. Pendaftaran, sesi dan token sementara dibersihkan maksimal **7 hari setelah selesai/kedaluwarsa**. Akun internal tetap memiliki tenggat khusus **30 hari sejak dibuat**, tidak diperpanjang login; pending internal juga memiliki tenggat maksimum 30 hari sejak dimulai.
+Target akun publik aktif tersedia sampai ditutup, dengan minimisasi data yang tidak lagi diperlukan. Pada implementasi Development, profil/credential dihapus saat penutupan. Batas retensi pendaftaran, sesi dan token sementara adalah **7 hari setelah selesai/kedaluwarsa**, dengan penghapusan oleh job yang berhasil. Pemantauan keterlambatan serta batas penghapusan hosted yang terukur harus dibuktikan sebelum menjadi janji publik (PUB-JOBS). Akun internal tetap memiliki tenggat khusus **30 hari sejak dibuat**, tidak diperpanjang login; pending internal juga memiliki tenggat maksimum 30 hari sejak dimulai.
 
-Log keamanan aplikasi yang diperlukan: maksimal **30 hari**, kecuali penahanan insiden terdokumentasi. Isi percakapan/lampiran kasus selesai: maksimal **7 hari setelah penyelesaian benar-benar tercapai**. Bukti minimum kasus: maksimal **30 hari**, berupa nomor, jenis, tanggal, dan hasil tanpa percakapan. Penahanan untuk sengketa, insiden, atau kewajiban hukum memerlukan kategori/alasan spesifik, penanggung jawab dan tanggal peninjauan. Tanpa perpanjangan terdokumentasi, penahanan berakhir dan tenggat awal kembali diterapkan. Penyelesaian tidak hanya berarti persetujuan refund atau penutupan administratif.
+Target log keamanan aplikasi yang diperlukan: maksimal **30 hari**, kecuali penahanan insiden terdokumentasi. Cleanup saat ini menerapkan 30 hari pada audit penanganan privasi; cakupan seluruh log aplikasi/infrastruktur masih harus dipetakan. Isi percakapan/lampiran kasus selesai mengikuti batas **7 hari setelah penyelesaian benar-benar tercapai** dan bukti minimum kasus **30 hari**, berupa nomor, jenis, tanggal, dan hasil tanpa percakapan. Runtime menerapkan jadwal kasus tersebut pada permintaan privasi; penerapan pada keluhan/refund dan komunikasi eksternal masih perlu prosedur serta bukti tersendiri. Bukti transaksi wajib dipisahkan dari percakapan kasus.
+
+Penahanan untuk sengketa, insiden, atau kewajiban hukum memerlukan kategori/alasan spesifik, penanggung jawab dan tanggal peninjauan. Tanpa perpanjangan terdokumentasi, penahanan berakhir dan tenggat awal kembali diterapkan. Penyelesaian tidak hanya berarti persetujuan refund atau penutupan administratif. Rincian kategori, pelaksanaan, dan bukti penghapusan ada dalam SOP privasi dan retensi.
 
 Berkas 3D/CAD mempertahankan kelas **14/60/90 hari** dalam `docs/backend/phase-2-closure-decisions.md`: jangan menganggap file, salinan provider, atau backup telah dihapus sebelum prosesnya terverifikasi. Tidak mengubah kelas tersebut menjadi retensi kasus 7 hari. Lampiran kasus baru tidak dikumpulkan pada formulir privasi tahap ini; komunikasi/lampiran eksternal membutuhkan prosedur manual/integrasi retensi sebelum publikasi.
 
@@ -56,13 +64,14 @@ Cleanup Development lokal berjalan harian dan saat logon, dengan pemeriksaan lin
 
 ## 7. Keamanan, pemberitahuan, dan publikasi
 
-Kontrol meliputi sesi Customer, verifikasi email, hash password, pemeriksaan origin/host, akses Owner, token sekali pakai, pembatasan percobaan dan proyeksi data ekspor. Kontrol tersebut tidak menggantikan verifikasi lingkungan publik. TBD: prosedur insiden, pemenuhan pemberitahuan UU PDP yang berlaku, pemulihan backup, akses pihak operasional, daftar subprocessor dan bukti penghapusan.
+Kontrol meliputi sesi Customer, verifikasi email, hash password, pemeriksaan origin/host, akses Owner, token sekali pakai, pembatasan percobaan dan proyeksi data ekspor. Kontrol tersebut tidak menggantikan verifikasi lingkungan publik. Prosedur insiden dan pemberitahuan, pemulihan backup, akses pihak operasional, daftar subprocessor, serta bukti penghapusan menjadi PUB-INCIDENT, PUB-BACKUP, dan PUB-PROVIDER.
 
-Sebelum diterbitkan: persetujuan Owner dan tinjauan legal; semua TBD diselesaikan; metode pengolahan/backup/provider produksi dikonfirmasi; usia minimum diterapkan; retensi transaksi diinventaris; kanal hak data dan eskalasi setelah akun ditutup diuji; penghapusan provider/backup serta komunikasi eksternal dibuktikan. Dokumen memiliki versi/tanggal berlaku serta mekanisme pemberitahuan perubahan. Gerbang pendaftaran publik tetap tertutup selama tahap ini.
+Sebelum diterbitkan: persetujuan Owner dan tinjauan legal; seluruh blocker kesiapan diselesaikan; metode pengolahan/backup/provider produksi dikonfirmasi; kelayakan akun anak, verifikasi dan persetujuan wali diterapkan; retensi transaksi diinventaris; kanal hak data dan eskalasi setelah akun ditutup diuji; penghapusan provider/backup serta komunikasi eksternal dibuktikan. Dokumen memiliki versi/tanggal berlaku serta mekanisme pemberitahuan perubahan. Gerbang pendaftaran publik tetap tertutup selama tahap ini.
 
 ## Rujukan tinjauan
 
 - UU PDP: https://jdih.komdigi.go.id/produk_hukum/view/id/832/t/undangundang%2Bnomor%2B27%2Btahun%2B2022
 - UU KUP: https://www.pajak.go.id/sites/default/files/2021-11/SDSN%20UU%20KUP%20stdtd%20UU%20HPP.pdf
 - Keputusan retensi berkas: `docs/backend/phase-2-closure-decisions.md`
+- PP TUNAS dan Permen Komdigi 9/2026: [penilaian akun anak dan sumber primer](customer-public-launch-readiness.md#penilaian-akun-anak).
 - Draf analitik: `docs/frontend/analytics-privacy-notice-draft.md` (tidak membuktikan aktivasi publik)

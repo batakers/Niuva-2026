@@ -2,6 +2,15 @@
 
 Status: implementasi lokal/test, 2 Oktober 2026. Draf legal bukan penerimaan legal, dokumen resmi pendaftaran, atau izin publikasi.
 
+**Catatan 3 Oktober 2026:** isi di bawah adalah snapshot implementasi PR #38.
+Preview Owner kini membaca [Syarat v3](customer-terms-draft.md) dan
+[Privasi v3](customer-privacy-draft.md) yang masih draf; referensi v2 dan usia 18
+di snapshot ini adalah keputusan historis yang digantikan target semua usia
+dalam [addendum PRD](../PRD-Niuva-MVP.md#addendum-persiapan-customer-publik--3-oktober-2026).
+[Paket kesiapan publik](customer-public-launch-readiness.md) mencatat review
+anak/wali, refund aplikasi dan operasi hosted yang masih diperlukan. Revisi
+dokumen tidak memperluas capability Development atau membuktikan publikasi.
+
 ## Dokumen dan operasional
 
 - Draf `DRAFT-TERMS-2026-10-02-v2` dan `DRAFT-PRIVACY-2026-10-02-v2` memakai identitas dan kontak yang dikonfirmasi Owner. Preview `/admin/privacy/policy?document=terms|privacy` memerlukan izin Owner.
@@ -63,4 +72,4 @@ Rollback fitur: nonaktifkan konfigurasi pendaftaran internal untuk menutup akses
 
 ## Prasyarat publikasi
 
-Review/persetujuan legal, verifikasi alamat identitas dan alamat retur, proses refund, penerapan usia minimal 18, daftar provider/lokasi produksi, perjanjian pemrosesan, hak privasi lain dan kanal tindak lanjut, kebijakan backup/penghapusan, pemisahan retensi transaksi, monitoring SLA/hold/cleanup, pengujian provider nyata dan penerimaan visual/device/AT. Tanpa promosi sesuai keputusan Owner. Dokumen pengujian internal tetap berbeda dari draf komersial ini.
+Prasyarat snapshot 2 Oktober: review/persetujuan legal, verifikasi alamat identitas dan alamat retur, proses refund, usia minimal 18, daftar provider/lokasi produksi, perjanjian pemrosesan, hak privasi lain dan kanal tindak lanjut, kebijakan backup/penghapusan, pemisahan retensi transaksi, monitoring SLA/hold/cleanup, pengujian provider nyata dan penerimaan visual/device/AT. Batas umum 18+ telah digantikan pada 3 Oktober oleh target semua usia dengan asesmen kelayakan/risiko dan mekanisme anak/wali; gunakan matriks paket publik untuk prasyarat terkini. Tanpa promosi sesuai keputusan Owner. Dokumen pengujian internal tetap berbeda dari draf komersial.

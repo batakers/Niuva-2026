@@ -104,7 +104,7 @@ test("pending restores after navigation and Owner privacy never becomes public",
   await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true })));
   await expect(action).toBeEnabled();
   await page.goto("/admin/privacy"); await expect(page.getByRole("button", { name: "Simpan penanganan" })).toHaveCount(0);
-  await page.goto("/admin/privacy/policy"); await expect(page.getByText("DRAFT-TERMS-2026-10-02-v2", { exact: false })).toHaveCount(0);
+  await page.goto("/admin/privacy/policy"); await expect(page.getByText("DRAFT-TERMS", { exact: false })).toHaveCount(0);
 });
 test("permanent closure consumes proof, clears access and cannot replay on disposable test account", async ({ page }) => {
   await loginPrivacyFixture(page);
