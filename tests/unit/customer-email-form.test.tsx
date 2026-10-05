@@ -4,6 +4,20 @@ import { CustomerEmailForm } from "@/components/niuva/customer-email-form";
 const legal = { terms: { href: "/test-terms", version: "TEST" }, privacy: { href: "/test-privacy", version: "TEST" } };
 beforeEach(() => { vi.restoreAllMocks(); });
 describe("Customer email form", () => {
+  it("requires a separate unchecked age declaration and focuses it before sending", () => {
+    const fetchMock = vi.fn(); vi.stubGlobal("fetch", fetchMock);
+    const { container } = render(<CustomerEmailForm mode="register" returnTo="/account" legal={legal} />);
+    const age = screen.getByRole("checkbox", { name: "Saya menyatakan bahwa saya berusia 18 tahun atau lebih." });
+    expect(age).not.toBeChecked(); expect(age).toBeRequired();
+    fireEvent.change(screen.getByLabelText("Nama lengkap"), { target: { value: "Adult Fixture" } });
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "adult@example.test" } });
+    fireEvent.change(screen.getByLabelText("Password", { exact: true }), { target: { value: "adult long passphrase" } });
+    fireEvent.change(screen.getByLabelText("Konfirmasi password"), { target: { value: "adult long passphrase" } });
+    fireEvent.click(screen.getByRole("checkbox", { name: /Saya menyetujui/ }));
+    fireEvent.submit(container.querySelector("form")!);
+    expect(age).toHaveFocus(); expect(age).toHaveAttribute("aria-describedby", "auth-ageDeclaration-error");
+    expect(fetchMock).not.toHaveBeenCalled(); vi.unstubAllGlobals();
+  });
   it("validates on blur and connects the message to its input", () => {
     render(<CustomerEmailForm mode="login" returnTo="/account" />);
     const email = screen.getByLabelText("Email");

@@ -814,6 +814,8 @@ model CustomerPasswordCredential {
 }
 
 model CustomerPendingRegistration {
+  ageDeclarationVersion String? @map("age_declaration_version")
+  ageDeclaredAt DateTime? @map("age_declared_at") @db.Timestamptz(6)
   internalTestExpiresAt DateTime? @map("internal_test_expires_at") @db.Timestamptz(6)
   @@index([internalTestExpiresAt])
   id String @id @default(uuid()) @db.Uuid
@@ -851,6 +853,8 @@ model CustomerEmailToken {
 }
 
 model CustomerConsent {
+  ageDeclarationVersion String? @map("age_declaration_version")
+  ageDeclaredAt DateTime? @map("age_declared_at") @db.Timestamptz(6)
   id String @id @default(uuid()) @db.Uuid
   customerId String @map("customer_id") @db.Uuid
   termsVersion String @map("terms_version")
@@ -868,6 +872,8 @@ model CustomerAuthRateLimit {
 }
 
 model CustomerInternalGoogleConsent {
+  ageDeclarationVersion String? @map("age_declaration_version")
+  ageDeclaredAt DateTime? @map("age_declared_at") @db.Timestamptz(6)
   tokenHash String @id @map("token_hash")
   normalizedEmail String @map("normalized_email")
   termsVersion String @map("terms_version")

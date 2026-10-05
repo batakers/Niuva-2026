@@ -10,6 +10,7 @@ import { CustomerWorkRepository } from "@/modules/customer-work/repository";
 import { createOpaqueToken, hashOpaqueToken } from "@/modules/customer-auth/core";
 import { DAY_MS, closureIdentityHash, privacyRequestSchema, privacyOwnerSchema } from "@/modules/customer-privacy/core";
 import { eraseCustomerAccount, lockCustomerLifecycle, lockCustomerBusinessWrite } from "@/modules/customer-privacy/lifecycle";
+import { googleRegistrationProof } from "./customer-auth-fixtures";
 const prisma = getPrismaClient();
 const repository = new CustomerPrivacyRepository(prisma);
 const now = new Date("2026-10-02T05:00:00Z");
@@ -116,7 +117,9 @@ describe("Customer privacy PostgreSQL lifecycle (isolated fixtures)", () => {
     const preservedCustom = await prisma.customPrintRequest.findUniqueOrThrow({ where: { id: custom.id } });
     expect(preservedCustom.customerId).toBeNull(); expect(preservedCustom.accountClosedAt).toEqual(now); expect(preservedCustom.publicTokenHash).not.toBe(custom.publicTokenHash);
     await expect(auth.upsertGoogleCustomer({ email: customer.email, normalizedEmail: customer.email, googleSubject: customer.googleSubject ?? randomUUID() }, new Date(now.getTime() + 1000), true, undefined, now)).rejects.toMatchObject({ code: "UNAUTHORIZED" });
-    const fresh = await auth.upsertGoogleCustomer({ email: customer.email, normalizedEmail: customer.email, googleSubject: customer.googleSubject ?? randomUUID() }, new Date(now.getTime() + 1000), true);
+    const freshIdentity = { email: customer.email, normalizedEmail: customer.email, googleSubject: customer.googleSubject ?? randomUUID() };
+    const freshAt = new Date(now.getTime() + 1000);
+    const fresh = await auth.upsertGoogleCustomer(freshIdentity, freshAt, true, await googleRegistrationProof(prisma, freshIdentity, freshAt));
     expect(fresh.id).not.toBe(customer.id); expect((await auth.getAccount(fresh.id))!.orders).toHaveLength(0);
     await expect(new CustomerWorkRepository(prisma).claim({ customerId: fresh.id, kind: "B2B_INQUIRY", token: `${inquiry.id}.wrong` })).rejects.toMatchObject({ code: "UNAUTHORIZED" });
     await repository.handle(handle(privacy.id), ownerId, new Date(now.getTime() + 2000));

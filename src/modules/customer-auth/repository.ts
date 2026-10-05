@@ -11,6 +11,7 @@ import { lockCustomerLifecycle, assertFreshAccountIntent } from "@/modules/custo
 
 import type { CustomerGoogleIdentity } from "./core";
 import { hashOpaqueToken } from "./core";
+import { assertRecordedAgeDeclaration, type RecordedAgeDeclaration } from "./age-declaration";
 import { assertInternalAccountActive, assertInternalEmail, internalExpiry, type InternalAuthConfig, INTERNAL_TERMS_VERSION, INTERNAL_PRIVACY_VERSION } from "./internal-testing";
 
 export type InternalGoogleRegistration = Readonly<{ config: InternalAuthConfig; consentToken?: string }>;
@@ -146,13 +147,14 @@ export class CustomerAuthRepository implements CustomerAuthRepositoryPort {
         throw appError("CONFLICT");
       }
 
-      if (!allowCreate) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
-      let consent: { acceptedAt: Date; termsVersion: string; privacyVersion: string } | undefined;
+      if (!allowCreate || !internal) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
+      let consent: ({ acceptedAt: Date; termsVersion: string; privacyVersion: string } & RecordedAgeDeclaration) | undefined;
       if (internal) {
         assertInternalEmail(identity.normalizedEmail, "google", internal.config);
         if (!internal.consentToken) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
         const proof = await transaction.customerInternalGoogleConsent.findUnique({ where: { tokenHash: hashOpaqueToken(internal.consentToken) } });
         if (!proof || proof.normalizedEmail !== identity.normalizedEmail || proof.expiresAt <= now || proof.consumedAt || proof.termsVersion !== INTERNAL_TERMS_VERSION || proof.privacyVersion !== INTERNAL_PRIVACY_VERSION) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
+        assertRecordedAgeDeclaration(proof, now);
         const claimed = await transaction.customerInternalGoogleConsent.updateMany({ where: { tokenHash: proof.tokenHash, consumedAt: null, expiresAt: { gt: now } }, data: { consumedAt: now } });
         if (claimed.count !== 1) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
         consent = proof;
@@ -167,7 +169,8 @@ export class CustomerAuthRepository implements CustomerAuthRepositoryPort {
           lastLoginAt: now,
           normalizedEmail: identity.normalizedEmail,
           ...(internal ? { internalTestExpiresAt: internalExpiry(now), createdAt: now } : {}),
-          ...(consent ? { consents: { create: { acceptedAt: consent.acceptedAt, termsVersion: consent.termsVersion, privacyVersion: consent.privacyVersion } } } : {}),
+          ...(consent ? { consents: { create: { acceptedAt: consent.acceptedAt, termsVersion: consent.termsVersion, privacyVersion: consent.privacyVersion,
+            ageDeclarationVersion: consent.ageDeclarationVersion, ageDeclaredAt: consent.ageDeclaredAt } } } : {}),
         },
       });
 

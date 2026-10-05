@@ -7,8 +7,9 @@ import { INTERNAL_GOOGLE_CONSENT_COOKIE } from "@/modules/customer-auth/internal
 import { customerCookieSecure } from "@/modules/customer-auth/app-origin";
 import { safeCustomerReturnTo } from "@/modules/customer-auth/core";
 import { appError, toAppError } from "@/modules/shared/errors";
+import { ageDeclarationSchema } from "@/modules/customer-auth/age-declaration";
 export const runtime = "nodejs";
-const schema = z.object({ consent: z.literal("on"), returnTo: z.string().optional() });
+const schema = z.object({ consent: z.literal("on"), ageDeclaration: ageDeclarationSchema, returnTo: z.string().max(2048).optional() });
 export async function POST(request: Request): Promise<Response> {
   let returnTo = "/account";
   const json = request.headers.get("accept")?.includes("application/json") ?? false;
@@ -18,7 +19,7 @@ export async function POST(request: Request): Promise<Response> {
     const raw = Object.fromEntries(new URLSearchParams(await readBoundedText(request, 2048)));
     returnTo = safeCustomerReturnTo(typeof raw.returnTo === "string" ? raw.returnTo : undefined);
     schema.parse(raw);
-    const token = await new InternalGoogleConsentService().accept();
+    const token = await new InternalGoogleConsentService().accept(raw);
     const destination = `/api/auth/google/start?returnTo=${encodeURIComponent(returnTo)}`;
     // Native form redirects stay on our origin: Chromium applies form-action
     // CSP to the redirect chain. A subsequent plain link starts OAuth safely.

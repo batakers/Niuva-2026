@@ -4,9 +4,15 @@ import { Prisma } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { parseGoogleIdentity } from "@/modules/customer-auth/core";
 import { CustomerAuthRepository } from "@/modules/customer-auth/repository";
+import { googleRegistrationProof } from "./customer-auth-fixtures";
 
 const prisma = getPrismaClient();
 const repository = new CustomerAuthRepository(prisma);
+
+async function registerFixture(email: string, subject: string, now: Date) {
+  const customerIdentity = identity(email, subject);
+  return repository.upsertGoogleCustomer(customerIdentity, now, true, await googleRegistrationProof(prisma, customerIdentity, now));
+}
 
 async function cleanCustomerAuthTables(): Promise<void> {
   await prisma.$executeRaw`
@@ -50,8 +56,8 @@ beforeEach(cleanCustomerAuthTables);
 
 describe("customer auth PostgreSQL boundary", () => {
   it("links only unowned normalized-email orders and does not leak another account's order", async () => {
-    const otherCustomer = await repository.upsertGoogleCustomer(
-      identity("other@example.com", "google-other"),
+    const otherCustomer = await registerFixture(
+      "other@example.com", "google-other",
       new Date("2026-09-25T10:00:00.000Z"),
     );
     const matching = await createOrder("ORD-CUSTOMER-ONE", " Customer@Example.COM ");
@@ -62,8 +68,8 @@ describe("customer auth PostgreSQL boundary", () => {
       otherCustomer.id,
     );
 
-    const customer = await repository.upsertGoogleCustomer(
-      identity("customer@example.com", "google-customer"),
+    const customer = await registerFixture(
+      "customer@example.com", "google-customer",
       new Date("2026-09-25T10:01:00.000Z"),
     );
 
@@ -83,8 +89,8 @@ describe("customer auth PostgreSQL boundary", () => {
   });
 
   it("fails identity/email conflicts without creating a second customer or linking orders", async () => {
-    const existing = await repository.upsertGoogleCustomer(
-      identity("customer@example.com", "google-existing"),
+    const existing = await registerFixture(
+      "customer@example.com", "google-existing",
       new Date("2026-09-25T10:00:00.000Z"),
     );
     const order = await createOrder("ORD-CUSTOMER-CONFLICT", "customer@example.com");
@@ -104,8 +110,8 @@ describe("customer auth PostgreSQL boundary", () => {
   });
 
   it("honors session expiry and revocation", async () => {
-    const customer = await repository.upsertGoogleCustomer(
-      identity("session@example.com", "google-session"),
+    const customer = await registerFixture(
+      "session@example.com", "google-session",
       new Date("2026-09-25T10:00:00.000Z"),
     );
     const expiresAt = new Date("2026-09-25T11:00:00.000Z");

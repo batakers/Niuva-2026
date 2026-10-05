@@ -6,6 +6,7 @@ import {
 } from "../../lib/env/server";
 import { hasActivationGrant as defaultHasActivationGrant } from "../../lib/env/deployment";
 import { appError } from "../shared/errors";
+import { getAgeGateStatus } from "../customer-auth/age-declaration";
 
 import { CAPABILITY_MATRIX } from "./matrix";
 import {
@@ -42,15 +43,15 @@ export type PolicyGateReader = Readonly<{
   getStatus: (gate: PolicyGate) => PolicyGateStatus;
 }>;
 
-/** Default reader: every gate is "not closed" (fail-closed; no Owner decision is assumed). */
+/** Only the implemented self-declaration closes PUB-AGE; policy remains fail-closed. */
 export const DEFAULT_POLICY_GATE_READER: PolicyGateReader = Object.freeze({
-  getStatus: (): PolicyGateStatus => ({ closed: false }),
+  getStatus: (gate: PolicyGate): PolicyGateStatus => ({ closed: gate === "PUB-AGE" && getAgeGateStatus().closed }),
 });
 
 export type CapabilityContext = Readonly<{
   /** Env source; defaults to `process.env`. */
   env?: Readonly<Record<string, string | undefined>>;
-  /** Policy/age gate reader; defaults to "never closed". */
+  /** Policy/age gate reader; defaults to the implemented age control only. */
   gates?: PolicyGateReader;
   /** Activation grant lookup; defaults to the (empty) recorded grants. */
   hasActivationGrant?: (tier: DeploymentTier, capability: string) => boolean;

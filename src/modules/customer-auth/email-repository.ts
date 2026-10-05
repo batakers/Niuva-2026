@@ -2,6 +2,7 @@ import type { PrismaClient, CustomerPendingRegistration } from "@/generated/pris
 import { getPrismaClient } from "@/lib/db/prisma";
 import { appError } from "@/modules/shared/errors";
 import { hashOpaqueToken } from "./core";
+import { assertRecordedAgeDeclaration } from "./age-declaration";
 import { lockCustomerLifecycle, assertFreshAccountIntent } from "@/modules/customer-privacy/lifecycle";
 import { assertInternalAccountActive, assertInternalEmail, internalExpiry, capInternalExpiry, INTERNAL_TERMS_VERSION, INTERNAL_PRIVACY_VERSION } from "./internal-testing";
 
@@ -22,7 +23,7 @@ export class CustomerEmailRepository {
   findPending(handle: string, now: Date) {
     return this.prisma.customerPendingRegistration.findFirst({ where: { handleHash: hashOpaqueToken(handle), completedAt: null, expiresAt: { gt: now }, OR: [{ internalTestExpiresAt: null }, { internalTestExpiresAt: { gt: now } }] } });
   }
-  async createPending(data: Omit<CustomerPendingRegistration, "id" | "sentAt" | "completedAt" | "deliveryConfirmed" | "internalTestExpiresAt"> & { internalTestExpiresAt?: Date | null }) {
+  async createPending(data: Omit<CustomerPendingRegistration, "id" | "sentAt" | "completedAt" | "deliveryConfirmed" | "internalTestExpiresAt" | "ageDeclarationVersion" | "ageDeclaredAt"> & { internalTestExpiresAt?: Date | null; ageDeclarationVersion?: string | null; ageDeclaredAt?: Date | null }) {
     return this.prisma.$transaction(async tx => {
       await lockCustomerLifecycle(tx);
       await assertFreshAccountIntent(tx, data.normalizedEmail, data.consentAt);
@@ -90,6 +91,7 @@ export class CustomerEmailRepository {
       const pending = await tx.customerPendingRegistration.findUnique({ where: { id: record.pendingId } });
       if (!claimed.count || !pending || pending.completedAt || pending.expiresAt <= now) throw appError("VALIDATION_ERROR");
       await assertFreshAccountIntent(tx, pending.normalizedEmail, pending.consentAt);
+      assertRecordedAgeDeclaration(pending, now);
       assertInternalAccountActive(pending.internalTestExpiresAt, now);
       if (pending.internalTestExpiresAt) {
         assertInternalEmail(pending.email, "password");
@@ -99,7 +101,8 @@ export class CustomerEmailRepository {
       const customer = await tx.customer.create({ data: { email: pending.email, normalizedEmail: pending.normalizedEmail, displayName: pending.displayName, emailVerifiedAt: now,
         ...(pending.internalTestExpiresAt ? { internalTestExpiresAt: internalExpiry(now), createdAt: now } : {}),
         passwordCredential: { create: { passwordHash: pending.passwordHash } },
-        consents: { create: { termsVersion: pending.termsVersion, privacyVersion: pending.privacyVersion, acceptedAt: pending.consentAt } } } });
+        consents: { create: { termsVersion: pending.termsVersion, privacyVersion: pending.privacyVersion, acceptedAt: pending.consentAt,
+          ageDeclarationVersion: pending.ageDeclarationVersion, ageDeclaredAt: pending.ageDeclaredAt } } } });
       await tx.customerPendingRegistration.update({ where: { id: pending.id }, data: { completedAt: now } });
       await tx.$executeRaw`UPDATE orders SET customer_id = ${customer.id} WHERE customer_id IS NULL AND account_closed_at IS NULL AND lower(btrim(customer_email)) = ${pending.normalizedEmail}`;
       return record.returnTo;

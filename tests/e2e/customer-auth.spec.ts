@@ -28,7 +28,7 @@ test("account redirects an unauthenticated Customer to Google login", async ({ p
   expect(prematureOAuthStarts).toEqual([]);
 });
 
-test("register uses the Google boundary, opens Account, and logout revokes access", async ({ page }) => {
+test("register links to existing Google Customer login, opens Account, and logout revokes access", async ({ page }) => {
   await page.goto("/register?returnTo=/account");
   await page.getByRole("link", { name: "Lanjutkan dengan Google" }).click();
 

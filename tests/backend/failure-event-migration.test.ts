@@ -29,7 +29,9 @@ describe("failure_events migration contract", () => {
       .map((entry) => entry.name);
 
     expect(migrationName).toMatch(/^\d{14}_[a-z0-9_]+$/);
-    expect([...names].sort().at(-1)).toBe(migrationName);
+    // The approved additive age migration now follows this historical one.
+    expect([...names].sort().at(-2)).toBe(migrationName);
+    expect([...names].sort().at(-1)).toBe("20261005230000_customer_age_declaration");
   });
 
   it("only creates the table and its two indexes", async () => {

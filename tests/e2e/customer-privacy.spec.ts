@@ -10,7 +10,8 @@ async function loginPrivacyFixture(page: Page) {
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Konfirmasi password", { exact: true }).fill(password);
-  await page.getByRole("checkbox").check();
+  await page.getByRole("checkbox", { name: /Saya menyetujui/ }).check();
+  await page.getByRole("checkbox", { name: /Saya menyatakan/ }).check();
   await page.getByRole("button", { name: "Buat akun", exact: true }).click();
   await expect(page).toHaveURL(/\/verify-email\?/);
   const rows = (await readFile(join(process.cwd(), "test-results/customer-email-test-outbox.jsonl"), "utf8")).trim().split("\n").map(line => JSON.parse(line) as { to: string; purpose: string; token: string; fixture: boolean });

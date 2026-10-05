@@ -21,6 +21,13 @@ export default async function setupE2EContent(): Promise<void> {
   const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString, max: 1 }) });
   try {
     await seedApprovedPublicContent(prisma);
+    // Mock OAuth exercises login to an existing isolated Customer. It must not
+    // bypass the age/policy proof required by new-account creation.
+    await prisma.customer.upsert({
+      where: { googleSubject: "local-demo-google-subject" },
+      create: { email: "demo-customer@example.test", normalizedEmail: "demo-customer@example.test", googleSubject: "local-demo-google-subject", displayName: "Demo Customer", emailVerifiedAt: new Date() },
+      update: {},
+    });
   } finally {
     await prisma.$disconnect();
   }

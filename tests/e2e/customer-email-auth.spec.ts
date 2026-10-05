@@ -15,7 +15,8 @@ async function register(page: Page, email: string) {
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Konfirmasi password", { exact: true }).fill(password);
-  await page.getByRole("checkbox").check();
+  await page.getByRole("checkbox", { name: /Saya menyetujui/ }).check();
+  await page.getByRole("checkbox", { name: /Saya menyatakan/ }).check();
   await page.getByRole("button", { name: "Buat akun", exact: true }).click();
   await expect(page).toHaveURL(/\/verify-email\?/);
   await expect(page.getByText(email, { exact: true })).toBeVisible();
@@ -27,6 +28,25 @@ async function login(page: Page, email: string, value = password) {
   await page.getByRole("button", { name: "Masuk", exact: true }).click();
   await expect(page).toHaveURL(/\/account$/);
 }
+test("age declaration stays unchecked, focuses validation, and rejects direct POST across responsive widths", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  for (const width of [390, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/register");
+    const age = page.getByRole("checkbox", { name: "Saya menyatakan bahwa saya berusia 18 tahun atau lebih." });
+    await expect(age).not.toBeChecked(); await expect(age).toHaveAttribute("required", "");
+    await page.getByLabel("Nama lengkap").fill("Adult Fixture"); await page.getByLabel("Email", { exact: true }).fill("adult-e2e@example.test");
+    await page.getByLabel("Password", { exact: true }).fill(password); await page.getByLabel("Konfirmasi password", { exact: true }).fill(password);
+    await page.getByRole("checkbox", { name: /Saya menyetujui/ }).check();
+    await page.getByRole("button", { name: "Buat akun", exact: true }).click();
+    await expect(age).toBeFocused(); await expect(age).toHaveAttribute("aria-invalid", "true");
+    await page.keyboard.press("Space"); await expect(age).toBeChecked();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+  const response = await page.request.post("/api/auth/email/register", { headers: { Origin: new URL(page.url()).origin, Accept: "application/json" }, form: { name: "Adult Fixture", email: "adult-e2e@example.test", password, confirmPassword: password, consent: "on", ageDeclaration: "false" } });
+  expect(response.status()).toBe(422); expect(response.headers()["set-cookie"]).toBeUndefined();
+  expect(await response.text()).not.toContain("adult-e2e@example.test");
+});
 test("email registration verifies through POST, login works, reset revokes the session", async ({ page }) => {
   const email = `customer-email-${Date.now()}@example.test`;
   await register(page, email);
