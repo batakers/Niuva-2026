@@ -2,7 +2,9 @@
 
 Diperbarui pada Tahap 12, 5 Oktober 2026 (task 28.1, Req 32.5). Laporan ini membedakan remediasi historis pada commit `c54b2d1` dari perubahan Tahap 12 yang belum di-commit.
 
-**Status akhir:** Tahap 12 (task 26 sampai 30) selesai dan terverifikasi untuk scope yang disetujui; 1.10 dan 7.27 juga selesai. Tiga putaran stabilitas, database test baru, smoke build produksi lokal, seluruh gate checkpoint 30, serta cleanup lulus. Seluruh kegagalan diagnostik awal tetap dicatat di baseline. Item yang ditunda dan keputusan legal/bisnis yang masih terbuka tidak diklaim selesai.
+**Status akhir Tahap 12:** task 26 sampai 30 selesai dan terverifikasi untuk scope yang disetujui; 1.10 dan 7.27 juga selesai. Tiga putaran stabilitas, database test baru, smoke build produksi lokal, seluruh gate checkpoint 30, serta cleanup lulus. Seluruh kegagalan diagnostik awal tetap dicatat di baseline. Item yang ditunda dan keputusan legal/bisnis yang masih terbuka tidak diklaim selesai.
+
+**Pembaruan 2026-10-05–06:** keputusan Owner setelah merge ada di `register-keputusan.md`: RK-08/RK-12/RK-13/RK-27 TERTUTUP; RK-17 menunggu aset, RK-11 menunggu hosting, dan penutupan formal legal/bisnis lain tetap terpisah. Lanjutan kode yang diinstruksikan Owner ada di [laporan niuva-keputusan-lanjutan](../niuva-keputusan-lanjutan/implementation-report.md): deklarasi 18+ wajib dan bukti server, pemeriksaan ringan CAD, sitemap produk terbit, serta diagnosis E2E. Angka gate di laporan ini adalah riwayat Tahap 12; gate implementasi lanjutan tidak ditambahkan ke angka historis.
 
 Semua bukti bersifat lokal, loopback, dan non-production. Penerimaan visual **belum ditinjau**, termasuk beranda, `/projects`, `/shop`, navigasi "Brief Proyek", dan badge cart. Physical-device, pembaca layar/assistive technology, provider, isolasi staging, hosted, dan production tidak terverifikasi. `PUB-RELEASE` tetap `NOT_AUTHORIZED`.
 
@@ -93,13 +95,13 @@ Optional yang tetap unchecked: **1.12/P28, 1.13/P29, 3.2/P13, 3.4/P14, 5.2/P3, 5
 | Item | Keputusan eksplisit / syarat membuka spec terpisah |
 | --- | --- |
 | RK-10 / 7.25 | Model hibrida dipertahankan: nonce untuk admin/API admin/checkout/account, CSP statis untuk publik ber-cache. 7.25 keputusan saja melalui 26.1; tidak memperluas nonce/SRI |
-| RK-16 | ISR `/services/[slug]` 300 disetujui dan diterapkan; RK-08 model Service tetap terbuka |
+| RK-16 / RK-08 | ISR `/services/[slug]` 300 disetujui dan diterapkan; keputusan 2026-10-05 menutup RK-08: layanan tetap data kode, model/tabel Service tidak dihapus |
 | RK-14 / 21.23 | Cache ongkir tidak diperlukan sekarang; buka spec sesudah provider aktif dan data kuota/latensi tersedia |
 | 3.14 | Ditunda mendekati staging; butuh pilihan vendor/paket, biaya, retensi/data/redaksi PII dan persetujuan |
 | 5.15 / RK-11 | Ditunda sampai hosting/topologi instance dipilih; butuh store/biaya/skema yang disetujui; rate limit masih per proses |
 | 7.13 | Guard assertNonProductionProvider dipertahankan sampai ada bukti staging terisolasi dan izin penghapusan path |
 
-RK-01 sampai RK-09 dan RK-19 sampai RK-28 tetap `BELUM_TERTUTUP`. RK-11, RK-12, RK-13, RK-15, RK-17, RK-18 juga tidak diputuskan oleh Tahap 12. Dokumen legal resmi, usia/assurance wali (terutama RK-02/RK-03), retensi, SLA, provider/hosting, dan bukti PUB-* tetap memerlukan keputusan atau bukti lingkungan masing-masing.
+Pada checkpoint Tahap 12, keputusan tambahan belum dicatat. Register 2026-10-05 kemudian menutup RK-08, RK-12, RK-13, RK-27 serta mencatat pilihan Owner pada entri lain. Kontrol deklarasi usia dan sitemap diterapkan lewat spec lanjutan 2026-10-06. Status formal RK-01/RK-02/RK-03/RK-05/RK-09/RK-18, dokumen legal resmi, retensi, SLA, provider/hosting, dan bukti PUB-* tetap mengikuti register dan belum menjadi izin aktivasi publik.
 
 ## 7. Lima risiko tersisa yang diterima
 
