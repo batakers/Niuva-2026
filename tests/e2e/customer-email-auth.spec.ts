@@ -1,6 +1,10 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
+import { isolatedActorHeaders } from "./helpers/actor";
+test.beforeEach(async ({ context }, testInfo) => {
+  await context.setExtraHTTPHeaders(isolatedActorHeaders(testInfo));
+});
 const password = "a long test passphrase for niuva";
 async function mailToken(email: string, purpose: string) {
   const content = await readFile(join(process.cwd(), "test-results/customer-email-test-outbox.jsonl"), "utf8");
@@ -83,8 +87,8 @@ test("email registration verifies through POST, login works, reset revokes the s
   await page.goto(`/reset-password?token=${reset}`);
   await expect(page.getByText("Tautan pemulihan tidak dapat digunakan.")).toBeVisible();
 });
-test("email forms work without JavaScript", async ({ browser }) => {
-  const context = await browser.newContext({ javaScriptEnabled: false });
+test("email forms work without JavaScript", async ({ browser }, testInfo) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, extraHTTPHeaders: isolatedActorHeaders(testInfo) });
   try {
     const page = await context.newPage();
     const email = `customer-nojs-${Date.now()}@example.test`;
@@ -95,6 +99,23 @@ test("email forms work without JavaScript", async ({ browser }) => {
     await login(page, email);
     await expect(page.getByText(email, { exact: true })).toBeVisible();
   } finally { await context.close(); }
+});
+test("independent browser actors retain the email IP rate limit", async ({ page }, testInfo) => {
+  await page.goto("/forgot-password");
+  const origin = new URL(page.url()).origin;
+  const nonce = Date.now();
+  const submit = (index: number, actorHeaders = isolatedActorHeaders(testInfo)) => page.request.post(
+    "/api/auth/email/forgot-password",
+    { headers: { ...actorHeaders, Origin: origin, Accept: "application/json" }, form: { email: `actor-limit-${nonce}-${index}@example.test` } },
+  );
+  // Existing service policy: 20 requests per hour for one IP. Unknown emails
+  // exercise the real counter without sending mail or creating accounts.
+  const allowed = await Promise.all(Array.from({ length: 20 }, (_, index) => submit(index)));
+  expect(allowed.map(response => response.status())).toEqual(Array<number>(20).fill(200));
+  const blocked = await submit(20);
+  expect(blocked.status()).toBe(429);
+  const independent = await submit(20, isolatedActorHeaders(testInfo, "independent-customer"));
+  expect(independent.status()).toBe(200);
 });
 test("inline validation focuses errors and password pending recovers", async ({ page }) => {
   await page.goto("/login");

@@ -84,6 +84,9 @@ user request and the authority order above.
 
 - The current user-selected guidance level is **C — Somewhere in between**. The
   older `User level: A` metadata in the PRD/Tech Design does not override it.
+- Pengulangan E2E auth email memakai bucket throttle DB test yang sama. Gunakan
+  `tests/e2e/helpers/actor.ts` untuk actor fixture terpisah, termasuk context
+  tanpa JavaScript; batas runtime dan bucket DB tetap dipertahankan.
 - The current PRD addenda require Customer login before checkout (Google or
   verified email/password) and
   includes a read-only Customer account. Clerk protects Owner/Admin only; do

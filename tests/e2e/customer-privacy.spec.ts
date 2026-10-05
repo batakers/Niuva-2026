@@ -1,6 +1,11 @@
 import { readFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
+import { isolatedActorHeaders } from "./helpers/actor";
+
+test.beforeEach(async ({ context }, testInfo) => {
+  await context.setExtraHTTPHeaders(isolatedActorHeaders(testInfo));
+});
 
 async function loginPrivacyFixture(page: Page) {
   const email = `privacy-e2e-${Date.now()}-${Math.random().toString(36).slice(2)}@example.test`;
@@ -30,6 +35,13 @@ async function privacyToken(purpose: string) {
   const mail = rows.filter(row => row.fixture && row.purpose === purpose).at(-1);
   expect(mail).toBeTruthy(); return mail!.token;
 }
+async function expectInvalidPrivacyLink(page: Page) {
+  // Next also mounts a route-announcer alert outside the application main.
+  // Replay proof must address the application's refusal, even when it is live.
+  const alert = page.getByRole("main").getByRole("alert");
+  await expect(alert).toHaveCount(1);
+  await expect(alert).toContainText("Tautan tidak berlaku");
+}
 async function requestExport(page: Page) {
   await page.getByRole("button", { name: "Minta tautan unduhan", exact: true }).click();
   await expect(page).toHaveURL(/status=sent/);
@@ -43,7 +55,7 @@ async function requestExport(page: Page) {
   const content = await readFile(path!, "utf8");
   expect(JSON.parse(content)).toMatchObject({ schemaVersion: "niuva.customer-data.v1" });
   for (const key of ["passwordHash", "tokenHash", "sessionHash", "storageKey", "providerResponseJson"]) expect(content).not.toContain(key);
-  await page.reload(); await expect(page.getByRole("alert")).toContainText("Tautan tidak berlaku");
+  await page.reload(); await expectInvalidPrivacyLink(page);
 }
 test("privacy export, corrections, validation, safe replay and responsive Customer route", async ({ page }) => {
   await loginPrivacyFixture(page);
@@ -73,8 +85,8 @@ test("privacy export, corrections, validation, safe replay and responsive Custom
   await page.goto("/account/privacy"); await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: /Lewati/ })).toBeFocused();
 });
-test("privacy forms and export work without JavaScript on 127.0.0.1", async ({ browser, baseURL }) => {
-  const context = await browser.newContext({ javaScriptEnabled: false, acceptDownloads: true });
+test("privacy forms and export work without JavaScript on 127.0.0.1", async ({ browser, baseURL }, testInfo) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, acceptDownloads: true, extraHTTPHeaders: isolatedActorHeaders(testInfo) });
   try {
     const page = await context.newPage(); await loginPrivacyFixture(page);
     const loopback = new URL(baseURL!); loopback.hostname = "127.0.0.1";
@@ -118,5 +130,5 @@ test("permanent closure consumes proof, clears access and cannot replay on dispo
   await expect(page).toHaveURL(/\/account\/privacy\/closed$/);
   await page.goto("/account"); await expect(page).toHaveURL(/\/login\?/);
   await page.goto(`/account/privacy/confirm?action=CLOSE&token=${token}`);
-  await expect(page.getByRole("alert")).toContainText("Tautan tidak berlaku");
+  await expectInvalidPrivacyLink(page);
 });
