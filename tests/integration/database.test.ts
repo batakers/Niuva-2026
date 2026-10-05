@@ -65,6 +65,9 @@ afterAll(async () => {
 
 describe("isolated PostgreSQL integration harness", () => {
   it("runs the reviewed migration only inside the named test database", async () => {
+    const expectedDatabaseName = decodeURIComponent(
+      new URL(process.env.TEST_DATABASE_URL ?? "").pathname,
+    ).replace(/^\/+/, "");
     const rows = await prisma.$queryRaw<
       Array<{
         databaseName: string;
@@ -84,7 +87,7 @@ describe("isolated PostgreSQL integration harness", () => {
 
     expect(rows).toEqual([
       {
-        databaseName: "niuva_test",
+        databaseName: expectedDatabaseName,
         orderTable: "orders",
         snapshotTrigger: "orders_commercial_snapshot_immutable",
       },

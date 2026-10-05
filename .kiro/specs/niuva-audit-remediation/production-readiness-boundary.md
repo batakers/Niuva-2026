@@ -1,6 +1,6 @@
 # Batas Kesiapan Production: niuva-audit-remediation
 
-Dokumen ini dibuat oleh task 23.7 (Req 32.1 sampai 32.4). Ini dokumen batas, bukan klaim kesiapan.
+Dokumen ini dibuat oleh task 23.7 dan diperbarui pada Tahap 12 (5 Oktober 2026; Req 32.1 sampai 32.4). Ini dokumen batas, bukan klaim kesiapan. Hasil checkpoint penutupan dirujuk dari `baseline-gate.md`.
 
 **Pernyataan utama:**
 
@@ -9,34 +9,39 @@ Dokumen ini dibuat oleh task 23.7 (Req 32.1 sampai 32.4). Ini dokumen batas, buk
 - Semua bukti di repository ini bersifat lokal, loopback, dan non-production.
 - Hasil CI dan hasil gate lokal yang hijau bukan bukti lingkungan, bukan penerimaan visual, dan bukan penerimaan perangkat fisik atau assistive technology.
 
-Dokumen ini tidak mengisi nilai keputusan apa pun dan tidak mengubah `docs/` milik Owner. Rujukan: `register-keputusan.md` (RK-xx, AG-xx), `env-register.md` bagian 6.5, `render-strategy.md`, `baseline-gate.md`, `tasks.md` (Overview).
+Dokumen ini merujuk keputusan teknis eksplisit dari handoff Owner di `register-keputusan.md`, tanpa memilih keputusan legal/bisnis baru atau mengubah `docs/` milik Owner. Rujukan lain: `env-register.md` bagian 6.5, `render-strategy.md`, `baseline-gate.md`, `tasks.md` (Overview).
 
 ## 1. Yang terverifikasi (lokal, loopback, non-production)
 
 ### 1.1 Angka gate terkini
 
-Angka berikut adalah hasil gate terkini yang dilaporkan untuk task 23.7. Semuanya dijalankan pada working tree lokal, dengan database test PostgreSQL di loopback (`niuva_test`) dan mock lokal untuk provider. `baseline-gate.md` masih memuat angka checkpoint 2 yang lebih lama (lint 0, test 55/612, backend 38/190, integration 15/83, e2e 103); angka di tabel ini menggantikannya sebagai keadaan terkini dan tidak dihitung ulang di dokumen ini.
+Angka berikut adalah hasil checkpoint penutupan Tahap 12 (task 30); catatan historis task 23.7/25 tetap tersedia di `baseline-gate.md`. Bukti stabilitas, seluruh kegagalan awal dan pengulangan database test baru/production lokal, serta cleanup dicatat terpisah di sana (bagian 11 sampai 15). Tidak ada credential production atau provider nyata yang diaktifkan.
 
 | Gate | Hasil terkini |
 | --- | --- |
 | `lint` | PASS, 0 error, 0 warning |
-| `test` | PASS, 84 file / 1181 test |
+| `typecheck`, `db:validate` | PASS; typecheck ulang setelah cleanup PASS |
+| `test` | PASS, 85 file / 1190 test |
 | `test:backend` | PASS, 68 file / 496 test |
 | `test:integration` | PASS, 19 file / 105 test |
 | `test:e2e` | 109 lulus, 5 dilewati (skip) |
-| `build` | PASS |
+| E2E production pada `next start` loopback port 3101 | 5/5 PASS, tanpa skip |
+| Fresh database: 17 migrasi dari kosong, integration, E2E penuh | PASS, 19/105 dan 109 lulus/5 skip/0 gagal; exit suite/peluncur 0 |
+| `build` | PASS, 68 entri halaman; empat slug layanan ISR 300 |
 
 Catatan:
 
 - 5 test E2E yang dilewati tidak dihitung sebagai bukti apa pun.
 - `build` adalah bukti kompilasi, bukan penerimaan visual atau kesiapan production (Req 5.10).
-- Shim `node_modules/.bin` yang tidak lengkap adalah kondisi lingkungan mesin lokal, bukan temuan repository (`baseline-gate.md` bagian 5).
+- Shim `node_modules/.bin` kini dapat menjalankan gate lewat `corepack pnpm`; masalah shim di `baseline-gate.md` bagian 5 adalah snapshot historis.
 
 ### 1.2 Apa yang dibuktikan hasil tersebut
 
 - Perilaku code pada database test lokal dan mock lokal (`NIUVA_CUSTOMER_AUTH_MOCK`, Clerk/R2 dikosongkan untuk E2E).
-- Replay 17 migrasi pada database lokal kosong berhasil (`baseline-gate.md` bagian 9.4, task 3.11). Ini bukti lokal.
-- Pembandingan klasifikasi render hasil `build` terhadap `render-strategy.md` (9.18). Satu selisih tetap terbuka: `/services/[slug]` berklasifikasi dinamis, strategi menyatakan statis (Catatan C, RK-16).
+- Replay 17 migrasi pada database lokal baru `niuva_stage12_test_20261005_01a10ad2` berhasil dari kosong; integration dan E2E penuh sesudahnya lulus (`baseline-gate.md` bagian 12/15, task 27.2). Bukti task 3.11 tetap historis di bagian 9.4. Ini bukti lokal, bukan migration/deployment production.
+- Pembandingan render hasil `build` terhadap `render-strategy.md`: selisih `/services/[slug]` ditutup oleh RK-16 dan task 26.3. Empat slug menjadi SSG/ISR 300 detik (5m di build dan manifest), dengan fallback saat database gagal.
+- Coverage V8 4.1.11 pada ketiga config mengukur masing-masing 360 file sumber dan mengecualikan generated. Baseline dan usulan threshold di bawah baseline ada di `baseline-gate.md` bagian 10; persentase tidak membuktikan ketepatan semua cabang atau kesiapan production.
+- Header/CSP enam route dibuktikan pada build/`next start` aktual. Perilaku cache `/projects` dan detail berubah setelah kedua aksi portfolio, sesudah write database langsung terbukti tetap stale. Identitas Owner pada smoke cache hanya constructor DI harness lokal; Clerk HTTP/session tetap tidak terverifikasi. Dist, dua include tsconfig, listener, dan proses milik peluncur dibersihkan; data test dan coverage retained (baseline bagian 13/15).
 - Fail-closed berjalan di code untuk capability yang bergantung pada keputusan yang belum tertutup (mis. `getAgeGateStatus()` tetap `DECISION_PENDING`, `decide("signup")` menolak dengan `AGE_GATE_NOT_CLOSED`).
 
 ## 2. Yang TIDAK terverifikasi
@@ -55,10 +60,9 @@ Daftar ini tidak lengkap sebagai jaminan. Apa pun yang tidak tercantum di bagian
 | Penerimaan visual | **Belum ditinjau** | Tidak ada pernyataan penerimaan eksplisit dari user. Lulus test/build bukan persetujuan visual | Req 32.2, `AGENTS.md` |
 | Physical-device | Tidak terverifikasi | Terpisah dari `test:e2e`. Chromium di mesin lokal bukan perangkat fisik | Req 32.3 |
 | Assistive technology (pembaca layar, dll.) | Tidak terverifikasi | Terpisah dari `test:e2e` dan dari pemeriksaan otomatis mana pun | Req 32.3 |
-| Pemantauan error eksternal | Tidak ada | SDK pemantauan belum disetujui. Env Sentry tidak punya konsumen (`UNUSED_PENDING_APPROVAL`). `FailureLogger` hanya interface | AG-3.14, `env-register.md` bagian 2 |
-| Cakupan test terukur (coverage) | Tidak diukur otomatis | Paket coverage belum disetujui. Celah dicatat manual di `coverage-gaps.md` | AG-1.10 |
-| CSP seluruh situs | Terbatas | Strategi akhir belum diputuskan. Route publik statis tetap memakai CSP statis dari `next.config.ts` dengan cakupan terbatas. Nonce hanya di `/admin`, `/api/admin`, `/checkout`, `/account` | RK-10, 7.25, `csp-verification.md` |
-| Render `/services/[slug]` | Selisih terbuka | Dinamis padahal strategi statis | RK-16 |
+| Pemantauan error eksternal | Tidak ada | SDK ditunda sampai mendekati staging. Env Sentry tidak punya konsumen (`UNUSED_PENDING_APPROVAL`); logger/FailureEvent lokal tidak membuktikan pemantauan eksternal | AG-3.14, `env-register.md` bagian 2 |
+| Cakupan seluruh cabang sumber | Tidak lengkap | Coverage sudah diukur; sejumlah cabang belum teruji. Tidak ada threshold di atas baseline atau pengecualian modul untuk menaikkan angka | AG-1.10, `coverage-gaps.md`, `baseline-gate.md` bagian 10 |
+| CSP dengan Clerk aktif | Tidak terverifikasi | RK-10 memutuskan model hibrida: nonce pada cakupan admin/API admin/checkout/account, CSP statis pada publik ber-cache. Tanpa Clerk, `/admin` hanya membuktikan jalur 503 statis. Tidak ada perluasan nonce/SRI | RK-10, 26.1, `csp-verification.md` |
 | Kesiapan hukum dan kebijakan (dokumen resmi, usia, wali, retensi, data, SLA) | Tidak tertutup | Semua entri `BELUM_TERTUTUP` | `register-keputusan.md` bagian A sampai C |
 
 ## 3. Lima risiko tersisa yang diterima
@@ -77,18 +81,18 @@ Risiko ini juga wajib muncul di laporan penyelesaian (task 24.1).
 
 ## 4. Gate dan approval yang tertahan
 
-Tidak satu pun dari item ini dieksekusi tanpa persetujuan tertulis user yang menyebut item itu. Permintaan coding umum dan spec ini bukan persetujuan. Task dibiarkan unchecked dan dilaporkan "ditunda".
+Approval 1.10 dan 7.27 sudah diberikan melalui handoff Tahap 12 dan dieksekusi melalui task aslinya. Keputusan RK-10, RK-14, RK-16 tertutup; keputusan ini tidak membuka capability/provider atau izin rilis. Item berikut ditunda atau dicatat dengan batas pelaksanaan eksplisit.
 
 | Gate | Jenis | Yang menunggu | Dampak selama tertahan | Rujukan |
 | --- | --- | --- | --- | --- |
-| 1.10 | `[APPROVAL_GATE]` | Paket `@vitest/coverage-v8` dan konfigurasi coverage | Tidak ada pengukuran coverage otomatis | AG-1.10 |
-| 3.14 | `[APPROVAL_GATE]` | SDK pemantauan error | Tidak ada pengiriman kegagalan ke layanan eksternal | AG-3.14 |
-| 5.15 | `[APPROVAL_GATE]` | Store rate limit bersama (migrasi baru atau resource hosted) | Rate limit tetap per proses | AG-5.15, RK-11 |
-| 7.13 | `[APPROVAL_GATE]` | Penghapusan `src/modules/providers/non-production.ts` dan `assertNonProductionProvider` | Guard lama tetap ada | AG-7.13 |
-| 7.25 | `[BLOCKED_ON_OWNER]` | Keputusan strategi CSP akhir untuk seluruh situs | CSP route publik statis tidak diubah dari cakupan terbatas | RK-10 |
-| 7.27 | `[APPROVAL_GATE]` | Perubahan `.env.example` | Nama env baru hanya ada di `env-register.md` | AG-7.27 |
+| 1.10 | Disetujui, selesai | Paket dev 4.1.11 sama dengan Vitest | Coverage tiga config dan baseline terukur; threshold hanya diusulkan di bawah baseline | AG-1.10 |
+| 3.14 | Ditunda | Buka spec terpisah mendekati staging: vendor/paket, biaya, pemrosesan data, retensi, redaksi PII dan approval tertulis | Tidak ada pengiriman kegagalan ke layanan eksternal | AG-3.14 |
+| 5.15 | Ditunda | Buka spec terpisah setelah hosting/topologi instance dipilih dan opsi store/biaya/skema disetujui; RK-11 tetap terbuka | Rate limit tetap per proses | AG-5.15, RK-11 |
+| 7.13 | Ditunda | Bukti capability/provider di staging terisolasi, tidak ada pemanggil tersisa, dan approval penghapusan path sebelum spec terpisah dikerjakan | `assertNonProductionProvider` dan berkas guard lama tetap ada | AG-7.13 |
+| 7.25 | Keputusan saja, melalui 26.1 | Pertahankan model hibrida (RK-10 tertutup) | Tidak ada perluasan nonce ke publik atau aktivasi SRI | RK-10 |
+| 7.27 | Disetujui, selesai | Sembilan nama runtime baru dari register ditambahkan kosong ke `.env.example` | Tidak menyalin nilai env privat; tidak mengaktifkan provider | AG-7.27 |
 
-Juga tertahan tetapi di luar daftar enam di atas: 21.23 (`[BLOCKED_ON_OWNER]`, cache rate ongkir, RK-14).
+21.23 ditunda sesuai keputusan RK-14: cache ongkir tidak diperlukan sekarang. Buka spec terpisah setelah provider aktif dan tersedia data kuota/latensi; tidak memilih TTL atau mengurangi revalidasi ongkir server. RK-01 sampai RK-09 dan RK-19 sampai RK-28 tetap `BELUM_TERTUTUP`.
 
 ## 5. `PUB-RELEASE` tetap `NOT_AUTHORIZED`
 

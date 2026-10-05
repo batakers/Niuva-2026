@@ -1,184 +1,120 @@
 # Laporan Penyelesaian: niuva-audit-remediation
 
-Dibuat oleh task 24.1 (Req 32.5). Format mengikuti "Done means" di `AGENTS.md`: files changed, commands run, hasil test/build/browser, acceptance criteria yang tercakup, remaining risks, rollback notes.
+Diperbarui pada Tahap 12, 5 Oktober 2026 (task 28.1, Req 32.5). Laporan ini membedakan remediasi historis pada commit `c54b2d1` dari perubahan Tahap 12 yang belum di-commit.
 
-**Pernyataan utama:**
+**Status akhir:** Tahap 12 (task 26 sampai 30) selesai dan terverifikasi untuk scope yang disetujui; 1.10 dan 7.27 juga selesai. Tiga putaran stabilitas, database test baru, smoke build produksi lokal, seluruh gate checkpoint 30, serta cleanup lulus. Seluruh kegagalan diagnostik awal tetap dicatat di baseline. Item yang ditunda dan keputusan legal/bisnis yang masih terbuka tidak diklaim selesai.
 
-- Semua bukti di laporan ini bersifat lokal, loopback, dan non-production.
-- Penerimaan visual: **belum ditinjau**. Test dan build hijau bukan persetujuan visual.
-- Physical-device, assistive technology, provider, dan production acceptance terpisah dari `test:e2e` dan tidak terverifikasi.
-- `PUB-RELEASE` tetap `NOT_AUTHORIZED`. Tidak ada klaim kesiapan production, staging, atau hosted.
-- Tidak ada commit, push, deployment, aktivasi provider, atau penggunaan credential production dalam pekerjaan ini.
+Semua bukti bersifat lokal, loopback, dan non-production. Penerimaan visual **belum ditinjau**, termasuk beranda, `/projects`, `/shop`, navigasi "Brief Proyek", dan badge cart. Physical-device, pembaca layar/assistive technology, provider, isolasi staging, hosted, dan production tidak terverifikasi. `PUB-RELEASE` tetap `NOT_AUTHORIZED`.
 
-Sumber: `baseline-gate.md`, `register-keputusan.md`, `production-readiness-boundary.md`, `render-strategy.md`, `tasks.md`, `requirements.md` (Req 32).
+Sumber: `baseline-gate.md` bagian 10 sampai 15, `register-keputusan.md`, `production-readiness-boundary.md`, `render-strategy.md`, `coverage-gaps.md`, `tasks.md`, dan `requirements.md`.
 
-## 1. Ringkasan hasil gate terkini
+## 1. Hasil gate dan bukti
 
-| Gate | Hasil |
+| Gate / bukti | Hasil terukur Tahap 12 |
 | --- | --- |
-| `lint` | PASS, 0 error, 0 warning |
-| `typecheck` | PASS |
-| `test` | PASS, 84 file / 1181 test |
-| `test:backend` | PASS, 68 file / 496 test |
-| `db:validate` | PASS |
-| `test:integration` | PASS, 19 file / 105 test |
-| `test:e2e` | PASS, 109 lulus, 5 dilewati (skip), 0 gagal |
-| E2E production (`public-content-production-path.spec.ts`, tier production, port 3101) | PASS, 5 lulus, 0 dilewati |
-| `build` | PASS (`distDir` default, 68 halaman) |
+| `lint`, `typecheck`, `db:validate` checkpoint | PASS, lint 0 error / 0 warning; typecheck diulang setelah cleanup dan tetap PASS |
+| Tiga putaran `test` | Ketiganya PASS, masing-masing 85 file / 1190 test |
+| Tiga putaran `test:backend` | Ketiganya PASS, masing-masing 68 file / 496 test |
+| Tiga putaran `test:integration` | Ketiganya PASS, masing-masing 19 file / 105 test, database test lama |
+| Tiga putaran `test:e2e` penuh | Ketiganya 109 lulus / 5 skip / 0 gagal |
+| Build checkpoint | PASS, 68 entri halaman; empat slug layanan SSG/ISR 300 detik pada build dan prerender manifest |
+| Database baru dari kosong | 17 migrasi berhasil; integration 19 file / 105 test PASS setelah koreksi assertion yang disetujui user; kegagalan awal tercatat |
+| E2E penuh database baru | Konfirmasi akhir 109 lulus / 5 skip / 0 gagal, exit suite/peluncur 0; port 3000 kosong. Semua kegagalan awal dicatat di baseline bagian 12 |
+| Header/CSP `next build` + `next start` | PASS pada enam route; rincian pada baseline bagian 13 |
+| Perilaku revalidasi kedua aksi portfolio | PASS pada cache produksi nyata dan HTTP, dua audit write lokal; batas otorisasi harness dijelaskan di bagian 4 |
+| E2E production pada server `next start` | Pengulangan dan checkpoint akhir masing-masing 5/5 PASS, exit 0; timeout `page.goto("/")` pada percobaan pertama tetap dicatat, penyebab belum terbukti |
+| Checkpoint 30 | Selesai: semua gate dijalankan kembali dan PASS; unit 85/1190, backend 68/496, integration 19/105, E2E penuh 109/5 skip/0 gagal; baseline bagian 15 |
 
-Catatan:
+Tiga putaran stabilitas memakai source/config/test yang sama; `public-pages.spec.ts:78` lulus pada ketiganya tanpa retry atau perubahan timeout. Setelah rangkaian tersebut, user memberi izin khusus mengganti assertion nama database test dengan nama dari `TEST_DATABASE_URL` yang sudah divalidasi setup. Pemeriksaan tabel dan trigger tetap sama. Perubahan ini dilaporkan terpisah dari rangkaian stabilitas awal.
 
-- Angka ini menggantikan baseline checkpoint 2 di `baseline-gate.md` (lint 0, test 55/612, backend 38/190, integration 15/83, e2e 103). Baseline awal sebelum perubahan: lint 0 error / 148 warning.
-- 5 test E2E yang dilewati tidak dihitung sebagai bukti.
-- `test:integration` memakai database test lokal `niuva_test` di loopback. E2E memakai mock lokal (`NIUVA_CUSTOMER_AUTH_MOCK`, Clerk/R2 dikosongkan).
-- `build` adalah bukti kompilasi, bukan penerimaan visual atau kesiapan production.
-- Replay 17 migrasi pada database lokal kosong berhasil (task 3.11), sebagai bukti lokal.
-- Semua angka di tabel diukur pada checkpoint akhir (task 25), termasuk `db:validate` dan `typecheck`. 5 test yang dilewati di `test:e2e` penuh adalah spec production path, yang dijalankan terpisah dan lulus 5/5.
+Coverage V8 dipin 4.1.11, sama dengan Vitest. Masing-masing suite mengukur 360 file sumber termasuk file 0%, mengecualikan `src/generated/**`. Baseline statements/branches/functions/lines: unit **37.75/32.70/38.01/38.49%**, backend **32.66/23.86/31.82/34.53%**, integration **34.12/23.54/37.54/35.80%**. Usulan threshold dibulatkan ke bawah dan belum diberlakukan otomatis, sesuai task 1.10; lihat baseline bagian 10. Tidak ada coverage gabungan yang dihitung dari rata-rata suite.
 
-## 2. File yang berubah
+Lima skip E2E penuh adalah spec production path dan tidak dihitung sebagai bukti produksi. Build/test hijau bukan penerimaan visual atau kesiapan lingkungan.
 
-Sumber: `git status --short` dan `git diff --stat` (hanya baca). Working tree uncommitted, tidak ada commit. Tracked: 113 file berubah, 2433 insersi, 806 penghapusan (belum termasuk file baru yang untracked).
+## 2. File yang berubah pada Tahap 12
 
-Working tree yang sama juga memuat perubahan uncommitted milik Owner yang tidak disentuh pekerjaan ini: `docs/PRD-Niuva-MVP.md`, `docs/README.md`, `docs/TechDesign-Niuva-MVP.md`, `docs/backend/provider-staging-intake.md`, `docs/legal/*` (termasuk enam file baru `customer-*`), `tests/backend/customer-privacy-pages.test.ts`, dan `tests/e2e/customer-privacy.spec.ts`. Daftar di bawah tidak mengklaim atau menyalahkan perubahan Owner; perubahan di `docs/frontend/mvp-release-readiness.md` dan `MEMORY.md` juga muncul di status, dan asal-usulnya tidak dinilai di sini.
+Checkout mulai bersih pada branch `chore/niuva-audit-remediation`, HEAD `c54b2d1`. Commit Owner `230faa6` dan remediasi sebelumnya `c54b2d1` sudah ada sebelum sesi ini. Tidak ada commit, push, atau PR dalam sesi ini.
 
-Ringkasan per area (tidak memuat tiap file; lihat `git status --short` untuk daftar lengkap):
-
-| Area | Isi perubahan |
+| Area | File dan tujuan |
 | --- | --- |
-| Spec | `.kiro/specs/niuva-audit-remediation/` (folder baru: design, requirements, tasks, baseline-gate, register-keputusan, register-dependency, env-register, render-strategy, csp-verification, csp-clerk-findings, coverage-gaps, rate-limit-routes, production-readiness-boundary, completion-report) |
-| Konfigurasi | `eslint.config.mjs`, `next.config.ts`, `vitest.config.mts` (`testTimeout: 30_000`), `prisma/schema.prisma`, migrasi baru `20261003120000_failure_events/` |
-| Observability | `src/lib/observability/` (baru), `src/instrumentation.ts`, `src/lib/http/response.ts`, `src/modules/shared/errors.ts` |
-| Env dan deployment | `src/lib/env/` (`deployment.ts`, `dev-origins.ts`, `internal-auth.ts`, `object-storage-startup.ts`, `origin.ts`, `server-actions-origins.ts`, baru), `src/lib/env/server.ts` |
-| Boundary request | `src/lib/security/` (`actor-key.ts`, `csp.ts`, `nonce.ts`, baru; `headers.ts`, `origin.ts`, `rate-limit.ts`), `src/lib/http/public-mutation.ts`, `src/proxy.ts`, route handler di `src/app/api/**` |
-| Capability dan provider | `src/modules/capabilities/` (baru), `src/modules/providers/non-production.ts`, `src/modules/{payment,shipping,notifications,files,customer-auth}/**` |
-| Admin | `src/app/admin/**` (`admin-page-failure.ts` baru, halaman, `actions.ts`), `src/components/niuva/admin-shell.tsx`, `src/modules/admin/action-queue-service.ts`, `src/app/demo/action-queue/` |
-| Publik dan render | `src/app/{page,shop,projects,services,project-brief}/**`, view baru (`shop-index-view`, `product-detail-view`, `projects-index-view`, `project-detail-view`), `src/app/preview/` (baru), `src/app/robots.ts`, `src/app/sitemap.ts`, `src/lib/site-metadata.ts`, `src/modules/portfolio/public-source.ts`, `src/lib/images/` |
-| UI lain | `src/components/niuva/{public-navigation,private-upload-field,system-state-copy}`, `src/features/cart/**`, `src/features/frontend-preview/**`, halaman akun dan custom-print |
-| Test baru | Sekitar 60 file baru di `tests/unit`, `tests/backend`, `tests/integration`, `tests/e2e` (capability, CSP, rate limit batch 1 sampai 5, failure event, sitemap/robots, render strategy, public content production path, dan lain-lain) |
-| Test yang disesuaikan | Lihat bagian 7 |
+| Dependency | `package.json`, `pnpm-lock.yaml`: satu dependency dev langsung `@vitest/coverage-v8@4.1.11` dan transitif paketnya |
+| Coverage | `vitest.config.mts`, `vitest.backend.config.mts`, `vitest.integration.config.mts`: provider V8, laporan terpisah, generated dikecualikan; alias unit memakai entry `server-only` kosong resmi Next untuk transform coverage |
+| Env contoh | `.env.example`: sembilan nama runtime baru kosong beserta komentar; tanpa nilai dari env privat |
+| ISR layanan | `src/app/services/[slug]/page.tsx`: hapus `connection()`, literal `revalidate = 300`, pertahankan static params/fallback database/unknown slug 404 |
+| Invalidasi portfolio | `src/app/admin/actions.ts`: kedua aksi portfolio menambah invalidasi pola `/services/[slug]` dengan tipe `page` |
+| Header 404 | `src/app/api/frontend-preview/media/[id]/route.ts`: `X-Robots-Tag: noindex, nofollow` dan `Cache-Control: no-store` pada 404 |
+| Test unit | `tests/unit/services-render-strategy.test.tsx` baru (9 test); `system-pages-coverage.test.ts` manifest 18 menjadi 17 sesuai ISR; `test-only-routes-fail-closed.test.tsx` assertion header 404 |
+| Test integration (izin tambahan user) | `tests/integration/database.test.ts`: nama yang diharapkan berasal dari TEST_DATABASE_URL yang divalidasi setup, bukan literal `niuva_test`; pemeriksaan `orders` dan trigger immutable tetap persis sama |
+| Spec | `register-keputusan.md`, `baseline-gate.md`, `coverage-gaps.md`, `render-strategy.md`, `production-readiness-boundary.md`, `completion-report.md`, `tasks.md`: keputusan, hasil nyata, batas bukti, status task, dan prosedur gate |
 
-## 3. Command yang dijalankan
+Daftar final: **20 file** (19 tracked berubah dan satu test unit baru), sesuai tabel area di atas. `tsconfig.json` identik dengan checkout awal setelah hanya dua include dist sementara dibersihkan; file itu tidak termasuk perubahan akhir. Dokumen Owner di `docs/` dan `docs/legal/`, dua test privasi Owner, workflow, `vercel.json`, dan migrasi lama identik dengan `c54b2d1`. File lama di c54b2d1 bukan perubahan uncommitted sesi ini; laporan lama tentang 113 file dirty dan dokumen Owner dirty sudah tidak berlaku.
 
-Shim `node_modules/.bin` tidak lengkap di mesin lokal (bukan temuan repository). Gate dijalankan lewat `node node_modules/<paket>/...` bila `corepack pnpm <script>` tidak bisa dipakai.
+## 3. Command dan lingkungan
 
-- `lint`: `eslint .`
-- `typecheck`: `prisma generate`, `next typegen`, `tsc --noEmit`
-- `test`: `vitest run`
-- `test:backend`: `vitest run --config vitest.backend.config.mts`
-- `test:integration`: `vitest run --config vitest.integration.config.mts` dengan `.env.test.local`, setelah `db:test:start` dan `db:test:migrate` (database test lokal), lalu `db:test:stop`
-- `test:e2e`: `node node_modules/@playwright/test/cli.js test` (Playwright memulai server dev lewat `scripts/local-e2e-web.ps1`)
-- `build`: `next build` dengan `NIUVA_NEXT_DIST_DIR` sementara, dibersihkan sesudahnya
-- `db:validate`: `prisma validate`
-- Read-only: `git status --short`, `git diff --stat`
+Gate dijalankan lewat `corepack pnpm`: `lint`, `typecheck`, `test`, `test:backend`, `test:integration`, `test:e2e`, `db:validate`, dan `build`. Dependensi disetujui dipasang dengan `corepack pnpm add -D --save-exact @vitest/coverage-v8@4.1.11`. Tidak ada dependency baru lain.
 
-## 4. Laporan per tahap
+Database test dikelola melalui `db:test:start` / `db:test:stop`. Untuk bukti database baru, migration dan Vitest dijalankan dengan binding database test baru yang sudah diverifikasi; wrapper integration biasa mengimpor database lama sehingga tidak dipakai untuk fresh proof. Tidak ada reset/drop database yang ada atau edit migrasi.
 
-Nomor tahap mengikuti judul di `tasks.md` (Tahap N = task top-level yang bersangkutan: Tahap 0 = task 1, Tahap 1 = task 3, Tahap 2 = task 5, Tahap 3 = task 7, Tahap 4 = task 9, Tahap 9 = task 19, Tahap 10 = task 21, Tahap 11 = task 23).
+Smoke produksi memakai `corepack pnpm build`, `corepack pnpm exec next start -H localhost -p 3101`, lalu `corepack pnpm exec playwright test tests/e2e/public-content-production-path.spec.ts` pada server yang sudah siap. Memakai `NIUVA_DEPLOYMENT_TIER=production` pada mesin lokal bukan deployment production. Preload sementara mengisolasi loader env untuk smoke production agar tidak mengisi key provider dari env privat. Nilai env privat tidak dibaca langsung, dicetak, atau disalin ke repo.
 
-Detail file dan hasil tiap sub-task ada di `tasks.md` dan di dokumen pendukung yang disebut. Tabel ini merangkum status.
+Cara andal latar belakang, polling, pembungkus PostgreSQL, batas waktu proses, PID ownership, dan pembersihan ada di baseline bagian 14. Log sintetis lokal disimpan di `%TEMP%/niuva-stage12-20261005-01a10ad2`; coverage ignored ada di `.local/coverage`.
 
-| Tahap | Status | Isi dan bukti | Catatan rollback |
-| --- | --- | --- | --- |
-| 0 (task 1, checkpoint 2) | Selesai, kecuali 1.10 (gate tertahan) | Baseline gate tercatat (`baseline-gate.md`), `register-dependency.md`, `register-keputusan.md`. Lint 148 warning menjadi 0 (1.6 sampai 1.8). I6 diperiksa statis (1.9). | `eslint.config.mjs` dan perubahan kecil di `retail-rate-service.ts` dan satu test dapat dikembalikan per file |
-| 1 (task 3, checkpoint 4) | Selesai, kecuali 3.14 (gate tertahan) | Observability layer, `FailureEvent` dan migrasi baru, wiring kegagalan, kebenaran konfigurasi. Replay 17 migrasi dari database kosong berhasil (3.11). | Migrasi `20261003120000_failure_events` bersifat aditif; rollback = tabel/kolom baru dihapus lewat migrasi baru, bukan edit migrasi lama |
-| 2 (task 5, checkpoint 6) | Selesai, kecuali 5.15 (gate tertahan) | Rate limit per pelaku (`deriveActorKey`) pada route publik (batch 1 sampai 5, `rate-limit-routes.md`), otorisasi, sha256 unggahan. Store rate limit tetap in-memory per proses. | Per route handler; kembalikan file terkait |
-| 3 (task 7, checkpoint 8) | Selesai, kecuali 7.13, 7.25, 7.27 (tertahan) | Deployment tier, capability matrix dan resolver fail-closed, CSP nonce terbatas (`/admin`, `/api/admin`, `/checkout`, `/account`), proxy. Tidak ada capability yang terbuka tanpa izin aktivasi. | Resolver adalah titik tunggal; kembalikan modul `src/modules/capabilities/` dan pemanggilnya per capability (dikerjakan satu per satu) |
-| 4 (task 9, checkpoint 10) | **Direduksi**, selesai untuk task esensial | Jalur data publik yang diuji (`resolvePublicContentSource`), strategi render, `robots.ts`, `sitemap.ts`, metadata. Satu selisih render terbuka (bagian 6). Visual: belum ditinjau. | Kembalikan view/page publik dan `revalidate` per route; perilaku halaman yang sudah diterima Owner tidak diubah selain penghapusan `connection()` di `/` dan `/shop` |
-| 5 sampai 8 | **Di luar ruang lingkup** | Email outbox durable, job terjadwal, refund, audit/akses admin tidak dikerjakan (Pilihan 1 Ringkas). Risiko diterima di bagian 8. | n/a |
-| 9 (task 19, checkpoint 20) | **Direduksi** (hanya 19.22 dan 19.23) | Pola gambar di `next.config.ts` dibatasi, halaman akun bebas `eslint-disable` image. Konversi form tanpa JavaScript tidak dikerjakan. Visual: belum ditinjau. | Kembalikan `next.config.ts` dan halaman akun |
-| 10 (task 21, checkpoint 22) | **Direduksi** (hanya 21.22 dan 21.24) | Revalidasi ongkir server dibuktikan tetap dipertahankan, lima route khusus test tetap fail-closed dan `noindex`. 21.23 (cache ongkir) `[BLOCKED_ON_OWNER]`. | Hanya test; tidak ada perubahan perilaku |
-| 11 (task 23) | **Direduksi** (hanya 23.1 dan 23.7) | `register-keputusan.md` (semua `BELUM_TERTUTUP`), `production-readiness-boundary.md`. | Dokumen; hapus file bila perlu |
+## 4. Acceptance criteria dan batas pembuktian
 
-Status eksekusi gate per tahap mengikuti catatan checkpoint di `tasks.md`. Laporan ini tidak menambahkan hasil per tahap yang tidak tercatat di dokumen sumber; bila ada gate per tahap yang tidak tercatat, statusnya dianggap `TIDAK_DIJALANKAN` sampai task 25 menjalankannya.
+- Req 6.2 dan 6.3: coverage diukur pada semua suite, generated dikecualikan, baseline dan threshold di bawah baseline dicatat; tidak ada threshold 80% atau pengecualian modul tambahan untuk menaikkan angka.
+- Req 14.2 dan 14.3: izin `.env.example` eksplisit dan hanya nama/placeholder non-rahasia.
+- Req 16.1, 16.2, 16.8, dan 5.3: strategi layanan dibuktikan build nyata; fallback database dan unknown slug diuji; pola invalidasi baru diuji pada kedua aksi.
+- Req 28.13 dan 16.7: respons 404 media tetap fail-closed, tidak di-cache, dan membawa noindex/nofollow.
+- Req 29.7 dan 32.1: tiga rangkaian penuh, semua kegagalan fresh/smoke, dan bukti lingkungan lokal dicatat terpisah; tidak menghapus kegagalan awal karena pengulangan.
+- Req 32.2 sampai 32.5: visual, physical-device, AT, provider/staging, otorisasi rilis, dan laporan dibedakan secara eksplisit.
+- Req 30: hanya keputusan Owner eksplisit yang ditutup. RK legal/bisnis lain tidak diberi default.
 
-## 5. Acceptance criteria yang tercakup
+Smoke cache memuat body aksi admin yang sebenarnya dari `src/app/admin/actions.ts` dan menjalankan PortfolioService, repository Prisma, audit, serta cache/revalidation Next yang sebenarnya. Identitas Owner disuntikkan melalui constructor dependency injection hanya dalam harness sementara. Dua HTTP route dibuktikan tetap stale setelah write database langsung, lalu berubah setelah masing-masing aksi; dua audit write terjadi. Ini bukan bukti sesi Clerk atau pemanggilan Server Action melalui browser yang terautentikasi.
 
-Hanya kriteria yang tercakup oleh task yang aktif dan selesai. Kriteria milik task di luar ruang lingkup tidak dicakup.
+## 5. Status per tahap
 
-- Req 32.1: bukti provider, inbox, storage, backup, pemulihan dinyatakan sebagai bukti lingkungan yang tidak digantikan CI (`production-readiness-boundary.md` bagian 2 dan 6).
-- Req 32.2: penerimaan visual dilaporkan belum ditinjau (laporan ini, bagian 9).
-- Req 32.3: physical-device dan assistive technology dilaporkan terpisah dari `test:e2e`.
-- Req 32.4: `PUB-RELEASE` = `NOT_AUTHORIZED`; publikasi policy, deployment, aktivasi provider, dan credential production menunggu instruksi terpisah.
-- Req 32.5: laporan ini.
-- Req 30: semua open question tercatat di `register-keputusan.md` dan tetap `BELUM_TERTUTUP`; tidak ada nilai default dipilih.
-- Requirement lain (Tahap 0 sampai 4, 9, 10) dicakup oleh task yang bertanda selesai di `tasks.md`; pemetaan per task ada di baris `_Requirements:_` masing-masing.
+Remediasi Tahap 0 sampai 4, 9, 10, 11 dan checkpoint 25 pada c54b2d1 adalah riwayat yang tetap dirujuk melalui task masing-masing. Pengurangan scope "Pilihan 1 (Ringkas)" tetap berlaku; Tahap 5 sampai 8 dan pekerjaan lain yang dikeluarkan tidak dikembalikan ke scope.
 
-## 6. Temuan terbuka
+| Item Tahap 12 | Status / batas |
+| --- | --- |
+| 26.1 / 26.2 | Selesai: keputusan dan deferral hanya dicatat dalam register |
+| 1.10 / 7.27 | Disetujui dan selesai |
+| 26.3 / 26.4 | Selesai: ISR layanan, invalidasi, 404 media, test, dan build |
+| 27.1 | Selesai: tiga putaran PASS lengkap; cleanup akhir terverifikasi |
+| 27.2 / 27.3 | Selesai: migration fresh, integration/E2E, header/CSP, cache nyata, dan cleanup terverifikasi; kegagalan awal tetap tercatat |
+| 28 | Selesai: laporan, batas kesiapan, baseline, prosedur gate, dan kebersihan repo konsisten |
+| 29 | Property 16 sudah ada dan lulus di suite; daftar optional di bawah |
+| 30 | Selesai: seluruh gate checkpoint PASS, typecheck ulang setelah cleanup PASS, proses/port/dist bersih |
 
-- **`/services/[slug]` dinamis.** Build menghasilkan `ƒ` (dinamis) padahal strategi menyatakan statis, karena `connection()` untuk bagian proyek terkait. Dicatat sebagai selisih terbuka di `render-strategy.md` (Catatan C) dan RK-16. Tidak diperbaiki karena mengubah halaman publik yang sudah diterima.
-- **404 route media tanpa `X-Robots-Tag`.** Respons 404 route media tidak membawa header `X-Robots-Tag`. Belum ditindaklanjuti.
-- **`test:e2e` penuh pernah menggantung saat dijalankan manual.** Penyebab belum diketahui. Jalankan dengan timeout eksplisit dan periksa proses yang tersisa (server dev, port 3000) sesudahnya.
-- **`db:test:start` di foreground menggantung.** Jalankan sebagai proses latar belakang, lalu `db:test:stop` sesudah selesai.
-- **Rate limit per proses.** Berperilaku benar hanya untuk satu instance (RK-11, AG-5.15).
-- **Temuan turunan lain** (mis. 19.13) dan catatan `TIDAK_DIJALANKAN` mengikuti catatan masing-masing task di `tasks.md`.
-- **Entri lain yang belum ditutup:** RK-17 (aset `og:image`), RK-18 (sitemap `/shop/[slug]`), RK-12 (pemeriksaan isi berkas 3D/CAD).
+Optional yang tetap unchecked: **1.12/P28, 1.13/P29, 3.2/P13, 3.4/P14, 5.2/P3, 5.5/P4, 5.24/P18, 7.15/P17**. Property 16 sudah ada pada `tests/unit/properties/audit-p16-proxy-surface.test.ts`; pemetaan design dan test memvalidasi Req 13.9 sampai 13.12, sehingga rujukan 13.11/13.12 pada task 29.1 sah. Tidak perlu menulis test duplikat.
 
-## 7. Test yang disesuaikan
+## 6. Keputusan dan pekerjaan yang ditunda
 
-- `tests/unit/system-pages-coverage.test.ts`: jumlah route pada manifest diturunkan dari 21 menjadi 18 karena `connection()` dihapus di `/` dan `/shop` (keduanya kini direvalidasi, bukan dinamis). Penyesuaian mengikuti perubahan perilaku render yang disengaja, bukan melemahkan assertion. Route lain di manifest tidak berubah.
-- `vitest.config.mts`: `testTimeout: 30_000` ditambahkan (hanya timeout; suite unit sensitif terhadap beban mesin; test tidak diubah).
-- File test lain yang berubah di working tree (`tests/unit/home.test.tsx`, `admin-proxy.test.ts`, `p06`, `p08`, `p13`, dan beberapa test backend/e2e) mengikuti perubahan task masing-masing. Dua file test privasi milik Owner (`customer-privacy-pages.test.ts`, `customer-privacy.spec.ts`) tidak diubah oleh pekerjaan ini.
+| Item | Keputusan eksplisit / syarat membuka spec terpisah |
+| --- | --- |
+| RK-10 / 7.25 | Model hibrida dipertahankan: nonce untuk admin/API admin/checkout/account, CSP statis untuk publik ber-cache. 7.25 keputusan saja melalui 26.1; tidak memperluas nonce/SRI |
+| RK-16 | ISR `/services/[slug]` 300 disetujui dan diterapkan; RK-08 model Service tetap terbuka |
+| RK-14 / 21.23 | Cache ongkir tidak diperlukan sekarang; buka spec sesudah provider aktif dan data kuota/latensi tersedia |
+| 3.14 | Ditunda mendekati staging; butuh pilihan vendor/paket, biaya, retensi/data/redaksi PII dan persetujuan |
+| 5.15 / RK-11 | Ditunda sampai hosting/topologi instance dipilih; butuh store/biaya/skema yang disetujui; rate limit masih per proses |
+| 7.13 | Guard assertNonProductionProvider dipertahankan sampai ada bukti staging terisolasi dan izin penghapusan path |
 
-## 8. Risiko tersisa yang diterima
+RK-01 sampai RK-09 dan RK-19 sampai RK-28 tetap `BELUM_TERTUTUP`. RK-11, RK-12, RK-13, RK-15, RK-17, RK-18 juga tidak diputuskan oleh Tahap 12. Dokumen legal resmi, usia/assurance wali (terutama RK-02/RK-03), retensi, SLA, provider/hosting, dan bukti PUB-* tetap memerlukan keputusan atau bukti lingkungan masing-masing.
 
-User menyetujui "Pilihan 1 (Ringkas)". Kapabilitas berikut tidak dikerjakan; risikonya diterima, bukan dihilangkan.
+## 7. Lima risiko tersisa yang diterima
 
-| No | Risiko | Dampak | Rujukan |
-| --- | --- | --- | --- |
-| 1 | Email Customer tanpa jaminan kirim ulang | Tidak ada outbox durable; email verifikasi atau proof privasi yang gagal tidak dijamin terkirim ulang | RK-24 |
-| 2 | Belum ada job terjadwal (retensi berkas, pelepasan stok, rekonsiliasi pembayaran) | Tidak berjalan otomatis dan tanpa monitoring lag | RK-25 |
-| 3 | Belum ada alur refund | Aplikasi tidak mengajukan, menyetujui, atau mengirim refund | RK-04, RK-07, RK-26 |
-| 4 | Funnel checkout membutuhkan JavaScript | Checkout tidak berfungsi tanpa JavaScript; guest checkout tidak dipulihkan | RK-13 |
-| 5 | Belum ada halaman audit admin | Tidak ada halaman audit dan pengelolaan akses admin lewat aplikasi | RK-27, RK-09 |
+| Risiko | Dampak / rujukan |
+| --- | --- |
+| Email Customer tanpa jaminan kirim ulang | Tidak ada outbox durable; RK-24 |
+| Belum ada job terjadwal | Retensi berkas, pelepasan stok, dan rekonsiliasi pembayaran tidak otomatis; RK-25 |
+| Belum ada alur refund | Tidak ada pengajuan/persetujuan/pengiriman refund; RK-04, RK-07, RK-26 |
+| Checkout membutuhkan JavaScript | Funnel tanpa JS belum dikerjakan; guest checkout tidak dipulihkan; RK-13 |
+| Belum ada halaman audit admin | Tidak ada UI audit/pengelolaan akses admin; RK-27, RK-09 |
 
-## 9. Gate yang tertahan
+## 8. Rollback dan checkpoint penutupan
 
-Tidak satu pun dieksekusi tanpa persetujuan tertulis user yang menyebut item itu. Task dibiarkan unchecked dan dilaporkan "ditunda".
+Tahap 12 tidak mengubah skema atau migrasi. Rollback bersifat per file dalam daftar bagian 2, setelah keputusan Owner; jangan mengembalikan commit Owner/historis atau menghapus file yang tidak termasuk perubahan sesi ini. Coverage adalah dependency dev dan bisa dibatalkan bersama tiga config serta lockfile; ISR/header/invalidasi dibatalkan bersama test terkait bila diputuskan. Tidak ada tindakan deployment atau provider yang perlu di-rollback.
 
-| Gate | Jenis | Yang perlu disebut dalam persetujuan | Dampak selama tertahan |
-| --- | --- | --- | --- |
-| 1.10 | `[APPROVAL_GATE]` | Paket `@vitest/coverage-v8` dan konfigurasi coverage | Tidak ada pengukuran coverage otomatis; celah dicatat manual di `coverage-gaps.md` |
-| 3.14 | `[APPROVAL_GATE]` | Nama paket SDK pemantauan error, biaya bulanan | Tidak ada pengiriman kegagalan ke layanan eksternal |
-| 5.15 | `[APPROVAL_GATE]` | Store rate limit bersama (`src/modules/rate-limit/repository.ts`, migrasi `RateLimitWindow`, atau resource hosted); terkait RK-11 | Rate limit tetap per proses |
-| 7.13 | `[APPROVAL_GATE]` | Penghapusan `src/modules/providers/non-production.ts` dan `assertNonProductionProvider` | Guard lama tetap ada |
-| 7.25 | `[BLOCKED_ON_OWNER]` | Keputusan strategi CSP akhir (RK-10) | CSP route publik statis tetap cakupan terbatas |
-| 7.27 | `[APPROVAL_GATE]` | Perubahan `.env.example` | Nama env baru hanya di `env-register.md` |
-| 21.23 | `[BLOCKED_ON_OWNER]` | Keputusan cache rate ongkir (RK-14) | Tidak ada cache rate ongkir |
+Cleanup akhir selesai: semua server/proses milik peluncur dihentikan, `db:test:stop` exit 0 dikonfirmasi, dist `.local/stage12-next` dihapus setelah path absolut/parent dan reparse point diperiksa, dan hanya dua include dist itu dibersihkan dari tsconfig. Typecheck ulang PASS dan tsconfig identik dengan checkout awal. Tidak ada listener 3000/3101/3103/55432, proses node/postgres milik peluncur, atau `.next-*-tmp` di root. Data database test lokal baru dan laporan coverage dipertahankan tanpa reset/drop; direktori E2E/test-results yang sudah ada tidak dihapus sembarang. Race taskkill serta error stderr pada wrapper stop awal tetap tercatat pada baseline; konfirmasi cleanup tidak hanya berdasarkan exit code wrapper.
 
-## 10. Owner follow-up
-
-Semua entri di `register-keputusan.md` berstatus `BELUM_TERTUTUP` (RK-01 sampai RK-28, AG-1.10 sampai AG-7.27). Yang paling menentukan:
-
-- Dokumen legal resmi dan tanggal berlaku (RK-01); metode verifikasi usia dan assurance wali (RK-02, RK-03).
-- Kalender kerja WIB, hari libur, petugas pengganti (RK-06); SLA hari kerja tetap "belum ditetapkan".
-- Refund dan cakupan metode pembayaran (RK-04, RK-07, RK-26); retensi legal/akuntansi (RK-05, RK-09).
-- Keputusan model `Service` (RK-08) dan `/services/[slug]` (RK-16).
-- Strategi CSP (RK-10), store rate limit (RK-11), cart sisi server (RK-13), cache ongkir (RK-14).
-- Bukti lingkungan per `PUB-*` (`production-readiness-boundary.md` bagian 6).
-
-## 11. Penerimaan dan kesiapan
-
-- Visual acceptance: **belum ditinjau** sampai user menyatakan menerimanya secara eksplisit. Lulus test/build bukan persetujuan visual.
-- Physical-device dan assistive technology: tidak terverifikasi; terpisah dari `test:e2e`.
-- Provider, inbox email, R2, backup/restore, dan isolasi staging dari production: tidak terverifikasi; butuh bukti lingkungan.
-- `PUB-RELEASE` = `NOT_AUTHORIZED`. Empat tindakan (publikasi policy, deployment, aktivasi provider, credential production) butuh instruksi terpisah masing-masing.
-- Laporan ini bukan klaim kesiapan production.
-
-## 12. Catatan rollback
-
-- Belum ada commit; rollback perubahan code adalah per file lewat `git checkout -- <path>` untuk file tracked dan penghapusan file untracked baru, atas keputusan Owner. Jangan menyentuh perubahan uncommitted Owner (`docs/`, `docs/legal/`, dua file test privasi).
-- Migrasi baru `20261003120000_failure_events` aditif. Jangan edit atau reset migrasi yang sudah ada; batalkan lewat migrasi baru. Jangan reset destruktif di production.
-- Capability dikerjakan satu per satu lewat resolver tunggal, sehingga rollback bisa per capability.
-- Perubahan yang tidak dapat dibatalkan lewat rollback code: pengiriman email, pembayaran, atau aktivasi provider nyata. Tidak ada satu pun yang dilakukan pekerjaan ini.
-- Hapus artefak sementara setelah verifikasi (dist dir `NIUVA_NEXT_DIST_DIR`, `.next-e2e`, `test-results/`) dan hentikan proses latar belakang (database test, server dev).
-
-## 13. Checkpoint akhir
-
-Task 25 dijalankan. Angka final ada di bagian 1 dan di "Baseline terkini" pada `baseline-gate.md`.
-
-- Semua gate berjalan dan lulus: `lint`, `typecheck`, `test` (84/1181), `test:backend` (68/496), `db:validate`, `build` (`distDir` default), `test:integration` (19/105), `test:e2e` penuh (109 lulus, 5 dilewati, 0 gagal), dan E2E production (5/5).
-- Gate `TIDAK_DIJALANKAN`: tidak ada.
-- Invariant system pages (p05, p12, p13, `system-pages-coverage`, `admin-proxy`) lulus di dalam `test`.
-- Pembersihan: `db:test:stop` dijalankan, tidak ada listener di port 3000/3101/55432, tidak ada dist dir `.next-*-tmp`, `tsconfig.json` tidak berubah, output sementara di `.local/` dihapus. Build default menimpa `.next` (dist dir default, bukan file sementara).
-- Tidak ada commit, push, deployment, aktivasi provider, atau credential production. Perubahan uncommitted Owner tidak disentuh.
-- Bukti tetap lokal, loopback, non-production. Visual acceptance belum ditinjau; `PUB-RELEASE` tetap `NOT_AUTHORIZED`.
+Task 26 sampai 30 dicentang hanya setelah bukti masing-masing terpenuhi; task 29 memverifikasi property yang sudah ada dan mendokumentasikan optional yang belum dikerjakan. Branch tetap **`chore/niuva-audit-remediation`**, HEAD **`c54b2d1`**; perubahan Tahap 12 **belum di-commit**. Tidak ada commit/push/PR, deployment, aktivasi provider, atau penggunaan credential production. Visual tetap **belum ditinjau**; `PUB-RELEASE` tetap **`NOT_AUTHORIZED`**. Catatan rollback per file di atas tidak mengeksekusi rollback atau mengubah keputusan Owner.

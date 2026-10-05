@@ -11,9 +11,9 @@ Dokumen ini mencatat hasil Gate_Verifikasi sebelum perubahan berisiko (Req 3). I
   - Belum di-track: `docs/legal/customer-privacy-retention-sop.md`, `customer-public-input-evidence.md`, `customer-public-launch-readiness.md`, `customer-public-policy-validation.md`, `customer-public-runtime-contract.md`, `customer-service-refund-sop.md`, serta folder spec `.kiro/specs/niuva-audit-remediation/`.
 - Tidak ada file code di `src/` yang berubah pada working tree saat pencatatan. Dua file test yang berubah (`tests/backend/customer-privacy-pages.test.ts`, `tests/e2e/customer-privacy.spec.ts`) milik Owner.
 
-## Baseline terkini (checkpoint akhir, task 25)
+## Checkpoint akhir task 25 (historis, sebelum Tahap 12)
 
-Diukur ulang pada checkpoint akhir di working tree yang memuat seluruh perubahan uncommitted (`HEAD` `5a5acc9`). Angka ini menggantikan tabel checkpoint 2 di bagian 2 sebagai baseline terkini; bagian 2, 6, dan 7 dipertahankan sebagai catatan historis.
+Diukur ulang pada checkpoint task 25 di working tree yang saat itu memuat seluruh perubahan uncommitted (`HEAD` `5a5acc9`). Ini snapshot sebelum commit `c54b2d1` dan Tahap 12. Bagian 2, 6, dan 7 juga dipertahankan sebagai catatan historis; bukti Tahap 12 dicatat mulai bagian 10.
 
 | Gate | Hasil | File | Test | Catatan |
 | --- | --- | --- | --- | --- |
@@ -235,6 +235,113 @@ Kesimpulan ringkas: catatan I6 **usang menurut bukti statis dan run 1.2**, denga
 - Untuk menutup (c), satu task yang punya izin memakai database test baru harus menjalankan `migrate deploy` dari database kosong lalu `test:integration`. Tanpa reset destruktif pada `niuva_test` yang ada.
 - Tidak ada perubahan pada `prisma/migrations/`, `src/`, `tests/`, atau database oleh task ini.
 
-## 10. Baseline coverage (diisi task 1.10, hanya bila disetujui)
+## 10. Baseline coverage (task 1.10, approval tertulis Tahap 12)
 
-_Belum dikerjakan. `[APPROVAL_GATE]`: bagian ini diisi hanya jika user menyetujui `@vitest/coverage-v8` secara tertulis._
+Diukur 5 Oktober 2026 dari suite penuh setelah perbaikan transform coverage unit. User menyetujui `@vitest/coverage-v8` melalui handoff Tahap 12; keputusan ada di AG-1.10. Paket dev dipin **4.1.11**, sama dengan Vitest terpasang dan lockfile. Tidak ada biaya bulanan; versi paket harus diperbarui bersama Vitest. Tidak ada SDK observability atau dependency aplikasi yang ditambah.
+
+Coverage aktif di `vitest.config.mts`, `vitest.backend.config.mts`, dan `vitest.integration.config.mts` dengan provider `v8`, cakupan `src/**/*.{ts,tsx}`, dan pengecualian eksplisit `src/generated/**`. Setiap laporan mencakup **360 file sumber**, termasuk file yang tidak dieksekusi (0%); tidak ada file generated dalam kunci laporan. Laporan JSON dan ringkasan disimpan terpisah di `.local/coverage/{unit,backend,integration}` (ignored); tidak dirata-ratakan atau diklaim sebagai coverage gabungan.
+
+| Suite | File test / test | Statements | Branches | Functions | Lines |
+| --- | --- | --- | --- | --- | --- |
+| Unit | 85 / 1190 | 37.75% (3351/8875) | 32.70% (2557/7819) | 38.01% (731/1923) | 38.49% (3097/8045) |
+| Backend | 68 / 496 | 32.66% (2887/8837) | 23.86% (1866/7819) | 31.82% (612/1923) | 34.53% (2770/8021) |
+| Integration | 19 / 105 | 34.12% (3016/8837) | 23.54% (1841/7819) | 37.54% (722/1923) | 35.80% (2872/8021) |
+
+Usulan threshold per config, dibulatkan ke bawah agar tidak melebihi baseline (Req 6.3): unit statements/branches/functions/lines **37/32/38/38**; backend **32/23/31/34**; integration **34/23/37/35**. Threshold otomatis belum diberlakukan; baseline lebih dahulu diukur dan usulan dicatat sesuai 1.10. Tidak memakai threshold default 80%, mengurangi scope, atau mengecualikan modul yang sulit diukur.
+
+Diagnostik awal: unit 85/1190 lulus, tetapi provider coverage melewatkan lima modul (`quote.ts`, `order-status.ts`, `server.ts` di frontend-preview, `admin/operations.ts`, `portfolio/public-service.ts`) karena transform client/jsdom tidak dapat me-resolve import `server-only` yang tidak pernah dimuat akibat mock. Angka awal 39.01/33.94/39.74/39.69% **bukan baseline yang dipakai**, sebab denominator tidak lengkap. Alias pada config unit menunjuk entry server kosong resmi Next yang terpasang (`next/dist/compiled/server-only/empty.js`); tidak ada perubahan runtime aplikasi atau penambahan pengecualian. Probe 9/9 dan suite penuh sesudahnya tidak lagi melaporkan kegagalan parse, dan kelima modul tercakup. Tiga putaran stabilitas dihitung setelah perbaikan config ini.
+
+Pemeriksaan C1/I2 terhadap `coverage-gaps.md`: `portfolio/public-service.ts` memiliki 100% lines/functions dan 90.90% branches di backend; integration 95.83% lines, 100% functions, 72.72% branches. `frontend-preview/server.ts` masih 20.93% lines, 15.78% functions, 17.85% branches di integration (0% di unit/backend). Halaman layanan di unit memiliki 93.33% lines, 88.88% functions, 80% branches. Coverage ini mengukur eksekusi lokal, bukan kebenaran provider, visual, atau production readiness.
+
+## 11. Bukti stabilitas Tahap 12 (task 27.1)
+
+Tiga putaran berikut selesai pada 5 Oktober 2026, setelah seluruh implementasi task 26, 1.10, dan 7.27 serta koreksi transform coverage unit. Hash SHA-256 file produksi, tiga config Vitest, dan test terkait tetap sama sepanjang ketiga putaran. Tidak ada retry tambahan, perubahan timeout, atau assertion yang dilonggarkan. Semua gate dijalankan satu per satu; urutan suite dalam putaran pertama backend/E2E/integration/unit, putaran kedua dan ketiga unit/backend/integration/E2E.
+
+| Putaran | Unit | Backend | Integration | E2E penuh | Durasi proses per suite (detik, unit/backend/integration/E2E) |
+| --- | --- | --- | --- | --- | --- |
+| 1 | PASS 85 file / 1190 test | PASS 68 / 496 | PASS 19 / 105 | 109 lulus, 5 skip, 0 gagal | 145.46 / 16.16 / 90.02 / 200.91 |
+| 2 | PASS 85 / 1190 | PASS 68 / 496 | PASS 19 / 105 | 109 lulus, 5 skip, 0 gagal | 133.21 / 24.75 / 69.58 / 246.89 |
+| 3 | PASS 85 / 1190 | PASS 68 / 496 | PASS 19 / 105 | 109 lulus, 5 skip, 0 gagal | 170.86 / 30.91 / 85.74 / 228.64 |
+
+Seluruh 12 proses mengembalikan exit code 0 dan tidak melewati timeout peluncur. `tests/e2e/public-pages.spec.ts:78` lulus pada ketiganya (2.1 / 3.4 / 2.4 detik); kegagalan historis tidak kambuh pada rangkaian ini. Dugaan kompilasi dingin sebelumnya tetap dugaan, bukan penyebab yang dibuktikan. Lima skip merupakan spec production path yang dijalankan terpisah, bukan coverage E2E produksi dari putaran ini.
+
+Bukti mentah lokal: `%TEMP%/niuva-stage12-20261005-01a10ad2/logs/21-stable1-*`, `31` sampai `34-stable2-*`, dan `41` sampai `44-stable3-*`, serta `stability-final-code-hashes.json`. Laporan coverage lengkap putaran ini disalin sebelum suite berikutnya; hasil fresh-database yang gagal tidak menggantikan baseline PASS di bagian 10.
+
+## 12. Database test baru (task 27.2)
+
+Database baru **`niuva_stage12_test_20261005_01a10ad2`** dibuat pada cluster test loopback port 55432, setelah memverifikasi `SHOW data_directory` menunjuk `.local/postgres-test/data` milik checkout ini dan nama tersebut belum ada. Tidak memakai reset, drop, atau mengganti database `niuva_test` lama. Seluruh **17 migrasi diterapkan dari kosong**, exit code 0, dan jumlah migrasi applied diverifikasi 17.
+
+Percobaan integration awal: **18 file lulus, 1 gagal; 104 test lulus, 1 gagal**, exit 1. `tests/integration/database.test.ts:85-87` mengharuskan `databaseName: "niuva_test"`, sementara `current_database()` mengembalikan nama database baru. `orderTable: "orders"` dan `snapshotTrigger: "orders_commercial_snapshot_immutable"` cocok. Ini kegagalan assertion nama harness, bukan kegagalan migrasi. Test tidak dilewati atau dilonggarkan; koreksi satu assertion menunggu izin tambahan karena task 27 semula tanpa perubahan kode.
+
+User kemudian **menyetujui koreksi assertion dan verifikasi ulang** melalui jawaban eksplisit di sesi ini. Nama yang diharapkan kini diambil persis dari `TEST_DATABASE_URL` yang sudah divalidasi `tests/integration/setup.ts`; assertion `orders` dan trigger immutable tetap sama. Pengulangan suite penuh pada database baru: **19 file / 105 test PASS**, exit 0, 85.74 detik (`59-fresh-db-integration-corrected`). Coverage integration tetap sama dengan bagian 10, seluruh 360 file tercakup. Tidak ada test di-skip atau diganti dengan pemeriksaan yang menerima database sembarang.
+
+Percobaan E2E awal: **108 lulus, 5 skip, 1 gagal**, exit 1. Test `customer-privacy.spec.ts:75` gagal dengan `ERR_CONNECTION_REFUSED` saat mengakses `127.0.0.1:3000/account/privacy`; peluncur sementara memakai `next dev -H localhost` sehingga hanya satu alamat loopback yang menerima koneksi. `public-pages.spec.ts:78` tetap lulus. Koreksi peluncur sementara menjadi bind IPv4 loopback dan isolasi env dilakukan tanpa mengedit test atau source aplikasi; hasil pengulangan dicatat sesudah selesai.
+
+Percobaan bind IPv4 eksplisit dengan env terisolasi (`55-fresh-db-e2e-retry`): **103 lulus / 5 skip / 6 gagal**, exit 1. Kegagalan: `account-work.spec.ts:62` (response POST keputusan tidak muncul dalam 15000 ms), `:98` (quote tetap SENT, menunggu DECLINED), `customer-auth.spec.ts:31` (response logout tidak muncul), `:170` (status Google pending tidak muncul), `customer-privacy.spec.ts:47` (focus invalid field tidak aktif), dan `:97` (button pending tidak menjadi disabled). Tidak mengubah enam test tersebut. Diagnostic browser terpisah menunjukkan halaman/account dapat terhidrasi tanpa pageerror/console error setelah load; penyebab tepat kegagalan interaksi ini belum terbukti.
+
+Pengulangan dengan bind default yang sama dengan config repo (`61-fresh-db-e2e-default-binding`): **109 lulus / 5 skip / 0 test gagal**. `public-pages.spec.ts:78` kembali lulus. Namun peluncur mengembalikan exit 1 saat `taskkill` mencoba menghentikan child yang sedang keluar; pesan cleanup dicatat, dan pemeriksaan segera sesudahnya menemukan tidak ada listener port 3000. Ini dibedakan dari hasil suite PASS. Peluncur berikutnya mengumpulkan exit suite terpisah, menjalankan taskkill sebagai proses tersendiri, dan memverifikasi port kosong sebelum menyatakan cleanup selesai. Pengulangan konfirmasi akhir dicatat bersama checkpoint.
+
+Konfirmasi akhir pada database baru (`77-fresh-db-e2e-clean-checkpoint`): **109 lulus / 5 skip / 0 gagal**, exit suite **0**, exit peluncur **0**, 152.91 detik. Port 3000 terbukti kosong sesudah cleanup. Seluruh test lama, termasuk enam interaksi yang gagal pada percobaan bind IPv4 dan `public-pages.spec.ts:78`, lulus tanpa perubahan assertion, timeout, atau retry. Dengan integration 19/105 PASS dan replay 17 migrasi, bukti fresh-database task 27.2 selesai. Enam kegagalan interaksi dan timeout produksi awal tetap dicatat sebagai kejadian awal dengan penyebab yang belum terbukti.
+
+## 13. Smoke production lokal (task 27.3)
+
+Semua smoke menggunakan database test baru dan build sementara `.local/stage12-next`; tidak ada deployment atau aktivasi provider. Hasil hanya diakui bila assertion dan output bukti berhasil, bukan exit code proses saja.
+
+Percobaan peluncur awal yang **tidak dihitung sebagai PASS**: header `/admin` menerima 307 sementara harness mengharuskan 503; pengosongan env pada Windows dapat menghapus variabel dan membuat loader Next mengisi konfigurasi kembali dari file env. Peluncur diperbaiki dengan preload sementara yang mencegah pembacaan env oleh `@next/env`; source/config aplikasi tidak diubah. Smoke cache awal mengalami error encoding Prisma ketika harness dan bundle Next memuat client terpisah dalam satu proses. Log memuat assertion gagal meskipun exit code 0 akibat penutupan promise; bukti itu ditolak. Harness pengulangan berbagi satu client lokal dan menetapkan exit gagal sebelum cleanup async. Hasil pengulangan dicatat sesudah selesai.
+
+Header/CSP pengulangan `57-isolated-production-smoke` **PASS** pada semua route berikut, masing-masing dua permintaan HTTP. Hanya ada satu header CSP pada tiap respons; tidak ada `unsafe-eval`, `x-nonce` tidak bocor di response, dan nonce checkout berbeda pada kedua request. Header non-CSP yang diperiksa: nosniff, DENY, strict-origin-when-cross-origin, Permissions-Policy pembatas kamera/lokasi/mikrofon/payment/USB, X-Permitted-Cross-Domain-Policies none, dan HSTS max-age 63072000 includeSubDomains.
+
+| Route | Status HTTP | CSP script-src | Cache-Control / cache |
+| --- | --- | --- | --- |
+| `/` | 200 | self, unsafe-inline; statis | s-maxage=300, stale-while-revalidate=31535700; HIT |
+| `/projects` | 200 | self, unsafe-inline; statis | s-maxage=300, stale-while-revalidate=31535700; HIT |
+| `/checkout` | 307 ke login | self, nonce berbeda, strict-dynamic; tanpa unsafe-inline | private, no-cache, no-store, max-age=0, must-revalidate |
+| `/admin` | 503, tanpa Clerk | self, unsafe-inline; statis | Cache-Control tidak ada pada response proxy ini |
+| `/sitemap.xml` | 200 | self, unsafe-inline; statis | public, max-age=0, must-revalidate; HIT |
+| `/robots.txt` | 200 | self, unsafe-inline; statis | public, max-age=0, must-revalidate; HIT |
+
+Slug layanan tak dikenal mengembalikan 404. Media preview 404 membawa `X-Robots-Tag: noindex, nofollow` dan `Cache-Control: no-store`. Ini membuktikan jalur admin tanpa credential; CSP/otorisasi Clerk aktif tidak terverifikasi.
+
+**Bukti perilaku cache PASS** (`58-admin-cache-behavior-retry`, exit 0, 8.14 detik): harness memuat body `updatePortfolioAction` dan `replacePortfolioMediaAction` sebenarnya, PortfolioService, repository Prisma, audit, serta cache/revalidation dari build Next produksi pada HTTP loopback port 3103. Identitas Owner disuntikkan hanya melalui constructor dependency injection; tidak mengubah Clerk atau otorisasi aplikasi. Setelah dua route dihangatkan, write database langsung tetap menampilkan marker lama di `/projects` dan `/projects/stage12-cache-proof`, membuktikan cache aktual. Pemanggilan update action menghasilkan marker judul baru pada kedua route; media action menghasilkan alt media baru pada kedua route; masing-masing regenerasi bertanda MISS. Dua audit write aktual tercatat. Pending tags mencakup `/projects`, `/projects/[slug]/page`, dan `/services/[slug]/page`. Bukti bukan pencocokan teks source dan bukan bukti browser Owner terautentikasi. Output: `logs/admin-cache-behavior.json` di direktori TEMP sesi ini.
+
+E2E produksi dari server `next start` pada percobaan tersebut: **4 lulus / 1 gagal**, exit 1. `public-content-production-path.spec.ts:96` timeout 30000 ms pada `page.goto("/")` (menunggu load). Assertion/timeout tidak diubah; diagnosis jaringan aset dan pengulangan dilakukan terpisah. Header yang PASS tidak membuat suite browser gagal ini dianggap PASS.
+
+Pengulangan setelah rebuild fixtures (`62-production-build-final-proof`, PASS) memakai server `next start` yang sama jenisnya: **5/5 PASS**, exit 0 (`63-production-network-and-e2e-retry`, 10.38 detik). Sebelum suite, diagnostic browser beranda mencapai load dan heading terlihat tanpa request failure; request yang masih pending adalah prefetch lokal. Penyebab timeout awal **belum terbukti**; hasil pengulangan tidak menghapus kegagalan awal atau mengubah timeout/assertion test. Kedua run memakai build nyata dan database test, bukan server dev bertier production.
+
+## 14. Cara gate yang andal dan pembersihan (task 28.2)
+
+- Jalankan `db:test:start` dan gate yang lama sebagai child process latar belakang melalui `Start-Process -WindowStyle Hidden`, redirect stdout/stderr ke file di `%TEMP%`, lalu poll file status. Pertahankan proses pembungkus database sampai semua gate selesai; `db:test:stop` dijalankan di `finally` saat pembungkus dihentikan.
+- Buka `.Handle` pada objek `Process` segera setelah `Start-Process -PassThru`, kemudian `WaitForExit()` sebelum membaca `.ExitCode`. Pada percobaan awal tanpa handle, exit code null salah diklasifikasikan gagal meskipun PostgreSQL siap; probe ulang membuktikan exit 0.
+- Batas tiap gate 30 menit; readiness server 120 detik. Batas peluncur tidak mengubah timeout/retry/assertion test. Jalankan integration, E2E, dan build bergantian karena berbagi database, port, dan dist.
+- Untuk database baru, set `TEST_DATABASE_URL` hanya ke database test loopback dengan marker `test`; jalankan `pnpm exec vitest run --config vitest.integration.config.mts` setelah migration. Wrapper `test:integration` biasa mengimpor konfigurasi database lama sehingga tidak dipakai untuk bukti fresh-database. Jangan mencetak URL atau nilai env.
+- Untuk E2E database baru, jalankan server sendiri, verifikasi PID listener milik proses peluncur, lalu gunakan config Playwright yang sama dengan `reuseExistingServer`. Gunakan bind default yang sama dengan config repo dan verifikasi `localhost` serta `127.0.0.1` yang dipakai test; `-H localhost` hanya menerima satu alamat pada mesin ini. Jangan biarkan default `local-e2e-web.ps1` mengganti binding database baru.
+- Smoke production memakai `next build` dan `next start` yang sebenarnya, `NIUVA_DEPLOYMENT_TIER=production`, mock Customer dimatikan, provider credential tidak tersedia, dan port loopback. Preload sementara mengisolasi loader env; tidak mengubah Next/app di repository. Playwright harus menggunakan server produksi yang sudah siap, bukan menyalakan server dev dengan tier production.
+- Dist sementara hanya `.local/stage12-next` melalui `NIUVA_NEXT_DIST_DIR`; jangan membuat `.next-*-tmp` di root. Hapus hanya target sementara yang absolute path-nya telah diverifikasi berada di `.local` checkout ini setelah semua gate. Hapus hanya entri dist itu dari `tsconfig.json` bila Next menambahkannya.
+- Hentikan hanya server/proses milik peluncur (PID dan turunannya), lalu stop cluster test melalui script repo. Simpan exit code suite sebelum cleanup; gunakan child process tersendiri untuk taskkill dan verifikasi listener hilang, karena race proses keluar bisa menghasilkan stderr taskkill walaupun suite PASS. Data test lokal dipertahankan; tidak ada reset/drop database lama. Coverage di `.local/coverage` dipertahankan sebagai laporan ignored.
+
+Hasil pemeriksaan cleanup dan checkpoint akhir task 30 dicatat setelah semua gate selesai. Dokumen Owner, workflow, `vercel.json`, migrasi lama, dan dua test privasi Owner diperiksa terhadap commit awal `c54b2d1` agar tetap tidak berubah.
+
+## 15. Checkpoint penutupan task 30 (5 Oktober 2026)
+
+Semua command berikut dijalankan kembali setelah implementasi dan koreksi assertion nama database yang disetujui user. Source produksi, config coverage, dan test tidak berubah selama checkpoint. Dokumen hasil/status diperbarui sesudah eksekusi; tidak dianggap sebagai perubahan aplikasi.
+
+| Gate | Hasil akhir | Bukti proses / durasi |
+| --- | --- | --- |
+| `corepack pnpm db:validate` | PASS, schema valid | `70-checkpoint-static`, bersama lint/typecheck 67.29 detik, exit 0 |
+| `corepack pnpm lint` | PASS, 0 error / 0 warning | proses 70, exit 0 |
+| `corepack pnpm typecheck` | PASS | proses 70; diulang setelah cleanup sebagai proses 78, 25.29 detik, exit 0 |
+| `corepack pnpm test` | PASS, **85 file / 1190 test** | `71-checkpoint-unit`, 105.98 detik, exit 0 |
+| `corepack pnpm test:backend` | PASS, **68 file / 496 test** | `72-checkpoint-backend`, 9.15 detik, exit 0 |
+| `corepack pnpm test:integration` | PASS, **19 file / 105 test** | `73-checkpoint-integration`, 64.08 detik, exit 0 |
+| `corepack pnpm test:e2e` penuh | **109 lulus / 5 skip / 0 gagal** | `74-checkpoint-e2e`, 157.16 detik, exit 0 |
+| `corepack pnpm build` | PASS, **68 entri halaman**; layanan empat slug ISR 300 / 5m | `75-checkpoint-production-build`, 22.30 detik, exit 0 |
+| E2E production (`public-content-production-path.spec.ts`) pada `next start` port 3101 | **5/5 PASS**, tanpa skip | `76-checkpoint-production-e2e`, 9.02 detik, exit 0; port 3101 kosong setelah cleanup |
+| E2E penuh konfirmasi database baru | **109 lulus / 5 skip / 0 gagal** | proses 77, 152.91 detik, exit suite/peluncur 0; port 3000 kosong |
+
+Hasil coverage checkpoint tetap sama dengan bagian 10. Lima skip suite penuh tetap merupakan spec production path yang dibuktikan terpisah 5/5; skip tidak dihitung sebagai PASS.
+
+Cleanup akhir: `.local/stage12-next` dihapus hanya setelah absolute path dan parent `.local` diverifikasi sesuai checkout serta bukan reparse point. Hanya dua entri include dist tersebut dihapus dari `tsconfig.json`; `git diff --quiet -- tsconfig.json` lulus sebelum dan sesudah typecheck ulang. Mixed line endings yang ditinggalkan typegen dikembalikan ke CRLF sesuai checkout Windows; konten tetap identik dan `git status` tidak lagi menandai tsconfig berubah. Tidak ada `.next-*-tmp` di root. Tidak ada listener pada port **3000, 3101, 3103, 55432** dan tidak ada proses node/postgres milik peluncur yang tersisa. Coverage ignored dan data database test lokal baru dipertahankan; tidak melakukan reset/drop database lama. Log/fixture harness tetap di TEMP untuk traceability, bukan source repo.
+
+Pada `finally` pembungkus, PowerShell memperlakukan baris command CLI di stderr sebagai `NativeCommandError` dan wrapper exit 1. Setelah itu `corepack pnpm db:test:stop` dijalankan lagi sebagai child process terpisah dengan stdout/stderr terpisah dan handle dibuka; **exit 0** terkonfirmasi, output "PostgreSQL test berhenti. Data test lokal dipertahankan.". Port/proses akhir diverifikasi sesudah konfirmasi tersebut (`logs/db-stop-confirmed.json`, `logs/final-cleanup-state.json`). Ini kegagalan kontrol proses awal, bukan kegagalan gate aplikasi; tidak ditutup hanya dengan mengasumsikan server sudah mati.
+
+Pemeriksaan repo: branch **`chore/niuva-audit-remediation`**, HEAD **`c54b2d1`** tetap sama. Working tree berisi perubahan Tahap 12 yang belum di-commit. Dokumen `docs/`, workflow, `vercel.json`, migrasi lama, dan dua test privasi Owner identik dengan commit awal. Tidak ada commit, push, PR, deployment, aktivasi provider, atau credential production. Visual acceptance **belum ditinjau**; perangkat fisik/AT/provider/staging tidak terverifikasi; **`PUB-RELEASE = NOT_AUTHORIZED`**.

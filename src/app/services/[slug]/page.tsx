@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { connection } from "next/server";
 
 import { PublicShell } from "@/components/niuva/public-shell";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { typographySystemTokens as type } from "@/design/typography";
 import { publicServices } from "@/features/public/company-content";
 import { listPublishedPortfolioProjects } from "@/modules/portfolio/public-service";
+
+export const revalidate = 300;
 
 type ServicePageProps = Readonly<{ params: Promise<{ slug: string }> }>;
 
@@ -33,7 +34,6 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
   const service = findService((await params).slug);
   if (!service) notFound();
 
-  await connection();
   let relatedProjects: Awaited<ReturnType<typeof listPublishedPortfolioProjects>> = [];
   try {
     relatedProjects = (await listPublishedPortfolioProjects()).filter((project) =>

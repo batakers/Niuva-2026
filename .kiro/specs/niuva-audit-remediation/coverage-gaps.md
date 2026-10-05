@@ -1,5 +1,19 @@
 # Celah Test C1 dan I2 (pencatatan manual)
 
+## Pembaruan terukur Tahap 12 (5 Oktober 2026)
+
+Approval 1.10 sudah diberikan. Baseline resmi ada di `baseline-gate.md` bagian 10: tiga config memakai V8 4.1.11, masing-masing mengukur 360 file sumber, dengan `src/generated/**` dikecualikan. Bagian G1 sampai G7 di bawah adalah **snapshot historis task 1.11**, bukan status celah terkini setelah seluruh remediasi.
+
+| Area dari snapshot | Bukti coverage suite penuh sesudah remediasi | Batas kesimpulan |
+| --- | --- | --- |
+| G1–G3: `portfolio/public-service.ts` | Backend: lines/functions 100%, branches 90.90%; integration: lines 95.83%, functions 100%, branches 72.72% | Fungsi publik kini benar-benar dieksekusi; tidak semua cabang teruji. Mock unit sendiri tetap 0%. |
+| G4–G6: `frontend-preview/server.ts` | Integration: lines 20.93%, functions 15.78%, branches 17.85%; unit/backend 0% | Sebagian jalur tetap tidak tercakup oleh Vitest. Coverage rendah dicatat; tidak ada scope yang dikecilkan atau klaim celah tertutup seluruhnya. E2E tidak masuk denominator V8 ini. |
+| G7: `/services/[slug]` | Unit: lines 93.33%, functions 88.88%, branches 80% melalui `services-render-strategy.test.tsx` | ISR 300, fallback database, filter/limit proyek, slug tidak dikenal, dan invalidasi kedua aksi portfolio diuji. Ini bukan penerimaan visual atau bukti provider. |
+
+Transform unit untuk modul server yang sepenuhnya di-mock kini memakai alias entry server kosong resmi Next untuk `server-only`. Lima modul yang semula gagal diparse kembali ada di laporan, termasuk G1–G3 dan G4–G6; tidak ditambahkan pengecualian baru bagi modul tersebut. Usulan threshold di bawah baseline dicatat, tanpa memberlakukan threshold otomatis sebelum pengukuran.
+
+## Snapshot manual task 1.11 (sebelum approval coverage)
+
 Task 1.11, requirement 6.4. Dokumen ini dibuat manual karena task 1.10 (`@vitest/coverage-v8`) adalah `[APPROVAL_GATE]` yang belum disetujui dan tidak dieksekusi. Tidak ada angka coverage di sini. Tidak ada threshold otomatis yang dipasang, dan tidak ada config test yang diubah.
 
 ## Cara verifikasi

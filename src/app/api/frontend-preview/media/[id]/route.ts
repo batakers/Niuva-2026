@@ -7,7 +7,10 @@ export const runtime = "nodejs";
 function notFoundResponse() {
   return new Response(null, {
     status: 404,
-    headers: { "Cache-Control": "no-store" },
+    headers: {
+      "Cache-Control": "no-store",
+      "X-Robots-Tag": "noindex, nofollow",
+    },
   });
 }
 

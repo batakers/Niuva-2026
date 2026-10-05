@@ -19,7 +19,8 @@ const appDir = path.join(process.cwd(), "src", "app");
 
 // Mirrors design.md "Keputusan B" inventory (21 non-admin `connection()` pages),
 // minus "/" (revalidate = 300, niuva-audit-remediation 9.14), and "shop/page.tsx" and
-// "shop/[slug]/page.tsx" (revalidate = 60, 9.16). Those pages no longer call connection(), so the scan
+// "shop/[slug]/page.tsx" (revalidate = 60, 9.16), and "services/[slug]/page.tsx"
+// (revalidate = 300, 26.3). Those pages no longer call connection(), so the scan
 // cannot find them; keeping them in the manifest would fail the "nothing stale" check.
 // Keys are page.tsx paths relative to src/app, using forward slashes.
 const manifest: Record<string, ManifestEntry> = {
@@ -37,7 +38,6 @@ const manifest: Record<string, ManifestEntry> = {
   "orders/[token]/page.tsx": { status: "excluded", reason: "X1-404-contract" },
   "quote/[token]/page.tsx": { status: "excluded", reason: "X1-404-contract" },
   "project-brief/page.tsx": { status: "excluded", reason: "X2-redirect-guard" },
-  "services/[slug]/page.tsx": { status: "excluded", reason: "X1-404-contract" },
   "demo/action-queue/page.tsx": { status: "excluded", reason: "X4-non-product" },
   "internal-testing/policy/page.tsx": { status: "excluded", reason: "X4-non-product" },
   "internal-testing/google-consent/page.tsx": { status: "excluded", reason: "X4-non-product" },
@@ -82,8 +82,8 @@ const nonAdminLoadingFiles = allFiles
   .sort();
 
 describe("loading coverage manifest (Property 11)", () => {
-  it("lists all 18 non-admin connection() pages found by the scan, and nothing stale", () => {
-    expect(scannedConnectionPages).toHaveLength(18);
+  it("lists all 17 non-admin connection() pages found by the scan, and nothing stale", () => {
+    expect(scannedConnectionPages).toHaveLength(17);
     expect(scannedConnectionPages).toEqual(Object.keys(manifest).sort());
   });
 

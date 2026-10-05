@@ -18,7 +18,9 @@ Fakta yang dipakai:
 5. `revalidatePath` hanya bermakna bila route punya cache entry. Pada route dinamis, ia tidak berdampak pada halaman publik. Pola segment dinamis memakai `revalidatePath("/projects/[slug]", "page")`, bukan path konkret.
 6. Di development, page selalu dirender saat diminta; klasifikasi hanya dapat diverifikasi dari output `build` (9.18).
 
-## Keadaan kode saat ini (dibaca 9.13)
+## Snapshot historis sebelum penerapan (dibaca 9.13)
+
+Tabel ini mempertahankan keadaan awal untuk traceability. Keadaan setelah Tahap 12 ada di tabel pembandingan build di bawah; jangan memakai snapshot ini sebagai inventaris runtime terkini.
 
 | Route | Request-time API hari ini | Akibat |
 | --- | --- | --- |
@@ -42,7 +44,7 @@ Proxy nonce (`src/proxy.ts`) hanya memiliki `/admin`, `/api/admin`, `/checkout`,
 | `/shop` | revalidasi berjangka pendek | `revalidate = 60` | Stok terlihat di halaman. `revalidatePath("/shop")` sudah dipanggil pada produk, varian, stok, dan media. |
 | `/shop/[slug]` | revalidasi berjangka pendek | `revalidate = 60` | Sama. Perlu `revalidatePath("/shop/[slug]", "page")` (Catatan B). |
 | `/services` | statis (tetap) | tanpa segment config | Satu-satunya route publik statis hari ini. Jangan diubah. |
-| `/services/[slug]` | statis (tetap) | `generateStaticParams` dipertahankan | Konten berasal dari `publicServices` (data kode). Bagian "proyek terkait" membaca database lewat `connection()`; itu membuat route dinamis. Keputusan: pertahankan statis dengan memindahkan proyek terkait ke jalur revalidasi atau menghapus `connection()` (Catatan C). Sampai diterapkan, 9.18 mencatat selisih. |
+| `/services/[slug]` | revalidasi berjangka (RK-16, task 26.3) | `revalidate = 300`, `generateStaticParams` dipertahankan | Konten layanan berasal dari `publicServices`; proyek terkait membaca portfolio terpublikasi dan memakai fallback kosong saat database gagal. Kedua aksi portfolio menginvalidasi `/services/[slug]` dengan tipe `page`. Keputusan Owner: handoff Tahap 12, 5 Oktober 2026. |
 | `/cart`, `/checkout` | dinamis | `connection()` dipertahankan | Per sesi dan customer login; tidak boleh di-cache. `/checkout` juga memakai nonce CSP dari proxy. |
 | `/account/*` | dinamis | `connection()` dipertahankan | Per customer; nonce CSP dari proxy. |
 | `/quote/[token]`, `/orders/[token]`, `/custom-print/requests/[token]` | dinamis | `connection()` dipertahankan | Per token; isi tidak boleh di-cache atau dibagi antar pengunjung. |
@@ -56,7 +58,7 @@ Proxy nonce (`src/proxy.ts`) hanya memiliki `/admin`, `/api/admin`, `/checkout`,
 
 - **A. Preview dan `searchParams`.** `/projects`, `/projects/[slug]`, dan `/shop*` memakai `?preview=` lewat `searchParams`. Selama `searchParams` dibaca di page, route tetap dinamis dan `revalidate` tidak ada artinya. 9.14 sampai 9.16 harus memisahkan jalur produksi (tanpa `searchParams`) dari jalur preview, tanpa mengubah perilaku preview yang sudah diterima Owner. Opsi yang perlu dipilih saat penerapan: proteksi preview di proxy/route terpisah, atau tetap dinamis dengan cache data memakai `unstable_cache`. Keputusan tidak diambil di sini karena menyentuh permukaan publik yang sudah diterima.
 - **B. Invalidasi pola.** `src/app/admin/actions.ts` saat ini hanya memanggil `revalidatePath("/shop")`, `"/projects"`, `"/"`. Untuk detail `[slug]` belum ada panggilan. Pola `type: "page"` diperlukan agar detail ikut invalid (Req 16.2). Perubahan `actions.ts` adalah bagian 9.15/9.16, bukan 9.13.
-- **C. `/services/[slug]`.** Design menyebut route ini statis, kode saat ini dinamis karena `connection()`. 9.18 harus mencatat selisih ini bila belum diperbaiki.
+- **C. `/services/[slug]`.** Selisih dinamis pada 9.18 ditutup oleh keputusan RK-16 dan task 26.3: hapus `connection()`, ISR 300 detik dengan slug layanan yang sama dan fallback database tetap tersedia. Model `Service` (RK-08) tidak diubah.
 - **D. Batas `revalidate`.** Nilai 300 dan 60 adalah usulan awal berdasarkan frekuensi perubahan dan keberadaan invalidasi on-demand. Nilai dapat disesuaikan di 9.14 sampai 9.16 tanpa mengubah strategi.
 - **E. Verifikasi.** Klasifikasi statis/dinamis diverifikasi dari output `build` (9.18, Req 16.8); test e2e tidak membuktikan cache.
 
@@ -70,8 +72,8 @@ Proxy nonce (`src/proxy.ts`) hanya memiliki `/admin`, `/api/admin`, `/checkout`,
 | `/shop` | revalidasi 60 | `○` static, Revalidate 1m, Expire 1y | Tidak ada |
 | `/shop/[slug]` | revalidasi 60 | `●` SSG (`generateStaticParams`) | Sama seperti `/projects/[slug]`. |
 | `/services` | statis | `○` static | Tidak ada |
-| `/services/[slug]` | statis | `ƒ` dynamic (server-rendered on demand) | **Selisih (Catatan C).** Strategi mengharapkan statis; kode masih memakai `connection()`. |
+| `/services/[slug]` | ISR 300 (RK-16) | Empat slug `●` SSG, masing-masing Revalidate 5m, Expire 1y | Tidak ada; build task 26.3, 5 Oktober 2026, exit 0. `prerender-manifest.json` mencatat `initialRevalidateSeconds: 300` untuk tiap slug. |
 
 Dijalankan pada Task 9.18 dengan `corepack pnpm build` (Next 16.3.2, exit 0, compile berhasil). Route `/preview/projects*` dan `/preview/shop*` berklasifikasi `ƒ` (dinamis), sesuai jalur preview yang dipisahkan dari jalur produksi.
 
-Penanganan selisih: Task 9.18 hanya meminta pembandingan dan pencatatan (langkah: jalankan `build`, bandingkan, catat selisih). Perbaikan `/services/[slug]` (menghapus `connection()` atau memindahkan proyek terkait ke jalur revalidasi) mengubah perilaku halaman publik yang sudah diterima, sehingga tidak dilakukan di sini dan dicatat sebagai selisih terbuka untuk keputusan Owner atau task lanjutan.
+Pembaruan task 26.3: `corepack pnpm build` dengan `NIUVA_NEXT_DIST_DIR=.local/stage12-next`, Next 16.3.2, exit 0. Output nyata menampilkan `/services/research-development`, `/services/consultant-workshop`, `/services/design-prototyping`, dan `/services/apparel-merchandise` sebagai `●`, Revalidate 5m dan Expire 1y. Build dilakukan tanpa koneksi database; informasi layanan tetap ter-prerender ketika proyek terkait gagal dibaca. Bukti ini tetap lokal, loopback, non-production; penerimaan visual belum ditinjau.

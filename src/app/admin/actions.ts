@@ -442,6 +442,7 @@ export const updatePortfolioAction: AdminAction = async (_previous, formData) =>
     revalidatePath("/projects");
     revalidatePath("/projects/[slug]", "page");
     revalidatePath("/");
+    revalidatePath("/services/[slug]", "page");
     return successState("Project portfolio berhasil diperbarui.");
   } catch (error) {
     return errorStateFrom(error);
@@ -459,6 +460,7 @@ export const replacePortfolioMediaAction: AdminAction = async (_previous, formDa
     revalidatePath("/projects");
     revalidatePath("/projects/[slug]", "page");
     revalidatePath("/");
+    revalidatePath("/services/[slug]", "page");
     return successState("Mapping media portfolio berhasil diperbarui.");
   } catch (error) {
     return errorStateFrom(error);

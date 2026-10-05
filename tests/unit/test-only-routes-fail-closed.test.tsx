@@ -125,6 +125,8 @@ describe("test-only routes fail closed and stay noindex (Req 28.13, 16.7)", () =
         });
         expect(response.status).toBe(404);
         expect(response.headers.get("Content-Type")).not.toBe("image/png");
+        expect(response.headers.get("Cache-Control")).toBe("no-store");
+        expect(response.headers.get("X-Robots-Tag")).toBe("noindex, nofollow");
       }
     }
   });
@@ -148,6 +150,7 @@ describe("test-only routes fail closed and stay noindex (Req 28.13, 16.7)", () =
     } else {
       expect(response.status).toBe(404);
       expect(response.headers.get("Cache-Control")).toBe("no-store");
+      expect(response.headers.get("X-Robots-Tag")).toBe("noindex, nofollow");
     }
   });
 

@@ -41,7 +41,7 @@ Di luar ruang lingkup spec ini (tidak dikerjakan; dapat dibuka sebagai spec terp
 
 `requirements.md`, `design.md`, dan laporan audit masih menjelaskan area-area ini.
 
-**Baseline awal (sebelum Tahap 0; data, bukan asumsi).** `lint` PASS (0 error, 148 warning; 146 dari `.agents/skills/impeccable/`, 1 di `src/modules/shipping/retail-rate-service.ts:145`, 1 di `tests/unit/properties/p06-token-not-found.test.tsx:87`). `typecheck` PASS. `test` PASS (55 file / 612 test). `test:backend` PASS (38 file / 190 test). `build` PASS (49 route, hanya `/services` statis). Shim `node_modules/.bin` tidak lengkap, jadi gate dijalankan lewat `node node_modules/<paket>/...`. Itu kondisi lingkungan, bukan temuan repo. Baseline terkini (setelah Tahap 1, lokal/non-production): lint 0 error, typecheck PASS, unit 62 file / 790 test, backend 46 file / 312 test, integration 16 file / 89 test, e2e 22 spec / 103 test (ukuran Tahap 0), build PASS, db:validate PASS, 17 migrasi.
+**Baseline awal (sebelum Tahap 0; data, bukan asumsi).** `lint` PASS (0 error, 148 warning; 146 dari `.agents/skills/impeccable/`, 1 di `src/modules/shipping/retail-rate-service.ts:145`, 1 di `tests/unit/properties/p06-token-not-found.test.tsx:87`). `typecheck` PASS. `test` PASS (55 file / 612 test). `test:backend` PASS (38 file / 190 test). `build` PASS (49 route, hanya `/services` statis). Shim `node_modules/.bin` tidak lengkap, jadi gate dijalankan lewat `node node_modules/<paket>/...`. Itu kondisi lingkungan, bukan temuan repo. Baseline historis setelah Tahap 1 (lokal/non-production; hasil terkini Tahap 12 ada di baseline bagian 15): lint 0 error, typecheck PASS, unit 62 file / 790 test, backend 46 file / 312 test, integration 16 file / 89 test, e2e 22 spec / 103 test (ukuran Tahap 0), build PASS, db:validate PASS, 17 migrasi.
 
 **Tertahan sampai Baseline_Gate tercatat (Req 3.5).** Task bertanda `[BUTUH_INTEGRASI]` tidak dimulai sebelum task 1.2 mencatat hasil `test:integration` (lulus, gagal, atau `TIDAK_DIJALANKAN` beserta penyebab). Task bertanda `[BUTUH_E2E]` menunggu task 1.3. Selama status itu `TIDAK_DIJALANKAN`, task bertanda tersebut dilaporkan tertahan dan pekerjaan dibatasi pada task yang diverifikasi gate yang sudah berjalan.
 
@@ -74,7 +74,7 @@ Di luar ruang lingkup spec ini (tidak dikerjakan; dapat dibuka sebagai spec terp
 
 ## Tasks
 
-- [ ] 1. Tahap 0 - Fondasi rencana, baseline, dan gate
+- [x] 1. Tahap 0 - Fondasi rencana, baseline, dan gate
   - [x] 1.1 Catat Baseline_Gate untuk gate yang bisa berjalan
     - Masalah: baseline harus tercatat sebelum perubahan berisiko (Req 3).
     - File: `.kiro/specs/niuva-audit-remediation/baseline-gate.md` (baru).
@@ -142,9 +142,9 @@ Di luar ruang lingkup spec ini (tidak dikerjakan; dapat dibuka sebagai spec terp
     - Selesai bila: hasil verifikasi dan dasarnya tercatat. Pembaruan dokumen readiness dilakukan di 3.20.
     - _Requirements: 10.4_
 
-  - [ ] 1.10 [APPROVAL_GATE] Pasang `@vitest/coverage-v8` dan konfigurasi coverage
+  - [x] 1.10 [APPROVAL_GATE] Pasang `@vitest/coverage-v8` dan konfigurasi coverage
     - **DO NOT EXECUTE kecuali user menyetujui penambahan `@vitest/coverage-v8` secara tertulis.** Sebut tujuan (mengukur celah test C1/I2), dampak maintenance (paket resmi Vitest, versi harus cocok dengan Vitest terpasang), dampak keamanan (dev dependency), dan biaya (tidak ada).
-    - Catatan status: user sempat menyetujui secara prinsip, lalu memilih menunda. Percobaan parsial sudah dikembalikan sepenuhnya (tidak ada `@vitest/coverage-v8`, tidak ada blok coverage di config vitest). Task tetap tertahan sampai user menyetujui ulang secara tertulis.
+    - Catatan status: approval tertulis diberikan melalui handoff Tahap 12 (5 Oktober 2026), dicatat di AG-1.10. Paket 4.1.11 dipin sama dengan Vitest; baseline tiga config, perbaikan transform server-only unit, dan usulan threshold di bawah baseline tercatat di baseline-gate.md bagian 10.
     - File: `package.json`, lockfile, `vitest.config.mts`, `vitest.backend.config.mts`, `vitest.integration.config.mts`.
     - Langkah: aktifkan coverage untuk ketiga config, kecualikan `src/generated/**`, catat angka awal sebagai baseline di `baseline-gate.md`. Usulkan threshold yang sama dengan atau di bawah baseline; jangan menaikkan di atas baseline.
     - Gate: `test`, `test:backend`, `test:integration`.
@@ -287,6 +287,7 @@ Di luar ruang lingkup spec ini (tidak dikerjakan; dapat dibuka sebagai spec terp
     - _Requirements: 8.6, 14.3_
 
   - [ ] 3.14 [APPROVAL_GATE] Pasang SDK pemantauan error
+    - Status Tahap 12: **DITUNDA** sampai mendekati staging; syarat vendor/paket, biaya, data/retensi/redaksi, dan approval pada AG-3.14. Buka spec terpisah, bukan dilaksanakan dalam penutupan ini.
     - **DO NOT EXECUTE kecuali user menyetujui paket SDK secara tertulis.** Tanpa persetujuan, `FailureLogger` tetap interface dan env Sentry tetap tanpa konsumen.
     - File: `package.json`, lockfile, adapter baru di `src/lib/observability/`.
     - Langkah: tambahkan adapter yang mengimplementasikan `FailureLogger` tanpa menyentuh call site.
@@ -445,6 +446,7 @@ Di luar ruang lingkup spec ini (tidak dikerjakan; dapat dibuka sebagai spec terp
     - _Requirements: 11.7, 11.8, 5.1_
 
   - [ ] 5.15 [APPROVAL_GATE] Ganti store rate limit ke resource bersama
+    - Status Tahap 12: **DITUNDA** sampai hosting/topologi instance dipilih; RK-11 tetap `BELUM_TERTUTUP`. Buka spec terpisah dengan store, biaya, skema, dan approval yang jelas (AG-5.15).
     - **DO NOT EXECUTE kecuali user menyetujui secara tertulis resource hosted atau penggunaan tabel PostgreSQL bersama untuk rate limit.** Keputusan store final adalah T3 (Owner + engineering). Tanpa persetujuan, store in-memory tetap dan keterbatasannya dicatat di 5.16.
     - File (bila disetujui): `src/modules/rate-limit/repository.ts` (baru), migrasi baru `RateLimitWindow` (`scope`, `key`, `count`, `resetAt`; `@@id([scope, key])`, `@@index([resetAt])`), tanpa menyentuh `CustomerAuthRateLimit`.
     - Gate: `db:validate`, `test:backend`, `test:integration` [BUTUH_INTEGRASI].
@@ -618,6 +620,7 @@ Di luar ruang lingkup spec ini (tidak dikerjakan; dapat dibuka sebagai spec terp
     - _Requirements: 13.7, 5.5, 5.7_
 
   - [ ] 7.13 [APPROVAL_GATE] Hapus `assertNonProductionProvider`
+    - Status Tahap 12: **DITUNDA**; guard dipertahankan sampai ada bukti staging terisolasi dan izin penghapusan path, lalu spec terpisah (AG-7.13).
     - **DO NOT EXECUTE kecuali user menyetujui secara tertulis penghapusan `src/modules/providers/non-production.ts` dan fungsi `assertNonProductionProvider`.** Hanya setelah 7.7 sampai 7.12 selesai dan tidak ada pemanggil tersisa.
     - Langkah: hapus setelah persetujuan, lalu `typecheck`, `test`, `test:backend`, `build`.
     - Prasyarat: 7.7, 7.8, 7.9, 7.10, 7.11, 7.12.
@@ -704,7 +707,7 @@ Di luar ruang lingkup spec ini (tidak dikerjakan; dapat dibuka sebagai spec terp
     - _Requirements: 13.11, 13.12_
 
   - [ ] 7.25 [BLOCKED_ON_OWNER] Strategi CSP akhir untuk seluruh situs
-    - Menunggu keputusan T6: nonce untuk seluruh situs (kehilangan `/services` statis), `experimental.sri`, atau cakupan terbatas seperti 7.22. Hanya catat opsi di `register-keputusan.md`. Jangan memilih.
+    - Status Tahap 12: keputusan RK-10 **TERTUTUP** melalui 26.1: pertahankan model hibrida nonce pada admin/API admin/checkout/account dan CSP statis pada publik ber-cache. Task 7.25 tidak dieksekusi sebagai perubahan kode; tidak memperluas nonce atau mengaktifkan SRI. Checkbox implementasi ini tetap unchecked sesuai scope handoff; keputusan tidak lagi menunggu Owner.
     - Prasyarat: 1.5.
     - _Requirements: 13.11, 30.8, 30.10_
 
@@ -714,7 +717,7 @@ Di luar ruang lingkup spec ini (tidak dikerjakan; dapat dibuka sebagai spec terp
     - Prasyarat: 7.2, 7.14, 7.17.
     - _Requirements: 14.1, 14.3, 14.4_
 
-  - [ ] 7.27 [APPROVAL_GATE] Perbarui `.env.example`
+  - [x] 7.27 [APPROVAL_GATE] Perbarui `.env.example`
     - **DO NOT EXECUTE kecuali user menyetujui secara tertulis perubahan `.env.example`.** Isi perubahan diambil dari `env-register.md`. Hanya nilai contoh non-rahasia. `.env.local` dan `.env.test.local` tidak disentuh.
     - Prasyarat: 7.26.
     - _Requirements: 9.7, 14.2, 4.5_
@@ -879,7 +882,7 @@ Di luar ruang lingkup spec ini (tidak dikerjakan; dapat dibuka sebagai spec terp
     - Catatan ruang lingkup: Test ini berlaku pada susunan berkas saat ini; lokasi `src/modules/checkout/service.ts` dibaca apa adanya.
     - Risiko: Invariant Req 5.3.
     - Selesai bila: ada test yang gagal bila revalidasi ongkir dihapus.
-    - _Requirements: 28.12, 5.3_
+    - _Requirements: 16.1, 16.2, 16.8, 5.3_
 
   - [x] 21.24 Tes lima route khusus test tetap fail-closed dan `noindex`
     - Masalah: Req 28.13 menuntut lima route khusus test tidak terbuka dan tidak terindeks. Beberapa route memakai `NODE_ENV` atau helper env untuk memutuskan (mis. `resolveCuratedMediaPath(process.env.NODE_ENV, id)` di `/api/frontend-preview/media/[id]`).
@@ -932,9 +935,9 @@ Di luar ruang lingkup spec ini (tidak dikerjakan; dapat dibuka sebagai spec terp
 - [x] 25. Checkpoint akhir - Semua gate yang bisa berjalan
   - Jalankan seluruh gate yang bisa berjalan: `db:validate`, `lint`, `typecheck`, `test`, `test:backend`, `test:integration` (bila database test lokal tersedia), `test:e2e` (termasuk suite JS-nonaktif), E2E production, dan `build`. Hentikan semua proses latar belakang dan hapus dist dir atau berkas sementara yang dibuat selama verifikasi. Konfirmasi dengan `git status --short` bahwa perubahan uncommitted Owner (docs/legal, addendum PRD/Tech Design, dua file test) tidak tersentuh, dan tidak ada commit, push, deployment, aktivasi provider, atau penggunaan credential production. Gate yang tidak dapat berjalan dilaporkan `TIDAK_DIJALANKAN` beserta penyebabnya. Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 26. Tahap 12 - Penutupan dan bukti stabilitas: keputusan Owner dan penutupan item tertunda
+- [x] 26. Tahap 12 - Penutupan dan bukti stabilitas: keputusan Owner dan penutupan item tertunda
   - Catatan tahap: Tahap 12 menutup keputusan Owner yang sudah diberikan, dua perbaikan kecil (ISR `/services/[slug]` dan header 404 preview media), lalu mengumpulkan bukti stabilitas tanpa mengubah kode. Tahap ini tidak memilih nilai keputusan legal/bisnis, tidak mengaktifkan provider, dan tidak menyatakan kesiapan production.
-  - [ ] 26.1 Catat keputusan Owner di `register-keputusan.md`
+  - [x] 26.1 Catat keputusan Owner di `register-keputusan.md`
     - Masalah: Owner telah memutuskan beberapa item; keputusan itu belum tercatat di register, sehingga laporan akhir tidak konsisten (Req 30.8).
     - File: `.kiro/specs/niuva-audit-remediation/register-keputusan.md` (hanya file ini).
     - Langkah: catat keputusan berikut beserta pemilik, tanggal, dan bukti rujukan. (a) 1.10 disetujui dan 7.27 disetujui; keduanya dieksekusi lewat task aslinya (1.10 dan 7.27), bukan diduplikasi di sini. (b) 7.13 ditunda: guard lama dipertahankan sampai ada bukti staging. (c) 3.14 ditunda sampai mendekati staging. (d) 5.15 ditunda sampai hosting dipilih; RK-11 tetap terbuka. (e) 7.25/RK-10 diputuskan: pertahankan model hibrida (nonce untuk `/admin`, `/api/admin`, `/checkout`, `/account`; CSP statis untuk halaman publik ber-cache). (f) RK-16 diputuskan: `/services/[slug]` menjadi ISR `revalidate` 300. (g) 21.23/RK-14 diputuskan: tidak perlu cache ongkir sekarang; tinjau ulang setelah provider aktif dan ada data kuota/latensi. Tiap item yang ditunda (7.13, 3.14, 5.15, 21.23) diberi syarat membuka ulang sebagai spec terpisah. Jangan mengisi keputusan legal/bisnis lain; entri lain tetap `BELUM_TERTUTUP`.
@@ -943,7 +946,7 @@ Di luar ruang lingkup spec ini (tidak dikerjakan; dapat dibuka sebagai spec terp
     - Selesai bila: semua entri di atas tercatat, tiap item tertunda punya syarat membuka ulang, dan tidak ada entri lain yang berubah.
     - _Requirements: 30.8, 30.10, 32.1_
 
-  - [ ] 26.2 Catat status approval 1.10 dan 7.27
+  - [x] 26.2 Catat status approval 1.10 dan 7.27
     - Masalah: [APPROVAL_GATE disetujui tertulis oleh user: 1.10]. Persetujuan 1.10 dan 7.27 sudah ada, sehingga tidak perlu task eksekusi baru.
     - File: tidak ada.
     - Langkah: jangan duplikasi task. Cukup pastikan 26.1 mencatat bahwa 1.10 dan 7.27 kini disetujui dan dieksekusi lewat task aslinya.
@@ -952,16 +955,16 @@ Di luar ruang lingkup spec ini (tidak dikerjakan; dapat dibuka sebagai spec terp
     - Selesai bila: 26.1 memuat catatan tersebut dan tidak ada task duplikat.
     - _Requirements: 30.8_
 
-  - [ ] 26.3 Ubah `/services/[slug]` menjadi ISR (RK-16)
+  - [x] 26.3 Ubah `/services/[slug]` menjadi ISR (RK-16)
     - Masalah: `/services/[slug]` masih dinamis karena `connection()`; keputusan RK-16 menetapkan ISR `revalidate` 300.
     - File: `src/app/services/[slug]/page.tsx`, `src/app/admin/actions.ts`, `tests/unit/system-pages-coverage.test.ts`, `tests/unit/projects-render-strategy.test.tsx` sebagai acuan test baru (mis. `tests/unit/services-render-strategy.test.tsx`), `.kiro/specs/niuva-audit-remediation/render-strategy.md`.
     - Langkah: hapus `connection()`; tetapkan `export const revalidate = 300` sebagai literal; pertahankan `generateStaticParams`; pastikan bagian proyek terkait tahan saat database gagal (tangkap error dan render tanpa bagian itu). Pada aksi admin portfolio di `src/app/admin/actions.ts` yang sudah me-revalidate `/projects`, tambahkan `revalidatePath("/services/[slug]", "page")`. Perbarui manifest `tests/unit/system-pages-coverage.test.ts` secara jujur (jumlah `connection()` turun) tanpa melemahkan assertion. Tambah test seperti `tests/unit/projects-render-strategy.test.tsx` (tanpa `connection()`, `revalidate` 300, `generateStaticParams`, tahan kegagalan database, revalidasi dari aksi admin). Isi ulang baris `/services/[slug]` di `render-strategy.md` dari hasil build.
     - Gate: `test`, `lint`, `typecheck`, `build`, `test:e2e` (spec `public-pages`).
     - Prasyarat: 26.1.
     - Selesai bila: build melaporkan `/services/[slug]` sebagai ISR 5 menit, test baru lulus, jumlah test dan assertion tidak turun, dan `render-strategy.md` sesuai hasil build.
-    - _Requirements: 28.12, 5.3_
+    - _Requirements: 16.1, 16.2, 16.8, 5.3_
 
-  - [ ] 26.4 Perbaiki header 404 `/api/frontend-preview/media/[id]`
+  - [x] 26.4 Perbaiki header 404 `/api/frontend-preview/media/[id]`
     - Masalah: respons 404 route ini harus membawa `X-Robots-Tag: noindex, nofollow` bersama `Cache-Control: no-store` (Req 28.13).
     - File: `src/app/api/frontend-preview/media/[id]/route.ts`, `tests/unit/test-only-routes-fail-closed.test.tsx`.
     - Langkah: tambahkan header `X-Robots-Tag: noindex, nofollow` pada respons 404 bersama `Cache-Control: no-store`. Tambah assertion di `tests/unit/test-only-routes-fail-closed.test.tsx`; jangan melemahkan assertion yang ada.
@@ -970,37 +973,41 @@ Di luar ruang lingkup spec ini (tidak dikerjakan; dapat dibuka sebagai spec terp
     - Selesai bila: test gagal bila salah satu header hilang dari respons 404.
     - _Requirements: 28.13, 16.7_
 
-- [ ] 27. Bukti stabilitas (tanpa perubahan kode)
+- [x] 27. Bukti stabilitas (tanpa perubahan kode)
   - Catatan tahap: task 27 hanya menjalankan gate dan mencatat hasil. Tidak ada perubahan kode produksi atau test. Flaky dilaporkan, bukan dilonggarkan.
-  - [ ] 27.1 Jalankan suite penuh tiga kali berturut-turut
+  - Pengecualian scope yang disetujui user pada 5 Oktober 2026 setelah tiga putaran 27.1 selesai: koreksi satu assertion di `tests/integration/database.test.ts` agar nama database yang diharapkan berasal dari `TEST_DATABASE_URL` yang divalidasi setup, bukan literal `niuva_test`. Pemeriksaan tabel/trigger dipertahankan; verifikasi ulang fresh-database dan checkpoint memakai koreksi ini. Tidak ada perubahan source produksi pada tahap 27.
+  - [x] 27.1 Jalankan suite penuh tiga kali berturut-turut
     - Masalah: stabilitas belum dibuktikan; satu kegagalan diketahui pada `tests/e2e/public-pages.spec.ts` "published projects filter and navigate".
     - File: `.kiro/specs/niuva-audit-remediation/baseline-gate.md` (bagian baru "Bukti stabilitas").
     - Langkah: jalankan `test`, `test:backend`, `test:integration`, dan `test:e2e` penuh tiga kali berturut-turut tanpa perubahan kode. Catat angka tiap putaran (file dan test) serta setiap kegagalan, termasuk "published projects filter and navigate", beserta pesan dan putaran kemunculannya. Jalankan `db:test:start` dan Playwright di latar belakang dengan polling dan timeout eksplisit; pastikan tidak ada proses tersisa sesudahnya. Jangan menambah retry, memperpanjang timeout, atau melonggarkan assertion.
     - Gate: `test`, `test:backend`, `test:integration`, `test:e2e` (tiga putaran).
     - Prasyarat: 26.
     - Selesai bila: tiga putaran tercatat lengkap, kegagalan dilaporkan apa adanya, dan tidak ada proses tersisa.
+    - Hasil: tiga putaran lengkap PASS (unit 85/1190, backend 68/496, integration 19/105, E2E 109 lulus/5 skip), hash code/config/test tetap sama; `public-pages.spec.ts:78` lulus ketiganya. Semua proses milik peluncur dihentikan pada cleanup akhir. Bukti baseline bagian 11 dan 15.
     - _Requirements: 29.7, 32.1_
 
-  - [ ] 27.2 Verifikasi dari database test baru
+  - [x] 27.2 Verifikasi dari database test baru
     - Masalah: database `niuva_test` lama dapat menyembunyikan masalah migrasi; perlu bukti dari database kosong.
     - File: `.kiro/specs/niuva-audit-remediation/baseline-gate.md`.
     - Langkah: buat database test baru (bukan `niuva_test` lama), jalankan semua migrasi dari kosong, lalu `test:integration` dan `test:e2e`. Tanpa reset destruktif pada database yang ada. Catat nama database (tanpa credential), hasil, dan pembersihan.
     - Gate: `test:integration`, `test:e2e`.
     - Prasyarat: 27.1.
     - Selesai bila: semua migrasi berhasil dari kosong, kedua suite tercatat, dan database yang ada tidak diubah.
+    - Hasil: `niuva_stage12_test_20261005_01a10ad2`, 17 migrasi dari kosong; integration 19/105 dan E2E penuh 109 lulus/5 skip/0 gagal, exit 0. Kegagalan awal, izin koreksi assertion nama, pengulangan, dan cleanup dicatat baseline bagian 12/15. Tidak ada reset/drop database lama.
     - _Requirements: 29.7, 32.1_
 
-  - [ ] 27.3 Smoke build produksi lokal
+  - [x] 27.3 Smoke build produksi lokal
     - Masalah: perilaku header, CSP, dan revalidasi pada build produksi belum dibuktikan setelah 26.3.
     - File: `.kiro/specs/niuva-audit-remediation/baseline-gate.md`. Baca `env-register.md` dan `csp-verification.md`.
     - Langkah: `next build` lalu `next start` dengan `NIUVA_DEPLOYMENT_TIER` sesuai `env-register.md` pada port loopback, dengan dist dir sementara. Verifikasi header keamanan dan CSP aktual pada `/`, `/projects`, `/checkout`, dan `/admin` (sesuai `csp-verification.md`), serta `/sitemap.xml` dan `/robots.txt`. Buktikan dengan perilaku, bukan pencocokan teks, bahwa perubahan portfolio lewat aksi admin merevalidasi `/projects` dan `/projects/[slug]`. Hentikan proses dan hapus dist dir sementara. Tanpa credential production.
     - Gate: `build`, smoke manual terdokumentasi.
     - Prasyarat: 27.2.
     - Selesai bila: hasil per route tercatat, bukti revalidasi tercatat, dan tidak ada proses atau dist dir tersisa.
-    - _Requirements: 28.12, 5.3, 32.1_
+    - Hasil: enam route header/CSP PASS dari `next build` + `next start`; kedua aksi portfolio mengubah hasil HTTP dua cache route setelah write DB langsung terbukti tetap stale. Identitas Owner hanya DI harness; Clerk aktif tidak terverifikasi. E2E production 5/5, dist dan proses sementara dibersihkan. Baseline bagian 13/15.
+    - _Requirements: 16.2, 16.8, 29.1, 29.2, 5.3, 32.1_
 
-- [ ] 28. Kebersihan dokumen dan repo
-  - [ ] 28.1 Koreksi laporan dan dokumen batas
+- [x] 28. Kebersihan dokumen dan repo
+  - [x] 28.1 Koreksi laporan dan dokumen batas
     - Masalah: `completion-report.md` memuat rujukan "temuan turunan (mis. 19.13)" tanpa sumber dan angka yang sudah usang.
     - File: `.kiro/specs/niuva-audit-remediation/completion-report.md`, `.kiro/specs/niuva-audit-remediation/production-readiness-boundary.md`, `.kiro/specs/niuva-audit-remediation/baseline-gate.md`.
     - Langkah: hapus atau sumberkan rujukan "temuan turunan (mis. 19.13)". Perbarui angka akhir, jumlah route manifest, status gate 1.10 dan 7.27 setelah dieksekusi, dan daftar penundaan baru (7.13, 3.14, 5.15, 21.23 dan RK-11). Perbarui `production-readiness-boundary.md`, dan bagian 10 `baseline-gate.md` (baseline coverage dari 1.10).
@@ -1009,43 +1016,47 @@ Di luar ruang lingkup spec ini (tidak dikerjakan; dapat dibuka sebagai spec terp
     - Selesai bila: laporan konsisten dengan hasil 26 dan 27 serta tidak memuat rujukan tanpa sumber.
     - _Requirements: 32.1, 32.2, 32.3, 32.4, 32.5_
 
-  - [ ] 28.2 Catat cara gate andal dan konfirmasi kebersihan repo
+  - [x] 28.2 Catat cara gate andal dan konfirmasi kebersihan repo
     - Masalah: gate penuh berhenti bila dijalankan di foreground; direktori atau entri sementara dapat tertinggal.
     - File: `.kiro/specs/niuva-audit-remediation/baseline-gate.md`.
     - Langkah: catat cara menjalankan gate secara andal (`db:test:start` dan `test:e2e` penuh di latar belakang dengan polling dan timeout, jangan foreground). Pastikan tidak ada direktori `.next-*-tmp` dan `tsconfig.json` bersih dari entri sementara. Konfirmasi dengan `git status --short` bahwa perubahan uncommitted Owner (`docs/`, `docs/legal/`, `tests/backend/customer-privacy-pages.test.ts`, `tests/e2e/customer-privacy.spec.ts`) tidak tersentuh.
     - Gate: tidak ada (dokumen dan pemeriksaan repo).
     - Prasyarat: 28.1.
     - Selesai bila: cara gate tercatat, tidak ada sisa sementara, dan file Owner tidak berubah.
+    - Hasil: baseline bagian 14/15; temporary dist dan dua include tsconfig dibersihkan, typecheck ulang PASS, proses/port kosong, dan path Owner/protected identik c54b2d1. Log TEMP dan coverage ignored dipertahankan sebagai bukti.
     - _Requirements: 32.1, 29.7_
 
-- [ ] 29. Tes properti opsional bernilai tinggi
-  - [ ]* 29.1 Pastikan test Property 16 (permukaan terlindungi tidak dapat dilewati)
+- [x] 29. Tes properti opsional bernilai tinggi
+  - [x]* 29.1 Pastikan test Property 16 (permukaan terlindungi tidak dapat dilewati)
     - **Property 16: Permukaan yang dilindungi tidak dapat dilewati**
     - File: `tests/unit/properties/audit-p16-proxy-surface.test.ts`. Tag: `// Feature: niuva-audit-remediation, Property 16`.
     - Langkah: periksa apakah test sudah ada (task 7.23 bertanda selesai). Tulis hanya bila belum ada; bila sudah ada, cukup catat bahwa sudah ada.
+    - Hasil: sudah ada dan lulus dalam tiga suite unit Tahap 12; pemetaan design/test diperiksa terhadap Req 13.9 sampai 13.12. Tidak menulis test duplikat.
     - Gate: `test`.
     - Prasyarat: 26.
     - **Validates: Requirements 13.11, 13.12**
 
-  - [ ]* 29.2 Daftar sub-task Property opsional lain yang masih unchecked
+  - [x]* 29.2 Daftar sub-task Property opsional lain yang masih unchecked
     - Langkah: periksa `tasks.md` untuk sub-task Property bertanda `*` milik tahap aktif yang masih unchecked, lalu cantumkan sebagai daftar opsional di `completion-report.md`. Saat penulisan spec ini kandidatnya: 1.12 (Property 28), 1.13 (Property 29), 3.2 (Property 13), 3.4 (Property 14), 5.2 (Property 3), 5.5 (Property 4), 5.24 (Property 18), 7.15 (Property 17).
     - Gate: tidak ada (dokumen).
     - Prasyarat: 28.1.
     - Catatan: task 29 boleh dilewati tanpa memblokir penutupan.
+    - Hasil: delapan kandidat tersebut tetap unchecked dan tercatat di `completion-report.md` bagian 5.
 
-- [ ] 30. Checkpoint penutupan spec
+- [x] 30. Checkpoint penutupan spec
   - Prasyarat: 26, 27, 28. Jalankan seluruh gate: `db:validate`, `lint`, `typecheck`, `test`, `test:backend`, `test:integration`, `test:e2e` penuh, E2E production, dan `build`. Konfirmasi semua task non-opsional selesai atau berstatus ditunda dengan alasan, laporan konsisten, dan tidak ada proses atau direktori sementara. Tidak ada commit, push, deployment, aktivasi provider, atau penggunaan credential production. Visual acceptance tetap "belum ditinjau"; `PUB-RELEASE` tetap `NOT_AUTHORIZED`. Ensure all tests pass, ask the user if questions arise.
+  - Hasil: seluruh gate checkpoint PASS, angka dan kegagalan awal dicatat baseline bagian 15. 3.14/5.15/7.13/21.23 ditunda dengan syarat spec terpisah; 7.25 hanya keputusan melalui 26.1; tidak mengklaim implementasi di luar scope. Task opsional yang tidak ditulis tetap unchecked. Dist/tsconfig/process cleanup terverifikasi. Branch/HEAD tetap `chore/niuva-audit-remediation` / `c54b2d1`, tanpa commit/push/PR. Visual belum ditinjau, `PUB-RELEASE = NOT_AUTHORIZED`.
 
 ## Notes
 
 - Sub-task bertanda `*` bersifat opsional. Test yang menjadi bagian task implementasi (test action, test komponen, test manifest, test guard) bukan opsional. Test Property milik task di luar ruang lingkup tidak termasuk; Property 28 tetap di 1.12. Satu Property mungkin tidak lagi punya sub-task test aktif karena task pemiliknya di luar ruang lingkup.
-- Task `[APPROVAL_GATE]` yang masih aktif (1.10, 3.14, 5.15, 7.13, 7.27) tidak dijalankan otomatis dan tidak dieksekusi tanpa persetujuan tertulis yang menyebut item, path, atau paketnya. Tanpa persetujuan, biarkan unchecked dan laporkan "ditunda".
-- Task `[BLOCKED_ON_OWNER]` yang masih aktif (7.25) tidak dijalankan otomatis; ia menunggu keputusan Owner atau legal dan tidak boleh memilih nilai default (Req 30.10).
+- Task `[APPROVAL_GATE]` 1.10 dan 7.27 sudah disetujui dalam handoff Tahap 12 dan selesai. 3.14, 5.15, 7.13 tetap unchecked sebagai **ditunda** dengan syarat membuka spec terpisah di register; tidak dieksekusi otomatis.
+- Keputusan `[BLOCKED_ON_OWNER]` 7.25/RK-10 sudah dicatat melalui 26.1; tidak ada implementasi CSP tambahan dalam scope ini. RK legal/bisnis lain tidak diberi default (Req 30.10).
 - Approval_Gate dan `[BLOCKED_ON_OWNER]` tetap ada di Task Dependency Graph, tetapi wave-nya menunggu persetujuan atau keputusan dan task itu tidak dijadwalkan otomatis. Task lain pada wave yang sama tidak menunggunya, dan tidak ada task yang dapat dieksekusi memakainya sebagai prasyarat. Keduanya ditempatkan setelah checkpoint tahap sebelumnya supaya tidak muncul sebelum waktunya.
 - Task `[BUTUH_INTEGRASI]` dan `[BUTUH_E2E]` tertahan selama Baseline_Gate (1.2 dan 1.3) mencatat `TIDAK_DIJALANKAN`. Task itu dilaporkan tertahan, bukan lulus. Status `TIDAK_DIJALANKAN` ditulis beserta penyebab dan syaratnya (Req 29.7).
 - Penerimaan visual tetap "belum ditinjau" sampai user menyatakan menerimanya secara eksplisit; `build` dan test hijau bukan persetujuan visual. Semua bukti bersifat lokal dan non-production. Penerimaan physical-device dan assistive technology terpisah dari `test:e2e` dan pemeriksaan otomatis apa pun. `PUB-RELEASE` tetap `NOT_AUTHORIZED`.
-- Perubahan uncommitted milik Owner tidak boleh disentuh: `docs/legal/`, addendum PRD dan Tech Design, serta dua file test (`tests/backend/customer-privacy-pages.test.ts` dan `tests/e2e/customer-privacy.spec.ts`). Jalankan `git status --short` sebelum mengedit. Tidak ada commit, push, deployment, aktivasi provider, atau penggunaan credential production.
-- Catatan eksekusi: suite unit sensitif terhadap beban mesin. `testTimeout: 30_000` ditambahkan ke `vitest.config.mts` (hanya timeout; test tidak diubah). Jalankan gate penuh sekali per tahap atau checkpoint, bukan setelah setiap task. `test:integration`, `test:e2e`, dan `build` dijalankan sendiri-sendiri secara berurutan; `next build` memakai dist sementara lewat `NIUVA_NEXT_DIST_DIR` yang dibersihkan sesudahnya. Baseline terkini: unit 62 file / 790 test, backend 46 file / 312 test, integration 16 file / 89 test, e2e 22 spec / 103 test.
+- Path milik Owner tidak boleh disentuh (checkout Tahap 12 mulai bersih; perubahan Owner sebelumnya sudah di commit 230faa6/c54b2d1): `docs/legal/`, addendum PRD dan Tech Design, serta dua file test (`tests/backend/customer-privacy-pages.test.ts` dan `tests/e2e/customer-privacy.spec.ts`). Jalankan `git status --short` sebelum mengedit. Tidak ada commit, push, deployment, aktivasi provider, atau penggunaan credential production.
+- Catatan eksekusi: suite unit sensitif terhadap beban mesin. `testTimeout: 30_000` ditambahkan ke `vitest.config.mts` (hanya timeout; test tidak diubah). Jalankan gate penuh sekali per tahap atau checkpoint, bukan setelah setiap task. `test:integration`, `test:e2e`, dan `build` dijalankan sendiri-sendiri secara berurutan; `next build` memakai dist sementara lewat `NIUVA_NEXT_DIST_DIR` yang dibersihkan sesudahnya. Baseline historis Tahap 1: unit 62 file / 790 test, backend 46 file / 312 test, integration 16 file / 89 test, e2e 22 spec / 103 test. Hasil terkini Tahap 12/checkpoint 30: unit 85/1190, backend 68/496, integration 19/105, E2E 109 lulus/5 skip, production 5/5; baseline bagian 15.
 - Tahap 10 (task 21) sengaja terakhir dan kini hanya memuat 21.22 dan 21.24; pemecahan modul dan refactor lain berada di luar ruang lingkup.
 - Cara membaca graf: wave adalah lapisan topologi; task dalam satu wave tidak saling bergantung. Wave bukan jaminan eksekusi paralel: task yang menjalankan `build`, `test:e2e`, atau server lokal berbagi direktori dist dan port, jadi gate-nya dijalankan bergantian. Checkpoint masuk graf sebagai task biasa (nomor top-level genap dan 25).
 - Sumber sisi (edge) graf, selain baris `Prasyarat:` tiap sub-task: (a) semua task tahap 1 sampai 11 menunggu checkpoint 2 (Tahap 0 selesai lebih dulu), kecuali 9.1 dan 9.2 (pengecualian di Overview); (b) tiap checkpoint menunggu semua task tahapnya yang bukan gate atau blocked; (c) task tahap 4 (kecuali 9.1 dan 9.2) menunggu checkpoint 8; (d) Tahap 3 serial: 7.7 sampai 7.12 berurutan, satu capability pada satu waktu; (e) 9.15 dan 9.16 mewarisi prasyarat 9.14 (kini hanya 9.13) dari kalimat "Gate dan prasyarat: sama dengan 9.14"; pada 9.1, angka "4" dalam kalimat "sebelum tahap 4 lain" adalah prosa dan bukan rujukan ke checkpoint 4. Task di luar ruang lingkup tidak ada di graf.
