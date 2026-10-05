@@ -57,7 +57,7 @@ async function assertHomepageMedia(page: Page, record: (value: Omit<MediaDiagnos
 
   for (const [imageIndex, image] of (await media.all()).entries()) {
     const before = await image.evaluate(element => element instanceof HTMLImageElement ? { alt: element.alt, source: element.currentSrc || element.src, complete: element.complete, naturalWidth: element.naturalWidth, naturalHeight: element.naturalHeight } : null);
-    if (before) record({ phase: "decode-start", imageIndex, alt: before.alt, sourcePath: publicImagePath(before.source), complete: before.complete, naturalWidth: before.naturalWidth, naturalHeight: before.naturalHeight });
+    if (before) record({ phase: "decode-start", imageIndex, alt: before.alt.slice(0, 160), sourcePath: publicImagePath(before.source), complete: before.complete, naturalWidth: before.naturalWidth, naturalHeight: before.naturalHeight });
     await expectDecodedImage(image);
     record({ phase: "decode-complete", imageIndex });
   }
@@ -89,6 +89,11 @@ test("authorized product routes have named responsive and semantic proof", async
     const viewport = page.viewportSize();
     diagnostics.push({ ...value, elapsedMs: Date.now() - started, width: viewport?.width ?? 0, height: viewport?.height ?? 0 });
   };
+  page.on("request", request => {
+    if (request.resourceType() !== "image") return;
+    const sourcePath = publicImagePath(request.url());
+    if (sourcePath) record({ phase: "image-request", sourcePath });
+  });
   page.on("response", response => {
     if (response.request().resourceType() !== "image") return;
     const sourcePath = publicImagePath(response.url());
@@ -98,6 +103,11 @@ test("authorized product routes have named responsive and semantic proof", async
     if (request.resourceType() !== "image") return;
     const sourcePath = publicImagePath(request.url());
     if (sourcePath) record({ phase: "image-request-failed", sourcePath, status: "failed" });
+  });
+  page.on("requestfinished", request => {
+    if (request.resourceType() !== "image") return;
+    const sourcePath = publicImagePath(request.url());
+    if (sourcePath) record({ phase: "image-request-finished", sourcePath });
   });
   try {
   record({ phase: "login-start" });
@@ -189,7 +199,15 @@ test("authorized product routes have named responsive and semantic proof", async
   expect(consoleErrors.filter((message) => !message.includes("status of 503"))).toEqual([]);
   expect(pageErrors).toEqual([]);
   record({ phase: "proof-complete" });
+  } catch (error) {
+    record({ phase: "proof-failed" });
+    throw error;
   } finally {
+    // The CI list reporter does not print JSON attachments and the workflow
+    // does not upload traces. Log the bounded public projection for both failed
+    // and passing comparisons: no error payload, query, cookies, storage or
+    // private URLs. Write before the asynchronous attachment can be interrupted.
+    process.stdout.write(`NIUVA_PUBLIC_MEDIA_DIAGNOSTICS ${JSON.stringify(diagnostics.slice(-200))}\n`);
     await testInfo.attach("public-homepage-media-diagnostics", { body: Buffer.from(JSON.stringify(diagnostics, null, 2)), contentType: "application/json" });
   }
 });
