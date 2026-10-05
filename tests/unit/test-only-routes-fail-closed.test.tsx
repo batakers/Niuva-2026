@@ -18,7 +18,7 @@ const actionQueueList = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({ notFound, redirect }));
 vi.mock("next/server", () => ({ connection: vi.fn(async () => undefined) }));
 vi.mock("@/lib/auth/customer", () => ({ getCurrentCustomer }));
-vi.mock("@/features/frontend-preview/server", () => ({ getProjectPreview }));
+vi.mock("@/features/frontend-preview/server", () => ({ getProjectPreview, getLiveShopProducts: async () => [] }));
 vi.mock("@/modules/admin/action-queue-service", () => ({
   ActionQueueService: class {
     list = actionQueueList;
