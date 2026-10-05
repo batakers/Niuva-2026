@@ -58,6 +58,11 @@ beforeEach(() => {
 });
 
 describe("Property 8: toAdminAccessState is total over ERROR_CODES", () => {
+  it("leaves RESOURCE_BUSY unmapped so the caller rethrows it", () => {
+    expect(ERROR_CODES).toContain("RESOURCE_BUSY");
+    expect(toAdminAccessState(appError("RESOURCE_BUSY"))).toBeNull();
+  });
+
   it("covers every ERROR_CODES entry exactly once as mapped or unmapped", () => {
     expect(MAPPED_CODES).toHaveLength(3);
     expect(MAPPED_CODES.length + UNMAPPED_CODES.length).toBe(ERROR_CODES.length);

@@ -100,7 +100,8 @@ describe("admin authorization", () => {
 
 describe("admin proxy", () => {
   it("matches only the admin route boundary", () => {
-    expect(config.matcher).toEqual(["/admin/:path*", "/api/admin/:path*"]);
+    // Task 7.21: Clerk entries stay first and unchanged; header-only entries follow.
+    expect(config.matcher.slice(0, 2)).toEqual(["/admin/:path*", "/api/admin/:path*"]);
     expect(
       unstable_doesMiddlewareMatch({
         config,

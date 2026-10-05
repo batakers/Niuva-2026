@@ -142,9 +142,7 @@ export class RetailShippingRateService {
 
     return {
       expiresAt: resolved.expiresAt,
-      options: resolved.options.map(({ providerPayload: _providerPayload, ...option }) =>
-        option,
-      ),
+      options: resolved.options.map(toPublicRateOption),
     };
   }
 
@@ -336,6 +334,22 @@ function toRateOption(
     providerPayload: rate.providerPayload,
     serviceCode: rate.serviceCode,
     serviceName: rate.serviceName,
+  };
+}
+
+// Explicit allow-list: providerPayload must never reach callers of getRates().
+function toPublicRateOption(
+  option: RetailShippingRateOption,
+): RetailShippingRateOption {
+  return {
+    courierCode: option.courierCode,
+    courierName: option.courierName,
+    ...(option.etaText === undefined ? {} : { etaText: option.etaText }),
+    optionId: option.optionId,
+    priceRp: option.priceRp,
+    ...(option.provider === undefined ? {} : { provider: option.provider }),
+    serviceCode: option.serviceCode,
+    serviceName: option.serviceName,
   };
 }
 

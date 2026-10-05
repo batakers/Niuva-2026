@@ -5,8 +5,10 @@ import Link from "next/link";
 import { AdminDataUnavailableView, AdminPagination, AdminShell } from "@/components/niuva/admin-shell";
 import { AdminAccessView } from "@/app/admin/admin-access-view";
 import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
+import { recordAdminPageFailure } from "@/app/admin/admin-page-failure";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import type { AdminAccess } from "@/lib/auth/clerk";
+import type { FailureKind } from "@/lib/observability/logger";
 import { AdminOperationsService, parseAdminPage, type AdminCustomPrintRequestRow } from "@/modules/admin/operations";
 
 export const metadata: Metadata = {
@@ -29,8 +31,9 @@ export default async function AdminCustomPrintPage({
   if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
   const { access } = gate;
 
-  const result = await loadCustomPrintRequests(access, page);
-  if (result === null) return <AdminDataUnavailableView active="custom-print" role={access.profile.role} title="Request custom print belum dapat dimuat" />;
+  const loaded = await loadCustomPrintRequests(access, page);
+  if (loaded.status === "unavailable") return <AdminDataUnavailableView active="custom-print" kind={loaded.kind} role={access.profile.role} title="Request custom print belum dapat dimuat" />;
+  const result = loaded.data;
   const waitingReview = result.items.filter((item) => item.status === "SUBMITTED").length;
   const waitingQuote = result.items.filter((item) => item.status === "QUOTE_READY").length;
 
@@ -74,11 +77,15 @@ export default async function AdminCustomPrintPage({
   );
 }
 
-async function loadCustomPrintRequests(access: AdminAccess, page: number): Promise<Awaited<ReturnType<AdminOperationsService["listCustomPrintRequests"]>> | null> {
+type CustomPrintRequestsLoad =
+  | { status: "ok"; data: Awaited<ReturnType<AdminOperationsService["listCustomPrintRequests"]>> }
+  | { status: "unavailable"; kind: FailureKind };
+
+async function loadCustomPrintRequests(access: AdminAccess, page: number): Promise<CustomPrintRequestsLoad> {
   try {
-    return await new AdminOperationsService({ authorize: async () => access }).listCustomPrintRequests({ page });
-  } catch {
-    return null;
+    return { status: "ok", data: await new AdminOperationsService({ authorize: async () => access }).listCustomPrintRequests({ page }) };
+  } catch (error) {
+    return { status: "unavailable", kind: recordAdminPageFailure(error, "page:/admin/custom-print", { op: "list", page: String(page) }) };
   }
 }
 

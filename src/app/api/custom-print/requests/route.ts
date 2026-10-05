@@ -24,7 +24,9 @@ export async function POST(request: Request) {
   const correlationId = createCorrelationId();
 
   try {
-    assertPublicMutationRequest(request, customPrintRequestRateLimiter);
+    assertPublicMutationRequest(request, customPrintRequestRateLimiter, {
+      endpointId: "POST /api/custom-print/requests",
+    });
     const customer = await requireCustomer();
     const payload = await readJsonBody(request, {
       maxBytes: CUSTOM_PRINT_REQUEST_MAX_BODY_BYTES,

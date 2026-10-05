@@ -14,5 +14,9 @@ export default defineConfig({
     exclude: ["node_modules", ".next", "tests/e2e/**"],
     clearMocks: true,
     restoreMocks: true,
+    // p01-next-action-live-isolation, p03-proxy-classification and
+    // p12-surface-structure exceeded the 5s default under full-suite load.
+    // Timeout only; test content and numRuns are unchanged.
+    testTimeout: 30_000,
   },
 });

@@ -49,6 +49,24 @@ describe("typed HTTP error contract", () => {
     expect(response.headers.get("retry-after")).toBe("12");
   });
 
+  it("keeps a real rate limit as RATE_LIMITED (429) without touching RESOURCE_BUSY", () => {
+    const response = apiError(appError("RATE_LIMITED"), "test-correlation-id");
+    expect(response.status).toBe(429);
+    expect(response.headers.get("retry-after")).toBeNull();
+  });
+
+  it("maps RESOURCE_BUSY to 503 with a short Retry-After", () => {
+    const response = apiError(appError("RESOURCE_BUSY"), "test-correlation-id");
+    expect(response.status).toBe(503);
+    expect(response.headers.get("retry-after")).toBe("5");
+
+    const explicit = apiError(
+      appError("RESOURCE_BUSY", { details: { retryAfterSeconds: "3" } }),
+      "test-correlation-id",
+    );
+    expect(explicit.headers.get("retry-after")).toBe("3");
+  });
+
   it("adds an internally generated correlation ID to success responses", async () => {
     const response = apiSuccess({ ok: true });
 

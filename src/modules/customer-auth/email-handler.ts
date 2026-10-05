@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { ZodError } from "zod";
 import { CustomerEmailService } from "./email-service";
 import { CUSTOMER_SESSION_COOKIE, customerSessionCookieOptions, safeCustomerReturnTo } from "./core";
+import { customerCookieSecure } from "./app-origin";
 import { assertCustomerAuthOrigin, customerAuthOrigin } from "./origin";
 import { appError, toAppError } from "@/modules/shared/errors";
 export const PENDING_REGISTRATION_COOKIE = "niuva_customer_pending";
@@ -54,12 +55,12 @@ export function emailPostHandler(action: EmailAction, factory: () => CustomerEma
       const response = json ? NextResponse.json({ destination: url.pathname + url.search + url.hash }) : NextResponse.redirect(url, 303);
       response.headers.set("Cache-Control", "no-store");
       if (session) {
-        const options = customerSessionCookieOptions(process.env.NODE_ENV === "production");
+        const options = customerSessionCookieOptions(customerCookieSecure(process.env));
         if (session.remember) options.maxAge = session.maxAge;
         else Reflect.deleteProperty(options, "maxAge");
         response.cookies.set(CUSTOMER_SESSION_COOKIE, session.token, options);
       }
-      if (handle) response.cookies.set(PENDING_REGISTRATION_COOKIE, handle, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 86400 });
+      if (handle) response.cookies.set(PENDING_REGISTRATION_COOKIE, handle, { httpOnly: true, secure: customerCookieSecure(process.env), sameSite: "lax", path: "/", maxAge: 86400 });
       if (action === "verify" || action === "register" && handle === null) response.cookies.delete(PENDING_REGISTRATION_COOKIE);
       if (action === "reset-password") response.cookies.delete(CUSTOMER_SESSION_COOKIE);
       return response;

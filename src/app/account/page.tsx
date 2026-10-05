@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { connection } from "next/server";
 
@@ -10,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import {
   requireCustomer,
 } from "@/lib/auth/customer";
+import { resolveCustomerAvatar } from "@/lib/images/customer-avatar";
 import { isAppError } from "@/modules/shared/errors";
 import {
   CustomerAuthRepository,
@@ -92,6 +94,7 @@ export default async function AccountPage() {
     redirect("/login?returnTo=/account&error=auth_failed");
   }
   const work = await new CustomerWorkRepository().list(customer.id);
+  const avatar = resolveCustomerAvatar(account.profile.avatarUrl);
 
   return (
     <PublicShell functionalStatus="server-backed" scope="account">
@@ -117,11 +120,14 @@ export default async function AccountPage() {
             </CardHeader>
             <CardContent className="space-y-5">
               <div className="flex items-center gap-4">
-                {account.profile.avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={account.profile.avatarUrl}
+                {avatar.mode !== "none" ? (
+                  // Decorative: the display name is rendered as text beside it.
+                  <Image
+                    src={avatar.src}
                     alt=""
+                    width={56}
+                    height={56}
+                    unoptimized={avatar.mode === "unoptimized"}
                     className="size-14 rounded-full object-cover ring-1 ring-border"
                     referrerPolicy="no-referrer"
                   />

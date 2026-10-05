@@ -1,4 +1,8 @@
 import { validateStartupEnvironment } from "@/lib/env/server";
+import {
+  requireAllowed,
+  type CapabilityContext,
+} from "@/modules/capabilities/resolver";
 import type { CustomPrintNotificationScheduler } from "@/modules/custom-print/service";
 import type { InquiryNotificationScheduler } from "@/modules/inquiry/service";
 import { assertNonProductionProvider } from "@/modules/providers/non-production";
@@ -80,6 +84,84 @@ export class ResendEmailGateway {
   }
 }
 
+export type ResendDeliveryCapabilityConfig = Readonly<{
+  apiKey: string;
+  /**
+   * Caller-owned capability inputs (never read from process.env implicitly).
+   * NODE_ENV, NIUVA_DEPLOYMENT_TIER, NIUVA_PROVIDER_MODE and DATABASE_URL are
+   * taken from here when present.
+   */
+  capabilityEnv?: Readonly<Record<string, string | undefined>>;
+  /** Set false to declare the database resource unbound (default: bound). */
+  databaseBound?: boolean;
+  from: string;
+  gates?: CapabilityContext["gates"];
+  hasActivationGrant?: CapabilityContext["hasActivationGrant"];
+  nodeEnv?: "development" | "production" | "test";
+}>;
+
+const CALLER_CAPABILITY_KEYS = [
+  "DATABASE_URL",
+  "NIUVA_DEPLOYMENT_TIER",
+  "NIUVA_PROVIDER_MODE",
+  "NODE_ENV",
+] as const;
+
+function pickCapabilityEnv(
+  source: Readonly<Record<string, string | undefined>>,
+): Readonly<Record<string, string | undefined>> {
+  return Object.fromEntries(
+    CALLER_CAPABILITY_KEYS.map((key) => [key, source[key]]),
+  );
+}
+
+// Non-secret marker for an input this module does not use (it never touches
+// the database). It only keeps the resolver resource group evaluable; a caller
+// can still declare the database unbound.
+const DELIVERY_SCOPE_DATABASE_URL = "postgresql://resend-scope.invalid/none";
+
+/** Builds the resolver context from the caller-provided Resend configuration. */
+export function buildResendCapabilityContext(
+  config: ResendDeliveryCapabilityConfig,
+): CapabilityContext {
+  const caller = config.capabilityEnv ?? {};
+  const apiKey = config.apiKey.trim();
+  const from = config.from.trim();
+  const env: Record<string, string | undefined> = {
+    DATABASE_URL:
+      caller.DATABASE_URL ??
+      (config.databaseBound === false ? undefined : DELIVERY_SCOPE_DATABASE_URL),
+    EMAIL_FROM: from.length > 0 ? from : undefined,
+    NIUVA_DEPLOYMENT_TIER: caller.NIUVA_DEPLOYMENT_TIER,
+    NIUVA_PROVIDER_MODE: caller.NIUVA_PROVIDER_MODE,
+    NODE_ENV: config.nodeEnv ?? caller.NODE_ENV,
+    RESEND_API_KEY: apiKey.length > 0 ? apiKey : undefined,
+  };
+
+  return {
+    env,
+    ...(config.gates === undefined ? {} : { gates: config.gates }),
+    ...(config.hasActivationGrant === undefined
+      ? {}
+      : { hasActivationGrant: config.hasActivationGrant }),
+  };
+}
+
+/** Legacy production rejection first (resolver can only tighten), then the resolver. */
+export function assertResendDeliveryAllowed(
+  config: ResendDeliveryCapabilityConfig,
+): void {
+  assertNonProductionProvider({
+    nodeEnv:
+      config.nodeEnv === "production" ||
+      config.capabilityEnv?.NODE_ENV === "production"
+        ? "production"
+        : config.nodeEnv,
+    provider: "Resend",
+  });
+  requireAllowed("emailDelivery", buildResendCapabilityContext(config));
+}
+
 export function createInquiryAdminNotificationFromEnvironment(
   source: Readonly<Record<string, string | undefined>> = process.env,
 ): InquiryNotificationScheduler | undefined {
@@ -140,9 +222,11 @@ function createAdminEmailGateway(
     return undefined;
   }
 
-  assertNonProductionProvider({
+  assertResendDeliveryAllowed({
+    apiKey: resendApiKey,
+    capabilityEnv: pickCapabilityEnv(source),
+    from: emailFrom,
     nodeEnv: environment.NODE_ENV,
-    provider: "Resend",
   });
 
   return {

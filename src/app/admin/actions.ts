@@ -17,7 +17,8 @@ import { QuoteService } from "@/modules/quote/service";
 import { createCustomShippingProviderForRuntime, createPaymentProviderForRuntime } from "@/modules/providers/runtime";
 import { ShippingService } from "@/modules/shipping/service";
 import { RoughCustomShippingService } from "@/modules/shipping/rough-custom";
-import { isAppError, toAppError } from "@/modules/shared/errors";
+import { toAppErrorLogged } from "@/lib/observability/report";
+import { isAppError } from "@/modules/shared/errors";
 
 export type AdminActionState = Readonly<{
   link?: string;
@@ -350,6 +351,7 @@ export const updateProductAction: AdminAction = async (_previous, formData) => {
     revalidatePath(`/admin/products/${productId}`);
     revalidatePath("/admin/products");
     revalidatePath("/shop");
+    revalidatePath("/shop/[slug]", "page");
     revalidatePath("/");
     return successState("Produk berhasil diperbarui.");
   } catch (error) {
@@ -375,6 +377,7 @@ export const updateVariantAction: AdminAction = async (_previous, formData) => {
     revalidatePath(`/admin/products/${productId}`);
     revalidatePath("/admin/products");
     revalidatePath("/shop");
+    revalidatePath("/shop/[slug]", "page");
     return successState("Varian berhasil diperbarui.");
   } catch (error) {
     return errorStateFrom(error);
@@ -395,6 +398,7 @@ export const adjustStockAction: AdminAction = async (_previous, formData) => {
     revalidatePath(`/admin/products/${productId}/stock/${variantId}`);
     revalidatePath("/admin/products");
     revalidatePath("/shop");
+    revalidatePath("/shop/[slug]", "page");
     return successState("Stok berhasil disesuaikan.");
   } catch (error) {
     return errorStateFrom(error);
@@ -410,6 +414,7 @@ export const replaceProductMediaAction: AdminAction = async (_previous, formData
     revalidatePath(`/admin/products/${productId}`);
     revalidatePath("/admin/products");
     revalidatePath("/shop");
+    revalidatePath("/shop/[slug]", "page");
     return successState("Mapping foto produk berhasil diperbarui.");
   } catch (error) {
     return errorStateFrom(error);
@@ -435,6 +440,7 @@ export const updatePortfolioAction: AdminAction = async (_previous, formData) =>
     revalidatePath(`/admin/portfolio/${projectId}`);
     revalidatePath("/admin/portfolio");
     revalidatePath("/projects");
+    revalidatePath("/projects/[slug]", "page");
     revalidatePath("/");
     return successState("Project portfolio berhasil diperbarui.");
   } catch (error) {
@@ -451,6 +457,7 @@ export const replacePortfolioMediaAction: AdminAction = async (_previous, formDa
     revalidatePath(`/admin/portfolio/${projectId}`);
     revalidatePath("/admin/portfolio");
     revalidatePath("/projects");
+    revalidatePath("/projects/[slug]", "page");
     revalidatePath("/");
     return successState("Mapping media portfolio berhasil diperbarui.");
   } catch (error) {
@@ -553,7 +560,7 @@ function errorState(message: string): AdminActionState {
 }
 
 function errorStateFrom(error: unknown): AdminActionState {
-  const app = toAppError(error);
+  const app = toAppErrorLogged(error, { boundary: "action:admin" });
   if (isAppError(error)) return errorState(app.message);
   return errorState("Operasi belum dapat diselesaikan. Coba lagi.");
 }

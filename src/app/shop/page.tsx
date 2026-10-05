@@ -1,83 +1,25 @@
 import type { Metadata } from "next";
-import { connection } from "next/server";
-import { PublicShell } from "@/components/niuva/public-shell";
-import { StatusNotice } from "@/components/niuva/status-notice";
-import { NiuvaLink } from "@/components/ui/NiuvaLink";
-import { typographySystemTokens as type } from "@/design/typography";
-import { getLiveShopProducts, getShopPreview } from "@/features/frontend-preview/server";
-import { ProductGrid } from "./product-grid";
+import { buildPageSocialMetadata } from "@/lib/site-metadata";
+import { ShopIndexView } from "./shop-index-view";
+
+const SHOP_TITLE = "Shop · Niuva";
+const SHOP_DESCRIPTION =
+  "Katalog produk ready-made Niuva dengan pilihan kategori dan status ketersediaan.";
 
 export const metadata: Metadata = {
-  title: "Shop · Niuva",
-  description: "Katalog produk ready-made Niuva dengan pilihan kategori dan status ketersediaan.",
+  title: SHOP_TITLE,
+  description: SHOP_DESCRIPTION,
+  ...buildPageSocialMetadata({ title: SHOP_TITLE, description: SHOP_DESCRIPTION, path: "/shop" }),
 };
 
-export default async function ShopPage({ searchParams }: { searchParams: Promise<{ preview?: string }> }) {
-  await connection();
-  const { scenario, products: previewProducts } = await getShopPreview((await searchParams).preview);
-  let products = previewProducts;
-  let liveEnabled = false;
-  let liveCatalogError = false;
-  let liveCatalogUnavailable = false;
-  if (scenario === null && process.env.DATABASE_URL !== undefined) {
-    try {
-      products = await getLiveShopProducts();
-      liveEnabled = products.length > 0;
-    } catch {
-      liveCatalogError = true;
-      products = [];
-    }
-  } else if (scenario === null) {
-    liveCatalogUnavailable = true;
-  }
-  const functionalStatus = liveEnabled
-    ? "server-backed" as const
-    : scenario === null
-      ? "capability-gated" as const
-      : "frontend-preview" as const;
+// Time-based revalidation (render-strategy.md, 9.16). Must stay a static
+// literal and short because stock is visible. This page must not read
+// `searchParams` or any other request-time API, otherwise it becomes dynamic
+// and `revalidate` has no effect: `?preview=` scenarios are served by
+// `src/app/preview/shop/page.tsx` through a rewrite in next.config.ts.
+// `revalidatePath("/shop")` in admin actions invalidates this entry.
+export const revalidate = 60;
 
-  return (
-    <PublicShell functionalStatus={functionalStatus} scope="shop" headerAction={{ href: "#catalog", label: "Lihat Produk" }}>
-      <main id="main-content">
-        <section className="border-b border-border bg-card">
-          <div className="mx-auto max-w-public px-5 py-9 sm:px-8 sm:py-12">
-            <p className="text-sm font-medium text-brand-700">Ready-made</p>
-            <h1 className={`${type.heading.className} mt-3 max-w-3xl`}>Produk ready-made, dengan status yang jelas.</h1>
-            <p className="mt-3 max-w-xl text-base leading-7 text-muted-foreground">Lihat produk yang tersedia, lalu periksa varian, harga, dan stok sebelum menambahkannya ke cart.</p>
-          </div>
-        </section>
-
-        <div className="mx-auto max-w-public scroll-mt-8 px-5 py-8 sm:px-8 sm:py-10" id="catalog">
-          {liveCatalogError ? (
-            <StatusNotice tone="error" title="Katalog live belum dapat dimuat." description="Sumber data produk sedang tidak dapat dijangkau. Tidak ada transaksi yang dibuat; coba muat ulang atau gunakan preview contoh." action={<NiuvaLink href="/shop" variant="outline" className="min-h-11">Muat ulang</NiuvaLink>} />
-          ) : liveCatalogUnavailable ? (
-            <StatusNotice tone="warning" title="Katalog live belum terhubung." description="Database katalog belum tersedia pada runtime ini. Gunakan preview contoh untuk meninjau tampilan; data preview bukan inventory nyata." action={<NiuvaLink href="/shop?preview=examples" variant="outline" className="min-h-11">Buka preview contoh</NiuvaLink>} />
-          ) : scenario === "loading" ? (
-            <div role="status" aria-label="Memuat katalog" className="space-y-5 py-8">
-              <p className="text-sm text-muted-foreground">Memuat katalog contoh…</p>
-              <div className="grid gap-8 md:grid-cols-2">
-                {[0, 1].map(item => <div key={item} className="space-y-4"><div className="aspect-[4/3] rounded-xl bg-muted motion-safe:animate-pulse" /><div className="h-7 w-2/3 rounded-md bg-muted motion-safe:animate-pulse" /></div>)}
-              </div>
-            </div>
-          ) : scenario === "error" ? (
-            <StatusNotice tone="error" title="Katalog belum dapat dimuat." description="Muat kembali untuk meninjau alur pemulihan. Tidak ada transaksi yang dibuat." action={<NiuvaLink href="/shop?preview=examples" variant="outline" className="min-h-11">Coba lagi</NiuvaLink>} />
-          ) : products.length === 0 ? (
-            <StatusNotice tone="info" title="Katalog ready-made belum dipublikasikan." description="Produk, foto, varian, dan stok akan muncul setelah dataset launch mendapat persetujuan publikasi." action={<NiuvaLink href="/services" variant="outline" className="min-h-11">Lihat layanan</NiuvaLink>} />
-          ) : (
-            <ProductGrid products={products} previewEnabled={scenario === "examples"} />
-          )}
-          {process.env.NODE_ENV === "development" && !liveEnabled && (
-            <aside aria-label="Preview katalog" className="mt-12 rounded-lg border border-info-border bg-info-background p-4 text-info">
-              <p className="text-sm font-semibold">Preview lokal, data sintetis dan bukan inventory Niuva</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {[["examples", "Contoh"], ["empty", "Kosong"], ["loading", "Memuat"], ["error", "Gagal"]].map(([value, label]) => (
-                  <NiuvaLink key={value} href={`/shop?preview=${value}`} variant="outline" size="sm" className="min-h-11" aria-current={scenario === value ? "page" : undefined}>{label}</NiuvaLink>
-                ))}
-              </div>
-            </aside>
-          )}
-        </div>
-      </main>
-    </PublicShell>
-  );
+export default function ShopPage() {
+  return <ShopIndexView preview={undefined} />;
 }

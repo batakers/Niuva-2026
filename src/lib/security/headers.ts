@@ -1,4 +1,4 @@
-import { CUSTOM_FILE_MAX_BYTES } from "../../modules/policy/privacy";
+import { decide } from "../../modules/capabilities/resolver";
 
 export type SecurityHeader = {
   key: string;
@@ -7,20 +7,18 @@ export type SecurityHeader = {
 
 type SecurityEnvironment = Readonly<Record<string, string | undefined>>;
 
-function isNonEmptyString(value: string | undefined): boolean {
-  return typeof value === "string" && value.trim().length > 0;
-}
-
-function hasCompleteR2UploadCapability(environment: SecurityEnvironment): boolean {
-  return (
-    environment.CUSTOM_FILE_MAX_BYTES?.trim() === String(CUSTOM_FILE_MAX_BYTES) &&
-    isNonEmptyString(environment.R2_ACCESS_KEY_ID) &&
-    isNonEmptyString(environment.R2_ACCOUNT_ID) &&
-    isNonEmptyString(environment.R2_ENDPOINT) &&
-    isNonEmptyString(environment.R2_PRIVATE_BUCKET) &&
-    isNonEmptyString(environment.R2_PUBLIC_BUCKET) &&
-    isNonEmptyString(environment.R2_SECRET_ACCESS_KEY)
-  );
+// R2 connect-src is granted only when the capability resolver allows
+// `objectStorage`. The env is passed in (no implicit process.env) and NODE_ENV
+// is pinned to the caller's value so tier resolution matches the header mode.
+// A half-filled R2 group is rejected at start by src/instrumentation.ts
+// (see lib/env/object-storage-startup.ts), so a denial here never hides one.
+function isObjectStorageAllowed(
+  environment: SecurityEnvironment,
+  nodeEnvironment: string | undefined,
+): boolean {
+  return decide("objectStorage", {
+    env: { ...environment, NODE_ENV: nodeEnvironment },
+  }).allowed;
 }
 
 function getSafeHttpsOrigin(endpoint: string | undefined): string | undefined {
@@ -45,14 +43,35 @@ function getSafeHttpsOrigin(endpoint: string | undefined): string | undefined {
   }
 }
 
+// The one place that decides whether the R2 origin is part of connect-src.
+// Shared by the static policy below and the per-request nonce policy written by
+// src/proxy.ts, so the two cannot drift. Never in production NODE_ENV.
+export function getObjectStorageConnectOrigin(
+  nodeEnvironment = process.env.NODE_ENV,
+  environment: SecurityEnvironment = process.env,
+): string | undefined {
+  return nodeEnvironment === "production" ||
+    !isObjectStorageAllowed(environment, nodeEnvironment)
+    ? undefined
+    : getSafeHttpsOrigin(environment.R2_ENDPOINT);
+}
+
+// `source` for the static CSP rule in next.config.ts headers(). It matches every
+// path EXCEPT /checkout and /account(/...), whose CSP comes only from the
+// nonce proxy (src/proxy.ts), so no response relies on header overwrite there.
+// Next compiles this case-insensitively, the same way as the proxy matcher, and
+// isHeaderOnlyPath lowercases, so both sides agree on differently-cased paths.
+// /admin and /api/admin stay included because
+// Clerk's merge cannot drop 'unsafe-inline' and 503/redirect responses from the
+// proxy carry no CSP of their own (see csp-clerk-findings.md, section 10).
+export const STATIC_CSP_SOURCE = "/((?!checkout(?:/|$)|account(?:/|$)).*)";
+
 export function getContentSecurityPolicy(
   nodeEnvironment = process.env.NODE_ENV,
   environment: SecurityEnvironment = process.env,
 ): string {
   const isProduction = nodeEnvironment === "production";
-  const r2Origin = isProduction || !hasCompleteR2UploadCapability(environment)
-    ? undefined
-    : getSafeHttpsOrigin(environment.R2_ENDPOINT);
+  const r2Origin = getObjectStorageConnectOrigin(nodeEnvironment, environment);
   const connectSources = [
     "'self'",
     ...(r2Origin === undefined ? [] : [r2Origin]),
@@ -78,15 +97,21 @@ export function getContentSecurityPolicy(
   return directives.join("; ");
 }
 
-export function getSecurityHeaders(
+export function getStaticContentSecurityPolicyHeader(
   nodeEnvironment = process.env.NODE_ENV,
   environment: SecurityEnvironment = process.env,
+): SecurityHeader {
+  return {
+    key: "Content-Security-Policy",
+    value: getContentSecurityPolicy(nodeEnvironment, environment),
+  };
+}
+
+// Every security header except the CSP; applied to all routes.
+export function getNonCspSecurityHeaders(
+  nodeEnvironment = process.env.NODE_ENV,
 ): SecurityHeader[] {
   const headers: SecurityHeader[] = [
-    {
-      key: "Content-Security-Policy",
-      value: getContentSecurityPolicy(nodeEnvironment, environment),
-    },
     {
       key: "Permissions-Policy",
       value: "camera=(), geolocation=(), microphone=(), payment=(), usb=()",
@@ -117,4 +142,14 @@ export function getSecurityHeaders(
   }
 
   return headers;
+}
+
+export function getSecurityHeaders(
+  nodeEnvironment = process.env.NODE_ENV,
+  environment: SecurityEnvironment = process.env,
+): SecurityHeader[] {
+  return [
+    getStaticContentSecurityPolicyHeader(nodeEnvironment, environment),
+    ...getNonCspSecurityHeaders(nodeEnvironment),
+  ];
 }

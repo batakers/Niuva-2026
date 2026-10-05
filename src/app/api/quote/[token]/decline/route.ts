@@ -24,7 +24,9 @@ export async function POST(
   const correlationId = createCorrelationId();
 
   try {
-    assertPublicMutationRequest(request, quoteDecisionRateLimiter);
+    assertPublicMutationRequest(request, quoteDecisionRateLimiter, {
+      endpointId: "POST /api/quote/[token]/decline",
+    });
     const { token } = await context.params;
     const quoteId = getRouteAccessTokenEntityId(token);
 

@@ -12,7 +12,9 @@ const limiter = createInMemoryRateLimiter({ limit: 5, maxKeys: 256, windowMs: 60
 export async function POST(request: Request, context: RouteContext<"/api/custom-print/requests/[token]/files">) {
   const correlationId = createCorrelationId();
   try {
-    assertPublicMutationRequest(request, limiter);
+    assertPublicMutationRequest(request, limiter, {
+      endpointId: "POST /api/custom-print/requests/[token]/files",
+    });
     const { token } = await context.params;
     const payload = await readJsonBody(request, { maxBytes: 4 * 1_024 });
     const data = typeof payload === "object" && payload !== null ? payload : {};

@@ -70,6 +70,42 @@ describe("origin boundary", () => {
     expect(isLoopbackRequest(request)).toBe(false);
     expect(isSameOriginRequest(request)).toBe(true);
   });
+
+  it.each(["null", "NULL", "Null", " null ", "\tnull"])(
+    "rejects the opaque Origin value %j",
+    (value) => {
+      const request = new Request("http://127.0.0.1:3000/api/example", {
+        headers: { origin: value },
+        method: "POST",
+      });
+
+      expect(isSameOriginRequest(request)).toBe(false);
+    },
+  );
+
+  it("does not trust X-Forwarded-Host that matches Origin but not the real host", () => {
+    const request = new Request("https://real.example/api/example", {
+      headers: {
+        origin: "https://evil.test",
+        "x-forwarded-host": "evil.test",
+        "x-forwarded-proto": "https",
+      },
+      method: "POST",
+    });
+
+    expect(isSameOriginRequest(request)).toBe(false);
+  });
+
+  it("accepts a legitimate same-origin request and rejects a missing Origin", () => {
+    const url = "https://real.example/api/example";
+
+    expect(
+      isSameOriginRequest(
+        new Request(url, { headers: { origin: "https://real.example" }, method: "POST" }),
+      ),
+    ).toBe(true);
+    expect(isSameOriginRequest(new Request(url, { method: "POST" }))).toBe(false);
+  });
 });
 
 describe("in-memory rate limiter", () => {

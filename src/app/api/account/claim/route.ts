@@ -15,7 +15,9 @@ const schema = z.object({ kind: z.enum(["B2B_INQUIRY", "CUSTOM_PRINT_REQUEST"]),
 export async function POST(request: Request) {
   const correlationId = createCorrelationId();
   try {
-    assertPublicMutationRequest(request, limiter);
+    assertPublicMutationRequest(request, limiter, {
+      endpointId: "POST /api/account/claim",
+    });
     const customer = await requireCustomer();
     const input = parseWithValidation(schema, await readJsonBody(request, { maxBytes: 2_048 }));
     const result = await new CustomerWorkRepository().claim({ ...input, customerId: customer.id });

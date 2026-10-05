@@ -38,7 +38,9 @@ export function PrivateUploadField({
   maxBytes,
   onBusyChange,
   onFileChange,
+  intentUrl = "/api/uploads/intents",
 }: Readonly<{
+  intentUrl?: string;
   acceptedExtensions: readonly string[];
   description: string;
   disabled?: boolean;
@@ -100,7 +102,7 @@ export function PrivateUploadField({
 
     setStatus("uploading");
     try {
-      const intentResponse = await fetch("/api/uploads/intents", {
+      const intentResponse = await fetch(intentUrl, {
         body: JSON.stringify({ mimeType, originalName: nextFile.name, sizeBytes: nextFile.size }),
         headers: { "content-type": "application/json" },
         method: "POST",

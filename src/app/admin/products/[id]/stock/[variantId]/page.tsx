@@ -6,7 +6,7 @@ import { z } from "zod";
 
 import { AdminAccessView } from "@/app/admin/admin-access-view";
 import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
-import { loadAdminRecord } from "@/app/admin/admin-record-loader";
+import { loadAdminRecordLogged } from "@/app/admin/admin-page-failure";
 import { AdminDataUnavailableView, AdminPagination, AdminShell } from "@/components/niuva/admin-shell";
 import { AdminOperationsService, parseAdminPage } from "@/modules/admin/operations";
 
@@ -40,9 +40,13 @@ export default async function AdminStockHistoryPage({
   if (!z.uuid().safeParse(id).success || !z.uuid().safeParse(variantId).success) notFound();
   const page = parseAdminPage((await searchParams).page);
   const service = new AdminOperationsService({ authorize: async () => access });
-  const result = await loadAdminRecord(() => service.getStockHistory(id, variantId, { page }));
+  const result = await loadAdminRecordLogged(
+    "page:/admin/products/[id]/stock/[variantId]",
+    () => service.getStockHistory(id, variantId, { page }),
+    { id, op: "detail", page: String(page), variantId },
+  );
   if (result.status === "not-found") notFound();
-  if (result.status === "unavailable") return <AdminDataUnavailableView active="products" role={access.profile.role} title="Riwayat stok belum dapat dimuat" />;
+  if (result.status === "unavailable") return <AdminDataUnavailableView active="products" kind={result.kind} role={access.profile.role} title="Riwayat stok belum dapat dimuat" />;
   const history = result.record;
 
   return (

@@ -8,9 +8,22 @@ import { StatusNotice } from "@/components/niuva/status-notice";
 import { isLocalDemoMode, getServerCapabilities } from "@/lib/env/server";
 import { typographySystemTokens as type } from "@/design/typography";
 import { publicServices } from "@/features/public/company-content";
+import { buildPageSocialMetadata } from "@/lib/site-metadata";
 import { BriefForm } from "./brief-form";
 
-export const metadata: Metadata = { title: "Project brief · Niuva", description: "Susun konteks, tujuan, dan referensi awal untuk percakapan proyek bersama Niuva." };
+const BRIEF_TITLE = "Project brief · Niuva";
+const BRIEF_DESCRIPTION =
+  "Susun konteks, tujuan, dan referensi awal untuk percakapan proyek bersama Niuva.";
+
+export const metadata: Metadata = {
+  title: BRIEF_TITLE,
+  description: BRIEF_DESCRIPTION,
+  ...buildPageSocialMetadata({
+    title: BRIEF_TITLE,
+    description: BRIEF_DESCRIPTION,
+    path: "/project-brief",
+  }),
+};
 
 export default async function ProjectBriefPage({ searchParams }: Readonly<{
   searchParams: Promise<{ service?: string | string[] }>;

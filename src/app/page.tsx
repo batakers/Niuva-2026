@@ -2,7 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { connection } from "next/server";
 import { PublicShell } from "@/components/niuva/public-shell";
 
 import { typographySystemTokens } from "@/design/typography";
@@ -11,6 +10,7 @@ import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Icon } from "@/components/ui/Icon";
 import { getProjectPreview } from "@/features/frontend-preview/server";
 import { publicCompanyProfile, publicServices } from "@/features/public/company-content";
+import { buildPageSocialMetadata } from "@/lib/site-metadata";
 import { cn } from "@/lib/utils";
 
 const processSteps = [
@@ -55,11 +55,19 @@ function PathArrow() {
 export const metadata: Metadata = {
   title: "Niuva",
   description: publicCompanyProfile.supportingCopy,
+  ...buildPageSocialMetadata({
+    title: "Niuva",
+    description: publicCompanyProfile.supportingCopy,
+    path: "/",
+  }),
   robots: { follow: true, index: true },
 };
 
+// Time-based revalidation (render-strategy.md, 9.13). Must stay a static
+// literal. `revalidatePath("/")` in admin actions invalidates this entry.
+export const revalidate = 300;
+
 export default async function Home() {
-  await connection();
   // Portfolio evidence is additive; a database outage must not take down the
   // company narrative and the primary contact paths on the homepage.
   const { projects } = await getProjectPreview(undefined).catch(() => ({ projects: [] as const }));

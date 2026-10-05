@@ -4,6 +4,7 @@ const storageMock = vi.hoisted(() => ({
   createDownloadUrl: vi.fn(),
   createUploadUrl: vi.fn(),
   deleteObject: vi.fn(),
+  computeSha256: vi.fn(),
   headObject: vi.fn(),
   lastKey: undefined as string | undefined,
 }));
@@ -20,6 +21,7 @@ vi.mock("@/modules/files/r2", () => ({
     createUploadUrl: storageMock.createUploadUrl,
     deleteObject: storageMock.deleteObject,
     headObject: storageMock.headObject,
+    computeSha256: storageMock.computeSha256,
   }),
 }));
 
@@ -90,6 +92,7 @@ beforeEach(async () => {
   storageMock.createUploadUrl.mockReset();
   storageMock.deleteObject.mockReset();
   storageMock.headObject.mockReset();
+  storageMock.computeSha256.mockReset().mockResolvedValue("a".repeat(64));
   storageMock.lastKey = undefined;
   storageMock.createUploadUrl.mockImplementation(
     async (input: Readonly<{ key: string }>) => {
@@ -164,6 +167,12 @@ describe("Private upload route integration", () => {
       uploadStatus: "UPLOADED",
       uploadTokenHash: null,
     });
+    const checked = await prisma.storedFile.findUnique({
+      select: { sha256: true, verifiedAt: true },
+      where: { id: fileId },
+    });
+    expect(checked?.sha256).toBe("a".repeat(64));
+    expect(checked?.verifiedAt).not.toBeNull();
 
     const uploaderId = customerAuthMock.id;
     const other = await prisma.customer.create({

@@ -8,7 +8,9 @@ import {
 } from "lucide-react";
 import type { AdminRole } from "@/generated/prisma/client";
 import { AdminSessionActions } from "./admin-session-actions";
+import type { FailureKind } from "@/lib/observability/logger";
 import { AdminSidebarLayout, AdminSidebarLink, AdminSidebarToggle } from "./admin-sidebar";
+import { adminDataUnavailableDescription } from "./system-state-copy";
 
 export type AdminArea =
   | "overview"
@@ -160,9 +162,10 @@ function AdminNavLink({
 
 export function AdminDataUnavailableView({
   active = "overview",
+  kind,
   role,
   title = "Data operasional belum dapat dimuat",
-}: Readonly<{ active?: AdminArea; role: AdminRole; title?: string }>) {
+}: Readonly<{ active?: AdminArea; kind?: FailureKind; role: AdminRole; title?: string }>) {
   const retryHref = active === "overview" ? "/admin" : active === "queue" ? "/admin/queue" :
     [...primaryNavigation, ...manageNavigation].find((item) => item.area === active)?.href ?? "/admin";
   return (
@@ -170,7 +173,9 @@ export function AdminDataUnavailableView({
       <p className="text-sm font-medium text-brand-700">Niuva / Admin</p>
       <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
       <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground">
-        Sesi {roleLabels[role]} tersedia, tetapi sumber data sedang tidak dapat dijangkau. Coba muat ulang tanpa mengubah data.
+        {kind === undefined
+          ? `Sesi ${roleLabels[role]} tersedia, tetapi sumber data sedang tidak dapat dijangkau. Coba muat ulang tanpa mengubah data.`
+          : adminDataUnavailableDescription(kind)}
       </p>
       <p className="mt-5 text-sm font-medium text-destructive" role="alert">Tidak ada perubahan operasional yang dibuat.</p>
       <div className="mt-6">

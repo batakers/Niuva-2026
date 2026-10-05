@@ -7,7 +7,7 @@ import { z } from "zod";
 import { AdminAccessView } from "@/app/admin/admin-access-view";
 import { AdminActionForm } from "@/app/admin/admin-action-form";
 import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
-import { loadAdminRecord } from "@/app/admin/admin-record-loader";
+import { loadAdminRecordLogged } from "@/app/admin/admin-page-failure";
 import {
   replaceProductMediaAction,
   updateProductAction,
@@ -29,9 +29,9 @@ export default async function AdminProductDetailPage({ params }: Readonly<{ para
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
   const service = new AdminOperationsService({ authorize: async () => access });
-  const result = await loadAdminRecord(() => service.getProduct(id));
+  const result = await loadAdminRecordLogged("page:/admin/products/[id]", () => service.getProduct(id), { id, op: "detail" });
   if (result.status === "not-found") notFound();
-  if (result.status === "unavailable") return <AdminDataUnavailableView active="products" role={access.profile.role} title="Detail produk belum dapat dimuat" />;
+  if (result.status === "unavailable") return <AdminDataUnavailableView active="products" kind={result.kind} role={access.profile.role} title="Detail produk belum dapat dimuat" />;
   const product = result.record;
 
   return (

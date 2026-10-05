@@ -23,7 +23,9 @@ export async function POST(request: Request) {
   const correlationId = createCorrelationId();
 
   try {
-    assertPublicMutationRequest(request, shippingRatesRateLimiter);
+    assertPublicMutationRequest(request, shippingRatesRateLimiter, {
+      endpointId: "POST /api/shipping/rates",
+    });
     await requireCustomer();
     const payload = await readJsonBody(request, {
       maxBytes: SHIPPING_RATES_MAX_BODY_BYTES,

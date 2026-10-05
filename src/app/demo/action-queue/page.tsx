@@ -8,6 +8,7 @@ import { ActionQueueService } from "@/modules/admin/action-queue-service";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { PublicShell } from "@/components/niuva/public-shell";
 
+import { createDemoActionQueueAuthorizer } from "./demo-authorizer";
 import { LocalDemoActionQueueView } from "./action-queue-demo-view";
 
 export const metadata: Metadata = {
@@ -24,7 +25,9 @@ export default async function LocalDemoActionQueuePage() {
 
   let result: ActionQueueResult | null = null;
   try {
-    result = await new ActionQueueService().list();
+    result = await new ActionQueueService({
+      authorize: createDemoActionQueueAuthorizer(),
+    }).list();
   } catch {
     // Keep the demo route useful even when its local database is unavailable.
   }

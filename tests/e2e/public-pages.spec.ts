@@ -15,6 +15,7 @@ test("public navigation supports mobile menu, escape, skip link and real routes"
   await toggle.click();
   const nav = page.getByRole("navigation", { name: "Navigasi utama" });
   await expect(nav.getByRole("link", { name: "Layanan", exact: true })).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Brief Proyek", exact: true })).toHaveAttribute("href", "/project-brief");
   await page.keyboard.press("Escape");
   await expect(toggle).toBeFocused();
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
@@ -36,6 +37,7 @@ test("public navigation exposes active cues on exact, dynamic, and mobile routes
     { label: "Shop", path: "/shop/contoh-dock-modular-meja?preview=examples" },
     { label: "Custom Print", path: "/custom-print/request" },
     { label: "Cart", path: "/cart?preview=examples" },
+    { label: "Brief Proyek", path: "/project-brief" },
   ] as const;
 
   for (const routeCase of routeCases) {

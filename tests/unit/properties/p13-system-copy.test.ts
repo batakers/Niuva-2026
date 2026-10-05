@@ -97,6 +97,12 @@ describe("Property 13: system copy constraints", () => {
   const copyStrings: Array<[string, string]> = [];
   collectStrings(systemCopy, "systemCopy", copyStrings);
 
+  it("has copy for RESOURCE_BUSY", () => {
+    expect(systemCopy.resourceBusy.title.length).toBeGreaterThan(0);
+    expect(systemCopy.resourceBusy.description.length).toBeGreaterThan(0);
+    expect(copyStrings.map(([label]) => label)).toContain("systemCopy.resourceBusy.title");
+  });
+
   it("collects every systemCopy string", () => {
     expect(copyStrings.length).toBeGreaterThanOrEqual(25);
   });

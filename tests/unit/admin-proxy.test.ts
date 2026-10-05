@@ -226,7 +226,8 @@ describe("admin proxy with Clerk credentials", () => {
 
 describe("admin proxy unchanged contracts", () => {
   it("keeps the route matcher unchanged", () => {
-    expect(config).toEqual({ matcher: ["/admin/:path*", "/api/admin/:path*"] });
+    // Task 7.21: the Clerk entries stay first and unchanged; header-only entries follow.
+    expect(config.matcher.slice(0, 2)).toEqual(["/admin/:path*", "/api/admin/:path*"]);
   });
 
   it("keeps createAdminAuthUnavailableResponse output identical", async () => {

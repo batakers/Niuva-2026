@@ -6,7 +6,7 @@ import { z } from "zod";
 
 import { AdminAccessView } from "@/app/admin/admin-access-view";
 import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
-import { loadAdminRecord } from "@/app/admin/admin-record-loader";
+import { loadAdminRecordLogged, recordAdminPageFailure } from "@/app/admin/admin-page-failure";
 import { AdminActionForm } from "@/app/admin/admin-action-form";
 import {
   createQuoteDraftAction,
@@ -41,13 +41,13 @@ export default async function AdminCustomPrintDetailPage({ params }: Readonly<{ 
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
   const [requestResult, pricing, activeRule, latestEstimate] = await Promise.all([
-    loadAdminRecord(() => new AdminOperationsService({ authorize: async () => access }).getCustomPrintRequest(id)),
+    loadAdminRecordLogged("page:/admin/custom-print/[id]", () => new AdminOperationsService({ authorize: async () => access }).getCustomPrintRequest(id), { id, op: "detail" }),
     loadPricing(access),
     loadActivePricing(access),
     new CustomPrintEstimateService({ authorizeAdmin: async () => access }).latestForAdmin(id),
   ]);
   if (requestResult.status === "not-found") notFound();
-  if (requestResult.status === "unavailable") return <AdminDataUnavailableView active="custom-print" role={access.profile.role} title="Detail custom print belum dapat dimuat" />;
+  if (requestResult.status === "unavailable") return <AdminDataUnavailableView active="custom-print" kind={requestResult.kind} role={access.profile.role} title="Detail custom print belum dapat dimuat" />;
   const request = requestResult.record;
   const review = request.review;
   const estimateCurrent = latestEstimate !== null && isEstimateCurrent(latestEstimate.snapshot, review?.updatedAt);
@@ -215,8 +215,8 @@ export default async function AdminCustomPrintDetailPage({ params }: Readonly<{ 
   );
 }
 
-async function loadPricing(access: AdminAccess): Promise<Awaited<ReturnType<AdminOperationsService["listPricingRules"]>> | null> { try { return await new AdminOperationsService({ authorize: async () => access }).listPricingRules(); } catch { return null; } }
-async function loadActivePricing(access: AdminAccess): Promise<Awaited<ReturnType<AdminOperationsService["getActivePricingRule"]>> | null> { try { return await new AdminOperationsService({ authorize: async () => access }).getActivePricingRule(); } catch { return null; } }
+async function loadPricing(access: AdminAccess): Promise<Awaited<ReturnType<AdminOperationsService["listPricingRules"]>> | null> { try { return await new AdminOperationsService({ authorize: async () => access }).listPricingRules(); } catch (error) { recordAdminPageFailure(error, "page:/admin/custom-print/[id]", { op: "pricing-rules" }); return null; } }
+async function loadActivePricing(access: AdminAccess): Promise<Awaited<ReturnType<AdminOperationsService["getActivePricingRule"]>> | null> { try { return await new AdminOperationsService({ authorize: async () => access }).getActivePricingRule(); } catch (error) { recordAdminPageFailure(error, "page:/admin/custom-print/[id]", { op: "active-pricing-rule" }); return null; } }
 function Info({ label, value }: Readonly<{ label: string; value: string }>) { return <div><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-1 break-words font-medium">{value}</dd></div>; }
 function Field({ label, name, required, type, value }: Readonly<{ label: string; name: string; required?: boolean; type: string; value: string }>) { return <label className="grid gap-2 text-sm font-medium" htmlFor={name}><span>{label}</span><input className={inputClass} defaultValue={value} id={name} name={name} required={required} type={type} /></label>; }
 function formatStatus(value: string): string { return value.toLocaleLowerCase("id").split("_").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" "); }

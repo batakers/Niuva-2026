@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Icon } from "@/components/ui/Icon";
+import { useCartCount } from "@/features/cart/use-cart-count";
 import { useHydrated } from "./use-hydrated";
 
 const primaryLinks = [
@@ -13,6 +14,7 @@ const primaryLinks = [
   { href: "/projects", label: "Projects" },
   { href: "/custom-print", label: "Custom Print" },
   { href: "/shop", label: "Shop" },
+  { href: "/project-brief", label: "Brief Proyek" },
 ] as const;
 
 const utilityLinks = [
@@ -31,6 +33,7 @@ export type PublicHeaderAction = Readonly<{ href: string; label: string }> | nul
 
 export function PublicNavigation({ action }: { action: PublicHeaderAction }) {
   const hydrated = useHydrated();
+  const cartCount = useCartCount();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
@@ -69,6 +72,14 @@ export function PublicNavigation({ action }: { action: PublicHeaderAction }) {
                 className={navigationLinkClassName}
                 onClick={() => setOpen(false)}>
                 {label}
+                {href === "/cart" && cartCount ? (
+                  <>
+                    <span aria-hidden="true" data-cart-count className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full border border-border bg-muted px-1.5 text-xs font-semibold tabular-nums text-foreground">
+                      {cartCount > 99 ? "99+" : cartCount}
+                    </span>
+                    <span className="sr-only">, {cartCount} item di cart</span>
+                  </>
+                ) : null}
               </Link>
             );
           })}

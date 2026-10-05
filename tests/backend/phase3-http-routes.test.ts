@@ -113,6 +113,18 @@ describe("Phase 3 public HTTP boundaries", () => {
     expect(mocks.createIntent).not.toHaveBeenCalled();
   });
 
+  it("rejects an anonymous upload intent with 401 and no upload URL", async () => {
+    mocks.createIntent.mockRejectedValueOnce(appError("UNAUTHORIZED"));
+
+    const response = await postUploadIntent(
+      publicRequest("/api/uploads/intents", { mimeType: "model/stl", originalName: "model.stl", sizeBytes: 3 }),
+    );
+
+    expect(response.status).toBe(401);
+    const body = JSON.stringify(await response.json());
+    expect(body).not.toContain("uploadUrl");
+  });
+
   it("keeps public routes thin while returning only public-safe service values", async () => {
     mocks.inquirySubmit.mockResolvedValue({
       accessToken: { token: "inquiry-token" },
@@ -167,7 +179,7 @@ describe("Phase 3 public HTTP boundaries", () => {
     expect(intent.status).toBe(201);
     expect(mocks.createIntent).toHaveBeenCalledWith({
       mimeType: "model/stl", originalName: "model.stl", sizeBytes: 3,
-    }, "80c93342-dc64-4426-b5bd-f1bda83f1720");
+    });
     await expect(intent.json()).resolves.toMatchObject({
       fileId: "2b7f3c1a-18f7-4d91-8b86-8d98fcd0f7f4",
       uploadToken: "upload-token",

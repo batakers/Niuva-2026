@@ -17,9 +17,9 @@ export async function POST(request: Request) {
     const payload = await readJsonBody(request, {
       maxBytes: MIDTRANS_WEBHOOK_MAX_BODY_BYTES,
     });
-    const result = await new PaymentWebhookService().handleMidtransNotification(
-      payload,
-    );
+    const result = await new PaymentWebhookService({
+      environment: process.env,
+    }).handleMidtransNotification(payload);
 
     return apiSuccess(
       { ok: true, outcome: result.kind },

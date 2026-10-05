@@ -5,8 +5,10 @@ import Link from "next/link";
 import { AdminDataUnavailableView, AdminPagination, AdminShell } from "@/components/niuva/admin-shell";
 import { AdminAccessView } from "@/app/admin/admin-access-view";
 import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
+import { recordAdminPageFailure } from "@/app/admin/admin-page-failure";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import type { AdminAccess } from "@/lib/auth/clerk";
+import type { FailureKind } from "@/lib/observability/logger";
 import { AdminOperationsService, parseAdminPage, type AdminPortfolioRow } from "@/modules/admin/operations";
 import { isApprovedCardOnlyPortfolioProject } from "@/modules/portfolio/public-content";
 
@@ -30,8 +32,9 @@ export default async function AdminPortfolioPage({
   if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
   const { access } = gate;
 
-  const result = await loadPortfolio(access, page);
-  if (result === null) return <AdminDataUnavailableView active="portfolio" role={access.profile.role} title="Portfolio belum dapat dimuat" />;
+  const loaded = await loadPortfolio(access, page);
+  if (loaded.status === "unavailable") return <AdminDataUnavailableView active="portfolio" kind={loaded.kind} role={access.profile.role} title="Portfolio belum dapat dimuat" />;
+  const result = loaded.data;
   const published = result.items.filter((item) => item.isPublished).length;
   const featured = result.items.filter((item) => item.isFeatured).length;
 
@@ -75,11 +78,15 @@ export default async function AdminPortfolioPage({
   );
 }
 
-async function loadPortfolio(access: AdminAccess, page: number): Promise<Awaited<ReturnType<AdminOperationsService["listPortfolio"]>> | null> {
+type PortfolioLoad =
+  | { status: "ok"; data: Awaited<ReturnType<AdminOperationsService["listPortfolio"]>> }
+  | { status: "unavailable"; kind: FailureKind };
+
+async function loadPortfolio(access: AdminAccess, page: number): Promise<PortfolioLoad> {
   try {
-    return await new AdminOperationsService({ authorize: async () => access }).listPortfolio({ page });
-  } catch {
-    return null;
+    return { status: "ok", data: await new AdminOperationsService({ authorize: async () => access }).listPortfolio({ page }) };
+  } catch (error) {
+    return { status: "unavailable", kind: recordAdminPageFailure(error, "page:/admin/portfolio", { op: "list", page: String(page) }) };
   }
 }
 

@@ -13,6 +13,14 @@ describe("Customer email authentication primitives", () => {
     expect(await verifyPassword(password + " ", first)).toBe(false);
     expect(await verifyPassword(password, "malformed")).toBe(false);
   }, 10000);
+  it("reports a saturated hashing pool as RESOURCE_BUSY, not RATE_LIMITED", async () => {
+    const results = await Promise.allSettled([hashPassword("one"), hashPassword("two"), hashPassword("three")]);
+    const rejected = results.filter((result): result is PromiseRejectedResult => result.status === "rejected");
+    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(2);
+    expect(rejected).toHaveLength(1);
+    expect(rejected[0].reason).toMatchObject({ code: "RESOURCE_BUSY", status: 503 });
+    expect(rejected[0].reason).not.toMatchObject({ code: "RATE_LIMITED" });
+  }, 20000);
   it("accepts passphrases without forced numbers/uppercase and enforces length", () => {
     expect(passwordSchema.safeParse("a long lowercase phrase").success).toBe(true);
     expect(passwordSchema.safeParse("short").success).toBe(false);

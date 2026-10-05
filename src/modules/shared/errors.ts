@@ -19,6 +19,7 @@ export const ERROR_CODES = [
   "QUOTE_NOT_READY",
   "PRICING_RULE_NOT_APPROVED",
   "RATE_LIMITED",
+  "RESOURCE_BUSY",
   "LOCAL_SETUP_DISABLED",
   "INTERNAL_ERROR",
 ] as const;
@@ -111,6 +112,10 @@ const ERROR_DEFINITIONS: Record<ErrorCode, ErrorDefinition> = {
   RATE_LIMITED: {
     message: "Terlalu banyak permintaan. Coba lagi beberapa saat lagi.",
     status: 429,
+  },
+  RESOURCE_BUSY: {
+    message: "Server sedang sibuk. Coba lagi sebentar lagi.",
+    status: 503,
   },
   LOCAL_SETUP_DISABLED: {
     message: "Pengaturan ini hanya tersedia saat setup lokal.",

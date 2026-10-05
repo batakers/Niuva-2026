@@ -1,3 +1,5 @@
+import type { FailureKind } from "@/lib/observability/logger";
+
 export const SYSTEM_HEADING_ID = "system-state-title" as const;
 
 export type SystemStateCopy = Readonly<{ title: string; description: string }>;
@@ -50,6 +52,23 @@ export const systemCopy = {
         "Akses Admin belum dapat diperiksa saat ini. Muat ulang halaman, atau coba lagi beberapa saat lagi.",
     },
   },
+  // Description per failure cause for the admin "data unavailable" view.
+  // Kinds without an entry use `fallback`. No raw error text is ever interpolated.
+  adminDataUnavailable: {
+    DATABASE_UNAVAILABLE:
+      "Basis data belum dapat dijangkau saat ini. Coba muat ulang dalam beberapa saat, tanpa mengubah data.",
+    PROVIDER_TIMEOUT:
+      "Layanan pendukung terlalu lama merespons. Coba muat ulang dalam beberapa saat, tanpa mengubah data.",
+    CODE_DEFECT:
+      "Terjadi kesalahan saat memuat data ini. Coba muat ulang, atau kembali ke Overview.",
+    fallback:
+      "Data operasional belum dapat dimuat saat ini. Coba muat ulang tanpa mengubah data.",
+  },
+  resourceBusy: {
+    title: "Server sedang sibuk saat ini.",
+    description:
+      "Permintaan Anda belum dapat diproses karena server sedang sibuk. Tunggu sebentar, lalu coba lagi.",
+  },
   signOutFailed: { title: "Keluar belum berhasil", description: "Coba keluar lagi." },
   loading: { cart: "Memuat keranjang" },
   actions: {
@@ -63,3 +82,21 @@ export const systemCopy = {
     reload: "Muat ulang",
   },
 } as const satisfies Record<string, unknown>;
+
+/**
+ * Picks the admin "data unavailable" description for a failure cause. Causes
+ * without dedicated copy, and callers that pass no kind, get the safe fallback.
+ */
+export function adminDataUnavailableDescription(kind?: FailureKind): string {
+  const copy = systemCopy.adminDataUnavailable;
+  switch (kind) {
+    case "DATABASE_UNAVAILABLE":
+      return copy.DATABASE_UNAVAILABLE;
+    case "PROVIDER_TIMEOUT":
+      return copy.PROVIDER_TIMEOUT;
+    case "CODE_DEFECT":
+      return copy.CODE_DEFECT;
+    default:
+      return copy.fallback;
+  }
+}

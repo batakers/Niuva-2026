@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { parseInternalAuthEnvironment } from "../../lib/env/internal-auth";
 import { appError } from "../shared/errors";
 import { normalizeCustomerEmail } from "./core";
 
@@ -7,12 +8,8 @@ export const INTERNAL_GOOGLE_CONSENT_COOKIE = "niuva_internal_google_consent";
 export const INTERNAL_TERMS_VERSION = "INTERNAL-TERMS-2026-10-02-v1";
 export const INTERNAL_PRIVACY_VERSION = "INTERNAL-PRIVACY-2026-10-02-v1";
 export type InternalAuthConfig = Readonly<{ origin: string; googleEmail: string; passwordEmail: string }>;
-const configSchema = z.object({
-  NIUVA_INTERNAL_AUTH_ENABLED: z.literal("true"),
-  NIUVA_INTERNAL_GOOGLE_EMAIL: z.string().trim().email(),
-  NIUVA_INTERNAL_PASSWORD_EMAIL: z.string().trim().email(),
-  APP_URL: z.string().url(),
-});
+// APP_URL keeps its original lenient parse; the loopback/origin rules follow below.
+const appUrlSchema = z.string().url();
 
 // Cleanup deliberately does not depend on the signup flag or provider readiness.
 export function isInternalAuthDatabase(source: Readonly<Record<string, string | undefined>> = process.env): boolean {
@@ -28,12 +25,16 @@ export function isInternalAuthDatabase(source: Readonly<Record<string, string | 
 
 export function getInternalAuthConfig(source: Readonly<Record<string, string | undefined>> = process.env): InternalAuthConfig | null {
   if (!isInternalAuthDatabase(source) || source.NIUVA_CUSTOMER_AUTH_MOCK && source.NIUVA_CUSTOMER_AUTH_MOCK !== "false") return null;
-  const parsed = configSchema.safeParse(source);
-  if (!parsed.success) return null;
-  const app = new URL(parsed.data.APP_URL);
+  // Field shapes come from the single env schema source (src/lib/env/internal-auth.ts).
+  const internal = parseInternalAuthEnvironment(source);
+  const appUrl = appUrlSchema.safeParse(source.APP_URL);
+  if (!internal || internal.NIUVA_INTERNAL_AUTH_ENABLED !== true || !appUrl.success) return null;
+  const { NIUVA_INTERNAL_GOOGLE_EMAIL: rawGoogleEmail, NIUVA_INTERNAL_PASSWORD_EMAIL: rawPasswordEmail } = internal;
+  if (rawGoogleEmail === undefined || rawPasswordEmail === undefined) return null;
+  const app = new URL(appUrl.data);
   if (!["127.0.0.1", "localhost", "[::1]"].includes(app.hostname) || !["http:", "https:"].includes(app.protocol) || app.username || app.password || app.pathname !== "/" || app.search || app.hash) return null;
-  const googleEmail = normalizeCustomerEmail(parsed.data.NIUVA_INTERNAL_GOOGLE_EMAIL);
-  const passwordEmail = normalizeCustomerEmail(parsed.data.NIUVA_INTERNAL_PASSWORD_EMAIL);
+  const googleEmail = normalizeCustomerEmail(rawGoogleEmail);
+  const passwordEmail = normalizeCustomerEmail(rawPasswordEmail);
   if (googleEmail === passwordEmail) return null;
   return { origin: app.origin, googleEmail, passwordEmail };
 }

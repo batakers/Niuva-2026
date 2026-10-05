@@ -84,8 +84,6 @@ const QUOTE_CAUSES: readonly Cause[] = [...BASE, appErrorCause("CONFLICT"), appE
 // custom-print has no route-level format check: the service decides, so only AppError causes apply.
 const CUSTOM_PRINT_CAUSES: readonly Cause[] = [appErrorCause("NOT_FOUND"), appErrorCause("UNAUTHORIZED")];
 
-const liveMocks = () => [mocks.getLiveQuoteReview, mocks.getLiveOrderStatus, mocks.getStatus];
-
 function props(token: string): PageProps {
   return { params: Promise.resolve({ token }), searchParams: Promise.resolve({}) };
 }

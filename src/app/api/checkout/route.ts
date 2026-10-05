@@ -27,7 +27,9 @@ export async function POST(request: Request) {
   const correlationId = createCorrelationId();
 
   try {
-    assertPublicMutationRequest(request, checkoutRateLimiter);
+    assertPublicMutationRequest(request, checkoutRateLimiter, {
+      endpointId: "POST /api/checkout",
+    });
     const customer = await requireCustomer();
     const payload = await readJsonBody(request, {
       maxBytes: CHECKOUT_MAX_BODY_BYTES,
