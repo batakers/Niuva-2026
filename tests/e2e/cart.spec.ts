@@ -13,6 +13,7 @@ test("product selection adds only variant ID and quantity to the local cart", as
   );
   await page.getByRole("link", { name: "Lihat cart" }).click();
   await expect(page).toHaveURL(/\/cart\?preview=examples$/);
+  await expect(page.locator('a[href="/cart"]').filter({ hasText: "2 item di cart" }).first()).toBeAttached();
   await expect(page.getByRole("heading", { level: 3, name: "Dock modular meja" })).toBeVisible();
   await expect(page.getByText(/Rp\s?390\.000/)).toBeVisible();
 });

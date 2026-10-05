@@ -6,8 +6,9 @@ test("public navigation keeps the four paths, separate utilities, and contextual
   await page.goto("/");
   const navigation = page.getByRole("navigation", { name: "Navigasi utama" });
   await expect(navigation.locator('[data-navigation-group="primary"] a')).toHaveText([
-    "Layanan", "Projects", "Custom Print", "Shop",
+    "Layanan", "Projects", "Custom Print", "Shop", "Brief Proyek",
   ]);
+  await expect(navigation.getByRole("link", { name: "Brief Proyek" })).toHaveAttribute("href", "/project-brief");
   await expect(navigation.locator('[data-navigation-group="utility"] a')).toHaveText(["Cart", "Akun"]);
   await expect(page.locator("header").getByRole("link", { name: "Diskusikan Proyek" })).toHaveAttribute("href", "/project-brief");
 

@@ -3,6 +3,7 @@ import { connection } from "next/server";
 
 import { AdminAccessView } from "@/app/admin/admin-access-view";
 import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
+import { recordAdminPageFailure } from "@/app/admin/admin-page-failure";
 import { activatePricingRuleAction } from "@/app/admin/actions";
 import { AdminActionForm } from "@/app/admin/admin-action-form";
 import {
@@ -12,6 +13,7 @@ import {
 } from "@/components/niuva/admin-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import type { AdminAccess } from "@/lib/auth/clerk";
+import type { FailureKind } from "@/lib/observability/logger";
 import {
   AdminOperationsService,
   parseAdminPage,
@@ -41,18 +43,19 @@ export default async function AdminPricingPage({
   if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
   const { access } = gate;
 
-  const pricing = await loadPricing(access, page);
-  if (pricing === null) {
+  const loaded = await loadPricing(access, page);
+  if (loaded.status === "unavailable") {
     return (
       <AdminDataUnavailableView
         active="pricing"
+        kind={loaded.kind}
         role={access.profile.role}
         title="Pricing rules belum dapat dimuat"
       />
     );
   }
 
-  const { activeRule, result } = pricing;
+  const { activeRule, result } = loaded.data;
   const active = activeRule === null ? 0 : 1;
   const visibleInactive = result.items.filter((item) => item.status !== "ACTIVE").length;
 
@@ -196,16 +199,17 @@ export default async function AdminPricingPage({
   );
 }
 
-async function loadPricing(
-  access: AdminAccess,
-  page: number,
-): Promise<
-  | Readonly<{
-      activeRule: AdminPricingRuleRow | null;
-      result: Awaited<ReturnType<AdminOperationsService["listPricingRules"]>>;
-    }>
-  | null
-> {
+type PricingLoad =
+  | {
+      status: "ok";
+      data: Readonly<{
+        activeRule: AdminPricingRuleRow | null;
+        result: Awaited<ReturnType<AdminOperationsService["listPricingRules"]>>;
+      }>;
+    }
+  | { status: "unavailable"; kind: FailureKind };
+
+async function loadPricing(access: AdminAccess, page: number): Promise<PricingLoad> {
   try {
     const service = new AdminOperationsService({
       authorize: async () => access,
@@ -214,9 +218,9 @@ async function loadPricing(
       service.listPricingRules({ page }),
       service.getActivePricingRule(),
     ]);
-    return { activeRule, result };
-  } catch {
-    return null;
+    return { status: "ok", data: { activeRule, result } };
+  } catch (error) {
+    return { status: "unavailable", kind: recordAdminPageFailure(error, "page:/admin/pricing", { op: "list", page: String(page) }) };
   }
 }
 

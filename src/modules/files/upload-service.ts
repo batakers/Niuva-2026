@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { z } from "zod";
 
+import { requireCustomer } from "@/lib/auth/customer";
 import { CUSTOM_FILE_MAX_BYTES, REFERENCE_PHOTO_MAX_BYTES } from "@/modules/policy/privacy";
 import { appError, isAppError } from "@/modules/shared/errors";
 import { recordAudit, type AuditRecorder } from "@/modules/shared/audit";
@@ -74,6 +75,7 @@ export interface UploadFileRepository {
   markUploadedIfPending(input: Readonly<{
     fileId: string;
     now: Date;
+    sha256?: string;
     uploadTokenHash: string;
   }>): Promise<boolean>;
   rejectPendingUpload(fileId: string): Promise<void>;
@@ -81,6 +83,7 @@ export interface UploadFileRepository {
 
 export type UploadServiceDependencies = Readonly<{
   audit?: AuditRecorder;
+  authorize?: () => Promise<Readonly<{ id: string }>>;
   now?: () => Date;
   randomBytes?: RandomBytes;
   repository?: UploadFileRepository;
@@ -96,6 +99,7 @@ type NormalizedPrivateFile = Readonly<{
 
 export class UploadService {
   private readonly audit?: AuditRecorder;
+  private readonly authorize: () => Promise<Readonly<{ id: string }>>;
   private readonly clock: () => Date;
   private readonly randomBytes?: RandomBytes;
   private readonly repositoryFactory: () => UploadFileRepository;
@@ -103,6 +107,7 @@ export class UploadService {
 
   constructor(dependencies: UploadServiceDependencies = {}) {
     this.audit = dependencies.audit;
+    this.authorize = dependencies.authorize ?? requireCustomer;
     this.clock = dependencies.now ?? (() => new Date());
     this.randomBytes = dependencies.randomBytes;
     this.repositoryFactory = () =>
@@ -111,7 +116,22 @@ export class UploadService {
       dependencies.storage ?? createR2PrivateObjectStorageFromEnvironment();
   }
 
-  async createIntent(input: unknown, uploadedByCustomerId?: string): Promise<UploadIntentResult> {
+  /** Customer-only intent. Authorization happens before any file row or URL exists. */
+  async createIntent(input: unknown): Promise<UploadIntentResult> {
+    const customer = await this.authorize();
+    return this.issueIntent(input, customer.id);
+  }
+
+  /**
+   * Intent for the private-link append flow. The caller MUST have validated the
+   * route access token and the request's append eligibility first; no Customer
+   * session is required and the file is not attributed to a Customer.
+   */
+  async createIntentForVerifiedRequestAccess(input: unknown): Promise<UploadIntentResult> {
+    return this.issueIntent(input, undefined);
+  }
+
+  private async issueIntent(input: unknown, uploadedByCustomerId?: string): Promise<UploadIntentResult> {
     const file = normalizePrivateFile(input);
     const now = this.clock();
     const expiresAt = new Date(now.getTime() + UPLOAD_INTENT_TTL_MS);
@@ -229,9 +249,26 @@ export class UploadService {
       });
     }
 
+    let sha256: string | undefined;
+    const storage = this.storageFactory();
+    if (storage.computeSha256 !== undefined) {
+      try {
+        sha256 = await storage.computeSha256(file.storageKey, CUSTOM_FILE_MAX_BYTES);
+      } catch {
+        sha256 = undefined;
+      }
+      if (sha256 === undefined || !/^[0-9a-f]{64}$/.test(sha256)) {
+        await this.rejectAndDelete(file);
+        throw appError("UPLOAD_REJECTED", {
+          details: { file: "Checksum objek upload tidak dapat diverifikasi." },
+        });
+      }
+    }
+
     const markedUploaded = await repository.markUploadedIfPending({
       fileId: file.id,
       now,
+      sha256,
       uploadTokenHash: file.uploadTokenHash,
     });
 

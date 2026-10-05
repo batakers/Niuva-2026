@@ -1,6 +1,16 @@
 import { z } from "zod";
 
-import { CUSTOM_FILE_MAX_BYTES } from "@/modules/policy/privacy";
+import { CUSTOM_FILE_MAX_BYTES } from "../../modules/policy/privacy";
+
+import { parseDevOriginList } from "./dev-origins";
+import {
+  deploymentEnvironmentShape,
+  resolveDeploymentTier,
+  resolveProviderMode,
+  type DeploymentTier,
+  type ProviderMode,
+} from "./deployment";
+import { internalAuthEnvironmentShape } from "./internal-auth";
 
 type EnvironmentSource = Readonly<Record<string, string | undefined>>;
 
@@ -30,6 +40,44 @@ const optionalHttpUrl = optionalNonEmptyString.refine(
     value === undefined || hasAllowedProtocol(value, ["http:", "https:"]),
   { message: "Must be an HTTP(S) URL." },
 );
+
+function isCredentialFreeHttpsUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+
+    return (
+      url.protocol === "https:" && url.username === "" && url.password === ""
+    );
+  } catch {
+    return false;
+  }
+}
+
+// Payment provider endpoints receive the server key in an Authorization header,
+// so plain HTTP and URLs that embed credentials are rejected.
+const optionalHttpsUrlWithoutCredentials = optionalNonEmptyString.refine(
+  (value) => value === undefined || isCredentialFreeHttpsUrl(value),
+  { message: "Must be an HTTPS URL without embedded credentials." },
+);
+
+// Comma-separated hostnames/IPs for `allowedDevOrigins`. Blank or only commas
+// becomes undefined; any malformed entry rejects the whole field. Shape rules
+// live in ./dev-origins so next.config.ts can share them without the "@/" alias.
+const optionalDevOriginList = z
+  .preprocess(blankToUndefined, z.string().optional())
+  .transform((value, context) => {
+    const { invalid, valid } = parseDevOriginList(value);
+
+    if (invalid.length > 0) {
+      context.addIssue({
+        code: "custom",
+        message: "Must be comma-separated hostnames or IPs without scheme, port, path, or credentials.",
+      });
+      return z.NEVER;
+    }
+
+    return valid.length > 0 ? valid : undefined;
+  });
 
 const optionalDatabaseUrl = optionalNonEmptyString.refine(
   (value) =>
@@ -72,17 +120,38 @@ const serverEnvironmentSchema = z.object({
   BITESHIP_COURIERS: optionalNonEmptyString,
   BITESHIP_ORIGIN_AREA_ID: optionalNonEmptyString,
   CLERK_SECRET_KEY: optionalNonEmptyString,
+  // Consumer (src/app/api/analytics/retention/route.ts) only checks truthiness.
+  CRON_SECRET: optionalNonEmptyString,
   CUSTOM_FILE_MAX_BYTES: optionalApprovedCustomFileMaxBytes,
   DATABASE_URL: optionalDatabaseUrl,
+  // Consumer (scripts/seed-local-demo.ts) requires a PostgreSQL URL.
+  DEMO_DATABASE_URL: optionalDatabaseUrl,
   EMAIL_FROM: optionalNonEmptyString,
   GOOGLE_CLIENT_ID: optionalNonEmptyString,
   GOOGLE_CLIENT_SECRET: optionalNonEmptyString,
   GOOGLE_REDIRECT_URI: optionalHttpUrl,
   MIDTRANS_IS_PRODUCTION: optionalBoolean,
   MIDTRANS_SERVER_KEY: optionalNonEmptyString,
+  // Optional Snap endpoint override (not in CAPABILITY_GROUPS). Unset keeps the
+  // sandbox default in src/modules/payment/midtrans.ts; the provider guard still
+  // blocks production/live regardless of this value.
+  MIDTRANS_SNAP_ENDPOINT: optionalHttpsUrlWithoutCredentials,
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: optionalNonEmptyString,
   NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: optionalNonEmptyString,
   NEXT_PUBLIC_SENTRY_DSN: optionalHttpUrl,
+  // Internal-testing auth (optional, not in CAPABILITY_GROUPS). Shape is shared
+  // with src/modules/customer-auth/internal-testing.ts via ./internal-auth.
+  ...internalAuthEnvironmentShape,
+  // Deployment tier and provider mode (no consumers yet; shape in ./deployment).
+  ...deploymentEnvironmentShape,
+  // Flags below are only ever compared to the exact string "true" by consumers.
+  NIUVA_ANALYTICS_ENABLED: optionalBoolean,
+  NIUVA_CUSTOMER_AUTH_MOCK: optionalBoolean,
+  // Consumer (next.config.ts allowedDevOrigins, `next dev` only). Not in
+  // CAPABILITY_GROUPS. Default empty.
+  NIUVA_DEV_ALLOWED_ORIGINS: optionalDevOriginList,
+  // Consumer (next.config.ts) uses the value as a relative distDir name.
+  NIUVA_NEXT_DIST_DIR: optionalNonEmptyString,
   NIUVA_RUNTIME_MODE: z
     .preprocess(blankToUndefined, z.enum(["demo", "live"]).optional()),
   NODE_ENV: z
@@ -137,6 +206,26 @@ export function isLocalDemoMode(
   } catch {
     return false;
   }
+}
+
+export type ResolvedDeployment = Readonly<{
+  providerMode: ProviderMode;
+  tier: DeploymentTier;
+}>;
+
+/** Fail-closed tier/mode resolution; see ./deployment. Grants nothing by itself. */
+export function resolveDeployment(
+  source: EnvironmentSource = process.env,
+): ResolvedDeployment {
+  const environment = parseServerEnvironment(source);
+
+  return {
+    providerMode: resolveProviderMode(environment.NIUVA_PROVIDER_MODE),
+    tier: resolveDeploymentTier({
+      nodeEnv: environment.NODE_ENV,
+      tier: environment.NIUVA_DEPLOYMENT_TIER,
+    }),
+  };
 }
 
 export class EnvironmentValidationError extends Error {

@@ -18,6 +18,7 @@ import {
 import { CustomerAuthService } from "@/modules/customer-auth/service";
 import { INTERNAL_GOOGLE_CONSENT_COOKIE, getInternalAuthConfig } from "@/modules/customer-auth/internal-testing";
 import { createGoogleOAuthAdapter, getCustomerGoogleOAuthConfig } from "@/modules/customer-auth/google";
+import { customerCookieSecure } from "@/modules/customer-auth/app-origin";
 import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
@@ -54,7 +55,7 @@ function customerRedirectUrl(path: string, request: Request): URL {
 
 function clearOAuthCookies(response: NextResponse): void {
   const options = {
-    ...customerOAuthCookieOptions(process.env.NODE_ENV === "production"),
+    ...customerOAuthCookieOptions(customerCookieSecure(process.env)),
     maxAge: 0,
   };
 
@@ -116,7 +117,7 @@ export async function GET(request: Request): Promise<Response> {
     response.cookies.set(
       CUSTOMER_SESSION_COOKIE,
       login.sessionToken,
-      { ...customerSessionCookieOptions(process.env.NODE_ENV === "production"), maxAge: Math.max(0, Math.floor((login.expiresAt.getTime() - Date.now()) / 1000)) },
+      { ...customerSessionCookieOptions(customerCookieSecure(process.env)), maxAge: Math.max(0, Math.floor((login.expiresAt.getTime() - Date.now()) / 1000)) },
     );
     clearOAuthCookies(response);
     return response;

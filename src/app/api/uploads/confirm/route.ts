@@ -21,7 +21,9 @@ export async function POST(request: Request) {
   const correlationId = createCorrelationId();
 
   try {
-    assertPublicMutationRequest(request, uploadConfirmRateLimiter);
+    assertPublicMutationRequest(request, uploadConfirmRateLimiter, {
+      endpointId: "POST /api/uploads/confirm",
+    });
     const payload = await readJsonBody(request, {
       maxBytes: UPLOAD_CONFIRM_MAX_BODY_BYTES,
     });

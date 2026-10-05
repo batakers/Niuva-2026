@@ -7,7 +7,7 @@ import { z } from "zod";
 import { AdminAccessView } from "@/app/admin/admin-access-view";
 import { AdminActionForm } from "@/app/admin/admin-action-form";
 import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
-import { loadAdminRecord } from "@/app/admin/admin-record-loader";
+import { loadAdminRecordLogged } from "@/app/admin/admin-page-failure";
 import { replacePortfolioMediaAction, updatePortfolioAction } from "@/app/admin/actions";
 import { AdminDataUnavailableView, AdminShell } from "@/components/niuva/admin-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
@@ -25,9 +25,9 @@ export default async function AdminPortfolioDetailPage({ params }: Readonly<{ pa
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
   const service = new AdminOperationsService({ authorize: async () => access });
-  const result = await loadAdminRecord(() => service.getPortfolio(id));
+  const result = await loadAdminRecordLogged("page:/admin/portfolio/[id]", () => service.getPortfolio(id), { id, op: "detail" });
   if (result.status === "not-found") notFound();
-  if (result.status === "unavailable") return <AdminDataUnavailableView active="portfolio" role={access.profile.role} title="Detail portfolio belum dapat dimuat" />;
+  if (result.status === "unavailable") return <AdminDataUnavailableView active="portfolio" kind={result.kind} role={access.profile.role} title="Detail portfolio belum dapat dimuat" />;
   const project = result.record;
   const isCardOnly = isApprovedCardOnlyPortfolioProject(project);
 

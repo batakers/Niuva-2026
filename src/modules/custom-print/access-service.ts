@@ -27,6 +27,12 @@ const appendModelSchema = z.object({
 });
 const appendAccountModelSchema = appendModelSchema.omit({ token: true }).extend({ requestId: z.uuid() });
 
+/** Single rule for whether a private-link request may still receive a model. */
+export function canAppendModel(status: Readonly<{ intakeMode: string; status: string }>): boolean {
+  return status.intakeMode === "REFERENCE_ONLY" &&
+    ["SUBMITTED", "UNDER_REVIEW"].includes(status.status);
+}
+
 type Repository = Pick<CustomPrintRequestRepository,
   "attachVerifiedModel" | "findForPublicAccess" | "rotatePublicToken">;
 
@@ -64,6 +70,14 @@ export class CustomPrintAccessService {
       referenceNumber: request.referenceNumber,
       status: request.status,
     };
+  }
+
+  /** Validates the route token and that the request still accepts a model. */
+  async assertCanAppend(token: string): Promise<void> {
+    const status = await this.getStatus(token);
+    if (!canAppendModel(status)) {
+      throw appError("CONFLICT", { message: "Request ini tidak dapat menerima model lagi." });
+    }
   }
 
   async appendModel(input: unknown, uploadingCustomerId?: string) {

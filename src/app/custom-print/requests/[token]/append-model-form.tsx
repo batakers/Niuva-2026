@@ -62,6 +62,9 @@ export function AppendModelForm({ token, requestId }: Readonly<{ token?: string;
       description="STL, 3MF, dan OBJ untuk model awal; STEP/STP untuk review manual. File tetap privat."
       disabled={pending}
       id="append-model-file"
+      intentUrl={requestId === undefined
+        ? `/api/custom-print/requests/${encodeURIComponent(token ?? "")}/upload-intent`
+        : undefined}
       label="File model 3D/CAD"
       maxBytes={CUSTOM_FILE_MAX_BYTES}
       onBusyChange={setUploadBusy}

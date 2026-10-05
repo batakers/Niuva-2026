@@ -3,6 +3,7 @@ import { CodeChallengeMethod, OAuth2Client } from "google-auth-library";
 import { isLocalDemoMode, parseServerEnvironment } from "@/lib/env/server";
 import { appError, isAppError } from "@/modules/shared/errors";
 
+import { isGoogleRedirectUriAllowed } from "./app-origin";
 import {
   parseGoogleIdentity,
   type CustomerGoogleIdentity,
@@ -41,6 +42,12 @@ export function getCustomerGoogleOAuthConfig(
       environment.GOOGLE_CLIENT_SECRET === undefined ||
       environment.GOOGLE_REDIRECT_URI === undefined
     ) {
+      throw appError("CUSTOMER_AUTH_UNAVAILABLE");
+    }
+
+    // Hosted tiers: the redirect URI must sit on the canonical origin (fail
+    // closed). Local mock/test runtimes and loopback dev keep today's behavior.
+    if (!isLocalCustomerAuthMockEnabled(source) && !isGoogleRedirectUriAllowed(source, environment.GOOGLE_REDIRECT_URI)) {
       throw appError("CUSTOMER_AUTH_UNAVAILABLE");
     }
 

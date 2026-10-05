@@ -7,7 +7,6 @@ import {
 } from "@/lib/http/response";
 import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
 import { UploadService } from "@/modules/files/upload-service";
-import { getCurrentCustomer } from "@/lib/auth/customer";
 
 export const runtime = "nodejs";
 
@@ -22,12 +21,13 @@ export async function POST(request: Request) {
   const correlationId = createCorrelationId();
 
   try {
-    assertPublicMutationRequest(request, uploadIntentRateLimiter);
+    assertPublicMutationRequest(request, uploadIntentRateLimiter, {
+      endpointId: "POST /api/uploads/intents",
+    });
     const payload = await readJsonBody(request, {
       maxBytes: UPLOAD_INTENT_MAX_BODY_BYTES,
     });
-    const customer = await getCurrentCustomer();
-    const result = await new UploadService().createIntent(payload, customer?.id);
+    const result = await new UploadService().createIntent(payload);
 
     return apiSuccess(
       {

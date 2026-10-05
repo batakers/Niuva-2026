@@ -5,7 +5,7 @@ import { connection } from "next/server";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { getServerCapabilities } from "@/lib/env/server";
-import { CustomPrintAccessService } from "@/modules/custom-print/access-service";
+import { CustomPrintAccessService, canAppendModel } from "@/modules/custom-print/access-service";
 import { isAppError } from "@/modules/shared/errors";
 
 import { AppendModelForm } from "./append-model-form";
@@ -48,8 +48,7 @@ export default async function CustomPrintRequestStatusPage({ params }: PageProps
   } catch {
     // Status remains available even if private upload is unavailable.
   }
-  const canAppend = status.intakeMode === "REFERENCE_ONLY" &&
-    ["SUBMITTED", "UNDER_REVIEW"].includes(status.status);
+  const canAppend = canAppendModel(status);
 
   return <PublicShell functionalStatus="server-backed" scope="custom-request">
     <main className="mx-auto max-w-public px-5 py-12 sm:px-8 sm:py-16" id="main-content">

@@ -2,6 +2,10 @@ import Decimal from "decimal.js";
 import { z } from "zod";
 
 import { validateStartupEnvironment } from "@/lib/env/server";
+import {
+  requireAllowed,
+  type CapabilityContext,
+} from "@/modules/capabilities/resolver";
 import { assertNonProductionProvider } from "@/modules/providers/non-production";
 import { appError, isAppError } from "@/modules/shared/errors";
 
@@ -78,9 +82,19 @@ export interface BiteshipRateProvider {
 
 export type BiteshipRateGatewayConfig = Readonly<{
   apiKey: string;
+  /**
+   * Caller-owned capability inputs (never read from process.env implicitly).
+   * NODE_ENV, NIUVA_DEPLOYMENT_TIER, NIUVA_PROVIDER_MODE and DATABASE_URL are
+   * taken from here when present.
+   */
+  capabilityEnv?: Readonly<Record<string, string | undefined>>;
   couriers: readonly string[];
+  /** Set false to declare the database resource unbound (default: bound). */
+  databaseBound?: boolean;
   endpoint?: string;
   fetch?: typeof fetch;
+  gates?: CapabilityContext["gates"];
+  hasActivationGrant?: CapabilityContext["hasActivationGrant"];
   nodeEnv?: "development" | "production" | "test";
   originAreaId: string;
   timeoutMs?: number;
@@ -158,31 +172,93 @@ export function createBiteshipRateGatewayFromEnvironment(
 
   const couriers = parseCourierAllowlist(environment.BITESHIP_COURIERS);
 
-  const gateway = new BiteshipRateGateway({
+  const gatewayConfig: BiteshipRateGatewayConfig = {
     apiKey: environment.BITESHIP_API_KEY,
+    capabilityEnv: pickCapabilityEnv(source),
     couriers,
     nodeEnv: environment.NODE_ENV,
     originAreaId: environment.BITESHIP_ORIGIN_AREA_ID,
-  });
+  };
+  const gateway = new BiteshipRateGateway(gatewayConfig);
 
-  assertBiteshipTestConfiguration({
-    apiKey: environment.BITESHIP_API_KEY,
-    couriers,
-    nodeEnv: environment.NODE_ENV,
-    originAreaId: environment.BITESHIP_ORIGIN_AREA_ID,
-  });
+  assertBiteshipTestConfiguration(gatewayConfig);
 
   return gateway;
 }
 
+const CALLER_CAPABILITY_KEYS = [
+  "DATABASE_URL",
+  "NIUVA_DEPLOYMENT_TIER",
+  "NIUVA_PROVIDER_MODE",
+  "NODE_ENV",
+] as const;
+
+function pickCapabilityEnv(
+  source: Readonly<Record<string, string | undefined>>,
+): Readonly<Record<string, string | undefined>> {
+  return Object.fromEntries(
+    CALLER_CAPABILITY_KEYS.map((key) => [key, source[key]]),
+  );
+}
+
+// Non-secret marker for an input the gateway does not own: it never uses the
+// database. It only keeps the resolver resource group evaluable; a caller can
+// still declare the database unbound.
+const GATEWAY_SCOPE_DATABASE_URL = "postgresql://gateway-scope.invalid/none";
+
+/** Builds the resolver context from the caller-provided gateway configuration. */
+export function buildBiteshipCapabilityContext(
+  config: BiteshipRateGatewayConfig,
+): CapabilityContext {
+  const caller = config.capabilityEnv ?? {};
+  const apiKey = config.apiKey.trim();
+  const originAreaId = config.originAreaId.trim();
+  const couriers = config.couriers.join(",").trim();
+  const env: Record<string, string | undefined> = {
+    BITESHIP_API_KEY: apiKey.length > 0 ? apiKey : undefined,
+    BITESHIP_COURIERS: couriers.length > 0 ? couriers : undefined,
+    BITESHIP_ORIGIN_AREA_ID: originAreaId.length > 0 ? originAreaId : undefined,
+    DATABASE_URL:
+      caller.DATABASE_URL ??
+      (config.databaseBound === false ? undefined : GATEWAY_SCOPE_DATABASE_URL),
+    NIUVA_DEPLOYMENT_TIER: caller.NIUVA_DEPLOYMENT_TIER,
+    NIUVA_PROVIDER_MODE: caller.NIUVA_PROVIDER_MODE,
+    NODE_ENV: config.nodeEnv ?? caller.NODE_ENV,
+  };
+
+  return {
+    env,
+    ...(config.gates === undefined ? {} : { gates: config.gates }),
+    ...(config.hasActivationGrant === undefined
+      ? {}
+      : { hasActivationGrant: config.hasActivationGrant }),
+  };
+}
+
 function assertBiteshipTestConfiguration(
-  config: Pick<BiteshipRateGatewayConfig, "apiKey" | "couriers" | "nodeEnv" | "originAreaId">,
+  config: Pick<
+    BiteshipRateGatewayConfig,
+    | "apiKey"
+    | "capabilityEnv"
+    | "couriers"
+    | "databaseBound"
+    | "gates"
+    | "hasActivationGrant"
+    | "nodeEnv"
+    | "originAreaId"
+  >,
 ): void {
+  // Legacy guard first, exactly as before: the resolver can only tighten it.
   assertNonProductionProvider({
     isLiveProvider: config.apiKey.startsWith("biteship_live."),
-    nodeEnv: config.nodeEnv,
+    nodeEnv:
+      config.nodeEnv === "production" ||
+      config.capabilityEnv?.NODE_ENV === "production"
+        ? "production"
+        : config.nodeEnv,
     provider: "Biteship",
   });
+  requireAllowed("shipping", buildBiteshipCapabilityContext(config));
 
   if (!config.apiKey.startsWith("biteship_test.")) {
     throw appError("PROVIDER_UNAVAILABLE", {

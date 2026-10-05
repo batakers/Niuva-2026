@@ -23,7 +23,9 @@ export async function POST(request: Request) {
   const correlationId = createCorrelationId();
 
   try {
-    assertPublicMutationRequest(request, projectBriefRateLimiter);
+    assertPublicMutationRequest(request, projectBriefRateLimiter, {
+      endpointId: "POST /api/project-brief",
+    });
     const customer = await requireCustomer();
     const payload = await readJsonBody(request, {
       maxBytes: PROJECT_BRIEF_MAX_BODY_BYTES,

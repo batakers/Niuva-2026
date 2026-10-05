@@ -17,7 +17,9 @@ const schema = z.object({ decision: z.enum(["accept", "decline"]) }).strict();
 export async function POST(request: Request, context: RouteContext<"/api/account/make/[id]/quotes/[quoteId]/decision">) {
   const correlationId = createCorrelationId();
   try {
-    assertPublicMutationRequest(request, limiter);
+    assertPublicMutationRequest(request, limiter, {
+      endpointId: "POST /api/account/make/[id]/quotes/[quoteId]/decision",
+    });
     const customer = await requireCustomer();
     const { id, quoteId } = await context.params;
     const work = await new CustomerWorkRepository().request(customer.id, id);

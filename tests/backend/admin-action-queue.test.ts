@@ -1,9 +1,21 @@
 import { describe, expect, it } from "vitest";
 
+import type { AdminAccess } from "@/lib/auth/clerk";
 import type { PrismaClient } from "@/generated/prisma/client";
 import type { ActionQueueSignal } from "@/modules/admin/action-queue";
 import { PrismaActionQueueRepository } from "@/modules/admin/action-queue-repository";
 import { ActionQueueService } from "@/modules/admin/action-queue-service";
+import { ADMIN_PERMISSIONS, hasAdminPermission } from "@/modules/admin/permissions";
+
+// Permissive authorizer for projection tests; authorization has its own suite below.
+const allowAdmin = async (): Promise<AdminAccess> => access("OWNER", true);
+
+function access(role: "ADMIN" | "OWNER", isActive: boolean): AdminAccess {
+  return {
+    clerkUserId: "clerk-test",
+    profile: { id: "admin-test", clerkUserId: "clerk-test", isActive, role },
+  } as AdminAccess;
+}
 
 function signal(
   kind: ActionQueueSignal["kind"],
@@ -76,6 +88,7 @@ describe("ActionQueueService", () => {
     };
 
     const result = await new ActionQueueService({
+      authorize: allowAdmin,
       now: () => generatedAt,
       repository,
     }).list();
@@ -133,6 +146,7 @@ describe("ActionQueueService", () => {
     }
 
     const result = await new ActionQueueService({
+      authorize: allowAdmin,
       now: () => new Date("2026-09-11T08:00:00.000Z"),
       repository: {
         async listSignals() {
@@ -151,6 +165,7 @@ describe("ActionQueueService", () => {
 
   it("routes quote and shipment work to their owning details when the server supplies target ids", async () => {
     const result = await new ActionQueueService({
+      authorize: allowAdmin,
       repository: { async listSignals() {
         return [
           { ...signal("QUOTE_SEND", "quote-1", "QTE-1", "2026-09-11T01:00:00.000Z"), targetId: "request-1" },
@@ -170,6 +185,7 @@ describe("ActionQueueService", () => {
     signals.push(signal("SHIPPING_EXCEPTION", "shipping-1", "ORD-2", "2026-09-11T03:00:00.000Z"));
 
     const result = await new ActionQueueService({
+      authorize: allowAdmin,
       now: () => new Date("2026-09-11T08:00:00.000Z"),
       repository: { async listSignals() { return signals; } },
     }).list("orders");
@@ -312,5 +328,45 @@ describe("PrismaActionQueueRepository", () => {
       quotes: { none: { status: "DRAFT" } },
       status: "QUOTE_READY",
     });
+  });
+});
+
+describe("ActionQueueService authorization", () => {
+  let reads = 0;
+  const repository = {
+    async listSignals(): Promise<readonly ActionQueueSignal[]> {
+      reads += 1;
+      return [];
+    },
+  };
+
+  it("rejects when no admin session exists and never reads signals", async () => {
+    reads = 0;
+    const service = new ActionQueueService({
+      authorize: async () => {
+        throw new Error("UNAUTHENTICATED");
+      },
+      repository,
+    });
+    await expect(service.list()).rejects.toThrow("UNAUTHENTICATED");
+    expect(reads).toBe(0);
+  });
+
+  it.each(["ADMIN", "OWNER"] as const)("rejects an inactive %s", async (role) => {
+    reads = 0;
+    const service = new ActionQueueService({ authorize: async () => access(role, false), repository });
+    await expect(service.list()).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(reads).toBe(0);
+  });
+
+  it.each(["ADMIN", "OWNER"] as const)("allows an active %s", async (role) => {
+    const service = new ActionQueueService({ authorize: async () => access(role, true), repository });
+    await expect(service.list()).resolves.toMatchObject({ items: [] });
+  });
+
+  it("stays tied to the matrix: every role allowed here holds AUDIT_READ", () => {
+    expect(ADMIN_PERMISSIONS).toContain("AUDIT_READ");
+    expect(hasAdminPermission("ADMIN", "AUDIT_READ")).toBe(true);
+    expect(hasAdminPermission("OWNER", "AUDIT_READ")).toBe(true);
   });
 });

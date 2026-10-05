@@ -3,6 +3,10 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 
 import { validateStartupEnvironment } from "@/lib/env/server";
+import {
+  requireAllowed,
+  type CapabilityContext,
+} from "@/modules/capabilities/resolver";
 import type { CheckoutPaymentProvider } from "@/modules/checkout/service";
 import { assertNonProductionProvider } from "@/modules/providers/non-production";
 import { appError } from "@/modules/shared/errors";
@@ -62,8 +66,18 @@ export type MidtransPaymentStatus =
   | "SETTLED";
 
 export type MidtransSnapGatewayConfig = Readonly<{
+  /**
+   * Caller-owned capability inputs (never read from process.env implicitly).
+   * NODE_ENV, NIUVA_DEPLOYMENT_TIER, NIUVA_PROVIDER_MODE, DATABASE_URL and the
+   * public client key are taken from here when present.
+   */
+  capabilityEnv?: Readonly<Record<string, string | undefined>>;
+  /** Set false to declare the database resource unbound (default: bound). */
+  databaseBound?: boolean;
   endpoint?: string;
   fetch?: typeof fetch;
+  gates?: CapabilityContext["gates"];
+  hasActivationGrant?: CapabilityContext["hasActivationGrant"];
   isProduction: boolean;
   nodeEnv?: "development" | "production" | "test";
   now?: () => Date;
@@ -90,11 +104,7 @@ export class MidtransSnapGateway implements CheckoutPaymentProvider {
     orderNumber: string;
     providerOrderId: string;
   }>): Promise<Readonly<{ redirectUrl?: string; token?: string }>> {
-    assertNonProductionProvider({
-      isLiveProvider: this.config.isProduction,
-      nodeEnv: this.config.nodeEnv,
-      provider: "Midtrans",
-    });
+    assertMidtransPaymentAllowed(this.config);
 
     const grossAmount = parseSnapGrossAmount(input.amountRp);
     assertProviderOrderId(input.providerOrderId);
@@ -174,17 +184,83 @@ export function createMidtransSnapGatewayFromEnvironment(
     });
   }
 
-  assertNonProductionProvider({
-    isLiveProvider: environment.MIDTRANS_IS_PRODUCTION,
-    nodeEnv: environment.NODE_ENV,
-    provider: "Midtrans",
-  });
-
-  return new MidtransSnapGateway({
+  const gatewayConfig: MidtransSnapGatewayConfig = {
+    capabilityEnv: pickCapabilityEnv(source),
+    ...(environment.MIDTRANS_SNAP_ENDPOINT === undefined
+      ? {}
+      : { endpoint: environment.MIDTRANS_SNAP_ENDPOINT }),
     isProduction: environment.MIDTRANS_IS_PRODUCTION,
     nodeEnv: environment.NODE_ENV,
     serverKey: environment.MIDTRANS_SERVER_KEY,
+  };
+
+  assertMidtransPaymentAllowed(gatewayConfig);
+
+  return new MidtransSnapGateway(gatewayConfig);
+}
+
+const CALLER_CAPABILITY_KEYS = [
+  "DATABASE_URL",
+  "NEXT_PUBLIC_MIDTRANS_CLIENT_KEY",
+  "NIUVA_DEPLOYMENT_TIER",
+  "NIUVA_PROVIDER_MODE",
+  "NODE_ENV",
+] as const;
+
+export function pickCapabilityEnv(
+  source: Readonly<Record<string, string | undefined>>,
+): Readonly<Record<string, string | undefined>> {
+  return Object.fromEntries(
+    CALLER_CAPABILITY_KEYS.map((key) => [key, source[key]]),
+  );
+}
+
+// Non-secret markers for inputs the gateway does not own: it never uses the
+// public client key or the database. They only keep the resolver groups
+// evaluable; a caller can still declare the database unbound.
+const GATEWAY_SCOPE_CLIENT_KEY = "gateway-scope";
+const GATEWAY_SCOPE_DATABASE_URL = "postgresql://gateway-scope.invalid/none";
+
+/** Builds the resolver context from the caller-provided gateway configuration. */
+export function buildMidtransCapabilityContext(
+  config: MidtransSnapGatewayConfig,
+): CapabilityContext {
+  const caller = config.capabilityEnv ?? {};
+  const serverKey = config.serverKey.trim();
+  const env: Record<string, string | undefined> = {
+    DATABASE_URL:
+      caller.DATABASE_URL ??
+      (config.databaseBound === false ? undefined : GATEWAY_SCOPE_DATABASE_URL),
+    MIDTRANS_IS_PRODUCTION: String(config.isProduction),
+    MIDTRANS_SERVER_KEY: serverKey.length > 0 ? serverKey : undefined,
+    NEXT_PUBLIC_MIDTRANS_CLIENT_KEY:
+      caller.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY ?? GATEWAY_SCOPE_CLIENT_KEY,
+    NIUVA_DEPLOYMENT_TIER: caller.NIUVA_DEPLOYMENT_TIER,
+    NIUVA_PROVIDER_MODE: caller.NIUVA_PROVIDER_MODE,
+    NODE_ENV: config.nodeEnv ?? caller.NODE_ENV,
+  };
+
+  return {
+    env,
+    ...(config.gates === undefined ? {} : { gates: config.gates }),
+    ...(config.hasActivationGrant === undefined
+      ? {}
+      : { hasActivationGrant: config.hasActivationGrant }),
+  };
+}
+
+export function assertMidtransPaymentAllowed(config: MidtransSnapGatewayConfig): void {
+  // Legacy guard first, exactly as before: the resolver can only tighten it.
+  assertNonProductionProvider({
+    isLiveProvider: config.isProduction,
+    nodeEnv:
+      config.nodeEnv === "production" ||
+      config.capabilityEnv?.NODE_ENV === "production"
+        ? "production"
+        : config.nodeEnv,
+    provider: "Midtrans",
   });
+  requireAllowed("payment", buildMidtransCapabilityContext(config));
 }
 
 export function parseMidtransNotification(input: unknown): MidtransNotification {

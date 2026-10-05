@@ -18,7 +18,7 @@ describe("Owner privacy server rendering", () => {
     expect(page).toContain("Privasi Customer"); expect(page).toContain("3×24 jam kalender"); expect(page).toContain("Tinjau draf Syarat Layanan");
     for (const document of ["terms", "privacy"]) {
       const draft = renderToStaticMarkup(await PolicyPreview({ searchParams: Promise.resolve({ document }) }));
-      expect(draft).toContain(document === "terms" ? "DRAFT-TERMS-2026-10-02-v2" : "DRAFT-PRIVACY-2026-10-02-v2");
+      expect(draft).toContain(document === "terms" ? "DRAFT-TERMS-2026-10-03-v3" : "DRAFT-PRIVACY-2026-10-03-v3");
       expect(draft).toContain("PT. NIUVA INOVASI UTAMA"); expect(draft).toContain("Belum berlaku");
     }
   });

@@ -5,8 +5,10 @@ import Link from "next/link";
 import { AdminDataUnavailableView, AdminPagination, AdminShell } from "@/components/niuva/admin-shell";
 import { AdminAccessView } from "@/app/admin/admin-access-view";
 import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
+import { recordAdminPageFailure } from "@/app/admin/admin-page-failure";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import type { AdminAccess } from "@/lib/auth/clerk";
+import type { FailureKind } from "@/lib/observability/logger";
 import { AdminOperationsService, parseAdminPage, type AdminProductRow } from "@/modules/admin/operations";
 
 export const metadata: Metadata = {
@@ -29,8 +31,9 @@ export default async function AdminProductsPage({
   if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
   const { access } = gate;
 
-  const result = await loadProducts(access, page);
-  if (result === null) return <AdminDataUnavailableView active="products" role={access.profile.role} title="Products belum dapat dimuat" />;
+  const loaded = await loadProducts(access, page);
+  if (loaded.status === "unavailable") return <AdminDataUnavailableView active="products" kind={loaded.kind} role={access.profile.role} title="Products belum dapat dimuat" />;
+  const result = loaded.data;
   const published = result.items.filter((item) => item.isPublished).length;
   const variants = result.items.flatMap((item) => item.variants);
   const lowStock = variants.filter((variant) => variant.isActive && variant.stockOnHand >= 0 && variant.stockOnHand <= 3).length;
@@ -75,11 +78,15 @@ export default async function AdminProductsPage({
   );
 }
 
-async function loadProducts(access: AdminAccess, page: number): Promise<Awaited<ReturnType<AdminOperationsService["listProducts"]>> | null> {
+type ProductsLoad =
+  | { status: "ok"; data: Awaited<ReturnType<AdminOperationsService["listProducts"]>> }
+  | { status: "unavailable"; kind: FailureKind };
+
+async function loadProducts(access: AdminAccess, page: number): Promise<ProductsLoad> {
   try {
-    return await new AdminOperationsService({ authorize: async () => access }).listProducts({ page });
-  } catch {
-    return null;
+    return { status: "ok", data: await new AdminOperationsService({ authorize: async () => access }).listProducts({ page }) };
+  } catch (error) {
+    return { status: "unavailable", kind: recordAdminPageFailure(error, "page:/admin/products", { op: "list", page: String(page) }) };
   }
 }
 

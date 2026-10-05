@@ -5,11 +5,20 @@ import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Icon } from "@/components/ui/Icon";
 import { typographySystemTokens as type } from "@/design/typography";
 import { publicServices } from "@/features/public/company-content";
+import { buildPageSocialMetadata } from "@/lib/site-metadata";
+
+const SERVICES_TITLE = "Layanan · Niuva";
+const SERVICES_DESCRIPTION =
+  "Research & Development, Consultant & Workshop, Design & Prototyping, serta Apparel & Merchandise dari Niuva.";
 
 export const metadata: Metadata = {
-  title: "Layanan · Niuva",
-  description:
-    "Research & Development, Consultant & Workshop, Design & Prototyping, serta Apparel & Merchandise dari Niuva.",
+  title: SERVICES_TITLE,
+  description: SERVICES_DESCRIPTION,
+  ...buildPageSocialMetadata({
+    title: SERVICES_TITLE,
+    description: SERVICES_DESCRIPTION,
+    path: "/services",
+  }),
   robots: { follow: true, index: true },
 };
 

@@ -12,7 +12,9 @@ const previewRateLimiter = createInMemoryRateLimiter({ limit: 15, maxKeys: 256, 
 export async function POST(request: Request) {
   const correlationId = createCorrelationId();
   try {
-    assertPublicMutationRequest(request, previewRateLimiter);
+    assertPublicMutationRequest(request, previewRateLimiter, {
+      endpointId: "POST /api/custom-print/preview-estimate",
+    });
     const customer = await requireCustomer();
     const payload = await readJsonBody(request, { maxBytes: 8 * 1_024 });
     const result = await new CustomerPreviewService().preview(payload, customer.id);

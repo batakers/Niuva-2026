@@ -11,7 +11,9 @@ const limiter = createInMemoryRateLimiter({ limit: 5, maxKeys: 256, windowMs: 60
 export async function POST(request: Request, context: RouteContext<"/api/account/make/[id]/model">) {
   const correlationId = createCorrelationId();
   try {
-    assertPublicMutationRequest(request, limiter);
+    assertPublicMutationRequest(request, limiter, {
+      endpointId: "POST /api/account/make/[id]/model",
+    });
     const customer = await requireCustomer();
     const { id } = await context.params;
     const body = await readJsonBody(request, { maxBytes: 4_096 });

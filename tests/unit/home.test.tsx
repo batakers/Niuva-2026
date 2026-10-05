@@ -13,9 +13,16 @@ vi.mock("@/features/frontend-preview/server", () => ({
   getProjectPreview: vi.fn(async () => ({ projects: [], scenario: null })),
 }));
 
-import Home from "@/app/page";
+import { connection } from "next/server";
+import Home, * as homeModule from "@/app/page";
 
 describe("public homepage", () => {
+  it("uses time-based revalidation and no request-time connection() (Req 16.1)", async () => {
+    render(await Home());
+    expect(homeModule.revalidate).toBe(300);
+    expect(connection).not.toHaveBeenCalled();
+  });
+
   it("renders Niuva positioning, entry paths, capabilities, and process", async () => {
     render(await Home());
 

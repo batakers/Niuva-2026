@@ -934,3 +934,21 @@ model CustomerClosureFence {
   @@index([expiresAt])
   @@map("customer_closure_fences")
 }
+
+// Durable failure record so staff can find a failure from the correlation id a
+// user reads out. Allowlisted ids/enums only: no payload, header, body, token,
+// or PII. Deliberately has no foreign keys and no automatic cleanup; retention
+// waits for Register_Keputusan T4.
+model FailureEvent {
+  id              String   @id @default(uuid()) @db.Uuid
+  correlationId   String   @map("correlation_id")
+  boundary        String
+  errorCode       String   @map("error_code")
+  kind            String
+  occurredAt      DateTime @default(now()) @map("occurred_at") @db.Timestamptz(6)
+  safeContextJson Json?    @map("safe_context_json")
+
+  @@index([correlationId])
+  @@index([occurredAt])
+  @@map("failure_events")
+}

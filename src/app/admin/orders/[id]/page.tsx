@@ -11,7 +11,7 @@ import {
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { AdminAccessView } from "@/app/admin/admin-access-view";
 import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
-import { loadAdminRecord } from "@/app/admin/admin-record-loader";
+import { loadAdminRecordLogged } from "@/app/admin/admin-page-failure";
 import {
   AdminActionForm,
 } from "@/app/admin/admin-action-form";
@@ -58,10 +58,10 @@ export default async function AdminOrderDetailPage({
   if (!z.uuid().safeParse(id).success) notFound();
 
   const service = new AdminOperationsService({ authorize: async () => access });
-  const result = await loadAdminRecord(() => service.getOrder(id));
+  const result = await loadAdminRecordLogged("page:/admin/orders/[id]", () => service.getOrder(id), { id, op: "detail" });
   if (result.status === "not-found") notFound();
   if (result.status === "unavailable") {
-    return <AdminDataUnavailableView active="orders" role={access.profile.role} title="Detail order belum dapat dimuat" />;
+    return <AdminDataUnavailableView active="orders" kind={result.kind} role={access.profile.role} title="Detail order belum dapat dimuat" />;
   }
   const order = result.record;
 

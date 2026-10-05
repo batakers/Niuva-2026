@@ -5,7 +5,7 @@ export { passwordSchema, emailSchema, registrationSchema, loginSchema, tokenSche
 
 let activeHashes = 0;
 async function derive(password: string, salt: string): Promise<Buffer> {
-  if (activeHashes >= 2) throw appError("RATE_LIMITED");
+  if (activeHashes >= 2) throw appError("RESOURCE_BUSY", { details: { retryAfterSeconds: "5" } });
   activeHashes++;
   try { return await new Promise<Buffer>((resolve, reject) => scrypt(password, salt, 64, { N: 131072, r: 8, p: 1, maxmem: 192 * 1024 * 1024 }, (error, key) => error ? reject(error) : resolve(key))); } finally { activeHashes--; }
 }

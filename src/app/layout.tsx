@@ -3,6 +3,7 @@ import { Fraunces, Space_Grotesk } from "next/font/google";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PublicPageViewCollector } from "@/components/niuva/public-page-view-collector";
+import { buildRootMetadata } from "@/lib/site-metadata";
 
 import "./globals.css";
 
@@ -21,11 +22,7 @@ const fraunces = Fraunces({
   weight: "variable",
 });
 
-export const metadata: Metadata = {
-  title: "Niuva",
-  description:
-    "Niuva Inovasi Utama adalah mitra inovasi dan pengembangan produk end-to-end yang membantu perusahaan mengubah ide menjadi solusi teknologi dan produk kreatif bernilai tinggi melalui riset, desain, engineering, prototyping, hingga dukungan manufaktur.",
-};
+export const metadata: Metadata = buildRootMetadata(process.env);
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

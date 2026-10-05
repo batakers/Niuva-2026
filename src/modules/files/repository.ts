@@ -136,9 +136,14 @@ export class StoredFileRepository {
         };
   }
 
+  /**
+   * One conditional UPDATE: checksum and verification timestamp are written
+   * together with the status change, so they can never be partially set.
+   */
   async markUploadedIfPending(input: Readonly<{
     fileId: string;
     now: Date;
+    sha256?: string;
     uploadTokenHash: string;
   }>): Promise<boolean> {
     const updated = await this.prisma.storedFile.updateMany({
@@ -149,6 +154,9 @@ export class StoredFileRepository {
         uploadTokenHash: input.uploadTokenHash,
       },
       data: {
+        ...(input.sha256 === undefined
+          ? {}
+          : { sha256: input.sha256, verifiedAt: input.now }),
         uploadedAt: input.now,
         uploadExpiresAt: null,
         uploadStatus: "UPLOADED",

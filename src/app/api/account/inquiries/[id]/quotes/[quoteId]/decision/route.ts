@@ -14,7 +14,9 @@ const schema = z.object({ decision: z.enum(["ACCEPTED", "DECLINED"]) }).strict()
 export async function POST(request: Request, context: RouteContext<"/api/account/inquiries/[id]/quotes/[quoteId]/decision">) {
   const correlationId = createCorrelationId();
   try {
-    assertPublicMutationRequest(request, limiter);
+    assertPublicMutationRequest(request, limiter, {
+      endpointId: "POST /api/account/inquiries/[id]/quotes/[quoteId]/decision",
+    });
     const customer = await requireCustomer();
     const { id, quoteId } = await context.params;
     const { decision } = parseWithValidation(schema, await readJsonBody(request, { maxBytes: 1_024 }));

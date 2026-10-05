@@ -2294,3 +2294,38 @@ Development loopback `niuva_dev`, akun aktif dan catatan transaksi. Windows task
 task internal 03.00 tetap ada. Fitur hanya internal Development/test, sementara
 cleanup tetap independen dari flag pendaftaran. Backup/provider/fiskal dan bukti
 publikasi tetap terpisah; inventory dan batas di dokumen implementasi legal.
+
+## Addendum kontrak kesiapan Customer publik — 3 Oktober 2026
+
+[Addendum PRD 3 Oktober](PRD-Niuva-MVP.md#addendum-persiapan-customer-publik--3-oktober-2026)
+menetapkan target public signup semua usia sesuai kelayakan hukum/fitur dan
+refund penuh yang disetujui Owner lalu dijalankan serta direkonsiliasi aplikasi.
+Batch ini **dokumentasi**; endpoint, schema, migrations, guard dan capability
+runtime pada PR #38 dipertahankan. Draf komersial v3 tidak dimuat sebagai public
+consent dan tidak mengubah batas internal Development/test.
+
+[Kontrak implementasi publik](legal/customer-public-runtime-contract.md)
+menjadi requirement teknis untuk batch kode berikutnya: versi policy immutable
+dan penerimaan kedua metode, hasil kelayakan usia/wali yang disahkan, kasus
+refund/approval/nominal server, operasi provider dengan refund_key stabil,
+rekonsiliasi hasil bank dan fallback manual yang aman. Retry tidak boleh
+menciptakan refund baru untuk hasil yang belum pasti. Kasus keuangan
+pasca-produksi/pengiriman diperluas terpisah dari lifecycle pembatalan order
+yang sudah disetujui; refund tidak otomatis menambah stock. Desain API/schema
+final dan migrasi tambahan ditetapkan pada batch implementasi, bukan dianggap
+ada dari nama konsep di dokumen ini.
+
+Hosted membutuhkan tier lingkungan eksplisit dan capability provider/email/
+privacy/origin/CSP yang konsisten, staging terpisah, outbox durable dengan
+retry/expiry, cleanup/monitoring hosted serta pemulihan yang tidak menghidupkan
+kembali akun, token, riwayat atau refund lama. NODE_ENV/build tidak menjadi izin
+live. Lifecycle lock, penanda closed-business, pemisahan Customer dari Clerk,
+retensi internal dan safe export tetap dipertahankan. Syarat legal/data/provider,
+SOP, skenario acceptance dan bukti penutupan tercatat di
+[paket kesiapan](legal/customer-public-launch-readiness.md).
+
+Implementasi berikutnya wajib menjalankan lint, typecheck, unit/backend/
+integration, Prisma validation, E2E dan build dengan regresi consent, akses
+anak, refund ganda/rekonsiliasi, closure yang beradu dengan transaksi/job dan
+restore. CI lokal tidak menggantikan bukti sandbox/hosted, device/AT, review
+legal atau instruksi publikasi/deployment/aktivasi production.

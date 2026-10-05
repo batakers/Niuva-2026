@@ -10,6 +10,7 @@ import {
   UploadService,
   type UploadFileRepository,
 } from "@/modules/files/upload-service";
+import { appError } from "@/modules/shared/errors";
 import type {
   CreatePendingFileInput,
   PendingFileForConfirmation,
@@ -143,6 +144,7 @@ function createUploadService(
     repository,
     service: new UploadService({
       audit: async () => undefined,
+      authorize: async () => ({ id: "00000000-0000-4000-8000-000000000001" }),
       now,
       randomBytes: (size) => new Uint8Array(size).fill(7),
       repository,
@@ -310,6 +312,42 @@ describe("Phase 3 private upload boundary", () => {
       sizeBytes: 10 * 1_024 * 1_024 + 1,
     })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
     expect(repository.records.size).toBe(1);
+  });
+
+  it("rejects without a Customer before any StoredFile row or presigned URL exists", async () => {
+    const repository = new InMemoryUploadRepository();
+    const storage = new FakePrivateObjectStorage();
+    const createPending = vi.spyOn(repository, "createPending");
+    const service = new UploadService({
+      audit: async () => undefined,
+      authorize: async () => { throw appError("UNAUTHORIZED"); },
+      now: () => NOW,
+      repository,
+      storage,
+    });
+
+    await expect(service.createIntent({
+      mimeType: "model/stl",
+      originalName: "client-housing.stl",
+      sizeBytes: 3,
+    })).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    expect(createPending).not.toHaveBeenCalled();
+    expect(repository.records.size).toBe(0);
+    expect(storage.createCalls).toHaveLength(0);
+  });
+
+  it("attributes the file to the authorized Customer and keeps the token flow session-free", async () => {
+    const { repository, service } = createUploadService();
+    const createPending = vi.spyOn(repository, "createPending");
+    const input = { mimeType: "model/stl", originalName: "a.stl", sizeBytes: 3 };
+
+    await service.createIntent(input);
+    await service.createIntentForVerifiedRequestAccess(input);
+
+    expect(createPending.mock.calls[0]?.[0].uploadedByCustomerId).toBe("00000000-0000-4000-8000-000000000001");
+    expect(createPending.mock.calls[1]?.[0].uploadedByCustomerId).toBeUndefined();
+    await expect(service.createIntentForVerifiedRequestAccess({ ...input, originalName: "x.exe" }))
+      .rejects.toMatchObject({ code: "UPLOAD_REJECTED" });
   });
 });
 

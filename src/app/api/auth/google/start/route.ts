@@ -11,6 +11,7 @@ import {
   createCustomerOAuthState,
 } from "@/modules/customer-auth/core";
 import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
+import { customerCookieSecure } from "@/modules/customer-auth/app-origin";
 import { customerAuthOrigin } from "@/modules/customer-auth/origin";
 import {
   createGoogleOAuthAdapter,
@@ -68,7 +69,7 @@ export async function GET(request: Request): Promise<Response> {
       state,
     });
     const response = NextResponse.redirect(authorizationUrl);
-    const options = customerOAuthCookieOptions(process.env.NODE_ENV === "production");
+    const options = customerOAuthCookieOptions(customerCookieSecure(process.env));
 
     response.cookies.set(CUSTOMER_OAUTH_STATE_COOKIE, state, options);
     response.cookies.set(CUSTOMER_OAUTH_VERIFIER_COOKIE, pkce.verifier, options);

@@ -5,8 +5,10 @@ import Link from "next/link";
 import { AdminDataUnavailableView, AdminPagination, AdminShell } from "@/components/niuva/admin-shell";
 import { AdminAccessView } from "@/app/admin/admin-access-view";
 import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
+import { recordAdminPageFailure } from "@/app/admin/admin-page-failure";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import type { AdminAccess } from "@/lib/auth/clerk";
+import type { FailureKind } from "@/lib/observability/logger";
 import { AdminOperationsService, parseAdminPage, type AdminOrderRow } from "@/modules/admin/operations";
 
 export const metadata: Metadata = {
@@ -34,8 +36,9 @@ export default async function AdminOrdersPage({
   if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
   const { access } = gate;
 
-  const result = await loadOrders(access, page);
-  if (result === null) return <AdminDataUnavailableView active="orders" role={access.profile.role} title="Orders belum dapat dimuat" />;
+  const loaded = await loadOrders(access, page);
+  if (loaded.status === "unavailable") return <AdminDataUnavailableView active="orders" kind={loaded.kind} role={access.profile.role} title="Orders belum dapat dimuat" />;
+  const result = loaded.data;
   return (
       <AdminShell active="orders" role={result.role}>
         <main id="main-content" data-admin-surface="orders">
@@ -98,11 +101,15 @@ export default async function AdminOrdersPage({
   );
 }
 
-async function loadOrders(access: AdminAccess, page: number): Promise<Awaited<ReturnType<AdminOperationsService["listOrders"]>> | null> {
+type OrdersLoad =
+  | { status: "ok"; data: Awaited<ReturnType<AdminOperationsService["listOrders"]>> }
+  | { status: "unavailable"; kind: FailureKind };
+
+async function loadOrders(access: AdminAccess, page: number): Promise<OrdersLoad> {
   try {
-    return await new AdminOperationsService({ authorize: async () => access }).listOrders({ page });
-  } catch {
-    return null;
+    return { status: "ok", data: await new AdminOperationsService({ authorize: async () => access }).listOrders({ page }) };
+  } catch (error) {
+    return { status: "unavailable", kind: recordAdminPageFailure(error, "page:/admin/orders", { op: "list", page: String(page) }) };
   }
 }
 

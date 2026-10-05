@@ -218,7 +218,17 @@ describe("Project Brief route integration", () => {
       entityType: "B2BInquiry",
     });
 
+    // The service now authorizes; the DB is truncated per test, so seed the Owner profile.
+    await prisma.adminProfile.create({
+      data: { clerkUserId: "clerk_test_owner", isActive: true, role: "OWNER" },
+    });
+
     const queue = await new ActionQueueService({
+      authorize: () =>
+        requireAdminForSession(
+          { userId: "clerk_test_owner" },
+          new PrismaAdminProfileRepository(prisma),
+        ),
       now: () => new Date("2026-09-14T00:00:00.000Z"),
       repository: new PrismaActionQueueRepository(prisma),
     }).list();

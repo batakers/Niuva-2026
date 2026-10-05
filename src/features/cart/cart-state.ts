@@ -79,9 +79,17 @@ export function readCart(storage: Pick<Storage, "getItem" | "removeItem">): Cart
   }
 }
 
+export const CART_CHANGE_EVENT = "niuva:cart-change";
+
+/** Total unit quantity in a snapshot; display-only, never a price or stock authority. */
+export function countCartUnits(snapshot: CartSnapshot) {
+  return snapshot.items.reduce((total, item) => total + item.quantity, 0);
+}
+
 export function writeCart(storage: Pick<Storage, "setItem">, snapshot: CartSnapshot) {
   try {
     storage.setItem(CART_STORAGE_KEY, JSON.stringify(snapshot));
+    if (typeof window !== "undefined") window.dispatchEvent(new Event(CART_CHANGE_EVENT));
     return true;
   } catch {
     return false;

@@ -24,6 +24,9 @@ export function toAdminAccessState(error: unknown): AdminAccessState | null {
       return "FORBIDDEN";
     case "AUTH_UNAVAILABLE":
       return "AUTH_UNAVAILABLE";
+    case "RESOURCE_BUSY":
+      // Server busy is not an access decision; the caller rethrows it.
+      return null;
     default:
       return null;
   }

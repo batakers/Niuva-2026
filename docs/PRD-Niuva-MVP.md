@@ -1608,3 +1608,68 @@ prasyarat publikasi di `docs/legal/customer-policy-implementation.md`. Usia 18,
 retensi pembukuan, backup/provider produksi, proses refund/retur dan tinjauan
 legal merupakan prasyarat publikasi; tahap ini tidak mengubah B2B menjadi WA,
 melakukan refund otomatis, deployment ataupun penerimaan legal.
+
+## Addendum persiapan Customer publik — 3 Oktober 2026
+
+Keputusan Owner menetapkan target **pendaftaran publik penuh**, dengan Google
+dan email/password terverifikasi, menggantikan target pilot Customer undangan.
+Target akun mencakup **semua usia** dan menggantikan pembatasan umum 18+ pada
+draf/prasyarat 2 Oktober. Kelayakan akses anak per kelompok usia/fitur, penilaian
+risiko PP TUNAS/aturan pelaksana, verifikasi yang proporsional dan persetujuan
+orang tua/wali yang dapat dibuktikan merupakan prasyarat, bukan izin membuka
+pendaftaran tanpa mekanisme tersebut. Pihak yang menyepakati transaksi anak,
+memberi persetujuan pembayaran, menerima refund dan menjalankan hak data harus
+ditetapkan melalui review legal serta diverifikasi oleh layanan.
+
+Refund versi pertama tetap **penuh**, dengan alur Customer mengajukan, Owner
+memeriksa dan menyetujui setelah syarat retur yang relevan terpenuhi, lalu
+aplikasi mengirim dan memantau hasil melalui rekonsiliasi. Persetujuan bersyarat
+sebelum retur tidak memberi izin kirim sebelum syaratnya terpenuhi. Nominal
+berasal dari pembayaran server; ongkir yang menjadi tanggung jawab Niuva di
+luar pembayaran awal dicatat terpisah. Pilihan metode pembayaran tetap luas;
+metode tanpa refund API, window habis dan kegagalan provider mempunyai
+pengecualian manual yang disetujui serta bukti rekonsiliasi agar tidak terjadi
+refund ganda. API accepted tidak otomatis menyelesaikan kasus. Kasus keuangan
+pasca-pengiriman tidak memaksa pembalikan lifecycle order atau stock.
+
+Keputusan layanan tetap 1 hari kerja tanggapan awal, 2 hari kerja pemeriksaan
+setelah bukti lengkap/retur yang diperlukan, serta mulai refund 1 hari kerja
+setelah persetujuan dan syarat retur terpenuhi; Senin–Jumat selain libur
+nasional, WIB. Kalender/jam, petugas/pengganti dan alamat retur harus dikonfirmasi.
+Akses/koreksi privasi tetap 72 jam kalender sejak penerimaan awal tanpa reset
+melalui status/kanal. Closure mencabut akses dan tidak menautkan kembali riwayat
+saat daftar ulang; pesanan/kasus/refund aktif tetap diselesaikan melalui kontak
+terverifikasi dan dasar pemrosesan yang tepat.
+
+Batch pertama menghasilkan **draf policy dan paket operasional untuk review**.
+[Paket kesiapan publik](legal/customer-public-launch-readiness.md) memiliki
+matriks pemilik/bukti/syarat penutupan; [SOP layanan/refund](legal/customer-service-refund-sop.md),
+[SOP privasi/retensi](legal/customer-privacy-retention-sop.md),
+[kontrak implementasi](legal/customer-public-runtime-contract.md) dan
+[simulasi](legal/customer-public-policy-validation.md) menetapkan pekerjaan
+berikutnya. Draf Syarat/Privasi v3 belum berlaku dan tidak menjadi dokumen
+pendaftaran publik. Review Owner/legal final dan tanggal berlaku masih diperlukan.
+
+Implementasi publik, consent kedua metode, mekanisme anak/wali, privacy hosted,
+refund provider, outbox dengan retry dan job hosted **belum tersedia** pada
+baseline PR #38. Guard internal/allowlist serta dokumen persetujuan pengujian
+30 hari tetap berlaku pada runtime sekarang. Pilihan proyek staging terpisah
+dan outbox durable dipertahankan sebagai target. Tahap berikutnya: implementasi
+dan CI → staging/provider/recovery → publikasi policy resmi → aktivasi
+production setelah instruksi rilis eksplisit. Merge/build bukan penerimaan
+legal/provider atau izin deployment/credential production.
+
+Input Owner lanjutan 3 Oktober: **Rheza** adalah petugas utama layanan Customer,
+privasi dan tindak lanjut pembayaran/refund; approval refund tetap Owner sesuai
+izin. Alamat profil **Jl. Telekomunikasi No.1, Sukapura, Kec. Dayeuhkolot,
+Kabupaten Bandung, Jawa Barat** dikonfirmasi juga sebagai alamat retur. Detail
+penerima/jam akan diisi Owner; pengganti serta coverage kalender belum ditetapkan.
+Penugasan operasional tidak otomatis memberikan role atau permission aplikasi.
+
+Review kewajiban dilakukan berbasis sumber resmi dan dapat disiapkan secara
+internal; perekrutan konsultan hukum/akuntansi formal bukan prasyarat mulai
+pekerjaan kode. Kelayakan akun anak, assurance wali, kewajiban penilaian/
+pelaporan yang berlaku, retensi dan bukti provider tetap dipenuhi sebelum
+kemampuan terkait diaktifkan. [Catatan input/bukti](legal/customer-public-input-evidence.md)
+menyimpan fakta yang sudah dikonfirmasi dan kebutuhan tersisa, sehingga input
+yang sama tidak diminta berulang atau dianggap menutup seluruh gate publik.
