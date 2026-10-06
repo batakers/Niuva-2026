@@ -15,7 +15,8 @@ import {
   verifyAccessToken,
   type IssuedAccessToken,
 } from "@/modules/shared/access-token";
-import { appError } from "@/modules/shared/errors";
+import { AppError, appError } from "@/modules/shared/errors";
+import { assertNoPaymentIssues } from "@/modules/payment/operational-state";
 import { requireAdminPermission } from "@/modules/admin/permissions";
 import { getCancellationDecision } from "@/modules/policy/commercial";
 
@@ -200,6 +201,11 @@ export class OrderStatusService {
       throw appError("NOT_FOUND");
     }
 
+    if (nextStatus !== "CANCELLED" && current.paymentIssues.length > 0) {
+      await this.recordPaymentHold(admin, current, nextStatus);
+      assertNoPaymentIssues(current.paymentIssues);
+    }
+
     const cancellation = getCancellationDecision({
       actor: admin.profile.role,
       orderStatus: current.status,
@@ -289,12 +295,15 @@ export class OrderStatusService {
       });
     }
 
-    const updated = await repository.updateStatusIfCurrent(
-      orderId,
-      current.status,
-      nextStatus,
-      this.clock(),
-    );
+    let updated: OrderMutationState | null;
+    try {
+      updated = await repository.updateStatusIfCurrent(orderId, current.status, nextStatus, this.clock());
+    } catch (error) {
+      if (error instanceof AppError && error.details?.reason === "PAYMENT_EXCEPTION") {
+        await this.recordPaymentHold(admin, current, nextStatus);
+      }
+      throw error;
+    }
 
     if (updated === null) {
       throw appError("CONFLICT", {
@@ -314,6 +323,15 @@ export class OrderStatusService {
     });
 
     return updated;
+  }
+
+  private async recordPaymentHold(admin: AdminAccess, current: OrderMutationState, nextStatus: OrderStatus): Promise<void> {
+    await recordAudit(this.audit, {
+      action: "order.status.transition", actorId: admin.profile.id, actorType: "ADMIN",
+      afterJson: { status: nextStatus }, beforeJson: { status: current.status },
+      entityId: current.id, entityType: current.orderType === "RETAIL" ? "RetailOrder" : "CustomOrder",
+      metadata: { reason: "PAYMENT_EXCEPTION", result: "REJECTED" },
+    });
   }
 
   async reissuePublicToken(orderId: string): Promise<Readonly<{

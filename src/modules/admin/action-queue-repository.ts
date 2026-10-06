@@ -1,5 +1,7 @@
 import type { PrismaClient } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
+import { getPaymentIssues } from "@/modules/payment/operational-state";
+import { operationalPaymentSelect, paymentIssueCandidateWhere } from "@/modules/payment/operational-repository";
 
 import type { ActionQueueSignal } from "./action-queue";
 
@@ -67,6 +69,7 @@ export class PrismaActionQueueRepository
           id: true,
           orderNumber: true,
           orderType: true,
+          paymentAttempts: { select: operationalPaymentSelect },
           status: true,
           updatedAt: true,
         },
@@ -74,6 +77,7 @@ export class PrismaActionQueueRepository
           OR: [
             { status: "PAID" },
             { orderType: "CUSTOM_PRINT", status: "FINISHING_QC" },
+            paymentIssueCandidateWhere,
           ],
         },
       }),
@@ -92,6 +96,14 @@ export class PrismaActionQueueRepository
         where: { status: "EXCEPTION" },
       }),
     ]);
+
+    const paymentSignals = orderSignals.flatMap((record): ActionQueueSignal[] => {
+      const issues = getPaymentIssues(record.status, record.paymentAttempts);
+      if (issues.length === 0) return [];
+      const oldest = issues.reduce((left, right) => left.occurredAt <= right.occurredAt ? left : right);
+      return [{ entityId: record.id, kind: "PAYMENT_EXCEPTION", reference: record.orderNumber, sourceUpdatedAt: oldest.occurredAt }];
+    });
+    const heldOrders = new Set(paymentSignals.map((signal) => signal.entityId));
 
     return [
       ...newInquiries.map(
@@ -130,7 +142,7 @@ export class PrismaActionQueueRepository
         }),
       ),
       ...orderSignals
-        .filter((record) => record.status === "PAID")
+        .filter((record) => record.status === "PAID" && !heldOrders.has(record.id))
         .map(
           (record): ActionQueueSignal => ({
             entityId: record.id,
@@ -143,7 +155,7 @@ export class PrismaActionQueueRepository
         .filter(
           (record) =>
             record.orderType === "CUSTOM_PRINT" &&
-            record.status === "FINISHING_QC",
+            record.status === "FINISHING_QC" && !heldOrders.has(record.id),
         )
         .map(
           (record): ActionQueueSignal => ({
@@ -162,6 +174,7 @@ export class PrismaActionQueueRepository
           targetId: record.orderId,
         }),
       ),
+      ...paymentSignals,
     ];
   }
 }

@@ -10,6 +10,9 @@ import { InventoryRepository } from "@/modules/inventory/repository";
 import { B2BInquiryRepository } from "@/modules/inquiry/repository";
 import { PaymentWebhookRepository } from "@/modules/payment/webhook-repository";
 import { PaymentWebhookService } from "@/modules/payment/webhook-service";
+import { OrderRepository } from "@/modules/order/repository";
+import { OrderStatusService } from "@/modules/order/status-service";
+import { PrismaActionQueueRepository } from "@/modules/admin/action-queue-repository";
 import { ShippingRepository } from "@/modules/shipping/repository";
 import { ShippingService } from "@/modules/shipping/service";
 import type { BiteshipRateRequest } from "@/modules/shipping/biteship";
@@ -429,6 +432,183 @@ describe("isolated PostgreSQL integration harness", () => {
     await expect(
       prisma.productVariant.findUnique({ where: { id: lateVariant.id } }),
     ).resolves.toMatchObject({ stockOnHand: 1 });
+  });
+
+  it("holds a refunded paid order without restoring physical stock", async () => {
+    const now = new Date("2026-10-06T08:00:00.000Z");
+    const variant = await createWebhookFixtureVariant("REFUND-HOLD", 1);
+    const payable = await createRetailPaymentFixture({
+      expiresAt: new Date(now.getTime() + 30 * 60_000),
+      orderNumber: "ORD-REFUND-HOLD",
+      providerOrderId: "PAY-REFUND-HOLD",
+      publicTokenHash: "refund-hold-token",
+      variantId: variant.id,
+    });
+    const webhook = new PaymentWebhookService({
+      audit: async () => undefined, now: () => now,
+      repository: new PaymentWebhookRepository(prisma), serverKey: "midtrans-server-key",
+    });
+    const payload = { gross_amount: "12500.00", order_id: payable.providerOrderId, transaction_id: "txn-refund-hold" };
+    await webhook.handleMidtransNotification(signedPaymentPayload({ ...payload, transaction_status: "settlement" }));
+    await webhook.handleMidtransNotification(signedPaymentPayload({ ...payload, transaction_status: "refund" }));
+    const status = new OrderStatusService({
+      audit: async () => undefined,
+      authorizeAdmin: async () => ({
+        clerkUserId: "fixture-admin",
+        profile: { clerkUserId: "fixture-admin", id: "fixture-admin", isActive: true, role: "ADMIN" },
+      }),
+      repository: new OrderRepository(prisma),
+    });
+    await expect(status.transition(payable.orderId, "PROCESSING")).rejects.toMatchObject({ code: "CONFLICT" });
+    await expect(prisma.order.findUniqueOrThrow({ where: { id: payable.orderId } })).resolves.toMatchObject({ status: "PAID" });
+    await expect(prisma.productVariant.findUniqueOrThrow({ where: { id: variant.id } })).resolves.toMatchObject({ stockOnHand: 0 });
+    await expect(prisma.stockMovement.count({ where: { variantId: variant.id } })).resolves.toBe(1);
+    const signals = await new PrismaActionQueueRepository(prisma).listSignals();
+    expect(signals.filter((signal) => signal.entityId === payable.orderId)).toMatchObject([{ kind: "PAYMENT_EXCEPTION" }]);
+  });
+
+  it("keeps an already verified settlement idempotent when a later capture callback arrives", async () => {
+    const now = new Date("2026-10-06T08:00:00.000Z");
+    const variant = await createWebhookFixtureVariant("SETTLEMENT-REPLAY", 1);
+    const payable = await createRetailPaymentFixture({
+      expiresAt: new Date(now.getTime() + 30 * 60_000),
+      orderNumber: "ORD-SETTLEMENT-REPLAY", providerOrderId: "PAY-SETTLEMENT-REPLAY",
+      publicTokenHash: "settlement-replay-token", variantId: variant.id,
+    });
+    let receivedAt = now;
+    const webhook = new PaymentWebhookService({
+      audit: async () => undefined, now: () => receivedAt,
+      repository: new PaymentWebhookRepository(prisma), serverKey: "midtrans-server-key",
+    });
+    const payload = { gross_amount: "12500.00", order_id: payable.providerOrderId, transaction_id: "txn-settlement-replay" };
+    await webhook.handleMidtransNotification(signedPaymentPayload({ ...payload, transaction_status: "settlement" }));
+    receivedAt = new Date(now.getTime() + 60 * 60_000);
+    await expect(webhook.handleMidtransNotification(signedPaymentPayload({
+      ...payload, transaction_status: "capture", fraud_status: "accept",
+    }))).resolves.toMatchObject({ kind: "STALE", processingResult: "STALE_SETTLED" });
+    await expect(prisma.paymentEvent.count({ where: { processingResult: "LATE_SETTLEMENT_REFUND_REQUIRED" } })).resolves.toBe(0);
+    await expect(prisma.stockMovement.count({ where: { variantId: variant.id } })).resolves.toBe(1);
+  });
+
+  it("closes a late-payment exception only on a verified full refund without reopening the order", async () => {
+    const now = new Date("2026-10-06T08:00:00.000Z");
+    const variant = await createWebhookFixtureVariant("LATE-REFUND", 1);
+    const payable = await createRetailPaymentFixture({
+      expiresAt: new Date(now.getTime() - 1_000),
+      orderNumber: "ORD-LATE-REFUND", providerOrderId: "PAY-LATE-REFUND",
+      publicTokenHash: "late-refund-token", variantId: variant.id,
+    });
+    const webhook = new PaymentWebhookService({
+      audit: async () => undefined, now: () => now,
+      repository: new PaymentWebhookRepository(prisma), serverKey: "midtrans-server-key",
+    });
+    const payload = { gross_amount: "12500.00", order_id: payable.providerOrderId, transaction_id: "txn-late-refund" };
+    await webhook.handleMidtransNotification(signedPaymentPayload({ ...payload, transaction_status: "settlement" }));
+    const queue = new PrismaActionQueueRepository(prisma);
+    expect((await queue.listSignals()).filter((signal) => signal.entityId === payable.orderId)).toMatchObject([{ kind: "PAYMENT_EXCEPTION" }]);
+    const refund = signedPaymentPayload({ ...payload, transaction_status: "refund" });
+    await expect(webhook.handleMidtransNotification(refund)).resolves.toMatchObject({ processingResult: "REFUNDED_AFTER_LATE_SETTLEMENT" });
+    await expect(webhook.handleMidtransNotification(refund)).resolves.toMatchObject({ kind: "DUPLICATE" });
+    expect((await queue.listSignals()).filter((signal) => signal.entityId === payable.orderId)).toEqual([]);
+    await expect(prisma.order.findUniqueOrThrow({ where: { id: payable.orderId } })).resolves.toMatchObject({ status: "CANCELLED" });
+    await expect(prisma.paymentAttempt.findUniqueOrThrow({ where: { id: payable.paymentAttemptId } })).resolves.toMatchObject({ status: "EXPIRED" });
+    await expect(prisma.productVariant.findUniqueOrThrow({ where: { id: variant.id } })).resolves.toMatchObject({ stockOnHand: 1 });
+    await expect(prisma.stockMovement.count({ where: { variantId: variant.id } })).resolves.toBe(0);
+  });
+
+  it("rechecks the payment hold inside the order mutation transaction", async () => {
+    const now = new Date("2026-10-06T08:00:00.000Z");
+    const order = await prisma.order.create({ data: {
+      customerEmail: "fixture@example.test", customerName: "Fixture", customerPhone: "+628000000000",
+      grandTotalRp: "10000", itemsSubtotalRp: "10000", shippingTotalRp: "0",
+      orderNumber: "ORD-REFUND-RACE", orderType: "RETAIL", publicTokenHash: "refund-race-token", status: "PAID",
+      paymentAttempts: { create: { amountRp: "10000", expiresAt: now, providerOrderId: "PAY-REFUND-RACE", purpose: "ORDER_TOTAL", status: "SETTLED" } },
+    } });
+    const repository = new OrderRepository(prisma);
+    const cached = await repository.findStatusForMutation(order.id);
+    expect(cached).toMatchObject({ status: "PAID" });
+    let mutation: Promise<unknown> | undefined;
+    await prisma.$transaction(async (transaction) => {
+      await transaction.$queryRaw(Prisma.sql`SELECT "id" FROM "payment_attempts" WHERE "order_id" = ${order.id}::uuid FOR UPDATE`);
+      mutation = repository.updateStatusIfCurrent(order.id, "PAID", "PROCESSING", now).then(
+        (result) => ({ result }), (error: unknown) => ({ error }),
+      );
+      await transaction.paymentAttempt.updateMany({ where: { orderId: order.id }, data: { status: "REFUNDED" } });
+    });
+    expect(await mutation).toMatchObject({ error: { code: "CONFLICT" } });
+    await expect(prisma.order.findUniqueOrThrow({ where: { id: order.id } })).resolves.toMatchObject({ status: "PAID" });
+  });
+
+  it("rejects shipment metadata and new custom shipping charges after refund", async () => {
+    const now = new Date("2026-10-06T08:00:00.000Z");
+    const order = await prisma.order.create({ data: {
+      customerEmail: "fixture@example.test", customerName: "Fixture", customerPhone: "+628000000000",
+      grandTotalRp: "10000", itemsSubtotalRp: "10000", shippingTotalRp: "0",
+      orderNumber: "ORD-SHIPPING-HOLD", orderType: "CUSTOM_PRINT", publicTokenHash: "shipping-hold-token", status: "READY_TO_SHIP",
+      shipments: { create: {} },
+      paymentAttempts: { create: { amountRp: "10000", expiresAt: now, providerOrderId: "PAY-SHIPPING-HOLD", purpose: "ORDER_TOTAL", status: "REFUNDED" } },
+    } });
+    const repository = new ShippingRepository(prisma);
+    await expect(repository.recordShipmentMetadata(order.id, { courierCode: "JNE", trackingNumber: "TEST-HOLD" })).rejects.toMatchObject({ code: "CONFLICT", details: { reason: "PAYMENT_EXCEPTION" } });
+    await prisma.order.update({ where: { id: order.id }, data: { status: "FINISHING_QC" } });
+    await expect(repository.createCustomShippingPayment({
+      orderId: order.id, now, courierCode: "JNE", courierName: "JNE", serviceCode: "REG", serviceName: "Regular",
+      finalHeightCm: new Prisma.Decimal("10"), finalLengthCm: new Prisma.Decimal("10"),
+      finalWeightGrams: new Prisma.Decimal("100"), finalWidthCm: new Prisma.Decimal("10"),
+      paymentExpiresAt: new Date(now.getTime() + 24 * 60 * 60_000), paymentProviderOrderId: "PAY-SHIPPING-REJECTED",
+      priceRp: new Prisma.Decimal("15000"), providerPayload: {},
+    })).rejects.toMatchObject({ code: "CONFLICT", details: { reason: "PAYMENT_EXCEPTION" } });
+    await expect(prisma.paymentAttempt.count({ where: { orderId: order.id } })).resolves.toBe(1);
+  });
+
+  it("keeps partial refunds on hold and does not treat a full refund as permission to fulfill", async () => {
+    const now = new Date("2026-10-06T08:00:00.000Z");
+    const variant = await createWebhookFixtureVariant("PARTIAL-REFUND", 1);
+    const payable = await createRetailPaymentFixture({
+      expiresAt: new Date(now.getTime() + 30 * 60_000),
+      orderNumber: "ORD-PARTIAL-REFUND", providerOrderId: "PAY-PARTIAL-REFUND",
+      publicTokenHash: "partial-refund-token", variantId: variant.id,
+    });
+    const webhook = new PaymentWebhookService({
+      audit: async () => undefined, now: () => now,
+      repository: new PaymentWebhookRepository(prisma), serverKey: "midtrans-server-key",
+    });
+    const payload = { gross_amount: "12500.00", order_id: payable.providerOrderId, transaction_id: "txn-partial-refund" };
+    await webhook.handleMidtransNotification(signedPaymentPayload({ ...payload, transaction_status: "settlement" }));
+    const partial = signedPaymentPayload({ ...payload, transaction_status: "partial_refund" });
+    await expect(webhook.handleMidtransNotification(partial)).resolves.toMatchObject({ processingResult: "PARTIAL_REFUND_REQUIRES_EXCEPTION" });
+    await expect(webhook.handleMidtransNotification(partial)).resolves.toMatchObject({ kind: "DUPLICATE" });
+    const repository = new OrderRepository(prisma);
+    await expect(repository.findStatusForMutation(payable.orderId)).resolves.toMatchObject({ paymentIssues: [{ kind: "PARTIAL_REFUND" }] });
+    await expect(repository.updateStatusIfCurrent(payable.orderId, "PAID", "PROCESSING", now)).rejects.toMatchObject({ code: "CONFLICT" });
+    await webhook.handleMidtransNotification(signedPaymentPayload({ ...payload, transaction_status: "refund" }));
+    await expect(repository.findStatusForMutation(payable.orderId)).resolves.toMatchObject({ paymentIssues: [{ kind: "FULL_REFUND" }] });
+    await expect(repository.updateStatusIfCurrent(payable.orderId, "PAID", "PROCESSING", now)).rejects.toMatchObject({ code: "CONFLICT" });
+  });
+
+  it("does not advance custom shipping settlement when the order payment has been refunded", async () => {
+    const now = new Date("2026-10-06T08:00:00.000Z");
+    const order = await prisma.order.create({ data: {
+      customerEmail: "fixture@example.test", customerName: "Fixture", customerPhone: "+628000000000",
+      grandTotalRp: "11000", itemsSubtotalRp: "10000", shippingTotalRp: "1000",
+      orderNumber: "ORD-SHIPPING-SETTLEMENT-HOLD", orderType: "CUSTOM_PRINT",
+      publicTokenHash: "shipping-settlement-hold-token", status: "WAITING_SHIPPING_PAYMENT",
+      paymentAttempts: { create: [
+        { amountRp: "10000", expiresAt: now, providerOrderId: "PAY-TOTAL-REFUNDED", purpose: "ORDER_TOTAL", status: "REFUNDED" },
+        { amountRp: "1000", expiresAt: new Date(now.getTime() + 24 * 60 * 60_000), providerOrderId: "PAY-SHIPPING-SETTLEMENT-HOLD", purpose: "CUSTOM_SHIPPING", status: "PENDING" },
+      ] },
+    } });
+    const webhook = new PaymentWebhookService({
+      audit: async () => undefined, now: () => now,
+      repository: new PaymentWebhookRepository(prisma), serverKey: "midtrans-server-key",
+    });
+    await expect(webhook.handleMidtransNotification(signedPaymentPayload({
+      gross_amount: "1000.00", order_id: "PAY-SHIPPING-SETTLEMENT-HOLD",
+      transaction_id: "txn-shipping-settlement-hold", transaction_status: "settlement",
+    }))).resolves.toMatchObject({ kind: "LATE_SETTLEMENT_REFUND_REQUIRED" });
+    await expect(prisma.order.findUniqueOrThrow({ where: { id: order.id } })).resolves.toMatchObject({ status: "WAITING_SHIPPING_PAYMENT" });
+    const state = await new OrderRepository(prisma).findStatusForMutation(order.id);
+    expect(state?.paymentIssues.map((issue) => issue.kind).sort()).toEqual(["FULL_REFUND", "LATE_SETTLEMENT"]);
   });
 
   it("consumes two reservations of one variant without overselling or duplicate movements", async () => {
