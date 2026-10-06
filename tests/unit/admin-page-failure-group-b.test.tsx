@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/admin";
 import type { FailureEvent, FailureKind } from "@/lib/observability/logger";
 import { AppError } from "@/modules/shared/errors";
 
@@ -90,8 +90,8 @@ import AdminProductDetailPage from "@/app/admin/products/[id]/page";
 const VALID_ID = "a6f443d8-3e8a-49b5-81d0-94d56e06c208";
 
 const adminAccess = {
-  clerkUserId: "user_admin",
-  profile: { clerkUserId: "user_admin", id: VALID_ID, isActive: true, role: "ADMIN" },
+  authUserId: "user_admin",
+  profile: { authUserId: "user_admin", id: VALID_ID, isActive: true, role: "ADMIN" },
 } as unknown as AdminAccess;
 
 const recorded: FailureEvent[] = [];

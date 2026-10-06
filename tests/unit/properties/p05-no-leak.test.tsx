@@ -11,7 +11,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/",
   useRouter: () => ({ refresh: vi.fn() }),
 }));
-vi.mock("@clerk/nextjs", () => ({ useClerk: () => ({ signOut: vi.fn() }) }));
+
 vi.mock("@/lib/env/server", () => ({ isLocalDemoMode: () => false }));
 
 import { AdminAccessView } from "@/app/admin/admin-access-view";

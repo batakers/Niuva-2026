@@ -21,17 +21,18 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
-vi.mock("@clerk/nextjs/server", () => ({
-  auth: mocks.auth,
-  clerkMiddleware: () => () => undefined,
+vi.mock("@/lib/auth/admin-engine", () => ({
+  getAdminAuth: () => ({ api: { getSession: async () => { const value = await mocks.auth(); return value?.userId ? { user: { id: value.userId, twoFactorEnabled: true }, session: { mfaVerified: true } } : null; } } }),
 }));
+vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
+
 vi.mock("@/lib/env/server", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/env/server")>();
   return {
     ...actual,
     getServerCapabilities: () => ({
       biteship: false,
-      clerkAdmin: true,
+      adminAuth: true,
       customUploads: false,
       database: true,
       midtrans: false,
@@ -64,7 +65,7 @@ async function clean(): Promise<void> {
     TRUNCATE TABLE
       "audit_logs", "idempotency_records", "stock_movements", "b2b_quotes",
       "b2b_inquiry_files", "b2b_inquiries", "product_media", "product_variants",
-      "products", "categories", "pricing_rule_versions", "admin_profiles"
+      "products", "categories", "pricing_rule_versions", "admin_profiles", "admin_auth_users"
     RESTART IDENTITY CASCADE
   `;
 }
@@ -180,7 +181,7 @@ describe("direct Server Action call without proxy protection", () => {
 
   it("rejects with FORBIDDEN for a deactivated AdminProfile", async () => {
     await prisma.adminProfile.create({
-      data: { clerkUserId: "clerk_direct_post_inactive", isActive: false, role: "OWNER" },
+      data: { authUser: { create: { id: "clerk_direct_post_inactive", email: "clerk_direct_post_inactive@example.test", name: "Fixture Admin" } }, clerkUserId: "clerk_direct_post_inactive", isActive: false, role: "OWNER" },
     });
     mocks.auth.mockResolvedValue({ userId: "clerk_direct_post_inactive" });
     const before = await snapshot();
@@ -195,7 +196,7 @@ describe("direct Server Action call without proxy protection", () => {
 
   it("control: the same call succeeds for an active Owner, so the rejections are not vacuous", async () => {
     await prisma.adminProfile.create({
-      data: { clerkUserId: "clerk_direct_post_owner", isActive: true, role: "OWNER" },
+      data: { authUser: { create: { id: "clerk_direct_post_owner", email: "clerk_direct_post_owner@example.test", name: "Fixture Admin" } }, clerkUserId: "clerk_direct_post_owner", isActive: true, role: "OWNER" },
     });
     mocks.auth.mockResolvedValue({ userId: "clerk_direct_post_owner" });
     const result = await (adminActions.transitionInquiryAction as unknown as ActionFn)(

@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PrismaClient } from "@/generated/prisma/client";
-import type { AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/admin";
 import type { AdminPermission } from "@/modules/admin/permissions";
 
 const required = vi.hoisted(() => ({ calls: [] as string[] }));
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/auth/clerk", () => ({ requireAdmin: vi.fn() }));
+vi.mock("@/lib/auth/admin", () => ({ requireAdmin: vi.fn() }));
 vi.mock("@/lib/db/prisma", () => ({ getPrismaClient: vi.fn() }));
 vi.mock("@/modules/admin/permissions", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/modules/admin/permissions")>();
@@ -24,9 +24,9 @@ import { AdminOperationsService } from "@/modules/admin/operations";
 
 function access(role: "ADMIN" | "OWNER", isActive = true): AdminAccess {
   return {
-    clerkUserId: `user_${role.toLowerCase()}`,
+    authUserId: `user_${role.toLowerCase()}`,
     profile: {
-      clerkUserId: `user_${role.toLowerCase()}`,
+      authUserId: `user_${role.toLowerCase()}`,
       id: "2b7f3c1a-18f7-4d91-8b86-8d98fcd0f7f4",
       isActive,
       role,

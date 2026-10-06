@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
+import { requireAdmin, type AdminAccess } from "@/lib/auth/admin";
 import {
   recordAudit,
   createTransitionAuditRecorder,

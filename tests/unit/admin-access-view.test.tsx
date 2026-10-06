@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/admin";
 import type { AdminAccessState } from "@/app/admin/admin-page-access";
 import { AdminAccessView } from "@/app/admin/admin-access-view";
 import { systemCopy } from "@/components/niuva/system-state-copy";
@@ -11,16 +11,16 @@ vi.mock("@/components/niuva/admin-session-actions", () => ({
   AdminSessionActions: () => null,
 }));
 
-const clerkMocks = vi.hoisted(() => ({ signOut: vi.fn() }));
-const routerMocks = vi.hoisted(() => ({ refresh: vi.fn() }));
+const fetchMock = vi.hoisted(() => vi.fn());
+const routerMocks = vi.hoisted(() => ({ refresh: vi.fn(), replace: vi.fn() }));
+const navigationMocks = vi.hoisted(() => ({ navigate: vi.fn() }));
+vi.mock("@/components/niuva/admin-auth-navigation", () => ({ navigateAfterAdminAuth: navigationMocks.navigate }));
 
-vi.mock("@clerk/nextjs", () => ({
-  useClerk: () => ({ signOut: clerkMocks.signOut }),
-}));
+
 
 vi.mock("next/navigation", async (importOriginal) => {
   const actual = await importOriginal<typeof import("next/navigation")>();
-  return { ...actual, useRouter: () => ({ refresh: routerMocks.refresh }) };
+  return { ...actual, useRouter: () => routerMocks };
 });
 
 const authMocks = vi.hoisted(() => ({
@@ -36,7 +36,7 @@ const queueMocks = vi.hoisted(() => ({
 }));
 const dashboardMocks = vi.hoisted(() => ({ load: vi.fn() }));
 
-vi.mock("@/lib/auth/clerk", () => ({
+vi.mock("@/lib/auth/admin", () => ({
   requireAdmin: authMocks.requireAdmin,
 }));
 
@@ -63,8 +63,10 @@ import AdminQueuePage from "@/app/admin/queue/page";
 import { AdminShell } from "@/components/niuva/admin-shell";
 
 beforeEach(() => {
-  clerkMocks.signOut.mockReset();
-  clerkMocks.signOut.mockResolvedValue(undefined);
+  fetchMock.mockReset().mockImplementation(async () => Response.json({ success: true }));
+  vi.stubGlobal("fetch", fetchMock);
+  routerMocks.replace.mockReset();
+  navigationMocks.navigate.mockReset();
   routerMocks.refresh.mockReset();
   authMocks.requireAdmin.mockReset();
   nextServerMocks.connection.mockReset();
@@ -88,6 +90,7 @@ beforeEach(() => {
   });
 });
 
+afterEach(() => vi.unstubAllGlobals());
 describe("admin access view", () => {
   it("marks the redesigned Admin visual pending while exposing the approved foundation", () => {
     render(
@@ -147,13 +150,13 @@ describe("admin access view", () => {
 
     fireEvent.click(screen.getByRole("button", { name: systemCopy.actions.signOut }));
 
-    await waitFor(() => expect(clerkMocks.signOut).toHaveBeenCalledWith({ redirectUrl: "/" }));
-    expect(clerkMocks.signOut).toHaveBeenCalledOnce();
+    await waitFor(() => expect(navigationMocks.navigate).toHaveBeenCalledWith("/"));
+    expect(fetchMock).toHaveBeenCalledWith("/api/admin/auth/sign-out", expect.objectContaining({ method: "POST", credentials: "same-origin" }));
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("shows a static alert without raw detail when sign-out fails and keeps the button enabled", async () => {
-    clerkMocks.signOut.mockRejectedValue(new Error("clerk_secret_failure user_leak@example.test"));
+    fetchMock.mockRejectedValue(new Error("clerk_secret_failure user_leak@example.test"));
     render(<AdminAccessView state="FORBIDDEN" />);
 
     fireEvent.click(screen.getByRole("button", { name: systemCopy.actions.signOut }));
@@ -209,9 +212,9 @@ function homeLinks(): HTMLElement[] {
 describe("admin access route", () => {
   it("uses the server authorization boundary before rendering role context", async () => {
     authMocks.requireAdmin.mockResolvedValue({
-      clerkUserId: "user_owner",
+      authUserId: "user_owner",
       profile: {
-        clerkUserId: "user_owner",
+        authUserId: "user_owner",
         id: "a6f443d8-3e8a-49b5-81d0-94d56e06c208",
         isActive: true,
         role: "OWNER",
@@ -243,9 +246,9 @@ describe("admin access route", () => {
 
   it("renders a safe queue error after authorization succeeds but the read fails", async () => {
     authMocks.requireAdmin.mockResolvedValue({
-      clerkUserId: "user_admin",
+      authUserId: "user_admin",
       profile: {
-        clerkUserId: "user_admin",
+        authUserId: "user_admin",
         id: "a6f443d8-3e8a-49b5-81d0-94d56e06c208",
         isActive: true,
         role: "ADMIN",
@@ -275,8 +278,8 @@ describe("admin access route", () => {
 
   it("shows a safe overview error when dashboard data fails after authorization", async () => {
     authMocks.requireAdmin.mockResolvedValue({
-      clerkUserId: "user_admin",
-      profile: { clerkUserId: "user_admin", id: "a6f443d8-3e8a-49b5-81d0-94d56e06c208", isActive: true, role: "ADMIN" },
+      authUserId: "user_admin",
+      profile: { authUserId: "user_admin", id: "a6f443d8-3e8a-49b5-81d0-94d56e06c208", isActive: true, role: "ADMIN" },
     } satisfies AdminAccess);
     dashboardMocks.load.mockRejectedValue(new Error("private database failure"));
     render(await AdminPage({ searchParams: Promise.resolve({}) }));

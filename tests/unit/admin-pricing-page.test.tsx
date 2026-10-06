@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/admin";
 import type { AdminPricingRuleRow } from "@/modules/admin/operations";
 
 const authMocks = vi.hoisted(() => ({
@@ -21,7 +21,7 @@ vi.mock("@/components/niuva/admin-session-actions", () => ({
   AdminSessionActions: () => null,
 }));
 
-vi.mock("@/lib/auth/clerk", () => ({
+vi.mock("@/lib/auth/admin", () => ({
   requireAdmin: authMocks.requireAdmin,
 }));
 
@@ -43,9 +43,9 @@ vi.mock("@/modules/admin/operations", () => ({
 import AdminPricingPage from "@/app/admin/pricing/page";
 
 const ownerAccess = {
-  clerkUserId: "user_owner",
+  authUserId: "user_owner",
   profile: {
-    clerkUserId: "user_owner",
+    authUserId: "user_owner",
     id: "a6f443d8-3e8a-49b5-81d0-94d56e06c208",
     isActive: true,
     role: "OWNER",

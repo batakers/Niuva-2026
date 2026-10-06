@@ -1,4 +1,4 @@
-import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
+import { requireAdmin, type AdminAccess } from "@/lib/auth/admin";
 import { z } from "zod";
 import { recordAudit, type AuditRecorder, createTransitionAuditRecorder } from "@/modules/shared/audit";
 import { appError } from "@/modules/shared/errors";

@@ -2,7 +2,7 @@ import Decimal from "decimal.js";
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/admin";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { CustomerWorkRepository } from "@/modules/customer-work/repository";
 import { CustomPrintAccessService } from "@/modules/custom-print/access-service";
@@ -35,7 +35,7 @@ async function customer(address: string) {
 }
 async function admin(): Promise<AdminAccess> {
   const profile = await prisma.adminProfile.create({ data: { clerkUserId: `admin_${randomUUID()}`, isActive: true, role: "OWNER" } });
-  return { clerkUserId: profile.clerkUserId, profile };
+  return { authUserId: profile.id, profile };
 }
 async function uploaded(extension: "stl" | "obj" | "3mf" | "step" | "stp" | "jpg" | "png", uploadedByCustomerId?: string) {
   const id = randomUUID();

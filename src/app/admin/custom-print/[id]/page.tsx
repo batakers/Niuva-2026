@@ -20,7 +20,7 @@ import {
 } from "@/app/admin/actions";
 import { AdminDataUnavailableView, AdminShell } from "@/components/niuva/admin-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
-import type { AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/admin";
 import { AdminOperationsService } from "@/modules/admin/operations";
 import { CustomPrintEstimateService, isEstimateCurrent } from "@/modules/custom-print/estimate";
 import { readCustomerPreviewSnapshot } from "@/modules/custom-print/customer-preview";

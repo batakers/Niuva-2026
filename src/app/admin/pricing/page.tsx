@@ -12,7 +12,7 @@ import {
   AdminShell,
 } from "@/components/niuva/admin-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
-import type { AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/admin";
 import type { FailureKind } from "@/lib/observability/logger";
 import {
   AdminOperationsService,

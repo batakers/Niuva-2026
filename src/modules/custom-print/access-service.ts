@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
+import { requireAdmin, type AdminAccess } from "@/lib/auth/admin";
 import { requireAdminPermission } from "@/modules/admin/permissions";
 import {
   getRouteAccessTokenEntityId,

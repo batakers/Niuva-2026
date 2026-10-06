@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-const state = vi.hoisted(() => ({ cookies: new Map<string, string>(), customer: { id: "fixture-customer" }, access: { clerkUserId: "test-owner", profile: { id: "00000000-0000-4000-8000-000000000001", role: "OWNER", isActive: true } } }));
+const state = vi.hoisted(() => ({ cookies: new Map<string, string>(), customer: { id: "fixture-customer" }, access: { authUserId: "test-owner", profile: { id: "00000000-0000-4000-8000-000000000001", role: "OWNER", isActive: true } } }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: (name: string) => ({ value: state.cookies.get(name) }) }) }));
 vi.mock("@/lib/auth/customer", () => ({ requireCustomer: async () => state.customer }));
-vi.mock("@/lib/auth/clerk", () => ({ requireAdmin: async () => state.access }));
+vi.mock("@/lib/auth/admin", () => ({ requireAdmin: async () => state.access }));
 vi.mock("@/lib/db/prisma", () => ({ getPrismaClient: () => ({}) }));
 import { CustomerPrivacyRepository } from "@/modules/customer-privacy/repository";
 import { CustomerPrivacyService } from "@/modules/customer-privacy/service";

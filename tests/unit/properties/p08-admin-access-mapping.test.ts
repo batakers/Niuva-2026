@@ -16,7 +16,7 @@ const mocks = vi.hoisted(() => ({
   requireAdminPermission: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/clerk", () => ({
+vi.mock("@/lib/auth/admin", () => ({
   requireAdmin: mocks.requireAdmin,
 }));
 
@@ -34,7 +34,7 @@ const MAPPED_CODES = Object.keys(EXPECTED_STATE) as ErrorCode[];
 const UNMAPPED_CODES = ERROR_CODES.filter((code) => EXPECTED_STATE[code] === undefined);
 
 const grantedAccess = {
-  clerkUserId: "user_test",
+  authUserId: "user_test",
   profile: { isActive: true, role: "OWNER" },
 };
 

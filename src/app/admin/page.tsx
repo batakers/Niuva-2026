@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
-import type { AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/admin";
 import { AdminAccessView } from "@/app/admin/admin-access-view";
 import { AdminDataUnavailableView } from "@/components/niuva/admin-shell";
 import { ActionQueueService } from "@/modules/admin/action-queue-service";

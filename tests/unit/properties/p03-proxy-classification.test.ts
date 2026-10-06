@@ -6,19 +6,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { acceptHeaderCorpus, DEFAULT_SEED, forEachCase, MIN_GENERATED, pathnameCorpus } from "../helpers/corpus";
 
-type MiddlewareHandler = (auth: { protect: () => Promise<void> }, request: NextRequest, event: NextFetchEvent) => unknown;
 
 const clerkMocks = vi.hoisted(() => ({
   protect: vi.fn(),
   delegated: vi.fn(),
 }));
 
-vi.mock("@clerk/nextjs/server", () => ({
-  clerkMiddleware: (handler: MiddlewareHandler) => async (request: NextRequest, event: NextFetchEvent) => {
-    clerkMocks.delegated();
-    return handler({ protect: clerkMocks.protect }, request, event);
-  },
-}));
+
 
 import { classifyAdminProxyRequest } from "@/lib/auth/admin-proxy-response";
 import proxy from "@/proxy";
@@ -93,8 +87,8 @@ const pathCorpus: string[] = [
 beforeEach(() => {
   clerkMocks.protect.mockReset();
   clerkMocks.delegated.mockReset();
-  vi.stubEnv("CLERK_SECRET_KEY", "");
-  vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
+  vi.stubEnv("BETTER_AUTH_SECRET", "");
+  vi.stubEnv("BETTER_AUTH_URL", "");
 });
 
 afterEach(() => {
@@ -175,8 +169,8 @@ describe("Property 3: proxy classification without Clerk credentials", () => {
   }, 30_000);
 
   it("treats a single missing credential as no credentials", async () => {
-    vi.stubEnv("CLERK_SECRET_KEY", "sk_test_example");
-    vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "   ");
+    vi.stubEnv("BETTER_AUTH_SECRET", "test-only-admin-secret-at-least-32-characters");
+    vi.stubEnv("BETTER_AUTH_URL", "   ");
 
     const response = await run("/admin/orders", "text/html");
 

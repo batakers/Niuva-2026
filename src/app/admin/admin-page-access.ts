@@ -1,4 +1,4 @@
-import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
+import { requireAdmin, type AdminAccess } from "@/lib/auth/admin";
 import { requireAdminPermission, type AdminPermission } from "@/modules/admin/permissions";
 import { isAppError } from "@/modules/shared/errors";
 

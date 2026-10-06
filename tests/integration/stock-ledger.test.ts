@@ -97,7 +97,7 @@ describe("stock movement ledger", () => {
     await expect(prisma.productVariant.findUniqueOrThrow({ where: { id: variant.id } })).resolves.toMatchObject({ stockOnHand: 1 });
     expect(movements[2]?.reservationId).toBe(reservation.id);
     const operations = new AdminOperationsService({
-      authorize: async () => ({ clerkUserId: admin.clerkUserId, profile: admin }),
+      authorize: async () => ({ authUserId: admin.id, profile: admin }),
       prisma,
     });
     const history = await operations.getStockHistory(product.id, variant.id);
@@ -106,7 +106,7 @@ describe("stock movement ledger", () => {
     expect(history?.movements[0]).toMatchObject({ kind: "ORDER_CONSUMPTION", orderId: reservation.orderId });
     await expect(operations.getStockHistory(crypto.randomUUID(), variant.id)).resolves.toBeNull();
     const disabled = new AdminOperationsService({
-      authorize: async () => ({ clerkUserId: admin.clerkUserId, profile: { ...admin, isActive: false } }),
+      authorize: async () => ({ authUserId: admin.id, profile: { ...admin, isActive: false } }),
       prisma,
     });
     await expect(disabled.getStockHistory(product.id, variant.id)).rejects.toMatchObject({ code: "FORBIDDEN" });
@@ -184,7 +184,7 @@ describe("stock movement ledger", () => {
       });
     }
     const operations = new AdminOperationsService({
-      authorize: async () => ({ clerkUserId: admin.clerkUserId, profile: admin }),
+      authorize: async () => ({ authUserId: admin.id, profile: admin }),
       prisma,
     });
     const first = await operations.getStockHistory(product.id, variant.id, { page: 1 });

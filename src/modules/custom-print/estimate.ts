@@ -2,7 +2,7 @@ import Decimal from "decimal.js";
 import { z } from "zod";
 import { Prisma, type PrismaClient } from "@/generated/prisma/client";
 
-import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
+import { requireAdmin, type AdminAccess } from "@/lib/auth/admin";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { requireAdminPermission } from "@/modules/admin/permissions";
 import { calculatePrintQuote, type StandardPrintInput } from "@/modules/pricing/calculator";

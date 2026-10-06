@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/admin";
 import {
   ADMIN_PERMISSION_MATRIX,
   hasAdminPermission,
@@ -23,9 +23,9 @@ const now = new Date("2026-09-05T00:00:00.000Z");
 
 function access(role: "ADMIN" | "OWNER"): AdminAccess {
   return {
-    clerkUserId: `user_${role.toLowerCase()}`,
+    authUserId: `user_${role.toLowerCase()}`,
     profile: {
-      clerkUserId: `user_${role.toLowerCase()}`,
+      authUserId: `user_${role.toLowerCase()}`,
       id: role === "OWNER"
         ? "a6f443d8-3e8a-49b5-81d0-94d56e06c208"
         : "2b7f3c1a-18f7-4d91-8b86-8d98fcd0f7f4",

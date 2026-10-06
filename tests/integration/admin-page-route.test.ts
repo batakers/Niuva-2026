@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-const clerkMocks = vi.hoisted(() => ({
+const authMocks = vi.hoisted(() => ({
   auth: vi.fn(),
 }));
 
@@ -15,14 +15,14 @@ const nextServerMocks = vi.hoisted(() => ({
   connection: vi.fn(),
 }));
 
-vi.mock("@clerk/nextjs/server", () => ({
-  auth: clerkMocks.auth,
+vi.mock("@/lib/auth/admin-engine", () => ({
+  getAdminAuth: () => ({ api: { getSession: async () => { const value = await authMocks.auth(); return value?.userId ? { user: { id: value.userId, twoFactorEnabled: true }, session: { mfaVerified: true } } : null; } } }),
 }));
+vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
+vi.mock("next/navigation", async importOriginal => ({ ...await importOriginal<typeof import("next/navigation")>(), useRouter: () => ({ replace: () => undefined, refresh: () => undefined }) }));
 
-// AdminSignOutButton (client component) calls useClerk(); there is no provider in static rendering.
-vi.mock("@clerk/nextjs", () => ({
-  useClerk: () => ({ signOut: vi.fn() }),
-}));
+
+
 vi.mock("@/lib/env/server", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/env/server")>();
 
@@ -73,19 +73,19 @@ async function cleanIntegrationDatabase(): Promise<void> {
       "portfolio_projects",
       "services",
       "pricing_rule_versions",
-      "admin_profiles"
+      "admin_profiles", "admin_auth_users"
     RESTART IDENTITY CASCADE
   `;
 }
 
 beforeEach(async () => {
   await cleanIntegrationDatabase();
-  clerkMocks.auth.mockReset();
-  clerkMocks.auth.mockResolvedValue({ userId: ownerClerkUserId });
+  authMocks.auth.mockReset();
+  authMocks.auth.mockResolvedValue({ userId: ownerClerkUserId });
   environmentMocks.getServerCapabilities.mockReset();
   environmentMocks.getServerCapabilities.mockReturnValue({
     biteship: false,
-    clerkAdmin: true,
+    adminAuth: true,
     customUploads: false,
     database: true,
     midtrans: false,
@@ -101,7 +101,7 @@ afterAll(cleanIntegrationDatabase);
 describe("Admin page route integration", () => {
   it("renders the protected stock history with physical, reserved and available balances", async () => {
     await prisma.adminProfile.create({
-      data: { clerkUserId: ownerClerkUserId, isActive: true, role: "OWNER", displayName: "Owner" },
+      data: { authUser: { create: { id: ownerClerkUserId, email: ownerClerkUserId + "@example.test", name: "Fixture Owner" } }, clerkUserId: ownerClerkUserId, isActive: true, role: "OWNER", displayName: "Owner" },
     });
     const product = await prisma.product.create({
       data: { description: "Stok route", name: "Produk stok", slug: "admin-stock-route" },
@@ -125,9 +125,10 @@ describe("Admin page route integration", () => {
     expect(markup).not.toContain(systemCopy.adminAccess.FORBIDDEN.title);
   });
 
-  it("resolves the Clerk test identity through AdminProfile and renders database-backed work", async () => {
+  it("resolves the Better Auth test identity through AdminProfile and renders database-backed work", async () => {
     await prisma.adminProfile.create({
       data: {
+        authUser: { create: { id: ownerClerkUserId, email: ownerClerkUserId + "@example.test", name: "Fixture Owner" } },
         clerkUserId: ownerClerkUserId,
         isActive: true,
         role: "OWNER",
@@ -151,7 +152,7 @@ describe("Admin page route integration", () => {
 
     const markup = renderToStaticMarkup(await AdminPage({ searchParams: Promise.resolve({}) }));
 
-    expect(clerkMocks.auth).toHaveBeenCalledOnce();
+    expect(authMocks.auth).toHaveBeenCalledOnce();
     expect(nextServerMocks.connection).toHaveBeenCalledOnce();
     expect(markup).toContain("Overview");
     expect(markup).toContain(inquiry.referenceNumber);
@@ -165,7 +166,7 @@ describe("Admin page route integration", () => {
   });
 
   it("applies the queue group on the server before rendering rows", async () => {
-    await prisma.adminProfile.create({ data: { clerkUserId: ownerClerkUserId, isActive: true, role: "OWNER" } });
+    await prisma.adminProfile.create({ data: { authUser: { create: { id: ownerClerkUserId, email: ownerClerkUserId + "@example.test", name: "Fixture Owner" } }, clerkUserId: ownerClerkUserId, isActive: true, role: "OWNER" } });
     await prisma.b2BInquiry.create({ data: {
       confidentialityAck: true,
       currentStage: "CAD",
@@ -187,7 +188,7 @@ describe("Admin page route integration", () => {
   });
 
   it("keeps the queue hidden when the Clerk identity has no active profile", async () => {
-    clerkMocks.auth.mockResolvedValue({ userId: "clerk_test_admin_page_unknown" });
+    authMocks.auth.mockResolvedValue({ userId: "clerk_test_admin_page_unknown" });
 
     const markup = renderToStaticMarkup(await AdminPage({ searchParams: Promise.resolve({}) }));
 
@@ -198,7 +199,7 @@ describe("Admin page route integration", () => {
 
   it("calls notFound() for a valid id without a record instead of the unavailable state", async () => {
     await prisma.adminProfile.create({
-      data: { clerkUserId: ownerClerkUserId, isActive: true, role: "OWNER", displayName: "Owner" },
+      data: { authUser: { create: { id: ownerClerkUserId, email: ownerClerkUserId + "@example.test", name: "Fixture Owner" } }, clerkUserId: ownerClerkUserId, isActive: true, role: "OWNER", displayName: "Owner" },
     });
 
     await expect(

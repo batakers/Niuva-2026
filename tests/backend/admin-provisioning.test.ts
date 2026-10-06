@@ -7,7 +7,8 @@ import {
 } from "@/modules/admin/provisioning";
 
 const validEnvironment = {
-  ADMIN_PROFILE_CLERK_USER_ID: "user_test_owner",
+  ADMIN_AUTH_EMAIL: "owner@example.test",
+  ADMIN_AUTH_PASSWORD: "Test-only-password-29!",
   ADMIN_PROFILE_CONFIRMATION: "I_UNDERSTAND_NON_PRODUCTION",
   ADMIN_PROFILE_DISPLAY_NAME: "Owner Smoke",
   ADMIN_PROFILE_ROLE: "OWNER",
@@ -16,7 +17,8 @@ const validEnvironment = {
 describe("guarded AdminProfile provisioning", () => {
   it("requires an explicit identity, role, display name, and non-production confirmation", () => {
     expect(parseAdminProvisioningInput(validEnvironment)).toEqual({
-      clerkUserId: "user_test_owner",
+      email: "owner@example.test",
+      password: "Test-only-password-29!",
       confirmation: "I_UNDERSTAND_NON_PRODUCTION",
       displayName: "Owner Smoke",
       role: "OWNER",

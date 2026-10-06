@@ -2,9 +2,7 @@ import { NextRequest, type NextFetchEvent } from "next/server";
 import { createRequire } from "node:module";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@clerk/nextjs/server", () => ({
-  clerkMiddleware: () => async () => new Response(null),
-}));
+
 
 import nextConfig from "../../next.config";
 import proxy from "@/proxy";
@@ -57,7 +55,7 @@ describe("next.config headers(): static CSP source", () => {
   const staticRegex = pathToRegexp(STATIC_CSP_SOURCE);
 
   it("excludes /checkout and /account from the static CSP only", () => {
-    for (const path of ["/checkout", "/checkout/", "/checkout/step", "/account", "/account/orders/1"]) {
+    for (const path of ["/checkout", "/checkout/", "/checkout/step", "/account", "/account/orders/1", "/admin", "/admin/sign-in", "/api/admin/orders"]) {
       expect(staticRegex.test(path), path).toBe(false);
     }
   });
@@ -73,16 +71,13 @@ describe("next.config headers(): static CSP source", () => {
     expect(response.headers.get("content-security-policy")).toContain("'nonce-");
   });
 
-  it("keeps the static CSP on every other path, including look-alikes and admin", () => {
+  it("keeps the static CSP on every other path, including look-alikes", () => {
     for (const path of [
       "/",
       "/services",
       "/checkoutx",
       "/accounts",
       "/account-x/y",
-      "/admin",
-      "/admin/sign-in",
-      "/api/admin/orders",
       "/api/health",
       "/custom-print/requests/abc",
     ]) {

@@ -89,7 +89,7 @@ user request and the authority order above.
   tanpa JavaScript; batas runtime dan bucket DB tetap dipertahankan.
 - The current PRD addenda require Customer login before checkout (Google or
   verified email/password) and
-  includes a read-only Customer account. Clerk protects Owner/Admin only; do
+  includes a read-only Customer account. Better Auth with mandatory TOTP protects Owner/Admin only; do
   not restore the historical guest-checkout scope.
 - Internal Customer Development policy and retention are defined in the
   2 October 2026 PRD/Tech Design addenda. Internal documents do not authorize

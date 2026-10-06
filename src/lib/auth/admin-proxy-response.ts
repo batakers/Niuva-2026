@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 /**
  * Pure helpers for the admin proxy (`src/proxy.ts`). This module must not
- * import Clerk so it stays testable and safe to use before any credentials
+ * import the auth engine so it stays testable and safe to use before any credentials
  * exist.
  */
 
@@ -44,7 +44,7 @@ function isAcceptableHtmlRange(range: string): boolean {
 }
 
 /**
- * Decides whether a request without Clerk credentials gets the HTML 503
+ * Decides whether a request without Admin auth configuration gets the HTML 503
  * (browser navigation) or the unchanged JSON 503 (everything else).
  *
  * `/api` and `/api/...` are always "api", whatever `Accept` says. Any other
@@ -72,7 +72,7 @@ export function classifyAdminProxyRequest(
 
 /**
  * True only for the exact sign-in path or a path below `/admin/sign-in/`
- * (Clerk sub-steps such as factor and SSO callback). `/admin/sign-in-other`
+ * (the native login and recovery UI). `/admin/sign-in-other`
  * and similar look-alikes are NOT matched and stay protected.
  *
  * Residual risk (design, Keputusan E): if a protected route is ever added

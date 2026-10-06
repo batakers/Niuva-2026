@@ -2,23 +2,8 @@ import { NextRequest, type NextFetchEvent } from "next/server";
 import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const clerkMocks = vi.hoisted(() => ({ delegated: vi.fn(), protect: vi.fn() }));
-
-vi.mock("@clerk/nextjs/server", () => ({
-  clerkMiddleware:
-    (
-      handler: (
-        auth: { protect: (options: unknown) => unknown },
-        request: unknown,
-        event: unknown,
-      ) => unknown,
-    ) =>
-    async (request: unknown, event: unknown) => {
-      clerkMocks.delegated();
-
-      return handler({ protect: clerkMocks.protect }, request, event);
-    },
-}));
+const authMocks = vi.hoisted(() => ({ session: vi.fn() }));
+vi.mock("@/lib/auth/admin-engine", () => ({ getAdminAuth: () => ({ api: { getSession: authMocks.session } }) }));
 
 import proxy, { config } from "@/proxy";
 import { buildContentSecurityPolicy } from "@/lib/security/csp";
@@ -47,10 +32,12 @@ function matches(url: string, headers?: Record<string, string>): boolean {
 }
 
 beforeEach(() => {
-  clerkMocks.delegated.mockClear();
-  clerkMocks.protect.mockClear();
-  vi.stubEnv("CLERK_SECRET_KEY", "sk_test_example");
-  vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "pk_test_example");
+  authMocks.session.mockClear();
+  authMocks.session.mockClear();
+  vi.stubEnv("BETTER_AUTH_SECRET", "test-only-admin-secret-at-least-32-characters");
+  vi.stubEnv("BETTER_AUTH_URL", "http://localhost:3000");
+  vi.stubEnv("DATABASE_URL", "postgresql://localhost/niuva_test");
+  authMocks.session.mockResolvedValue(null);
 });
 
 afterEach(() => {
@@ -58,7 +45,7 @@ afterEach(() => {
 });
 
 describe("proxy header-only path", () => {
-  it("writes nonce + CSP and never calls Clerk for /checkout and /account", async () => {
+  it("writes nonce + CSP and never calls Admin auth for /checkout and /account", async () => {
     for (const pathname of HEADER_ONLY_PATHS) {
       const response = await run(pathname, { accept: "text/html" });
       const policy = response.headers.get("content-security-policy");
@@ -67,13 +54,13 @@ describe("proxy header-only path", () => {
       expect(response.status, pathname).toBe(200);
     }
 
-    expect(clerkMocks.delegated).not.toHaveBeenCalled();
-    expect(clerkMocks.protect).not.toHaveBeenCalled();
+    expect(authMocks.session).not.toHaveBeenCalled();
+    expect(authMocks.session).not.toHaveBeenCalled();
   });
 
-  it("does not need Clerk credentials (no 503)", async () => {
-    vi.stubEnv("CLERK_SECRET_KEY", "");
-    vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
+  it("does not need Admin auth credentials (no 503)", async () => {
+    vi.stubEnv("BETTER_AUTH_SECRET", "");
+    vi.stubEnv("BETTER_AUTH_URL", "");
 
     const response = await run("/checkout", { accept: "text/html" });
 
@@ -130,34 +117,34 @@ describe("proxy header-only path", () => {
   });
 });
 
-describe("proxy Clerk path is unchanged for admin", () => {
-  it("still goes through the Clerk handler for /admin and /api/admin", async () => {
+describe("proxy Admin auth path is unchanged for admin", () => {
+  it("still goes through the Admin auth handler for /admin and /api/admin", async () => {
     await run("/admin/orders", { accept: "text/html" });
     await run("/api/admin/orders", { accept: "application/json" });
 
-    expect(clerkMocks.delegated).toHaveBeenCalledTimes(2);
-    expect(clerkMocks.protect).toHaveBeenCalledTimes(2);
+    expect(authMocks.session).toHaveBeenCalledTimes(2);
+    expect(authMocks.session).toHaveBeenCalledTimes(2);
   });
 
   it("keeps the 503 for admin without credentials but not for header-only paths", async () => {
-    vi.stubEnv("CLERK_SECRET_KEY", "");
+    vi.stubEnv("BETTER_AUTH_SECRET", "");
 
     expect((await run("/admin/orders", { accept: "text/html" })).status).toBe(503);
     expect((await run("/checkout")).status).toBe(200);
   });
 
-  it("sends anything that is not explicitly header-only to Clerk", async () => {
+  it("sends anything that is not explicitly header-only to Admin auth", async () => {
     for (const pathname of ["/Admin/orders", "/ADMIN", "/api/admin", "/services", "/checkoutx"]) {
-      clerkMocks.delegated.mockClear();
+      authMocks.session.mockClear();
       await run(pathname, { accept: "text/html" });
 
-      expect(clerkMocks.delegated, pathname).toHaveBeenCalledTimes(1);
+      expect(authMocks.session, pathname).toHaveBeenCalledTimes(1);
     }
   });
 });
 
 describe("proxy matcher", () => {
-  it("keeps the Clerk entries first and unchanged", () => {
+  it("keeps the Admin auth entries first and unchanged", () => {
     expect(config.matcher.slice(0, 2)).toEqual(["/admin/:path*", "/api/admin/:path*"]);
   });
 

@@ -7,7 +7,7 @@ import { AdminAccessView } from "@/app/admin/admin-access-view";
 import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
 import { recordAdminPageFailure } from "@/app/admin/admin-page-failure";
 import { StatusNotice } from "@/components/niuva/status-notice";
-import type { AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/admin";
 import type { FailureKind } from "@/lib/observability/logger";
 import { AdminOperationsService, parseAdminPage, type AdminCustomPrintRequestRow } from "@/modules/admin/operations";
 

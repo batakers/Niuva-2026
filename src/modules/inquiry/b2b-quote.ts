@@ -2,7 +2,7 @@ import Decimal from "decimal.js";
 import { Prisma, type PrismaClient } from "@/generated/prisma/client";
 import { z } from "zod";
 
-import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
+import { requireAdmin, type AdminAccess } from "@/lib/auth/admin";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { requireAdminPermission } from "@/modules/admin/permissions";
 import { appError } from "@/modules/shared/errors";

@@ -11,7 +11,7 @@ describe("server environment contract", () => {
   it("keeps every provider capability disabled when no values are configured", () => {
     expect(getServerCapabilities({})).toEqual({
       biteship: false,
-      clerkAdmin: false,
+      adminAuth: false,
       customUploads: false,
       customerGoogle: false,
       database: false,
@@ -196,8 +196,8 @@ describe("server environment contract", () => {
 
   it("fails startup on a partially configured provider group", () => {
     expect(() =>
-      validateStartupEnvironment({ CLERK_SECRET_KEY: "server-only-key" }),
-    ).toThrow("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY");
+      validateStartupEnvironment({ BETTER_AUTH_SECRET: "test-only-admin-secret-at-least-32-characters" }),
+    ).toThrow("BETTER_AUTH_URL");
 
     expect(() =>
       validateStartupEnvironment({ BITESHIP_API_KEY: "biteship_test.example" }),

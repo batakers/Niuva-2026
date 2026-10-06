@@ -1,6 +1,6 @@
 import type { Prisma, PrismaClient } from "@/generated/prisma/client";
 import { z } from "zod";
-import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
+import { requireAdmin, type AdminAccess } from "@/lib/auth/admin";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { assertDevelopmentDatabaseUrl } from "@/modules/admin/provisioning";
 import { requireAdminPermission } from "@/modules/admin/permissions";

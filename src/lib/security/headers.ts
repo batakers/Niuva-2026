@@ -61,10 +61,9 @@ export function getObjectStorageConnectOrigin(
 // nonce proxy (src/proxy.ts), so no response relies on header overwrite there.
 // Next compiles this case-insensitively, the same way as the proxy matcher, and
 // isHeaderOnlyPath lowercases, so both sides agree on differently-cased paths.
-// /admin and /api/admin stay included because
-// Clerk's merge cannot drop 'unsafe-inline' and 503/redirect responses from the
-// proxy carry no CSP of their own (see csp-clerk-findings.md, section 10).
-export const STATIC_CSP_SOURCE = "/((?!checkout(?:/|$)|account(?:/|$)).*)";
+// /admin and /api/admin also use the nonce CSP from the NIUVA proxy.
+// Authentication-unavailable HTML writes its own restricted static CSP.
+export const STATIC_CSP_SOURCE = "/((?!checkout(?:/|$)|account(?:/|$)|admin(?:/|$)|api/admin(?:/|$)).*)";
 
 export function getContentSecurityPolicy(
   nodeEnvironment = process.env.NODE_ENV,

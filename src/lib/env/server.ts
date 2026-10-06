@@ -119,7 +119,13 @@ const serverEnvironmentSchema = z.object({
   BITESHIP_API_KEY: optionalNonEmptyString,
   BITESHIP_COURIERS: optionalNonEmptyString,
   BITESHIP_ORIGIN_AREA_ID: optionalNonEmptyString,
-  CLERK_SECRET_KEY: optionalNonEmptyString,
+  BETTER_AUTH_SECRET: z.preprocess(blankToUndefined, z.string().min(32).optional()),
+  BETTER_AUTH_URL: optionalHttpUrl,
+  ADMIN_SMTP_HOST: optionalNonEmptyString,
+  ADMIN_SMTP_PORT: optionalPositiveInteger,
+  ADMIN_SMTP_USER: optionalNonEmptyString,
+  ADMIN_SMTP_PASSWORD: optionalNonEmptyString,
+  ADMIN_EMAIL_FROM: optionalEmail,
   // Consumer (src/app/api/analytics/retention/route.ts) only checks truthiness.
   CRON_SECRET: optionalNonEmptyString,
   CUSTOM_FILE_MAX_BYTES: optionalApprovedCustomFileMaxBytes,
@@ -136,7 +142,6 @@ const serverEnvironmentSchema = z.object({
   // sandbox default in src/modules/payment/midtrans.ts; the provider guard still
   // blocks production/live regardless of this value.
   MIDTRANS_SNAP_ENDPOINT: optionalHttpsUrlWithoutCredentials,
-  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: optionalNonEmptyString,
   NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: optionalNonEmptyString,
   NEXT_PUBLIC_SENTRY_DSN: optionalHttpUrl,
   // Internal-testing auth (optional, not in CAPABILITY_GROUPS). Shape is shared
@@ -268,8 +273,8 @@ type CapabilityGroup = {
 
 const CAPABILITY_GROUPS: readonly CapabilityGroup[] = [
   {
-    fields: ["NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "CLERK_SECRET_KEY"],
-    name: "Clerk admin",
+    fields: ["BETTER_AUTH_SECRET", "BETTER_AUTH_URL"],
+    name: "Better Auth admin",
   },
   {
     fields: [
@@ -352,7 +357,7 @@ export function validateStartupEnvironment(
 
 export type ServerCapabilities = {
   biteship: boolean;
-  clerkAdmin: boolean;
+  adminAuth: boolean;
   customUploads: boolean;
   customerGoogle: boolean;
   database: boolean;
@@ -371,7 +376,7 @@ export function getServerCapabilities(
 
   return {
     biteship: hasAll(CAPABILITY_GROUPS[3].fields),
-    clerkAdmin: hasAll(CAPABILITY_GROUPS[0].fields),
+    adminAuth: hasAll(CAPABILITY_GROUPS[0].fields),
     customUploads:
       environment.DATABASE_URL !== undefined &&
       objectStorage &&

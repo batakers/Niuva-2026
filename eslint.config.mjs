@@ -10,6 +10,7 @@ const eslintConfig = defineConfig([
     // Default ignores of eslint-config-next:
     ".next/**",
     ".next-e2e/**",
+    ".next-admin-auth-e2e/**",
     ".next-demo-e2e/**",
     ".next-reference-e2e/**",
     ".worktrees/**",

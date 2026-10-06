@@ -4,7 +4,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AdminAccessState, AdminPageAccessResult } from "@/app/admin/admin-page-access";
-import type { AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/admin";
 import { AdminAccessView } from "@/app/admin/admin-access-view";
 import AdminOrderDetailPage from "@/app/admin/orders/[id]/page";
 import AdminInquiryDetailPage from "@/app/admin/inquiries/[id]/page";

@@ -1,4 +1,4 @@
-import type { AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/admin";
 import { requireAdminPermission } from "@/modules/admin/permissions";
 import { CustomerEmailRepository } from "@/modules/customer-auth/email-repository";
 import { createOpaqueToken, hashOpaqueToken } from "@/modules/customer-auth/core";
