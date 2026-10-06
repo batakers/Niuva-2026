@@ -179,6 +179,9 @@ test("Google pending preserves layout, prevents double activation, and recovers 
     await page.goto("/login");
     const google = page.getByRole("link", { name: "Lanjutkan dengan Google" });
     const helper = page.locator("#customer-auth-helper");
+    // The native link remains usable before hydration and without JavaScript.
+    // This scenario specifically verifies its enhanced pending-state handler.
+    await expect(google).toHaveAttribute("data-enhanced", "true");
     const before = await helper.evaluate(element => { const r = element.getBoundingClientRect(); return { x: r.x, y: r.y + scrollY, width: r.width, height: r.height }; });
     await google.click({ noWaitAfter: true });
     const status = page.getByRole("status").filter({ hasText: "Menghubungkan ke Google…" });

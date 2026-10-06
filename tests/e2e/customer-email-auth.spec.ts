@@ -37,6 +37,7 @@ test("age declaration stays unchecked, focuses validation, and rejects direct PO
   for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/register");
+    await expect(page.locator('form[action="/api/auth/email/register"]')).toHaveAttribute("data-enhanced", "true");
     const age = page.getByRole("checkbox", { name: "Saya menyatakan bahwa saya berusia 18 tahun atau lebih." });
     await expect(age).not.toBeChecked(); await expect(age).toHaveAttribute("required", "");
     await page.getByLabel("Nama lengkap").fill("Adult Fixture"); await page.getByLabel("Email", { exact: true }).fill("adult-e2e@example.test");
