@@ -64,6 +64,28 @@ migration: `stored_files` uses `id`, while ownership link tables use `file_id`.
   the order or consumes released stock. Amount/signature failures never mutate
   payment/order state.
 
+## Operational payment safety — approved 2026-10-06
+
+The Admin/payment-exception slice adds a shared projection of unresolved
+verified payment outcomes. Refund and partial-refund holds prevent further
+order fulfillment; an Admin status mutation rechecks attempts and events after
+locking payment attempts before the order. Shipment metadata and custom
+shipping charge preparation use the same check. A shipping settlement cannot
+advance an order while a different attempt has a payment hold.
+
+A repeated valid settlement for an already settled attempt records
+`STALE_SETTLED` instead of a late-payment exception. A different transaction ID
+on the same provider order is retained as `PROVIDER_TRANSACTION_CONFLICT`.
+A verified full refund after a recorded late settlement records
+`REFUNDED_AFTER_LATE_SETTLEMENT`, preserving the expired/cancelled attempt and
+closed order. It closes that financial queue item without consuming stock or
+reopening fulfillment. Full refunds on active orders remain held for Owner
+handling; this slice does not expose paid cancellation, refund initiation,
+manual dismissal, provider activation, or production readiness.
+
+See [Action Queue lifecycle](SPEC-action-queue.md#lifecycle-payment-hold--revisi-2026-10-06)
+for the exact open/closed rules and safe projection.
+
 ## Resend boundary
 
 Inquiry and custom-print notifications are scheduled only after their database

@@ -5,6 +5,8 @@ import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { publicServices } from "@/features/public/company-content";
 import { isModelExtension, isReferencePhotoExtension } from "@/modules/custom-print/file-types";
+import { getPaymentIssues, type PaymentIssue } from "@/modules/payment/operational-state";
+import { operationalPaymentSelect } from "@/modules/payment/operational-repository";
 import { requireAdminPermission, type AdminPermission } from "./permissions";
 
 export type AdminOrderRow = Readonly<{
@@ -128,6 +130,7 @@ export type AdminOrderDetail = Readonly<{
   orderNumber: string;
   orderType: "RETAIL" | "CUSTOM_PRINT";
   paidAt: Date | null;
+  paymentIssues: readonly PaymentIssue[];
   paymentAttempts: readonly Readonly<{
     amountRp: string;
     createdAt: Date;
@@ -607,6 +610,7 @@ export class AdminOperationsService {
         paymentAttempts: {
           orderBy: { createdAt: "desc" },
           select: {
+            ...operationalPaymentSelect,
             amountRp: true,
             createdAt: true,
             expiresAt: true,
@@ -685,6 +689,7 @@ export class AdminOperationsService {
       orderNumber: order.orderNumber,
       orderType: order.orderType,
       paidAt: order.paidAt,
+      paymentIssues: getPaymentIssues(order.status, order.paymentAttempts),
       paymentAttempts: order.paymentAttempts.map((attempt) => ({
         amountRp: attempt.amountRp.toString(),
         createdAt: attempt.createdAt,

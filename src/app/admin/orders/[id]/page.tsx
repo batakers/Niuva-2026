@@ -23,6 +23,7 @@ import {
   transitionOrderAction,
 } from "@/app/admin/actions";
 import { AdminOperationsService } from "@/modules/admin/operations";
+import { PAYMENT_ISSUE_LABELS } from "@/modules/payment/operational-state";
 import type { OrderStatus } from "@/generated/prisma/client";
 import {
   CUSTOM_ORDER_TRANSITIONS,
@@ -66,9 +67,10 @@ export default async function AdminOrderDetailPage({
   const order = result.record;
 
   const currentStatus = order.status as OrderStatus;
+  const paymentHeld = order.paymentIssues.length > 0;
   const transitions = order.orderType === "RETAIL" ? RETAIL_ORDER_TRANSITIONS : CUSTOM_ORDER_TRANSITIONS;
   const nextStatuses = (transitions[currentStatus] ?? []).filter(
-    (nextStatus) => !requiresVerifiedPaymentSettlement(currentStatus, nextStatus),
+    (nextStatus) => !requiresVerifiedPaymentSettlement(currentStatus, nextStatus) && (!paymentHeld || nextStatus === "CANCELLED"),
   );
 
   return (
@@ -85,6 +87,21 @@ export default async function AdminOrderDetailPage({
             <span className="inline-flex rounded-md border border-brand-300 bg-brand-50 px-3 py-1.5 text-sm font-semibold text-brand-800">{formatStatus(order.status)}</span>
           </div>
         </header>
+
+        {paymentHeld ? (
+          <section aria-labelledby="payment-exception-title" className="rounded-xl border border-warning-border bg-warning-background p-5 text-warning sm:p-6">
+            <h2 className="text-xl font-semibold" id="payment-exception-title">Pembayaran perlu diperiksa</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6">Proses dan pengiriman order ditahan. Owner perlu mencocokkan referensi pembayaran di dashboard Midtrans dan menangani refund sesuai kondisi order. Refund tidak otomatis mengembalikan stok fisik.</p>
+            <ul className="mt-4 space-y-3 text-sm">
+              {order.paymentIssues.map((issue) => (
+                <li key={`${issue.paymentAttemptId}:${issue.kind}`}>
+                  <p className="font-semibold">{PAYMENT_ISSUE_LABELS[issue.kind]}</p>
+                  <p className="mt-1 break-words">{issue.purpose === "CUSTOM_SHIPPING" ? "Pembayaran pengiriman" : "Pembayaran order"} · <span className="font-medium">{issue.providerOrderId}</span></p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         <section aria-labelledby="order-actions-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
           <h2 className="text-xl font-semibold" id="order-actions-title">Aksi operasional</h2>
@@ -104,7 +121,7 @@ export default async function AdminOrderDetailPage({
               <input name="orderId" type="hidden" value={order.id} />
             </AdminActionForm>
           </div>
-          {order.orderType === "CUSTOM_PRINT" &&
+          {!paymentHeld && order.orderType === "CUSTOM_PRINT" &&
           (currentStatus === "FINISHING_QC" || currentStatus === "WAITING_SHIPPING_PAYMENT") ? (
             <div className="mt-6 border-t border-border pt-5">
               <h3 className="text-sm font-semibold">Pengukuran paket final</h3>
@@ -122,7 +139,7 @@ export default async function AdminOrderDetailPage({
               </AdminActionForm>
             </div>
           ) : null}
-          {(currentStatus === "READY_TO_SHIP" || currentStatus === "SHIPPED") && order.shipments.length > 0 ? (
+          {!paymentHeld && (currentStatus === "READY_TO_SHIP" || currentStatus === "SHIPPED") && order.shipments.length > 0 ? (
             <div className="mt-6 border-t border-border pt-5">
               <h3 className="text-sm font-semibold">Kurir dan nomor resi</h3>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">

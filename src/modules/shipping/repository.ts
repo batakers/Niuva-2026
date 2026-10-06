@@ -1,6 +1,8 @@
 import { Prisma, type PrismaClient } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { appError } from "@/modules/shared/errors";
+import { assertNoPaymentIssues } from "@/modules/payment/operational-state";
+import { lockPaymentOrder, readOrderPaymentIssues } from "@/modules/payment/operational-repository";
 
 import { minimizeShippingRatePayload } from "./snapshot";
 
@@ -153,7 +155,9 @@ export class ShippingRepository implements ShippingServiceRepository {
     orderId: string,
     input: Readonly<{ courierCode: string; trackingNumber: string }>,
   ): Promise<Readonly<{ shipmentId: string }>> {
-    const order = await this.prisma.order.findUnique({
+    return this.prisma.$transaction(async (transaction) => {
+      await lockPaymentOrder(transaction, orderId);
+      const order = await transaction.order.findUnique({
       where: { id: orderId },
       select: {
         status: true,
@@ -166,6 +170,7 @@ export class ShippingRepository implements ShippingServiceRepository {
     });
 
     if (order === null) throw appError("NOT_FOUND");
+    assertNoPaymentIssues(await readOrderPaymentIssues(transaction, orderId, order.status));
     if (order.status !== "READY_TO_SHIP" && order.status !== "SHIPPED") {
       throw appError("CONFLICT", {
         message: "Kurir dan resi hanya dapat dicatat saat order siap atau sudah dikirim.",
@@ -179,7 +184,7 @@ export class ShippingRepository implements ShippingServiceRepository {
       });
     }
 
-    await this.prisma.shipment.update({
+    await transaction.shipment.update({
       where: { id: shipment.id },
       data: {
         courierCode: input.courierCode,
@@ -189,6 +194,7 @@ export class ShippingRepository implements ShippingServiceRepository {
     });
 
     return { shipmentId: shipment.id };
+    });
   }
 
   async saveCustomShippingAddress(
@@ -295,6 +301,8 @@ export class ShippingRepository implements ShippingServiceRepository {
       if (order === null) {
         throw appError("NOT_FOUND");
       }
+
+      assertNoPaymentIssues(await readOrderPaymentIssues(transaction, input.orderId, order.status));
 
       if (order.orderType !== "CUSTOM_PRINT") {
         throw appError("CONFLICT", {

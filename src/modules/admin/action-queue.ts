@@ -17,6 +17,7 @@ export type ActionQueueKind =
   | "QUOTE_SEND"
   | "ORDER_PROCESSING"
   | "PACKAGE_MEASUREMENT"
+  | "PAYMENT_EXCEPTION"
   | "SHIPPING_EXCEPTION";
 
 export type ActionQueueSignal = Readonly<{
@@ -74,6 +75,11 @@ const ACTION_QUEUE_COPY = {
     attention: "STANDARD",
     nextAction: "Ukur paket final untuk pengiriman",
     title: "Custom order menunggu pengukuran paket",
+  },
+  PAYMENT_EXCEPTION: {
+    attention: "EXCEPTION",
+    nextAction: "Periksa pembayaran bersama Owner",
+    title: "Pembayaran memerlukan pemeriksaan",
   },
   QUOTE_PREPARATION: {
     attention: "STANDARD",
@@ -179,6 +185,7 @@ function actionQueueHref(signal: ActionQueueSignal): string {
         : "/admin/custom-print";
     case "ORDER_PROCESSING":
     case "PACKAGE_MEASUREMENT":
+    case "PAYMENT_EXCEPTION":
       return `/admin/orders/${encodeURIComponent(signal.entityId)}`;
     case "SHIPPING_EXCEPTION":
       return signal.targetId

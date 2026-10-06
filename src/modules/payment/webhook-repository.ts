@@ -4,6 +4,7 @@ import {
   Prisma,
   type PaymentAttemptStatus,
   type PaymentPurpose,
+  type OrderStatus,
   type PrismaClient,
 } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
@@ -17,6 +18,7 @@ import {
 } from "./midtrans";
 import { minimizePaymentEventPayload } from "./payload";
 import { transitionPayment } from "./transitions";
+import { readOrderPaymentIssues } from "./operational-repository";
 import {
   transitionCustomOrder,
   transitionRetailOrder,
@@ -54,9 +56,10 @@ type WebhookPaymentAttempt = Readonly<{
   order: Readonly<{
     id: string;
     orderType: "CUSTOM_PRINT" | "RETAIL";
-    status: string;
+    status: OrderStatus;
   }>;
   purpose: PaymentPurpose;
+  providerTransactionId: string | null;
   status: PaymentAttemptStatus;
 }>;
 
@@ -142,6 +145,12 @@ export class PaymentWebhookRepository {
       }
 
       if (input.notification.transactionId !== undefined) {
+        if (attempt.providerTransactionId !== null && attempt.providerTransactionId !== input.notification.transactionId) {
+          return finalizeEvent(transaction, eventId, {
+            kind: "STALE", orderId: attempt.order.id, paymentAttemptId: attempt.id,
+            processingResult: "PROVIDER_TRANSACTION_CONFLICT",
+          }, attempt.id);
+        }
         const existingTransaction = await transaction.paymentAttempt.findFirst({
           where: {
             NOT: { id: attempt.id },
@@ -215,6 +224,12 @@ async function processPaymentState(input: Readonly<{
   }
 
   if (targetStatus === "SETTLED") {
+    if (attempt.status === "SETTLED") {
+      return finalizeEvent(transaction, eventId, {
+        kind: "STALE", orderId: attempt.order.id, paymentAttemptId: attempt.id,
+        processingResult: "STALE_SETTLED",
+      }, attempt.id);
+    }
     const expectedOrderStatus = expectedPayableOrderStatus(attempt);
 
     if (attempt.status === "PENDING" && attempt.expiresAt <= now) {
@@ -249,6 +264,14 @@ async function processPaymentState(input: Readonly<{
         kind: "LATE_SETTLEMENT_REFUND_REQUIRED",
         orderId: attempt.order.id,
         paymentAttemptId: attempt.id,
+        processingResult: "LATE_SETTLEMENT_REFUND_REQUIRED",
+      }, attempt.id);
+    }
+
+    const issues = await readOrderPaymentIssues(transaction, attempt.order.id, attempt.order.status);
+    if (issues.some((issue) => issue.paymentAttemptId !== attempt.id || issue.kind !== "PAYMENT_VERIFICATION")) {
+      return finalizeEvent(transaction, eventId, {
+        kind: "LATE_SETTLEMENT_REFUND_REQUIRED", orderId: attempt.order.id, paymentAttemptId: attempt.id,
         processingResult: "LATE_SETTLEMENT_REFUND_REQUIRED",
       }, attempt.id);
     }
@@ -336,6 +359,18 @@ async function processPaymentState(input: Readonly<{
     }
 
     if (attempt.status !== "SETTLED") {
+      const lateSettlement = await transaction.paymentEvent.findFirst({
+        where: { paymentAttemptId: attempt.id, processingResult: "LATE_SETTLEMENT_REFUND_REQUIRED" },
+        select: { id: true },
+      });
+      if (lateSettlement !== null) {
+        // The expired/cancelled attempt stays immutable. A verified provider
+        // refund receipt closes its financial exception without reopening it.
+        return finalizeEvent(transaction, eventId, {
+          kind: "PROCESSED", orderId: attempt.order.id, paymentAttemptId: attempt.id,
+          processingResult: "REFUNDED_AFTER_LATE_SETTLEMENT",
+        }, attempt.id);
+      }
       return finalizeEvent(transaction, eventId, {
         kind: "STALE",
         orderId: attempt.order.id,

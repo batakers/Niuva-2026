@@ -34,6 +34,22 @@ function signal(
 }
 
 describe("ActionQueueService", () => {
+  it("puts payment holds first and routes operators to the affected order", async () => {
+    const service = new ActionQueueService({
+      authorize: allowAdmin,
+      repository: { async listSignals() { return [
+        signal("ORDER_PROCESSING", "order-normal", "ORD-NORMAL", "2026-10-05T08:00:00.000Z"),
+        signal("PAYMENT_EXCEPTION", "order-held", "ORD-HELD", "2026-10-06T08:00:00.000Z"),
+        signal("PAYMENT_EXCEPTION", "order-held", "ORD-HELD", "2026-10-06T08:01:00.000Z"),
+      ]; } },
+    });
+    const result = await service.list("orders");
+    expect(result.items).toHaveLength(2);
+    expect(result.priorityItems[0]).toMatchObject({
+      kind: "PAYMENT_EXCEPTION", attention: "EXCEPTION", href: "/admin/orders/order-held", reference: "ORD-HELD",
+    });
+  });
+
   it("projects live operational signals into safe rows ordered by attention and age", async () => {
     const generatedAt = new Date("2026-09-11T08:00:00.000Z");
     const repository = {
@@ -258,6 +274,7 @@ describe("PrismaActionQueueRepository", () => {
             {
               id: "order-paid",
               orderNumber: "ORD-PAID",
+              paymentAttempts: [],
               orderType: "RETAIL",
               status: "PAID",
               updatedAt: new Date("2026-09-11T05:00:00.000Z"),
@@ -265,6 +282,7 @@ describe("PrismaActionQueueRepository", () => {
             {
               id: "order-qc",
               orderNumber: "ORD-QC",
+              paymentAttempts: [],
               orderType: "CUSTOM_PRINT",
               status: "FINISHING_QC",
               updatedAt: new Date("2026-09-11T06:00:00.000Z"),
@@ -315,7 +333,10 @@ describe("PrismaActionQueueRepository", () => {
       expect(call.args.select).not.toHaveProperty("customerEmail");
       expect(call.args.select).not.toHaveProperty("customerPhone");
       expect(call.args.select).not.toHaveProperty("address");
-      expect(call.args.select).not.toHaveProperty("paymentAttempts");
+      const projection = JSON.stringify(call.args.select);
+      expect(projection).not.toContain("payloadJson");
+      expect(projection).not.toContain("snapToken");
+      expect(projection).not.toContain("redirectUrl");
       expect(call.args.select).not.toHaveProperty("trackingNumber");
     }
 

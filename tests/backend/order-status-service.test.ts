@@ -19,10 +19,10 @@ const admin: AdminAccess = {
 };
 
 function repositoryFor(
-  state: Omit<OrderMutationState, "shipment">,
+  state: Omit<OrderMutationState, "shipment" | "paymentIssues"> & Partial<Pick<OrderMutationState, "shipment" | "paymentIssues">>,
   onUpdate: () => void,
 ): OrderStatusRepository {
-  const mutationState: OrderMutationState = { ...state, shipment: null };
+  const mutationState: OrderMutationState = { ...state, paymentIssues: state.paymentIssues ?? [], shipment: state.shipment ?? null };
   return {
     async findForPublicStatusById() {
       return {
@@ -91,6 +91,37 @@ describe("OrderStatusService payment authority", () => {
       status: "PAID",
     });
     expect(updates).toBe(1);
+  });
+
+  it.each([
+    { current: "PAID" as const, next: "PROCESSING" as const, orderType: "RETAIL" as const },
+    { current: "PAID" as const, next: "IN_PRODUCTION" as const, orderType: "CUSTOM_PRINT" as const },
+    { current: "READY_TO_SHIP" as const, next: "SHIPPED" as const, orderType: "RETAIL" as const },
+  ])("holds $orderType fulfillment from $current after a verified refund", async ({ current, next, orderType }) => {
+    let updates = 0;
+    const audits: Array<Record<string, unknown>> = [];
+    const state = Object.assign(
+      { id: "order-1", orderType, status: current, shipment: { courierCode: "JNE", trackingNumber: "TEST-REFUND" } },
+      { paymentIssues: [{
+        kind: "FULL_REFUND" as const,
+        occurredAt: new Date("2026-10-06T00:00:00.000Z"),
+        paymentAttemptId: "attempt-1",
+        providerOrderId: "PAY-REFUNDED-1",
+        purpose: "ORDER_TOTAL" as const,
+      }] },
+    );
+    const service = new OrderStatusService({
+      audit: async (event) => { audits.push(event); },
+      authorizeAdmin: async () => admin,
+      repository: repositoryFor(state, () => { updates += 1; }),
+    });
+
+    await expect(service.transition("order-1", next)).rejects.toMatchObject({ code: "CONFLICT" });
+    expect(updates).toBe(0);
+    expect(audits.at(-1)).toMatchObject({
+      action: "order.status.transition",
+      metadata: { reason: "PAYMENT_EXCEPTION", result: "REJECTED" },
+    });
   });
 
   it("returns only the unexpired payment handoff for a token-authorized order", async () => {

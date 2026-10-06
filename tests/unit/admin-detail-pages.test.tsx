@@ -81,7 +81,6 @@ vi.mock("@/modules/inquiry/b2b-quote", () => ({
 
 vi.mock("@/app/admin/inquiries/[id]/b2b-quote-panel", () => ({ B2BQuoteAdminPanel: () => null }));
 vi.mock("@/app/admin/products/[id]/stock-adjustment-panel", () => ({ StockAdjustmentPanel: () => null }));
-vi.mock("@/app/admin/admin-action-form", () => ({ AdminActionForm: () => null }));
 vi.mock("@/app/admin/actions", () => ({
   createCustomShippingPaymentAction: vi.fn(),
   createQuoteDraftAction: vi.fn(),
@@ -177,6 +176,38 @@ beforeEach(() => {
   mocks.service.listPricingRules.mockResolvedValue([]);
   mocks.service.getActivePricingRule.mockResolvedValue(null);
   mocks.listQuotes.mockResolvedValue([]);
+});
+
+describe("order payment hold presentation", () => {
+  const order = {
+    address: null, cancelledAt: null, completedAt: null,
+    createdAt: new Date("2026-10-06T00:00:00.000Z"), customerEmail: "fixture@example.test",
+    customerName: "Fixture", customerPhone: "+628000000000", grandTotalRp: "10000",
+    id: VALID_ID, items: [], itemsSubtotalRp: "10000", orderNumber: "ORD-HELD-TEST",
+    orderType: "RETAIL", paidAt: new Date("2026-10-06T00:00:00.000Z"),
+    paymentAttempts: [], paymentIssues: [], reservations: [], shipments: [], shipmentRates: [],
+    shippingTotalRp: "0", status: "PAID", updatedAt: new Date("2026-10-06T00:00:00.000Z"),
+  };
+
+  it("explains the payment hold and removes fulfillment controls", async () => {
+    mocks.service.getOrder.mockResolvedValue({ ...order, paymentIssues: [{
+      kind: "FULL_REFUND", occurredAt: order.updatedAt,
+      paymentAttemptId: "attempt-1", providerOrderId: "PAY-REFUNDED-TEST", purpose: "ORDER_TOTAL",
+    }] });
+    render(await AdminOrderDetailPage({ params: Promise.resolve({ id: VALID_ID }) }));
+    expect(screen.getByRole("heading", { name: "Pembayaran perlu diperiksa" })).toBeInTheDocument();
+    expect(screen.getByText("PAY-REFUNDED-TEST")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Ubah ke / })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Siapkan pembayaran shipping" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Terbitkan tautan baru" })).toBeInTheDocument();
+  });
+
+  it("keeps fulfillment controls for an order without payment issues", async () => {
+    mocks.service.getOrder.mockResolvedValue(order);
+    render(await AdminOrderDetailPage({ params: Promise.resolve({ id: VALID_ID }) }));
+    expect(screen.queryByRole("heading", { name: "Pembayaran perlu diperiksa" })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /^Ubah ke / }).length).toBeGreaterThan(0);
+  });
 });
 
 describe.each(cases)("admin detail page $name", (testCase) => {

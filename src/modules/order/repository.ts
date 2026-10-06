@@ -5,10 +5,13 @@ import type {
   PrismaClient,
 } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
+import { assertNoPaymentIssues, type PaymentIssue } from "@/modules/payment/operational-state";
+import { lockPaymentOrder, readOrderPaymentIssues } from "@/modules/payment/operational-repository";
 
 export type OrderMutationState = Readonly<{
   id: string;
   orderType: OrderType;
+  paymentIssues: readonly PaymentIssue[];
   shipment: Readonly<{ courierCode: string | null; trackingNumber: string | null }> | null;
   status: OrderStatus;
 }>;
@@ -107,27 +110,7 @@ export class OrderRepository {
   }
 
   async findStatusForMutation(orderId: string): Promise<OrderMutationState | null> {
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
-      select: {
-        id: true,
-        orderType: true,
-        shipments: {
-          orderBy: { updatedAt: "desc" },
-          select: { courierCode: true, trackingNumber: true },
-          take: 1,
-        },
-        status: true,
-      },
-    });
-
-    if (order === null) return null;
-    return {
-      id: order.id,
-      orderType: order.orderType,
-      shipment: order.shipments[0] ?? null,
-      status: order.status,
-    };
+    return readMutationState(this.prisma, orderId);
   }
 
   async updateStatusIfCurrent(
@@ -136,16 +119,17 @@ export class OrderRepository {
     nextStatus: OrderStatus,
     timestamp: Date,
   ): Promise<OrderMutationState | null> {
-    const updated = await this.prisma.order.updateMany({
-      where: { id: orderId, status: currentStatus },
-      data: orderStatusData(nextStatus, timestamp),
+    return this.prisma.$transaction(async (transaction) => {
+      await lockPaymentOrder(transaction, orderId);
+      const current = await readMutationState(transaction, orderId);
+      if (current === null || current.status !== currentStatus) return null;
+      if (nextStatus !== "CANCELLED") assertNoPaymentIssues(current.paymentIssues);
+      const updated = await transaction.order.updateMany({
+        where: { id: orderId, status: currentStatus },
+        data: orderStatusData(nextStatus, timestamp),
+      });
+      return updated.count === 0 ? null : readMutationState(transaction, orderId);
     });
-
-    if (updated.count === 0) {
-      return null;
-    }
-
-    return this.findStatusForMutation(orderId);
   }
 
   async findForCommercialOperation(orderId: string) {
@@ -185,6 +169,34 @@ export class OrderRepository {
     });
     return updated.count === 1;
   }
+}
+
+async function readMutationState(
+  client: Pick<Prisma.TransactionClient, "order" | "paymentAttempt">,
+  orderId: string,
+): Promise<OrderMutationState | null> {
+    const order = await client.order.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        orderType: true,
+        shipments: {
+          orderBy: { updatedAt: "desc" },
+          select: { courierCode: true, trackingNumber: true },
+          take: 1,
+        },
+        status: true,
+      },
+    });
+
+    if (order === null) return null;
+    return {
+      id: order.id,
+      orderType: order.orderType,
+      paymentIssues: await readOrderPaymentIssues(client, order.id, order.status),
+      shipment: order.shipments[0] ?? null,
+      status: order.status,
+    };
 }
 
 function orderStatusData(

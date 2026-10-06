@@ -1,11 +1,14 @@
 # Spec: Action Queue
 
 Status: **OWNER_APPROVED** (persetujuan awal 2026-09-10).
-Pemeriksaan: **2026-09-30**, `main` pada `9605a96e936236b7e54b526f05e6b344747b24ab`.
+Baseline audit: **2026-10-06**, `main` pada `4b1bb7a92f3581a5ee6c8fb1fa0f3dd0a6a03c36`.
+Revisi payment exception disetujui Owner pada sesi 2026-10-06; validasi lokal
+tetap terpisah dari aktivasi provider dan produksi.
 Module ID: `action-queue`. Revisi navigasi dikirim melalui branch `codex/admin-navigation-docs-v03`.
 
 Dokumen ini menjelaskan projection runtime dan keputusan pengecualian yang
-Owner tegaskan kembali pada sesi 2026-09-30. [PRD](../PRD-Niuva-MVP.md),
+Owner tegaskan kembali pada sesi 2026-09-30, dengan perluasan payment exception
+yang disetujui pada 2026-10-06. [PRD](../PRD-Niuva-MVP.md),
 [Tech Design](../TechDesign-Niuva-MVP.md) dan [lifecycle](lifecycle-contract.md)
 tetap authority domain. [DESIGN](../../DESIGN.md) mengatur shell visual;
 [readiness](../frontend/mvp-release-readiness.md) membedakan implementasi,
@@ -25,7 +28,7 @@ timestamp dan link internal. Tidak ada nama/kontak/alamat Customer, metadata
 file privat, internal notes, payment amount, provider ID atau raw provider JSON.
 UUID dapat berada dalam identity/link internal, bukan reference utama di layar.
 
-## Tujuh signal yang diimplementasikan
+## Delapan signal yang diimplementasikan
 
 | Kind | Kondisi sumber | Timestamp | Next action / tujuan |
 | --- | --- | --- | --- |
@@ -33,9 +36,10 @@ UUID dapat berada dalam identity/link internal, bukan reference utama di layar.
 | CUSTOM_PRINT_REVIEW | CustomPrintRequest.status = SUBMITTED | updatedAt | Mulai review custom print; `/admin/custom-print/[id]`. |
 | QUOTE_PREPARATION | Request QUOTE_READY dan tidak memiliki quote DRAFT | updatedAt | Siapkan quote; detail request. |
 | QUOTE_SEND | CustomPrintQuote.status = DRAFT | createdAt | Kirim quote; detail request melalui requestId. |
-| ORDER_PROCESSING | Order.status = PAID | updatedAt | Proses pesanan berbayar; `/admin/orders/[id]`. |
-| PACKAGE_MEASUREMENT | CUSTOM_PRINT order pada FINISHING_QC | updatedAt | Ukur paket final untuk pengiriman; detail order. |
+| ORDER_PROCESSING | Order.status = PAID tanpa payment hold | updatedAt | Proses pesanan berbayar; `/admin/orders/[id]`. |
+| PACKAGE_MEASUREMENT | CUSTOM_PRINT order pada FINISHING_QC tanpa payment hold | updatedAt | Ukur paket final untuk pengiriman; detail order. |
 | SHIPPING_EXCEPTION | Shipment.status = EXCEPTION | updatedAt | Tinjau exception pengiriman; detail order melalui orderId. |
+| PAYMENT_EXCEPTION | Payment hold yang masih aktif menurut state attempt dan outcome terverifikasi | Timestamp issue aktif tertua per order | Periksa pembayaran bersama Owner; detail order. |
 
 Repository memilih field minimum dari record saat ini. Tidak ada tabel
 OperationalQueue atau task lokal sebagai pengganti state domain.
@@ -50,7 +54,7 @@ Sumber kode: [types/mapping](../../src/modules/admin/action-queue.ts),
   terbaru. Workflow request yang sudah memiliki draft tidak memunculkan
   prepare-quote kedua; mapper juga menekan QUOTE_PREPARATION ketika ada
   QUOTE_SEND dengan workflowKey yang sama.
-- Shipping EXCEPTION tampil pertama, kemudian sourceUpdatedAt tertua;
+- Payment/shipping EXCEPTION tampil pertama, kemudian sourceUpdatedAt tertua;
   timestamp sama memakai identity sebagai tie-break yang deterministik.
 - Query group divalidasi di server: `all`, `inquiries`, `custom-print`, `orders`.
   Invalid/missing kembali `all`. Filter dilakukan sebelum limit 50.
@@ -72,15 +76,49 @@ page unavailable. Collection analytics tetap mati secara default.
 
 | Topik | Keputusan Owner / runtime sekarang | Gate sebelum fitur lanjutan |
 | --- | --- | --- |
-| Payment-event exception | **EXCLUDED_UNTIL_LIFECYCLE**. Tidak masuk queue. PaymentEvent masih menyimpan outcome mismatch, conflict, late settlement/refund dan outcome lain sesuai service. | Lifecycle server yang mendefinisikan open, acknowledgment/resolution, siapa yang berwenang, transisi dan audit. Pemilik: Owner dengan kontrak admin/payment. |
+| Payment-event exception | Included untuk issue aktif yang berasal dari outcome provider terverifikasi. Tidak ada acknowledge/dismiss manual yang membuka fulfillment. | Resolusi mengikuti bukti provider dan lifecycle domain di bawah; refund/pembatalan berbayar tetap kewenangan Owner. |
 | Alert stok | **EXCLUDED_UNTIL_POLICY**. Tidak masuk queue. Inventory/reservations/StockMovement tetap berlaku. | Ambang stok, prioritas dan tindakan operator disepakati Owner, baru pemetaan signal diimplementasikan. |
 | Shipping exception | Included karena current Shipment.status = EXCEPTION mempunyai state domain otoritatif. | Mutasi/detail mengikuti service pengiriman yang tersedia. |
 
-Pilihan untuk mengecualikan payment/stock sudah ditutup; lifecycle penyelesaian
-dan threshold fitur masa depan masih terbuka. Tidak boleh menafsirkan historic
-PaymentEvent sebagai pekerjaan aktif selamanya, atau memakai flag browser,
-timeout tebakan, maupun stock threshold baru. Pengecualian queue tidak mengubah
-lifecycle pembayaran, refund, stok, atau menyatakan incident telah selesai.
+Pengecualian alert stok tetap berlaku. Revisi payment tidak menafsirkan seluruh
+history PaymentEvent sebagai pekerjaan aktif selamanya, memakai flag browser,
+timeout tebakan, atau mengubah lifecycle stok.
+
+### Lifecycle payment hold — revisi 2026-10-06
+
+Projection bersama berada di `src/modules/payment/operational-state.ts`;
+selection/locking database berada di `operational-repository.ts`. Queue dan
+detail order memakai aturan yang sama dengan pengaman fulfillment server.
+
+- Refund penuh pada order aktif menghasilkan `FULL_REFUND`: proses produksi,
+  pemenuhan dan pengiriman ditahan. Ini belum membatalkan order. Generic paid
+  cancellation tetap fail-closed; workflow refund/cancellation khusus tetap
+  diperlukan sesuai kebijakan yang sudah disetujui.
+- `PARTIAL_REFUND_REQUIRES_EXCEPTION` menghasilkan `PARTIAL_REFUND`; callback
+  berulang tidak menambah pekerjaan kedua. Refund parsial tetap tidak didukung
+  sebagai kebijakan bisnis MVP. Owner memeriksa dan menangani melalui Midtrans.
+- `LATE_SETTLEMENT_REFUND_REQUIRED` tetap aktif pada order yang dibatalkan
+  sampai ada konfirmasi refund penuh. `REFUNDED_AFTER_LATE_SETTLEMENT` hanya
+  dicatat dari webhook terverifikasi untuk attempt dengan late settlement yang
+  tercatat. Attempt expired/cancelled tetap immutable; order tidak dibuka lagi.
+- Refund penuh terkonfirmasi menyelesaikan issue finansial pada order
+  `CANCELLED`/`COMPLETED`. Pada order aktif, issue berubah menjadi `FULL_REFUND`
+  dan hold tetap berlaku sampai lifecycle operasional ditutup secara sah.
+- Amount mismatch, konflik transaction ID, atau settlement status-code invalid
+  menghasilkan `PAYMENT_VERIFICATION`. Hanya konfirmasi settlement valid yang
+  lebih baru (`SETTLED`/`STALE_SETTLED`) menyelesaikan issue verifikasi tersebut.
+- Replay settlement sah tidak menghasilkan late-payment baru. History lama
+  yang salah mengklasifikasikan replay pada attempt SETTLED dengan receipt
+  SETTLED tidak diproyeksikan sebagai late-payment yang belum direfund.
+- Unknown/unlinked payment event belum menjadi item queue order; tidak ada
+  pemetaan customer/order melalui tebakan provider reference.
+
+Order dengan hold tidak sekaligus ditampilkan sebagai siap proses/pengukuran.
+Penolakan transition order dicatat ke audit. Mutasi status, pencatatan resi,
+dan pembuatan tagihan shipping custom memeriksa ulang payment hold di dalam
+transaksi dengan lock attempt sebelum order, mengikuti urutan webhook.
+Settlement shipping juga tidak boleh membuka READY_TO_SHIP jika pembayaran
+order lain masih memiliki hold. Refund tidak melakukan restock fisik otomatis.
 
 ## Navigasi dan state layar
 
