@@ -46,7 +46,9 @@ function Import-TestEnvironment {
 }
 
 function Get-SafeTestDatabaseUrl {
-  Import-TestEnvironment
+  if ([string]::IsNullOrWhiteSpace($env:TEST_DATABASE_URL)) {
+    Import-TestEnvironment
+  }
   $candidate = $env:TEST_DATABASE_URL
   if ([string]::IsNullOrWhiteSpace($candidate)) {
     throw "TEST_DATABASE_URL wajib disediakan."

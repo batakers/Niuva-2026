@@ -4,20 +4,22 @@ $ErrorActionPreference = "Stop"
 $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 $testEnvPath = Join-Path $repoRoot ".env.test.local"
 
-if (-not (Test-Path -LiteralPath $testEnvPath -PathType Leaf)) {
-  throw ".env.test.local belum tersedia untuk E2E lokal."
-}
-
-foreach ($line in Get-Content -LiteralPath $testEnvPath) {
-  if ($line -match '^\s*#' -or $line -notmatch '=') {
-    continue
+if ([string]::IsNullOrWhiteSpace($env:TEST_DATABASE_URL)) {
+  if (-not (Test-Path -LiteralPath $testEnvPath -PathType Leaf)) {
+    throw ".env.test.local belum tersedia untuk E2E lokal."
   }
 
-  $parts = $line -split '=', 2
-  $name = $parts[0].Trim()
-  $value = $parts[1].Trim()
-  if ($name -match '^[A-Za-z_][A-Za-z0-9_]*$') {
-    Set-Item -Path "Env:$name" -Value $value
+  foreach ($line in Get-Content -LiteralPath $testEnvPath) {
+    if ($line -match '^\s*#' -or $line -notmatch '=') {
+      continue
+    }
+
+    $parts = $line -split '=', 2
+    $name = $parts[0].Trim()
+    $value = $parts[1].Trim()
+    if ($name -match '^[A-Za-z_][A-Za-z0-9_]*$') {
+      Set-Item -Path "Env:$name" -Value $value
+    }
   }
 }
 

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { privacyOwnerSchema, privacyRequestSchema } from "@/modules/customer-privacy/validation";
+import { useHydrated } from "./use-hydrated";
 
 export type PrivacyField = Readonly<{ name: string; label: string; kind?: "textarea" | "select" | "checkbox" | "date"; required?: boolean; help?: string; defaultValue?: string; options?: readonly { value: string; label: string }[] }>;
 export const privacyControlClass = "min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 py-3 text-base text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive";
@@ -8,6 +9,7 @@ export function PrivacyForm({ action, mode, fields = [], hidden = {}, label, pre
   action: string; mode: "email" | "request" | "owner" | "export" | "close"; fields?: readonly PrivacyField[]; hidden?: Readonly<Record<string, string>>; label: string; prefix: string; danger?: boolean; initialErrors?: Readonly<Record<string, string>>;
 }>) {
   const [pending, setPending] = useState(false);
+  const hydrated = useHydrated();
   const [errors, setErrors] = useState<Readonly<Record<string, string>>>(initialErrors);
   const [message, setMessage] = useState("");
   const busy = useRef(false);
@@ -54,7 +56,7 @@ export function PrivacyForm({ action, mode, fields = [], hidden = {}, label, pre
     } catch { setMessage("Koneksi terputus atau respons tidak valid. Periksa status sebelum mencoba lagi."); }
     busy.current = false; setPending(false);
   }
-  return <form ref={formRef} action={action} method="post" onSubmit={submit} className="space-y-5" aria-busy={pending}>
+  return <form ref={formRef} action={action} method="post" onSubmit={submit} data-enhanced={hydrated} className="space-y-5" aria-busy={pending}>
     {Object.entries(hidden).map(([name, value]) => <input key={name} name={name} type="hidden" value={value} />)}
     {fields.map(field => {
       const id = `${prefix}-${field.name}`;

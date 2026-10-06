@@ -59,6 +59,7 @@ async function requestExport(page: Page) {
 }
 test("privacy export, corrections, validation, safe replay and responsive Customer route", async ({ page }) => {
   await loginPrivacyFixture(page);
+  await expect(page.getByLabel("Data yang salah", { exact: true }).locator("xpath=ancestor::form")).toHaveAttribute("data-enhanced", "true");
   await page.getByLabel("Data yang salah", { exact: true }).fill("Nama");
   await page.getByLabel("Koreksi yang diminta", { exact: true }).fill("Customer Fixture");
   await page.getByRole("button", { name: "Ajukan koreksi" }).click();
@@ -109,6 +110,7 @@ test("privacy forms and export work without JavaScript on 127.0.0.1", async ({ b
 });
 test("pending restores after navigation and Owner privacy never becomes public", async ({ page }) => {
   await loginPrivacyFixture(page);
+  await expect(page.locator('form[action="/api/account/privacy/confirmation-email"]').filter({ has: page.getByRole("button", { name: "Minta tautan unduhan", exact: true }) })).toHaveAttribute("data-enhanced", "true");
   let submits = 0;
   await page.route("**/api/account/privacy/confirmation-email", async route => { submits++; await new Promise(resolve => setTimeout(resolve, 300)); await route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ message: "Email konfirmasi gagal dikirim.", fields: {} }) }); });
   const action = page.getByRole("button", { name: "Minta tautan unduhan" });

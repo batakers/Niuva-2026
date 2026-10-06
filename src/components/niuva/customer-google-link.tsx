@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type MouseEvent } from "react";
 
 import { cn } from "@/lib/utils";
 import styles from "./customer-google-link.module.css";
+import { useHydrated } from "./use-hydrated";
 
 export function CustomerGoogleLink({ available, fontClassName, href }: {
   available: boolean;
@@ -12,6 +13,7 @@ export function CustomerGoogleLink({ available, fontClassName, href }: {
   href: string;
 }) {
   const [pending, setPending] = useState(false);
+  const hydrated = useHydrated();
   const navigationPending = useRef(false);
 
   useEffect(() => {
@@ -48,7 +50,7 @@ export function CustomerGoogleLink({ available, fontClassName, href }: {
     <>
       {available ? (
         // Plain anchor: no prefetch, and native navigation works without JS.
-        <a href={href} onClick={startNavigation} aria-describedby="customer-auth-helper" aria-disabled={pending || undefined} aria-busy={pending || undefined} className={cn(styles.action, fontClassName)}>
+        <a href={href} onClick={startNavigation} data-enhanced={hydrated} aria-describedby="customer-auth-helper" aria-disabled={pending || undefined} aria-busy={pending || undefined} className={cn(styles.action, fontClassName)}>
           {content}
         </a>
       ) : (

@@ -1,9 +1,11 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useHydrated } from "@/components/niuva/use-hydrated";
 
 export function B2BQuoteDecision({ inquiryId, quoteId }: Readonly<{ inquiryId: string; quoteId: string }>) {
   const router = useRouter();
+  const hydrated = useHydrated();
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
   async function decide(decision: "ACCEPTED" | "DECLINED") {
@@ -18,5 +20,5 @@ export function B2BQuoteDecision({ inquiryId, quoteId }: Readonly<{ inquiryId: s
     } catch { setMessage("Koneksi gagal. Coba kembali."); }
     finally { setPending(false); }
   }
-  return <div className="mt-5 space-y-3"><div className="flex flex-wrap gap-3"><button className="min-h-11 rounded-md bg-brand-950 px-5 text-white disabled:opacity-50" disabled={pending} onClick={() => void decide("ACCEPTED")} type="button">Setujui proposal</button><button className="min-h-11 rounded-md border border-border px-5 disabled:opacity-50" disabled={pending} onClick={() => void decide("DECLINED")} type="button">Tolak proposal</button></div>{message && <p role="status" className="text-sm">{message}</p>}</div>;
+  return <div className="mt-5 space-y-3"><div className="flex flex-wrap gap-3"><button className="min-h-11 rounded-md bg-brand-950 px-5 text-white disabled:opacity-50" disabled={!hydrated || pending} onClick={() => void decide("ACCEPTED")} type="button">Setujui proposal</button><button className="min-h-11 rounded-md border border-border px-5 disabled:opacity-50" disabled={!hydrated || pending} onClick={() => void decide("DECLINED")} type="button">Tolak proposal</button></div>{message && <p role="status" className="text-sm">{message}</p>}</div>;
 }

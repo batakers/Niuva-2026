@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CUSTOMER_PASSWORD_MIN_LENGTH, emailSchema, passwordSchema } from "@/modules/customer-auth/password-validation";
 import { AGE_DECLARATION_LABEL, ageDeclarationSchema } from "@/modules/customer-auth/age-declaration";
+import { useHydrated } from "./use-hydrated";
 export type AuthFormMode = "login" | "register" | "forgot-password" | "reset-password" | "verify" | "resend";
 type Legal = { terms: { href: string; version: string; label?: string }; privacy: { href: string; version: string; label?: string } };
 export function CustomerEmailForm({ mode, returnTo, available = true, token, legal }: { mode: AuthFormMode; returnTo: string; available?: boolean; token?: string; legal?: Legal | null }) {
   const [pending, setPending] = useState(false);
+  const hydrated = useHydrated();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
   const [visible, setVisible] = useState<Record<string, boolean>>({});
@@ -79,7 +81,7 @@ export function CustomerEmailForm({ mode, returnTo, available = true, token, leg
     </div>;
   }
   const labels: Record<AuthFormMode, string> = { login: "Masuk", register: "Buat akun", "forgot-password": "Kirim tautan pemulihan", "reset-password": "Simpan password baru", verify: "Verifikasi email", resend: "Kirim ulang email verifikasi" };
-  return <form ref={formRef} method="post" action={`/api/auth/email/${path}`} onSubmit={submit} aria-busy={pending} className="space-y-5">
+  return <form ref={formRef} method="post" action={`/api/auth/email/${path}`} onSubmit={submit} data-enhanced={hydrated} aria-busy={pending} className="space-y-5">
     <input type="hidden" name="returnTo" value={returnTo} />
     {token ? <input type="hidden" name="token" value={token} /> : null}
     {mode === "register" ? field("name", "Nama lengkap", "text", "name") : null}

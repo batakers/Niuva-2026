@@ -87,6 +87,10 @@ user request and the authority order above.
 - Pengulangan E2E auth email memakai bucket throttle DB test yang sama. Gunakan
   `tests/e2e/helpers/actor.ts` untuk actor fixture terpisah, termasuk context
   tanpa JavaScript; batas runtime dan bucket DB tetap dipertahankan.
+- Wrapper test lokal menghormati `TEST_DATABASE_URL` dari environment proses;
+  `.env.test.local` hanya menjadi fallback bila URL eksplisit tidak tersedia.
+  Tetap gunakan database test terisolasi dan jangan reset database lama untuk
+  membuat gate lulus.
 - The current PRD addenda require Customer login before checkout (Google or
   verified email/password) and
   includes a read-only Customer account. Better Auth with mandatory TOTP protects Owner/Admin only; do
