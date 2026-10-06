@@ -1,7 +1,7 @@
 import Decimal from "decimal.js";
 import { z } from "zod";
 
-import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
+import { requireAdmin, type AdminAccess } from "@/lib/auth/admin";
 import {
   createTransitionAuditRecorder,
   recordAudit,

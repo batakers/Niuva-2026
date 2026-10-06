@@ -21,7 +21,7 @@ export type CspExtraSources = Readonly<
 export type BuildContentSecurityPolicyInput = Readonly<{
   nonce: string;
   tier: DeploymentTier;
-  /** Extra sources per directive (for example Clerk origins). Validated. */
+  /** Extra sources per directive for approved integrations. Validated. */
   extraSources?: CspExtraSources;
   /** Extra https origins for connect-src (for example the R2 endpoint). */
   connectOrigins?: readonly string[];

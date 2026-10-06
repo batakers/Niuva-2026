@@ -28,7 +28,7 @@ export function LocalDemoActionQueueView({
             project brief yang baru dikirim masuk ke antrean operasional.
           </p>
           <p className="mt-4 rounded-lg border border-warning-border bg-warning-background p-4 text-sm leading-6 text-warning">
-            Demo lokal · tidak menggantikan akses Clerk atau halaman Admin
+            Demo lokal · tidak menggantikan auth Admin atau halaman Admin
             production. Tidak ada mutasi operasional dari halaman ini.
           </p>
         </header>

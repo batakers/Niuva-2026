@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { requireCustomer } from "@/lib/auth/customer";
-import { requireAdmin } from "@/lib/auth/clerk";
+import { requireAdmin } from "@/lib/auth/admin";
 import { readBoundedText } from "@/lib/http/body";
 import { CUSTOMER_SESSION_COOKIE, hashOpaqueToken, customerSessionCookieOptions } from "@/modules/customer-auth/core";
 import { customerAuthOrigin } from "@/modules/customer-auth/origin";

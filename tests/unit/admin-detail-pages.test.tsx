@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ADMIN_ACCESS_STATES } from "@/app/admin/admin-page-access";
-import type { AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/admin";
 import { AppError } from "@/modules/shared/errors";
 
 const NOT_FOUND_MESSAGE = "NEXT_NOT_FOUND_SENTINEL";
@@ -114,8 +114,8 @@ const VALID_ID = "a6f443d8-3e8a-49b5-81d0-94d56e06c208";
 const VALID_VARIANT_ID = "0b7a1f3e-5c2d-4e6f-8a9b-1c2d3e4f5a6b";
 
 const adminAccess = {
-  clerkUserId: "user_admin",
-  profile: { clerkUserId: "user_admin", id: VALID_ID, isActive: true, role: "ADMIN" },
+  authUserId: "user_admin",
+  profile: { authUserId: "user_admin", id: VALID_ID, isActive: true, role: "ADMIN" },
 } as unknown as AdminAccess;
 
 type PageCase = Readonly<{

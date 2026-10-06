@@ -7,9 +7,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ADMIN_ACCESS_STATES, type AdminAccessState } from "@/app/admin/admin-page-access";
 import { AdminAccessView } from "@/app/admin/admin-access-view";
 
-vi.mock("@clerk/nextjs", () => ({
-  useClerk: () => ({ signOut: vi.fn() }),
-}));
+
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn() }),

@@ -10,7 +10,7 @@ vi.mock("@/lib/auth/customer", () => ({
 import { POST as postCustomPrint } from "@/app/api/custom-print/requests/route";
 import { POST as postAppendModel } from "@/app/api/custom-print/requests/[token]/files/route";
 import { getPrismaClient } from "@/lib/db/prisma";
-import type { AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/admin";
 import { CustomPrintAccessService } from "@/modules/custom-print/access-service";
 import { CustomPrintService } from "@/modules/custom-print/service";
 import { CustomerWorkRepository } from "@/modules/customer-work/repository";
@@ -56,7 +56,7 @@ async function uploadedFile(extension: "stl" | "jpg" | "png") {
 
 async function adminAccess(): Promise<AdminAccess> {
   const profile = await prisma.adminProfile.create({ data: { clerkUserId: `owner_${randomUUID()}`, isActive: true, role: "OWNER" } });
-  return { clerkUserId: profile.clerkUserId, profile };
+  return { authUserId: profile.id, profile };
 }
 
 function reviewInput(requestId: string) {

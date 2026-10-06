@@ -2,8 +2,8 @@ import Decimal from "decimal.js";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 
-import type { AdminAccess } from "@/lib/auth/clerk";
-import { requireAdmin } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/admin";
+import { requireAdmin } from "@/lib/auth/admin";
 import {
   createTransitionAuditRecorder,
   recordAudit,

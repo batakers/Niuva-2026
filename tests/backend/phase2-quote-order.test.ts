@@ -1,7 +1,7 @@
 import Decimal from "decimal.js";
 import { describe, expect, it } from "vitest";
 
-import type { AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/admin";
 import { issueAccessToken } from "@/modules/shared/access-token";
 import type { QuoteForAcceptance } from "@/modules/custom-print/repository";
 import { CUSTOM_PRINT_V1_PER_UNIT_POLICY } from "@/modules/pricing/policy";
@@ -14,9 +14,9 @@ const requestId = "f9c2a8b2-22cd-4e7a-9b3f-0c42d5a7b993";
 const orderId = "2b7f3c1a-18f7-4d91-8b86-8d98fcd0f7f4";
 const now = new Date("2026-09-04T00:00:00.000Z");
 const admin: AdminAccess = {
-  clerkUserId: "user_admin",
+  authUserId: "user_admin",
   profile: {
-    clerkUserId: "user_admin",
+    authUserId: "user_admin",
     id: "a6f443d8-3e8a-49b5-81d0-94d56e06c208",
     isActive: true,
     role: "ADMIN",

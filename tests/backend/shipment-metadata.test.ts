@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import type { AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/admin";
 import { ShippingService } from "@/modules/shipping/service";
 import type { ShippingServiceRepository } from "@/modules/shipping/repository";
 
 const admin: AdminAccess = {
-  clerkUserId: "user_admin",
+  authUserId: "user_admin",
   profile: {
-    clerkUserId: "user_admin",
+    authUserId: "user_admin",
     id: "a6f443d8-3e8a-49b5-81d0-94d56e06c208",
     isActive: true,
     role: "ADMIN",

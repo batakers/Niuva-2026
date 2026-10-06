@@ -100,7 +100,7 @@ export function AdminShell({
               <div className="ml-auto flex shrink-0 items-center gap-3">
                 <Link className="hidden min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 lg:inline-flex" href="/"><ExternalLink aria-hidden="true" className="size-4 shrink-0" />Situs publik</Link>
                 <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-foreground">{roleLabels[role]}</span>
-                <AdminSessionActions showLogout={Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)} />
+                <AdminSessionActions showLogout={Boolean(process.env.BETTER_AUTH_URL)} />
               </div>
             </div>
             <details className="mt-3 lg:hidden">
@@ -179,7 +179,7 @@ export function AdminDataUnavailableView({
       </p>
       <p className="mt-5 text-sm font-medium text-destructive" role="alert">Tidak ada perubahan operasional yang dibuat.</p>
       <div className="mt-6">
-        <AdminSessionActions retryHref={retryHref} showLogout={Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)} />
+        <AdminSessionActions retryHref={retryHref} showLogout={Boolean(process.env.BETTER_AUTH_URL)} />
       </div>
     </main></AdminShell>
   );

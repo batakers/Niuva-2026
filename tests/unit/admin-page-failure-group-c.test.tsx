@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/admin";
 import type { FailureEvent, FailureKind } from "@/lib/observability/logger";
 import { AppError } from "@/modules/shared/errors";
 
@@ -95,8 +95,8 @@ const VALID_ID = "a6f443d8-3e8a-49b5-81d0-94d56e06c208";
 const VARIANT_ID = "0b1d2c3e-4f50-4a61-8b72-93c4d5e6f708";
 
 const adminAccess = {
-  clerkUserId: "user_admin",
-  profile: { clerkUserId: "user_admin", id: VALID_ID, isActive: true, role: "ADMIN" },
+  authUserId: "user_admin",
+  profile: { authUserId: "user_admin", id: VALID_ID, isActive: true, role: "ADMIN" },
 } as unknown as AdminAccess;
 
 const recorded: FailureEvent[] = [];

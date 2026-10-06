@@ -1673,3 +1673,22 @@ pelaporan yang berlaku, retensi dan bukti provider tetap dipenuhi sebelum
 kemampuan terkait diaktifkan. [Catatan input/bukti](legal/customer-public-input-evidence.md)
 menyimpan fakta yang sudah dikonfirmasi dan kebutuhan tersisa, sehingga input
 yang sama tidak diminta berulang atau dianggap menutup seluruh gate publik.
+
+## Addendum 6 Oktober 2026 — Auth Admin pada hosting NIUVA
+
+Owner menyetujui penggantian Clerk untuk Owner/Admin dengan **Better Auth core**,
+berjalan pada hosting NIUVA dan PostgreSQL. Target awal adalah 10 akun pribadi;
+role setiap akun tetap ditentukan Owner secara eksplisit. Login memakai
+email/password dan authenticator TOTP wajib, dengan kode pemulihan sekali pakai.
+
+Registrasi Admin publik tetap tertutup. Penggantian engine auth tidak mengubah
+hak Owner/Admin, business logic DEVELOP/MAKE/BUY, ataupun scope/lifecycle Customer.
+ID AdminProfile dan riwayat bisnis tetap dipertahankan; mapping akun Clerk lama
+ke identitas baru harus eksplisit. Login baru memerlukan verifikasi email dan
+enrollment MFA, bukan pemindahan password/MFA atau sesi Clerk.
+
+Email auth Admin menggunakan adapter SMTP lokal tanpa fallback Resend.
+Pemilihan/aktivasi provider, deployment, dan provisioning akun nyata tetap
+memerlukan instruksi Owner tersendiri. Implementasi dan batas aktivasi dicatat
+pada [runbook migrasi](backend/admin-auth-migration.md). Addendum ini menggantikan
+ketentuan terdahulu yang menetapkan Clerk sebagai engine sesi Owner/Admin.

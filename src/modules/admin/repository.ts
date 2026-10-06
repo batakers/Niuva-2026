@@ -3,28 +3,29 @@ import { getPrismaClient } from "@/lib/db/prisma";
 
 export type AdminProfileAccessRecord = Readonly<{
   id: string;
-  clerkUserId: string;
+  authUserId?: string | null;
+  clerkUserId?: string | null;
   isActive: boolean;
   role: AdminRole;
 }>;
 
 export interface AdminProfileReader {
-  findByClerkUserId(
-    clerkUserId: string,
+  findByAuthUserId(
+    authUserId: string,
   ): Promise<AdminProfileAccessRecord | null>;
 }
 
 export class PrismaAdminProfileRepository implements AdminProfileReader {
   constructor(private readonly prisma: PrismaClient = getPrismaClient()) {}
 
-  async findByClerkUserId(
-    clerkUserId: string,
+  async findByAuthUserId(
+    authUserId: string,
   ): Promise<AdminProfileAccessRecord | null> {
     return this.prisma.adminProfile.findUnique({
-      where: { clerkUserId },
+      where: { authUserId },
       select: {
         id: true,
-        clerkUserId: true,
+        authUserId: true,
         isActive: true,
         role: true,
       },

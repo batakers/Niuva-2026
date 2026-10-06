@@ -1,5 +1,7 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
-import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { getAdminAuth } from "@/lib/auth/admin-engine";
+import { getServerCapabilities } from "@/lib/env/server";
+import { PrismaAdminProfileRepository } from "@/modules/admin/repository";
 
 import {
   classifyAdminProxyRequest,
@@ -11,39 +13,9 @@ import { buildContentSecurityPolicy } from "@/lib/security/csp";
 import { getObjectStorageConnectOrigin } from "@/lib/security/headers";
 import { generateNonce } from "@/lib/security/nonce";
 
-type ClerkEnvironment = Readonly<{
-  CLERK_SECRET_KEY?: string;
-  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?: string;
-}>;
-
-function isNonEmpty(value: string | undefined): value is string {
-  return typeof value === "string" && value.trim().length > 0;
+export function hasAdminAuthConfiguration(environment: Readonly<Record<string, string | undefined>> = process.env): boolean {
+  try { const capabilities = getServerCapabilities(environment); return capabilities.adminAuth && capabilities.database; } catch { return false; }
 }
-
-export function hasClerkAdminCredentials(
-  environment: ClerkEnvironment = process.env as ClerkEnvironment,
-): boolean {
-  return (
-    isNonEmpty(environment.CLERK_SECRET_KEY) &&
-    isNonEmpty(environment.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)
-  );
-}
-
-const adminProxy = clerkMiddleware(
-  async (auth, request) => {
-    const pathname = request.nextUrl.pathname;
-
-    if (isAdminSignInPath(pathname)) {
-      return;
-    }
-
-    const unauthenticatedUrl = new URL("/admin/sign-in", request.url).toString();
-    await auth.protect({ unauthenticatedUrl });
-  },
-  {
-    contentSecurityPolicy: { strict: true },
-  },
-);
 
 export function createAdminAuthUnavailableResponse(): NextResponse {
   return NextResponse.json(
@@ -72,8 +44,7 @@ function readDeploymentTier(): DeploymentTier {
 }
 
 // Only these prefixes take the header-only path. Everything else, including
-// anything unexpected the matcher lets through, falls to the Clerk path, so a
-// matcher or parsing surprise can never move an admin route out of Clerk.
+// anything unexpected the matcher lets through, stays behind the Admin session gate.
 function isHeaderOnlyPath(pathname: string): boolean {
   const lower = pathname.toLowerCase();
 
@@ -87,9 +58,8 @@ function isHeaderOnlyPath(pathname: string): boolean {
 
 // Writes the per-request nonce CSP: the request header lets Next attach the
 // nonce while rendering, the response header is what the browser enforces. The
-// static next.config CSP does not apply to these paths (STATIC_CSP_SOURCE), so
-// this is the only CSP they receive. /admin and /api/admin keep Clerk's CSP
-// (merged over the static one, see csp-clerk-findings.md, sections 9 and 10).
+// static next.config CSP excludes these paths and the Admin boundary, so
+// this is their single CSP writer.
 function createHeaderOnlyResponse(request: NextRequest): NextResponse {
   const nonce = generateNonce();
   const r2Origin = getObjectStorageConnectOrigin();
@@ -110,13 +80,14 @@ function createHeaderOnlyResponse(request: NextRequest): NextResponse {
   return response;
 }
 
-export default function proxy(request: NextRequest, event: NextFetchEvent) {
+export default async function proxy(request: NextRequest, _event?: unknown) {
+  void _event;
   if (isHeaderOnlyPath(request.nextUrl.pathname)) {
     return createHeaderOnlyResponse(request);
   }
-  // Clerk is a defense-in-depth route filter only. Every protected resource
+  // The proxy is a defense-in-depth route filter. Every protected resource
   // must independently call requireAdmin() before reading or mutating data.
-  if (!hasClerkAdminCredentials()) {
+  if (!hasAdminAuthConfiguration()) {
     const kind = classifyAdminProxyRequest({
       pathname: request.nextUrl.pathname,
       accept: request.headers.get("accept"),
@@ -127,10 +98,22 @@ export default function proxy(request: NextRequest, event: NextFetchEvent) {
       : createAdminAuthUnavailableResponse();
   }
 
-  return adminProxy(request, event);
+  const pathname = request.nextUrl.pathname;
+  if (isAdminSignInPath(pathname) || pathname.startsWith("/api/admin/auth/")) return createHeaderOnlyResponse(request);
+  try {
+    const session = await getAdminAuth().api.getSession({ headers: request.headers });
+    const profile = session ? await new PrismaAdminProfileRepository().findByAuthUserId(session.user.id) : null;
+    if (!session || !session.session.mfaVerified || !session.user.twoFactorEnabled || !profile?.isActive) {
+      const kind = classifyAdminProxyRequest({ pathname, accept: request.headers.get("accept") });
+      return kind === "browser-navigation" ? NextResponse.redirect(new URL("/admin/sign-in", request.url)) : NextResponse.json({ error: { code: session && !profile?.isActive ? "FORBIDDEN" : "UNAUTHORIZED" } }, { status: session && !profile?.isActive ? 403 : 401, headers: { "Cache-Control": "no-store" } });
+    }
+    return createHeaderOnlyResponse(request);
+  } catch {
+    return createAdminAuthUnavailableResponse();
+  }
 }
 
-// The first two entries are the Clerk surface and must never shrink. The
+// The first two entries are the Admin surface and must never shrink. The
 // object entries are header-only (nonce + CSP) with Next's documented prefetch
 // exclusion; nothing under /_next/static, /_next/image or the metadata files
 // matches because only these prefixes are listed. Next statically analyses

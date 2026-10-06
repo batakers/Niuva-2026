@@ -323,8 +323,8 @@ describe("isolated PostgreSQL integration harness", () => {
       repository,
       audit: async () => undefined,
       authorizeAdmin: async () => ({
-        clerkUserId: "fixture-admin",
-        profile: { clerkUserId: "fixture-admin", id: "fixture-admin", isActive: true, role: "ADMIN" },
+        authUserId: "fixture-admin",
+        profile: { authUserId: "fixture-admin", id: "fixture-admin", isActive: true, role: "ADMIN" },
       }),
       shippingProvider: { async getRate() { return input; } },
       paymentProvider: { async createPayment(payment) {
@@ -454,8 +454,8 @@ describe("isolated PostgreSQL integration harness", () => {
     const status = new OrderStatusService({
       audit: async () => undefined,
       authorizeAdmin: async () => ({
-        clerkUserId: "fixture-admin",
-        profile: { clerkUserId: "fixture-admin", id: "fixture-admin", isActive: true, role: "ADMIN" },
+        authUserId: "fixture-admin",
+        profile: { authUserId: "fixture-admin", id: "fixture-admin", isActive: true, role: "ADMIN" },
       }),
       repository: new OrderRepository(prisma),
     });
@@ -522,7 +522,7 @@ describe("isolated PostgreSQL integration harness", () => {
       customerEmail: "fixture@example.test", customerName: "Fixture", customerPhone: "+628000000000",
       grandTotalRp: "10000", itemsSubtotalRp: "10000", shippingTotalRp: "0",
       orderNumber: "ORD-REFUND-RACE", orderType: "RETAIL", publicTokenHash: "refund-race-token", status: "PAID",
-      paymentAttempts: { create: { amountRp: "10000", expiresAt: now, providerOrderId: "PAY-REFUND-RACE", purpose: "ORDER_TOTAL", status: "SETTLED" } },
+      paymentAttempts: { create: { amountRp: "10000", createdAt: new Date(now.getTime() - 60_000), expiresAt: now, providerOrderId: "PAY-REFUND-RACE", purpose: "ORDER_TOTAL", status: "SETTLED" } },
     } });
     const repository = new OrderRepository(prisma);
     const cached = await repository.findStatusForMutation(order.id);
@@ -546,7 +546,7 @@ describe("isolated PostgreSQL integration harness", () => {
       grandTotalRp: "10000", itemsSubtotalRp: "10000", shippingTotalRp: "0",
       orderNumber: "ORD-SHIPPING-HOLD", orderType: "CUSTOM_PRINT", publicTokenHash: "shipping-hold-token", status: "READY_TO_SHIP",
       shipments: { create: {} },
-      paymentAttempts: { create: { amountRp: "10000", expiresAt: now, providerOrderId: "PAY-SHIPPING-HOLD", purpose: "ORDER_TOTAL", status: "REFUNDED" } },
+      paymentAttempts: { create: { amountRp: "10000", createdAt: new Date(now.getTime() - 60_000), expiresAt: now, providerOrderId: "PAY-SHIPPING-HOLD", purpose: "ORDER_TOTAL", status: "REFUNDED" } },
     } });
     const repository = new ShippingRepository(prisma);
     await expect(repository.recordShipmentMetadata(order.id, { courierCode: "JNE", trackingNumber: "TEST-HOLD" })).rejects.toMatchObject({ code: "CONFLICT", details: { reason: "PAYMENT_EXCEPTION" } });
@@ -594,8 +594,8 @@ describe("isolated PostgreSQL integration harness", () => {
       orderNumber: "ORD-SHIPPING-SETTLEMENT-HOLD", orderType: "CUSTOM_PRINT",
       publicTokenHash: "shipping-settlement-hold-token", status: "WAITING_SHIPPING_PAYMENT",
       paymentAttempts: { create: [
-        { amountRp: "10000", expiresAt: now, providerOrderId: "PAY-TOTAL-REFUNDED", purpose: "ORDER_TOTAL", status: "REFUNDED" },
-        { amountRp: "1000", expiresAt: new Date(now.getTime() + 24 * 60 * 60_000), providerOrderId: "PAY-SHIPPING-SETTLEMENT-HOLD", purpose: "CUSTOM_SHIPPING", status: "PENDING" },
+        { amountRp: "10000", createdAt: new Date(now.getTime() - 60_000), expiresAt: now, providerOrderId: "PAY-TOTAL-REFUNDED", purpose: "ORDER_TOTAL", status: "REFUNDED" },
+        { amountRp: "1000", createdAt: new Date(now.getTime() - 60_000), expiresAt: new Date(now.getTime() + 24 * 60 * 60_000), providerOrderId: "PAY-SHIPPING-SETTLEMENT-HOLD", purpose: "CUSTOM_SHIPPING", status: "PENDING" },
       ] },
     } });
     const webhook = new PaymentWebhookService({

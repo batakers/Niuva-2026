@@ -1,139 +1,51 @@
-import { render, screen } from "@testing-library/react";
-import type { ReactNode } from "react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-type ClerkState = "loading" | "loaded" | "failed" | "degraded";
-
-const clerkMocks = vi.hoisted(() => ({
-  state: "loaded" as ClerkState,
-}));
-
-type ControlProps = Readonly<{ children?: ReactNode }>;
-type ClerkAppearance = Readonly<{
-  elements: Readonly<{
-    footerAction: Readonly<{ display: string }>;
-    formButtonPrimary: Readonly<{ boxShadow: string; minHeight: string }>;
-    formFieldInput: Readonly<{ minHeight: string }>;
-    socialButtonsBlockButton: Readonly<{ boxShadow: string; minHeight: string }>;
-  }>;
-  options: Readonly<{ elevation: string }>;
-  variables: Readonly<Readonly<{ colorPrimary: string }>>;
-}>;
-type SignInProps = Readonly<{
-  forceRedirectUrl: string;
-  path: string;
-  routing: string;
-  withSignUp: boolean;
-  appearance: ClerkAppearance;
-}>;
-
-vi.mock("@clerk/nextjs", () => ({
-  ClerkDegraded: ({ children }: ControlProps) =>
-    clerkMocks.state === "degraded" ? <>{children}</> : null,
-  ClerkFailed: ({ children }: ControlProps) =>
-    clerkMocks.state === "failed" ? <>{children}</> : null,
-  ClerkLoaded: ({ children }: ControlProps) =>
-    clerkMocks.state === "loaded" ? <>{children}</> : null,
-  ClerkLoading: ({ children }: ControlProps) =>
-    clerkMocks.state === "loading" ? <>{children}</> : null,
-  SignIn: ({ appearance, forceRedirectUrl, path, routing, withSignUp }: SignInProps) => (
-    <div
-      data-testid="clerk-sign-in"
-      data-appearance-elevation={appearance.options.elevation}
-      data-primary-button-shadow={appearance.elements.formButtonPrimary.boxShadow}
-      data-form-button-min-height={appearance.elements.formButtonPrimary.minHeight}
-      data-form-input-min-height={appearance.elements.formFieldInput.minHeight}
-      data-social-button-shadow={appearance.elements.socialButtonsBlockButton.boxShadow}
-      data-footer-action-display={appearance.elements.footerAction.display}
-      data-primary={appearance.variables.colorPrimary}
-      data-force-redirect-url={forceRedirectUrl}
-      data-path={path}
-      data-routing={routing}
-      data-with-sign-up={String(withSignUp)}
-    />
-  ),
-}));
-
 import AdminSignInPage from "@/app/admin/sign-in/[[...sign-in]]/page";
-
+const fetchMock = vi.fn();
+const router = vi.hoisted(() => ({ replace: vi.fn(), refresh: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => router }));
 beforeEach(() => {
-  clerkMocks.state = "loaded";
-  vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "pk_test_example");
+  vi.stubEnv("BETTER_AUTH_SECRET", "test-only-admin-auth-secret-at-least-32-characters");
+  vi.stubEnv("BETTER_AUTH_URL", "http://localhost:3000");
+  vi.stubEnv("DATABASE_URL", "postgresql://localhost/niuva_test");
+  vi.stubGlobal("fetch", fetchMock);
+  fetchMock.mockReset();
+  fetchMock.mockImplementation(async () => Response.json({ stage: "sign-in" }));
 });
-
-afterEach(() => {
-  vi.unstubAllEnvs();
-});
-
-describe("admin sign-in", () => {
-  it("renders a visible loading state while Clerk initializes", () => {
-    clerkMocks.state = "loading";
-
-    render(<AdminSignInPage />);
-
-    expect(screen.getByRole("status")).toHaveTextContent("Memuat layanan login");
-    expect(screen.queryByTestId("clerk-sign-in")).not.toBeInTheDocument();
+afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
+describe("native Admin sign-in", () => {
+  it("provides email/password and no public Admin registration", async () => {
+    render(await AdminSignInPage());
+    expect(await screen.findByLabelText("Email Admin")).toHaveAttribute("autocomplete", "username");
+    expect(screen.getByLabelText("Password")).toHaveAttribute("type", "password");
+    expect(screen.queryByRole("link", { name: /daftar|register|signup/i })).not.toBeInTheDocument();
   });
-
-  it("preserves the existing SignIn route and redirect props after Clerk loads", () => {
-    render(<AdminSignInPage />);
-
-    const signIn = screen.getByTestId("clerk-sign-in");
-    expect(signIn).toHaveAttribute("data-path", "/admin/sign-in");
-    expect(signIn).toHaveAttribute("data-routing", "path");
-    expect(signIn).toHaveAttribute("data-force-redirect-url", "/admin");
-    expect(signIn).toHaveAttribute("data-with-sign-up", "false");
+  it("fails visibly when auth configuration is incomplete", async () => {
+    vi.stubEnv("BETTER_AUTH_SECRET", "");
+    render(await AdminSignInPage());
+    expect(screen.getByRole("alert")).toHaveTextContent("Login Admin belum tersedia");
+    expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
   });
-
-  it("passes the Niuva appearance contract to Clerk", () => {
-    render(<AdminSignInPage />);
-
-    const signIn = screen.getByTestId("clerk-sign-in");
-    expect(signIn).toHaveAttribute("data-appearance-elevation", "flush");
-    expect(signIn).toHaveAttribute("data-primary", "var(--primary)");
-    expect(signIn).toHaveAttribute("data-form-button-min-height", "44px");
-    expect(signIn).toHaveAttribute("data-form-input-min-height", "44px");
-    expect(signIn).toHaveAttribute("data-primary-button-shadow", "none !important");
-    expect(signIn).toHaveAttribute("data-social-button-shadow", "none !important");
+  it("requires an authenticator challenge after password login", async () => {
+    render(await AdminSignInPage());
+    await screen.findByLabelText("Email Admin");
+    fetchMock.mockResolvedValueOnce(Response.json({ twoFactorRedirect: true }));
+    fireEvent.change(screen.getByLabelText("Email Admin"), { target: { value: "admin@example.test" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "Test-only-password-29!" } });
+    fireEvent.click(screen.getByRole("button", { name: "Masuk" }));
+    expect(await screen.findByLabelText("Kode authenticator")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Gunakan kode pemulihan" }));
+    expect(screen.getByLabelText("Kode pemulihan")).toBeInTheDocument();
   });
-
-  it("hides the Clerk footer sign-up link while keeping sign-up disabled", () => {
-    render(<AdminSignInPage />);
-
-    const signIn = screen.getByTestId("clerk-sign-in");
-    expect(signIn).toHaveAttribute("data-footer-action-display", "none");
-    expect(signIn).toHaveAttribute("data-with-sign-up", "false");
-    expect(signIn).toHaveAttribute("data-routing", "path");
-    expect(signIn).toHaveAttribute("data-path", "/admin/sign-in");
-    expect(signIn).toHaveAttribute("data-force-redirect-url", "/admin");
-  });
-
-  it.each(["failed", "degraded"] as const)(
-    "renders a recoverable alert instead of a blank card when Clerk is %s",
-    (state) => {
-      clerkMocks.state = state;
-
-      render(<AdminSignInPage />);
-
-      expect(screen.getByRole("alert")).toHaveTextContent(
-        "Layanan login belum dapat dimuat.",
-      );
-      expect(screen.getByRole("link", { name: "Coba lagi" })).toHaveAttribute(
-        "href",
-        "/admin/sign-in",
-      );
-      expect(screen.queryByTestId("clerk-sign-in")).not.toBeInTheDocument();
-    },
-  );
-
-  it("keeps the existing safe fallback when Clerk is not configured", () => {
-    vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
-
-    render(<AdminSignInPage />);
-
-    expect(screen.getByRole("alert")).toHaveTextContent(
-      "Login admin belum tersedia.",
-    );
-    expect(screen.queryByTestId("clerk-sign-in")).not.toBeInTheDocument();
+  it("does not show a login success on a rejected password", async () => {
+    render(await AdminSignInPage());
+    await screen.findByLabelText("Email Admin");
+    fetchMock.mockResolvedValueOnce(Response.json({ code: "INVALID_EMAIL_OR_PASSWORD" }, { status: 401 }));
+    fireEvent.change(screen.getByLabelText("Email Admin"), { target: { value: "admin@example.test" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "Incorrect-password" } });
+    fireEvent.click(screen.getByRole("button", { name: "Masuk" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Permintaan gagal");
+    expect(screen.queryByLabelText("Kode authenticator")).not.toBeInTheDocument();
   });
 });

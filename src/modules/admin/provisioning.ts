@@ -1,7 +1,9 @@
 import { z } from "zod";
 
 const adminProvisioningInputSchema = z.object({
-  clerkUserId: z.string().trim().regex(/^user_[A-Za-z0-9_-]+$/),
+  email: z.email().max(254).transform(value => value.trim().toLowerCase()),
+  password: z.string().min(12).max(128),
+  profileId: z.uuid().optional(),
   confirmation: z.literal("I_UNDERSTAND_NON_PRODUCTION"),
   displayName: z.string().trim().min(1).max(120),
   role: z.enum(["OWNER", "ADMIN"]),
@@ -15,7 +17,9 @@ export function parseAdminProvisioningInput(
   source: Readonly<Record<string, string | undefined>>,
 ): AdminProvisioningInput {
   const result = adminProvisioningInputSchema.safeParse({
-    clerkUserId: source.ADMIN_PROFILE_CLERK_USER_ID,
+    email: source.ADMIN_AUTH_EMAIL,
+    password: source.ADMIN_AUTH_PASSWORD,
+    profileId: source.ADMIN_PROFILE_ID?.trim() || undefined,
     confirmation: source.ADMIN_PROFILE_CONFIRMATION,
     displayName: source.ADMIN_PROFILE_DISPLAY_NAME,
     role: source.ADMIN_PROFILE_ROLE,
@@ -23,7 +27,7 @@ export function parseAdminProvisioningInput(
 
   if (!result.success) {
     throw new Error(
-      "Provisioning AdminProfile memerlukan ADMIN_PROFILE_CLERK_USER_ID, ADMIN_PROFILE_ROLE, ADMIN_PROFILE_DISPLAY_NAME, dan konfirmasi non-production yang valid.",
+      "Provisioning Admin memerlukan ADMIN_AUTH_EMAIL, ADMIN_AUTH_PASSWORD (12–128 karakter), ADMIN_PROFILE_ROLE, ADMIN_PROFILE_DISPLAY_NAME, dan konfirmasi non-production yang valid.",
     );
   }
 

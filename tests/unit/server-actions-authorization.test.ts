@@ -16,7 +16,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/admin";
 import type { AdminPermission } from "@/modules/admin/permissions";
 import { appError, isAppError } from "@/modules/shared/errors";
 
@@ -29,8 +29,8 @@ const state = vi.hoisted(() => ({
   permissions: [] as string[],
 }));
 
-vi.mock("@/lib/auth/clerk", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/auth/clerk")>();
+vi.mock("@/lib/auth/admin", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/auth/admin")>();
   return {
     ...actual,
     requireAdmin: async () => {
@@ -349,9 +349,9 @@ function formData(fields: Fields): FormData {
 
 function access(role: "ADMIN" | "OWNER", isActive: boolean): AdminAccess {
   return {
-    clerkUserId: "user_test",
+    authUserId: "user_test",
     profile: {
-      clerkUserId: "user_test",
+      authUserId: "user_test",
       email: "admin@example.test",
       id: UUID,
       isActive,

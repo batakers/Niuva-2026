@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/admin";
 import type { PrismaClient } from "@/generated/prisma/client";
 import type { ActionQueueSignal } from "@/modules/admin/action-queue";
 import { PrismaActionQueueRepository } from "@/modules/admin/action-queue-repository";
@@ -12,8 +12,8 @@ const allowAdmin = async (): Promise<AdminAccess> => access("OWNER", true);
 
 function access(role: "ADMIN" | "OWNER", isActive: boolean): AdminAccess {
   return {
-    clerkUserId: "clerk-test",
-    profile: { id: "admin-test", clerkUserId: "clerk-test", isActive, role },
+    authUserId: "clerk-test",
+    profile: { id: "admin-test", authUserId: "clerk-test", isActive, role },
   } as AdminAccess;
 }
 

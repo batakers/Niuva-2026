@@ -27,8 +27,8 @@ try {
   $env:DEMO_DATABASE_URL = $demoDatabaseUrl
   $env:NIUVA_RUNTIME_MODE = "demo"
   $env:NODE_ENV = "development"
-  $env:NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = ""
-  $env:CLERK_SECRET_KEY = ""
+  $env:BETTER_AUTH_URL = ""
+  $env:BETTER_AUTH_SECRET = ""
 
   Invoke-Step "corepack" @("pnpm", "exec", "prisma", "migrate", "deploy")
   Invoke-Step "corepack" @("pnpm", "exec", "jiti", "scripts/seed-local-demo.ts")

@@ -30,7 +30,7 @@ import { getPrismaClient } from "@/lib/db/prisma";
 import { PrismaActionQueueRepository } from "@/modules/admin/action-queue-repository";
 import { ActionQueueService } from "@/modules/admin/action-queue-service";
 import { PrismaAdminProfileRepository } from "@/modules/admin/repository";
-import { requireAdminForSession } from "@/lib/auth/clerk";
+import { requireAdminForSession } from "@/lib/auth/admin";
 import { POST as postCheckout } from "@/app/api/checkout/route";
 import { POST as postProjectBrief } from "@/app/api/project-brief/route";
 import { POST as postShippingRates } from "@/app/api/shipping/rates/route";
@@ -68,7 +68,7 @@ async function cleanIntegrationDatabase(): Promise<void> {
       "portfolio_projects",
       "services",
       "pricing_rule_versions",
-      "admin_profiles"
+      "admin_profiles", "admin_auth_users"
     RESTART IDENTITY CASCADE
   `;
 }
@@ -220,13 +220,13 @@ describe("Project Brief route integration", () => {
 
     // The service now authorizes; the DB is truncated per test, so seed the Owner profile.
     await prisma.adminProfile.create({
-      data: { clerkUserId: "clerk_test_owner", isActive: true, role: "OWNER" },
+      data: { authUser: { create: { id: "clerk_test_owner", email: "project-admin@example.test", name: "Fixture Owner" } }, clerkUserId: "clerk_test_owner", isActive: true, role: "OWNER" },
     });
 
     const queue = await new ActionQueueService({
       authorize: () =>
         requireAdminForSession(
-          { userId: "clerk_test_owner" },
+          { userId: "clerk_test_owner", mfaVerified: true, twoFactorEnabled: true },
           new PrismaAdminProfileRepository(prisma),
         ),
       now: () => new Date("2026-09-14T00:00:00.000Z"),
@@ -248,6 +248,7 @@ describe("Project Brief route integration", () => {
   it("resolves an active Clerk user through the database-owned AdminProfile", async () => {
     await prisma.adminProfile.create({
       data: {
+        authUser: { create: { id: "clerk_test_owner", email: "project-admin@example.test", name: "Fixture Owner" } },
         clerkUserId: "clerk_test_owner",
         isActive: true,
         role: "OWNER",
@@ -255,21 +256,21 @@ describe("Project Brief route integration", () => {
     });
 
     const access = await requireAdminForSession(
-      { userId: "clerk_test_owner" },
+      { userId: "clerk_test_owner", mfaVerified: true, twoFactorEnabled: true },
       new PrismaAdminProfileRepository(prisma),
     );
 
     expect(access).toMatchObject({
-      clerkUserId: "clerk_test_owner",
+      authUserId: "clerk_test_owner",
       profile: {
-        clerkUserId: "clerk_test_owner",
+        authUserId: "clerk_test_owner",
         isActive: true,
         role: "OWNER",
       },
     });
     await expect(
       requireAdminForSession(
-        { userId: "clerk_test_unknown" },
+        { userId: "clerk_test_unknown", mfaVerified: true, twoFactorEnabled: true },
         new PrismaAdminProfileRepository(prisma),
       ),
     ).rejects.toMatchObject({ code: "FORBIDDEN", status: 403 });

@@ -1,50 +1,10 @@
-import type { ReactNode } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
-
-type ClerkProviderProps = Readonly<{
-  children: ReactNode;
-  dynamic?: boolean;
-  publishableKey?: string;
-}>;
-
-const clerkMocks = vi.hoisted(() => ({
-  provider: vi.fn((props: ClerkProviderProps) => props.children),
-}));
-
-vi.mock("@clerk/nextjs", () => ({
-  ClerkProvider: clerkMocks.provider,
-}));
-
+import { describe, expect, it } from "vitest";
 import AdminLayout, { metadata } from "@/app/admin/layout";
-
-afterEach(() => {
-  clerkMocks.provider.mockClear();
-  vi.unstubAllEnvs();
-});
-
 describe("AdminLayout", () => {
-  it("emits noindex/nofollow robots metadata for every admin page", () => {
+  it("emits noindex/nofollow metadata for every admin page", () => {
     expect(metadata.robots).toEqual({ index: false, follow: false });
   });
-
-  it("enables Clerk dynamic rendering for strict CSP nonce propagation", () => {
-    const children = "admin-content";
-    vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "pk_test_example");
-
-    expect(AdminLayout({ children })).toMatchObject({
-      props: {
-        dynamic: true,
-        publishableKey: "pk_test_example",
-        children,
-      },
-    });
-  });
-
-  it("keeps the no-key fallback outside ClerkProvider", () => {
-    const children = "admin-content";
-    vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
-
-    expect(AdminLayout({ children })).toBe(children);
-    expect(clerkMocks.provider).not.toHaveBeenCalled();
+  it("renders Admin content without a hosted identity provider", () => {
+    expect(AdminLayout({ children: "admin-content" })).toBe("admin-content");
   });
 });

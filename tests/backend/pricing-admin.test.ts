@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/admin";
 import {
   assertPricingRuleDevelopmentEnvironment,
   PricingRuleAdminService,
@@ -8,9 +8,9 @@ import {
 import type { DomainAuditEvent } from "@/modules/shared/audit";
 
 const owner: AdminAccess = {
-  clerkUserId: "user_owner",
+  authUserId: "user_owner",
   profile: {
-    clerkUserId: "user_owner",
+    authUserId: "user_owner",
     id: "a6258b47-9d35-4a76-95c4-f8266c62069a",
     isActive: true,
     role: "OWNER",
@@ -19,8 +19,8 @@ const owner: AdminAccess = {
 
 const admin: AdminAccess = {
   ...owner,
-  clerkUserId: "user_admin",
-  profile: { ...owner.profile, clerkUserId: "user_admin", role: "ADMIN" },
+  authUserId: "user_admin",
+  profile: { ...owner.profile, authUserId: "user_admin", role: "ADMIN" },
 };
 
 const developmentEnvironment = {

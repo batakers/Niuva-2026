@@ -44,7 +44,7 @@ export type CapabilityDenialReason = (typeof CAPABILITY_DENIAL_REASONS)[number];
 /** Env capability groups (mirrors ServerCapabilities keys in lib/env/server). */
 export type ConfigGroup =
   | "biteship"
-  | "clerkAdmin"
+  | "adminAuth"
   | "customerGoogle"
   | "midtrans"
   | "objectStorage"

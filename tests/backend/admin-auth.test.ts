@@ -4,11 +4,11 @@ import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
 import {
   assertAdminAccessAvailable,
   requireAdminForSession,
-} from "@/lib/auth/clerk";
+} from "@/lib/auth/admin";
 import {
   config,
   createAdminAuthUnavailableResponse,
-  hasClerkAdminCredentials,
+  hasAdminAuthConfiguration,
 } from "@/proxy";
 import type {
   AdminProfileAccessRecord,
@@ -20,7 +20,7 @@ function profile(
   overrides: Partial<AdminProfileAccessRecord> = {},
 ): AdminProfileAccessRecord {
   return {
-    clerkUserId: "user_owner",
+    authUserId: "user_owner",
     id: "a6f443d8-3e8a-49b5-81d0-94d56e06c208",
     isActive: true,
     role: "OWNER",
@@ -33,21 +33,40 @@ function reader(
   calls: string[] = [],
 ): AdminProfileReader {
   return {
-    async findByClerkUserId(clerkUserId: string) {
-      calls.push(clerkUserId);
+    async findByAuthUserId(authUserId: string) {
+      calls.push(authUserId);
       return result;
     },
   };
 }
 
 describe("admin authorization", () => {
+  it("rejects a password-only session before reading an AdminProfile", async () => {
+    const calls: string[] = [];
+    const passwordOnly = { userId: "user_owner", mfaVerified: false, twoFactorEnabled: true };
+
+    await expect(requireAdminForSession(passwordOnly, reader(profile(), calls))).rejects.toMatchObject({
+      code: "UNAUTHORIZED",
+      status: 401,
+    });
+    expect(calls).toEqual([]);
+  });
+
+  it("rejects an identity that has not enrolled an authenticator", async () => {
+    const unenrolled = { userId: "user_owner", mfaVerified: true, twoFactorEnabled: false };
+    await expect(requireAdminForSession(unenrolled, reader(profile()))).rejects.toMatchObject({
+      code: "UNAUTHORIZED",
+      status: 401,
+    });
+  });
+
   it("requires database capability before an AdminProfile read", () => {
     expect(() =>
-      assertAdminAccessAvailable({ clerkAdmin: true, database: false }),
+      assertAdminAccessAvailable({ adminAuth: true, database: false }),
     ).toThrowError(AppError);
 
     try {
-      assertAdminAccessAvailable({ clerkAdmin: true, database: false });
+      assertAdminAccessAvailable({ adminAuth: true, database: false });
     } catch (error) {
       expect(error).toMatchObject({
         code: "AUTH_UNAVAILABLE",
@@ -56,7 +75,7 @@ describe("admin authorization", () => {
     }
 
     expect(() =>
-      assertAdminAccessAvailable({ clerkAdmin: true, database: true }),
+      assertAdminAccessAvailable({ adminAuth: true, database: true }),
     ).not.toThrow();
   });
 
@@ -69,7 +88,7 @@ describe("admin authorization", () => {
 
   it("rejects a Clerk identity without an active Niuva profile", async () => {
     await expect(
-      requireAdminForSession({ userId: "user_unprovisioned" }, reader(null)),
+      requireAdminForSession({ userId: "user_unprovisioned", mfaVerified: true, twoFactorEnabled: true }, reader(null)),
     ).rejects.toMatchObject({
       code: "FORBIDDEN",
       status: 403,
@@ -77,8 +96,8 @@ describe("admin authorization", () => {
 
     await expect(
       requireAdminForSession(
-        { userId: "user_inactive" },
-        reader(profile({ clerkUserId: "user_inactive", isActive: false })),
+        { userId: "user_inactive", mfaVerified: true, twoFactorEnabled: true },
+        reader(profile({ authUserId: "user_inactive", isActive: false })),
       ),
     ).rejects.toMatchObject({
       code: "FORBIDDEN",
@@ -89,8 +108,8 @@ describe("admin authorization", () => {
   it("uses the Clerk session identity for the profile lookup", async () => {
     const calls: string[] = [];
     const access = await requireAdminForSession(
-      { userId: "user_admin" },
-      reader(profile({ clerkUserId: "user_admin", role: "ADMIN" }), calls),
+      { userId: "user_admin", mfaVerified: true, twoFactorEnabled: true },
+      reader(profile({ authUserId: "user_admin", role: "ADMIN" }), calls),
     );
 
     expect(calls).toEqual(["user_admin"]);
@@ -133,11 +152,12 @@ describe("admin proxy", () => {
   });
 
   it("requires both Clerk credentials before enabling the proxy", () => {
-    expect(hasClerkAdminCredentials({})).toBe(false);
+    expect(hasAdminAuthConfiguration({})).toBe(false);
     expect(
-      hasClerkAdminCredentials({
-        CLERK_SECRET_KEY: "secret",
-        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "publishable",
+      hasAdminAuthConfiguration({
+        BETTER_AUTH_SECRET: "test-secret-that-is-long-enough-for-auth-only",
+        BETTER_AUTH_URL: "http://localhost:3000",
+        DATABASE_URL: "postgresql://localhost/niuva_test",
       }),
     ).toBe(true);
   });

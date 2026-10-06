@@ -1,5 +1,5 @@
 import type { AdminRole } from "@/generated/prisma/client";
-import type { AdminAccess } from "@/lib/auth/clerk";
+import type { AdminAccess } from "@/lib/auth/admin";
 import { appError } from "@/modules/shared/errors";
 
 export const ADMIN_PERMISSIONS = [

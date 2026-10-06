@@ -1,7 +1,7 @@
 import "server-only";
 
 import { Prisma, type AdminRole, type PrismaClient } from "@/generated/prisma/client";
-import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
+import { requireAdmin, type AdminAccess } from "@/lib/auth/admin";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { publicServices } from "@/features/public/company-content";
 import { isModelExtension, isReferencePhotoExtension } from "@/modules/custom-print/file-types";

@@ -155,7 +155,9 @@ enum IdempotencyStatus {
 
 model AdminProfile {
   id                   String               @id @default(uuid()) @db.Uuid
-  clerkUserId          String               @unique @map("clerk_user_id")
+  clerkUserId          String?              @unique @map("clerk_user_id")
+  authUserId           String?              @unique @map("auth_user_id")
+  authUser             AdminAuthUser?       @relation(fields: [authUserId], references: [id], onDelete: Restrict)
   displayName          String?              @map("display_name")
   role                 AdminRole            @default(ADMIN)
   isActive             Boolean              @default(false) @map("is_active")
@@ -170,6 +172,97 @@ model AdminProfile {
 
   @@index([isActive, role])
   @@map("admin_profiles")
+}
+
+model AdminAuthUser {
+  id               String @id
+  name             String
+  email            String @unique
+  emailVerified    Boolean @default(false)
+  image            String?
+  twoFactorEnabled Boolean @default(false)
+  createdAt        DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime @updatedAt @db.Timestamptz(6)
+  sessions         AdminAuthSession[]
+  accounts         AdminAuthAccount[]
+  twoFactors       AdminAuthTwoFactor[]
+  profile          AdminProfile?
+
+  @@map("admin_auth_users")
+}
+
+model AdminAuthSession {
+  id          String @id
+  token       String @unique
+  userId      String
+  user        AdminAuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime @db.Timestamptz(6)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
+  ipAddress   String?
+  userAgent   String?
+  mfaVerified Boolean @default(false)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("admin_auth_sessions")
+}
+
+model AdminAuthAccount {
+  id                     String @id
+  accountId              String
+  providerId             String
+  userId                 String
+  user                   AdminAuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  password               String?
+  accessToken            String?
+  refreshToken           String?
+  idToken                String?
+  accessTokenExpiresAt   DateTime? @db.Timestamptz(6)
+  refreshTokenExpiresAt  DateTime? @db.Timestamptz(6)
+  scope                  String?
+  createdAt              DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt              DateTime @updatedAt @db.Timestamptz(6)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("admin_auth_accounts")
+}
+
+model AdminAuthVerification {
+  id         String @id
+  identifier String @unique
+  value      String
+  expiresAt  DateTime @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @db.Timestamptz(6)
+
+  @@index([expiresAt])
+  @@map("admin_auth_verifications")
+}
+
+model AdminAuthTwoFactor {
+  id                      String @id
+  userId                  String
+  user                    AdminAuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  secret                  String
+  backupCodes             String
+  verified                Boolean @default(false)
+  failedVerificationCount Int @default(0)
+  lockedUntil             DateTime? @db.Timestamptz(6)
+
+  @@index([userId])
+  @@index([secret])
+  @@map("admin_auth_two_factors")
+}
+
+model AdminAuthRateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+
+  @@map("admin_auth_rate_limits")
 }
 
 model Service {

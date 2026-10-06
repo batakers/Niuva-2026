@@ -1,6 +1,8 @@
 "use client";
 
-import { useClerk } from "@clerk/nextjs";
+import { postAdminAuth } from "./admin-auth-form";
+import { navigateAfterAdminAuth } from "./admin-auth-navigation";
+import { useHydrated } from "./use-hydrated";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -14,15 +16,19 @@ import { Button } from "@/components/ui/button";
  * button stays enabled so the user can try again.
  */
 export function AdminSignOutButton() {
-  const { signOut } = useClerk();
+  const hydrated = useHydrated();
   const [failed, setFailed] = useState(false);
+  const [pending, setPending] = useState(false);
 
   async function handleSignOut() {
     setFailed(false);
+    setPending(true);
     try {
-      await signOut({ redirectUrl: "/" });
+      await postAdminAuth("/sign-out", {});
+      navigateAfterAdminAuth("/");
     } catch {
       setFailed(true);
+      setPending(false);
     }
   }
 
@@ -40,6 +46,8 @@ export function AdminSignOutButton() {
       <Button
         className="w-full sm:w-auto"
         onClick={handleSignOut}
+        disabled={pending || !hydrated}
+        aria-busy={pending}
         type="button"
         variant="outline"
       >

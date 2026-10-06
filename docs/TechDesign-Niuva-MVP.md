@@ -2329,3 +2329,23 @@ integration, Prisma validation, E2E dan build dengan regresi consent, akses
 anak, refund ganda/rekonsiliasi, closure yang beradu dengan transaksi/job dan
 restore. CI lokal tidak menggantikan bukti sandbox/hosted, device/AT, review
 legal atau instruksi publikasi/deployment/aktivasi production.
+
+## Addendum 6 Oktober 2026 — Better Auth khusus Admin
+
+Engine sesi Owner/Admin kini Better Auth core self-hosted dengan Prisma adapter
+dan plugin two-factor. Tabel AdminAuth terpisah dari Customer; AdminProfile
+memiliki auth_user_id baru serta clerk_user_id nullable yang dipertahankan untuk
+mapping/rollback. Tidak ada pengubahan ID profil, relasi bisnis, maupun migration
+historis. Native role/permission tetap memakai NIUVA AdminProfile.
+
+Boundary resource memakai src/lib/auth/admin.ts. Sesi database harus memiliki
+mfaVerified yang diberikan hanya oleh verifikasi TOTP/recovery library, user
+twoFactorEnabled, serta profil aktif. Proxy melakukan pemeriksaan database dan
+menulis CSP nonce; service/Server Action tetap memeriksa authority sendiri.
+Signup/Admin social login/trusted-device bypass/MFA removal tidak diekspos.
+
+Reset password mempertahankan MFA dan mencabut sesi. Email verifikasi/reset
+memakai SMTP lokal dengan TLS, terpisah dari capability email Customer.
+Kontrak lengkap, schema, konfigurasi, provisioning development yang dibatasi,
+verifikasi dan rollback ada pada [runbook migrasi](backend/admin-auth-migration.md).
+Tidak ada aktivasi provider/deployment production dalam implementasi lokal.

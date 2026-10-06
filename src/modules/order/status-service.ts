@@ -4,7 +4,7 @@ import type {
   PaymentAttemptStatus,
   PaymentPurpose,
 } from "@/generated/prisma/client";
-import { requireAdmin, type AdminAccess } from "@/lib/auth/clerk";
+import { requireAdmin, type AdminAccess } from "@/lib/auth/admin";
 import {
   createTransitionAuditRecorder,
   recordAudit,

@@ -18,31 +18,15 @@ import {
   type Rng,
 } from "../helpers/corpus";
 
-const clerkMocks = vi.hoisted(() => ({ delegated: vi.fn(), protect: vi.fn() }));
-
-vi.mock("@clerk/nextjs/server", () => ({
-  clerkMiddleware:
-    (
-      handler: (
-        auth: { protect: (options: unknown) => unknown },
-        request: unknown,
-        event: unknown,
-      ) => unknown,
-    ) =>
-    async (request: unknown, event: unknown) => {
-      clerkMocks.delegated();
-
-      return handler({ protect: clerkMocks.protect }, request, event);
-    },
-}));
-
-import { isAdminSignInPath } from "@/lib/auth/admin-proxy-response";
+const authMocks = vi.hoisted(() => ({ session: vi.fn().mockResolvedValue(null) }));
+vi.mock("@/lib/auth/admin-engine", () => ({ getAdminAuth: () => ({ api: { getSession: authMocks.session } }) }));
+import proxy, { config } from "@/proxy";
+import { isAdminSignInPath, classifyAdminProxyRequest } from "@/lib/auth/admin-proxy-response";
 import { resolveAppOrigin } from "@/lib/env/origin";
 import { buildContentSecurityPolicy } from "@/lib/security/csp";
 import { STATIC_CSP_SOURCE } from "@/lib/security/headers";
 import { generateNonce } from "@/lib/security/nonce";
 import { isSameOriginRequest } from "@/lib/security/origin";
-import proxy, { config } from "@/proxy";
 
 // Next's own compiled path-to-regexp (compiles header `source`); no types.
 const { pathToRegexp } = createRequire(import.meta.url)("next/dist/compiled/path-to-regexp") as {
@@ -155,10 +139,11 @@ const scriptSrcOf = (policy: string): string =>
   policy.split("; ").find((part) => part.startsWith("script-src ")) ?? "";
 
 beforeEach(() => {
-  clerkMocks.delegated.mockClear();
-  clerkMocks.protect.mockClear();
-  vi.stubEnv("CLERK_SECRET_KEY", "sk_test_example");
-  vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "pk_test_example");
+  authMocks.session.mockClear();
+  authMocks.session.mockClear();
+  vi.stubEnv("BETTER_AUTH_SECRET", "test-only-admin-secret-at-least-32-characters");
+  vi.stubEnv("BETTER_AUTH_URL", "http://localhost:3000");
+  vi.stubEnv("DATABASE_URL", "postgresql://localhost/niuva_test");
 });
 
 afterEach(() => {
@@ -167,17 +152,17 @@ afterEach(() => {
 
 // ---------------------------------------------------------------- (1)
 
-describe("Property 16 (1): admin surface always takes the Clerk path", () => {
+describe("Property 16 (1): admin surface always takes the native Admin auth path", () => {
   it("uses a corpus of at least 100 paths and header variants", () => {
     expect(pathCorpus.length).toBeGreaterThanOrEqual(MIN_GENERATED);
     expect(HEADER_VARIANTS.length).toBeGreaterThanOrEqual(5);
   });
 
-  it("keeps the first two Clerk matcher entries unchanged", () => {
+  it("keeps the first two native Admin auth matcher entries unchanged", () => {
     expect(config.matcher.slice(0, 2)).toEqual(["/admin/:path*", "/api/admin/:path*"]);
   });
 
-  it("delegates every path that normalises into /admin or /api/admin to Clerk, never header-only", async () => {
+  it("delegates every path that normalises into /admin or /api/admin to native Admin auth, never header-only", async () => {
     let admin = 0;
 
     for (const path of pathCorpus) {
@@ -185,25 +170,25 @@ describe("Property 16 (1): admin surface always takes the Clerk path", () => {
 
       for (const headers of HEADER_VARIANTS) {
         admin += 1;
-        clerkMocks.delegated.mockClear();
-        clerkMocks.protect.mockClear();
+        authMocks.session.mockClear();
+        authMocks.session.mockClear();
 
         const label = `path=${JSON.stringify(path)} headers=${JSON.stringify(headers)}`;
         const result = await run(path, headers);
         const pathname = new NextRequest(`http://localhost:3000${path}`).nextUrl.pathname;
 
-        expect(clerkMocks.delegated, label).toHaveBeenCalledTimes(1);
-        expect(clerkMocks.protect, label).toHaveBeenCalledTimes(isAdminSignInPath(pathname) ? 0 : 1);
+        expect(result?.status, label).toBe(isAdminSignInPath(pathname) ? 200 : (classifyAdminProxyRequest({ pathname, accept: headers.accept ?? null }) === "browser-navigation" ? 307 : 401));
+        expect(authMocks.session, label).toHaveBeenCalledTimes(isAdminSignInPath(pathname) ? 0 : 1);
         // The header-only path would return a Response carrying a nonce CSP.
-        expect(result?.headers?.get("content-security-policy") ?? null, label).toBeNull();
+        if (isAdminSignInPath(pathname)) expect(result?.headers?.get("content-security-policy"), label).toContain("\'nonce-");
       }
     }
 
     expect(admin).toBeGreaterThan(MIN_GENERATED);
   });
 
-  it("without Clerk credentials an admin-normalising path is a 503, never passed through", async () => {
-    vi.stubEnv("CLERK_SECRET_KEY", "");
+  it("without native Admin auth credentials an admin-normalising path is a 503, never passed through", async () => {
+    vi.stubEnv("BETTER_AUTH_SECRET", "");
 
     for (const path of pathCorpus) {
       if (!intoAdmin(normalise(path))) continue;
@@ -213,7 +198,7 @@ describe("Property 16 (1): admin surface always takes the Clerk path", () => {
       expect(response?.status, path).toBe(503);
     }
 
-    expect(clerkMocks.delegated).not.toHaveBeenCalled();
+    expect(authMocks.session).not.toHaveBeenCalled();
   });
 
   it("the matcher covers every admin path once URL-normalised, including _next/data forms", () => {
@@ -264,7 +249,7 @@ describe("Property 16 (2): checkout and account get exactly one nonce CSP writer
 
         if (isMatched && underProtected) {
           total += 1;
-          clerkMocks.delegated.mockClear();
+          authMocks.session.mockClear();
 
           const response = await run(path, headers);
           const policy = response?.headers?.get("content-security-policy") ?? null;
@@ -273,7 +258,7 @@ describe("Property 16 (2): checkout and account get exactly one nonce CSP writer
           expect(policy, label).not.toBeNull();
           expect((policy ?? "").match(/'nonce-/g), label).toHaveLength(1);
           expect(response?.headers.get("x-middleware-request-content-security-policy"), label).toBe(policy);
-          expect(clerkMocks.delegated, label).not.toHaveBeenCalled();
+          expect(authMocks.session, label).not.toHaveBeenCalled();
           // No static CSP on the same path.
           expect(staticRegex.test(pathname), label).toBe(false);
           // Production tier: no inline/eval scripts.

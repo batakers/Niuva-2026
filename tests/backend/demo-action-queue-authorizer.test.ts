@@ -31,7 +31,7 @@ describe("demo action queue authorizer", () => {
     expect(reads).toBe(1);
 
     const access = await createDemoActionQueueAuthorizer(demoEnv)();
-    expect(access.clerkUserId).toMatch(/^demo-fake-/);
+    expect(access.authUserId).toMatch(/^demo-fake-/);
     expect(access.profile.id).toMatch(/^demo-fake-/);
     expect(access.profile.isActive).toBe(true);
   });
@@ -58,8 +58,8 @@ describe("demo action queue authorizer", () => {
     let reads = 0;
     const service = new ActionQueueService({
       authorize: async () => ({
-        clerkUserId: "demo-fake-clerk-user",
-        profile: { id: "demo-fake-admin-profile", clerkUserId: "demo-fake-clerk-user", isActive: false, role: "ADMIN" },
+        authUserId: "demo-fake-clerk-user",
+        profile: { id: "demo-fake-admin-profile", authUserId: "demo-fake-clerk-user", isActive: false, role: "ADMIN" },
       }),
       repository: {
         async listSignals() {
