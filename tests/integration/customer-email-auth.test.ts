@@ -5,6 +5,7 @@ import { CustomerEmailRepository } from "@/modules/customer-auth/email-repositor
 import { CustomerEmailService } from "@/modules/customer-auth/email-service";
 import { CustomerAuthRepository } from "@/modules/customer-auth/repository";
 import { hashOpaqueToken } from "@/modules/customer-auth/core";
+import { AGE_DECLARATION_VERSION } from "@/modules/customer-auth/age-declaration";
 const prisma = getPrismaClient();
 const repo = new CustomerEmailRepository(prisma);
 const legal = { terms: { href: "/TEST-ONLY-terms", version: "TEST-TERMS-1" }, privacy: { href: "/TEST-ONLY-privacy", version: "TEST-PRIVACY-1" } };
@@ -12,7 +13,7 @@ const password = "a sufficiently long passphrase";
 let now: Date;
 let mails: { token: string; purpose: "verify" | "reset"; to: string }[];
 let service: CustomerEmailService;
-const data = (email = "email-auth@example.test") => ({ name: "Test Customer", email, password, confirmPassword: password, consent: "on", returnTo: "/checkout?test=1#summary" });
+const data = (email = "email-auth@example.test") => ({ name: "Test Customer", email, password, confirmPassword: password, consent: "on", ageDeclaration: "on", returnTo: "/checkout?test=1#summary" });
 async function verified() {
   const registration = await service.register(data(), "test-ip");
   const token = mails.at(-1)!.token;
@@ -35,12 +36,14 @@ describe("Customer email auth PostgreSQL", () => {
       grandTotalRp: new Prisma.Decimal("100000"), itemsSubtotalRp: new Prisma.Decimal("90000"), shippingTotalRp: new Prisma.Decimal("10000"),
       orderNumber: `ORD-EMAIL-${crypto.randomUUID()}`, orderType: "RETAIL", publicTokenHash: crypto.randomUUID(),
     } });
-    const registration = await service.register(data(), "ip");
+    const registration = await service.register({ ...data(), ageDeclarationVersion: "CLIENT-FORGED", ageDeclaredAt: "2099-01-01T00:00:00Z" }, "ip");
     expect((await prisma.order.findUnique({ where: { id: order.id } }))?.customerId).toBeNull();
     expect(await prisma.customer.findUnique({ where: { normalizedEmail: data().email } })).toBeNull();
     const pending = await repo.findPending(registration.handle!, now);
     expect(pending?.passwordHash).not.toContain(password);
     expect(pending?.deliveryConfirmed).toBe(true);
+    expect(pending?.ageDeclarationVersion).toBe(AGE_DECLARATION_VERSION);
+    expect(pending?.ageDeclaredAt).toEqual(now);
     expect(await repo.findToken(mails[0].token, "verify", now)).not.toBeNull();
     await service.verify(mails[0].token, "ip");
     const customer = await prisma.customer.findUnique({ where: { normalizedEmail: data().email }, include: { passwordCredential: true, consents: true, sessions: true } });
@@ -48,6 +51,8 @@ describe("Customer email auth PostgreSQL", () => {
     expect(customer?.emailVerifiedAt).toEqual(now);
     expect(customer?.passwordCredential).not.toBeNull();
     expect(customer?.consents[0].termsVersion).toBe(legal.terms.version);
+    expect(customer?.consents[0].ageDeclarationVersion).toBe(AGE_DECLARATION_VERSION);
+    expect(customer?.consents[0].ageDeclaredAt).toEqual(pending?.ageDeclaredAt);
     expect(customer?.sessions).toEqual([]);
     expect((await prisma.order.findUnique({ where: { id: order.id } }))?.customerId).toBe(customer?.id);
     await expect(service.verify(mails[0].token, "ip")).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
@@ -66,6 +71,30 @@ describe("Customer email auth PostgreSQL", () => {
   it("gates registration without legal documents or mail service", async () => {
     await expect(new CustomerEmailService(repo, service.mailer, null).register(data(), "ip")).rejects.toMatchObject({ code: "CUSTOMER_AUTH_UNAVAILABLE" });
     await expect(new CustomerEmailService(repo, null, legal).register(data(), "ip")).rejects.toMatchObject({ code: "CUSTOMER_AUTH_UNAVAILABLE" });
+  });
+  it.each([undefined, "off", "false", true, false])("refuses invalid age declaration %j before persistence or email", async ageDeclaration => {
+    await expect(service.register({ ...data(), ageDeclaration }, "ip")).rejects.toThrow();
+    expect(await prisma.customerPendingRegistration.count()).toBe(0);
+    expect(await prisma.customerEmailToken.count()).toBe(0);
+    expect(mails).toHaveLength(0);
+  });
+  it.each([
+    { ageDeclarationVersion: null, ageDeclaredAt: null },
+    { ageDeclarationVersion: "OLD", ageDeclaredAt: new Date("2026-10-01T12:00:00Z") },
+    { ageDeclarationVersion: AGE_DECLARATION_VERSION, ageDeclaredAt: new Date("2026-10-01T12:00:01Z") },
+  ])("refuses legacy or invalid pending age proof without creating credentials or claiming the token", async proof => {
+    await service.register(data(), "ip");
+    const pending = await prisma.customerPendingRegistration.findFirstOrThrow();
+    await prisma.customerPendingRegistration.update({ where: { id: pending.id }, data: proof });
+    await expect(service.verify(mails[0].token, "ip")).rejects.toMatchObject({ code: "CUSTOMER_AUTH_UNAVAILABLE" });
+    expect(await prisma.customer.count({ where: { normalizedEmail: data().email } })).toBe(0);
+    expect(await prisma.customerPasswordCredential.count()).toBe(0);
+    expect((await prisma.customerEmailToken.findUniqueOrThrow({ where: { tokenHash: hashOpaqueToken(mails[0].token) } })).consumedAt).toBeNull();
+    expect((await prisma.customerPendingRegistration.findUniqueOrThrow({ where: { id: pending.id } })).completedAt).toBeNull();
+  });
+  it("rejects direct ordinary Google creation even if allowCreate is supplied", async () => {
+    await expect(new CustomerAuthRepository(prisma).upsertGoogleCustomer({ email: "new@example.test", normalizedEmail: "new@example.test", googleSubject: "new-sub" }, now, true)).rejects.toMatchObject({ code: "CUSTOMER_AUTH_UNAVAILABLE" });
+    expect(await prisma.customer.count({ where: { normalizedEmail: "new@example.test" } })).toBe(0);
   });
   it("creates 24-hour and 30-day server sessions and refuses an incorrect password", async () => {
     await verified();
@@ -139,7 +168,7 @@ describe("Customer email auth PostgreSQL", () => {
   it("preserves pre-existing Google customer ID and rejects new Google registration without policy", async () => {
     const googleRepo = new CustomerAuthRepository(prisma);
     const identity = { email: "existing@example.test", normalizedEmail: "existing@example.test", googleSubject: "existing-sub" };
-    const existing = await googleRepo.upsertGoogleCustomer(identity, now);
+    const existing = await prisma.customer.create({ data: { ...identity, emailVerifiedAt: now } });
     expect((await googleRepo.upsertGoogleCustomer(identity, now, false)).id).toBe(existing.id);
     await expect(googleRepo.upsertGoogleCustomer({ ...identity, email: "new@example.test", normalizedEmail: "new@example.test", googleSubject: "new-sub" }, now, false)).rejects.toMatchObject({ code: "CUSTOMER_AUTH_UNAVAILABLE" });
   });

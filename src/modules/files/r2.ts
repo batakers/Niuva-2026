@@ -17,10 +17,17 @@ import {
 import { CUSTOM_FILE_MAX_BYTES } from "@/modules/policy/privacy";
 import { assertNonProductionProvider } from "@/modules/providers/non-production";
 import { appError } from "@/modules/shared/errors";
+import { CAD_INSPECTION_PREFIX_BYTES } from "./content-inspection";
 
 export type ObjectStorageHead = Readonly<{
   contentLength?: number;
   contentType?: string;
+}>;
+
+export type ObjectContentInspection = Readonly<{
+  prefix: Uint8Array;
+  sha256: string;
+  sizeBytes: number;
 }>;
 
 export interface PrivateObjectStorage {
@@ -35,6 +42,8 @@ export interface PrivateObjectStorage {
   }>): Promise<string>;
   deleteObject(key: string): Promise<void>;
   headObject(key: string): Promise<ObjectStorageHead>;
+  /** One bounded stream snapshot for CAD format, actual size, and checksum. */
+  inspectObject(key: string, maxBytes: number): Promise<ObjectContentInspection>;
   /**
    * Streams the object and returns its lower-case hex SHA-256. Implementations
    * must stop reading beyond `maxBytes`. Optional so lightweight adapters may
@@ -233,11 +242,42 @@ export class R2PrivateObjectStorage implements PrivateObjectStorage {
     return hash.digest("hex");
   }
 
+  async inspectObject(key: string, maxBytes: number): Promise<ObjectContentInspection> {
+    if (!Number.isSafeInteger(maxBytes) || maxBytes < 1 || maxBytes > CUSTOM_FILE_MAX_BYTES) throw appError("VALIDATION_ERROR");
+    const response = await this.client.send(new GetObjectCommand({ Bucket: this.config.privateBucket, Key: key }));
+    const body = response.Body;
+    if (!body || !(Symbol.asyncIterator in body)) throw appError("PROVIDER_UNAVAILABLE");
+    try {
+      return await inspectObjectStream(body as AsyncIterable<Uint8Array>, maxBytes);
+    } finally {
+      if ("destroy" in body && typeof body.destroy === "function") body.destroy();
+    }
+  }
+
   async deleteObject(key: string): Promise<void> {
     await this.client.send(
       new DeleteObjectCommand({ Bucket: this.config.privateBucket, Key: key }),
     );
   }
+}
+
+export async function inspectObjectStream(body: AsyncIterable<Uint8Array>, maxBytes: number): Promise<ObjectContentInspection> {
+  if (!Number.isSafeInteger(maxBytes) || maxBytes < 1 || maxBytes > CUSTOM_FILE_MAX_BYTES) throw appError("VALIDATION_ERROR");
+  const prefix = new Uint8Array(Math.min(CAD_INSPECTION_PREFIX_BYTES, maxBytes));
+  let prefixLength = 0;
+  let sizeBytes = 0;
+  const hash = createHash("sha256");
+  for await (const chunk of body) {
+    if (!(chunk instanceof Uint8Array)) throw appError("UPLOAD_REJECTED");
+    sizeBytes += chunk.byteLength;
+    if (sizeBytes > maxBytes) throw appError("UPLOAD_REJECTED");
+    const take = Math.min(chunk.byteLength, prefix.length - prefixLength);
+    prefix.set(chunk.subarray(0, take), prefixLength);
+    prefixLength += take;
+    hash.update(chunk);
+  }
+  if (sizeBytes === 0) throw appError("UPLOAD_REJECTED");
+  return { prefix: prefix.subarray(0, prefixLength), sizeBytes, sha256: hash.digest("hex") };
 }
 
 export function createR2PrivateObjectStorageFromEnvironment(

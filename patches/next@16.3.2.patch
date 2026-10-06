@@ -1,0 +1,34 @@
+diff --git a/dist/esm/server/image-optimizer.js b/dist/esm/server/image-optimizer.js
+index 50135855db356fa22ab03b050ce24a4182c60a8d..a2a48246e7b753189c3f5c3d4626ba70a4cb9b41 100644
+--- a/dist/esm/server/image-optimizer.js
++++ b/dist/esm/server/image-optimizer.js
+@@ -905,10 +905,11 @@ export async function fetchInternalImage(href, _req, _res, maximumResponseBody,
+     try {
+         // Coerce HEAD to GET to avoid issues with the image optimizer
+         const method = !_req.method || _req.method === 'HEAD' ? 'GET' : _req.method;
++        // The source fetch is shared by image requests. A client's disconnect
++        // must not close its stream and leave the shared cache entry pending.
+         const mocked = createRequestResponseMocks({
+             url: href,
+             method,
+-            socket: _req.socket,
+             maximumResponseBody
+         });
+         await handleRequest(mocked.req, mocked.res, parseReqUrl(href));
+diff --git a/dist/server/image-optimizer.js b/dist/server/image-optimizer.js
+index 31b5c6e3e46f40a994f62c4d43df6a8bbf971869..1f7b072d9f50d584203116ad32eadf2e83ab2649 100644
+--- a/dist/server/image-optimizer.js
++++ b/dist/server/image-optimizer.js
+@@ -1021,10 +1021,11 @@ async function fetchInternalImage(href, _req, _res, maximumResponseBody, handleR
+     try {
+         // Coerce HEAD to GET to avoid issues with the image optimizer
+         const method = !_req.method || _req.method === 'HEAD' ? 'GET' : _req.method;
++        // The source fetch is shared by image requests. A client's disconnect
++        // must not close its stream and leave the shared cache entry pending.
+         const mocked = (0, _mockrequest.createRequestResponseMocks)({
+             url: href,
+             method,
+-            socket: _req.socket,
+             maximumResponseBody
+         });
+         await handleRequest(mocked.req, mocked.res, (0, _url.parseReqUrl)(href));

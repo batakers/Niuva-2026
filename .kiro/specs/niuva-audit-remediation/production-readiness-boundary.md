@@ -11,6 +11,10 @@ Dokumen ini dibuat oleh task 23.7 dan diperbarui pada Tahap 12 (5 Oktober 2026; 
 
 Dokumen ini merujuk keputusan teknis eksplisit dari handoff Owner di `register-keputusan.md`, tanpa memilih keputusan legal/bisnis baru atau mengubah `docs/` milik Owner. Rujukan lain: `env-register.md` bagian 6.5, `render-strategy.md`, `baseline-gate.md`, `tasks.md` (Overview).
 
+**Pembaruan setelah keputusan Owner 2026-10-05:** RK-08, RK-12, RK-13, dan RK-27 berstatus TERTUTUP dalam register. Model/tabel Service tetap dipertahankan, checkout tetap membutuhkan JavaScript, dan UI audit admin tetap ditunda. RK-17 menunggu aset Owner; RK-11 menunggu hosting. Pernyataan usia 18+ dipilih Owner beserta penerimaan risiko bahwa self-declaration tidak memverifikasi usia; legal/dokumen/tanggal berlaku dan dasar retensi tetap belum disahkan.
+
+**Implementasi 2026-10-06:** spec [niuva-keputusan-lanjutan](../niuva-keputusan-lanjutan/implementation-report.md) menambahkan deklarasi usia wajib dan bukti server pada email/internal Google, pemeriksaan header CAD lokal, serta sitemap produk terbit. PUB-AGE mencerminkan kontrol yang teruji, tetapi PUB-POLICY, matrix, grant aktivasi dan PUB-RELEASE tidak dibuka. Status formal RK-02/RK-03/RK-18 tetap mengikuti aturan register. Provider/staging/production tidak dibuktikan oleh perubahan ini; angka di bawah tetap checkpoint historis Tahap 12, sedangkan gate lanjutan ada di laporan spec baru.
+
 ## 1. Yang terverifikasi (lokal, loopback, non-production)
 
 ### 1.1 Angka gate terkini
@@ -63,7 +67,7 @@ Daftar ini tidak lengkap sebagai jaminan. Apa pun yang tidak tercantum di bagian
 | Pemantauan error eksternal | Tidak ada | SDK ditunda sampai mendekati staging. Env Sentry tidak punya konsumen (`UNUSED_PENDING_APPROVAL`); logger/FailureEvent lokal tidak membuktikan pemantauan eksternal | AG-3.14, `env-register.md` bagian 2 |
 | Cakupan seluruh cabang sumber | Tidak lengkap | Coverage sudah diukur; sejumlah cabang belum teruji. Tidak ada threshold di atas baseline atau pengecualian modul untuk menaikkan angka | AG-1.10, `coverage-gaps.md`, `baseline-gate.md` bagian 10 |
 | CSP dengan Clerk aktif | Tidak terverifikasi | RK-10 memutuskan model hibrida: nonce pada cakupan admin/API admin/checkout/account, CSP statis pada publik ber-cache. Tanpa Clerk, `/admin` hanya membuktikan jalur 503 statis. Tidak ada perluasan nonce/SRI | RK-10, 26.1, `csp-verification.md` |
-| Kesiapan hukum dan kebijakan (dokumen resmi, usia, wali, retensi, data, SLA) | Tidak tertutup | Semua entri `BELUM_TERTUTUP` | `register-keputusan.md` bagian A sampai C |
+| Kesiapan hukum dan kebijakan (dokumen resmi, usia, wali, retensi, data, SLA) | Belum menjadi izin publik | Arah 18+ sudah dipilih dan kontrol deklarasi diuji lokal; dokumen final, retensi, kanal hak, serta keputusan bisnis/lingkungan lain tetap terbuka. Penutupan formal mengikuti register | `register-keputusan.md` bagian A sampai C; spec lanjutan |
 
 ## 3. Lima risiko tersisa yang diterima
 

@@ -127,9 +127,9 @@ describe("capability resolver: tier x mode x capability", () => {
     }
   });
 
-  it("defaults to a gate reader that reports every gate as not closed", () => {
+  it("closes only the implemented age control while retaining policy and guardian denials", () => {
     expect(DEFAULT_POLICY_GATE_READER.getStatus("PUB-POLICY")).toEqual({ closed: false });
-    expect(DEFAULT_POLICY_GATE_READER.getStatus("PUB-AGE")).toEqual({ closed: false });
+    expect(DEFAULT_POLICY_GATE_READER.getStatus("PUB-AGE")).toEqual({ closed: true });
     expect(DEFAULT_POLICY_GATE_READER.getStatus("PUB-GUARDIAN")).toEqual({ closed: false });
   });
 });

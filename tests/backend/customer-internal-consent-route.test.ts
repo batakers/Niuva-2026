@@ -11,6 +11,12 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllEnvs());
 describe("internal consent boundary", () => {
+  it.each(["consent=on", "consent=on&ageDeclaration=off", "consent=on&ageDeclaration=false"])("rejects a direct POST without an explicit age declaration: %s", async body => {
+    const response = await POST(request(body, true));
+    expect(response.status).toBe(422); expect(response.headers.get("set-cookie")).toBeNull();
+    expect(await response.text()).not.toContain("TEST-ONLY-CONSENT-PROOF");
+    expect(mocks.accept).not.toHaveBeenCalled();
+  });
   it("requires consent and origin before issuing a proof", async () => {
     expect((await POST(request("returnTo=%2Fcheckout", true))).status).toBe(422);
     expect((await POST(request("consent=on", true, null))).status).toBe(403);
@@ -18,7 +24,7 @@ describe("internal consent boundary", () => {
     expect(mocks.accept).not.toHaveBeenCalled();
   });
   it("keeps no-JS form redirects on our origin and the proof short-lived HttpOnly", async () => {
-    const response = await POST(request("consent=on&returnTo=%2Fcheckout"));
+    const response = await POST(request("consent=on&ageDeclaration=on&returnTo=%2Fcheckout"));
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe("http://127.0.0.1:3000/internal-testing/google-consent?continue=1&returnTo=%2Fcheckout");
     expect(response.headers.get("set-cookie")).toContain("HttpOnly");
@@ -26,10 +32,10 @@ describe("internal consent boundary", () => {
     expect(response.headers.get("set-cookie")).toContain("Path=/api/auth/google");
   });
   it("returns an allowlisted OAuth destination to JS and handles failure", async () => {
-    const response = await POST(request("consent=on&returnTo=https%3A%2F%2Fevil.test", true));
+    const response = await POST(request("consent=on&ageDeclaration=on&returnTo=https%3A%2F%2Fevil.test", true));
     expect(await response.json()).toEqual({ destination: "/api/auth/google/start?returnTo=%2Faccount" });
     mocks.accept.mockRejectedValue(new Error("TEST-FAILURE"));
-    const failed = await POST(request("consent=on", true));
+    const failed = await POST(request("consent=on&ageDeclaration=on", true));
     expect(failed.status).toBe(500); expect(failed.headers.get("set-cookie")).toBeNull();
   });
 });

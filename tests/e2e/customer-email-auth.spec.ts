@@ -1,6 +1,10 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
+import { isolatedActorHeaders } from "./helpers/actor";
+test.beforeEach(async ({ context }, testInfo) => {
+  await context.setExtraHTTPHeaders(isolatedActorHeaders(testInfo));
+});
 const password = "a long test passphrase for niuva";
 async function mailToken(email: string, purpose: string) {
   const content = await readFile(join(process.cwd(), "test-results/customer-email-test-outbox.jsonl"), "utf8");
@@ -15,7 +19,8 @@ async function register(page: Page, email: string) {
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Konfirmasi password", { exact: true }).fill(password);
-  await page.getByRole("checkbox").check();
+  await page.getByRole("checkbox", { name: /Saya menyetujui/ }).check();
+  await page.getByRole("checkbox", { name: /Saya menyatakan/ }).check();
   await page.getByRole("button", { name: "Buat akun", exact: true }).click();
   await expect(page).toHaveURL(/\/verify-email\?/);
   await expect(page.getByText(email, { exact: true })).toBeVisible();
@@ -27,6 +32,25 @@ async function login(page: Page, email: string, value = password) {
   await page.getByRole("button", { name: "Masuk", exact: true }).click();
   await expect(page).toHaveURL(/\/account$/);
 }
+test("age declaration stays unchecked, focuses validation, and rejects direct POST across responsive widths", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  for (const width of [390, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/register");
+    const age = page.getByRole("checkbox", { name: "Saya menyatakan bahwa saya berusia 18 tahun atau lebih." });
+    await expect(age).not.toBeChecked(); await expect(age).toHaveAttribute("required", "");
+    await page.getByLabel("Nama lengkap").fill("Adult Fixture"); await page.getByLabel("Email", { exact: true }).fill("adult-e2e@example.test");
+    await page.getByLabel("Password", { exact: true }).fill(password); await page.getByLabel("Konfirmasi password", { exact: true }).fill(password);
+    await page.getByRole("checkbox", { name: /Saya menyetujui/ }).check();
+    await page.getByRole("button", { name: "Buat akun", exact: true }).click();
+    await expect(age).toBeFocused(); await expect(age).toHaveAttribute("aria-invalid", "true");
+    await page.keyboard.press("Space"); await expect(age).toBeChecked();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+  const response = await page.request.post("/api/auth/email/register", { headers: { Origin: new URL(page.url()).origin, Accept: "application/json" }, form: { name: "Adult Fixture", email: "adult-e2e@example.test", password, confirmPassword: password, consent: "on", ageDeclaration: "false" } });
+  expect(response.status()).toBe(422); expect(response.headers()["set-cookie"]).toBeUndefined();
+  expect(await response.text()).not.toContain("adult-e2e@example.test");
+});
 test("email registration verifies through POST, login works, reset revokes the session", async ({ page }) => {
   const email = `customer-email-${Date.now()}@example.test`;
   await register(page, email);
@@ -63,8 +87,8 @@ test("email registration verifies through POST, login works, reset revokes the s
   await page.goto(`/reset-password?token=${reset}`);
   await expect(page.getByText("Tautan pemulihan tidak dapat digunakan.")).toBeVisible();
 });
-test("email forms work without JavaScript", async ({ browser }) => {
-  const context = await browser.newContext({ javaScriptEnabled: false });
+test("email forms work without JavaScript", async ({ browser }, testInfo) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, extraHTTPHeaders: isolatedActorHeaders(testInfo) });
   try {
     const page = await context.newPage();
     const email = `customer-nojs-${Date.now()}@example.test`;
@@ -75,6 +99,23 @@ test("email forms work without JavaScript", async ({ browser }) => {
     await login(page, email);
     await expect(page.getByText(email, { exact: true })).toBeVisible();
   } finally { await context.close(); }
+});
+test("independent browser actors retain the email IP rate limit", async ({ page }, testInfo) => {
+  await page.goto("/forgot-password");
+  const origin = new URL(page.url()).origin;
+  const nonce = Date.now();
+  const submit = (index: number, actorHeaders = isolatedActorHeaders(testInfo)) => page.request.post(
+    "/api/auth/email/forgot-password",
+    { headers: { ...actorHeaders, Origin: origin, Accept: "application/json" }, form: { email: `actor-limit-${nonce}-${index}@example.test` } },
+  );
+  // Existing service policy: 20 requests per hour for one IP. Unknown emails
+  // exercise the real counter without sending mail or creating accounts.
+  const allowed = await Promise.all(Array.from({ length: 20 }, (_, index) => submit(index)));
+  expect(allowed.map(response => response.status())).toEqual(Array<number>(20).fill(200));
+  const blocked = await submit(20);
+  expect(blocked.status()).toBe(429);
+  const independent = await submit(20, isolatedActorHeaders(testInfo, "independent-customer"));
+  expect(independent.status()).toBe(200);
 });
 test("inline validation focuses errors and password pending recovers", async ({ page }) => {
   await page.goto("/login");

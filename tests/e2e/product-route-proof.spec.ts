@@ -4,6 +4,15 @@ import { expectDecodedImage } from "./helpers/readiness";
 
 const proofWidths = [320, 390, 768, 1280] as const;
 
+type MediaDiagnostic = { phase: string; elapsedMs: number; width: number; height: number; imageIndex?: number; alt?: string; sourcePath?: string; complete?: boolean; naturalWidth?: number; naturalHeight?: number; status?: number | "failed" };
+function publicImagePath(raw: string): string | undefined {
+  try {
+    const url = new URL(raw);
+    const source = url.pathname === "/_next/image" ? new URL(url.searchParams.get("url") ?? "", url.origin).pathname : url.pathname;
+    return /^\/(?:media\/|_next\/static\/media\/)/.test(source) ? source : undefined;
+  } catch { return undefined; }
+}
+
 async function assertNoHorizontalOverflow(page: Page, route: string, width: number) {
   const dimensions = await page.evaluate(() => ({
     bodyScrollWidth: document.body.scrollWidth,
@@ -42,12 +51,15 @@ async function assertAccessibleSections(page: Page) {
   expect(missingSectionLabels).toEqual([]);
 }
 
-async function assertHomepageMedia(page: Page) {
+async function assertHomepageMedia(page: Page, record: (value: Omit<MediaDiagnostic, "elapsedMs" | "width" | "height">) => void) {
   const media = page.locator("[data-home-section='project-proof'] img");
   await expect(media).toHaveCount(3);
 
-  for (const image of await media.all()) {
+  for (const [imageIndex, image] of (await media.all()).entries()) {
+    const before = await image.evaluate(element => element instanceof HTMLImageElement ? { alt: element.alt, source: element.currentSrc || element.src, complete: element.complete, naturalWidth: element.naturalWidth, naturalHeight: element.naturalHeight } : null);
+    if (before) record({ phase: "decode-start", imageIndex, alt: before.alt.slice(0, 160), sourcePath: publicImagePath(before.source), complete: before.complete, naturalWidth: before.naturalWidth, naturalHeight: before.naturalHeight });
     await expectDecodedImage(image);
+    record({ phase: "decode-complete", imageIndex });
   }
 
   const altTexts = await media.evaluateAll((images) => images.map((image) =>
@@ -70,8 +82,37 @@ async function fillRequiredBriefFields(page: Page) {
   await form.getByLabel("Persetujuan kerahasiaan").check();
 }
 
-test("authorized product routes have named responsive and semantic proof", async ({ page }) => {
+test("authorized product routes have named responsive and semantic proof", async ({ page }, testInfo) => {
+  const started = Date.now();
+  const diagnostics: MediaDiagnostic[] = [];
+  const record = (value: Omit<MediaDiagnostic, "elapsedMs" | "width" | "height">) => {
+    const viewport = page.viewportSize();
+    diagnostics.push({ ...value, elapsedMs: Date.now() - started, width: viewport?.width ?? 0, height: viewport?.height ?? 0 });
+  };
+  page.on("request", request => {
+    if (request.resourceType() !== "image") return;
+    const sourcePath = publicImagePath(request.url());
+    if (sourcePath) record({ phase: "image-request", sourcePath });
+  });
+  page.on("response", response => {
+    if (response.request().resourceType() !== "image") return;
+    const sourcePath = publicImagePath(response.url());
+    if (sourcePath) record({ phase: "image-response", sourcePath, status: response.status() });
+  });
+  page.on("requestfailed", request => {
+    if (request.resourceType() !== "image") return;
+    const sourcePath = publicImagePath(request.url());
+    if (sourcePath) record({ phase: "image-request-failed", sourcePath, status: "failed" });
+  });
+  page.on("requestfinished", request => {
+    if (request.resourceType() !== "image") return;
+    const sourcePath = publicImagePath(request.url());
+    if (sourcePath) record({ phase: "image-request-finished", sourcePath });
+  });
+  try {
+  record({ phase: "login-start" });
   await loginCustomer(page);
+  record({ phase: "login-complete" });
   const consoleErrors: string[] = [];
   const pageErrors: string[] = [];
   page.on("console", (message) => {
@@ -81,6 +122,7 @@ test("authorized product routes have named responsive and semantic proof", async
 
   for (const width of proofWidths) {
     await page.setViewportSize({ width, height: 900 });
+    record({ phase: "layout-start" });
 
     await page.goto("/");
     await assertRouteShell(page, "/", width);
@@ -94,12 +136,15 @@ test("authorized product routes have named responsive and semantic proof", async
     await assertRouteShell(page, "/project-brief", width);
     await assertAccessibleSections(page);
     await expect(page.getByRole("form", { name: "Form project brief" })).toBeVisible();
+    record({ phase: "layout-complete" });
   }
 
   for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+    record({ phase: "media-navigation-start" });
     await page.goto("/");
-    await assertHomepageMedia(page);
+    record({ phase: "media-navigation-complete" });
+    await assertHomepageMedia(page, record);
   }
 
   await page.setViewportSize({ width: 390, height: 844 });
@@ -153,4 +198,16 @@ test("authorized product routes have named responsive and semantic proof", async
   await expect(page.locator("input[type='file']")).toBeDisabled();
   expect(consoleErrors.filter((message) => !message.includes("status of 503"))).toEqual([]);
   expect(pageErrors).toEqual([]);
+  record({ phase: "proof-complete" });
+  } catch (error) {
+    record({ phase: "proof-failed" });
+    throw error;
+  } finally {
+    // The CI list reporter does not print JSON attachments and the workflow
+    // does not upload traces. Log the bounded public projection for both failed
+    // and passing comparisons: no error payload, query, cookies, storage or
+    // private URLs. Write before the asynchronous attachment can be interrupted.
+    process.stdout.write(`NIUVA_PUBLIC_MEDIA_DIAGNOSTICS ${JSON.stringify(diagnostics.slice(-200))}\n`);
+    await testInfo.attach("public-homepage-media-diagnostics", { body: Buffer.from(JSON.stringify(diagnostics, null, 2)), contentType: "application/json" });
+  }
 });

@@ -14,11 +14,13 @@ import { InternalAuthCleanupRepository } from "@/modules/customer-auth/internal-
 import { getCustomerAuthLegalDocuments } from "@/modules/customer-auth/legal";
 import { INTERNAL_AUTH_RETENTION_MS } from "@/modules/customer-auth/internal-testing";
 import { hashOpaqueToken } from "@/modules/customer-auth/core";
+import { AGE_DECLARATION_VERSION } from "@/modules/customer-auth/age-declaration";
 const prisma = getPrismaClient();
 let now = new Date("2026-10-02T00:00:00Z");
 const identity = { googleSubject: "internal-google-test", email: "internal-google@example.test", normalizedEmail: "internal-google@example.test" };
 const repo = new CustomerAuthRepository(prisma);
 const password = "internal test long passphrase";
+const consentInput = { consent: "on", ageDeclaration: "on" };
 let mails: { token: string; to: string }[] = [];
 const emailService = () => new CustomerEmailService(new CustomerEmailRepository(prisma), { async send(mail) { mails.push(mail); } }, getCustomerAuthLegalDocuments(), () => now);
 beforeEach(async () => {
@@ -38,11 +40,16 @@ describe("internal Customer PostgreSQL lifecycle", () => {
     const service = new CustomerAuthService({ repository: repo, now: () => now });
     await expect(service.completeGoogleLogin(identity)).rejects.toMatchObject({ code: "CUSTOMER_AUTH_UNAVAILABLE" });
     expect(await prisma.customer.count({ where: { normalizedEmail: identity.email } })).toBe(0);
-    const token = await new InternalGoogleConsentService(prisma).accept(now);
+    const token = await new InternalGoogleConsentService(prisma).accept(consentInput, now);
+    const proof = await prisma.customerInternalGoogleConsent.findUniqueOrThrow({ where: { tokenHash: hashOpaqueToken(token) } });
+    expect(proof.ageDeclarationVersion).toBe(AGE_DECLARATION_VERSION);
+    expect(proof.ageDeclaredAt).toEqual(now);
     const login = await service.completeGoogleLogin(identity, token);
     const customer = await prisma.customer.findUniqueOrThrow({ where: { id: login.customer.id }, include: { consents: true } });
     expect(customer.internalTestExpiresAt!.getTime() - now.getTime()).toBe(INTERNAL_AUTH_RETENTION_MS);
     expect(customer.consents).toHaveLength(1);
+    expect(customer.consents[0].ageDeclarationVersion).toBe(AGE_DECLARATION_VERSION);
+    expect(customer.consents[0].ageDeclaredAt).toEqual(now);
     expect((await prisma.customerInternalGoogleConsent.findUniqueOrThrow({ where: { tokenHash: hashOpaqueToken(token) } })).consumedAt).toEqual(now);
     now = new Date(now.getTime() + 86400000);
     expect((await service.completeGoogleLogin(identity)).expiresAt).toEqual(customer.internalTestExpiresAt);
@@ -53,18 +60,24 @@ describe("internal Customer PostgreSQL lifecycle", () => {
   it("rejects expired, reused, wrong-version and wrong-email proofs without creating accounts", async () => {
     const consent = new InternalGoogleConsentService(prisma);
     const service = new CustomerAuthService({ repository: repo, now: () => now });
-    for (const change of [{ expiresAt: now }, { consumedAt: now }, { termsVersion: "OLD" }, { privacyVersion: "OLD" }, { normalizedEmail: "someone@example.test" }]) {
-      const token = await consent.accept(now);
+    for (const change of [{ expiresAt: now }, { consumedAt: now }, { termsVersion: "OLD" }, { privacyVersion: "OLD" }, { normalizedEmail: "someone@example.test" }, { ageDeclarationVersion: null, ageDeclaredAt: null }, { ageDeclarationVersion: "OLD" }, { ageDeclaredAt: new Date(now.getTime() + 1000) }]) {
+      const token = await consent.accept(consentInput, now);
       await prisma.customerInternalGoogleConsent.update({ where: { tokenHash: hashOpaqueToken(token) }, data: change });
       await expect(service.completeGoogleLogin(identity, token)).rejects.toMatchObject({ code: "CUSTOMER_AUTH_UNAVAILABLE" });
     }
-    const token = await consent.accept(now);
+    const token = await consent.accept(consentInput, now);
     await expect(service.completeGoogleLogin({ ...identity, email: "foreign@example.test", normalizedEmail: "foreign@example.test" }, token)).rejects.toMatchObject({ code: "CUSTOMER_AUTH_UNAVAILABLE" });
     expect(await prisma.customer.count({ where: { normalizedEmail: identity.email } })).toBe(0);
   });
+  it.each([undefined, "off", "false", true, false])("rejects direct consent-service input %j before issuing a proof", async ageDeclaration => {
+    await expect(new InternalGoogleConsentService(prisma).accept({ consent: "on", ageDeclaration }, now)).rejects.toThrow();
+    expect(await prisma.customerInternalGoogleConsent.count()).toBe(0);
+    expect(await prisma.customer.count({ where: { normalizedEmail: identity.email } })).toBe(0);
+    expect(await prisma.customerSession.count({ where: { customer: { normalizedEmail: identity.email } } })).toBe(0);
+  });
   it("rejects foreign email before pending/provider and caps password sessions/reset", async () => {
     const service = emailService();
-    const data = { name: "Internal Fixture", email: state.config!.passwordEmail, password, confirmPassword: password, consent: "on" };
+    const data = { name: "Internal Fixture", email: state.config!.passwordEmail, password, confirmPassword: password, consent: "on", ageDeclaration: "on" };
     await expect(service.register({ ...data, email: "foreign@example.test" }, "ip")).rejects.toMatchObject({ code: "CUSTOMER_AUTH_UNAVAILABLE" });
     expect(mails).toHaveLength(0); expect(await prisma.customerPendingRegistration.count()).toBe(0);
     await service.register(data, "ip");
@@ -82,7 +95,7 @@ describe("internal Customer PostgreSQL lifecycle", () => {
   }, 10000);
   it("fails verification/resend when internal signup is disabled", async () => {
     const service = emailService();
-    const registration = await service.register({ name: "Internal Fixture", email: state.config!.passwordEmail, password, confirmPassword: password, consent: "on" }, "ip");
+    const registration = await service.register({ name: "Internal Fixture", email: state.config!.passwordEmail, password, confirmPassword: password, consent: "on", ageDeclaration: "on" }, "ip");
     state.config = null; now = new Date(now.getTime() + 61000);
     await expect(service.verify(mails[0].token, "ip")).rejects.toMatchObject({ code: "CUSTOMER_AUTH_UNAVAILABLE" });
     await expect(service.resend(registration.handle!, "/account", "ip")).rejects.toMatchObject({ code: "CUSTOMER_AUTH_UNAVAILABLE" });

@@ -11,6 +11,20 @@ function request(action: string, input: Record<string, string> = {}, json = true
 }
 beforeEach(() => { vi.restoreAllMocks(); mocks.cookies.clear(); });
 describe("Customer email auth POST boundaries", () => {
+  it.each([undefined, "off", "false"])("rejects direct email registration with age declaration %s without side effects or details", async ageDeclaration => {
+    const mailer = { send: vi.fn(async () => undefined) };
+    const realService = new CustomerEmailService(new CustomerEmailRepository(), mailer, { terms: { href: "/TEST-ONLY-terms", version: "TEST" }, privacy: { href: "/TEST-ONLY-privacy", version: "TEST" } });
+    const pending = vi.spyOn(realService.repository, "createPending");
+    const rateLimit = vi.spyOn(realService.repository, "limit");
+    const response = await emailPostHandler("register", () => realService)(request("register", {
+      name: "Adult Fixture", email: "private-fixture@example.test", password: "test long passphrase", confirmPassword: "test long passphrase", consent: "on",
+      ...(ageDeclaration === undefined ? {} : { ageDeclaration }),
+    }));
+    expect(response.status).toBe(422); expect(response.headers.get("set-cookie")).toBeNull();
+    const body = await response.text();
+    expect(body).toContain("ageDeclaration"); expect(body).not.toContain("private-fixture@example.test"); expect(body).not.toContain("test long passphrase");
+    expect(pending).not.toHaveBeenCalled(); expect(rateLimit).not.toHaveBeenCalled(); expect(mailer.send).not.toHaveBeenCalled();
+  });
   it("rejects cross-origin POST before invoking the service", async () => {
     const factory = vi.fn(() => service);
     const response = await emailPostHandler("login", factory)(new Request("https://app.example.test/api/auth/email/login", { method: "POST", headers: { Origin: "https://evil.test", Accept: "application/json" }, body: "email=x" }));

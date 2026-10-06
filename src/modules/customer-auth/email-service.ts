@@ -4,6 +4,7 @@ import { CustomerEmailRepository } from "./email-repository";
 import { createCustomerAuthMailer, type CustomerAuthMailer } from "./email-mailer";
 import { getCustomerAuthLegalDocuments, type CustomerAuthLegalDocuments } from "./legal";
 import { appError } from "@/modules/shared/errors";
+import { AGE_DECLARATION_VERSION } from "./age-declaration";
 import { assertInternalEmail, getInternalAuthConfig, internalExpiry, capInternalExpiry, assertInternalAccountActive, INTERNAL_TERMS_VERSION } from "./internal-testing";
 
 export class CustomerEmailService {
@@ -33,7 +34,9 @@ export class CustomerEmailService {
     if (await this.repository.findCredential(normalizedEmail)) return { handle: null, sent: false };
     const handle = createOpaqueToken();
     const pending = await this.repository.createPending({ handleHash: hashOpaqueToken(handle), email: input.email, normalizedEmail, displayName: input.name, passwordHash,
-      termsVersion: this.legal.terms.version, privacyVersion: this.legal.privacy.version, consentAt: now, expiresAt: new Date(now.getTime() + 86400000), internalTestExpiresAt: internal ? internalExpiry(now) : null });
+      termsVersion: this.legal.terms.version, privacyVersion: this.legal.privacy.version, consentAt: now,
+      ageDeclarationVersion: AGE_DECLARATION_VERSION, ageDeclaredAt: now,
+      expiresAt: new Date(now.getTime() + 86400000), internalTestExpiresAt: internal ? internalExpiry(now) : null });
     try {
       await this.send("verify", pending.email, safeCustomerReturnTo(input.returnTo), { pendingId: pending.id });
       return { handle, sent: true };

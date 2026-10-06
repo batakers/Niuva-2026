@@ -7,7 +7,7 @@ import type { PendingFileForConfirmation } from "@/modules/files/repository";
 import { UploadService, type UploadFileRepository } from "@/modules/files/upload-service";
 
 const NOW = new Date("2026-09-05T08:00:00.000Z");
-const CONTENT = Buffer.from("abc");
+const CONTENT = Buffer.from("solid fixture\nfacet normal 0 0 1\nendsolid fixture\n");
 const EXPECTED = createHash("sha256").update(CONTENT).digest("hex");
 
 type Row = { -readonly [K in keyof PendingFileForConfirmation]: PendingFileForConfirmation[K] } & {
@@ -22,6 +22,7 @@ class Repo implements UploadFileRepository {
   async createPending(input: Parameters<UploadFileRepository["createPending"]>[0]) {
     const row: Row = {
       bucketScope: "PRIVATE_CUSTOMER",
+      extension: input.extension,
       id: input.id,
       mimeType: input.mimeType,
       sha256: null,
@@ -70,11 +71,12 @@ class Repo implements UploadFileRepository {
 
 function makeStorage(overrides: Partial<PrivateObjectStorage> = {}): PrivateObjectStorage {
   return {
+    inspectObject: async () => ({ prefix: CONTENT, sizeBytes: CONTENT.length, sha256: EXPECTED }),
     computeSha256: async () => EXPECTED,
     createDownloadUrl: async () => "https://storage.example.test/d",
     createUploadUrl: async () => "https://storage.example.test/u",
     deleteObject: async () => undefined,
-    headObject: async () => ({ contentLength: 3, contentType: "model/stl" }),
+    headObject: async () => ({ contentLength: CONTENT.length, contentType: "model/stl" }),
     ...overrides,
   };
 }
@@ -92,7 +94,7 @@ async function setup(storage: PrivateObjectStorage) {
   const intent = await service.createIntent({
     mimeType: "model/stl",
     originalName: "part.stl",
-    sizeBytes: 3,
+    sizeBytes: CONTENT.length,
   });
   return {
     confirm: () => service.confirmUpload({ fileId: intent.fileId, uploadToken: intent.uploadToken }),
@@ -126,7 +128,7 @@ describe("upload confirmation checksum (Req 12.7)", () => {
     expect(absent.row()).toMatchObject({ sha256: null, verifiedAt: null });
 
     const unhashable = await setup(
-      makeStorage({ computeSha256: async () => "NOT-HEX" }),
+      makeStorage({ inspectObject: async () => ({ prefix: CONTENT, sizeBytes: CONTENT.length, sha256: "NOT-HEX" }) }),
     );
     await expect(unhashable.confirm()).rejects.toMatchObject({ code: "UPLOAD_REJECTED" });
     expect(unhashable.row()).toMatchObject({ sha256: null, uploadStatus: "REJECTED", verifiedAt: null });

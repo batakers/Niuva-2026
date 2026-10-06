@@ -31,6 +31,7 @@ function fileRepository(file: Awaited<ReturnType<PrivateFileDownloadRepository["
 function storage() {
   const calls: string[] = [];
   const implementation: PrivateObjectStorage = {
+    async inspectObject() { throw new Error("Download tests never inspect upload content."); },
     async createDownloadUrl(input) {
       calls.push(input.key);
       return "https://storage.example.test/signed-download";

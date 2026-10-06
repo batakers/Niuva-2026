@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { publicServices } from "@/features/public/company-content";
-import { getProjectPreview } from "@/features/frontend-preview/server";
+import { getLiveShopProducts, getProjectPreview } from "@/features/frontend-preview/server";
 import { resolveCustomerAppOrigin } from "@/modules/customer-auth/app-origin";
 
 // Time-based revalidation (Req 16.3, render-strategy.md). The sitemap is a
@@ -13,7 +13,7 @@ export const revalidate = 300;
 // Indexable public routes only. Deliberately absent (Req 16.7): `/auth-test-policy`,
 // `/internal-testing/*`, `/demo/action-queue`, `/api/frontend-preview/media/[id]`,
 // `/preview/*`, auth pages, `/cart`, `/checkout`, `/account/*`, token pages,
-// and `/admin/*`. `/shop/[slug]` is omitted until a public catalog read path exists.
+// and `/admin/*`. Product detail URLs use the same published catalog as `/shop`.
 const STATIC_PATHS = [
   "/",
   "/services",
@@ -39,9 +39,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...publicServices.map((service) => ({ url: absolute(`/services/${service.slug}`) })),
   ];
 
-  // A database outage or missing database at build time must not fail the
-  // build; project URLs are added on the next revalidation.
-  const result = await getProjectPreview(undefined).catch(() => null);
+  // Independent fallbacks keep a failed read from hiding the other content.
+  // Missing databases at build time must not fail the build.
+  const [result, products] = await Promise.all([
+    getProjectPreview(undefined).catch(() => null),
+    getLiveShopProducts().catch(() => []),
+  ]);
 
   for (const project of result?.projects ?? []) {
     if (project.detailReadiness === "card-only") {
@@ -51,5 +54,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entries.push({ url: absolute(`/projects/${encodeURIComponent(project.slug)}`) });
   }
 
-  return entries;
+  for (const product of products) entries.push({ url: absolute(`/shop/${encodeURIComponent(product.slug)}`) });
+  return [...new Map(entries.map(entry => [entry.url, entry])).values()];
 }

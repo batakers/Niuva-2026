@@ -3,6 +3,14 @@ import { createOpaqueToken, hashOpaqueToken } from "./core";
 import { getInternalAuthConfig, INTERNAL_PRIVACY_VERSION, INTERNAL_TERMS_VERSION } from "./internal-testing";
 import { appError } from "@/modules/shared/errors";
 import type { PrismaClient } from "@/generated/prisma/client";
+import { z } from "zod";
+import { ageDeclarationSchema, AGE_DECLARATION_VERSION } from "./age-declaration";
+
+export const internalGoogleConsentSchema = z.object({
+  consent: z.literal("on"),
+  ageDeclaration: ageDeclarationSchema,
+  returnTo: z.string().max(2048).optional(),
+});
 
 export class InternalGoogleConsentRepository {
   constructor(private readonly prisma: PrismaClient = getPrismaClient()) {}
@@ -17,6 +25,7 @@ export class InternalGoogleConsentRepository {
         tokenHash, normalizedEmail,
         termsVersion: INTERNAL_TERMS_VERSION, privacyVersion: INTERNAL_PRIVACY_VERSION,
         acceptedAt: now, expiresAt: new Date(now.getTime() + 600000),
+        ageDeclarationVersion: AGE_DECLARATION_VERSION, ageDeclaredAt: now,
       } });
     });
   }
@@ -25,7 +34,8 @@ export class InternalGoogleConsentRepository {
 export class InternalGoogleConsentService {
   private readonly repository: InternalGoogleConsentRepository;
   constructor(prisma?: PrismaClient) { this.repository = new InternalGoogleConsentRepository(prisma); }
-  async accept(now = new Date()): Promise<string> {
+  async accept(raw: unknown, now = new Date()): Promise<string> {
+    internalGoogleConsentSchema.parse(raw);
     const config = getInternalAuthConfig();
     if (!config) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
     const token = createOpaqueToken();

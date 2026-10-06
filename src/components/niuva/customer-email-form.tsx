@@ -4,6 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CUSTOMER_PASSWORD_MIN_LENGTH, emailSchema, passwordSchema } from "@/modules/customer-auth/password-validation";
+import { AGE_DECLARATION_LABEL, ageDeclarationSchema } from "@/modules/customer-auth/age-declaration";
 export type AuthFormMode = "login" | "register" | "forgot-password" | "reset-password" | "verify" | "resend";
 type Legal = { terms: { href: string; version: string; label?: string }; privacy: { href: string; version: string; label?: string } };
 export function CustomerEmailForm({ mode, returnTo, available = true, token, legal }: { mode: AuthFormMode; returnTo: string; available?: boolean; token?: string; legal?: Legal | null }) {
@@ -44,6 +45,10 @@ export function CustomerEmailForm({ mode, returnTo, available = true, token, leg
       if (error) fields[name] = error;
     }
     if (mode === "register" && data.get("consent") !== "on") fields.consent = "Setujui ketentuan dan pemberitahuan privasi yang tersedia.";
+    if (mode === "register") {
+      const ageError = ageDeclarationSchema.safeParse(data.get("ageDeclaration")).error?.issues[0]?.message;
+      if (ageError) fields.ageDeclaration = ageError;
+    }
     setErrors(fields); setMessage("");
     if (Object.keys(fields).length) { focusError(fields); return; }
     busy.current = true; setPending(true);
@@ -83,6 +88,7 @@ export function CustomerEmailForm({ mode, returnTo, available = true, token, leg
     {["register", "reset-password"].includes(mode) ? field("confirmPassword", "Konfirmasi password", "password", "new-password") : null}
     {mode === "login" ? <div className="flex flex-wrap items-center justify-between gap-x-4"><label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-muted-foreground"><input type="checkbox" name="remember" className="size-4 accent-primary focus-visible:ring-3 focus-visible:ring-ring" />Ingat saya</label><a className="inline-flex min-h-11 items-center text-sm font-medium text-primary underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring" href={`/forgot-password?returnTo=${encodeURIComponent(returnTo)}`}>Lupa password?</a></div> : null}
     {mode === "register" ? <div><label className="flex min-h-11 items-start gap-3 text-sm leading-6 text-muted-foreground"><input id="auth-consent" type="checkbox" name="consent" required disabled={!legal} className="mt-1 size-4 shrink-0 accent-primary focus-visible:ring-3 focus-visible:ring-ring" aria-invalid={Boolean(errors.consent)} aria-describedby={errors.consent ? "auth-consent-error" : undefined} /><span>Saya menyetujui {legal ? <><a className="inline-flex min-h-11 items-center text-primary underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring" href={legal.terms.href} target="_blank" rel="noopener noreferrer">{legal.terms.label ?? "Syarat Layanan"}</a> dan <a className="inline-flex min-h-11 items-center text-primary underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring" href={legal.privacy.href} target="_blank" rel="noopener noreferrer">{legal.privacy.label ?? "Kebijakan Privasi"}</a></> : "Syarat Layanan dan Kebijakan Privasi (belum tersedia)"} Niuva.</span></label>{errors.consent ? <p id="auth-consent-error" className="mt-2 text-sm text-destructive">{errors.consent}</p> : null}</div> : null}
+    {mode === "register" ? <div><label className="flex min-h-11 items-start gap-3 text-sm leading-6 text-muted-foreground"><input id="auth-ageDeclaration" type="checkbox" name="ageDeclaration" required className="mt-1 size-4 shrink-0 accent-primary focus-visible:ring-3 focus-visible:ring-ring" aria-invalid={Boolean(errors.ageDeclaration)} aria-describedby={errors.ageDeclaration ? "auth-ageDeclaration-error" : undefined} onChange={() => setErrors(current => ({ ...current, ageDeclaration: "" }))} /><span>{AGE_DECLARATION_LABEL}</span></label>{errors.ageDeclaration ? <p id="auth-ageDeclaration-error" className="mt-2 text-sm text-destructive">{errors.ageDeclaration}</p> : null}</div> : null}
     <Button type="submit" disabled={!available || pending} variant={mode === "resend" ? "outline" : "default"} className="min-h-12 w-full">{labels[mode]}</Button>
     <p role="status" aria-live="polite" aria-atomic="true" className="min-h-5 text-sm text-muted-foreground">{pending ? "Memproses…" : message}</p>
   </form>;

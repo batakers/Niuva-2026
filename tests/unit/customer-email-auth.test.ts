@@ -27,7 +27,7 @@ describe("Customer email authentication primitives", () => {
     expect(passwordSchema.safeParse("x".repeat(129)).success).toBe(false);
   });
   it("requires matching confirmation and consent at the server schema", () => {
-    const data = { name: "Test Customer", email: "test@example.test", password: "a long lowercase phrase", confirmPassword: "a long lowercase phrase", consent: "on" };
+    const data = { name: "Test Customer", email: "test@example.test", password: "a long lowercase phrase", confirmPassword: "a long lowercase phrase", consent: "on", ageDeclaration: "on" };
     expect(registrationSchema.safeParse(data).success).toBe(true);
     expect(registrationSchema.safeParse({ ...data, consent: undefined }).success).toBe(false);
     expect(registrationSchema.safeParse({ ...data, confirmPassword: "different" }).success).toBe(false);
