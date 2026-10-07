@@ -169,9 +169,34 @@ model AdminProfile {
   customPrintReviews   CustomPrintReview[]  @relation("CustomPrintReviewAdmin")
   approvedPricingRules PricingRuleVersion[] @relation("PricingRuleApprovedBy")
   stockMovements       StockMovement[]      @relation("StockMovementAdmin")
+  invitations          AdminInvitation[]
 
   @@index([isActive, role])
   @@map("admin_profiles")
+}
+
+enum AdminInvitationStatus {
+  PENDING
+  SENT
+  FAILED
+  ACCEPTED
+}
+
+model AdminInvitation {
+  id               String                @id @default(uuid()) @db.Uuid
+  email            String                @unique
+  displayName      String                @map("display_name")
+  tokenHash        String?               @unique @map("token_hash")
+  status           AdminInvitationStatus @default(PENDING)
+  expiresAt        DateTime              @map("expires_at") @db.Timestamptz(6)
+  invitedByAdminId String                @map("invited_by_admin_id") @db.Uuid
+  invitedBy        AdminProfile          @relation(fields: [invitedByAdminId], references: [id], onDelete: Restrict)
+  acceptedAt       DateTime?             @map("accepted_at") @db.Timestamptz(6)
+  createdAt        DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([invitedByAdminId])
+  @@map("admin_invitations")
 }
 
 model AdminAuthUser {

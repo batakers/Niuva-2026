@@ -2,16 +2,18 @@ import { z } from "zod";
 import type { createAdminAuthEngine } from "@/lib/auth/admin-engine";
 import { PrismaAdminProfileRepository } from "@/modules/admin/repository";
 import { isAdminSmtpConfigured } from "./mail";
+import { adminNewPasswordSchema, ADMIN_EXISTING_PASSWORD_MAX_LENGTH } from "./password-policy";
 
 type Engine = ReturnType<typeof createAdminAuthEngine>;
-const password = z.string().min(12).max(128);
+const password = adminNewPasswordSchema;
+const currentPassword = z.string().min(1).max(ADMIN_EXISTING_PASSWORD_MAX_LENGTH);
 const schemas: Readonly<Record<string, z.ZodType>> = {
   "/sign-in/email": z.object({ email: z.email().max(254), password: z.string().min(1).max(128) }).strict(),
   "/sign-out": z.object({}).strict(),
-  "/two-factor/enable": z.object({ password }).strict(),
+  "/two-factor/enable": z.object({ password: currentPassword }).strict(),
   "/two-factor/verify-totp": z.object({ code: z.string().regex(/^\d{6}$/), trustDevice: z.literal(false).optional() }).strict(),
   "/two-factor/verify-backup-code": z.object({ code: z.string().min(1).max(64), trustDevice: z.literal(false).optional() }).strict(),
-  "/two-factor/generate-backup-codes": z.object({ password }).strict(),
+  "/two-factor/generate-backup-codes": z.object({ password: currentPassword }).strict(),
   "/change-password": z.object({ currentPassword: z.string().min(1).max(128), newPassword: password }).strict(),
   "/request-password-reset": z.object({ email: z.email().max(254) }).strict(),
   "/send-verification-email": z.object({ email: z.email().max(254) }).strict(),

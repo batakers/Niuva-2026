@@ -1,10 +1,12 @@
 import { betterAuth } from "better-auth";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { twoFactor } from "better-auth/plugins";
 import type { PrismaClient } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { parseServerEnvironment } from "@/lib/env/server";
 import { sendAdminAuthMail, type AdminAuthMail } from "@/modules/admin-auth/mail";
+import { ADMIN_PASSWORD_MIN_LENGTH, ADMIN_EXISTING_PASSWORD_MAX_LENGTH, adminNewPasswordSchema } from "@/modules/admin-auth/password-policy";
 import { appError } from "@/modules/shared/errors";
 
 export type AdminAuthEngineOptions = Readonly<{
@@ -37,13 +39,21 @@ export function createAdminAuthEngine(prisma: PrismaClient, options: AdminAuthEn
     emailAndPassword: {
       enabled: true,
       disableSignUp: true,
-      minPasswordLength: 12,
-      maxPasswordLength: 128,
+      minPasswordLength: ADMIN_PASSWORD_MIN_LENGTH,
+      // Better Auth also uses this cap for current-password verification.
+      // New credentials are restricted to 8–15 by the hook and NIUVA boundaries.
+      maxPasswordLength: ADMIN_EXISTING_PASSWORD_MAX_LENGTH,
       requireEmailVerification: true,
       revokeSessionsOnPasswordReset: true,
       resetPasswordTokenExpiresIn: 60 * 30,
       sendResetPassword: async ({ user, url }) => options.sendMail({ to: user.email, url, kind: "reset" }),
     },
+    hooks: { before: createAuthMiddleware(async context => {
+      if (!["/change-password", "/reset-password", "/set-password"].includes(context.path)) return;
+      if (!adminNewPasswordSchema.safeParse(context.body?.newPassword).success) {
+        throw new APIError("BAD_REQUEST", { code: "INVALID_PASSWORD_LENGTH", message: "Password baru harus sepanjang 8–15 karakter." });
+      }
+    }) },
     emailVerification: {
       sendOnSignIn: true,
       sendOnSignUp: false,

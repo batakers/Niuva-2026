@@ -10,7 +10,7 @@ import { provisionAdminIdentity } from "@/modules/admin-auth/provision";
 
 const prisma = getPrismaClient();
 const origin = "http://localhost:3997";
-const password = "Integration-only-password-472!";
+const password = "Test-472!";
 const profiles = new PrismaAdminProfileRepository(prisma);
 const mails: { url: string; kind: string }[] = [];
 const engine = createAdminAuthEngine(prisma, { baseUrl: origin, production: false, secret: "integration-only-admin-secret-never-use-in-production", sendMail: async mail => { mails.push(mail); } });
@@ -56,6 +56,31 @@ beforeEach(async () => {
 });
 
 describe("Better Auth Admin PostgreSQL boundary", () => {
+  it("allows a provisioned Owner to verify email and enroll TOTP with the original password", async () => {
+    const legacy = await prisma.adminProfile.create({ data: { clerkUserId: `legacy-provision-${randomUUID()}`, displayName: "Provisioned Owner Fixture", role: "OWNER", isActive: true } });
+    email = `provisioned-owner-${randomUUID()}@example.test`;
+    const result = await provisionAdminIdentity(prisma, { email, password, profileId: legacy.id, displayName: legacy.displayName!, role: "OWNER", confirmation: "I_UNDERSTAND_NON_PRODUCTION" });
+    const user = await prisma.adminAuthUser.findUniqueOrThrow({ where: { email }, select: { id: true, emailVerified: true, accounts: { select: { providerId: true, accountId: true, userId: true } } } });
+    userId = user.id;
+    expect(result.profileId).toBe(legacy.id);
+    expect(user.emailVerified).toBe(false);
+    expect(user.accounts).toEqual([{ providerId: "credential", accountId: user.id, userId: user.id }]);
+    const login = await call("/sign-in/email", { email, password });
+    expect(login.status).toBe(403);
+    expect(await login.json()).toMatchObject({ code: "EMAIL_NOT_VERIFIED" });
+    await expect(authorized()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    const mail = mails.find(value => value.kind === "verify")!;
+    expect(mail).toBeDefined();
+    const link = new URL(mail.url);
+    expect((await call(link.pathname.slice("/api/admin/auth".length) + link.search)).status).toBe(302);
+    await enroll();
+    expect((await authorized()).profile.id).toBe(legacy.id);
+    expect(await prisma.adminProfile.findUniqueOrThrow({ where: { id: legacy.id } })).toMatchObject({ clerkUserId: legacy.clerkUserId, createdAt: legacy.createdAt, role: "OWNER", isActive: true });
+  });
+
+  it.each([7, 16])("enforces new-password policy inside the engine at length %i", async length => {
+    await expect(engine.api.resetPassword({ body: { token: "synthetic-invalid-token", newPassword: "a".repeat(length) } })).rejects.toMatchObject({ body: { code: "INVALID_PASSWORD_LENGTH" } });
+  });
   it("requires email verification before enrollment and returns to the native Admin login", async () => {
     await prisma.adminAuthUser.update({ where: { id: userId }, data: { emailVerified: false } });
     expect((await call("/sign-in/email", { email, password })).status).toBe(403);
@@ -138,7 +163,7 @@ describe("Better Auth Admin PostgreSQL boundary", () => {
     expect(landing.origin + landing.pathname).toBe(origin + "/admin/sign-in");
     expect(landing.searchParams.get("flow")).toBe("reset");
     expect(landing.searchParams.get("token")).toBe(resetToken);
-    expect((await call("/reset-password", { token: resetToken, newPassword: "New-integration-password-598!" })).status).toBe(200);
+    expect((await call("/reset-password", { token: resetToken, newPassword: "New-Test-598!" })).status).toBe(200);
     cookies.clear(); sessionCookies.forEach((value, key) => cookies.set(key, value));
     await expect(authorized()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
     expect((await prisma.adminAuthUser.findUniqueOrThrow({ where: { id: userId } })).twoFactorEnabled).toBe(true);
@@ -148,7 +173,7 @@ describe("Better Auth Admin PostgreSQL boundary", () => {
   it("requires fresh MFA after a password change and invalidates the previous session", async () => {
     const setup = await enroll();
     const oldCookies = new Map(cookies);
-    const newPassword = "Changed-integration-password-692!";
+    const newPassword = "Changed-692!";
     expect((await call("/change-password", { currentPassword: password, newPassword })).status).toBe(200);
     await expect(authorized()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
     cookies.clear(); oldCookies.forEach((value, key) => cookies.set(key, value));

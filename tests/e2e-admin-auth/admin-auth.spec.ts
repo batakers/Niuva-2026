@@ -5,6 +5,11 @@ import { hashPassword } from "better-auth/crypto";
 import { PrismaClient } from "../../src/generated/prisma/client";
 import { getSafeTestDatabaseUrl } from "../../src/lib/db/test-safety";
 import { generateTestAdminTotp } from "../helpers/admin-totp";
+import { isolatedActorHeaders } from "../e2e/helpers/actor";
+
+test.beforeEach(async ({ context }, testInfo) => {
+  await context.setExtraHTTPHeaders(isolatedActorHeaders(testInfo, "admin"));
+});
 
 test("Admin login works at mobile width with keyboard and reduced motion", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
@@ -31,7 +36,6 @@ test("Admin enrolls TOTP, signs in again with a second factor and revokes the se
   const id = randomUUID(), email = `e2e-admin-${id}@example.test`, password = "E2E-only-admin-password-572!";
   await prisma.adminAuthUser.create({ data: { id, name: "Admin Fixture", email, emailVerified: true, accounts: { create: { id: randomUUID(), accountId: id, providerId: "credential", password: await hashPassword(password) } }, profile: { create: { role: "OWNER", isActive: true } } } });
   try {
-    await prisma.adminAuthRateLimit.deleteMany();
     await page.goto("/admin/sign-in");
     await page.getByLabel("Email Admin").fill(email);
     await page.getByLabel("Password", { exact: true }).fill(password);
@@ -65,7 +69,8 @@ test("Admin enrolls TOTP, signs in again with a second factor and revokes the se
     await page.getByRole("button", { name: "Verifikasi kode" }).click();
     await expect(page).toHaveURL(/\/admin$/);
     await page.getByRole("link", { name: "Keamanan akun", exact: true }).click();
-    const newPassword = "E2E-changed-admin-password-693!";
+    const newPassword = "E2E-new-693!";
+    await expect(page.getByRole("button", { name: "Ubah password", exact: true })).toBeEnabled();
     await page.getByLabel("Password saat ini").fill(password);
     await page.getByLabel("Password baru", { exact: true }).fill(newPassword);
     await page.getByLabel("Konfirmasi password baru").fill(newPassword);

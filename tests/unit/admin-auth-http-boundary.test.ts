@@ -8,6 +8,16 @@ function dependencies() {
   return { profiles: { findByAuthUserId: vi.fn() }, mailReady: () => false };
 }
 describe("Admin auth HTTP resource boundary", () => {
+  it.each([7, 8, 15, 16])("validates new password length %i before reaching Better Auth", async length => {
+    const handler = vi.fn(async () => Response.json({ success: true }));
+    const request = new Request(origin + "/api/admin/auth/reset-password", {
+      method: "POST", headers: { origin, "content-type": "application/json" },
+      body: JSON.stringify({ token: "synthetic-reset-token", newPassword: "a".repeat(length) }),
+    });
+    const response = await handleAdminAuthRequest(request, { handler } as unknown as Engine, dependencies());
+    expect(response.status).toBe(length === 8 || length === 15 ? 200 : 400);
+    expect(handler).toHaveBeenCalledTimes(length === 8 || length === 15 ? 1 : 0);
+  });
   it("cancels an oversized streamed body before reading the remaining payload", async () => {
     const cancel = vi.fn();
     const body = new ReadableStream<Uint8Array>({
