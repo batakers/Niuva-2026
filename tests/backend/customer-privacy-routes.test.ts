@@ -14,6 +14,28 @@ function request(action: string, raw: Record<string, string> = {}, json = true, 
 }
 beforeEach(() => { vi.restoreAllMocks(); state.cookies.set("niuva_customer_session", "x".repeat(43)); state.access.profile.role = "OWNER"; });
 describe("privacy HTTP boundaries", () => {
+  it.each([true, false])("Owner detail preserves the internal response path for JSON=%s", async json => {
+    const id = "7614b2eb-6e0c-4a27-9162-e94fb377ebd4";
+    vi.spyOn(service, "handle").mockResolvedValue({ id, referenceNumber: "PRV-FIXTURE", status: "IN_REVIEW", submissionKey: id, kind: "ADDITIONAL", customerId: null, details: null, correction: null, contactEmail: null, response: "Synthetic response", outcome: null, createdAt: new Date(), dueAt: new Date(), resolvedAt: null, contentDeleteAt: null, receiptDeleteAt: null, contentPurgedAt: null, handledBy: null, holdCategory: null, holdReason: null, holdOwnerId: null, holdReviewAt: null });
+    const response = await privacyPostHandler("owner", () => service)(request("owner", { id, responseView: "detail", returnTo: "/admin/privacy?status=OPEN&page=2" }, json));
+    const destination = json ? (await response.json() as { url: string }).url : response.headers.get("location")!;
+    expect(response.status).toBe(json ? 200 : 303);
+    const url = new URL(destination, "http://127.0.0.1:3000");
+    expect(url.pathname).toBe(`/admin/privacy/${id}`);
+    expect(url.searchParams.get("returnTo")).toBe("/admin/privacy?status=OPEN&page=2");
+    expect(url.searchParams.get("status")).toBe("updated");
+    expect(response.headers.get("cache-control")).toBe("no-store");
+  });
+  it("builds Owner error responses from UUID and view while ignoring forged paths", async () => {
+    const id = "7614b2eb-6e0c-4a27-9162-e94fb377ebd4";
+    vi.spyOn(service, "handle").mockRejectedValue(appError("VALIDATION_ERROR", { details: { response: "Periksa tanggapan." } }));
+    const response = await privacyPostHandler("owner", () => service)(request("owner", { id, responseView: "detail", returnTo: "//evil.test/admin", responsePath: "https://evil.test", response: "PRIVATE-CONTENT" }, false));
+    const url = new URL(response.headers.get("location")!);
+    expect(url.pathname).toBe(`/admin/privacy/${id}`);
+    expect(url.searchParams.get("returnTo")).toBe("/admin/privacy");
+    expect(url.searchParams.get("form")).toBe(id);
+    expect(url.href).not.toContain("evil.test"); expect(url.href).not.toContain("PRIVATE-CONTENT");
+  });
   it("rejects foreign, missing origin and mismatched Host before reading data; forwarded headers do not confer trust", async () => {
     const factory = vi.fn(() => service);
     const invalidHeaders: Record<string, string>[] = [{ origin: "https://evil.test" }, { origin: "" }, { host: "localhost:3000" }, { host: "evil.test", "x-forwarded-host": "127.0.0.1:3000", "x-forwarded-proto": "http" }];

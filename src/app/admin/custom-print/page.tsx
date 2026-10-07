@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import Link from "next/link";
+import { AdminPageHeader } from "../admin-page-header";
+import { AdminListControls } from "../admin-list-controls";
+import { parseAdminListQuery, adminListQueryParams, type AdminListQuery } from "@/modules/admin/list-query";
+import { buildAdminPageHref, withAdminReturnTo } from "@/modules/admin/navigation";
 
 import { AdminDataUnavailableView, AdminPagination, AdminShell } from "@/components/niuva/admin-shell";
 import { AdminAccessView } from "@/app/admin/admin-access-view";
@@ -9,7 +13,7 @@ import { recordAdminPageFailure } from "@/app/admin/admin-page-failure";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import type { AdminAccess } from "@/lib/auth/admin";
 import type { FailureKind } from "@/lib/observability/logger";
-import { AdminOperationsService, parseAdminPage, type AdminCustomPrintRequestRow } from "@/modules/admin/operations";
+import { AdminOperationsService, type AdminCustomPrintRequestRow } from "@/modules/admin/operations";
 
 export const metadata: Metadata = {
   title: "Custom Print admin · Niuva",
@@ -24,14 +28,17 @@ const dateFormatter = new Intl.DateTimeFormat("id-ID", {
 
 export default async function AdminCustomPrintPage({
   searchParams,
-}: Readonly<{ searchParams: Promise<{ page?: string }> }>) {
+}: Readonly<{ searchParams: Promise<Readonly<Record<string, unknown>>> }>) {
   await connection();
-  const page = parseAdminPage((await searchParams).page);
+  const query = parseAdminListQuery("custom-print", await searchParams);
+  const page = query.page;
+  const queryParams = adminListQueryParams(query);
+  const returnTo = buildAdminPageHref("/admin/custom-print", queryParams, page);
   const gate = await loadAdminPageAccess();
   if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
   const { access } = gate;
 
-  const loaded = await loadCustomPrintRequests(access, page);
+  const loaded = await loadCustomPrintRequests(access, query);
   if (loaded.status === "unavailable") return <AdminDataUnavailableView active="custom-print" kind={loaded.kind} role={access.profile.role} title="Request custom print belum dapat dimuat" />;
   const result = loaded.data;
   const waitingReview = result.items.filter((item) => item.status === "SUBMITTED").length;
@@ -40,37 +47,32 @@ export default async function AdminCustomPrintPage({
   return (
       <AdminShell active="custom-print" role={result.role}>
         <main id="main-content" data-admin-surface="custom-print">
-          <header className="border-b border-border pb-6">
-            <p className="text-sm font-medium text-brand-700">Niuva / Operations</p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">Custom Print Review</h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
-              Baca request, status file privat, dan quote terakhir dari satu antrean operator. Detail file tidak pernah menjadi URL publik.
-            </p>
-          </header>
+          <AdminPageHeader title="Custom Print" description="Pantau request, review operator, dan quote. Buka detail untuk memahami satu request sebelum melanjutkan pekerjaan." breadcrumbs={[{ label: "Custom Print" }]} />
+          <AdminListControls area="custom-print" query={query} />
 
           <section aria-label="Ringkasan custom print" className="mt-6 grid gap-3 sm:grid-cols-3">
-            <SummaryCard label="Total request" value={String(result.items.length)} />
-            <SummaryCard label="Menunggu review" value={String(waitingReview)} />
-            <SummaryCard label="Quote siap" value={String(waitingQuote)} />
+            <SummaryCard label="Hasil filter" value={String(result.filteredTotal)} />
+            <SummaryCard label="Menunggu review di halaman ini" value={String(waitingReview)} />
+            <SummaryCard label="Quote siap di halaman ini" value={String(waitingQuote)} />
           </section>
 
           <section className="mt-8" aria-labelledby="custom-print-list-title">
             <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
               <div>
                 <h2 className="text-xl font-semibold" id="custom-print-list-title">Request terbaru</h2>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">Review detail dan pembuatan quote mengikuti permission serta service server.</p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">Buka detail untuk review dan quote; pengiriman order ditangani di Orders.</p>
               </div>
               <p className="text-sm text-muted-foreground" role="status">Dibaca {dateFormatter.format(result.generatedAt)}</p>
             </div>
 
             {result.items.length === 0 ? (
-              <div className="mt-6"><StatusNotice tone="info" title="Belum ada request custom print." description="Request baru akan muncul setelah upload privat dan submission berhasil diverifikasi server." /></div>
+              <div className="mt-6"><StatusNotice tone="info" title="Tidak ada record yang sesuai." description="Coba ubah pencarian atau filter. Record baru akan tampil setelah berhasil diajukan." /></div>
             ) : (
               <div className="mt-6 grid gap-4">
-                {result.items.map((item) => <RequestCard item={item} key={item.id} />)}
+                {result.items.map((item) => <RequestCard item={item} key={item.id} returnTo={returnTo} />)}
               </div>
             )}
-            <AdminPagination basePath="/admin/custom-print" hasNext={result.hasNext} page={result.page} />
+            <AdminPagination basePath="/admin/custom-print" hasNext={result.hasNext} page={result.page} query={queryParams} />
           </section>
         </main>
       </AdminShell>
@@ -81,11 +83,11 @@ type CustomPrintRequestsLoad =
   | { status: "ok"; data: Awaited<ReturnType<AdminOperationsService["listCustomPrintRequests"]>> }
   | { status: "unavailable"; kind: FailureKind };
 
-async function loadCustomPrintRequests(access: AdminAccess, page: number): Promise<CustomPrintRequestsLoad> {
+async function loadCustomPrintRequests(access: AdminAccess, query: AdminListQuery): Promise<CustomPrintRequestsLoad> {
   try {
-    return { status: "ok", data: await new AdminOperationsService({ authorize: async () => access }).listCustomPrintRequests({ page }) };
+    return { status: "ok", data: await new AdminOperationsService({ authorize: async () => access }).listCustomPrintRequests(query) };
   } catch (error) {
-    return { status: "unavailable", kind: recordAdminPageFailure(error, "page:/admin/custom-print", { op: "list", page: String(page) }) };
+    return { status: "unavailable", kind: recordAdminPageFailure(error, "page:/admin/custom-print", { op: "list", page: String(query.page) }) };
   }
 }
 
@@ -93,12 +95,12 @@ function SummaryCard({ label, value }: Readonly<{ label: string; value: string }
   return <div className="rounded-xl border border-border bg-card p-4"><p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></div>;
 }
 
-function RequestCard({ item }: Readonly<{ item: AdminCustomPrintRequestRow }>) {
+function RequestCard({ item, returnTo }: Readonly<{ item: AdminCustomPrintRequestRow; returnTo: string }>) {
   return (
     <article className="rounded-xl border border-border bg-card p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <Link className="font-mono text-sm font-semibold text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/admin/custom-print/${item.id}`}>{item.referenceNumber}</Link>
+          <Link className="font-mono text-sm font-semibold text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/custom-print/${item.id}`, returnTo)}>{item.referenceNumber}</Link>
           <h3 className="mt-2 text-lg font-semibold">{item.customerName}</h3>
           <p className="mt-1 text-sm text-muted-foreground">{item.customerEmail}</p>
         </div>
@@ -112,7 +114,7 @@ function RequestCard({ item }: Readonly<{ item: AdminCustomPrintRequestRow }>) {
         <div><dt className="text-xs text-muted-foreground">Mode intake</dt><dd className="mt-1 font-medium">{item.intakeMode === "REFERENCE_ONLY" ? "Baru punya referensi" : "Model siap"}</dd></div>
         <div><dt className="text-xs text-muted-foreground">Model 3D/CAD</dt><dd className="mt-1 font-medium">{item.modelReady ? "Terverifikasi" : "Belum tersedia"}</dd></div>
       </dl>
-      <p className="mt-5 text-xs leading-5 text-muted-foreground">Diperbarui {dateFormatter.format(item.updatedAt)}. <Link className="font-semibold text-brand-700 underline-offset-4 hover:underline" href={`/admin/custom-print/${item.id}`}>Buka detail dan aksi</Link>.</p>
+      <p className="mt-5 text-xs leading-5 text-muted-foreground">Diperbarui {dateFormatter.format(item.updatedAt)}. <Link className="font-semibold text-brand-700 underline-offset-4 hover:underline" href={withAdminReturnTo(`/admin/custom-print/${item.id}`, returnTo)}>Buka detail dan aksi</Link>.</p>
     </article>
   );
 }

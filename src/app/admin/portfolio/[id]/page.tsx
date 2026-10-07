@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import { AdminPageHeader } from "@/app/admin/admin-page-header";
+import { normalizeAdminReturnTo } from "@/modules/admin/navigation";
 import { z } from "zod";
 
 import { AdminAccessView } from "@/app/admin/admin-access-view";
@@ -17,7 +18,7 @@ import { isApprovedCardOnlyPortfolioProject } from "@/modules/portfolio/public-c
 export const metadata: Metadata = { title: "Portfolio detail admin · Niuva", robots: { follow: false, index: false } };
 const dateFormatter = new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Jakarta" });
 
-export default async function AdminPortfolioDetailPage({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
+export default async function AdminPortfolioDetailPage({ params, searchParams }: Readonly<{ params: Promise<{ id: string }>; searchParams?: Promise<Readonly<Record<string, unknown>>> }>) {
   await connection();
   const accessResult = await loadAdminPageAccess();
   if (accessResult.kind === "denied") return <AdminAccessView state={accessResult.state} />;
@@ -29,12 +30,13 @@ export default async function AdminPortfolioDetailPage({ params }: Readonly<{ pa
   if (result.status === "not-found") notFound();
   if (result.status === "unavailable") return <AdminDataUnavailableView active="portfolio" kind={result.kind} role={access.profile.role} title="Detail portfolio belum dapat dimuat" />;
   const project = result.record;
+  const returnTo = normalizeAdminReturnTo((await searchParams)?.returnTo, "/admin/portfolio");
   const isCardOnly = isApprovedCardOnlyPortfolioProject(project);
 
   return (
     <AdminShell active="portfolio" role={access.profile.role}>
       <main className="space-y-8" data-admin-surface="portfolio-detail" id="main-content">
-        <header className="border-b border-border pb-6"><Link className="text-sm font-medium text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href="/admin/portfolio">← Kembali ke Portfolio</Link><div className="mt-5 flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-medium uppercase tracking-[0.1em] text-brand-700">{project.serviceLabel}</p><h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-5xl">{project.title}</h1><p className="mt-2 font-mono text-sm text-muted-foreground">{project.slug}</p></div><div className="flex flex-wrap gap-2"><span className="rounded-md border border-brand-300 bg-brand-50 px-3 py-1.5 text-sm font-semibold text-brand-800">{project.isPublished ? "Published" : "Draft"}</span>{isCardOnly ? <span className="rounded-md border border-border bg-muted px-3 py-1.5 text-sm font-semibold text-muted-foreground">Card-only</span> : null}</div></div></header>
+        <AdminPageHeader title={project.title} description={`${project.slug} · ${project.isPublished ? "Published" : "Draft"}`} returnHref={returnTo} returnLabel="Kembali ke Portfolio" breadcrumbs={[{ label: "Portfolio", href: returnTo }, { label: project.title }]} />
 
         <section aria-labelledby="portfolio-editor-title" className="rounded-xl border border-border bg-card p-5 sm:p-6"><h2 className="text-xl font-semibold" id="portfolio-editor-title">Editor project proof</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">{isCardOnly ? "Ini adalah Selected Works yang disetujui Owner. Ringkasan dan metadata tetap wajib; media serta narasi studi kasus dapat ditambahkan kemudian." : "Lengkapi konteks proyek dan pastikan izin publikasi client sudah disetujui Owner sebelum publish. Featured project wajib memiliki narasi dan minimal satu media."}</p><AdminActionForm action={updatePortfolioAction} className="mt-5" submitLabel="Simpan project"><input name="projectId" type="hidden" value={project.id} /><div className="grid gap-4 sm:grid-cols-2"><Field label="Judul" name="title" required value={project.title} /><Field label="Slug" name="slug" required value={project.slug} /><Field label="Layanan" name="serviceLabel" required value={project.serviceLabel} /><Field label="Nama client (opsional)" name="clientName" value={project.clientName ?? ""} /></div><label className="grid gap-2 text-sm font-medium" htmlFor="portfolio-summary"><span>Ringkasan</span><textarea className={textareaClass} defaultValue={project.summary} id="portfolio-summary" name="summary" required rows={3} /></label><div className="grid gap-4 lg:grid-cols-3"><label className="grid gap-2 text-sm font-medium" htmlFor="portfolio-challenge"><span>Tantangan</span><textarea className={textareaClass} defaultValue={project.challenge} id="portfolio-challenge" name="challenge" required={!isCardOnly} rows={5} /></label><label className="grid gap-2 text-sm font-medium" htmlFor="portfolio-process"><span>Proses</span><textarea className={textareaClass} defaultValue={project.process} id="portfolio-process" name="process" required={!isCardOnly} rows={5} /></label><label className="grid gap-2 text-sm font-medium" htmlFor="portfolio-result"><span>Hasil</span><textarea className={textareaClass} defaultValue={project.result} id="portfolio-result" name="result" required={!isCardOnly} rows={5} /></label></div><div className="flex flex-wrap gap-5"><label className="inline-flex min-h-11 items-center gap-3 text-sm font-medium" htmlFor="portfolio-featured"><input className="size-5 accent-primary" defaultChecked={project.isFeatured} id="portfolio-featured" name="isFeatured" type="checkbox" /><span>Featured</span></label><label className="inline-flex min-h-11 items-center gap-3 text-sm font-medium" htmlFor="portfolio-published"><input className="size-5 accent-primary" defaultChecked={project.isPublished} id="portfolio-published" name="isPublished" type="checkbox" /><span>Publish ke situs publik</span></label></div></AdminActionForm></section>
 

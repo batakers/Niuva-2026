@@ -16,7 +16,9 @@ const runtime = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev
     NIUVA_NEXT_DIST_DIR: ".next-admin-auth-e2e",
     NIUVA_RUNTIME_MODE: "",
     NIUVA_DEPLOYMENT_TIER: "local-test",
-    NIUVA_CUSTOMER_AUTH_MOCK: "",
+    // Enables the existing loopback-only Customer privacy test capability.
+    // Admin sign-in, credentials, and mandatory TOTP use real Better Auth.
+    NIUVA_CUSTOMER_AUTH_MOCK: "true",
     GOOGLE_CLIENT_ID: "", GOOGLE_CLIENT_SECRET: "", GOOGLE_REDIRECT_URI: "",
     ADMIN_SMTP_HOST: "", ADMIN_SMTP_PORT: "", ADMIN_SMTP_USER: "", ADMIN_SMTP_PASSWORD: "", ADMIN_EMAIL_FROM: "",
     R2_ACCOUNT_ID: "", R2_ACCESS_KEY_ID: "", R2_SECRET_ACCESS_KEY: "", R2_ENDPOINT: "", R2_PRIVATE_BUCKET: "", R2_PUBLIC_BUCKET: "", CUSTOM_FILE_MAX_BYTES: "",

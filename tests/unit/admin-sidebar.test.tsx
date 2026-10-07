@@ -8,6 +8,18 @@ const preferenceKey = "niuva.admin.sidebar.v1";
 beforeEach(() => { window.localStorage.clear(); });
 
 describe("desktop Admin navigation preference", () => {
+  it("separates Owner operations from management", () => {
+    render(<AdminShell active="privacy" role="OWNER"><main>Privacy</main></AdminShell>);
+    const owner = screen.getByRole("navigation", { name: "Owner" });
+    expect(within(owner).getByRole("link", { name: "Privasi Customer" })).toHaveAttribute("aria-current", "page");
+    expect(within(owner).getByRole("link", { name: "Tambah Admin" })).toHaveAttribute("href", "/admin/admins/new");
+    expect(within(screen.getByRole("navigation", { name: "Kelola" })).queryByRole("link", { name: "Privasi Customer" })).not.toBeInTheDocument();
+  });
+  it("hides Owner navigation from Admin", () => {
+    render(<AdminShell active="orders" role="ADMIN"><main>Orders</main></AdminShell>);
+    expect(screen.queryByRole("navigation", { name: "Owner" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Tambah Admin" })).not.toBeInTheDocument();
+  });
   it("starts expanded and preserves accessible routes when collapsed", async () => {
     render(<AdminShell active="overview" role="OWNER"><main>Overview content</main></AdminShell>);
     const sidebar = screen.getByRole("complementary", { name: "Navigasi Admin" });

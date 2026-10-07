@@ -22,8 +22,10 @@ const mocks = vi.hoisted(() => {
     service: {
       getActivePricingRule: vi.fn(),
       getCustomPrintRequest: vi.fn(),
+      getCustomPrintLinkedOrders: vi.fn(),
       getInquiry: vi.fn(),
       getOrder: vi.fn(),
+      getOrderSourceRequests: vi.fn(),
       getPortfolio: vi.fn(),
       getProduct: vi.fn(),
       getStockHistory: vi.fn(),
@@ -96,6 +98,7 @@ vi.mock("@/app/admin/actions", () => ({
   saveCustomShippingAddressAction: vi.fn(),
   saveEstimatedCustomPackageAction: vi.fn(),
   sendQuoteAction: vi.fn(),
+  sendB2BQuoteAction: vi.fn(),
   transitionInquiryAction: vi.fn(),
   transitionOrderAction: vi.fn(),
   updatePortfolioAction: vi.fn(),
@@ -104,6 +107,8 @@ vi.mock("@/app/admin/actions", () => ({
 }));
 
 import AdminCustomPrintDetailPage from "@/app/admin/custom-print/[id]/page";
+import AdminCustomPrintReviewPage from "@/app/admin/custom-print/[id]/review/page";
+import AdminB2BProposalPage from "@/app/admin/inquiries/[id]/proposal/page";
 import AdminInquiryDetailPage from "@/app/admin/inquiries/[id]/page";
 import AdminOrderDetailPage from "@/app/admin/orders/[id]/page";
 import AdminPortfolioDetailPage from "@/app/admin/portfolio/[id]/page";
@@ -136,6 +141,8 @@ const cases: readonly PageCase[] = [
   { name: "orders/[id]", page: AdminOrderDetailPage, read: () => mocks.service.getOrder, props: simpleProps, validIds: { id: VALID_ID }, invalidIds: simpleInvalid },
   { name: "inquiries/[id]", page: AdminInquiryDetailPage, read: () => mocks.service.getInquiry, props: simpleProps, validIds: { id: VALID_ID }, invalidIds: simpleInvalid },
   { name: "custom-print/[id]", page: AdminCustomPrintDetailPage, read: () => mocks.service.getCustomPrintRequest, props: simpleProps, validIds: { id: VALID_ID }, invalidIds: simpleInvalid },
+  { name: "custom-print/[id]/review", page: AdminCustomPrintReviewPage, read: () => mocks.service.getCustomPrintRequest, props: simpleProps, validIds: { id: VALID_ID }, invalidIds: simpleInvalid },
+  { name: "inquiries/[id]/proposal", page: AdminB2BProposalPage, read: () => mocks.service.getInquiry, props: simpleProps, validIds: { id: VALID_ID }, invalidIds: simpleInvalid },
   { name: "portfolio/[id]", page: AdminPortfolioDetailPage, read: () => mocks.service.getPortfolio, props: simpleProps, validIds: { id: VALID_ID }, invalidIds: simpleInvalid },
   { name: "products/[id]", page: AdminProductDetailPage, read: () => mocks.service.getProduct, props: simpleProps, validIds: { id: VALID_ID }, invalidIds: simpleInvalid },
   {
@@ -176,6 +183,8 @@ beforeEach(() => {
   mocks.service.listPricingRules.mockResolvedValue([]);
   mocks.service.getActivePricingRule.mockResolvedValue(null);
   mocks.listQuotes.mockResolvedValue([]);
+  mocks.service.getCustomPrintLinkedOrders.mockResolvedValue([]);
+  mocks.service.getOrderSourceRequests.mockResolvedValue([]);
 });
 
 describe("order payment hold presentation", () => {
@@ -207,6 +216,22 @@ describe("order payment hold presentation", () => {
     render(await AdminOrderDetailPage({ params: Promise.resolve({ id: VALID_ID }) }));
     expect(screen.queryByRole("heading", { name: "Pembayaran perlu diperiksa" })).not.toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /^Ubah ke / }).length).toBeGreaterThan(0);
+  });
+
+  it("keeps filtered origin through related request links", async () => {
+    mocks.service.getOrder.mockResolvedValue({ ...order, orderType: "CUSTOM_PRINT", status: "IN_PRODUCTION" });
+    mocks.service.getOrderSourceRequests.mockResolvedValue([{ id: VALID_VARIANT_ID, referenceNumber: "CP-LINKED", status: "APPROVED" }]);
+    render(await AdminOrderDetailPage({ params: Promise.resolve({ id: VALID_ID }), searchParams: Promise.resolve({ returnTo: "/admin/queue?group=orders" }) }));
+    expect(screen.getByRole("link", { name: "Kembali ke Action Queue" })).toHaveAttribute("href", "/admin/queue?group=orders");
+    const href = screen.getByRole("link", { name: /CP-LINKED/ }).getAttribute("href");
+    expect(new URL(href!, "https://niuva.test").searchParams.get("returnTo")).toBe("/admin/queue?group=orders");
+  });
+
+  it("never exposes a manual paid transition for an unpaid order", async () => {
+    mocks.service.getOrder.mockResolvedValue({ ...order, status: "PENDING_PAYMENT", paidAt: null });
+    render(await AdminOrderDetailPage({ params: Promise.resolve({ id: VALID_ID }) }));
+    expect(screen.queryByRole("button", { name: "Ubah ke Paid" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Siapkan pembayaran shipping" })).not.toBeInTheDocument();
   });
 });
 

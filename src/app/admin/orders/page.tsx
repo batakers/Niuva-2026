@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import Link from "next/link";
+import { AdminPageHeader } from "../admin-page-header";
+import { AdminListControls } from "../admin-list-controls";
+import { parseAdminListQuery, adminListQueryParams, type AdminListQuery } from "@/modules/admin/list-query";
+import { buildAdminPageHref, withAdminReturnTo } from "@/modules/admin/navigation";
 
 import { AdminDataUnavailableView, AdminPagination, AdminShell } from "@/components/niuva/admin-shell";
 import { AdminAccessView } from "@/app/admin/admin-access-view";
@@ -9,7 +13,7 @@ import { recordAdminPageFailure } from "@/app/admin/admin-page-failure";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import type { AdminAccess } from "@/lib/auth/admin";
 import type { FailureKind } from "@/lib/observability/logger";
-import { AdminOperationsService, parseAdminPage, type AdminOrderRow } from "@/modules/admin/operations";
+import { AdminOperationsService, type AdminOrderRow } from "@/modules/admin/operations";
 
 export const metadata: Metadata = {
   title: "Orders admin · Niuva",
@@ -29,45 +33,43 @@ const currencyFormatter = new Intl.NumberFormat("id-ID", {
 
 export default async function AdminOrdersPage({
   searchParams,
-}: Readonly<{ searchParams: Promise<{ page?: string }> }>) {
+}: Readonly<{ searchParams: Promise<Readonly<Record<string, unknown>>> }>) {
   await connection();
-  const page = parseAdminPage((await searchParams).page);
+  const query = parseAdminListQuery("orders", await searchParams);
+  const page = query.page;
+  const queryParams = adminListQueryParams(query);
+  const returnTo = buildAdminPageHref("/admin/orders", queryParams, page);
   const gate = await loadAdminPageAccess();
   if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
   const { access } = gate;
 
-  const loaded = await loadOrders(access, page);
+  const loaded = await loadOrders(access, query);
   if (loaded.status === "unavailable") return <AdminDataUnavailableView active="orders" kind={loaded.kind} role={access.profile.role} title="Orders belum dapat dimuat" />;
   const result = loaded.data;
   return (
       <AdminShell active="orders" role={result.role}>
         <main id="main-content" data-admin-surface="orders">
-          <header className="border-b border-border pb-6">
-            <p className="text-sm font-medium text-brand-700">Niuva / Operations</p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">Orders</h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
-              Satu daftar untuk membedakan retail dan custom print, membaca status pembayaran, lalu menentukan tindakan fulfillment berikutnya.
-            </p>
-          </header>
+          <AdminPageHeader title="Orders" description="Cari order, pantau pembayaran, dan buka detail untuk tindakan fulfillment." breadcrumbs={[{ label: "Orders" }]} />
+          <AdminListControls area="orders" query={query} />
 
           <section aria-label="Ringkasan orders" className="mt-6 grid gap-3 sm:grid-cols-3">
-            <SummaryCard label="Total tampil" value={String(result.items.length)} />
-            <SummaryCard label="Retail" value={String(result.items.filter((item) => item.orderType === "RETAIL").length)} />
-            <SummaryCard label="Custom print" value={String(result.items.filter((item) => item.orderType === "CUSTOM_PRINT").length)} />
+            <SummaryCard label="Hasil filter" value={String(result.filteredTotal)} />
+            <SummaryCard label="Retail di halaman ini" value={String(result.items.filter((item) => item.orderType === "RETAIL").length)} />
+            <SummaryCard label="Custom print di halaman ini" value={String(result.items.filter((item) => item.orderType === "CUSTOM_PRINT").length)} />
           </section>
 
           <section className="mt-8" aria-labelledby="orders-list-title">
             <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
               <div>
                 <h2 className="text-xl font-semibold" id="orders-list-title">Order terbaru</h2>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">50 record per halaman dari database. Gunakan pagination untuk membuka record yang lebih lama; status tetap ditentukan service server.</p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">50 record per halaman. Filter berlaku untuk seluruh daftar; buka detail untuk melakukan tindakan.</p>
               </div>
               <p className="text-sm text-muted-foreground" role="status">Dibaca {dateFormatter.format(result.generatedAt)} · Halaman {result.page}</p>
             </div>
 
             {result.items.length === 0 ? (
               <div className="mt-6">
-                <StatusNotice tone="info" title="Belum ada order." description="Daftar akan menampilkan order setelah checkout server berhasil membuat record." />
+                <StatusNotice tone="info" title="Tidak ada record yang sesuai." description="Coba ubah pencarian atau filter. Record baru akan tampil setelah berhasil diajukan." />
               </div>
             ) : (
               <>
@@ -85,16 +87,16 @@ export default async function AdminOrdersPage({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {result.items.map((item) => <OrderTableRow item={item} key={item.id} />)}
+                      {result.items.map((item) => <OrderTableRow item={item} key={item.id} returnTo={returnTo} />)}
                     </tbody>
                   </table>
                 </div>
                 <div className="mt-6 grid gap-3 lg:hidden">
-                  {result.items.map((item) => <OrderCard item={item} key={item.id} />)}
+                  {result.items.map((item) => <OrderCard item={item} key={item.id} returnTo={returnTo} />)}
                 </div>
               </>
             )}
-            <AdminPagination basePath="/admin/orders" hasNext={result.hasNext} page={result.page} />
+            <AdminPagination basePath="/admin/orders" hasNext={result.hasNext} page={result.page} query={queryParams} />
           </section>
         </main>
       </AdminShell>
@@ -105,11 +107,11 @@ type OrdersLoad =
   | { status: "ok"; data: Awaited<ReturnType<AdminOperationsService["listOrders"]>> }
   | { status: "unavailable"; kind: FailureKind };
 
-async function loadOrders(access: AdminAccess, page: number): Promise<OrdersLoad> {
+async function loadOrders(access: AdminAccess, query: AdminListQuery): Promise<OrdersLoad> {
   try {
-    return { status: "ok", data: await new AdminOperationsService({ authorize: async () => access }).listOrders({ page }) };
+    return { status: "ok", data: await new AdminOperationsService({ authorize: async () => access }).listOrders(query) };
   } catch (error) {
-    return { status: "unavailable", kind: recordAdminPageFailure(error, "page:/admin/orders", { op: "list", page: String(page) }) };
+    return { status: "unavailable", kind: recordAdminPageFailure(error, "page:/admin/orders", { op: "list", page: String(query.page) }) };
   }
 }
 
@@ -122,11 +124,11 @@ function SummaryCard({ label, value }: Readonly<{ label: string; value: string }
   );
 }
 
-function OrderTableRow({ item }: Readonly<{ item: AdminOrderRow }>) {
+function OrderTableRow({ item, returnTo }: Readonly<{ item: AdminOrderRow; returnTo: string }>) {
   return (
     <tr>
       <th className="px-5 py-4 align-top font-medium" scope="row">
-        <Link className="block font-mono text-sm text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/admin/orders/${item.id}`}>{item.orderNumber}</Link>
+        <Link className="block font-mono text-sm text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/orders/${item.id}`, returnTo)}>{item.orderNumber}</Link>
         <span className="mt-1 block text-xs font-normal text-muted-foreground">{orderTypeLabel(item.orderType)}</span>
       </th>
       <td className="px-5 py-4 align-top">
@@ -141,12 +143,12 @@ function OrderTableRow({ item }: Readonly<{ item: AdminOrderRow }>) {
   );
 }
 
-function OrderCard({ item }: Readonly<{ item: AdminOrderRow }>) {
+function OrderCard({ item, returnTo }: Readonly<{ item: AdminOrderRow; returnTo: string }>) {
   return (
     <article className="rounded-xl border border-border bg-card p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Link className="font-mono text-sm font-semibold text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/admin/orders/${item.id}`}>{item.orderNumber}</Link>
+          <Link className="font-mono text-sm font-semibold text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/orders/${item.id}`, returnTo)}>{item.orderNumber}</Link>
           <p className="mt-1 text-xs text-muted-foreground">{orderTypeLabel(item.orderType)}</p>
         </div>
         <StatusText value={item.status} />

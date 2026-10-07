@@ -12,6 +12,7 @@ describe("AdminOverviewView", () => {
   it("renders an accessible empty operational overview without synthetic fallback", () => {
     const now = new Date("2026-09-25T17:10:00.000Z");
     const queue: ActionQueueResult = {
+      summary: { groups: { inquiries: 0, "custom-print": 0, orders: 0 }, exceptions: 0 },
       filteredTotal: 0,
       generatedAt: now,
       group: "all",
@@ -45,11 +46,13 @@ describe("AdminOverviewView", () => {
     expect(screen.getByText("pekerjaan terbuka")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /13 bulan/ })).toHaveAttribute("href", "/admin?range=13m");
     expect(screen.queryByText(/DEMO-/)).not.toBeInTheDocument();
+    expect(screen.getByText("Pengumpulan tayangan belum aktif. Data historis tetap ditampilkan bila tersedia.")).toBeInTheDocument();
   });
 
   it("keeps the selected range and queue available when analytics fails", () => {
     const now = new Date("2026-09-25T17:10:00.000Z");
     const queue: ActionQueueResult = {
+      summary: { groups: { inquiries: 0, "custom-print": 0, orders: 0 }, exceptions: 0 },
       filteredTotal: 0, generatedAt: now, group: "orders",
       items: [], priorityItems: [], totalOpen: 0,
     };
@@ -61,6 +64,8 @@ describe("AdminOverviewView", () => {
     expect(screen.getByRole("link", { name: "13 bulan" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "30 hari" })).toHaveAttribute("href", "/admin?group=orders");
     expect(screen.getAllByRole("alert")).toHaveLength(2);
+    expect(screen.queryByText("Belum ada data pada periode ini.")).not.toBeInTheDocument();
+    expect(screen.getAllByText("Data traffic belum tersedia.")).toHaveLength(5);
     expect(screen.getByText("pekerjaan terbuka")).toBeInTheDocument();
   });
 });

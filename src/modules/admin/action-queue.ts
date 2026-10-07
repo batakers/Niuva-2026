@@ -41,6 +41,7 @@ export type ActionQueueItem = Readonly<{
 }>;
 
 export type ActionQueueResult = Readonly<{
+  summary: Readonly<{ groups: Readonly<Record<Exclude<ActionQueueGroup, "all">, number>>; exceptions: number }>;
   filteredTotal: number;
   generatedAt: Date;
   group: ActionQueueGroup;
@@ -139,7 +140,11 @@ export function projectActionQueueSignals(
     group === "all" || actionQueueGroupForKind(item.kind) === group,
   );
 
+  const groups = { inquiries: 0, "custom-print": 0, orders: 0 };
+  for (const item of allItems) groups[actionQueueGroupForKind(item.kind)] += 1;
+
   return {
+    summary: { groups, exceptions: allItems.filter(item => item.attention === "EXCEPTION").length },
     filteredTotal: filteredItems.length,
     generatedAt,
     group,
@@ -177,11 +182,12 @@ function actionQueueHref(signal: ActionQueueSignal): string {
     case "B2B_INQUIRY":
       return `/admin/inquiries/${encodeURIComponent(signal.entityId)}`;
     case "CUSTOM_PRINT_REVIEW":
+      return `/admin/custom-print/${encodeURIComponent(signal.entityId)}/review?step=review`;
     case "QUOTE_PREPARATION":
-      return `/admin/custom-print/${encodeURIComponent(signal.entityId)}`;
+      return `/admin/custom-print/${encodeURIComponent(signal.entityId)}/review?step=quote`;
     case "QUOTE_SEND":
       return signal.targetId
-        ? `/admin/custom-print/${encodeURIComponent(signal.targetId)}`
+        ? `/admin/custom-print/${encodeURIComponent(signal.targetId)}/review?step=quote`
         : "/admin/custom-print";
     case "ORDER_PROCESSING":
     case "PACKAGE_MEASUREMENT":

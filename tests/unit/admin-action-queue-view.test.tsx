@@ -27,10 +27,16 @@ function item(overrides: Partial<ActionQueueItem> = {}): ActionQueueItem {
 }
 
 function result(items: readonly ActionQueueItem[]): ActionQueueResult {
-  return { filteredTotal: items.length, generatedAt, group: "all", items, priorityItems: items.slice(0, 5), totalOpen: items.length };
+  return { summary: { groups: { inquiries: items.filter(item => item.kind === "B2B_INQUIRY").length, "custom-print": items.filter(item => ["CUSTOM_PRINT_REVIEW", "QUOTE_PREPARATION", "QUOTE_SEND"].includes(item.kind)).length, orders: items.filter(item => !["B2B_INQUIRY", "CUSTOM_PRINT_REVIEW", "QUOTE_PREPARATION", "QUOTE_SEND"].includes(item.kind)).length }, exceptions: items.filter(item => item.attention === "EXCEPTION").length }, filteredTotal: items.length, generatedAt, group: "all", items, priorityItems: items.slice(0, 5), totalOpen: items.length };
 }
 
 describe("AdminActionQueueView", () => {
+  it("carries the selected inbox context on record links", () => {
+    render(<AdminActionQueueView role="ADMIN" result={{ ...result([item()]), group: "inquiries" }} />);
+    for (const link of screen.getAllByRole("link", { name: "BRF-NEW-1" })) {
+      expect(new URL(link.getAttribute("href")!, "https://niuva.test").searchParams.get("returnTo")).toBe("/admin/queue?group=inquiries");
+    }
+  });
   it("renders safe server-derived work rows with textual exception context", () => {
     render(
       <AdminActionQueueView
@@ -52,7 +58,7 @@ describe("AdminActionQueueView", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: "Action Queue" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Owner")).toBeInTheDocument();
+    expect(within(screen.getByRole("banner", { name: "Niuva Admin" })).getByText("Owner", { selector: "span" })).toBeInTheDocument();
     expect(screen.getByRole("list", { name: "Pekerjaan operasional Niuva" })).toBeInTheDocument();
     expect(screen.getAllByText("ORD-SHIP-1")).toHaveLength(2);
     expect(screen.getAllByText("Tinjau exception pengiriman")).toHaveLength(2);

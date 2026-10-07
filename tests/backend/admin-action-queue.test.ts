@@ -173,6 +173,7 @@ describe("ActionQueueService", () => {
 
     expect(result.items).toHaveLength(50);
     expect(result.totalOpen).toBe(56);
+    expect(result.summary).toEqual({ groups: { inquiries: 55, "custom-print": 1, orders: 0 }, exceptions: 0 });
     expect(result.filteredTotal).toBe(56);
     expect(result.priorityItems).toHaveLength(5);
     expect(result.items.filter((item) => item.kind === "QUOTE_PREPARATION")).toHaveLength(0);
@@ -189,7 +190,7 @@ describe("ActionQueueService", () => {
         ];
       } },
     }).list();
-    expect(result.items.find((item) => item.kind === "QUOTE_SEND")?.href).toBe("/admin/custom-print/request-1");
+    expect(result.items.find((item) => item.kind === "QUOTE_SEND")?.href).toBe("/admin/custom-print/request-1/review?step=quote");
     expect(result.items.find((item) => item.kind === "SHIPPING_EXCEPTION")?.href).toBe("/admin/orders/order-1");
   });
 
@@ -207,6 +208,7 @@ describe("ActionQueueService", () => {
     }).list("orders");
 
     expect(result.totalOpen).toBe(57);
+    expect(result.summary).toEqual({ groups: { inquiries: 55, "custom-print": 0, orders: 2 }, exceptions: 1 });
     expect(result.filteredTotal).toBe(2);
     expect(result.items.map((item) => item.kind)).toEqual(["SHIPPING_EXCEPTION", "ORDER_PROCESSING"]);
     expect(result.priorityItems[0].kind).toBe("SHIPPING_EXCEPTION");

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { privacyOwnerSchema, privacyRequestSchema } from "@/modules/customer-privacy/validation";
+import { privacyOwnerSchema, privacyRequestSchema, isPrivacyResponseUrl } from "@/modules/customer-privacy/validation";
 import { useHydrated } from "./use-hydrated";
 
 export type PrivacyField = Readonly<{ name: string; label: string; kind?: "textarea" | "select" | "checkbox" | "date"; required?: boolean; help?: string; defaultValue?: string; options?: readonly { value: string; label: string }[] }>;
@@ -48,7 +48,7 @@ export function PrivacyForm({ action, mode, fields = [], hidden = {}, label, pre
         const result: unknown = await response.json();
         if (!result || typeof result !== "object") throw new Error("invalid response");
         const record = result as Record<string, unknown>;
-        if (response.ok && typeof record.url === "string" && /^\/(account|admin)\/privacy\?/.test(record.url)) { window.location.assign(record.url); return; }
+        if (response.ok && isPrivacyResponseUrl(record.url)) { window.location.assign(record.url); return; }
         const fieldErrors: Record<string, string> = {};
         if (record.fields && typeof record.fields === "object") for (const [key, value] of Object.entries(record.fields)) if (typeof value === "string") fieldErrors[key] = value;
         setErrors(fieldErrors); focusError(fieldErrors); setMessage(typeof record.message === "string" ? record.message : "Tindakan gagal diproses.");

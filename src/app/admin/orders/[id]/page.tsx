@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { AdminPageHeader } from "@/app/admin/admin-page-header";
+import { normalizeAdminReturnTo, withAdminReturnTo } from "@/modules/admin/navigation";
 import { z } from "zod";
 
 import {
@@ -49,7 +51,8 @@ const currencyFormatter = new Intl.NumberFormat("id-ID", {
 
 export default async function AdminOrderDetailPage({
   params,
-}: Readonly<{ params: Promise<{ id: string }> }>) {
+  searchParams,
+}: Readonly<{ params: Promise<{ id: string }>; searchParams?: Promise<Readonly<Record<string, unknown>>> }>) {
   await connection();
   const pageAccess = await loadAdminPageAccess();
   if (pageAccess.kind === "denied") return <AdminAccessView state={pageAccess.state} />;
@@ -59,12 +62,18 @@ export default async function AdminOrderDetailPage({
   if (!z.uuid().safeParse(id).success) notFound();
 
   const service = new AdminOperationsService({ authorize: async () => access });
-  const result = await loadAdminRecordLogged("page:/admin/orders/[id]", () => service.getOrder(id), { id, op: "detail" });
+  const result = await loadAdminRecordLogged("page:/admin/orders/[id]", async () => {
+    const order = await service.getOrder(id);
+    if (!order) return null;
+    const sourceRequests = order.orderType === "CUSTOM_PRINT" ? await service.getOrderSourceRequests(id) : [];
+    return { order, sourceRequests };
+  }, { id, op: "detail" });
   if (result.status === "not-found") notFound();
   if (result.status === "unavailable") {
     return <AdminDataUnavailableView active="orders" kind={result.kind} role={access.profile.role} title="Detail order belum dapat dimuat" />;
   }
-  const order = result.record;
+  const { order, sourceRequests } = result.record;
+  const returnTo = normalizeAdminReturnTo((await searchParams)?.returnTo, "/admin/orders");
 
   const currentStatus = order.status as OrderStatus;
   const paymentHeld = order.paymentIssues.length > 0;
@@ -76,17 +85,7 @@ export default async function AdminOrderDetailPage({
   return (
     <AdminShell active="orders" role={access.profile.role}>
       <main className="space-y-8" data-admin-surface="order-detail" id="main-content">
-        <header className="border-b border-border pb-6">
-          <Link className="text-sm font-medium text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href="/admin/orders">← Kembali ke Orders</Link>
-          <div className="mt-5 flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="font-mono text-sm text-muted-foreground">{order.orderNumber}</p>
-              <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-5xl">Detail order</h1>
-              <p className="mt-3 text-sm text-muted-foreground">{order.orderType === "CUSTOM_PRINT" ? "Custom print" : "Retail"} · dibuat {dateFormatter.format(order.createdAt)}</p>
-            </div>
-            <span className="inline-flex rounded-md border border-brand-300 bg-brand-50 px-3 py-1.5 text-sm font-semibold text-brand-800">{formatStatus(order.status)}</span>
-          </div>
-        </header>
+        <AdminPageHeader title="Detail order" description={`${order.orderNumber} · ${formatStatus(order.status)} · ${order.orderType === "CUSTOM_PRINT" ? "Custom print" : "Retail"}`} returnHref={returnTo} returnLabel="Kembali ke Orders" breadcrumbs={[{ label: "Orders", href: returnTo }, { label: order.orderNumber }]} />
 
         {paymentHeld ? (
           <section aria-labelledby="payment-exception-title" className="rounded-xl border border-warning-border bg-warning-background p-5 text-warning sm:p-6">
@@ -103,11 +102,15 @@ export default async function AdminOrderDetailPage({
           </section>
         ) : null}
 
+        {order.orderType === "CUSTOM_PRINT" ? <section aria-labelledby="source-requests-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
+          <h2 className="text-xl font-semibold" id="source-requests-title">Request asal</h2>
+          {sourceRequests.length === 0 ? <p className="mt-3 text-sm text-muted-foreground">Tidak ada relasi request pada item order ini.</p> : <ul className="mt-3 grid gap-2">{sourceRequests.map(request => <li key={request.id}><Link className="inline-flex min-h-11 items-center text-sm font-semibold text-brand-700 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/custom-print/${request.id}`, returnTo)}>{request.referenceNumber} · {formatStatus(request.status)}</Link></li>)}</ul>}
+        </section> : null}
         <section aria-labelledby="order-actions-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
           <h2 className="text-xl font-semibold" id="order-actions-title">Aksi operasional</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Transition divalidasi oleh service server dan dicatat ke audit log. Pembatalan order berbayar tetap memerlukan workflow refund terpisah.</p>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Pilih tindakan sesuai tahap order. Pembatalan order berbayar tetap memerlukan tindak lanjut refund terpisah.</p>
           <div className="mt-5 flex flex-wrap gap-2">
-            {nextStatuses.length === 0 ? <p className="text-sm text-muted-foreground">Tidak ada transition yang tersedia dari status ini.</p> : nextStatuses.map((next) => (
+            {nextStatuses.length === 0 ? <p className="text-sm text-muted-foreground">Tidak ada tindakan status lanjutan dari tahap ini.</p> : nextStatuses.map((next) => (
               <AdminActionForm action={transitionOrderAction} confirmMessage={next === "CANCELLED" ? "Batalkan order ini? Status tidak dapat dibuka kembali otomatis." : undefined} key={next} submitLabel={`Ubah ke ${formatStatus(next)}`}>
                 <input name="orderId" type="hidden" value={order.id} />
                 <input name="nextStatus" type="hidden" value={next} />

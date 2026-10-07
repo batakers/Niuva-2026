@@ -2,19 +2,19 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 const state = vi.hoisted(() => ({ role: "OWNER", available: true }));
 vi.mock("next/server", () => ({ connection: async () => {} }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: () => undefined, refresh: () => undefined }) }));
+vi.mock("next/navigation", async original => ({ ...await original<typeof import("next/navigation")>(), useRouter: () => ({ replace: () => undefined, refresh: () => undefined }) }));
 vi.mock("@/lib/auth/admin", () => ({ requireAdmin: async () => ({ authUserId: "fixture-owner", profile: { id: "00000000-0000-4000-8000-000000000001", role: state.role, isActive: true } }) }));
 vi.mock("@/lib/db/prisma", () => ({ getPrismaClient: () => ({}) }));
 // The forbidden access view renders a client sign-out button that calls useClerk(); static rendering has no provider.
 
-vi.mock("@/modules/customer-privacy/core", async original => ({ ...await original<typeof import("@/modules/customer-privacy/core")>(), isCustomerPrivacyAvailable: () => state.available }));
+vi.mock("@/modules/customer-privacy/core", async original => ({ ...await original<typeof import("@/modules/customer-privacy/core")>(), isCustomerPrivacyAvailable: () => state.available, assertCustomerPrivacyAvailable: () => { if (!state.available) throw new Error("LOCAL_SETUP_DISABLED"); } }));
 import OwnerPrivacyPage from "@/app/admin/privacy/page";
 import PolicyPreview from "@/app/admin/privacy/policy/page";
 import { CustomerPrivacyRepository } from "@/modules/customer-privacy/repository";
 beforeEach(() => { state.role = "OWNER"; state.available = true; vi.restoreAllMocks(); });
 describe("Owner privacy server rendering", () => {
   it("renders Owner route and legal previews behind the same permission", async () => {
-    vi.spyOn(CustomerPrivacyRepository.prototype, "listOwner").mockResolvedValue([]);
+    vi.spyOn(CustomerPrivacyRepository.prototype, "listOwnerFiltered").mockResolvedValue({ items: [], hasNext: false, filteredTotal: 0, page: 1 });
     const page = renderToStaticMarkup(await OwnerPrivacyPage({ searchParams: Promise.resolve({}) }));
     expect(page).toContain("Privasi Customer"); expect(page).toContain("3×24 jam kalender"); expect(page).toContain("Tinjau draf Syarat Layanan");
     for (const document of ["terms", "privacy"]) {
@@ -24,13 +24,13 @@ describe("Owner privacy server rendering", () => {
     }
   });
   it("ordinary Admin never reads request rows or drafts", async () => {
-    state.role = "ADMIN"; const read = vi.spyOn(CustomerPrivacyRepository.prototype, "listOwner");
+    state.role = "ADMIN"; const read = vi.spyOn(CustomerPrivacyRepository.prototype, "listOwnerFiltered");
     expect(renderToStaticMarkup(await OwnerPrivacyPage({ searchParams: Promise.resolve({}) }))).not.toContain("Tinjau draf");
     expect(renderToStaticMarkup(await PolicyPreview({ searchParams: Promise.resolve({ document: "terms" }) }))).not.toContain("DRAFT-TERMS");
     expect(read).not.toHaveBeenCalled();
   });
   it("environment unavailable does not read Customer requests", async () => {
-    state.available = false; const read = vi.spyOn(CustomerPrivacyRepository.prototype, "listOwner");
+    state.available = false; const read = vi.spyOn(CustomerPrivacyRepository.prototype, "listOwnerFiltered");
     expect(renderToStaticMarkup(await OwnerPrivacyPage({ searchParams: Promise.resolve({}) }))).toContain("hanya aktif pada Development lokal"); expect(read).not.toHaveBeenCalled();
   });
 });

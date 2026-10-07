@@ -11,6 +11,7 @@ import { AdminSessionActions } from "./admin-session-actions";
 import type { FailureKind } from "@/lib/observability/logger";
 import { AdminSidebarLayout, AdminSidebarLink, AdminSidebarToggle } from "./admin-sidebar";
 import { adminDataUnavailableDescription } from "./system-state-copy";
+import { buildAdminPageHref, isAdminRootPath } from "@/modules/admin/navigation";
 
 export type AdminArea =
   | "overview"
@@ -39,6 +40,9 @@ const manageNavigation: readonly NavigationItem[] = [
   { area: "products", href: "/admin/products", label: "Products & Stock", icon: Package },
   { area: "portfolio", href: "/admin/portfolio", label: "Portfolio", icon: Images },
   { area: "pricing", href: "/admin/pricing", label: "Pricing Rules", icon: SlidersHorizontal },
+];
+
+const ownerNavigation: readonly NavigationItem[] = [
   { area: "privacy", href: "/admin/privacy", label: "Privasi Customer", icon: ShieldCheck },
   { area: "admins", href: "/admin/admins/new", label: "Tambah Admin", icon: UserRoundPlus },
 ];
@@ -59,7 +63,7 @@ export function AdminShell({
   productScreenProofStatus?: "approved-owner" | "pending-owner-review";
   role: AdminRole;
 }>) {
-  const currentArea = [...primaryNavigation, ...manageNavigation].find((item) => item.area === active);
+  const currentArea = [...primaryNavigation, ...manageNavigation, ...ownerNavigation].find((item) => item.area === active);
   return (
     <div
       className="min-h-dvh bg-neutral-100 text-foreground"
@@ -84,8 +88,14 @@ export function AdminShell({
               </nav>
               <p className="mt-8 px-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground group-data-[sidebar-collapsed=true]/admin-shell:sr-only">Kelola</p>
               <nav aria-label="Kelola" className="mt-2 grid gap-1 group-data-[sidebar-collapsed=true]/admin-shell:mt-8">
-                {manageNavigation.filter(item => !["privacy", "admins"].includes(item.area) || role === "OWNER").map((item) => <AdminDesktopNavLink active={active} item={item} key={item.area} />)}
+                {manageNavigation.map((item) => <AdminDesktopNavLink active={active} item={item} key={item.area} />)}
               </nav>
+              {role === "OWNER" ? <>
+                <p className="mt-8 px-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground group-data-[sidebar-collapsed=true]/admin-shell:sr-only">Owner</p>
+                <nav aria-label="Owner" className="mt-2 grid gap-1 group-data-[sidebar-collapsed=true]/admin-shell:mt-8">
+                  {ownerNavigation.map(item => <AdminDesktopNavLink active={active} item={item} key={item.area} />)}
+                </nav>
+              </> : null}
             </div>
             <div className="mt-4 flex shrink-0 justify-center border-t border-border pt-4">
               <AdminSidebarToggle />
@@ -116,9 +126,13 @@ export function AdminShell({
                 </nav>
                 <nav aria-label="Kelola mobile" className="grid gap-1">
                   <p className="px-3 text-xs font-semibold text-muted-foreground">Kelola</p>
-                  {manageNavigation.filter(item => !["privacy", "admins"].includes(item.area) || role === "OWNER").map((item) => <AdminNavLink active={active} item={item} key={item.area} />)}
+                  {manageNavigation.map((item) => <AdminNavLink active={active} item={item} key={item.area} />)}
                   <Link className="inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm text-brand-700 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href="/"><ExternalLink aria-hidden="true" className="size-4" />Situs publik</Link>
                 </nav>
+                {role === "OWNER" ? <nav aria-label="Owner mobile" className="grid gap-1">
+                  <p className="px-3 text-xs font-semibold text-muted-foreground">Owner</p>
+                  {ownerNavigation.map(item => <AdminNavLink active={active} item={item} key={item.area} />)}
+                </nav> : null}
               </div>
             </details>
           </header>
@@ -191,24 +205,30 @@ export function AdminPagination({
   basePath,
   hasNext,
   page,
+  query = {},
 }: Readonly<{
   basePath: string;
   hasNext: boolean;
   page: number;
+  query?: Readonly<Record<string, string>>;
 }>) {
   if (page === 1 && !hasNext) return null;
+
+  const pageHref = (targetPage: number) => isAdminRootPath(basePath)
+    ? buildAdminPageHref(basePath, query, targetPage)
+    : `${basePath}?${new URLSearchParams({ ...query, page: String(targetPage) })}`;
 
   return (
     <nav aria-label="Paginasi data admin" className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
       <p className="text-sm text-muted-foreground">Halaman {page}</p>
       <div className="flex flex-wrap gap-2">
         {page > 1 ? (
-          <Link className="inline-flex min-h-11 items-center rounded-lg border border-border bg-card px-4 text-sm font-semibold hover:border-brand-400 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`${basePath}?page=${page - 1}`}>
+          <Link className="inline-flex min-h-11 items-center rounded-lg border border-border bg-card px-4 text-sm font-semibold hover:border-brand-400 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={pageHref(page - 1)}>
             Sebelumnya
           </Link>
         ) : null}
         {hasNext ? (
-          <Link className="inline-flex min-h-11 items-center rounded-lg border border-brand-300 bg-brand-50 px-4 text-sm font-semibold text-brand-900 hover:border-brand-500 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`${basePath}?page=${page + 1}`}>
+          <Link className="inline-flex min-h-11 items-center rounded-lg border border-brand-300 bg-brand-50 px-4 text-sm font-semibold text-brand-900 hover:border-brand-500 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={pageHref(page + 1)}>
             Berikutnya
           </Link>
         ) : null}

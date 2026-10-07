@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import Link from "next/link";
+import { AdminPageHeader } from "@/app/admin/admin-page-header";
+import { normalizeAdminReturnTo, withAdminReturnTo } from "@/modules/admin/navigation";
 import { z } from "zod";
 
 import { AdminAccessView } from "@/app/admin/admin-access-view";
@@ -30,7 +32,7 @@ export default async function AdminStockHistoryPage({
   searchParams,
 }: Readonly<{
   params: Promise<{ id: string; variantId: string }>;
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<Readonly<Record<string, unknown>>>;
 }>) {
   await connection();
   const gate = await loadAdminPageAccess();
@@ -38,7 +40,9 @@ export default async function AdminStockHistoryPage({
   const { access } = gate;
   const { id, variantId } = await params;
   if (!z.uuid().safeParse(id).success || !z.uuid().safeParse(variantId).success) notFound();
-  const page = parseAdminPage((await searchParams).page);
+  const query = await searchParams;
+  const page = parseAdminPage(typeof query.page === "string" ? query.page : undefined);
+  const returnTo = normalizeAdminReturnTo(query.returnTo, "/admin/products");
   const service = new AdminOperationsService({ authorize: async () => access });
   const result = await loadAdminRecordLogged(
     "page:/admin/products/[id]/stock/[variantId]",
@@ -52,14 +56,7 @@ export default async function AdminStockHistoryPage({
   return (
     <AdminShell active="products" role={access.profile.role}>
       <main className="space-y-8" data-admin-surface="stock-history" id="main-content">
-        <header className="border-b border-border pb-6">
-          <Link className="text-sm font-semibold text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/admin/products/${history.product.id}`}>
-            ← Kembali ke {history.product.name}
-          </Link>
-          <h1 className="mt-5 text-3xl font-semibold tracking-tight sm:text-5xl">Riwayat stok varian</h1>
-          <p className="mt-2 text-sm text-muted-foreground">{history.variant.name} · {history.variant.sku}</p>
-          <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground">Riwayat lengkap tersedia sejak saldo pembuka saat migrasi. Transaksi sebelum titik itu tidak direkonstruksi.</p>
-        </header>
+        <AdminPageHeader title="Riwayat stok varian" description={`${history.variant.name} · ${history.variant.sku}. Riwayat tersedia sejak saldo pembuka saat migrasi.`} returnHref={withAdminReturnTo(`/admin/products/${id}`, returnTo)} returnLabel={`Kembali ke ${history.product.name}`} breadcrumbs={[{ label: "Products & Stock", href: returnTo }, { label: history.product.name, href: withAdminReturnTo(`/admin/products/${id}`, returnTo) }, { label: "Riwayat stok" }]} />
 
         <section aria-label="Saldo stok saat ini" className="grid gap-3 sm:grid-cols-3">
           <Balance label="Stok fisik" value={history.variant.stockOnHand} />
@@ -79,7 +76,7 @@ export default async function AdminStockHistoryPage({
                     <p className="font-semibold">{kindLabel[movement.kind] ?? movement.kind}</p>
                     <p className="mt-1 text-sm text-muted-foreground">{dateFormatter.format(movement.createdAt)} · {movement.adminName ?? "Sistem"}</p>
                     {movement.reason ? <p className="mt-2 break-words text-sm">Alasan: {movement.reason}</p> : null}
-                    {movement.orderId ? <Link className="mt-2 inline-block text-sm font-semibold text-brand-700 underline underline-offset-4 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/admin/orders/${movement.orderId}`}>Order {movement.orderNumber}</Link> : null}
+                    {movement.orderId ? <Link className="mt-2 inline-block text-sm font-semibold text-brand-700 underline underline-offset-4 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/orders/${movement.orderId}`, returnTo)}>Order {movement.orderNumber}</Link> : null}
                   </div>
                   <div className="text-left tabular-nums sm:text-right">
                     <p className="font-semibold">{movement.delta > 0 ? "+" : ""}{movement.delta} unit</p>
@@ -89,7 +86,7 @@ export default async function AdminStockHistoryPage({
               ))}
             </ol>
           )}
-          <AdminPagination basePath={`/admin/products/${id}/stock/${variantId}`} hasNext={history.hasNext} page={history.page} />
+          <AdminPagination basePath={`/admin/products/${id}/stock/${variantId}`} hasNext={history.hasNext} page={history.page} query={{ returnTo }} />
         </section>
       </main>
     </AdminShell>

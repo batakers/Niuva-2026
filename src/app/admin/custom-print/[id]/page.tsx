@@ -6,23 +6,16 @@ import { z } from "zod";
 
 import { AdminAccessView } from "@/app/admin/admin-access-view";
 import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
-import { loadAdminRecordLogged, recordAdminPageFailure } from "@/app/admin/admin-page-failure";
+import { loadCustomPrintPageData } from "./custom-print-page-data";
+import { AdminPageHeader } from "@/app/admin/admin-page-header";
+import { normalizeAdminReturnTo, withAdminReturnTo } from "@/modules/admin/navigation";
 import { AdminActionForm } from "@/app/admin/admin-action-form";
 import {
-  createQuoteDraftAction,
   downloadPrivateFileAction,
-  recordCustomPrintReviewAction,
-  publishCustomPrintEstimateAction,
-  saveEstimatedCustomPackageAction,
   reissueCustomPrintRequestTokenAction,
-  reissueQuoteTokenAction,
-  sendQuoteAction,
 } from "@/app/admin/actions";
 import { AdminDataUnavailableView, AdminShell } from "@/components/niuva/admin-shell";
-import { StatusNotice } from "@/components/niuva/status-notice";
-import type { AdminAccess } from "@/lib/auth/admin";
-import { AdminOperationsService } from "@/modules/admin/operations";
-import { CustomPrintEstimateService, isEstimateCurrent } from "@/modules/custom-print/estimate";
+import { isEstimateCurrent } from "@/modules/custom-print/estimate";
 import { readCustomerPreviewSnapshot } from "@/modules/custom-print/customer-preview";
 
 export const metadata: Metadata = {
@@ -33,38 +26,27 @@ export const metadata: Metadata = {
 const dateFormatter = new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Jakarta" });
 const currencyFormatter = new Intl.NumberFormat("id-ID", { currency: "IDR", maximumFractionDigits: 0, style: "currency" });
 
-export default async function AdminCustomPrintDetailPage({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
+export default async function AdminCustomPrintDetailPage({ params, searchParams }: Readonly<{ params: Promise<{ id: string }>; searchParams?: Promise<Readonly<Record<string, unknown>>> }>) {
   await connection();
   const gate = await loadAdminPageAccess();
   if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
   const { access } = gate;
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
-  const [requestResult, pricing, activeRule, latestEstimate] = await Promise.all([
-    loadAdminRecordLogged("page:/admin/custom-print/[id]", () => new AdminOperationsService({ authorize: async () => access }).getCustomPrintRequest(id), { id, op: "detail" }),
-    loadPricing(access),
-    loadActivePricing(access),
-    new CustomPrintEstimateService({ authorizeAdmin: async () => access }).latestForAdmin(id),
-  ]);
+  const requestResult = await loadCustomPrintPageData(id, access);
   if (requestResult.status === "not-found") notFound();
   if (requestResult.status === "unavailable") return <AdminDataUnavailableView active="custom-print" kind={requestResult.kind} role={access.profile.role} title="Detail custom print belum dapat dimuat" />;
-  const request = requestResult.record;
+  const { request, latestEstimate, linkedOrders } = requestResult.record;
+  const returnTo = normalizeAdminReturnTo((await searchParams)?.returnTo, "/admin/custom-print");
   const review = request.review;
   const estimateCurrent = latestEstimate !== null && isEstimateCurrent(latestEstimate.snapshot, review?.updatedAt);
-  const hasDraft = request.quotes.some((quote) => quote.status === "DRAFT");
   const referenceLink = safeHttpsUrl(request.referenceLink);
   const customerPreview = readCustomerPreviewSnapshot(request.customerPreviewSnapshot);
 
   return (
     <AdminShell active="custom-print" role={access.profile.role}>
       <main className="space-y-8" data-admin-surface="custom-print-detail" id="main-content">
-        <header className="border-b border-border pb-6">
-          <Link className="text-sm font-medium text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href="/admin/custom-print">← Kembali ke Custom Print</Link>
-          <div className="mt-5 flex flex-wrap items-start justify-between gap-4">
-            <div><p className="font-mono text-sm text-muted-foreground">{request.referenceNumber}</p><h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-5xl">Custom Print Review</h1><p className="mt-3 text-sm text-muted-foreground">{request.customerName} · diperbarui {dateFormatter.format(request.updatedAt)}</p></div>
-            <span className="inline-flex rounded-md border border-brand-300 bg-brand-50 px-3 py-1.5 text-sm font-semibold text-brand-800">{formatStatus(request.status)}</span>
-          </div>
-        </header>
+        <AdminPageHeader title="Custom Print Review" description={`${request.referenceNumber} · ${formatStatus(request.status)} · diperbarui ${dateFormatter.format(request.updatedAt)}`} returnHref={returnTo} returnLabel="Kembali ke Custom Print" breadcrumbs={[{ label: "Custom Print", href: returnTo }, { label: request.referenceNumber }]} actions={<Link className="inline-flex min-h-11 items-center rounded-lg bg-brand-700 px-4 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/custom-print/${id}/review?step=review`, returnTo)}>Buka Review & Quote</Link>} />
 
         <section aria-labelledby="request-summary-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
           <h2 className="text-xl font-semibold" id="request-summary-title">Request & file privat</h2>
@@ -106,121 +88,27 @@ export default async function AdminCustomPrintDetailPage({ params }: Readonly<{ 
             <label className="flex items-start gap-3 text-sm leading-6"><input className="mt-1 size-4" name="identityVerified" required type="checkbox" value="yes" /><span>Saya sudah memverifikasi identitas customer melalui proses manual.</span></label>
           </AdminActionForm></> : <p className="mt-2 text-sm leading-6 text-muted-foreground">Request ini dimiliki akun Customer. Status dan keputusan quote tersedia di akun; token lama tidak dapat diterbitkan ulang.</p>}
         </section>
-
-        <section aria-labelledby="review-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
-          <h2 className="text-xl font-semibold" id="review-title">Review slicer operator</h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">Catat berat dan durasi yang sudah diverifikasi. Quantity harus sama dengan request agar quote dapat dihitung server.</p>
-          {request.intakeMode === "REFERENCE_ONLY" && !request.modelReady ? (
-            <StatusNotice className="mt-5" tone="info" title="Menunggu model 3D/CAD terverifikasi" description="Foto dan link referensi membantu triase, tetapi belum dapat dislicing. Customer dapat menambahkan model lewat tautan privat pada request yang sama." />
-          ) : ["SUBMITTED", "UNDER_REVIEW", "QUOTE_READY", "QUOTE_SENT"].includes(request.status) ? (
-            <AdminActionForm action={recordCustomPrintReviewAction} className="mt-5" confirmMessage={review ? "Merevisi review akan menahan quote sampai estimasi versi baru terbit. Lanjutkan?" : undefined} submitLabel={review ? "Revisi review slicer" : "Simpan review slicer"}>
-              <input name="requestId" type="hidden" value={request.id} />
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Field label="Berat terverifikasi (g)" name="verifiedWeightG" required type="text" value={review?.verifiedWeightG ?? ""} />
-                <Field label="Durasi print (detik)" name="printDurationSeconds" required type="number" value={String(review?.printDurationSeconds ?? "")} />
-                {request.materialRequested === "NEEDS_RECOMMENDATION" && review === null
-                  ? <label className="grid gap-2 text-sm font-medium" htmlFor="materialCode"><span>Material code</span><select className={inputClass} defaultValue="" id="materialCode" name="materialCode" required><option disabled value="">Pilih setelah review</option><option value="PLA">PLA</option><option value="ABS">ABS</option></select></label>
-                  : <Field label="Material code" name="materialCode" required type="text" value={review?.materialCode ?? request.materialRequested.toUpperCase()} />}
-                <Field label="Quantity" name="quantity" required type="number" value={String(review?.quantity ?? request.quantity)} />
-              </div>
-              <label className="grid gap-2 text-sm font-medium" htmlFor="review-notes"><span>Catatan review</span><textarea className={textareaClass} defaultValue={review?.notes ?? ""} id="review-notes" name="notes" rows={3} /></label>
-              <label className="grid gap-2 text-sm font-medium" htmlFor="review-config"><span>Konfigurasi JSON <span className="font-normal text-muted-foreground">(opsional)</span></span><textarea className={`${textareaClass} font-mono`} defaultValue={review?.configurationJson ? JSON.stringify(review.configurationJson, null, 2) : ""} id="review-config" name="configurationJson" rows={4} /></label>
-            </AdminActionForm>
-          ) : (
-            <StatusNotice className="mt-5" tone="info" title="Review slicer terkunci" description="Request ini sudah melewati tahap review. Perubahan produksi harus mengikuti quote atau workflow status berikutnya; form review tidak lagi aktif." />
-          )}
+        <section aria-labelledby="review-summary-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
+          <h2 id="review-summary-title" className="text-xl font-semibold">Hasil review dan estimasi</h2>
+          {review ? <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-3"><Info label="Berat terverifikasi" value={`${review.verifiedWeightG} g`} /><Info label="Durasi print" value={`${review.printDurationSeconds} detik`} /><Info label="Material / jumlah" value={`${review.materialCode} · ${review.quantity} unit`} /></dl> : <p className="mt-3 text-sm text-muted-foreground">Belum ada review slicer operator.</p>}
+          {latestEstimate ? <p className="mt-4 text-sm">Estimasi v{latestEstimate.version}: {currencyFormatter.format(BigInt(latestEstimate.lowerRp.toFixed(0)))}–{currencyFormatter.format(BigInt(latestEstimate.upperRp.toFixed(0)))}{estimateCurrent ? "" : " · Review berubah; perlu estimasi baru."} Ongkir tidak termasuk.</p> : <p className="mt-3 text-sm text-muted-foreground">Belum ada estimasi terbit.</p>}
+          <Link className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-brand-700 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/custom-print/${id}/review?step=estimate`, returnTo)}>Buka tahap estimasi</Link>
         </section>
-
-        <section aria-labelledby="estimate-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
-          <h2 className="text-xl font-semibold" id="estimate-title">Estimasi produksi pascareview</h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">Operator menilai seluruh biaya pekerjaan sebelum kisaran 100%–130% dipublikasikan. Faktor awal ini belum terkalibrasi oleh riwayat pekerjaan. Ongkir tidak termasuk.</p>
-          {latestEstimate ? <p className="mt-4 rounded-lg border border-info-border bg-info-background p-4 text-sm font-medium text-info">Versi {latestEstimate.version} · {currencyFormatter.format(BigInt(latestEstimate.lowerRp.toFixed(0)))}–{currencyFormatter.format(BigInt(latestEstimate.upperRp.toFixed(0)))} · terbit {dateFormatter.format(latestEstimate.publishedAt)}{estimateCurrent ? "" : " · review berubah, terbitkan versi baru"}</p> : <StatusNotice className="mt-4" title="Perlu review" description="Belum ada estimasi terbit untuk request ini." tone="info" />}
-          {review && activeRule && request.modelReady && ["QUOTE_READY", "QUOTE_SENT"].includes(request.status) ? <AdminActionForm action={publishCustomPrintEstimateAction} className="mt-5" submitLabel={latestEstimate ? "Terbitkan versi estimasi baru" : "Terbitkan estimasi"}>
-            <input name="requestId" type="hidden" value={request.id} /><input name="pricingRuleVersionId" type="hidden" value={activeRule.id} />
-            <label className="grid gap-2 text-sm font-medium" htmlFor="estimate-filament"><span>Sumber filamen hasil penilaian</span><select className={inputClass} id="estimate-filament" name="filamentSource" required><option value="NIUVA_STOCK">Stok Niuva</option><option value="COMMUNAL">Komunal</option><option value="CUSTOMER_OWN">Punya customer</option></select></label>
-            <label className="grid gap-2 text-sm font-medium" htmlFor="estimate-extra"><span>Pos biaya tambahan bernama</span><textarea className={textareaClass} id="estimate-extra" name="additionalCostsText" placeholder={"Setup | 50000\nFinishing | 25000"} rows={3} /><span className="font-normal text-muted-foreground">Satu pos per baris: Nama | nominal IDR bulat positif. Isi semua pos yang berlaku.</span></label>
-            <label className="flex items-start gap-3 text-sm"><input className="mt-1 size-4" name="noAdditionalCosts" type="checkbox" value="yes" /><span>Saya sudah menilai pekerjaan ini dan menyatakan tidak ada pos biaya tambahan.</span></label>
-          </AdminActionForm> : <p className="mt-4 text-sm text-muted-foreground">Model, review slicer, dan pricing rule aktif diperlukan sebelum estimasi.</p>}
+        <section aria-labelledby="quote-history-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
+          <h2 id="quote-history-title" className="text-xl font-semibold">Riwayat quote</h2>
+          {request.quotes.length === 0 ? <p className="mt-3 text-sm text-muted-foreground">Belum ada quote untuk request ini.</p> : <ul className="mt-4 grid gap-3">{request.quotes.map(quote => <li className="rounded-lg border border-border p-4" key={quote.id}><p className="font-mono text-sm font-semibold">{quote.quoteNumber} · v{quote.version}</p><p className="mt-2 text-sm">{formatStatus(quote.status)} · {currencyFormatter.format(BigInt(quote.finalTotalRp))}</p></li>)}</ul>}
+          <Link className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-brand-700 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/custom-print/${id}/review?step=quote`, returnTo)}>Buka tahap quote</Link>
         </section>
-
-        <section aria-labelledby="rough-package-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
-          <h2 className="text-xl font-semibold" id="rough-package-title">Paket perkiraan untuk cek ongkir</h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">Customer dapat meminta rate testing dari akun setelah paket perkiraan terisi. Ongkir kasar tidak masuk quote, order, atau pembayaran.</p>
-          <AdminActionForm action={saveEstimatedCustomPackageAction} className="mt-5" submitLabel="Simpan paket perkiraan">
-            <input name="requestId" type="hidden" value={request.id} />
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5"><Field label="Berat (g)" name="weightGrams" required type="number" value="" /><Field label="Panjang (cm)" name="lengthCm" required type="number" value="" /><Field label="Lebar (cm)" name="widthCm" required type="number" value="" /><Field label="Tinggi (cm)" name="heightCm" required type="number" value="" /><Field label="Nilai paket (IDR)" name="declaredValueRp" required type="number" value="" /></div>
-          </AdminActionForm>
-        </section>
-
-        <section aria-labelledby="quote-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
-          <h2 className="text-xl font-semibold" id="quote-title">Quote & pricing rule</h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">Setelah diterbitkan, snapshot quote menjadi immutable. Tautan ini disiapkan untuk dibagikan manual melalui kanal customer yang disepakati; Niuva belum mengirimkannya otomatis.</p>
-          {pricing === null ? <StatusNotice className="mt-4" tone="warning" title="Pricing rules belum dapat dimuat" description="Draft quote ditahan sampai daftar aturan harga dapat dibaca oleh admin." /> : activeRule === null ? <StatusNotice className="mt-4" tone="warning" title="Belum ada pricing rule aktif" description="Owner harus mengaktifkan rule yang disetujui sebelum operator membuat quote." /> : <>
-            <div className="mt-4 rounded-lg border border-info-border bg-info-background p-4 text-sm"><p className="font-semibold text-info">Rule aktif: {activeRule.code} v{activeRule.version}</p><p className="mt-1 text-info">Quote akan menyimpan snapshot rule ini. Perubahan rule baru tidak mengubah quote yang sudah dikirim.</p></div>
-            {review && !hasDraft && estimateCurrent && (request.status === "QUOTE_READY" || request.status === "QUOTE_SENT") ? <AdminActionForm action={createQuoteDraftAction} className="mt-5" submitLabel="Buat draft quote"><input name="requestId" type="hidden" value={request.id} /><input name="pricingRuleVersionId" type="hidden" value={activeRule.id} /><div className="grid gap-4 sm:grid-cols-2"><label className="grid gap-2 text-sm font-medium" htmlFor="quote-material"><span>Material</span><select className={inputClass} defaultValue={review.materialCode} id="quote-material" name="materialCode"><option value="PLA">PLA</option><option value="ABS">ABS</option></select></label><label className="grid gap-2 text-sm font-medium" htmlFor="filament-source"><span>Sumber filamen sesuai estimasi</span><select className={inputClass} id="filament-source" name="filamentSource"><option value="NIUVA_STOCK">Stok Niuva</option><option value="COMMUNAL">Komunal</option><option value="CUSTOMER_OWN">Punya customer</option></select></label></div><label className="grid gap-2 text-sm font-medium" htmlFor="quote-config"><span>Konfigurasi tambahan <span className="font-normal text-muted-foreground">(opsional)</span></span><textarea className={`${textareaClass} font-mono`} id="quote-config" name="configurationJson" rows={3} /></label></AdminActionForm> : <p className="mt-5 text-sm text-muted-foreground">{hasDraft ? "Draft quote sudah tersedia. Kirim draft tersebut atau terbitkan versi baru setelah workflow sebelumnya selesai." : "Terbitkan estimasi setelah review slicer sebelum membuat draft."}</p>}
-          </>}
-
-          <div className="mt-6 border-t border-border pt-5">
-            {request.quotes.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Belum ada quote untuk request ini.</p>
-            ) : (
-              <div className="grid gap-3">
-                {request.quotes.map((quote) => (
-                  <article className="rounded-lg border border-border p-4" key={quote.id}>
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="font-mono text-sm font-semibold">{quote.quoteNumber} · v{quote.version}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          Dibuat {dateFormatter.format(quote.createdAt)}
-                          {quote.expiresAt ? ` · berlaku sampai ${dateFormatter.format(quote.expiresAt)}` : ""}
-                        </p>
-                      </div>
-                      <span className="rounded-md border border-brand-300 bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-800">
-                        {formatStatus(quote.status)}
-                      </span>
-                    </div>
-                    <p className="mt-4 text-lg font-semibold tabular-nums">
-                      {currencyFormatter.format(BigInt(quote.finalTotalRp))}
-                    </p>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {quote.status === "DRAFT" ? (
-                        <AdminActionForm
-                          action={sendQuoteAction}
-                          confirmMessage="Terbitkan quote ini dan siapkan tautan untuk dibagikan manual kepada customer? Snapshot quote menjadi immutable setelah diterbitkan."
-                          submitLabel="Terbitkan quote"
-                          successLinkLabel="Buka tautan quote"
-                        >
-                          <input name="quoteId" type="hidden" value={quote.id} />
-                          <input name="requestId" type="hidden" value={request.id} />
-                        </AdminActionForm>
-                      ) : quote.status === "SENT" && request.customerId === null ? (
-                        <AdminActionForm
-                          action={reissueQuoteTokenAction}
-                          confirmMessage="Terbitkan tautan quote baru dan cabut token lama?"
-                          submitLabel="Terbitkan ulang tautan"
-                        >
-                          <input name="quoteId" type="hidden" value={quote.id} />
-                          <input name="requestId" type="hidden" value={request.id} />
-                        </AdminActionForm>
-                      ) : null}
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
-          </div>
+        <section aria-labelledby="linked-orders-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
+          <h2 id="linked-orders-title" className="text-xl font-semibold">Order terkait</h2>
+          {linkedOrders.length === 0 ? <p className="mt-3 text-sm text-muted-foreground">Belum ada order dari quote request ini.</p> : <ul className="mt-3 grid gap-2">{linkedOrders.map(order => <li key={order.id}><Link className="inline-flex min-h-11 items-center text-sm font-semibold text-brand-700 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/orders/${order.id}`, returnTo)}>{order.orderNumber} · {formatStatus(order.status)}</Link></li>)}</ul>}
         </section>
       </main>
     </AdminShell>
   );
 }
 
-async function loadPricing(access: AdminAccess): Promise<Awaited<ReturnType<AdminOperationsService["listPricingRules"]>> | null> { try { return await new AdminOperationsService({ authorize: async () => access }).listPricingRules(); } catch (error) { recordAdminPageFailure(error, "page:/admin/custom-print/[id]", { op: "pricing-rules" }); return null; } }
-async function loadActivePricing(access: AdminAccess): Promise<Awaited<ReturnType<AdminOperationsService["getActivePricingRule"]>> | null> { try { return await new AdminOperationsService({ authorize: async () => access }).getActivePricingRule(); } catch (error) { recordAdminPageFailure(error, "page:/admin/custom-print/[id]", { op: "active-pricing-rule" }); return null; } }
 function Info({ label, value }: Readonly<{ label: string; value: string }>) { return <div><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-1 break-words font-medium">{value}</dd></div>; }
-function Field({ label, name, required, type, value }: Readonly<{ label: string; name: string; required?: boolean; type: string; value: string }>) { return <label className="grid gap-2 text-sm font-medium" htmlFor={name}><span>{label}</span><input className={inputClass} defaultValue={value} id={name} name={name} required={required} type={type} /></label>; }
 function formatStatus(value: string): string { return value.toLocaleLowerCase("id").split("_").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" "); }
 function formatBytes(value: string): string { const bytes = Number(value); if (!Number.isFinite(bytes)) return `${value} byte`; if (bytes < 1024) return `${bytes} byte`; if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KiB`; return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`; }
 function safeHttpsUrl(value: string | null): string | null { if (!value) return null; try { const url = new URL(value); return url.protocol === "https:" && !url.username && !url.password ? url.href : null; } catch { return null; } }
-const inputClass = "min-h-11 rounded-lg border border-input bg-background px-3 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm";
-const textareaClass = "min-h-24 rounded-lg border border-input bg-background px-3 py-2 text-base leading-6 outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm";

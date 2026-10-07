@@ -1,4 +1,20 @@
 import { z } from "zod";
+export const privacyStatusFilterSchema = z.enum(["OPEN", "IN_REVIEW", "RESOLVED"]);
+export type OwnerPrivacyListQuery = Readonly<{ page: number; status?: z.infer<typeof privacyStatusFilterSchema> }>;
+export function parseOwnerPrivacyListQuery(raw: Readonly<Record<string, unknown>>): OwnerPrivacyListQuery {
+  const numeric = typeof raw.page === "string" && /^\d+$/.test(raw.page) ? Number(raw.page) : raw.page;
+  const page = z.number().int().positive().safeParse(numeric);
+  const status = privacyStatusFilterSchema.safeParse(raw.status);
+  return { page: page.success ? Math.min(page.data, 10_000) : 1, ...(status.success ? { status: status.data } : {}) };
+}
+
+export function isPrivacyResponseUrl(value: unknown): value is string {
+  if (typeof value !== "string" || /[\\\u0000-\u001f\u007f#]/.test(value) || !value.includes("?")) return false;
+  const path = value.split("?", 1)[0];
+  if (path === "/account/privacy" || path === "/admin/privacy") return true;
+  if (!path.startsWith("/admin/privacy/")) return false;
+  return z.uuid().safeParse(path.slice("/admin/privacy/".length)).success;
+}
 export const privacyPurposeSchema = z.enum(["EXPORT", "CLOSE"]);
 export type PrivacyPurpose = z.infer<typeof privacyPurposeSchema>;
 export const privacyTokenSchema = z.string().regex(/^[A-Za-z0-9_-]{43}$/);

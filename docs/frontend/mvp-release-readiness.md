@@ -1,10 +1,10 @@
 # MVP release readiness — non-provider closure
 
-Snapshot: **2026-10-01** · checkout `codex/admin-navigation-docs-v03` · baseline
+Snapshot ledger awal: **2026-10-01** · checkout `codex/admin-navigation-docs-v03` · baseline
 `9605a96e936236b7e54b526f05e6b344747b24ab` sebagai sumber runtime; revisi sidebar/dokumentasi
 dikirim melalui branch di atas · scope lokal, non-provider dan non-production.
 Snapshot awal 2026-09-20 pada `a171686` dan addenda bertanggal tetap merupakan
-histori evidence masing-masing.
+histori evidence masing-masing. Evidence implementasi terbaru 7 Oktober 2026 dicatat pada addendum Admin Operations di Bagian 1.
 
 Dokumen ini adalah ledger status terkini untuk handoff. Checklist fase lama di
 `tasks/todo.md` dan `tasks/plan.md` tetap dipertahankan sebagai histori rencana;
@@ -29,6 +29,17 @@ sintetis (lihat status `ACCEPTED_LOOPBACK`, `ACCEPTED_LOOPBACK_SYNTHETIC`,
 keputusan). Tidak ada evidence di sini yang berasal dari staging, provider
 nyata, atau production. Penerimaan visual Owner, pemeriksaan perangkat fisik/AT,
 provider, dan production readiness tetap gate terpisah.
+
+### Admin Operations architecture — 2026-10-07
+
+Sumber: [laporan implementasi dan validasi](./admin-operations-implementation-2026-10-07.md) dan [approved plan / checklist selesai](../superpowers/plans/2026-10-07-admin-operations-architecture.md). Baseline PR #46 `5b8aaad05882389df83776a3800367b768b94850`; working tree `codex/admin-operations-architecture`. Belum di-commit/push atau diterapkan hosted/production.
+
+- Delapan batch selesai lokal: shared shell/context; tiga Core lists; B2B proposal workspace; MAKE review/estimate/quote workspace; Orders fulfillment/related request; Overview/Queue; management context; Owner Privacy detail.
+- Hanya tiga route produk baru: `/admin/inquiries/[id]/proposal`, `/admin/custom-print/[id]/review`, `/admin/privacy/[id]`. Existing URL tetap; business/domain policy dan fitur deferred tidak diperluas.
+- Gate akhir: **1.331 unit/component**, **582 backend**, **149 integration**, **11 browser Admin**, **111 browser publik lulus + 5 expected skip**; lint, strict typecheck, Prisma validation dan production build PASS.
+- Browser Admin memakai Better Auth dan MFA sungguhan; Customer mock tetap test/loopback. B2B return halaman kedua, Orders/MAKE related links, dan Privacy JS/native POST/303 tercakup. Automatic Admin loading boundary dipindahkan dengan content utuh agar HTML final tersedia tanpa JavaScript; initial navigation menunggu data lengkap.
+- Validation memakai database test terisolasi baru port 55439 setelah cluster test lama gagal sebelum tes aplikasi dengan PostgreSQL `58P01`. Dua puluh migration existing lulus pada database baru; cluster lama tidak direset/diperbaiki manual. Backend final memakai satu worker setelah timeout optimizer pada run parallel.
+- **78 capture sintetis local/actual-route**, termasuk desktop/mobile dan transisi shared shell. Penerimaan visual Owner untuk composition baru **belum tercatat**; walkthrough Owner BUY/MAKE/DEVELOP serta perangkat fisik/AT, provider/staging dan production tetap terpisah.
 
 ### Baseline Tahap 0 — 2026-10-04
 
