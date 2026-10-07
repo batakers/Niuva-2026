@@ -61,7 +61,7 @@ proses yang diberikan operator dan tidak memuat/mengubah `.env.local`. Dibutuhka
 | --- | --- |
 | `DATABASE_URL` | PostgreSQL loopback dengan nama bertanda dev/development |
 | `ADMIN_AUTH_EMAIL` | Email identitas Admin yang dipilih Owner |
-| `ADMIN_AUTH_PASSWORD` | Password awal, 12–128 karakter; jangan masukkan ke chat/history shell |
+| `ADMIN_AUTH_PASSWORD` | Password awal, 8–15 karakter sesuai keputusan Owner 7 Oktober 2026; jangan masukkan ke chat/history shell |
 | `ADMIN_PROFILE_DISPLAY_NAME` | Nama sesuai identitas yang dipilih Owner |
 | `ADMIN_PROFILE_ROLE` | `OWNER` atau `ADMIN`, tanpa default |
 | `ADMIN_PROFILE_CONFIRMATION` | `I_UNDERSTAND_NON_PRODUCTION` |
@@ -73,9 +73,17 @@ direview. Akun baru belum diverifikasi email dan belum MFA; login pertama mengir
 verifikasi lewat SMTP, kemudian pengguna menyiapkan authenticator. Tidak ada akun
 contoh Owner yang dibuat otomatis untuk development biasa.
 
+Credential Better Auth memakai `providerId=credential` dan `accountId` yang sama
+dengan ID auth user. Email tidak boleh dipakai sebagai `accountId`. Tes integrasi
+provisioning harus menjalankan login, verifikasi email, dan enrollment TOTP melalui
+engine asli agar mapping yang tidak dapat dipakai login terdeteksi.
+
 ## Konfigurasi runtime dan email
 
 `BETTER_AUTH_URL` adalah origin aplikasi yang tepat; production harus HTTPS.
+Route auth memakai origin ini untuk menormalisasi URL listener internal Next,
+termasuk port, sebelum pemeriksaan request dan callback. Header `Origin` browser
+tetap diperiksa dan header forwarding tidak menentukan origin tepercaya.
 `BETTER_AUTH_SECRET` wajib sekurangnya 32 karakter, dibuat acak dan disimpan sebagai
 secret hosting. Ia juga diperlukan untuk mendekripsi faktor kedua. **Jangan
 merotasi secret sembarangan**: perubahan key membutuhkan prosedur migrasi key/MFA
@@ -105,9 +113,25 @@ tersendiri ketika hosting/email lokal dipilih.
 - Suite Admin positif adalah perintah tambahan; workflow existing menjalankan
   integrasi engine dan E2E existing. Tidak ada perubahan deployment/workflow.
 
-UI autentikasi baru belum mendapat penerimaan visual Owner atau pengujian perangkat
-fisik/assistive technology. Pengujian lokal tidak membuktikan deliverability SMTP,
-kecocokan hosting final, ataupun kesiapan production.
+Penerimaan visual dan akses Owner lokal mengikuti bukti bertanggal di bawah.
+Pengujian perangkat fisik/assistive technology, kecocokan hosting final, dan
+kesiapan production tetap terpisah dari pengujian lokal.
+
+### Bukti lokal 7 Oktober 2026
+
+Owner menerima hasil redesign halaman login dalam sesi lokal. Satu akun Owner
+development kemudian dibuat, dihubungkan ke profil operasional yang sudah ada,
+memverifikasi email melalui Gmail SMTP TLS, dan menyelesaikan authenticator.
+Owner mengonfirmasi keberhasilan akses `/admin` pada loopback. Bukti ini terbatas
+pada akun dan sesi lokal tersebut; penerimaan visual login dicatat sebagai
+`ACCEPTED_OWNER_LOCAL`. Halaman Tambah Admin telah diperiksa dengan fixture
+desktop/mobile, tetapi penerimaan visual Owner untuk halaman itu belum dicatat.
+
+Email undangan nyata kepada Admin tambahan, provider lain, perangkat fisik/AT,
+hosting, dan production tetap membutuhkan bukti tersendiri. Password, sandi
+aplikasi Gmail, secret engine, QR, kode pemulihan, dan konfigurasi akun lokal tidak
+disertakan dalam Git. Pemeriksaan sintetis harus memakai database test dan actor
+terpisah agar tidak menghabiskan bucket throttle akun Owner yang sedang digunakan.
 
 Pemeriksaan `pnpm audit --prod` pada 6 Oktober 2026 masih menandai advisori pada
 versi dependency baseline: Next.js 16.3.2, Sharp 0.35.3, Undici 8.10.0,
@@ -121,9 +145,10 @@ ini tidak mengubah versi framework atau patch yang sudah ada.
 
 ## Aktivasi dan rollback
 
-Belum ada deployment, penggunaan credential production, DNS, pengiriman email
-nyata, atau provisioning 10 akun nyata dalam pekerjaan ini. Setelah hosting dan
-SMTP final tersedia, Owner menetapkan email/nama/role serta mapping ID lama.
+Belum ada deployment, penggunaan credential production, perubahan DNS, atau
+provisioning 10 akun nyata dalam pekerjaan ini. Satu Owner development dan email
+verifikasi lokal telah dibuktikan pada 7 Oktober 2026. Setelah hosting dan SMTP
+final tersedia, Owner menetapkan email/nama/role serta mapping ID lama.
 Provisioning pada hosted/production perlu prosedur operator yang direview dan
 persetujuan eksplisit; script development tidak boleh dipaksa melewati guard.
 Kehilangan authenticator dan seluruh kode pemulihan juga memerlukan verifikasi

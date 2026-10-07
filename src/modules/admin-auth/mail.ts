@@ -2,7 +2,7 @@ import nodemailer from "nodemailer";
 import { parseServerEnvironment } from "@/lib/env/server";
 import { appError } from "@/modules/shared/errors";
 
-export type AdminAuthMail = Readonly<{ to: string; url: string; kind: "reset" | "verify" }>;
+export type AdminAuthMail = Readonly<{ to: string; url: string; kind: "reset" | "verify" | "invite" }>;
 
 export function isAdminSmtpConfigured(): boolean {
   const env = parseServerEnvironment();
@@ -23,8 +23,10 @@ export async function sendAdminAuthMail(mail: AdminAuthMail): Promise<void> {
     logger: false,
     debug: false,
   });
+  const subject = mail.kind === "invite" ? "Undangan menjadi Admin NIUVA" : mail.kind === "reset" ? "Atur ulang password Admin NIUVA" : "Verifikasi email Admin NIUVA";
+  const instructions = mail.kind === "invite" ? "Owner NIUVA mengundang Anda sebagai Admin. Buat password Anda sendiri melalui tautan berikut, lalu masuk dan aktifkan authenticator sebelum mengakses Dashboard." : `${mail.kind === "reset" ? "Atur ulang password" : "Verifikasi alamat email"} akun Admin NIUVA melalui tautan berikut.`;
   try {
-    await transport.sendMail({ from: env.ADMIN_EMAIL_FROM, to: mail.to, subject: mail.kind === "reset" ? "Atur ulang password Admin NIUVA" : "Verifikasi email Admin NIUVA", text: `${mail.kind === "reset" ? "Atur ulang password" : "Verifikasi alamat email"} akun Admin NIUVA melalui tautan berikut. Tautan berlaku selama 30 menit.\n\n${mail.url}\n\nJika Anda tidak meminta ini, abaikan email ini.` });
+    await transport.sendMail({ from: env.ADMIN_EMAIL_FROM, to: mail.to, subject, text: `${instructions} Tautan berlaku selama 30 menit dan hanya dapat digunakan sekali.\n\n${mail.url}\n\nJika Anda tidak meminta ini, abaikan email ini.` });
   } catch {
     throw appError("AUTH_UNAVAILABLE");
   } finally {

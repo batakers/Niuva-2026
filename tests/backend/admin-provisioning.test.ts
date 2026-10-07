@@ -8,17 +8,22 @@ import {
 
 const validEnvironment = {
   ADMIN_AUTH_EMAIL: "owner@example.test",
-  ADMIN_AUTH_PASSWORD: "Test-only-password-29!",
+  ADMIN_AUTH_PASSWORD: "Test-only-29!",
   ADMIN_PROFILE_CONFIRMATION: "I_UNDERSTAND_NON_PRODUCTION",
   ADMIN_PROFILE_DISPLAY_NAME: "Owner Smoke",
   ADMIN_PROFILE_ROLE: "OWNER",
 };
 
 describe("guarded AdminProfile provisioning", () => {
+  it.each([7, 8, 15, 16])("enforces Owner-approved password boundary at %i characters", length => {
+    const parse = () => parseAdminProvisioningInput({ ...validEnvironment, ADMIN_AUTH_PASSWORD: "a".repeat(length) });
+    if (length === 8 || length === 15) expect(parse().password).toHaveLength(length);
+    else expect(parse).toThrow();
+  });
   it("requires an explicit identity, role, display name, and non-production confirmation", () => {
     expect(parseAdminProvisioningInput(validEnvironment)).toEqual({
       email: "owner@example.test",
-      password: "Test-only-password-29!",
+      password: "Test-only-29!",
       confirmation: "I_UNDERSTAND_NON_PRODUCTION",
       displayName: "Owner Smoke",
       role: "OWNER",

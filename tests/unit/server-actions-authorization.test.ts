@@ -118,8 +118,12 @@ const PRODUCT = { productId: UUID };
 const PROJECT = { projectId: UUID };
 
 const ADMIN_ACTIONS_FILE = "src/app/admin/actions.ts";
+const ADMIN_INVITATION_ACTIONS_FILE = "src/app/admin/admins/new/actions.ts";
 
 const MANIFEST: Readonly<Record<string, Readonly<Record<string, ManifestEntry>>>> = {
+  [ADMIN_INVITATION_ACTIONS_FILE]: {
+    inviteAdminAction: { permission: "ADMIN_PROFILE_MANAGE", fields: { displayName: "Synthetic invited Admin", email: "fixture@example.test" } },
+  },
   [ADMIN_ACTIONS_FILE]: {
     transitionOrderAction: {
       permission: "ORDER_FULFILL",
@@ -332,6 +336,7 @@ function scanActionFiles(): Record<string, string[]> {
 
 const loaders: Readonly<Record<string, () => Promise<Record<string, unknown>>>> = {
   [ADMIN_ACTIONS_FILE]: () => import("@/app/admin/actions"),
+  [ADMIN_INVITATION_ACTIONS_FILE]: () => import("@/app/admin/admins/new/actions"),
 };
 
 // ---------------------------------------------------------------------------

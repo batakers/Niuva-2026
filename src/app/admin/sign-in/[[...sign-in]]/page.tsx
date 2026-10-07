@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
-import NiuvaLogo from "@/components/ui/NiuvaLogo";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { AdminAuthForm } from "@/components/niuva/admin-auth-form";
+import { typographySystemTokens } from "@/design/typography";
 import { getServerCapabilities } from "@/lib/env/server";
 
 export const metadata: Metadata = { title: "Admin sign-in · Niuva", robots: { follow: false, index: false } };
@@ -12,25 +14,32 @@ export default async function AdminSignInPage({ searchParams = Promise.resolve({
   const resetToken = query.flow === "reset" && typeof query.token === "string" && query.token.length <= 512 ? query.token : "";
   let configured = false;
   try { const capabilities = getServerCapabilities(); configured = capabilities.adminAuth && capabilities.database; } catch { configured = false; }
+  const focusClass = "rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
   return (
-    <main className="min-h-dvh bg-neutral-100 px-4 py-6 text-foreground sm:px-8 sm:py-10" id="main-content">
-      <div className="mx-auto w-full max-w-5xl rounded-xl border border-border bg-card p-5 sm:p-8">
-        <header className="flex flex-wrap items-center gap-3 border-b border-border pb-5">
-          <Link className="inline-flex rounded-lg bg-neutral-900 px-2 py-2 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href="/"><NiuvaLogo className="h-6 w-auto" priority /></Link>
-          <span className="text-sm font-medium text-muted-foreground">Operations / Admin</span>
-        </header>
-        <div className="mt-8 grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-12">
-          <section className="min-w-0 space-y-6 lg:pt-4">
-            <p className="text-sm font-medium text-muted-foreground">Ruang operasional</p>
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Masuk untuk mengelola operasi Niuva.</h1>
-            <p className="max-w-xl text-base leading-7 text-muted-foreground">Gunakan akun Owner atau Admin yang sudah diaktifkan. Halaman ini tidak menyediakan registrasi admin publik.</p>
-            <p className="text-sm leading-6 text-muted-foreground">Akses Dashboard memerlukan password dan kode dari aplikasi authenticator Anda.</p>
-          </section>
-          <section aria-label="Form masuk Admin" className="min-w-0 rounded-xl border border-border bg-background p-5 sm:p-8">
-            {configured ? <AdminAuthForm resetToken={resetToken} verified={query.verified === "1"} passwordChanged={query.flow === "password-updated"}/> : <div role="alert" className="space-y-3"><p className="text-sm font-semibold">Login Admin belum tersedia.</p><p className="text-sm leading-6 text-muted-foreground">Konfigurasi autentikasi Admin belum lengkap. Hubungi Owner untuk menyiapkan layanan login.</p></div>}
-          </section>
+    <div className="flex min-h-dvh flex-col bg-background text-foreground" data-product-screen-proof-status="pending-owner-review">
+      <header className="px-5 py-4 sm:px-8 sm:py-6">
+        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4">
+          <Link aria-label="Niuva, kembali ke halaman utama" className={`${focusClass} inline-flex min-h-11 shrink-0 items-center`} href="/">
+            <Image alt="" className="h-6 w-auto sm:h-7" height={346} priority src="/assets/brand/niuva-logo-horizontal-light.svg" width={1831} />
+          </Link>
+          <Link className={`${focusClass} inline-flex min-h-11 items-center gap-2 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:text-foreground motion-reduce:transition-none`} href="/">
+            <ArrowLeft aria-hidden="true" className="size-4 shrink-0" />
+            Kembali ke situs
+          </Link>
         </div>
-      </div>
-    </main>
+      </header>
+      <main className="flex flex-1 items-center justify-center px-5 py-8 outline-none sm:px-8 sm:py-12" id="main-content" tabIndex={-1}>
+        <div className="w-full min-w-0 max-w-md">
+          <section aria-label="Form masuk Admin" className="min-w-0 rounded-xl border border-border bg-card p-6 sm:p-8">
+            {configured ? <AdminAuthForm resetToken={resetToken} invitation={query.flow === "invite"} verified={query.verified === "1"} passwordChanged={query.flow === "password-updated"}/> : <div role="alert" className="space-y-3"><h1 className={typographySystemTokens.subheading.className}>Login Admin belum tersedia.</h1><p className="text-base leading-6 text-muted-foreground">Konfigurasi autentikasi Admin belum lengkap. Hubungi Owner untuk menyiapkan layanan login.</p></div>}
+            <div className="mt-8 flex items-start gap-3 border-t border-border pt-6">
+              <ShieldCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-primary" />
+              <p className="text-sm leading-6 text-muted-foreground">Akses Dashboard memerlukan password dan kode dari aplikasi authenticator Anda.</p>
+            </div>
+          </section>
+          <p className="mt-5 text-center text-xs leading-5 text-muted-foreground">Halaman ini tidak menyediakan registrasi admin publik.</p>
+        </div>
+      </main>
+    </div>
   );
 }

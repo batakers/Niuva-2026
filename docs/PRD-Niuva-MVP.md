@@ -1692,3 +1692,22 @@ Pemilihan/aktivasi provider, deployment, dan provisioning akun nyata tetap
 memerlukan instruksi Owner tersendiri. Implementasi dan batas aktivasi dicatat
 pada [runbook migrasi](backend/admin-auth-migration.md). Addendum ini menggantikan
 ketentuan terdahulu yang menetapkan Clerk sebagai engine sesi Owner/Admin.
+
+## Addendum 7 Oktober 2026 — Tambah Admin melalui undangan Owner
+
+Owner menyetujui halaman Tambah Admin di Dashboard dengan undangan email;
+penerima membuat password sendiri. Hanya Owner aktif dengan MFA terverifikasi
+yang dapat mengundang. Akun hasil undangan selalu berperan Admin, dengan
+authenticator wajib sebelum mengakses Dashboard. Registrasi Admin publik tetap
+tidak tersedia; pembuatan Owner tetap melalui provisioning tepercaya.
+
+Undangan berlaku 30 menit dan sekali pakai. Undangan gagal kirim atau kedaluwarsa
+dapat dikirim ulang melalui halaman yang sama. Email yang sudah memiliki akun
+tidak diubah. SMTP yang belum lengkap harus terlihat sebagai kondisi belum
+tersedia, tanpa klaim pengiriman berhasil. Kontrak dan batas validasi lokal ada
+pada [runbook undangan Admin](backend/admin-invitations.md).
+
+Owner menetapkan panjang password Admin baru menjadi **8–15 karakter** pada
+7 Oktober 2026. Aturan ini berlaku pada provisioning Owner/Admin, aktivasi
+undangan, reset, dan perubahan password. Password existing tetap dapat digunakan
+untuk login dan verifikasi ulang; authenticator wajib tetap berlaku.

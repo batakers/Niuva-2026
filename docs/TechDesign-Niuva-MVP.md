@@ -2349,3 +2349,29 @@ memakai SMTP lokal dengan TLS, terpisah dari capability email Customer.
 Kontrak lengkap, schema, konfigurasi, provisioning development yang dibatasi,
 verifikasi dan rollback ada pada [runbook migrasi](backend/admin-auth-migration.md).
 Tidak ada aktivasi provider/deployment production dalam implementasi lokal.
+
+## Addendum 7 Oktober 2026 — Undangan Admin privat
+
+`/admin/admins/new` dan Server Action/service undangan memakai permission
+`ADMIN_PROFILE_MANAGE` yang hanya dimiliki Owner. Tabel baru `admin_invitations`
+menyimpan hash SHA-256 token acak 256 bit, pengundang, masa berlaku 30 menit,
+serta status pengiriman/aktivasi. SMTP Admin mengirim token melalui fragment URL;
+form menghapus fragment dari history setelah membacanya.
+
+Endpoint `POST /api/admin/auth/accept-invitation` hanya menerima undangan sah,
+dengan origin check, body JSON dibatasi 4 KiB, Zod, dan throttle per actor.
+Transaksi dengan penguncian per email memastikan hanya satu identitas terbentuk;
+pengundang masih harus Owner aktif saat aktivasi. Password di-hash menggunakan
+Better Auth. Verifikasi kepemilikan tautan mengaktifkan email serta profil Admin,
+tanpa membuat sesi atau melewati enrollment/verifikasi TOTP. Tidak ada endpoint
+signup bebas. Rincian kegagalan, retry, migrasi dan batas operasional mengikuti
+[runbook undangan Admin](backend/admin-invitations.md).
+
+Keputusan Owner 7 Oktober 2026 menetapkan password baru Admin 8–15 karakter.
+`src/modules/admin-auth/password-policy.ts` menjadi sumber batas untuk Better
+Auth, Zod pada provisioning/undangan/reset/change, serta input UI. Input password
+saat ini tetap menerima credential existing hingga 128 karakter agar perubahan
+policy tidak mengunci login, enrollment TOTP, atau regenerasi kode pemulihan.
+Hook sebelum reset/change/set password di Better Auth tetap memvalidasi password
+baru 8–15; batas library untuk pemeriksaan password existing tidak membuka batas
+baru melalui API internal.
