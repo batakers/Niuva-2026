@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AdminPageHeader } from "../admin-page-header";
 import { connection } from "next/server";
 
 import { AdminAccessView } from "@/app/admin/admin-access-view";
@@ -62,16 +63,7 @@ export default async function AdminPricingPage({
   return (
     <AdminShell active="pricing" role={result.role}>
       <main className="min-w-0 space-y-8" data-admin-surface="pricing" id="main-content">
-        <header className="border-b border-border pb-6">
-          <p className="text-sm font-medium text-brand-700">Niuva / Operations</p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">
-            Pricing Rules
-          </h1>
-          <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
-            Subview live untuk versi aturan harga. Definisi dan status dibaca dari
-            database; aktivasi hanya tersedia bagi Owner di development lokal.
-          </p>
-        </header>
+        <AdminPageHeader title="Pricing Rules" description="Periksa versi aturan harga dan rule aktif. Aktivasi tetap tersedia bagi Owner di development lokal." breadcrumbs={[{ label: "Pricing Rules" }]} />
 
         <section
           aria-label="Ringkasan pricing rules"

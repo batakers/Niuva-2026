@@ -7,7 +7,7 @@ import path from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import AdminLoading from "@/app/admin/loading";
+import AdminLoading from "@/app/admin/admin-loading";
 
 type ExclusionReason = "X1-404-contract" | "X2-redirect-guard" | "X3-root-wraps-admin" | "X4-non-product";
 
@@ -50,7 +50,8 @@ const exclusionReasons: readonly ExclusionReason[] = [
   "X4-non-product",
 ];
 
-// SHA-256 of src/app/admin/loading.tsx with CRLF normalized to LF (R6.9: unchanged).
+// The skeleton stays unchanged after moving it out of the streaming convention.
+// SHA-256 with CRLF normalized to LF (original R6.9 reference).
 const ADMIN_LOADING_SHA256 = "14ce07247f76014b97602c26d3c5779338d2e2465e5027dddd1051f2bd6838ea";
 
 function isAdminPath(relative: string): boolean {
@@ -124,10 +125,14 @@ describe("loading coverage manifest (Property 11)", () => {
   });
 });
 
-describe("admin loading state is unchanged (R6.9)", () => {
+describe("admin loading skeleton is preserved for native-form navigation", () => {
   it("matches the reference hash of its current content", () => {
-    const content = readFileSync(path.join(appDir, "admin", "loading.tsx"), "utf8").replace(/\r\n/g, "\n");
+    const content = readFileSync(path.join(appDir, "admin", "admin-loading.tsx"), "utf8").replace(/\r\n/g, "\n");
     expect(createHash("sha256").update(content).digest("hex")).toBe(ADMIN_LOADING_SHA256);
+  });
+
+  it("does not hide native Admin forms behind a JavaScript streaming boundary", () => {
+    expect(existsSync(path.join(appDir, "admin", "loading.tsx"))).toBe(false);
   });
 
   it("still renders main#main-content with role=status", () => {

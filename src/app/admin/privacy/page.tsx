@@ -2,43 +2,50 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import Link from "next/link";
 import { loadAdminPageAccess } from "@/app/admin/admin-page-access";
+import { recordAdminPageFailure } from "@/app/admin/admin-page-failure";
 import { AdminAccessView } from "@/app/admin/admin-access-view";
-import { AdminShell, AdminPagination } from "@/components/niuva/admin-shell";
-import { PrivacyForm, type PrivacyField } from "@/components/niuva/privacy-form";
-import { CustomerPrivacyRepository } from "@/modules/customer-privacy/repository";
+import { AdminPageHeader } from "@/app/admin/admin-page-header";
+import { AdminShell, AdminPagination, AdminDataUnavailableView } from "@/components/niuva/admin-shell";
+import { CustomerPrivacyService } from "@/modules/customer-privacy/service";
 import { isCustomerPrivacyAvailable, privacyKindLabels, privacyStatusLabels } from "@/modules/customer-privacy/core";
+import { parseOwnerPrivacyListQuery, privacyStatusFilterSchema } from "@/modules/customer-privacy/validation";
 import { PRIVACY_ERROR_MESSAGES } from "@/modules/customer-privacy/handler";
-import { typographySystemTokens as type } from "@/design/typography";
+import { buildAdminPageHref, withAdminReturnTo } from "@/modules/admin/navigation";
 export const metadata: Metadata = { title: "Privasi Customer · Owner Niuva", robots: { index: false, follow: false } };
 const date = new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Jakarta" });
-export default async function OwnerPrivacyPage({ searchParams }: { searchParams: Promise<{ page?: string; error?: string; status?: string; fields?: string; form?: string }> }) {
+export default async function OwnerPrivacyPage({ searchParams }: Readonly<{ searchParams: Promise<Readonly<Record<string, unknown>>> }>) {
   await connection();
   const gate = await loadAdminPageAccess({ permission: "PRIVACY_REQUEST_MANAGE" });
   if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
   const access = gate.access;
-  const query = await searchParams;
-  const initialErrors: Record<string, string> = {};
-  try { const parsed: unknown = JSON.parse(query.fields ?? "{}"); if (parsed && typeof parsed === "object") for (const [key, value] of Object.entries(parsed)) if (["response", "outcome", "fulfilled", "holdReason", "holdReviewAt", "correctedDisplayName"].includes(key) && typeof value === "string") initialErrors[key] = value; } catch { /* Ignore malformed status. */ }
-  const page = /^\d+$/.test(query.page ?? "") ? Math.max(1, Math.min(10000, Number(query.page))) : 1;
+  const raw = await searchParams;
+  const query = parseOwnerPrivacyListQuery(raw);
   const available = isCustomerPrivacyAvailable();
-  const rows = available ? await new CustomerPrivacyRepository().listOwner(page) : [];
+  const queryParams: Readonly<Record<string, string>> = query.status ? { status: query.status } : {};
+  const returnTo = buildAdminPageHref("/admin/privacy", queryParams, query.page);
+  let result: Awaited<ReturnType<CustomerPrivacyService["listOwner"]>> | null = null;
+  if (available) {
+    try { result = await new CustomerPrivacyService().listOwner(access, query); }
+    catch (error) { return <AdminDataUnavailableView active="privacy" role={access.profile.role} kind={recordAdminPageFailure(error, "page:/admin/privacy", { op: "list", page: String(query.page) })} title="Permintaan privasi belum dapat dimuat" />; }
+  }
   const now = new Date();
-  return <AdminShell active="privacy" role={access.profile.role}><main id="main-content" className="space-y-8"><header className="border-b border-border pb-6"><p className="text-sm font-medium text-primary">Niuva / Owner</p><h1 className={`mt-3 ${type.heading.className}`}>Privasi Customer</h1><p className="mt-4 max-w-2xl leading-7 text-muted-foreground">Tangani akses dan koreksi data dalam 3×24 jam kalender dari penerimaan awal. Perubahan status tidak memulai ulang tenggat. Setelah akun ditutup, gunakan kontak terverifikasi untuk tindak lanjut.</p><div className="mt-4 flex flex-wrap gap-4"><Link href="/admin/privacy/policy?document=terms" className="inline-flex min-h-11 items-center text-primary underline">Tinjau draf Syarat Layanan</Link><Link href="/admin/privacy/policy?document=privacy" className="inline-flex min-h-11 items-center text-primary underline">Tinjau draf Kebijakan Privasi</Link></div></header>
-    {query.error ? <p role="alert" className="rounded-lg border border-destructive p-4">{PRIVACY_ERROR_MESSAGES[query.error] ?? "Tindakan gagal diproses."}</p> : null}{query.status === "updated" ? <p role="status" className="rounded-lg border border-border p-4">Tanggapan dan hasil tersimpan.</p> : null}
-    {!available ? <p>Pusat privasi hanya aktif pada Development lokal dan test yang diizinkan.</p> : rows.length === 0 ? <p className="text-muted-foreground">Belum ada permintaan privasi.</p> : <section className="space-y-6" aria-label="Permintaan privasi">{rows.slice(0, 20).map(row => {
-      const held = Boolean(row.holdCategory && row.holdReviewAt && row.holdReviewAt > now);
-      const fields: PrivacyField[] = [
-        ...(row.kind === "CORRECTION" && row.customerId && !row.resolvedAt ? [{ name: "correctedDisplayName", label: "Nama profil setelah koreksi (opsional)", help: "Hanya nama profil aktif. Email login dan transaksi historis tidak berubah." }, { name: "applyProfileCorrection", kind: "checkbox" as const, label: "Terapkan nama profil ini setelah memeriksa koreksi dan menyampaikan hasil kepada Customer." }] : []),
-        { name: "status", kind: "select", label: "Status penanganan", defaultValue: row.status === "OPEN" ? "IN_REVIEW" : row.status, options: [{ value: "IN_REVIEW", label: "Sedang ditangani" }, { value: "RESOLVED", label: "Selesai" }] },
-        { name: "response", kind: "textarea", label: "Tanggapan untuk Customer", required: true, defaultValue: row.response ?? "", help: "Berikan data aman atau hasil koreksi. Jangan menyalin token, kredensial, maupun data pihak lain." },
-        { name: "outcome", kind: "select", label: "Hasil penanganan", defaultValue: row.outcome ?? "", options: [{ value: "", label: "Belum selesai" }, { value: "FULFILLED", label: "Dipenuhi" }, { value: "PARTIALLY_FULFILLED", label: "Dipenuhi sebagian, alasan dijelaskan" }, { value: "REFUSED", label: "Ditolak, dasar dijelaskan" }] },
-        { name: "fulfilled", kind: "checkbox", label: "Hasil sudah disampaikan dan tindakan benar-benar selesai, termasuk tindak lanjut melalui email bila akun ditutup.", defaultValue: row.resolvedAt ? "on" : "" },
-        { name: "holdCategory", kind: "select", label: "Kategori penahanan data", defaultValue: row.holdCategory ?? "", options: [{ value: "", label: "Tidak ditahan / lepaskan penahanan" }, { value: "DISPUTE", label: "Sengketa" }, { value: "SECURITY_INCIDENT", label: "Insiden keamanan" }, { value: "LEGAL_OBLIGATION", label: "Kewajiban hukum" }] },
-        { name: "holdReason", kind: "textarea", label: "Alasan penahanan", defaultValue: row.holdReason ?? "", help: "Alasan spesifik wajib untuk penahanan; Anda tercatat sebagai penanggung jawab." },
-        { name: "holdReviewAt", kind: "date", label: "Tanggal peninjauan penahanan (WIB)", defaultValue: row.holdReviewAt ? new Date(row.holdReviewAt.getTime() + 7 * 3600000).toISOString().slice(0, 10) : "", help: "Maksimal 30 hari ke depan. Tanpa perpanjangan terdokumentasi, penahanan berakhir dan cleanup mengikuti tenggat asli." },
-      ];
-      return <article key={row.id} className="min-w-0 rounded-xl border border-border bg-card p-5 sm:p-8"><header className="flex flex-wrap justify-between gap-4"><div className="min-w-0"><h2 className={type.subheading.className}>{privacyKindLabels[row.kind]}</h2><p className="mt-2 break-all text-sm">{row.referenceNumber}</p></div><p className="text-sm font-medium">{privacyStatusLabels[row.status]}{!row.resolvedAt && row.dueAt <= now ? " · Tenggat terlewati" : ""}</p></header><dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2"><div><dt className="text-muted-foreground">Diterima</dt><dd>{date.format(row.createdAt)} WIB</dd></div><div><dt className="text-muted-foreground">Tenggat awal</dt><dd>{date.format(row.dueAt)} WIB</dd></div><div><dt className="text-muted-foreground">Kontak terverifikasi</dt><dd className="break-all">{row.contactEmail ?? "Sudah dibersihkan"}</dd></div><div><dt className="text-muted-foreground">Akun</dt><dd>{row.customerId ? "Masih tertaut" : "Ditutup atau retensi akun selesai"}</dd></div></dl>{row.details ? <p className="mt-5 whitespace-pre-wrap break-words leading-7">{row.details}</p> : null}{row.correction ? <p className="mt-3 whitespace-pre-wrap break-words leading-7">Koreksi yang diminta: {row.correction}</p> : null}{row.holdCategory ? <p className="mt-4 text-sm font-medium">{held ? "Ditahan sampai peninjauan" : "Penahanan jatuh tempo"}: {row.holdCategory} · {row.holdReviewAt ? date.format(row.holdReviewAt) : "Tanggal belum tersedia"}</p> : null}{row.contentPurgedAt ? <p className="mt-5 text-muted-foreground">Isi telah dibersihkan; hanya bukti minimum sampai batas 30 hari.</p> : <details open={query.form === row.id} className="mt-6 border-t border-border pt-4"><summary className="min-h-11 cursor-pointer py-3 font-medium focus-visible:outline-2 focus-visible:outline-ring">Tanggapi dan catat hasil / penahanan</summary><div className="mt-4 max-w-2xl"><PrivacyForm prefix={`owner-${row.id}`} mode="owner" action="/api/admin/privacy" hidden={{ id: row.id }} initialErrors={query.form === row.id ? initialErrors : {}} fields={fields} label="Simpan penanganan" /></div></details>}</article>;
-    })}</section>}
-    <AdminPagination basePath="/admin/privacy" page={page} hasNext={rows.length > 20} />
+  return <AdminShell active="privacy" role={access.profile.role}><main id="main-content" data-admin-surface="privacy-list" className="space-y-6">
+    <AdminPageHeader title="Privasi Customer" description="Pantau permintaan akses dan koreksi data. Tenggat tetap 3×24 jam kalender dari penerimaan awal." breadcrumbs={[{ label: "Privasi Customer" }]} actions={<><Link href="/admin/privacy/policy?document=terms" className="inline-flex min-h-11 items-center rounded-lg border border-border bg-card px-3 text-sm font-medium text-brand-700 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">Tinjau draf Syarat Layanan</Link><Link href="/admin/privacy/policy?document=privacy" className="inline-flex min-h-11 items-center rounded-lg border border-border bg-card px-3 text-sm font-medium text-brand-700 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">Tinjau draf Kebijakan Privasi</Link></>} />
+    {typeof raw.error === "string" ? <p role="alert" className="rounded-lg border border-destructive-border p-4 text-destructive">{PRIVACY_ERROR_MESSAGES[raw.error] ?? "Tindakan gagal diproses."}</p> : null}
+    {raw.status === "updated" ? <p role="status" className="rounded-lg border border-border bg-card p-4">Tanggapan dan hasil tersimpan.</p> : null}
+    {!available ? <p>Pusat privasi hanya aktif pada Development lokal dan test yang diizinkan.</p> : result ? <>
+      <form action="/admin/privacy" method="get" aria-label="Filter privasi" className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card p-4">
+        <label className="grid gap-2 text-sm font-medium" htmlFor="privacy-status-filter">Status<select id="privacy-status-filter" name="status" defaultValue={query.status ?? ""} className="min-h-11 rounded-lg border border-input bg-background px-3 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"><option value="">Semua status</option>{privacyStatusFilterSchema.options.map(status => <option key={status} value={status}>{privacyStatusLabels[status]}</option>)}</select></label>
+        <button className="min-h-11 rounded-lg bg-brand-700 px-4 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" type="submit">Terapkan</button>
+        <Link className="inline-flex min-h-11 items-center text-sm font-semibold text-brand-700 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href="/admin/privacy">Reset filter</Link>
+      </form>
+      <p className="text-sm text-muted-foreground">{result.filteredTotal} hasil filter · halaman {result.page}</p>
+      {result.items.length === 0 ? <p className="rounded-xl border border-dashed border-border bg-card p-6 text-sm text-muted-foreground" role="status">Belum ada permintaan privasi pada filter ini.</p> : <section aria-label="Permintaan privasi" className="grid gap-3">{result.items.map(row => <article className="min-w-0 rounded-xl border border-border bg-card p-5" key={row.id}>
+        <div className="flex flex-wrap items-start justify-between gap-3"><div><Link className="inline-flex min-h-11 items-center break-all font-mono text-sm font-semibold text-brand-700 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/privacy/${row.id}`, returnTo)}>{row.referenceNumber}</Link><h2 className="mt-2 font-semibold">{privacyKindLabels[row.kind]}</h2></div><p className="text-sm font-medium">{privacyStatusLabels[row.status]}{!row.resolvedAt && row.dueAt <= now ? " · Tenggat terlewati" : ""}</p></div>
+        <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2"><div><dt className="text-xs text-muted-foreground">Diterima</dt><dd className="mt-1">{date.format(row.createdAt)} WIB</dd></div><div><dt className="text-xs text-muted-foreground">Tenggat awal</dt><dd className="mt-1">{date.format(row.dueAt)} WIB</dd></div></dl>
+        {row.contentPurgedAt ? <p className="mt-3 text-xs text-muted-foreground">Isi telah dibersihkan; bukti minimum masih tersedia.</p> : null}
+      </article>)}</section>}
+      <AdminPagination basePath="/admin/privacy" query={queryParams} page={result.page} hasNext={result.hasNext} />
+    </> : null}
   </main></AdminShell>;
 }

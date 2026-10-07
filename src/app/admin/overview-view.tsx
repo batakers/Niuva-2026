@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { BriefcaseBusiness, CreditCard, Eye, Printer, type LucideIcon } from "lucide-react";
+import { withAdminReturnTo } from "@/modules/admin/navigation";
+import { AlertTriangle, BriefcaseBusiness, CreditCard, Eye, Printer, ShoppingBag, type LucideIcon } from "lucide-react";
 import type { AdminRole } from "@/generated/prisma/client";
 import type { ActionQueueResult } from "@/modules/admin/action-queue";
 import type { DashboardResult } from "@/modules/admin/dashboard";
@@ -44,6 +45,7 @@ export function AdminOverviewView({
   role: AdminRole;
 }>) {
   const work = queue.items.slice(0, visibleWorkLimit);
+  const returnTo = overviewHref(range, queue.group);
   const metrics = [
     {
       label: "Tayangan halaman", value: analytics?.traffic?.pageViews,
@@ -73,7 +75,7 @@ export function AdminOverviewView({
           <div>
             <p className="text-sm font-medium text-brand-700">Niuva / Admin</p>
             <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">Overview</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Traffic publik dan hasil bisnis, berdampingan dengan pekerjaan yang perlu perhatian.</p>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Pantau pekerjaan terbuka, tentukan prioritas, dan lanjutkan ke halaman kerja yang sesuai.</p>
           </div>
           <div className="flex flex-col items-start gap-2 sm:items-end">
             <nav aria-label="Periode laporan" className="inline-flex rounded-lg border border-border bg-card p-1">
@@ -92,12 +94,16 @@ export function AdminOverviewView({
           </div>
         </header>
 
+        <section aria-label="Pekerjaan terbuka saat ini" className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <MetricCard label="B2B perlu ditindaklanjuti" value={queue.summary.groups.inquiries} note="Buka antrean B2B" href="/admin/queue?group=inquiries" icon={BriefcaseBusiness} />
+          <MetricCard label="Custom print perlu tindakan" value={queue.summary.groups["custom-print"]} note="Review atau quote" href="/admin/queue?group=custom-print" icon={Printer} />
+          <MetricCard label="Order perlu tindakan" value={queue.summary.groups.orders} note="Proses, paket, atau pemeriksaan" href="/admin/queue?group=orders" icon={ShoppingBag} />
+          <MetricCard label="Isu / perlu perhatian" value={queue.summary.exceptions} note="Buka antrean; exception diprioritaskan" href="/admin/queue" icon={AlertTriangle} />
+        </section>
         <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_17rem]">
-          <section aria-label="Metrik periode terpilih" className="grid min-w-0 gap-3 sm:grid-cols-2 xl:col-start-1 xl:row-start-1 xl:grid-cols-4">
-            {metrics.map((metric) => <MetricCard {...metric} key={metric.label} />)}
-          </section>
 
-          <aside aria-label="Prioritas operasional" className="min-w-0 rounded-xl border border-border bg-card p-5 xl:col-start-2 xl:row-span-2 xl:row-start-1">
+
+          <aside aria-label="Prioritas operasional" className="min-w-0 self-start rounded-xl border border-border bg-card p-5 xl:col-start-2 xl:row-start-1">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Perlu ditindaklanjuti</p>
             <div className="mt-2 flex items-end gap-2">
               <strong className="text-4xl font-semibold tabular-nums text-brand-900">{formatCount(queue.totalOpen)}</strong>
@@ -116,7 +122,7 @@ export function AdminOverviewView({
                     <li className="flex min-w-0 gap-3 py-3" key={item.id}>
                       <span aria-hidden="true" className="pt-0.5 text-xs font-semibold tabular-nums text-brand-700">{String(index + 1).padStart(2, "0")}</span>
                       <div className="min-w-0">
-                        <Link className="block break-words text-sm font-semibold leading-5 hover:text-brand-700 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={item.href}>{item.title}</Link>
+                        <Link className="block break-words text-sm font-semibold leading-5 hover:text-brand-700 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(item.href, returnTo)}>{item.title}</Link>
                         <p className="mt-1 break-all text-xs text-muted-foreground">{item.reference}</p>
                         <p className="mt-1 text-xs text-muted-foreground">{item.attention === "EXCEPTION" ? "Exception · " : ""}{formatAdminDate(item.sourceUpdatedAt)}</p>
                       </div>
@@ -139,21 +145,7 @@ export function AdminOverviewView({
             </div>
           </aside>
 
-          <div className="min-w-0 space-y-4 xl:col-start-1 xl:row-start-2">
-            {analytics?.traffic === null || analytics === null ? (
-              <p className="rounded-xl border border-warning-border bg-warning-background p-4 text-sm text-warning" role="alert">Data traffic belum dapat dimuat. Metrik operasional dan Action Queue tetap tersedia.</p>
-            ) : null}
-            {analytics?.business === null || analytics === null ? (
-              <p className="rounded-xl border border-warning-border bg-warning-background p-4 text-sm text-warning" role="alert">Jumlah hasil bisnis periode ini belum dapat dimuat. Coba muat ulang untuk memperbarui laporan.</p>
-            ) : null}
-            <TrafficTrend report={analytics} />
-            <div className="grid min-w-0 gap-4 md:grid-cols-2">
-              <BreakdownCard title="Sumber masuk" description="Hanya tayangan pertama saat halaman dimuat; bukan atribusi order." data={analytics?.traffic?.sources ?? []} label={(key) => sourceLabels[key] ?? key} />
-              <BreakdownCard title="Perangkat" description="Kategori kasar dari browser, tanpa ID pengunjung." data={analytics?.traffic?.devices ?? []} label={(key) => deviceLabels[key] ?? key} />
-              <BreakdownCard title="Negara" description="Dari header lokasi bila tersedia." data={analytics?.traffic?.countries ?? []} label={countryLabel} />
-              <BreakdownCard title="Kelompok halaman" description="Tayangan route publik yang diizinkan." data={analytics?.traffic?.routes ?? []} label={(key) => routeLabels[key] ?? key} />
-            </div>
-            <BusinessActivity report={analytics} />
+          <div className="min-w-0 space-y-4 xl:col-start-1 xl:row-start-1">
             <section aria-labelledby="admin-work-title" className="min-w-0 rounded-xl border border-border bg-card p-4 sm:p-5">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
@@ -163,9 +155,27 @@ export function AdminOverviewView({
                 <Link className="inline-flex min-h-11 items-center text-sm font-semibold text-brand-700 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={queue.group === "all" ? "/admin/queue" : `/admin/queue?group=${queue.group}`}>Buka Action Queue</Link>
               </div>
               <div className="mt-4"><WorkGroupFilters basePath="/admin" group={queue.group} range={range} /></div>
-              <div className="mt-4"><AdminWorkList emptyMessage={queue.totalOpen === 0 ? "Antrean pekerjaan sedang kosong." : undefined} items={work} /></div>
+              <div className="mt-4"><AdminWorkList emptyMessage={queue.totalOpen === 0 ? "Antrean pekerjaan sedang kosong." : undefined} items={work} returnTo={returnTo} /></div>
               {queue.filteredTotal > work.length ? <p className="mt-4 text-xs text-muted-foreground">Menampilkan {work.length} dari {queue.filteredTotal} pekerjaan. Buka Action Queue untuk melihat lebih banyak.</p> : null}
             </section>
+          <section aria-label="Metrik periode terpilih" className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {metrics.map((metric) => <MetricCard {...metric} key={metric.label} />)}
+          </section>
+            {analytics?.traffic === null || analytics === null ? (
+              <p className="rounded-xl border border-warning-border bg-warning-background p-4 text-sm text-warning" role="alert">Data traffic belum dapat dimuat. Metrik operasional dan Action Queue tetap tersedia.</p>
+            ) : null}
+            {analytics?.business === null || analytics === null ? (
+              <p className="rounded-xl border border-warning-border bg-warning-background p-4 text-sm text-warning" role="alert">Jumlah hasil bisnis periode ini belum dapat dimuat. Coba muat ulang untuk memperbarui laporan.</p>
+            ) : null}
+            <TrafficTrend report={analytics} />
+            <div className="grid min-w-0 gap-4 md:grid-cols-2">
+              <BreakdownCard title="Sumber masuk" description="Hanya tayangan pertama saat halaman dimuat; bukan atribusi order." unavailable={!analytics?.traffic} data={analytics?.traffic?.sources ?? []} label={(key) => sourceLabels[key] ?? key} />
+              <BreakdownCard title="Perangkat" description="Kategori kasar dari browser, tanpa ID pengunjung." unavailable={!analytics?.traffic} data={analytics?.traffic?.devices ?? []} label={(key) => deviceLabels[key] ?? key} />
+              <BreakdownCard title="Negara" description="Dari header lokasi bila tersedia." unavailable={!analytics?.traffic} data={analytics?.traffic?.countries ?? []} label={countryLabel} />
+              <BreakdownCard title="Kelompok halaman" description="Tayangan route publik yang diizinkan." unavailable={!analytics?.traffic} data={analytics?.traffic?.routes ?? []} label={(key) => routeLabels[key] ?? key} />
+            </div>
+            <BusinessActivity report={analytics} />
+
           </div>
         </div>
       </main>
@@ -213,6 +223,7 @@ function TrafficTrend({ report }: Readonly<{ report: AnalyticsReport | null }>) 
         </div>
         <p className="text-sm font-semibold tabular-nums text-brand-900">{report?.traffic ? formatCount(report.traffic.pageViews) : "—"} tayangan</p>
       </div>
+      {report && !report.collectionEnabled ? <p className="mt-4 text-xs leading-5 text-muted-foreground" role="status">Pengumpulan tayangan belum aktif. Data historis tetap ditampilkan bila tersedia.</p> : null}
       {report?.traffic?.pageViews ? (
         <>
           <div className="mt-5 h-44 w-full" aria-hidden="true">
@@ -226,7 +237,7 @@ function TrafficTrend({ report }: Readonly<{ report: AnalyticsReport | null }>) 
             <span>{points[0]?.key}</span><span>{points[Math.floor(points.length / 2)]?.key}</span><span>{points.at(-1)?.key}</span>
           </div>
         </>
-      ) : <p className="mt-5 rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground" role="status">Belum ada tayangan tercatat pada periode ini.</p>}
+      ) : <p className="mt-5 rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground" role="status">{report?.traffic ? "Belum ada tayangan tercatat pada periode ini." : "Data traffic belum tersedia."}</p>}
       <div className="sr-only">
         <table>
           <caption>Jumlah tayangan halaman menurut {report?.range === "13m" ? "bulan" : "tanggal"} Jakarta</caption>
@@ -239,15 +250,15 @@ function TrafficTrend({ report }: Readonly<{ report: AnalyticsReport | null }>) 
   );
 }
 
-function BreakdownCard({ title, description, data, label }: Readonly<{
-  title: string; description: string; data: readonly Breakdown[]; label: (key: string) => string;
+function BreakdownCard({ title, description, data, label, unavailable }: Readonly<{
+  title: string; description: string; data: readonly Breakdown[]; label: (key: string) => string; unavailable?: boolean;
 }>) {
   const max = Math.max(1, ...data.map((item) => item.count));
   return (
     <section className="min-w-0 rounded-xl border border-border bg-card p-4 sm:p-5">
       <h2 className="text-base font-semibold">{title}</h2>
       <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>
-      {data.length === 0 ? <p className="mt-5 text-sm text-muted-foreground">Belum ada data pada periode ini.</p> : (
+      {data.length === 0 ? <p className="mt-5 text-sm text-muted-foreground">{unavailable ? "Data traffic belum tersedia." : "Belum ada data pada periode ini."}</p> : (
         <ol className="mt-5 space-y-3">
           {data.slice(0, 5).map((item) => (
             <li key={item.key}>

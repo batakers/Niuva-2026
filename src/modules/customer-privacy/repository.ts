@@ -7,6 +7,7 @@ import { hashOpaqueToken } from "@/modules/customer-auth/core";
 import { DAY_MS, PRIVACY_CONFIRMATION_MS, privacyDeadline, type PrivacyPurpose, privacyRequestSchema, privacyOwnerSchema } from "./core";
 import { lockCustomerLifecycle, eraseCustomerAccount } from "./lifecycle";
 import type { z } from "zod";
+import type { OwnerPrivacyListQuery } from "./validation";
 
 export type PrivacyActor = { customerId: string; sessionHash: string };
 export class CustomerPrivacyRepository {
@@ -60,6 +61,22 @@ export class CustomerPrivacyRepository {
   }
   listOwner(page: number) {
     return this.prisma.customerPrivacyRequest.findMany({ orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 21, skip: (page - 1) * 20 });
+  }
+  getOwnerDetail(id: string) {
+    return this.prisma.customerPrivacyRequest.findUnique({ where: { id }, select: {
+      id: true, referenceNumber: true, customerId: true, kind: true, status: true,
+      details: true, correction: true, contactEmail: true, response: true, outcome: true,
+      createdAt: true, dueAt: true, resolvedAt: true, contentDeleteAt: true, receiptDeleteAt: true,
+      contentPurgedAt: true, holdCategory: true, holdReason: true, holdReviewAt: true,
+    } });
+  }
+  async listOwnerFiltered(query: OwnerPrivacyListQuery) {
+    const where: Prisma.CustomerPrivacyRequestWhereInput = query.status ? { status: query.status } : {};
+    const [rows, filteredTotal] = await Promise.all([
+      this.prisma.customerPrivacyRequest.findMany({ where, orderBy: [{ createdAt: "desc" }, { id: "desc" }], skip: (query.page - 1) * 20, take: 21, select: { id: true, referenceNumber: true, kind: true, status: true, createdAt: true, dueAt: true, resolvedAt: true, contentPurgedAt: true } }),
+      this.prisma.customerPrivacyRequest.count({ where }),
+    ]);
+    return { items: rows.slice(0, 20), hasNext: rows.length > 20, filteredTotal, page: query.page };
   }
   async handle(input: z.infer<typeof privacyOwnerSchema>, ownerId: string, now: Date) {
     return this.prisma.$transaction(async tx => {

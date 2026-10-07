@@ -73,6 +73,7 @@ beforeEach(() => {
   nextServerMocks.connection.mockResolvedValue(undefined);
   queueMocks.list.mockReset();
   queueMocks.list.mockResolvedValue({
+    summary: { groups: { inquiries: 0, "custom-print": 0, orders: 0 }, exceptions: 0 },
     filteredTotal: 0,
     generatedAt: new Date("2026-09-11T08:00:00.000Z"),
     group: "all",
@@ -229,7 +230,7 @@ describe("admin access route", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: "Overview" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Owner")).toBeInTheDocument();
+    expect(screen.getByText("Owner", { selector: "span" })).toBeInTheDocument();
   });
 
   it("renders the safe fallback after an expected authorization failure", async () => {

@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { ZodError } from "zod";
+import { z, ZodError } from "zod";
+import { normalizeAdminReturnTo } from "@/modules/admin/navigation";
 import { requireCustomer } from "@/lib/auth/customer";
 import { requireAdmin } from "@/lib/auth/admin";
 import { readBoundedText } from "@/lib/http/body";
@@ -43,15 +44,24 @@ export function privacyPostHandler(action: "email" | "export" | "close" | "reque
   return async (request: Request): Promise<Response> => {
     const json = request.headers.get("accept")?.includes("application/json") ?? false;
     let formId: string | undefined;
+    let ownerDetailPath: string | undefined;
+    let ownerReturnTo: string | undefined;
     try {
       assertPrivacyOrigin(request);
       if (!request.headers.get("content-type")?.startsWith("application/x-www-form-urlencoded")) throw appError("VALIDATION_ERROR");
       const raw = Object.fromEntries(new URLSearchParams(await readBoundedText(request, 16384)));
-      if (action === "owner" && /^[0-9a-f-]{36}$/i.test(raw.id ?? "")) formId = raw.id;
+      if (action === "owner" && z.uuid().safeParse(raw.id).success) {
+        formId = raw.id;
+        if (raw.responseView === "detail") {
+          ownerDetailPath = `/admin/privacy/${raw.id}`;
+          ownerReturnTo = normalizeAdminReturnTo(raw.returnTo, "/admin/privacy");
+        }
+      }
       const service = factory();
       let reference: string | undefined;
       if (action === "owner") {
-        const result = await service.handle(await requireAdmin(), raw);
+        const domainInput = Object.fromEntries(Object.entries(raw).filter(([key]) => key !== "responseView" && key !== "returnTo"));
+        const result = await service.handle(await requireAdmin(), domainInput);
         reference = result.referenceNumber;
       } else {
         const customer = await requireCustomer();
@@ -70,10 +80,15 @@ export function privacyPostHandler(action: "email" | "export" | "close" | "reque
         }
       }
       const status = action === "email" ? "sent" : action === "owner" ? "updated" : "received";
-      const path = action === "owner" ? "/admin/privacy" : "/account/privacy";
-      const url = `${path}?status=${status}${reference ? `&reference=${encodeURIComponent(reference)}` : ""}`;
+      const path = action === "owner" ? ownerDetailPath ?? "/admin/privacy" : "/account/privacy";
+      const query = new URLSearchParams({ status });
+      if (reference) query.set("reference", reference);
+      if (ownerReturnTo) query.set("returnTo", ownerReturnTo);
+      const url = `${path}?${query}`;
       if (json) return Response.json({ ok: true, status, url }, { headers: { "Cache-Control": "no-store" } });
-      return NextResponse.redirect(new URL(url, privacyRequestOrigin(request)), 303);
+      const response = NextResponse.redirect(new URL(url, privacyRequestOrigin(request)), 303);
+      response.headers.set("Cache-Control", "no-store");
+      return response;
     } catch (error) {
       const fields: Record<string, string> = {};
       if (error instanceof ZodError) for (const issue of error.issues) fields[String(issue.path[0])] ??= issue.message;
@@ -84,11 +99,14 @@ export function privacyPostHandler(action: "email" | "export" | "close" | "reque
       // Reject invalid-origin requests directly, without constructing redirects
       // from attacker-controlled host/origin headers.
       if (json || code === "ORIGIN_NOT_ALLOWED") return Response.json({ ok: false, code, message, fields }, { status, headers: { "Cache-Control": "no-store" } });
-      const url = new URL(action === "owner" ? "/admin/privacy" : "/account/privacy", customerAuthOrigin(request));
+      const url = new URL(action === "owner" ? ownerDetailPath ?? "/admin/privacy" : "/account/privacy", customerAuthOrigin(request));
+      if (ownerReturnTo) url.searchParams.set("returnTo", ownerReturnTo);
       url.searchParams.set("error", code);
       if (Object.keys(fields).length) url.searchParams.set("fields", JSON.stringify(fields));
       if (formId) url.searchParams.set("form", formId);
-      return NextResponse.redirect(url, 303);
+      const response = NextResponse.redirect(url, 303);
+      response.headers.set("Cache-Control", "no-store");
+      return response;
     }
   };
 }

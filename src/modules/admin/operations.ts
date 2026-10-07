@@ -1,4 +1,7 @@
 import "server-only";
+import { z } from "zod";
+import { parseAdminListQuery, type AdminListQuery } from "./list-query";
+import { PrismaAdminOperationsReadRepository, type AdminOperationsReadRepository } from "./operations-read-repository";
 
 import { Prisma, type AdminRole, type PrismaClient } from "@/generated/prisma/client";
 import { requireAdmin, type AdminAccess } from "@/lib/auth/admin";
@@ -303,6 +306,7 @@ export type AdminPortfolioDetail = Readonly<{
 }>;
 
 export type AdminInquiryDetail = Readonly<{
+  customerId: string | null;
   budgetRange: string | null;
   company: string | null;
   confidentialityAck: boolean;
@@ -339,7 +343,10 @@ export type AdminOperationsResult<T> = Readonly<{
   role: AdminRole;
 }>;
 
-export type AdminListInput = Readonly<{ page?: number }>;
+export type AdminFilteredResult<T> = AdminOperationsResult<T> & Readonly<{ filteredTotal: number }>;
+export type AdminLinkedOrder = Readonly<{ id: string; orderNumber: string; status: string }>;
+export type AdminLinkedRequest = Readonly<{ id: string; referenceNumber: string; status: string }>;
+export type AdminListInput = Partial<AdminListQuery>;
 
 export const ADMIN_PAGE_SIZE = 50;
 
@@ -354,217 +361,58 @@ type AdminOperationsDependencies = Readonly<{
   authorize?: () => Promise<AdminAccess>;
   now?: () => Date;
   prisma?: PrismaClient;
+  readRepository?: AdminOperationsReadRepository;
 }>;
 
 export class AdminOperationsService {
   private readonly authorize: () => Promise<AdminAccess>;
   private readonly now: () => Date;
   private readonly prisma: PrismaClient;
+  private readonly readRepository: AdminOperationsReadRepository;
 
   constructor(dependencies: AdminOperationsDependencies = {}) {
     this.authorize = dependencies.authorize ?? requireAdmin;
     this.now = dependencies.now ?? (() => new Date());
     this.prisma = dependencies.prisma ?? getPrismaClient();
+    this.readRepository = dependencies.readRepository ?? new PrismaAdminOperationsReadRepository(this.prisma);
   }
 
-  async listOrders(input: AdminListInput = {}): Promise<AdminOperationsResult<AdminOrderRow>> {
+  async listOrders(input: AdminListInput = {}): Promise<AdminFilteredResult<AdminOrderRow>> {
     const access = await this.authorizeWith("ORDER_FULFILL");
-    const page = normalizePage(input.page);
-    const rows = await this.prisma.order.findMany({
-      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
-      select: {
-        createdAt: true,
-        customerEmail: true,
-        customerName: true,
-        grandTotalRp: true,
-        id: true,
-        orderNumber: true,
-        orderType: true,
-        paymentAttempts: {
-          orderBy: { createdAt: "desc" },
-          select: { status: true },
-          take: 1,
-        },
-        shipments: {
-          orderBy: { updatedAt: "desc" },
-          select: { status: true },
-          take: 1,
-        },
-        status: true,
-        updatedAt: true,
-      },
-      skip: (page - 1) * ADMIN_PAGE_SIZE,
-      take: ADMIN_PAGE_SIZE + 1,
-    });
-    const pageRows = rows.slice(0, ADMIN_PAGE_SIZE);
-
-    return {
-      generatedAt: this.now(),
-      hasNext: rows.length > ADMIN_PAGE_SIZE,
-      items: pageRows.map((row) => ({
-        createdAt: row.createdAt,
-        customerEmail: row.customerEmail,
-        customerName: row.customerName,
-        grandTotalRp: row.grandTotalRp.toString(),
-        id: row.id,
-        orderNumber: row.orderNumber,
-        orderType: row.orderType,
-        paymentStatus: row.paymentAttempts[0]?.status ?? null,
-        shipmentStatus: row.shipments[0]?.status ?? null,
-        status: row.status,
-        updatedAt: row.updatedAt,
-      })),
-      page,
-      role: access.profile.role,
-    };
+    const query = parseAdminListQuery("orders", input);
+    const result = await this.readRepository.listOrders(query);
+    return { ...result, generatedAt: this.now(), page: query.page, role: access.profile.role };
   }
 
-  async listCustomPrintRequests(input: AdminListInput = {}): Promise<AdminOperationsResult<AdminCustomPrintRequestRow>> {
+  async getCustomPrintLinkedOrders(requestId: string): Promise<readonly AdminLinkedOrder[]> {
+    await this.authorizeWith("CUSTOM_PRINT_REVIEW");
+    return this.readRepository.getCustomPrintLinkedOrders(z.uuid().parse(requestId));
+  }
+
+  async getOrderSourceRequests(orderId: string): Promise<readonly AdminLinkedRequest[]> {
+    await this.authorizeWith("ORDER_FULFILL");
+    return this.readRepository.getOrderSourceRequests(z.uuid().parse(orderId));
+  }
+
+  async listCustomPrintRequests(input: AdminListInput = {}): Promise<AdminFilteredResult<AdminCustomPrintRequestRow>> {
     const access = await this.authorizeWith("CUSTOM_PRINT_REVIEW");
-    const page = normalizePage(input.page);
-    const rows = await this.prisma.customPrintRequest.findMany({
-      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
-      select: {
-        createdAt: true,
-        customerEmail: true,
-        customerName: true,
-        files: { select: { file: { select: { extension: true, uploadStatus: true } } } },
-        id: true,
-        intakeMode: true,
-        materialRequested: true,
-        quantity: true,
-        quotes: {
-          orderBy: { version: "desc" },
-          select: { quoteNumber: true, status: true, version: true },
-          take: 1,
-        },
-        referenceNumber: true,
-        status: true,
-        updatedAt: true,
-      },
-      skip: (page - 1) * ADMIN_PAGE_SIZE,
-      take: ADMIN_PAGE_SIZE + 1,
-    });
-    const pageRows = rows.slice(0, ADMIN_PAGE_SIZE);
-
-    return {
-      generatedAt: this.now(),
-      hasNext: rows.length > ADMIN_PAGE_SIZE,
-      items: pageRows.map((row) => ({
-        createdAt: row.createdAt,
-        customerEmail: row.customerEmail,
-        customerName: row.customerName,
-        fileCount: row.files.length,
-        id: row.id,
-        intakeMode: row.intakeMode,
-        modelReady: row.files.some(({ file }) => file.uploadStatus === "VERIFIED" && isModelExtension(file.extension)),
-        latestQuote: row.quotes[0] ?? null,
-        materialRequested: row.materialRequested,
-        quantity: row.quantity,
-        referenceNumber: row.referenceNumber,
-        status: row.status,
-        updatedAt: row.updatedAt,
-      })),
-      page,
-      role: access.profile.role,
-    };
+    const query = parseAdminListQuery("custom-print", input);
+    const result = await this.readRepository.listCustomPrintRequests(query);
+    return { ...result, generatedAt: this.now(), page: query.page, role: access.profile.role };
   }
 
-  async listProducts(input: AdminListInput = {}): Promise<AdminOperationsResult<AdminProductRow>> {
+  async listProducts(input: AdminListInput = {}): Promise<AdminFilteredResult<AdminProductRow>> {
     const access = await this.authorizeWith("CATALOG_WRITE");
-    const page = normalizePage(input.page);
-    const rows = await this.prisma.product.findMany({
-      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
-      select: {
-        category: { select: { name: true, slug: true } },
-        description: true,
-        id: true,
-        isPublished: true,
-        media: { select: { id: true } },
-        name: true,
-        slug: true,
-        variants: {
-          orderBy: { createdAt: "asc" },
-          select: {
-            id: true,
-            isActive: true,
-            name: true,
-            priceRp: true,
-            sku: true,
-            stockOnHand: true,
-          },
-        },
-      },
-      skip: (page - 1) * ADMIN_PAGE_SIZE,
-      take: ADMIN_PAGE_SIZE + 1,
-    });
-    const pageRows = rows.slice(0, ADMIN_PAGE_SIZE);
-
-    return {
-      generatedAt: this.now(),
-      hasNext: rows.length > ADMIN_PAGE_SIZE,
-      items: pageRows.map((row) => ({
-        category: row.category,
-        description: row.description,
-        id: row.id,
-        isPublished: row.isPublished,
-        mediaCount: row.media.length,
-        name: row.name,
-        slug: row.slug,
-        variants: row.variants.map((variant) => ({
-          id: variant.id,
-          isActive: variant.isActive,
-          name: variant.name,
-          priceRp: variant.priceRp.toString(),
-          sku: variant.sku,
-          stockOnHand: variant.stockOnHand,
-        })),
-      })),
-      page,
-      role: access.profile.role,
-    };
+    const query = parseAdminListQuery("products", input);
+    const result = await this.readRepository.listProducts(query);
+    return { ...result, generatedAt: this.now(), page: query.page, role: access.profile.role };
   }
 
-  async listPortfolio(input: AdminListInput = {}): Promise<AdminOperationsResult<AdminPortfolioRow>> {
+  async listPortfolio(input: AdminListInput = {}): Promise<AdminFilteredResult<AdminPortfolioRow>> {
     const access = await this.authorizeWith("PORTFOLIO_WRITE");
-    const page = normalizePage(input.page);
-    const rows = await this.prisma.portfolioProject.findMany({
-      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
-      select: {
-        clientName: true,
-        id: true,
-        isFeatured: true,
-        isPublished: true,
-        media: { select: { id: true } },
-        serviceLabel: true,
-        slug: true,
-        summary: true,
-        title: true,
-        updatedAt: true,
-      },
-      skip: (page - 1) * ADMIN_PAGE_SIZE,
-      take: ADMIN_PAGE_SIZE + 1,
-    });
-    const pageRows = rows.slice(0, ADMIN_PAGE_SIZE);
-
-    return {
-      generatedAt: this.now(),
-      hasNext: rows.length > ADMIN_PAGE_SIZE,
-      items: pageRows.map((row) => ({
-        clientName: row.clientName,
-        id: row.id,
-        isFeatured: row.isFeatured,
-        isPublished: row.isPublished,
-        mediaCount: row.media.length,
-        serviceLabel: row.serviceLabel,
-        slug: row.slug,
-        summary: row.summary,
-        title: row.title,
-        updatedAt: row.updatedAt,
-      })),
-      page,
-      role: access.profile.role,
-    };
+    const query = parseAdminListQuery("portfolio", input);
+    const result = await this.readRepository.listPortfolio(query);
+    return { ...result, generatedAt: this.now(), page: query.page, role: access.profile.role };
   }
 
   async getOrder(orderId: string): Promise<AdminOrderDetail | null> {
@@ -1007,37 +855,11 @@ export class AdminOperationsService {
     return project;
   }
 
-  async listInquiries(
-    input: AdminListInput = {},
-  ): Promise<AdminOperationsResult<AdminInquiryRow>> {
+  async listInquiries(input: AdminListInput = {}): Promise<AdminFilteredResult<AdminInquiryRow>> {
     const access = await this.authorizeWith("INQUIRY_MANAGE");
-    const page = normalizePage(input.page);
-    const rows = await this.prisma.b2BInquiry.findMany({
-      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
-      select: {
-        company: true,
-        createdAt: true,
-        currentStage: true,
-        email: true,
-        id: true,
-        name: true,
-        referenceNumber: true,
-        status: true,
-        targetDeadline: true,
-        updatedAt: true,
-      },
-      skip: (page - 1) * ADMIN_PAGE_SIZE,
-      take: ADMIN_PAGE_SIZE + 1,
-    });
-    const pageRows = rows.slice(0, ADMIN_PAGE_SIZE);
-
-    return {
-      generatedAt: this.now(),
-      hasNext: rows.length > ADMIN_PAGE_SIZE,
-      items: pageRows,
-      page,
-      role: access.profile.role,
-    };
+    const query = parseAdminListQuery("inquiries", input);
+    const result = await this.readRepository.listInquiries(query);
+    return { ...result, generatedAt: this.now(), page: query.page, role: access.profile.role };
   }
 
   async getInquiry(inquiryId: string): Promise<AdminInquiryDetail | null> {
@@ -1045,6 +867,7 @@ export class AdminOperationsService {
     const inquiry = await this.prisma.b2BInquiry.findUnique({
       where: { id: inquiryId },
       select: {
+        customerId: true,
         budgetRange: true,
         company: true,
         confidentialityAck: true,

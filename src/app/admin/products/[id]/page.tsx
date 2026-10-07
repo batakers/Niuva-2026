@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import { AdminPageHeader } from "@/app/admin/admin-page-header";
+import { normalizeAdminReturnTo } from "@/modules/admin/navigation";
 import { z } from "zod";
 
 import { AdminAccessView } from "@/app/admin/admin-access-view";
@@ -21,7 +22,7 @@ import { StockAdjustmentPanel } from "./stock-adjustment-panel";
 export const metadata: Metadata = { title: "Product detail admin · Niuva", robots: { follow: false, index: false } };
 const currencyFormatter = new Intl.NumberFormat("id-ID", { currency: "IDR", maximumFractionDigits: 0, style: "currency" });
 
-export default async function AdminProductDetailPage({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
+export default async function AdminProductDetailPage({ params, searchParams }: Readonly<{ params: Promise<{ id: string }>; searchParams?: Promise<Readonly<Record<string, unknown>>> }>) {
   await connection();
   const gate = await loadAdminPageAccess();
   if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
@@ -33,14 +34,12 @@ export default async function AdminProductDetailPage({ params }: Readonly<{ para
   if (result.status === "not-found") notFound();
   if (result.status === "unavailable") return <AdminDataUnavailableView active="products" kind={result.kind} role={access.profile.role} title="Detail produk belum dapat dimuat" />;
   const product = result.record;
+  const returnTo = normalizeAdminReturnTo((await searchParams)?.returnTo, "/admin/products");
 
   return (
     <AdminShell active="products" role={access.profile.role}>
       <main className="space-y-8" data-admin-surface="product-detail" id="main-content">
-        <header className="border-b border-border pb-6">
-          <Link className="text-sm font-medium text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href="/admin/products">← Kembali ke Products &amp; Stock</Link>
-          <div className="mt-5 flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-medium uppercase tracking-[0.1em] text-brand-700">{product.category?.name ?? "Tanpa kategori"}</p><h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-5xl">{product.name}</h1><p className="mt-2 font-mono text-sm text-muted-foreground">{product.slug}</p></div><span className="rounded-md border border-brand-300 bg-brand-50 px-3 py-1.5 text-sm font-semibold text-brand-800">{product.isPublished ? "Published" : "Draft"}</span></div>
-        </header>
+        <AdminPageHeader title={product.name} description={`${product.slug} · ${product.isPublished ? "Published" : "Draft"}`} returnHref={returnTo} returnLabel="Kembali ke Products & Stock" breadcrumbs={[{ label: "Products & Stock", href: returnTo }, { label: product.name }]} />
 
         <section aria-labelledby="product-editor-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
           <h2 className="text-xl font-semibold" id="product-editor-title">Editor produk</h2>
@@ -63,7 +62,7 @@ export default async function AdminProductDetailPage({ params }: Readonly<{ para
         <section aria-labelledby="variants-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
           <h2 className="text-xl font-semibold" id="variants-title">Varian &amp; stok</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">Harga, dimensi, dan status varian ditulis ke database melalui CatalogService. Penyesuaian stok menjaga reservasi aktif tetap aman.</p>
-          {product.variants.length === 0 ? <p className="mt-5 text-sm text-muted-foreground">Belum ada varian.</p> : <div className="mt-5 grid gap-5">{product.variants.map((variant) => <article className="rounded-lg border border-border p-4" key={variant.id}><div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-semibold">{variant.name}</h3><p className="mt-1 font-mono text-xs text-muted-foreground">{variant.sku}</p></div><span className="rounded-md border border-border bg-muted px-2.5 py-1 text-xs font-semibold">{variant.isActive ? "Aktif" : "Nonaktif"}</span></div><AdminActionForm action={updateVariantAction} className="mt-5" submitLabel="Simpan varian"><input name="variantId" type="hidden" value={variant.id} /><input name="productId" type="hidden" value={product.id} /><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><Field id={`variant-name-${variant.id}`} label="Nama" name="name" required value={variant.name} /><Field id={`variant-sku-${variant.id}`} label="SKU" name="sku" required value={variant.sku} /><Field id={`variant-price-${variant.id}`} label="Harga (Rp)" name="priceRp" required value={variant.priceRp} /><Field id={`variant-weight-${variant.id}`} label="Berat (g)" name="weightGrams" required value={variant.weightGrams} /><Field id={`variant-length-${variant.id}`} label="Panjang (cm)" name="lengthCm" value={variant.lengthCm ?? ""} /><Field id={`variant-width-${variant.id}`} label="Lebar (cm)" name="widthCm" value={variant.widthCm ?? ""} /><Field id={`variant-height-${variant.id}`} label="Tinggi (cm)" name="heightCm" value={variant.heightCm ?? ""} /></div><label className="inline-flex min-h-11 items-center gap-3 text-sm font-medium" htmlFor={`variant-active-${variant.id}`}><input className="size-5 accent-primary" defaultChecked={variant.isActive} id={`variant-active-${variant.id}`} name="isActive" type="checkbox" /><span>Varian aktif</span></label></AdminActionForm><div className="mt-5 border-t border-border pt-5"><div><p className="text-sm font-semibold">Stok fisik tersimpan</p><p className="mt-1 text-xs text-muted-foreground">{variant.stockOnHand} unit · {currencyFormatter.format(BigInt(variant.priceRp))} per unit</p></div><StockAdjustmentPanel productId={product.id} stockOnHand={variant.stockOnHand} variantId={variant.id} /></div></article>)}</div>}
+          {product.variants.length === 0 ? <p className="mt-5 text-sm text-muted-foreground">Belum ada varian.</p> : <div className="mt-5 grid gap-5">{product.variants.map((variant) => <article className="rounded-lg border border-border p-4" key={variant.id}><div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-semibold">{variant.name}</h3><p className="mt-1 font-mono text-xs text-muted-foreground">{variant.sku}</p></div><span className="rounded-md border border-border bg-muted px-2.5 py-1 text-xs font-semibold">{variant.isActive ? "Aktif" : "Nonaktif"}</span></div><AdminActionForm action={updateVariantAction} className="mt-5" submitLabel="Simpan varian"><input name="variantId" type="hidden" value={variant.id} /><input name="productId" type="hidden" value={product.id} /><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><Field id={`variant-name-${variant.id}`} label="Nama" name="name" required value={variant.name} /><Field id={`variant-sku-${variant.id}`} label="SKU" name="sku" required value={variant.sku} /><Field id={`variant-price-${variant.id}`} label="Harga (Rp)" name="priceRp" required value={variant.priceRp} /><Field id={`variant-weight-${variant.id}`} label="Berat (g)" name="weightGrams" required value={variant.weightGrams} /><Field id={`variant-length-${variant.id}`} label="Panjang (cm)" name="lengthCm" value={variant.lengthCm ?? ""} /><Field id={`variant-width-${variant.id}`} label="Lebar (cm)" name="widthCm" value={variant.widthCm ?? ""} /><Field id={`variant-height-${variant.id}`} label="Tinggi (cm)" name="heightCm" value={variant.heightCm ?? ""} /></div><label className="inline-flex min-h-11 items-center gap-3 text-sm font-medium" htmlFor={`variant-active-${variant.id}`}><input className="size-5 accent-primary" defaultChecked={variant.isActive} id={`variant-active-${variant.id}`} name="isActive" type="checkbox" /><span>Varian aktif</span></label></AdminActionForm><div className="mt-5 border-t border-border pt-5"><div><p className="text-sm font-semibold">Stok fisik tersimpan</p><p className="mt-1 text-xs text-muted-foreground">{variant.stockOnHand} unit · {currencyFormatter.format(BigInt(variant.priceRp))} per unit</p></div><StockAdjustmentPanel productId={product.id} stockOnHand={variant.stockOnHand} variantId={variant.id} returnTo={returnTo} /></div></article>)}</div>}
         </section>
       </main>
     </AdminShell>

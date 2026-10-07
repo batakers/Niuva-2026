@@ -63,8 +63,10 @@ const OPERATIONS: ReadonlyArray<
 > = [
   ["listOrders", "ORDER_FULFILL", (s) => s.listOrders()],
   ["getOrder", "ORDER_FULFILL", (s) => s.getOrder(ID)],
+  ["getOrderSourceRequests", "ORDER_FULFILL", (s) => s.getOrderSourceRequests(ID)],
   ["listCustomPrintRequests", "CUSTOM_PRINT_REVIEW", (s) => s.listCustomPrintRequests()],
   ["getCustomPrintRequest", "CUSTOM_PRINT_REVIEW", (s) => s.getCustomPrintRequest(ID)],
+  ["getCustomPrintLinkedOrders", "CUSTOM_PRINT_REVIEW", (s) => s.getCustomPrintLinkedOrders(ID)],
   ["listProducts", "CATALOG_WRITE", (s) => s.listProducts()],
   ["getProduct", "CATALOG_WRITE", (s) => s.getProduct(ID)],
   ["getStockHistory", "AUDIT_READ", (s) => s.getStockHistory(ID, ID)],

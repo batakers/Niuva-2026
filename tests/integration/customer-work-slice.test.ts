@@ -1,9 +1,11 @@
 import Decimal from "decimal.js";
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+vi.mock("server-only", () => ({}));
 
 import type { AdminAccess } from "@/lib/auth/admin";
 import { getPrismaClient } from "@/lib/db/prisma";
+import { AdminOperationsService } from "@/modules/admin/operations";
 import { CustomerWorkRepository } from "@/modules/customer-work/repository";
 import { CustomPrintAccessService } from "@/modules/custom-print/access-service";
 import { CustomerPreviewService } from "@/modules/custom-print/customer-preview-service";
@@ -267,11 +269,15 @@ describe("Customer ownership and commercial slice", () => {
     expect(quote.materialSubtotalRp.toString()).not.toBe("2000");
     expect(quote.finalTotalRp.toString()).not.toBe("12000");
     await quoteService.send(quote.id);
+    const operations = new AdminOperationsService({ authorize: async () => access });
+    expect(await operations.getCustomPrintLinkedOrders(request.request.id)).toEqual([]);
     await expect(quoteService.accept({ quoteId: quote.id, token: "wrong" })).rejects.toMatchObject({ code: "UNAUTHORIZED" });
     await expect(quoteService.accept({ quoteId: quote.id }, randomUUID())).rejects.toMatchObject({ code: "UNAUTHORIZED" });
     const accepted = await quoteService.accept({ quoteId: quote.id }, owner.id);
     expect(accepted.kind).toBe("CREATED");
     const order = await prisma.order.findUniqueOrThrow({ where: { id: accepted.orderId } });
+    expect(await operations.getCustomPrintLinkedOrders(request.request.id)).toEqual([{ id: order.id, orderNumber: order.orderNumber, status: order.status }]);
+    expect(await operations.getOrderSourceRequests(order.id)).toEqual([{ id: request.request.id, referenceNumber: request.request.referenceNumber, status: "APPROVED" }]);
     expect(order.customerId).toBe(owner.id);
     expect(order.shippingTotalRp.toString()).toBe("0");
     expect(order.grandTotalRp.toString()).toBe("77500");
@@ -280,6 +286,8 @@ describe("Customer ownership and commercial slice", () => {
     const attempt = await prisma.paymentAttempt.findFirstOrThrow({ where: { orderId: order.id } });
     expect(attempt.amountRp.toString()).toBe("77500");
     expect((await quoteService.accept({ quoteId: quote.id }, owner.id)).kind).toBe("ALREADY_ACCEPTED");
+    expect(await operations.getCustomPrintLinkedOrders(request.request.id)).toHaveLength(1);
+    expect(await operations.getOrderSourceRequests(order.id)).toHaveLength(1);
   });
 
   it("requires a new estimate after slicer revision and expires stale drafts", async () => {

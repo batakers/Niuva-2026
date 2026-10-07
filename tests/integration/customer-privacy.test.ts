@@ -15,6 +15,7 @@ const prisma = getPrismaClient();
 const repository = new CustomerPrivacyRepository(prisma);
 const now = new Date("2026-10-02T05:00:00Z");
 const emails: string[] = [];
+const ownerReadFixtureIds: string[] = [];
 async function fixture(google = false) {
   const email = `privacy-${randomUUID()}@example.test`; emails.push(email);
   const session = createOpaqueToken();
@@ -28,6 +29,8 @@ const request = () => privacyRequestSchema.parse({ submissionKey: randomUUID(), 
 const ownerId = randomUUID();
 const handle = (id: string, overrides: Record<string, unknown> = {}) => privacyOwnerSchema.parse({ id, status: "RESOLVED", response: "Data sudah diperiksa dan hasil telah disampaikan.", outcome: "FULFILLED", fulfilled: "on", ...overrides });
 afterEach(async () => {
+  await prisma.customerPrivacyRequest.deleteMany({ where: { id: { in: ownerReadFixtureIds } } });
+  ownerReadFixtureIds.length = 0;
   await prisma.customerPrivacyRequest.deleteMany({ where: { referenceNumber: { startsWith: "PRV-" }, OR: [{ contactEmail: { in: emails } }, { customer: { normalizedEmail: { in: emails } } }] } });
   await prisma.order.deleteMany({ where: { orderNumber: { startsWith: "PRIVACY-TEST-" } } });
   await prisma.b2BInquiry.deleteMany({ where: { referenceNumber: { startsWith: "PRIVACY-TEST-" } } });
@@ -38,6 +41,25 @@ afterEach(async () => {
   emails.length = 0;
 });
 describe("Customer privacy PostgreSQL lifecycle (isolated fixtures)", () => {
+  it("filters Owner reads before pagination and keeps private content in detail", async () => {
+    const { customer } = await fixture();
+    const prefix = `PRV-READ-${randomUUID()}`;
+    const baseline = await prisma.customerPrivacyRequest.count({ where: { status: "OPEN" } });
+    const rows = Array.from({ length: 28 }, (_, index) => ({ id: randomUUID(), referenceNumber: `${prefix}-${index}`, submissionKey: randomUUID(), customerId: customer.id, contactEmail: customer.email, kind: "ADDITIONAL", status: index < 25 ? "OPEN" : "RESOLVED", details: "Synthetic owner read fixture", createdAt: new Date("2099-01-01T00:00:00Z"), dueAt: new Date("2099-01-04T00:00:00Z") }));
+    ownerReadFixtureIds.push(...rows.map(row => row.id));
+    await prisma.customerPrivacyRequest.createMany({ data: rows });
+    const service = new CustomerPrivacyService(repository, null, () => now, () => undefined);
+    const access = { authUserId: "owner-read-fixture", profile: { id: ownerId, authUserId: "owner-read-fixture", role: "OWNER" as const, isActive: true } };
+    const first = await service.listOwner(access, { status: "OPEN", page: 1 });
+    const second = await service.listOwner(access, { status: "OPEN", page: 2 });
+    expect(first.filteredTotal).toBe(baseline + 25);
+    expect(first.items).toHaveLength(20); expect(first.hasNext).toBe(true);
+    expect(first.items.every(row => row.status === "OPEN")).toBe(true);
+    expect(second.items.filter(row => row.referenceNumber.startsWith(prefix))).toHaveLength(5);
+    expect(new Set([...first.items, ...second.items.filter(row => row.referenceNumber.startsWith(prefix))].map(row => row.id)).size).toBe(25);
+    expect(first.items.every(row => !("details" in row) && !("contactEmail" in row))).toBe(true);
+    expect(await service.getOwnerDetail(access, rows[0].id)).toMatchObject({ details: "Synthetic owner read fixture", contactEmail: customer.email });
+  });
   it("persists privacy rate limits across service instances without sending on rejected attempts", async () => {
     const { actor } = await fixture(); let deliveries = 0;
     const mailer = { async send() { deliveries++; } };

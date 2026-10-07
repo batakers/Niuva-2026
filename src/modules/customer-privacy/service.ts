@@ -1,4 +1,6 @@
 import type { AdminAccess } from "@/lib/auth/admin";
+import { z } from "zod";
+import { parseOwnerPrivacyListQuery } from "./validation";
 import { requireAdminPermission } from "@/modules/admin/permissions";
 import { CustomerEmailRepository } from "@/modules/customer-auth/email-repository";
 import { createOpaqueToken, hashOpaqueToken } from "@/modules/customer-auth/core";
@@ -42,5 +44,15 @@ export class CustomerPrivacyService {
     this.assertAvailable();
     requireAdminPermission(access, "PRIVACY_REQUEST_MANAGE");
     return this.repository.handle(privacyOwnerSchema.parse(raw), access.profile.id, this.clock());
+  }
+  async getOwnerDetail(access: AdminAccess, id: string) {
+    this.assertAvailable();
+    requireAdminPermission(access, "PRIVACY_REQUEST_MANAGE");
+    return this.repository.getOwnerDetail(z.uuid().parse(id));
+  }
+  async listOwner(access: AdminAccess, input: Readonly<Record<string, unknown>> = {}) {
+    this.assertAvailable();
+    requireAdminPermission(access, "PRIVACY_REQUEST_MANAGE");
+    return this.repository.listOwnerFiltered(parseOwnerPrivacyListQuery(input));
   }
 }

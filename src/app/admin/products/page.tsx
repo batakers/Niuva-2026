@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import Link from "next/link";
+import { AdminPageHeader } from "../admin-page-header";
+import { AdminListControls } from "../admin-list-controls";
+import { parseAdminListQuery, adminListQueryParams, type AdminListQuery } from "@/modules/admin/list-query";
+import { buildAdminPageHref, withAdminReturnTo } from "@/modules/admin/navigation";
 
 import { AdminDataUnavailableView, AdminPagination, AdminShell } from "@/components/niuva/admin-shell";
 import { AdminAccessView } from "@/app/admin/admin-access-view";
@@ -9,7 +13,7 @@ import { recordAdminPageFailure } from "@/app/admin/admin-page-failure";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import type { AdminAccess } from "@/lib/auth/admin";
 import type { FailureKind } from "@/lib/observability/logger";
-import { AdminOperationsService, parseAdminPage, type AdminProductRow } from "@/modules/admin/operations";
+import { AdminOperationsService, type AdminProductRow } from "@/modules/admin/operations";
 
 export const metadata: Metadata = {
   title: "Products & Stock admin · Niuva",
@@ -24,14 +28,16 @@ const currencyFormatter = new Intl.NumberFormat("id-ID", {
 
 export default async function AdminProductsPage({
   searchParams,
-}: Readonly<{ searchParams: Promise<{ page?: string }> }>) {
+}: Readonly<{ searchParams: Promise<Readonly<Record<string, unknown>>> }>) {
   await connection();
-  const page = parseAdminPage((await searchParams).page);
+  const query = parseAdminListQuery("products", await searchParams);
+  const queryParams = adminListQueryParams(query);
+  const returnTo = buildAdminPageHref("/admin/products", queryParams, query.page);
   const gate = await loadAdminPageAccess();
   if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
   const { access } = gate;
 
-  const loaded = await loadProducts(access, page);
+  const loaded = await loadProducts(access, query);
   if (loaded.status === "unavailable") return <AdminDataUnavailableView active="products" kind={loaded.kind} role={access.profile.role} title="Products belum dapat dimuat" />;
   const result = loaded.data;
   const published = result.items.filter((item) => item.isPublished).length;
@@ -41,18 +47,13 @@ export default async function AdminProductsPage({
   return (
       <AdminShell active="products" role={result.role}>
         <main id="main-content" data-admin-surface="products">
-          <header className="border-b border-border pb-6">
-            <p className="text-sm font-medium text-brand-700">Niuva / Operations</p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">Products &amp; Stock</h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
-              Periksa produk, varian, harga tersimpan, foto, dan stok sebelum katalog dipublikasikan. Nilai di sini berasal dari database admin.
-            </p>
-          </header>
+          <AdminPageHeader title="Products & Stock" description="Cari produk, periksa varian dan stok, lalu buka editor untuk memperbarui katalog." breadcrumbs={[{ label: "Products & Stock" }]} />
+          <AdminListControls area="products" query={query} />
 
           <section aria-label="Ringkasan products" className="mt-6 grid gap-3 sm:grid-cols-3">
-            <SummaryCard label="Produk" value={String(result.items.length)} />
-            <SummaryCard label="Terpublikasi" value={String(published)} />
-            <SummaryCard label="Stok menipis" value={String(lowStock)} />
+            <SummaryCard label="Hasil filter" value={String(result.filteredTotal)} />
+            <SummaryCard label="Terpublikasi di halaman ini" value={String(published)} />
+            <SummaryCard label="Stok menipis di halaman ini" value={String(lowStock)} />
           </section>
 
           <section className="mt-8" aria-labelledby="products-list-title">
@@ -61,17 +62,17 @@ export default async function AdminProductsPage({
                 <h2 className="text-xl font-semibold" id="products-list-title">Katalog internal</h2>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">Perubahan harga, stok, varian, media, dan publish state harus melewati permission dan audit server.</p>
               </div>
-              <p className="text-sm text-muted-foreground" role="status">{result.items.length} produk</p>
+              <p className="text-sm text-muted-foreground" role="status">{result.filteredTotal} hasil filter</p>
             </div>
 
             {result.items.length === 0 ? (
-              <div className="mt-6"><StatusNotice tone="info" title="Belum ada dataset katalog." description="Tambahkan produk dan varian melalui workflow admin yang tervalidasi sebelum mengaktifkan publikasi launch." /></div>
+              <div className="mt-6"><StatusNotice tone="info" title="Tidak ada record yang sesuai." description="Coba ubah pencarian atau filter publikasi." /></div>
             ) : (
               <div className="mt-6 grid gap-4">
-                {result.items.map((item) => <ProductCard item={item} key={item.id} />)}
+                {result.items.map((item) => <ProductCard item={item} key={item.id} returnTo={returnTo} />)}
               </div>
             )}
-            <AdminPagination basePath="/admin/products" hasNext={result.hasNext} page={result.page} />
+            <AdminPagination basePath="/admin/products" hasNext={result.hasNext} page={result.page} query={queryParams} />
           </section>
         </main>
       </AdminShell>
@@ -82,11 +83,11 @@ type ProductsLoad =
   | { status: "ok"; data: Awaited<ReturnType<AdminOperationsService["listProducts"]>> }
   | { status: "unavailable"; kind: FailureKind };
 
-async function loadProducts(access: AdminAccess, page: number): Promise<ProductsLoad> {
+async function loadProducts(access: AdminAccess, query: AdminListQuery): Promise<ProductsLoad> {
   try {
-    return { status: "ok", data: await new AdminOperationsService({ authorize: async () => access }).listProducts({ page }) };
+    return { status: "ok", data: await new AdminOperationsService({ authorize: async () => access }).listProducts(query) };
   } catch (error) {
-    return { status: "unavailable", kind: recordAdminPageFailure(error, "page:/admin/products", { op: "list", page: String(page) }) };
+    return { status: "unavailable", kind: recordAdminPageFailure(error, "page:/admin/products", { op: "list", page: String(query.page) }) };
   }
 }
 
@@ -94,7 +95,7 @@ function SummaryCard({ label, value }: Readonly<{ label: string; value: string }
   return <div className="rounded-xl border border-border bg-card p-4"><p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></div>;
 }
 
-function ProductCard({ item }: Readonly<{ item: AdminProductRow }>) {
+function ProductCard({ item, returnTo }: Readonly<{ item: AdminProductRow; returnTo: string }>) {
   const activeVariants = item.variants.filter((variant) => variant.isActive);
   const totalStock = activeVariants.reduce((total, variant) => total + variant.stockOnHand, 0);
   return (
@@ -102,7 +103,7 @@ function ProductCard({ item }: Readonly<{ item: AdminProductRow }>) {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.1em] text-brand-700">{item.category?.name ?? "Tanpa kategori"}</p>
-          <h3 className="mt-2 text-lg font-semibold"><Link className="underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/admin/products/${item.id}`}>{item.name}</Link></h3>
+          <h3 className="mt-2 text-lg font-semibold"><Link className="underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/products/${item.id}`, returnTo)}>{item.name}</Link></h3>
           <p className="mt-1 font-mono text-xs text-muted-foreground">{item.slug}</p>
         </div>
         <div className="flex flex-wrap gap-2 text-xs font-semibold">
@@ -124,7 +125,7 @@ function ProductCard({ item }: Readonly<{ item: AdminProductRow }>) {
           </table>
         )}
       </div>
-      <p className="mt-4 text-xs leading-5 text-muted-foreground">Total stok varian aktif: {totalStock}. <Link className="font-semibold text-brand-700 underline-offset-4 hover:underline" href={`/admin/products/${item.id}`}>Buka editor dan adjustment</Link>.</p>
+      <p className="mt-4 text-xs leading-5 text-muted-foreground">Total stok varian aktif: {totalStock}. <Link className="font-semibold text-brand-700 underline-offset-4 hover:underline" href={withAdminReturnTo(`/admin/products/${item.id}`, returnTo)}>Buka editor dan adjustment</Link>.</p>
     </article>
   );
 }

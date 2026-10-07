@@ -3,6 +3,16 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { PrivacyForm } from "@/components/niuva/privacy-form";
 afterEach(() => vi.unstubAllGlobals());
 describe("privacy progressive forms", () => {
+  it("keeps Owner response input and focus when an enhanced detail submission fails", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ ok: false, message: "Periksa tanggapan.", fields: { response: "Tanggapan perlu diperiksa." } }, { status: 422 })));
+    const { container } = render(<PrivacyForm action="/api/admin/privacy" mode="owner" prefix="owner-detail" hidden={{ id: "7614b2eb-6e0c-4a27-9162-e94fb377ebd4", status: "IN_REVIEW", responseView: "detail", returnTo: "/admin/privacy?status=OPEN&page=2" }} fields={[{ name: "response", label: "Tanggapan", kind: "textarea" }]} label="Simpan penanganan" />);
+    fireEvent.change(screen.getByLabelText("Tanggapan"), { target: { value: "Synthetic private response fixture" } });
+    fireEvent.submit(container.querySelector("form")!);
+    await waitFor(() => expect(screen.getByLabelText("Tanggapan")).toHaveAttribute("aria-invalid", "true"));
+    expect(screen.getByLabelText("Tanggapan")).toHaveValue("Synthetic private response fixture");
+    expect(screen.getByLabelText("Tanggapan")).toHaveFocus();
+    expect(screen.getByRole("button")).toBeEnabled();
+  });
   it("keeps native POST and field-associated errors with first-error focus", () => {
     const fetch = vi.fn(); vi.stubGlobal("fetch", fetch);
     const { container } = render(<PrivacyForm action="/api/account/privacy/requests" mode="request" prefix="test" hidden={{ kind: "CORRECTION", submissionKey: crypto.randomUUID() }} fields={[{ name: "details", label: "Data yang salah", kind: "textarea" }, { name: "correction", label: "Koreksi", kind: "textarea" }]} label="Ajukan" />);

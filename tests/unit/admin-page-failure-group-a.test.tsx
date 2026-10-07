@@ -28,6 +28,7 @@ const mocks = vi.hoisted(() => {
     service: {
       getActivePricingRule: vi.fn(),
       getCustomPrintRequest: vi.fn(),
+      getCustomPrintLinkedOrders: vi.fn(),
       getInquiry: vi.fn(),
       getOrder: vi.fn(),
       listCustomPrintRequests: vi.fn(),
@@ -255,19 +256,31 @@ describe.each(pages.filter((testCase) => testCase.detail))("admin group A detail
 });
 
 describe("admin custom-print detail secondary reads", () => {
-  it.each([
-    ["listPricingRules", "pricing-rules"],
-    ["getActivePricingRule", "active-pricing-rule"],
-  ] as const)("logs a failing %s read and keeps the existing fallback", async (method, op) => {
+  it.each(["listPricingRules", "getActivePricingRule"] as const)("skips %s before the canonical request is found", async (method) => {
     mocks.service[method].mockRejectedValue(databaseError());
     mocks.service.getCustomPrintRequest.mockResolvedValue(null);
 
     const result = await run(pages[5] as GroupAPage);
 
     expect(result.outcome).toBe("not-found");
+    expect(recorded).toHaveLength(0);
+    expect(mocks.service[method]).not.toHaveBeenCalled();
+    expect(mocks.estimateLatest).not.toHaveBeenCalled();
+    expect(mocks.service.getCustomPrintLinkedOrders).not.toHaveBeenCalled();
+  });
+  it.each([
+    ["listPricingRules", "pricing-rules"],
+    ["getActivePricingRule", "active-pricing-rule"],
+  ] as const)("logs failing %s after a valid request and keeps the detail readable", async (method, op) => {
+    mocks.service.getCustomPrintRequest.mockResolvedValue({ id: VALID_ID, referenceNumber: "CP-FAILURE-FIXTURE", status: "SUBMITTED", customerId: null, customerName: "Synthetic", customerEmail: "synthetic@example.test", customerPhone: "081234567890", materialRequested: "PLA", colorRequested: null, quantity: 1, intakeMode: "MODEL_READY", modelReady: true, photoCount: 0, files: [], review: null, quotes: [], referenceLink: null, customerPreviewSnapshot: null, updatedAt: new Date(), notes: null, unitConfirmation: null });
+    mocks.service.getCustomPrintLinkedOrders.mockResolvedValue([]);
+    mocks.service[method].mockRejectedValue(databaseError());
+    const result = await run(pages[5] as GroupAPage);
+    expect(result.outcome).toBe("rendered");
     expect(recorded).toHaveLength(1);
-    expect(recorded[0]).toMatchObject({ boundary: "page:/admin/custom-print/[id]", kind: "DATABASE_UNAVAILABLE" });
-    expect(recorded[0]?.safeContext).toEqual({ op });
+    expect(recorded[0]).toMatchObject({ boundary: "page:/admin/custom-print/[id]", kind: "DATABASE_UNAVAILABLE", safeContext: { op } });
+    expect(screen.queryByTestId("unavailable-view")).not.toBeInTheDocument();
+    expect(document.body).not.toHaveTextContent(SECRET_DETAIL);
   });
 });
 

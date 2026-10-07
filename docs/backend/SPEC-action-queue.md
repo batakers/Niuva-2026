@@ -17,11 +17,11 @@ penerimaan visual, provider dan produksi.
 ## Route, akses dan batas data
 
 `/admin` adalah Overview; `/admin/queue` adalah Action Queue lengkap. Keduanya
-memanggil `requireAdmin()` sebelum membaca data: sesi Clerk valid dan
-`AdminProfile.isActive` yang cocok dengan Clerk user ID. Role berasal dari
+memanggil `requireAdmin()` sebelum membaca data: sesi Better Auth dengan MFA
+terverifikasi dan `AdminProfile.isActive` yang cocok dengan auth user ID. Role berasal dari
 database. Tidak ada provisioning otomatis atau bypass login.
 
-Queue tetap read-only dan server-owned. Link menuju detail yang sudah tersedia;
+Queue tetap read-only dan server-owned. Link menuju detail atau workspace domain;
 mutasi pada detail memeriksa permission dan transition sendiri. Daftar memuat
 reference operasional, jenis pekerjaan, judul, next action, attention,
 timestamp dan link internal. Tidak ada nama/kontak/alamat Customer, metadata
@@ -33,9 +33,9 @@ UUID dapat berada dalam identity/link internal, bukan reference utama di layar.
 | Kind | Kondisi sumber | Timestamp | Next action / tujuan |
 | --- | --- | --- | --- |
 | B2B_INQUIRY | B2BInquiry.status = NEW | updatedAt | Tinjau brief proyek baru; `/admin/inquiries/[id]`. |
-| CUSTOM_PRINT_REVIEW | CustomPrintRequest.status = SUBMITTED | updatedAt | Mulai review custom print; `/admin/custom-print/[id]`. |
-| QUOTE_PREPARATION | Request QUOTE_READY dan tidak memiliki quote DRAFT | updatedAt | Siapkan quote; detail request. |
-| QUOTE_SEND | CustomPrintQuote.status = DRAFT | createdAt | Kirim quote; detail request melalui requestId. |
+| CUSTOM_PRINT_REVIEW | CustomPrintRequest.status = SUBMITTED | updatedAt | Mulai review; `/admin/custom-print/[id]/review?step=review`. |
+| QUOTE_PREPARATION | Request QUOTE_READY dan tidak memiliki quote DRAFT | updatedAt | Siapkan quote; `/admin/custom-print/[id]/review?step=quote`. |
+| QUOTE_SEND | CustomPrintQuote.status = DRAFT | createdAt | Terbitkan quote; workspace tahap quote melalui requestId. |
 | ORDER_PROCESSING | Order.status = PAID tanpa payment hold | updatedAt | Proses pesanan berbayar; `/admin/orders/[id]`. |
 | PACKAGE_MEASUREMENT | CUSTOM_PRINT order pada FINISHING_QC tanpa payment hold | updatedAt | Ukur paket final untuk pengiriman; detail order. |
 | SHIPPING_EXCEPTION | Shipment.status = EXCEPTION | updatedAt | Tinjau exception pengiriman; detail order melalui orderId. |
@@ -61,9 +61,19 @@ Sumber kode: [types/mapping](../../src/modules/admin/action-queue.ts),
 - `totalOpen` dihitung setelah deduplikasi sebelum filter/limit.
   `filteredTotal` sebelum limit. `priorityItems` adalah lima item pertama
   seluruh queue tanpa filter group, untuk panel prioritas Overview.
-- Result: `{generatedAt, group, totalOpen, filteredTotal, items, priorityItems}`.
+- `summary.groups` menghitung pekerjaan per domain dan `summary.exceptions`
+  menghitung perhatian EXCEPTION dari seluruh signal setelah deduplikasi,
+  sebelum filter group dan limit. Count pekerjaan tetap kondisi saat ini;
+  periode laporan tidak menyaring pekerjaan aktif.
+- Result: `{generatedAt, group, totalOpen, filteredTotal, items, priorityItems, summary}`.
   Item: `{id, href, kind, reference, title, nextAction, attention, sourceUpdatedAt}`;
   attention hanya STANDARD atau EXCEPTION. `id` bukan command/mutation token.
+
+Revisi architecture disetujui Owner 2026-10-07: Overview untuk orientation,
+Queue untuk dispatcher, list untuk pencarian/filter/pemantauan, detail untuk
+memahami record dan tindakan singkat, workspace untuk pekerjaan kompleks.
+Link UI membawa satu `returnTo` root yang dinormalisasi; filter/page/group/range
+tetap tersedia saat kembali. Query navigasi tidak menjadi input business action.
 
 Overview juga membaca DashboardService (counts status dan aktivitas createdAt)
 dan AnalyticsService (empat metrik periode 30d/13m kalender Asia/Jakarta).

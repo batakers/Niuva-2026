@@ -67,7 +67,7 @@ test("Owner sees Add Admin, SMTP availability, responsive layout and keyboard fo
   // Disabled invitation controls leave keyboard navigation available.
   await expect(page.getByRole("link", { name: "Kembali ke Dashboard", exact: true })).not.toBeFocused();
   await page.getByText("Menu Admin", { exact: true }).click();
-  await expect(page.getByRole("navigation", { name: "Kelola mobile" }).getByRole("link", { name: "Tambah Admin", exact: true })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Owner mobile" }).getByRole("link", { name: "Tambah Admin", exact: true })).toBeVisible();
 });
 
 test("recipient creates a password, still needs real MFA, and cannot add other Admins", async ({ page }) => {

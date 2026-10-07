@@ -9,6 +9,8 @@ import { AdminAccessView } from "@/app/admin/admin-access-view";
 import AdminOrderDetailPage from "@/app/admin/orders/[id]/page";
 import AdminInquiryDetailPage from "@/app/admin/inquiries/[id]/page";
 import AdminCustomPrintDetailPage from "@/app/admin/custom-print/[id]/page";
+import AdminCustomPrintReviewPage from "@/app/admin/custom-print/[id]/review/page";
+import AdminB2BProposalPage from "@/app/admin/inquiries/[id]/proposal/page";
 import AdminPortfolioDetailPage from "@/app/admin/portfolio/[id]/page";
 import AdminProductDetailPage from "@/app/admin/products/[id]/page";
 import AdminStockHistoryPage from "@/app/admin/products/[id]/stock/[variantId]/page";
@@ -119,6 +121,7 @@ vi.mock("@/app/admin/actions", () => {
     reissueCustomPrintRequestTokenAction: action,
     reissueQuoteTokenAction: action,
     sendQuoteAction: action,
+    sendB2BQuoteAction: action,
     createCustomShippingPaymentAction: action,
     recordShipmentMetadataAction: action,
     reissueOrderTokenAction: action,
@@ -153,6 +156,8 @@ const PAGES: readonly PageUnderTest[] = [
   { name: "orders/[id]", page: AdminOrderDetailPage, params: ["id"], read: "getOrder" },
   { name: "inquiries/[id]", page: AdminInquiryDetailPage, params: ["id"], read: "getInquiry" },
   { name: "custom-print/[id]", page: AdminCustomPrintDetailPage, params: ["id"], read: "getCustomPrintRequest" },
+  { name: "custom-print/[id]/review", page: AdminCustomPrintReviewPage, params: ["id"], read: "getCustomPrintRequest" },
+  { name: "inquiries/[id]/proposal", page: AdminB2BProposalPage, params: ["id"], read: "getInquiry" },
   { name: "portfolio/[id]", page: AdminPortfolioDetailPage, params: ["id"], read: "getPortfolio" },
   { name: "products/[id]", page: AdminProductDetailPage, params: ["id"], read: "getProduct" },
   { name: "products/[id]/stock/[variantId]", page: AdminStockHistoryPage, params: ["id", "variantId"], read: "getStockHistory" },
@@ -193,8 +198,8 @@ beforeEach(() => {
 });
 
 describe("Property 10: access, then UUID, then data", () => {
-  it("covers all six admin detail pages", () => {
-    expect(PAGES).toHaveLength(6);
+  it("covers admin details and the two Core Operations workspaces", () => {
+    expect(PAGES).toHaveLength(8);
   });
 
   describe.each(PAGES)("$name", (entry) => {

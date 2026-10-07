@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { withAdminReturnTo } from "@/modules/admin/navigation";
 import type { ActionQueueGroup, ActionQueueItem } from "@/modules/admin/action-queue";
 import { ACTION_QUEUE_GROUPS } from "@/modules/admin/action-queue";
 import type { ReportRange } from "@/modules/analytics/contract";
@@ -52,7 +53,8 @@ function filterHref(basePath: string, group: ActionQueueGroup, range?: ReportRan
 export function AdminWorkList({
   items,
   emptyMessage = "Belum ada pekerjaan pada kelompok ini.",
-}: Readonly<{ items: readonly ActionQueueItem[]; emptyMessage?: string }>) {
+  returnTo,
+}: Readonly<{ items: readonly ActionQueueItem[]; emptyMessage?: string; returnTo?: string }>) {
   if (items.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border bg-card p-6" role="status">
@@ -82,7 +84,7 @@ export function AdminWorkList({
                   <span className="block">{item.title}</span>
                   <AttentionLabel item={item} />
                 </th>
-                <td className="px-5 py-4 align-top"><WorkLink item={item} /></td>
+                <td className="px-5 py-4 align-top"><WorkLink item={item} returnTo={returnTo} /></td>
                 <td className="px-5 py-4 align-top text-muted-foreground">{item.nextAction}</td>
                 <td className="px-5 py-4 text-right align-top text-xs text-muted-foreground">
                   <time dateTime={item.sourceUpdatedAt.toISOString()}>{formatAdminDate(item.sourceUpdatedAt)}</time>
@@ -99,7 +101,7 @@ export function AdminWorkList({
               <strong className="text-sm font-semibold">{item.title}</strong>
               <AttentionLabel item={item} />
             </div>
-            <p className="mt-3"><WorkLink item={item} /></p>
+            <p className="mt-3"><WorkLink item={item} returnTo={returnTo} /></p>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.nextAction}</p>
             <time className="mt-2 block text-xs text-muted-foreground" dateTime={item.sourceUpdatedAt.toISOString()}>{formatAdminDate(item.sourceUpdatedAt)}</time>
           </li>
@@ -109,9 +111,9 @@ export function AdminWorkList({
   );
 }
 
-function WorkLink({ item }: Readonly<{ item: ActionQueueItem }>) {
+function WorkLink({ item, returnTo }: Readonly<{ item: ActionQueueItem; returnTo?: string }>) {
   return (
-    <Link className="inline-flex min-h-11 max-w-full items-center break-all font-mono text-sm font-semibold text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={item.href}>
+    <Link className="inline-flex min-h-11 max-w-full items-center break-all font-mono text-sm font-semibold text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={returnTo ? withAdminReturnTo(item.href, returnTo) : item.href}>
       {item.reference}
     </Link>
   );

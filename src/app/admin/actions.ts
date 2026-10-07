@@ -200,6 +200,7 @@ export const recordCustomPrintReviewAction: AdminAction = async (_previous, form
       verifiedWeightG: text(formData, "verifiedWeightG"),
     });
     revalidatePath(`/admin/custom-print/${requestId}`);
+    revalidatePath(`/admin/custom-print/${requestId}/review`);
     revalidatePath("/admin/custom-print");
     revalidateAdminWork();
     return successState("Review slicer berhasil disimpan.");
@@ -224,6 +225,7 @@ export const publishCustomPrintEstimateAction: AdminAction = async (_previous, f
       filamentSource: text(formData, "filamentSource"), additionalCosts, noAdditionalCosts,
     });
     revalidatePath(`/admin/custom-print/${requestId}`);
+    revalidatePath(`/admin/custom-print/${requestId}/review`);
     revalidatePath(`/account/make/${requestId}`);
     return successState("Estimasi produksi baru diterbitkan. Kisaran ini belum terkalibrasi oleh riwayat pekerjaan.");
   } catch (error) { return errorStateFrom(error); }
@@ -240,6 +242,7 @@ export const saveEstimatedCustomPackageAction: AdminAction = async (_previous, f
       declaredValueRp: numberValue(formData, "declaredValueRp"),
     });
     revalidatePath(`/admin/custom-print/${requestId}`);
+    revalidatePath(`/admin/custom-print/${requestId}/review`);
     revalidatePath(`/account/make/${requestId}`);
     return successState("Paket perkiraan disimpan untuk cek ongkir kasar. Ini tidak mengubah quote atau order.");
   } catch (error) { return errorStateFrom(error); }
@@ -254,6 +257,7 @@ export const reissueCustomPrintRequestTokenAction: AdminAction = async (_previou
   try {
     const accessToken = await new CustomPrintAccessService().reissuePublicToken(requestId);
     revalidatePath(`/admin/custom-print/${requestId}`);
+    revalidatePath(`/admin/custom-print/${requestId}/review`);
     return successState(
       "Token request baru diterbitkan; token lama sudah tidak berlaku. Bagikan tautan hanya setelah identitas customer diverifikasi secara manual.",
       `/custom-print/requests/${accessToken.token}`,
@@ -276,6 +280,7 @@ export const createQuoteDraftAction: AdminAction = async (_previous, formData) =
       requestId,
     });
     revalidatePath(`/admin/custom-print/${requestId}`);
+    revalidatePath(`/admin/custom-print/${requestId}/review`);
     revalidatePath("/admin/custom-print");
     revalidateAdminWork();
     return successState("Draft quote berhasil dibuat.");
@@ -310,6 +315,7 @@ export const sendQuoteAction: AdminAction = async (_previous, formData) => {
   try {
     const result = await new QuoteService().send(quoteId);
     revalidatePath(`/admin/custom-print/${requestId}`);
+    revalidatePath(`/admin/custom-print/${requestId}/review`);
     revalidatePath(`/account/make/${requestId}`);
     revalidatePath("/admin/custom-print");
     revalidateAdminWork();
@@ -328,6 +334,7 @@ export const reissueQuoteTokenAction: AdminAction = async (_previous, formData) 
   try {
     const result = await new QuoteService().reissuePublicToken(quoteId);
     revalidatePath(`/admin/custom-print/${requestId}`);
+    revalidatePath(`/admin/custom-print/${requestId}/review`);
     return successState(
       `Tautan ${result.quoteNumber} diterbitkan ulang dengan format route-bound v1.`,
       `/quote/${result.accessToken.token}`,
@@ -495,6 +502,7 @@ export const sendB2BQuoteAction: AdminAction = async (_previous, formData) => {
     await new B2BQuoteService().send({ inquiryId, scope: text(formData, "scope"),
       assumptions: text(formData, "assumptions"), lineItems, validUntil: text(formData, "validUntil") });
     revalidatePath(`/admin/inquiries/${inquiryId}`);
+    revalidatePath(`/admin/inquiries/${inquiryId}/proposal`);
     revalidatePath(`/account/inquiries/${inquiryId}`);
     return successState("Proposal B2B versi baru dikirim ke akun customer. Persetujuan tidak membuat order atau pembayaran.");
   } catch (error) { return errorStateFrom(error); }
