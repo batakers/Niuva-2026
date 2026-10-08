@@ -1,4 +1,4 @@
-import type { Prisma } from "@/generated/prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 import { appError } from "../shared/errors";
 import { hashOpaqueToken, createOpaqueToken } from "../customer-auth/core";
 import { DAY_MS, closureIdentityHash, closureGoogleHash } from "./core";
@@ -29,6 +29,10 @@ export async function eraseCustomerAccount(tx: Prisma.TransactionClient, id: str
   for (const row of await tx.b2BInquiry.findMany({ where: { customerId: id }, select: { id: true } })) await tx.b2BInquiry.update({ where: { id: row.id }, data: { accountClosedAt: now, publicTokenHash: hashOpaqueToken(createOpaqueToken()) } });
   for (const row of await tx.customPrintRequest.findMany({ where: { customerId: id }, select: { id: true } })) await tx.customPrintRequest.update({ where: { id: row.id }, data: { accountClosedAt: now, publicTokenHash: hashOpaqueToken(createOpaqueToken()) } });
   for (const quote of await tx.customPrintQuote.findMany({ where: { request: { customerId: id } }, select: { id: true } })) await tx.customPrintQuote.update({ where: { id: quote.id }, data: { publicTokenHash: hashOpaqueToken(createOpaqueToken()) } });
+  // Financial amounts and revisions survive closure. Buyer contact snapshots
+  // are stored separately so they can be redacted without rewriting totals.
+  await tx.invoice.updateMany({ where: { billingCase: { customerId: id } }, data: { buyerJson: Prisma.DbNull } });
+  await tx.billingCase.updateMany({ where: { customerId: id }, data: { accountClosedAt: now, customerId: null } });
   await tx.customerPendingRegistration.deleteMany({ where: { normalizedEmail: customer.normalizedEmail } });
   await tx.customerInternalGoogleConsent.deleteMany({ where: { normalizedEmail: customer.normalizedEmail } });
   await tx.customerPrivacyConfirmation.updateMany({ where: { customerId: id, consumedAt: null }, data: { consumedAt: now } });

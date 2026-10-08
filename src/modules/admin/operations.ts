@@ -1,4 +1,5 @@
 import "server-only";
+import { CUSTOM_PRINT_V1_RULE_CODE } from "@/modules/pricing/policy";
 import { z } from "zod";
 import { parseAdminListQuery, type AdminListQuery } from "./list-query";
 import { PrismaAdminOperationsReadRepository, type AdminOperationsReadRepository } from "./operations-read-repository";
@@ -954,7 +955,7 @@ export class AdminOperationsService {
   async getActivePricingRule(): Promise<AdminPricingRuleRow | null> {
     await this.authorizeWith("AUDIT_READ");
     const row = await this.prisma.pricingRuleVersion.findFirst({
-      where: { status: "ACTIVE" },
+      where: { status: "ACTIVE", code: CUSTOM_PRINT_V1_RULE_CODE },
       orderBy: [{ version: "desc" }, { createdAt: "desc" }, { id: "desc" }],
       select: {
         approvedAt: true,

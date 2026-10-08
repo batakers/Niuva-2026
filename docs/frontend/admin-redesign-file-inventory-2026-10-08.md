@@ -1,0 +1,230 @@
+# Admin redesign — workspace inventory, 8 October 2026
+
+Snapshot file aplikasi, domain, migration, test dan dokumentasi pada branch `codex/admin-redesign`. Hasil belum dikomit. Daftar ini mencakup perubahan Admin yang sudah ada ketika eksekusi dimulai dan dipertahankan, sehingga bukan klaim bahwa setiap baris dibuat dalam putaran ini. File duplikat lama dan scratch/log lokal tidak disertakan; tidak ada broad staging atau file deletion.
+
+```text
+ M DESIGN.md
+ M docs/PRD-Niuva-MVP.md
+ M docs/TechDesign-Niuva-MVP.md
+ M docs/frontend/admin-operations-implementation-2026-10-07.md
+ M next.config.ts
+ M package.json
+ M pnpm-lock.yaml
+ M prisma/schema.prisma
+ M src/app/admin/admin-list-controls.tsx
+ M src/app/admin/admin-loading.tsx
+ M src/app/admin/admin-page-header.tsx
+ M src/app/admin/admins/new/page.tsx
+ M src/app/admin/custom-print/[id]/page.tsx
+ M src/app/admin/custom-print/[id]/review/review-workspace.tsx
+ M src/app/admin/custom-print/page.tsx
+ M src/app/admin/inquiries/[id]/page.tsx
+ M src/app/admin/inquiries/page.tsx
+ M src/app/admin/orders/[id]/page.tsx
+ M src/app/admin/orders/page.tsx
+ M src/app/admin/overview-view.tsx
+ M src/app/admin/page.tsx
+ M src/app/admin/portfolio/[id]/page.tsx
+ M src/app/admin/portfolio/page.tsx
+ M src/app/admin/pricing/page.tsx
+ M src/app/admin/privacy/policy/page.tsx
+ M src/app/admin/products/[id]/page.tsx
+ M src/app/admin/products/page.tsx
+ M src/app/admin/queue/page.tsx
+ M src/app/admin/security/page.tsx
+ M src/app/admin/sign-in/[[...sign-in]]/page.tsx
+ M src/app/custom-print/request/reference-request-form.tsx
+ M src/app/custom-print/request/request-form.tsx
+ M src/app/globals.css
+ M src/app/layout.tsx
+ M src/app/page.tsx
+ M src/app/project-brief/brief-form.tsx
+ M src/components/niuva/admin-auth-form.tsx
+ M src/components/niuva/admin-security-form.tsx
+ M src/components/niuva/admin-shell.tsx
+ M src/components/niuva/public-shell.tsx
+ M src/features/public/company-content.ts
+ M src/modules/admin-auth/invitation-repository.ts
+ M src/modules/admin/action-queue-repository.ts
+ M src/modules/admin/list-query.ts
+ M src/modules/admin/navigation.ts
+ M src/modules/admin/operations-read-repository.ts
+ M src/modules/admin/operations.ts
+ M src/modules/admin/permissions.ts
+ M src/modules/custom-print/customer-preview.ts
+ M src/modules/custom-print/estimate.ts
+ M src/modules/custom-print/repository.ts
+ M src/modules/customer-privacy/lifecycle.ts
+ M src/modules/customer-privacy/repository.ts
+ M src/modules/files/repository.ts
+ M src/modules/inquiry/repository.ts
+ M src/modules/policy/privacy.ts
+ M src/modules/pricing/policy.ts
+ M src/modules/quote/service.ts
+ M tests/backend/customer-privacy-routes.test.ts
+ M tests/e2e-admin-auth/admin-auth.spec.ts
+ M tests/e2e-admin-auth/admin-invitations.spec.ts
+ M tests/e2e-admin-auth/admin-operations.spec.ts
+ M tests/e2e/account-work.spec.ts
+ M tests/integration/admin-page-route.test.ts
+ M tests/integration/customer-work-slice.test.ts
+ M tests/unit/admin-access-view.test.tsx
+ M tests/unit/admin-list-query.test.ts
+ M tests/unit/admin-overview-view.test.tsx
+ M tests/unit/admin-page-failure-group-b.test.tsx
+ M tests/unit/admin-page-failure-group-c.test.tsx
+ M tests/unit/admin-pricing-page.test.tsx
+ M tests/unit/admin-sidebar.test.tsx
+ M tests/unit/home.test.tsx
+ M tests/unit/server-actions-authorization.test.ts
+ M tests/unit/system-pages-coverage.test.ts
+?? docs/superpowers/plans/2026-10-08-admin-redesign-core.md
+?? docs/superpowers/plans/2026-10-08-admin-redesign-finance.md
+?? docs/superpowers/plans/2026-10-08-admin-redesign-implementation.md
+?? docs/superpowers/plans/2026-10-08-admin-redesign-rates-reports.md
+?? docs/superpowers/specs/2026-10-08-admin-redesign-design.md
+?? prisma/migrations/20261008073609_admin_notification_receipts/migration.sql
+?? prisma/migrations/20261008084700_site_information/migration.sql
+?? prisma/migrations/20261008093000_admin_finance/migration.sql
+?? prisma/migrations/20261008101500_financial_file_ownership/migration.sql
+?? prisma/migrations/20261008111000_active_tariff_constraint/migration.sql
+?? src/app/admin/account/page.tsx
+?? src/app/admin/activity/page.tsx
+?? src/app/admin/admin-media-editor.tsx
+?? src/app/admin/admins/actions.ts
+?? src/app/admin/admins/deactivate-button.tsx
+?? src/app/admin/admins/page.tsx
+?? src/app/admin/content/site-information/actions.ts
+?? src/app/admin/content/site-information/page.tsx
+?? src/app/admin/content/site-information/site-information-form.tsx
+?? src/app/admin/customers/[id]/page.tsx
+?? src/app/admin/customers/page.tsx
+?? src/app/admin/finance/actions.ts
+?? src/app/admin/finance/expenses/[id]/page.tsx
+?? src/app/admin/finance/expenses/actions.ts
+?? src/app/admin/finance/expenses/expense-form.tsx
+?? src/app/admin/finance/expenses/new/page.tsx
+?? src/app/admin/finance/expenses/page.tsx
+?? src/app/admin/finance/invoices/[id]/page.tsx
+?? src/app/admin/finance/invoices/new/page.tsx
+?? src/app/admin/finance/invoices/page.tsx
+?? src/app/admin/finance/page.tsx
+?? src/app/admin/finance/payments/[id]/page.tsx
+?? src/app/admin/finance/payments/page.tsx
+?? src/app/admin/finance/settings/actions.ts
+?? src/app/admin/finance/settings/page.tsx
+?? src/app/admin/inquiries/[id]/billing/actions.ts
+?? src/app/admin/inquiries/[id]/billing/page.tsx
+?? src/app/admin/reports/page.tsx
+?? src/app/admin/reports/report-view.tsx
+?? src/app/admin/search/page.tsx
+?? src/app/admin/settings/custom-print-rates/actions.ts
+?? src/app/admin/settings/custom-print-rates/page.tsx
+?? src/app/admin/settings/custom-print-rates/tariff-form.tsx
+?? src/app/admin/settings/page.tsx
+?? src/app/api/admin/account/route.ts
+?? src/app/api/admin/finance/evidence/route.ts
+?? src/app/api/admin/invoices/[id]/pdf/route.ts
+?? src/app/api/admin/notifications/read/route.ts
+?? src/app/api/admin/notifications/route.ts
+?? src/components/niuva/admin-account-menu.tsx
+?? src/components/niuva/admin-global-search.tsx
+?? src/components/niuva/admin-list-position.tsx
+?? src/components/niuva/admin-notification-center.tsx
+?? src/components/niuva/admin-notification-toast.tsx
+?? src/components/niuva/admin-trend-chart.tsx
+?? src/components/niuva/finance-action-form.tsx
+?? src/components/niuva/finance-list-controls.tsx
+?? src/components/niuva/financial-evidence-upload.tsx
+?? src/components/niuva/public-site-information.tsx
+?? src/modules/admin-auth/access-management-repository.ts
+?? src/modules/admin-auth/access-management-service.ts
+?? src/modules/admin/activity-timeline.ts
+?? src/modules/admin/attention-filter.ts
+?? src/modules/admin/global-search.ts
+?? src/modules/admin/navigation-items.ts
+?? src/modules/admin/notifications/repository.ts
+?? src/modules/admin/notifications/service.ts
+?? src/modules/admin/notifications/target-repository.ts
+?? src/modules/admin/notifications/target.ts
+?? src/modules/admin/notifications/types.ts
+?? src/modules/admin/overview-service.ts
+?? src/modules/admin/overview-types.ts
+?? src/modules/admin/reports/service.ts
+?? src/modules/admin/reports/types.ts
+?? src/modules/customers/query.ts
+?? src/modules/customers/repository.ts
+?? src/modules/customers/service.ts
+?? src/modules/customers/types.ts
+?? src/modules/finance/b2b-billing-service.ts
+?? src/modules/finance/billing-settings-service.ts
+?? src/modules/finance/evidence-policy.ts
+?? src/modules/finance/evidence-service.ts
+?? src/modules/finance/expense-categories.ts
+?? src/modules/finance/expense-service.ts
+?? src/modules/finance/invoice-document.ts
+?? src/modules/finance/invoice-pdf.ts
+?? src/modules/finance/invoice-service.ts
+?? src/modules/finance/manual-payment-service.ts
+?? src/modules/finance/money.ts
+?? src/modules/finance/pdf-assets/OFL.txt
+?? src/modules/finance/pdf-assets/SpaceGrotesk.ttf
+?? src/modules/finance/presentation.ts
+?? src/modules/finance/read-query.ts
+?? src/modules/finance/read-repository.ts
+?? src/modules/finance/read-service.ts
+?? src/modules/finance/repository.ts
+?? src/modules/finance/schema.ts
+?? src/modules/finance/source.ts
+?? src/modules/finance/summary.ts
+?? src/modules/finance/types.ts
+?? src/modules/pricing/tariff-schema.ts
+?? src/modules/pricing/tariff-service.ts
+?? src/modules/site-information/defaults.ts
+?? src/modules/site-information/public-reader.ts
+?? src/modules/site-information/repository.ts
+?? src/modules/site-information/schema.ts
+?? src/modules/site-information/service.ts
+?? src/modules/site-information/types.ts
+?? tests/backend/estimate-current-version.test.ts
+?? tests/backend/financial-evidence.test.ts
+?? tests/backend/invoice-payment-instructions.test.ts
+?? tests/backend/tariff-policy.test.ts
+?? tests/e2e-admin-auth/admin-b2b-billing.spec.ts
+?? tests/e2e-admin-auth/admin-customers.spec.ts
+?? tests/e2e-admin-auth/admin-dashboard-ux.spec.ts
+?? tests/e2e-admin-auth/admin-expenses.spec.ts
+?? tests/e2e-admin-auth/admin-finance.spec.ts
+?? tests/e2e-admin-auth/admin-invoice-download.spec.ts
+?? tests/e2e-admin-auth/admin-notifications.spec.ts
+?? tests/e2e-admin-auth/admin-reports.spec.ts
+?? tests/e2e-admin-auth/admin-site-information.spec.ts
+?? tests/e2e-admin-auth/admin-tariffs.spec.ts
+?? tests/e2e-admin-auth/helpers/session.ts
+?? tests/integration/admin-access-management.test.ts
+?? tests/integration/admin-customers.test.ts
+?? tests/integration/admin-expenses.test.ts
+?? tests/integration/admin-finance-invariants.test.ts
+?? tests/integration/admin-finance-privacy.test.ts
+?? tests/integration/admin-finance-read.test.ts
+?? tests/integration/admin-financial-evidence.test.ts
+?? tests/integration/admin-invoices.test.ts
+?? tests/integration/admin-notifications.test.ts
+?? tests/integration/admin-overview-attention.test.ts
+?? tests/integration/admin-reports.test.ts
+?? tests/integration/admin-tariffs.test.ts
+?? tests/integration/b2b-billing.test.ts
+?? tests/integration/helpers/finance.ts
+?? tests/integration/site-information.test.ts
+?? tests/unit/admin-customers-view.test.tsx
+?? tests/unit/admin-list-position.test.tsx
+?? tests/unit/admin-media-editor.test.tsx
+?? tests/unit/admin-notification-center.test.tsx
+?? tests/unit/admin-notification-route.test.ts
+?? tests/unit/admin-notification-target.test.ts
+?? tests/unit/admin-redesign-navigation.test.ts
+?? tests/unit/admin-reports.test.ts
+?? tests/unit/admin-search-activity.test.ts
+?? tests/unit/invoice-document.test.ts
+?? tests/unit/site-information-form.test.tsx
+```

@@ -16,9 +16,9 @@ export default async function AddAdminPage() {
   if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
   const mailReady = isAdminSmtpConfigured();
   return <AdminShell active="admins" role={gate.access.profile.role}>
-    <main id="main-content" className="mx-auto max-w-5xl space-y-8">
+    <main id="main-content" className="mx-auto max-w-5xl space-y-6">
       <header className="space-y-3">
-        <Link href="/admin" className="inline-flex min-h-11 items-center gap-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring"><ArrowLeft aria-hidden="true" className="size-4" />Kembali ke Dashboard</Link>
+        <Link href="/admin/admins" className="inline-flex min-h-11 items-center gap-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring"><ArrowLeft aria-hidden="true" className="size-4" />Kembali ke Admin & Akses</Link>
         <h1 className={typographySystemTokens.heading.className}>Tambah Admin</h1>
         <p className="max-w-2xl text-base leading-6 text-muted-foreground">Undang anggota tim untuk mengelola operasi Niuva. Setiap Admin menggunakan akun dan authenticator miliknya sendiri.</p>
       </header>

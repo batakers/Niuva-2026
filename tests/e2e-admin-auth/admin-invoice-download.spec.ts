@@ -1,0 +1,25 @@
+import { randomUUID } from "node:crypto";
+import path from "node:path";
+import { expect, test } from "@playwright/test";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../../src/generated/prisma/client";
+import { createAdminBrowserSession } from "./helpers/session";
+const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.TEST_DATABASE_URL }) });
+test.afterAll(async () => { await prisma.$disconnect(); });
+test("authorized invoice PDF renders long plain text with local font and denies closed sources", async ({ page, browser }) => {
+  const actor = await createAdminBrowserSession(page, prisma, "ADMIN");
+  const order = await prisma.order.create({ data: { orderNumber: randomUUID(), orderType: "RETAIL", customerName: "Synthetic PDF fixture", customerEmail: "pdf-fixture@example.test", customerPhone: "+628000000000", itemsSubtotalRp: "100000", shippingTotalRp: "0", grandTotalRp: "100000", publicTokenHash: randomUUID() } });
+  const billing = await prisma.billingCase.create({ data: { sourceKey: `ORDER_TOTAL:${order.id}`, kind: "ORDER_TOTAL", orderId: order.id, totalRp: "100000" } });
+  const financial = { issuer: { issuerName: "Synthetic Niuva TEST", issuerAddress: "Synthetic TEST address only", issuerEmail: "fixture@example.test", bankName: "TEST Bank", accountName: "TEST account", accountNumber: "000000000", transferInstructions: "Synthetic instructions for PDF testing." }, sourceReference: order.orderNumber, sourceKind: "ORDER_TOTAL", items: Array.from({ length: 80 }, (_, index) => ({ name: `Baris ${index + 1} · ${"Rincian pengujian dokumen panjang. ".repeat(6)}`, amountRp: "1250" })), totalRp: "100000", mode: "FULL", depositRp: null, depositDueDate: null, balanceDueDate: null };
+  const invoice = await prisma.invoice.create({ data: { billingCaseId: billing.id, revision: 1, state: "ISSUED", number: `INV-TEST-${randomUUID()}`, documentJson: financial, buyerJson: { name: order.customerName, email: order.customerEmail, phone: order.customerPhone }, issuedAt: new Date(), idempotencyKey: randomUUID(), createdByAdminId: actor.id } });
+  const url = `/api/admin/invoices/${invoice.id}/pdf`;
+  const response = await page.request.get(url);
+  expect(response.status()).toBe(200); expect(response.headers()["content-type"]).toBe("application/pdf"); expect(response.headers()["cache-control"]).toBe("no-store");
+  const downloadEvent = page.waitForEvent("download");
+  await page.evaluate((href) => { const anchor = document.createElement("a"); anchor.href = href; anchor.download = "invoice.pdf"; document.body.appendChild(anchor); anchor.click(); anchor.remove(); }, url);
+  const download = await downloadEvent;
+  await download.saveAs(path.resolve(".local/admin-finance/captures/long-invoice.pdf"));
+  const anonymous = await browser.newContext(); expect((await anonymous.request.get(`http://127.0.0.1:3107${url}`)).status()).toBe(401); await anonymous.close();
+  await prisma.billingCase.update({ where: { id: billing.id }, data: { accountClosedAt: new Date() } });
+  expect((await page.request.get(url)).status()).toBe(404);
+});

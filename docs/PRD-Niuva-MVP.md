@@ -1711,3 +1711,34 @@ Owner menetapkan panjang password Admin baru menjadi **8–15 karakter** pada
 7 Oktober 2026. Aturan ini berlaku pada provisioning Owner/Admin, aktivasi
 undangan, reset, dan perubahan password. Password existing tetap dapat digunakan
 untuk login dan verifikasi ulang; authenticator wajib tetap berlaku.
+
+## Addendum 7 Oktober 2026 — Navigasi dan akun Dashboard Admin
+
+Owner memilih implementasi langsung di kode untuk shell seluruh halaman Admin.
+Sidebar berkelompok menampilkan pekerjaan Operasional, halaman Kelola, serta
+halaman khusus Owner. Navbar memuat pencarian global, akses ke linimasa aktivitas,
+situs publik, dan menu akun di kanan atas. Overview menampilkan pekerjaan yang
+perlu perhatian, ringkasan bisnis, serta aktivitas terbaru secara ringkas tanpa
+angka atau grafik yang direka ketika sumber data belum tersedia.
+
+Hanya Owner dapat membuka **Admin & Akses**, mengundang Admin, melihat status
+undangan dan akun, serta menonaktifkan akun berperan Admin. Penonaktifan mencabut
+sesi aktif; Owner tidak dapat menonaktifkan Owner melalui halaman ini. Admin
+biasa tetap mengakses operasi yang diizinkan tanpa menu atau hasil pencarian
+khusus Owner. Akun pribadi menampilkan identitas, peran, dan akses pengamanan.
+
+Pencarian global meliputi menu, order, brief B2B, dan permintaan Custom Print
+berdasarkan referensi atau identitas customer yang masih boleh ditampilkan.
+Linimasa ikon lonceng menampilkan aktivitas yang tercatat dan terlihat oleh
+peran saat ini; Action Queue tetap daftar pekerjaan terbuka. Tidak ada klaim
+status belum dibaca tanpa pencatatan baca yang nyata.
+
+## Addendum 8 Oktober 2026 — Redesign Admin dan Keuangan
+
+Owner menyetujui [kesepakatan S01–S20](superpowers/specs/2026-10-08-admin-redesign-design.md) dan menginstruksikan eksekusi native berurutan dari [plan implementasi](superpowers/plans/2026-10-08-admin-redesign-implementation.md). Addendum ini menggantikan keputusan lama tentang mempertahankan UI Action Queue, menu Pricing Rules utama, dan menunda modul yang disetujui berikut.
+
+Overview memakai susunan bento tetap untuk Owner/Admin: empat sinyal pekerjaan terbuka, penerimaan/pengeluaran tercatat dan order dibayar, aktivitas terbaru, serta trafik ringkas. Action Queue tidak lagi menjadi menu/halaman kerja; sinyal tetap tersedia melalui daftar domain, notifikasi, pencarian, dan kartu perhatian. Lonceng memuat riwayat berizin dengan status baca per akun; pop-up hanya kejadian baru yang membutuhkan perhatian. Dibaca bukan selesai.
+
+Customers menyediakan direktori dan riwayat berdasarkan customerId sah. Konten berisi Portfolio dan Informasi Situs. Keuangan berisi invoice seluruh layanan, transaksi pembayaran, dan pengeluaran. B2B memakai satu invoice total proyek dengan pembayaran penuh atau DP + pelunasan yang ditentukan Owner; Owner/Admin memverifikasi transfer langsung dan mencatatnya. Keduanya boleh menerbitkan, mengoreksi, dan membatalkan catatan invoice/pembayaran manual/pengeluaran dengan alasan serta history; koreksi tidak menjalankan refund provider atau membatalkan pekerjaan otomatis.
+
+Laporan menyatukan operasional, keuangan, dan trafik. Tarif Custom Print berada pada Pengaturan khusus Owner dengan Ubah → Tinjau → Terapkan dan versi immutable; quote terbit lama tidak direprice. Admin & Akses/penonaktifan Admin dan Privasi Customer tetap Owner-only. Pola daftar → detail lengkap → tindakan serta return context berlaku lintas Admin. Diskon, Add Widget, AI Assistant, dan layout personal tidak ditambahkan. Kebijakan auth, lifecycle Customer, otoritas provider, pajak, serta retensi legal yang belum diputuskan tetap mengikuti sumber owning-nya.

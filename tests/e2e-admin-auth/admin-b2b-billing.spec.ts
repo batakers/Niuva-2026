@@ -1,0 +1,33 @@
+import { randomUUID } from "node:crypto";
+import { expect, test } from "@playwright/test";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../../src/generated/prisma/client";
+import { createAdminBrowserSession } from "./helpers/session";
+const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.TEST_DATABASE_URL }) });
+test.afterAll(async () => { await prisma.$disconnect(); });
+test("Owner sets agreed DP and Admin confirms balance with read-only terms", async ({ page, browser }) => {
+  const owner = await createAdminBrowserSession(page, prisma, "OWNER");
+  page.on("dialog", dialog => dialog.accept());
+  const email = `b2b-browser-${randomUUID()}@example.test`, customer = await prisma.customer.create({ data: { email, normalizedEmail: email } });
+  const inquiry = await prisma.b2BInquiry.create({ data: { customerId: customer.id, referenceNumber: randomUUID(), name: "Synthetic Billing Browser", email, phone: "+628000000", currentStage: "IDEA", description: "Synthetic browser project fixture", projectGoal: "TEST", targetQuantity: "1", confidentialityAck: true, publicTokenHash: randomUUID(), quotes: { create: { version: 1, status: "ACCEPTED", scope: "Synthetic TEST project scope", assumptions: "Synthetic assumption", lineItems: [{ name: "TEST", amountRp: "1000000" }], totalRp: "1000000", validUntil: new Date(Date.now() + 86400000), createdByAdminId: owner.id, decidedByCustomerId: customer.id } } } });
+  const url = `/admin/inquiries/${inquiry.id}/billing`;
+  await page.goto(url);
+  await page.getByLabel("Cara pembayaran").selectOption("DEPOSIT_BALANCE");
+  await page.getByLabel("Nominal DP (Rp)", { exact: true }).fill("300000");
+  await page.getByRole("button", { name: "Simpan pola pembayaran" }).click();
+  await expect(page.locator('[data-billing-stat="DP disepakati"]')).toHaveText("Rp 300.000");
+  const record = async (target: typeof page, amount: string) => {
+    await target.getByLabel("Tanggal dana diterima").fill(new Date().toISOString().slice(0, 10));
+    await target.getByLabel("Nominal diterima (Rp)").fill(amount);
+    await target.getByLabel("Referensi transfer", { exact: true }).fill(randomUUID());
+    await target.getByLabel("Saya sudah mencocokkan dana masuk dengan tagihan").check();
+    await target.getByRole("button", { name: "Catat pembayaran" }).click();
+  };
+  await record(page, "300000"); await expect(page.locator('[data-billing-stat="Sisa tagihan"]')).toHaveText("Rp 700.000");
+  const context = await browser.newContext({ baseURL: "http://localhost:3107" }), admin = await context.newPage();
+  await createAdminBrowserSession(admin, prisma, "ADMIN"); await admin.goto(url);
+  await expect(admin.getByText("Pola pembayaran dan nominal DP ditentukan Owner.")).toBeVisible(); await expect(admin.getByRole("button", { name: "Simpan pola pembayaran" })).toHaveCount(0);
+  await record(admin, "700000"); await expect(admin.locator('[data-billing-stat="Sisa tagihan"]')).toHaveText("Rp 0");
+  await admin.setViewportSize({ width: 320, height: 780 }); expect(await admin.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  await context.close();
+});

@@ -10,6 +10,7 @@ import { StatusNotice } from "@/components/niuva/status-notice";
 import { useHydrated } from "@/components/niuva/use-hydrated";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { usePublicSiteInformation } from "@/components/niuva/public-site-information";
 import { createPublicWhatsAppHref } from "@/features/public/company-content";
 import type { CustomFlowProductOption } from "@/modules/custom-print/product-intake";
 import { REFERENCE_PHOTO_MAX_BYTES } from "@/modules/policy/privacy";
@@ -54,6 +55,7 @@ export function ReferenceRequestForm({
   productOptions: readonly CustomFlowProductOption[];
   uploadsEnabled: boolean;
 }>) {
+  const siteInformation = usePublicSiteInformation();
   const hydrated = useHydrated();
   const [photoFileId, setPhotoFileId] = useState<string>();
   const [photoBusy, setPhotoBusy] = useState(false);
@@ -130,7 +132,7 @@ export function ReferenceRequestForm({
       {result === "success" && referenceNumber && requestId && <StatusNotice
         action={<div className="flex flex-wrap gap-3">
           <Link className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/account/make/${requestId}`}>Lihat status dan tambah model di akun</Link>
-          <a className="inline-flex min-h-11 items-center rounded-lg border border-border px-4 py-2 text-sm font-semibold focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={createPublicWhatsAppHref(referenceNumber)} rel="noreferrer">Lanjutkan via WhatsApp</a>
+          <a className="inline-flex min-h-11 items-center rounded-lg border border-border px-4 py-2 text-sm font-semibold focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={createPublicWhatsAppHref(referenceNumber, siteInformation.phone)} rel="noreferrer">Lanjutkan via WhatsApp</a>
         </div>}
         description={`Referensi ${referenceNumber} tersimpan di akun Anda. Model dapat ditambahkan pada request yang sama. Operator akan meninjau konteks lebih dahulu.`}
         title="Referensi masuk ke Niuva"

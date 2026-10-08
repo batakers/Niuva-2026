@@ -15,10 +15,15 @@ export type FileRetentionClass =
   | "CANCELLED_OR_UNPAID_REQUEST"
   | "COMPLETED_CUSTOM_ORDER";
 
+export function fileDeletionEligibleAt(startingAt: Date, retentionClass: FileRetentionClass): Date;
+export function fileDeletionEligibleAt(startingAt: Date, retentionClass: FileRetentionClass, purpose: "FINANCIAL_EVIDENCE"): null;
+export function fileDeletionEligibleAt(startingAt: Date, retentionClass: FileRetentionClass, purpose: "CUSTOMER_UPLOAD" | "FINANCIAL_EVIDENCE"): Date | null;
 export function fileDeletionEligibleAt(
   startingAt: Date,
   retentionClass: FileRetentionClass,
-): Date {
+  purpose: "CUSTOMER_UPLOAD" | "FINANCIAL_EVIDENCE" = "CUSTOMER_UPLOAD",
+): Date | null {
+  if (purpose === "FINANCIAL_EVIDENCE") return null;
   const timestamp = startingAt.getTime();
 
   if (!Number.isFinite(timestamp)) {

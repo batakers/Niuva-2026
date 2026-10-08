@@ -1,0 +1,10 @@
+import { z } from "zod";
+export const moneySchema = z.string().regex(/^(0|[1-9]\d{0,14})$/);
+export const positiveMoneySchema = moneySchema.refine(value => value !== "0");
+export const reasonSchema = z.string().trim().min(5).max(1000).refine(value => !/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(value));
+export const billingSourceSchema = z.discriminatedUnion("kind", [z.object({ kind: z.literal("ORDER_TOTAL"), orderId: z.uuid() }).strict(), z.object({ kind: z.literal("CUSTOM_SHIPPING"), orderId: z.uuid() }).strict(), z.object({ kind: z.literal("B2B"), inquiryId: z.uuid() }).strict()]);
+export const idempotencySchema = z.uuid();
+export const actualDateSchema = z.iso.date().refine(value => value <= new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()), "Tanggal tidak boleh di masa depan.");
+export const billingInstructionsSchema = z.object({ issuerName: z.string().trim().min(2).max(120), issuerAddress: z.string().trim().min(10).max(600), issuerEmail: z.email().max(254), bankName: z.string().trim().min(2).max(80), accountName: z.string().trim().min(2).max(120), accountNumber: z.string().trim().regex(/^[0-9 -]{5,40}$/), transferInstructions: z.string().trim().min(10).max(1000) }).strict();
+export const financialSnapshotSchema = z.object({ issuer: billingInstructionsSchema, sourceReference: z.string().min(1).max(120), sourceKind: z.enum(["ORDER_TOTAL", "CUSTOM_SHIPPING", "B2B"]), items: z.array(z.object({ name: z.string().min(1).max(300), amountRp: moneySchema }).strict()).min(1).max(100), totalRp: moneySchema, mode: z.enum(["FULL", "DEPOSIT_BALANCE"]), depositRp: moneySchema.nullable(), depositDueDate: z.iso.date().nullable(), balanceDueDate: z.iso.date().nullable() }).strict();
+export const invoiceBuyerSchema = z.object({ name: z.string().max(300), email: z.email().max(254), phone: z.string().max(50) }).strict();

@@ -33,6 +33,7 @@ export class B2BInquiryRepository {
     const files = await this.prisma.storedFile.findMany({
       where: {
         bucketScope: "PRIVATE_CUSTOMER",
+        purpose: "CUSTOMER_UPLOAD",
         id: { in: [...new Set(fileIds)] },
         uploadStatus: "UPLOADED",
       },
@@ -106,6 +107,7 @@ export class B2BInquiryRepository {
     const availableFiles = await transaction.storedFile.findMany({
       where: {
         bucketScope: "PRIVATE_CUSTOMER",
+        purpose: "CUSTOMER_UPLOAD",
         id: { in: [...new Set(fileIds)] },
         uploadStatus: "UPLOADED",
         uploadedByCustomerId: customerId ?? null,

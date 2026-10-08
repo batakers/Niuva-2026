@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import Link from "next/link";
 import { AdminPageHeader } from "../admin-page-header";
 import { AdminListControls } from "../admin-list-controls";
+import { AdminListPosition } from "@/components/niuva/admin-list-position";
 import { parseAdminListQuery, adminListQueryParams, type AdminListQuery } from "@/modules/admin/list-query";
 import { buildAdminPageHref, withAdminReturnTo } from "@/modules/admin/navigation";
 
@@ -47,6 +48,7 @@ export default async function AdminCustomPrintPage({
   return (
       <AdminShell active="custom-print" role={result.role}>
         <main id="main-content" data-admin-surface="custom-print">
+          <AdminListPosition listHref={returnTo} />
           <AdminPageHeader title="Custom Print" description="Pantau request, review operator, dan quote. Buka detail untuk memahami satu request sebelum melanjutkan pekerjaan." breadcrumbs={[{ label: "Custom Print" }]} />
           <AdminListControls area="custom-print" query={query} />
 

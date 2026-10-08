@@ -1,0 +1,6 @@
+import type { InvoiceFinancialSnapshot } from "./types";
+export function formatFinanceRp(value: string) { return `Rp ${BigInt(value).toLocaleString("id-ID")}`; }
+export const FINANCE_STATE_LABELS: Readonly<Record<string, string>> = { DRAFT: "Draft", ISSUED: "Terbit", VOID: "Dibatalkan", SUPERSEDED: "Diganti", UNPAID: "Belum dibayar", PARTIAL: "Dibayar sebagian", PAID: "Terbayar", REVIEW: "Perlu diperiksa", NO_PAYMENT_REQUIRED: "Tidak perlu pembayaran", VALID: "Tercatat", REVERSED: "Dikoreksi / dibatalkan", REVERSAL: "Pembatalan pencatatan", CONFIRMED: "Terkonfirmasi", PENDING: "Menunggu pembayaran", SETTLED: "Terkonfirmasi", REFUNDED: "Refund terkonfirmasi", FAILED: "Gagal", EXPIRED: "Kedaluwarsa", CANCELLED: "Dibatalkan" };
+export function invoicePaymentInstructions(snapshot: Pick<InvoiceFinancialSnapshot, "sourceKind" | "issuer">): readonly string[] {
+  return snapshot.sourceKind === "B2B" ? [`${snapshot.issuer.bankName} · ${snapshot.issuer.accountNumber} · a.n. ${snapshot.issuer.accountName}`, snapshot.issuer.transferInstructions] : ["Gunakan metode pembayaran yang tersedia pada pesanan Niuva. Status pembayaran mengikuti konfirmasi penyedia pembayaran. Invoice ini mendokumentasikan tagihan; penerbitannya tidak mengonfirmasi dana masuk."];
+}

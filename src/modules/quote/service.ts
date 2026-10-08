@@ -23,8 +23,7 @@ import { roundFinalTotal } from "@/modules/pricing/rounding";
 import { calculateProductionRange, additionalCostSchema } from "@/modules/custom-print/estimate";
 import {
   CUSTOM_PRINT_V1_RULE_CODE,
-  CUSTOM_PRINT_V1_RULE_VERSION,
-  customPrintPricingPolicySchema,
+  storedCustomPrintPricingPolicySchema,
   parseActiveCustomPrintPricingPolicy,
   type CustomPrintPricingPolicy,
 } from "@/modules/pricing/policy";
@@ -1109,7 +1108,7 @@ function createCalculationSnapshot(
 function assertQuoteStillMatchesCalculation(quote: QuoteForAcceptance): void {
   const snapshot = quoteCalculationSnapshotSchema.safeParse(quote.calculationSnapshot);
 
-  if (!snapshot.success) {
+  if (!snapshot.success || snapshot.data.policy.version !== snapshot.data.pricingRule.version) {
     throw appError("CONFLICT", {
       message: "Snapshot pricing quote tidak dapat divalidasi ulang.",
     });
@@ -1157,12 +1156,12 @@ const quoteCalculationSnapshotSchema = z.object({
   configurationJson: safeConfigurationSchema.optional(),
   filamentSource: z.enum(["NIUVA_STOCK", "CUSTOMER_OWN", "COMMUNAL"]),
   material: z.enum(["PLA", "ABS"]),
-  policy: customPrintPricingPolicySchema,
+  policy: storedCustomPrintPricingPolicySchema,
   printDurationSeconds: z.int().nonnegative(),
   pricingRule: z
     .object({
       code: z.literal(CUSTOM_PRINT_V1_RULE_CODE),
-      version: z.literal(CUSTOM_PRINT_V1_RULE_VERSION),
+      version: z.int().positive().max(1_000_000),
     })
     .strict(),
   quantity: z.int().positive(),

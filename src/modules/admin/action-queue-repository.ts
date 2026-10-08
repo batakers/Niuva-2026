@@ -30,7 +30,7 @@ export class PrismaActionQueueRepository
           referenceNumber: true,
           updatedAt: true,
         },
-        where: { status: "NEW" },
+        where: { status: "NEW", accountClosedAt: null },
       }),
       this.prisma.customPrintRequest.findMany({
         orderBy: [{ updatedAt: "asc" }, { id: "asc" }],
@@ -39,7 +39,7 @@ export class PrismaActionQueueRepository
           referenceNumber: true,
           updatedAt: true,
         },
-        where: { status: "SUBMITTED" },
+        where: { status: "SUBMITTED", accountClosedAt: null },
       }),
       this.prisma.customPrintRequest.findMany({
         orderBy: [{ updatedAt: "asc" }, { id: "asc" }],
@@ -49,6 +49,7 @@ export class PrismaActionQueueRepository
           updatedAt: true,
         },
         where: {
+          accountClosedAt: null,
           quotes: { none: { status: "DRAFT" } },
           status: "QUOTE_READY",
         },
@@ -61,7 +62,7 @@ export class PrismaActionQueueRepository
           quoteNumber: true,
           requestId: true,
         },
-        where: { status: "DRAFT" },
+        where: { status: "DRAFT", request: { accountClosedAt: null } },
       }),
       this.prisma.order.findMany({
         orderBy: [{ updatedAt: "asc" }, { id: "asc" }],
@@ -74,6 +75,7 @@ export class PrismaActionQueueRepository
           updatedAt: true,
         },
         where: {
+          accountClosedAt: null,
           OR: [
             { status: "PAID" },
             { orderType: "CUSTOM_PRINT", status: "FINISHING_QC" },
@@ -93,7 +95,7 @@ export class PrismaActionQueueRepository
           },
           updatedAt: true,
         },
-        where: { status: "EXCEPTION" },
+        where: { status: "EXCEPTION", order: { accountClosedAt: null } },
       }),
     ]);
 

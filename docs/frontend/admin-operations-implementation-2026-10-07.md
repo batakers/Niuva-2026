@@ -136,7 +136,34 @@ Agent memeriksa representative captures Overview, Orders (retail/custom), B2B li
 
 ## Scope yang tetap ditunda
 
-Global search, notification center, bulk/assignment, Admin & Access, UI create/import, pricing editor, B2B autosave/draft, generic unsaved-changes guard, custom scroll/focus restoration, revenue/AOV/growth/unique visitors, event feed, aggregate pipeline baru dan signal Queue tambahan tetap deferred. Mockup tidak menjadi sumber fitur atau angka backend.
+Permintaan Owner berikutnya membuka kembali global search, linimasa aktivitas
+berbasis AuditLog, menu akun, dan halaman Admin & Akses beserta penonaktifan
+Admin. Keempat scope tersebut sekarang diimplementasikan langsung di kode.
+
+Bulk/assignment, UI create/import, pricing editor, B2B autosave/draft, generic
+unsaved-changes guard, custom scroll/focus restoration, revenue/AOV/growth/unique
+visitors, aggregate pipeline baru dan signal Queue tambahan tetap deferred.
+Mockup tidak menjadi sumber fitur atau angka backend.
+
+### Lanjutan implementasi akun dan navigasi
+
+- Shell seluruh route Admin kini memakai pencarian di header, tautan linimasa
+  aktivitas melalui ikon lonceng, dan menu akun dengan Akun saya, Keamanan akun,
+  serta Keluar. Sidebar Owner menampilkan Admin & Akses.
+- Overview memusatkan empat sinyal pekerjaan, daftar tindak lanjut, metrik
+  periode, dan aktivitas terbaru. Grafik trafik hanya muncul bila ada data nyata.
+- Pencarian mencakup menu yang diizinkan, order, brief B2B, dan Custom Print;
+  record Customer yang sudah ditutup tidak ikut muncul. Linimasa membaca
+  AuditLog dan membatasi peristiwa khusus Owner untuk Admin biasa. Belum ada
+  status baca atau angka notifikasi yang disimpan.
+- Owner dapat melihat akun/undangan dan menonaktifkan Admin. Transaksi
+  memeriksa ulang peran serta status Owner dan target, mencabut seluruh sesi
+  Admin target, lalu mencatat audit. Owner tidak dapat dinonaktifkan dari UI ini.
+- Validasi lokal lanjutan: lint, typecheck, Prisma validate, build, 1.342 unit,
+  582 backend, 156 integrasi, dan 12 skenario browser Admin lulus. Browser
+  memeriksa desktop/mobile, fokus dan pintasan pencarian, reduced motion,
+  pembatasan Owner, serta pencabutan sesi. Visual Owner masih belum direview;
+  pengujian perangkat fisik/AT dan hosted/provider tetap terpisah.
 
 ## Risiko, rollback, dan langkah berikutnya
 

@@ -1,0 +1,31 @@
+import { randomUUID } from "node:crypto";
+import { describe, expect, it, vi } from "vitest";
+vi.mock("server-only", () => ({}));
+import { FinanceReadService } from "@/modules/finance/read-service";
+import { InvoiceService } from "@/modules/finance/invoice-service";
+import { ExpenseService } from "@/modules/finance/expense-service";
+import { financeActor, financeOrder, financePrisma as prisma } from "./helpers/finance";
+describe("daily Finance reads and actual receipts", () => {
+  it("counts a provider settlement once, never counts an invoice as cash, and excludes reversed expense", async () => {
+    const access = await financeActor("ADMIN"), service = new FinanceReadService(), invoices = new InvoiceService(), expenses = new ExpenseService();
+    const order = await financeOrder("190001");
+    const before = await service.summary(access, "30d");
+    const draft = await invoices.createDraft(access, { source: { kind: "ORDER_TOTAL", orderId: order.id }, idempotencyKey: randomUUID() });
+    expect((await service.summary(access, "30d")).grossConfirmedReceiptsRp).toBe(before.grossConfirmedReceiptsRp);
+    const attempt = await prisma.paymentAttempt.create({ data: { orderId: order.id, purpose: "ORDER_TOTAL", amountRp: "190001", providerOrderId: randomUUID(), status: "SETTLED", settledAt: new Date(), expiresAt: new Date(Date.now() + 60_000), events: { create: [1, 2].map(() => ({ provider: "MIDTRANS", providerOrderId: randomUUID(), eventFingerprint: randomUUID(), processingResult: "SETTLED" })) } } });
+    expect((await service.summary(access, "30d")).grossConfirmedReceiptsRp).toBe((BigInt(before.grossConfirmedReceiptsRp) + BigInt(190001)).toString());
+    const payment = await service.payment(access, attempt.id); expect(payment).toMatchObject({ source: "PROVIDER", amountRp: "190001" });
+    const list = await service.invoices(access, { q: order.orderNumber, service: "ready-made", page: 1 }); expect(list.items.map(row => row.id)).toContain(draft.id);
+    const expense = await expenses.record(access, { amountRp: "70001", expenseDate: new Date().toISOString().slice(0, 10), category: "OTHER", description: "Synthetic Finance read expense", idempotencyKey: randomUUID() });
+    expect((await service.summary(access, "30d")).validExpensesRp).toBe((BigInt(before.validExpensesRp) + BigInt(70001)).toString());
+    await expenses.void(access, { expenseId: expense.id, expectedVersion: 1, reason: "Synthetic finance read reversal.", idempotencyKey: randomUUID() });
+    expect((await service.summary(access, "30d")).validExpensesRp).toBe(before.validExpensesRp);
+    const pending = await prisma.paymentAttempt.create({ data: { orderId: order.id, purpose: "CUSTOM_SHIPPING", amountRp: "99", providerOrderId: randomUUID(), expiresAt: new Date(Date.now() + 60_000) } });
+    expect((await service.summary(access, "30d")).grossConfirmedReceiptsRp).toBe((BigInt(before.grossConfirmedReceiptsRp) + BigInt(190001)).toString());
+    await prisma.paymentEvent.create({ data: { paymentAttemptId: attempt.id, provider: "MIDTRANS", providerOrderId: attempt.providerOrderId, eventFingerprint: randomUUID(), processingResult: "PARTIAL_REFUND_REQUIRES_EXCEPTION" } });
+    expect((await service.payment(access, attempt.id))?.state).toBe("REVIEW");
+    expect((await service.summary(access, "30d")).needsReviewCount).toBeGreaterThan(before.needsReviewCount);
+    expect((await service.payment(access, pending.id))?.actualDate).toBeNull();
+    expect((await service.payments(access, { q: attempt.providerOrderId, status: "REVIEW" })).items.map(row => row.id)).toContain(attempt.id);
+  });
+});

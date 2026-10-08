@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { useHydrated } from "./use-hydrated";
 import { typographySystemTokens } from "@/design/typography";
 import { navigateAfterAdminAuth } from "./admin-auth-navigation";
 import QRCode from "react-qr-code";
@@ -30,6 +31,7 @@ export async function postAdminAuth(path: string, body: Readonly<Record<string, 
 }
 
 export function AdminAuthForm({ resetToken = "", invitation = false, verified = false, passwordChanged = false }: Readonly<{ resetToken?: string; invitation?: boolean; verified?: boolean; passwordChanged?: boolean }>) {
+  const hydrated = useHydrated();
   const [stage, setStage] = useState<Stage>(invitation ? "invitation" : resetToken ? "reset" : "loading");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -121,24 +123,24 @@ export function AdminAuthForm({ resetToken = "", invitation = false, verified = 
     {error && <p role="alert" className="rounded-lg border border-destructive-border bg-destructive-background px-3 py-3 text-sm leading-6 text-destructive-icon">{error}</p>}
     {message && <p role="status" className="rounded-lg border border-info-border bg-info-background px-3 py-3 text-sm leading-6 text-info-icon">{message}</p>}
     {stage === "forbidden" && <p className="text-sm text-muted-foreground">Hubungi Owner untuk memeriksa profil dan akses Admin Anda.</p>}
-    {(stage === "sign-in" || stage === "forgot") && <label className="block space-y-2"><span className="text-sm font-medium">Email Admin</span><input className={inputClass} name="email" type="email" autoComplete="username" required maxLength={254} value={email} onChange={event => setEmail(event.target.value)} disabled={busy}/></label>}
-    {(stage === "sign-in" || stage === "enroll" || stage === "reset" || stage === "invitation") && <label className="block space-y-2"><span className="text-sm font-medium">{stage === "reset" || stage === "invitation" ? "Password baru" : "Password"}</span><input className={inputClass} name="password" type="password" autoComplete={stage === "reset" || stage === "invitation" ? "new-password" : "current-password"} minLength={stage === "reset" || stage === "invitation" ? ADMIN_PASSWORD_MIN_LENGTH : 1} maxLength={stage === "reset" || stage === "invitation" ? ADMIN_PASSWORD_MAX_LENGTH : ADMIN_EXISTING_PASSWORD_MAX_LENGTH} required value={password} onChange={event => setPassword(event.target.value)} disabled={busy}/></label>}
+    {(stage === "sign-in" || stage === "forgot") && <label className="block space-y-2"><span className="text-sm font-medium">Email Admin</span><input className={inputClass} name="email" type="email" autoComplete="username" required maxLength={254} value={email} onChange={event => setEmail(event.target.value)} disabled={busy || !hydrated}/></label>}
+    {(stage === "sign-in" || stage === "enroll" || stage === "reset" || stage === "invitation") && <label className="block space-y-2"><span className="text-sm font-medium">{stage === "reset" || stage === "invitation" ? "Password baru" : "Password"}</span><input className={inputClass} name="password" type="password" autoComplete={stage === "reset" || stage === "invitation" ? "new-password" : "current-password"} minLength={stage === "reset" || stage === "invitation" ? ADMIN_PASSWORD_MIN_LENGTH : 1} maxLength={stage === "reset" || stage === "invitation" ? ADMIN_PASSWORD_MAX_LENGTH : ADMIN_EXISTING_PASSWORD_MAX_LENGTH} required value={password} onChange={event => setPassword(event.target.value)} disabled={busy || !hydrated}/></label>}
     {stage === "enroll" && <p className="text-sm leading-6 text-muted-foreground">Masukkan kembali password untuk menyiapkan authenticator. Dashboard akan terbuka setelah kode pertama diverifikasi.</p>}
-    {(stage === "reset" || stage === "invitation") && <label className="block space-y-2"><span className="text-sm font-medium">Konfirmasi password baru</span><input className={inputClass} type="password" autoComplete="new-password" minLength={ADMIN_PASSWORD_MIN_LENGTH} maxLength={ADMIN_PASSWORD_MAX_LENGTH} required value={confirmation} onChange={event => setConfirmation(event.target.value)} disabled={busy}/></label>}
+    {(stage === "reset" || stage === "invitation") && <label className="block space-y-2"><span className="text-sm font-medium">Konfirmasi password baru</span><input className={inputClass} type="password" autoComplete="new-password" minLength={ADMIN_PASSWORD_MIN_LENGTH} maxLength={ADMIN_PASSWORD_MAX_LENGTH} required value={confirmation} onChange={event => setConfirmation(event.target.value)} disabled={busy || !hydrated}/></label>}
     {stage === "setup" && setup && <div className="space-y-4">
       <p className="text-sm leading-6 text-muted-foreground">Pindai QR menggunakan aplikasi authenticator Anda. Simpan kode pemulihan di tempat pribadi; setiap kode hanya dapat digunakan sekali.</p>
       <div className="inline-block rounded-lg bg-white p-4"><QRCode value={setup.uri} size={176} title="QR untuk menambahkan akun NIUVA Admin ke authenticator"/></div>
       <details className="text-sm"><summary className="cursor-pointer py-3">Tidak bisa memindai QR?</summary><p className="break-all py-2">Tambahkan akun secara manual: {new URL(setup.uri).searchParams.get("secret")}</p></details>
       <div className="rounded-lg border border-border bg-muted p-4"><p className="mb-3 text-sm font-semibold">Kode pemulihan</p><ul className="grid grid-cols-2 gap-2 text-sm font-mono">{setup.codes.map(value => <li key={value}>{value}</li>)}</ul></div>
-      <label className="flex min-h-11 items-center gap-3 text-sm"><input type="checkbox" checked={saved} onChange={event => setSaved(event.target.checked)} required disabled={busy}/>Saya sudah menyimpan kode pemulihan</label>
+      <label className="flex min-h-11 items-center gap-3 text-sm"><input type="checkbox" checked={saved} onChange={event => setSaved(event.target.checked)} required disabled={busy || !hydrated}/>Saya sudah menyimpan kode pemulihan</label>
     </div>}
-    {(stage === "factor" || stage === "setup") && <label className="block space-y-2"><span className="text-sm font-medium">{backup && stage === "factor" ? "Kode pemulihan" : "Kode authenticator"}</span><input className={inputClass} name="code" type="text" inputMode={backup ? "text" : "numeric"} autoComplete="one-time-code" pattern={backup ? undefined : "[0-9]{6}"} maxLength={backup ? 64 : 6} required value={code} onChange={event => setCode(event.target.value)} disabled={busy}/></label>}
-    {stage !== "forbidden" && <button className={buttonClass + " w-full"} disabled={busy || (stage === "setup" && !saved) || (stage === "invitation" && !token)} type="submit">{busy ? "Memproses…" : stage === "enroll" ? "Siapkan authenticator" : stage === "factor" || stage === "setup" ? "Verifikasi kode" : stage === "forgot" ? "Kirim tautan pemulihan" : stage === "reset" ? "Simpan password" : stage === "invitation" ? "Aktifkan akun" : "Masuk"}</button>}
+    {(stage === "factor" || stage === "setup") && <label className="block space-y-2"><span className="text-sm font-medium">{backup && stage === "factor" ? "Kode pemulihan" : "Kode authenticator"}</span><input className={inputClass} name="code" type="text" inputMode={backup ? "text" : "numeric"} autoComplete="one-time-code" pattern={backup ? undefined : "[0-9]{6}"} maxLength={backup ? 64 : 6} required value={code} onChange={event => setCode(event.target.value)} disabled={busy || !hydrated}/></label>}
+    {stage !== "forbidden" && <button className={buttonClass + " w-full"} disabled={busy || !hydrated || (stage === "setup" && !saved) || (stage === "invitation" && !token)} type="submit">{busy ? "Memproses…" : stage === "enroll" ? "Siapkan authenticator" : stage === "factor" || stage === "setup" ? "Verifikasi kode" : stage === "forgot" ? "Kirim tautan pemulihan" : stage === "reset" ? "Simpan password" : stage === "invitation" ? "Aktifkan akun" : "Masuk"}</button>}
     <div className="flex flex-wrap gap-3 text-sm">
-      {stage === "sign-in" && <button className={secondaryButtonClass} type="button" onClick={() => { setError(""); setStage("forgot"); }} disabled={busy}>Lupa password?</button>}
-      {stage === "factor" && <button className={secondaryButtonClass} type="button" onClick={() => { setBackup(!backup); setCode(""); setError(""); }} disabled={busy}>{backup ? "Gunakan authenticator" : "Gunakan kode pemulihan"}</button>}
-      {(stage === "forgot" || stage === "invitation") && <button className={secondaryButtonClass} type="button" onClick={() => { setError(""); setPassword(""); setConfirmation(""); setToken(""); setStage("sign-in"); }} disabled={busy}>Kembali ke login</button>}
-      {["factor", "enroll", "setup", "forbidden"].includes(stage) && <button className={secondaryButtonClass} type="button" onClick={() => void leave()} disabled={busy}>Keluar dari sesi ini</button>}
+      {stage === "sign-in" && <button className={secondaryButtonClass} type="button" onClick={() => { setError(""); setStage("forgot"); }} disabled={busy || !hydrated}>Lupa password?</button>}
+      {stage === "factor" && <button className={secondaryButtonClass} type="button" onClick={() => { setBackup(!backup); setCode(""); setError(""); }} disabled={busy || !hydrated}>{backup ? "Gunakan authenticator" : "Gunakan kode pemulihan"}</button>}
+      {(stage === "forgot" || stage === "invitation") && <button className={secondaryButtonClass} type="button" onClick={() => { setError(""); setPassword(""); setConfirmation(""); setToken(""); setStage("sign-in"); }} disabled={busy || !hydrated}>Kembali ke login</button>}
+      {["factor", "enroll", "setup", "forbidden"].includes(stage) && <button className={secondaryButtonClass} type="button" onClick={() => void leave()} disabled={busy || !hydrated}>Keluar dari sesi ini</button>}
     </div>
   </form>;
 }

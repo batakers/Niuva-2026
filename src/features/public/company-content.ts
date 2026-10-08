@@ -30,8 +30,8 @@ export const publicCompanyProfile = {
   },
 } as const;
 
-export function createPublicWhatsAppHref(referenceNumber: string): string {
-  const phoneNumber = publicCompanyProfile.contact.phone.replace(/\D/g, "");
+export function createPublicWhatsAppHref(referenceNumber: string, phone: string = publicCompanyProfile.contact.phone): string {
+  const phoneNumber = phone.replace(/\D/g, "");
   const message = `Halo Niuva, saya baru mengirim project brief dengan referensi ${referenceNumber}.`;
 
   return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;

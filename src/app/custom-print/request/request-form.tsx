@@ -10,6 +10,7 @@ import { StatusNotice } from "@/components/niuva/status-notice";
 import { useHydrated } from "@/components/niuva/use-hydrated";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { usePublicSiteInformation } from "@/components/niuva/public-site-information";
 import { createPublicWhatsAppHref } from "@/features/public/company-content";
 import type { CustomFlowProductOption } from "@/modules/custom-print/product-intake";
 import { CUSTOM_FILE_MAX_BYTES } from "@/modules/policy/privacy";
@@ -198,6 +199,7 @@ export function RequestForm({
       : "unavailable";
   const isLive = mode === "live";
   const isPreview = mode === "preview";
+  const siteInformation = usePublicSiteInformation();
   const hydrated = useHydrated();
   const [errors, setErrors] = useState<PreviewErrors>({});
   const [file, setFile] = useState<File | null>(null);
@@ -708,7 +710,7 @@ export function RequestForm({
               {requestId ? <Link className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/account/make/${requestId}`}>Lihat status di akun</Link> : null}
               <a
                 className="inline-flex min-h-11 items-center rounded-lg border border-success-border bg-background px-4 py-2 text-sm font-semibold text-success underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                href={createPublicWhatsAppHref(referenceNumber)}
+                href={createPublicWhatsAppHref(referenceNumber, siteInformation.phone)}
                 rel="noreferrer"
               >
                 Lanjutkan melalui WhatsApp

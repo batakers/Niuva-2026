@@ -54,6 +54,8 @@ vi.mock("@/modules/admin/dashboard-service", () => ({
   }),
 }));
 
+vi.mock("@/modules/admin/reports/service", () => ({ AdminReportsService: vi.fn(function Reports() { return { load: async () => { await dashboardMocks.load(); return { generatedAt: "2026-10-08T00:00:00Z", finance: { status: "unavailable", message: "Keuangan belum dapat dimuat." }, operations: { status: "unavailable", message: "Operasional belum dapat dimuat." }, traffic: { status: "unavailable", message: "Trafik belum dapat dimuat." } }; } }; }) }));
+vi.mock("@/modules/admin/activity-timeline", () => ({ AdminActivityTimelineService: vi.fn(function Activity() { return { list: async () => ({ items: [], page: 1, hasNext: false }) }; }) }));
 vi.mock("next/server", () => ({
   connection: nextServerMocks.connection,
 }));
@@ -262,12 +264,11 @@ describe("admin access route", () => {
     expect(
       screen.getByRole("heading", {
         level: 1,
-        name: "Overview belum dapat dimuat",
+        name: "Overview",
       }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("alert")).toHaveTextContent(
-      "Tidak ada perubahan operasional yang dibuat.",
-    );
+    expect(screen.getByText("Pekerjaan yang perlu perhatian belum dapat dimuat.")).toBeInTheDocument();
+    expect(screen.queryByText("database unavailable")).not.toBeInTheDocument();
   });
 
   it("keeps the new queue route closed without an active Admin profile", async () => {
@@ -277,14 +278,13 @@ describe("admin access route", () => {
     expect(queueMocks.list).not.toHaveBeenCalled();
   });
 
-  it("shows a safe overview error when dashboard data fails after authorization", async () => {
+  it("rejects unexpected report composition failure without showing private details", async () => {
     authMocks.requireAdmin.mockResolvedValue({
       authUserId: "user_admin",
       profile: { authUserId: "user_admin", id: "a6f443d8-3e8a-49b5-81d0-94d56e06c208", isActive: true, role: "ADMIN" },
     } satisfies AdminAccess);
     dashboardMocks.load.mockRejectedValue(new Error("private database failure"));
-    render(await AdminPage({ searchParams: Promise.resolve({}) }));
-    expect(screen.getByRole("heading", { level: 1, name: "Overview belum dapat dimuat" })).toBeInTheDocument();
+    await expect(AdminPage({ searchParams: Promise.resolve({}) })).rejects.toThrow("private database failure");
     expect(screen.queryByText("private database failure")).not.toBeInTheDocument();
   });
 });

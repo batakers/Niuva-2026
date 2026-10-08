@@ -50,9 +50,9 @@ const exclusionReasons: readonly ExclusionReason[] = [
   "X4-non-product",
 ];
 
-// The skeleton stays unchanged after moving it out of the streaming convention.
-// SHA-256 with CRLF normalized to LF (original R6.9 reference).
-const ADMIN_LOADING_SHA256 = "14ce07247f76014b97602c26d3c5779338d2e2465e5027dddd1051f2bd6838ea";
+// The approved Admin redesign uses its shared neutral surface and bento skeleton.
+// SHA-256 with CRLF normalized to LF; accessibility assertions below still apply.
+const ADMIN_LOADING_SHA256 = "6b7dbebb3fa0b682a9cef8fd2b672cd1d2b1ead0bb891f8ff46c36d5b09ef06e";
 
 function isAdminPath(relative: string): boolean {
   return relative === "admin" || relative.startsWith("admin/");

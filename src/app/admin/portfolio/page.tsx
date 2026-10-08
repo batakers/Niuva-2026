@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import Link from "next/link";
 import { AdminPageHeader } from "../admin-page-header";
 import { AdminListControls } from "../admin-list-controls";
+import { AdminListPosition } from "@/components/niuva/admin-list-position";
 import { parseAdminListQuery, adminListQueryParams, type AdminListQuery } from "@/modules/admin/list-query";
 import { buildAdminPageHref, withAdminReturnTo } from "@/modules/admin/navigation";
 
@@ -47,6 +48,7 @@ export default async function AdminPortfolioPage({
   return (
       <AdminShell active="portfolio" role={result.role}>
         <main id="main-content" data-admin-surface="portfolio">
+          <AdminListPosition listHref={returnTo} />
           <AdminPageHeader title="Portfolio" description="Cari proyek dan pantau publikasi. Buka editor untuk memperbarui konten dan media yang sudah disetujui." breadcrumbs={[{ label: "Portfolio" }]} />
           <AdminListControls area="portfolio" query={query} />
 

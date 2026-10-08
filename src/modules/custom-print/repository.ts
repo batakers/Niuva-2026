@@ -177,6 +177,7 @@ export class CustomPrintRequestRepository {
     const files = await this.prisma.storedFile.findMany({
       where: {
         bucketScope: "PRIVATE_CUSTOMER",
+        purpose: "CUSTOMER_UPLOAD",
         id: { in: [...new Set(fileIds)] },
         uploadStatus: "UPLOADED",
       },
@@ -212,6 +213,7 @@ export class CustomPrintRequestRepository {
       const files = await transaction.storedFile.findMany({
         where: {
           bucketScope: "PRIVATE_CUSTOMER",
+        purpose: "CUSTOMER_UPLOAD",
           deletedAt: null,
           id: { in: [...new Set(input.fileIds)] },
           uploadStatus: "UPLOADED",
@@ -507,6 +509,7 @@ export class CustomPrintQuoteRepository {
 
   async createDraft(input: CreateDraftQuoteInput) {
     return this.prisma.$transaction(async (transaction) => {
+      await transaction.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('niuva-custom-print-rates'))`;
       // Serialize draft creation per request. The service preflight keeps the
       // UI responsive, while this row lock closes the concurrent-submit race.
       await transaction.$queryRaw(
@@ -646,6 +649,7 @@ export class CustomPrintQuoteRepository {
     publicTokenHash: string,
   ) {
     return this.prisma.$transaction(async (transaction) => {
+      await transaction.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('niuva-custom-print-rates'))`;
       const quoteHint = await transaction.customPrintQuote.findUnique({
         where: { id: quoteId }, select: { requestId: true },
       });
@@ -654,6 +658,7 @@ export class CustomPrintQuoteRepository {
       const quote = await transaction.customPrintQuote.findUnique({
         where: { id: quoteId },
         select: { estimateId: true, finalTotalRp: true, requestId: true, status: true,
+          pricingRuleVersion: { select: { status: true } },
           request: { select: { customerId: true, review: { select: { updatedAt: true } } } } },
       });
 
@@ -661,7 +666,7 @@ export class CustomPrintQuoteRepository {
         throw appError("NOT_FOUND");
       }
 
-      if (quote.status !== "DRAFT") {
+      if (quote.status !== "DRAFT" || quote.pricingRuleVersion.status !== "ACTIVE") {
         throw appError("QUOTE_NOT_READY");
       }
       const latestEstimate = await transaction.customPrintEstimate.findFirst({

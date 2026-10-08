@@ -1,0 +1,12 @@
+"use server";
+import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/auth/admin";
+import { toAppErrorLogged } from "@/lib/observability/report";
+import type { AdminAction } from "@/app/admin/actions";
+import { ExpenseService } from "@/modules/finance/expense-service";
+const text = (form: FormData, key: string) => typeof form.get(key) === "string" ? String(form.get(key)) : "";
+function details(form: FormData) { return { amountRp: text(form, "amountRp"), expenseDate: text(form, "expenseDate"), category: text(form, "category"), description: text(form, "description"), idempotencyKey: text(form, "idempotencyKey") }; }
+function refresh(id: string) { revalidatePath(`/admin/finance/expenses/${id}`); revalidatePath("/admin/finance/expenses"); revalidatePath("/admin/finance"); revalidatePath("/admin/reports"); revalidatePath("/admin"); }
+export const recordExpenseAction: AdminAction = async (_previous, form) => { try { const result = await new ExpenseService().record(await requireAdmin(), details(form)); refresh(result.id); return { status: "success", message: "Pengeluaran berhasil dicatat.", link: `/admin/finance/expenses/${result.id}` }; } catch (error) { return { status: "error", message: toAppErrorLogged(error, { boundary: "action:finance.expense.record" }).message }; } };
+export const correctExpenseAction: AdminAction = async (_previous, form) => { try { const result = await new ExpenseService().correct(await requireAdmin(), { ...details(form), expenseId: text(form, "expenseId"), expectedVersion: Number(form.get("expectedVersion")), reason: text(form, "reason") }); refresh(text(form, "expenseId")); refresh(result.id); return { status: "success", message: "Koreksi dicatat dan catatan asli tetap tersimpan.", link: `/admin/finance/expenses/${result.id}` }; } catch (error) { return { status: "error", message: toAppErrorLogged(error, { boundary: "action:finance.expense.correct" }).message }; } };
+export const voidExpenseAction: AdminAction = async (_previous, form) => { try { const result = await new ExpenseService().void(await requireAdmin(), { expenseId: text(form, "expenseId"), expectedVersion: Number(form.get("expectedVersion")), reason: text(form, "reason"), idempotencyKey: text(form, "idempotencyKey") }); refresh(result.id); return { status: "success", message: "Pencatatan pengeluaran dibatalkan; riwayat tersimpan." }; } catch (error) { return { status: "error", message: toAppErrorLogged(error, { boundary: "action:finance.expense.void" }).message }; } };

@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import Link from "next/link";
 import { AdminPageHeader } from "../admin-page-header";
 import { AdminListControls } from "../admin-list-controls";
+import { AdminListPosition } from "@/components/niuva/admin-list-position";
 import { parseAdminListQuery, adminListQueryParams, type AdminListQuery } from "@/modules/admin/list-query";
 import { buildAdminPageHref, withAdminReturnTo } from "@/modules/admin/navigation";
 
@@ -49,6 +50,7 @@ export default async function AdminOrdersPage({
   return (
       <AdminShell active="orders" role={result.role}>
         <main id="main-content" data-admin-surface="orders">
+          <AdminListPosition listHref={returnTo} />
           <AdminPageHeader title="Orders" description="Cari order, pantau pembayaran, dan buka detail untuk tindakan fulfillment." breadcrumbs={[{ label: "Orders" }]} />
           <AdminListControls area="orders" query={query} />
 
