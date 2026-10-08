@@ -22,7 +22,12 @@ export class PrismaAdminNotificationRepository {
   async activate(access: AdminAccess): Promise<void> {
     await this.prisma.$transaction(async tx => {
       await this.assertActive(access, tx);
-      await tx.adminNotificationState.upsert({ where: { profileId: access.profile.id }, create: { profileId: access.profile.id }, update: {} });
+      // Prisma's read-then-create upsert can race when two first boots use the
+      // same profile. Let PostgreSQL arbitrate the primary-key conflict so a
+      // concurrent bootstrap remains idempotent instead of surfacing P2002.
+      await tx.$executeRaw(Prisma.sql`INSERT INTO admin_notification_states (profile_id)
+        VALUES (${access.profile.id}::uuid)
+        ON CONFLICT (profile_id) DO NOTHING`);
       // Suppress the existing snapshot without marking anything read. An event
       // committed later remains discoverable even if it has the same timestamp.
       await tx.$executeRaw(Prisma.sql`INSERT INTO admin_notification_receipts (profile_id, audit_log_id, toast_claimed_at)
