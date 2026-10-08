@@ -1,0 +1,28 @@
+import { expect, test } from "@playwright/test";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../../src/generated/prisma/client";
+import { createAdminBrowserSession } from "./helpers/session";
+const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.TEST_DATABASE_URL }) });
+test.afterAll(async () => { await prisma.$disconnect(); });
+test("Admin records, corrects and voids an expense while originals stay linked", async ({ page }) => {
+  await createAdminBrowserSession(page, prisma, "ADMIN"); page.on("dialog", dialog => dialog.accept());
+  await page.goto("/admin/finance/expenses/new");
+  await page.getByLabel("Tanggal pengeluaran").fill(new Date().toISOString().slice(0, 10));
+  await page.getByLabel("Nominal pengeluaran (Rp)").fill("100000");
+  await page.getByLabel("Keterangan pengeluaran").fill("Synthetic browser expense TEST");
+  await page.getByRole("button", { name: "Catat pengeluaran", exact: true }).click();
+  await page.getByRole("link", { name: "Buka hasil" }).click();
+  await expect(page.locator("[data-expense-amount]")).toHaveText("Rp 100.000");
+  const original = page.url();
+  await expect(page.getByText("Penyimpanan bukti belum tersedia. Pengeluaran tetap tersimpan tanpa lampiran.")).toBeVisible();
+  await page.getByLabel("Nominal pengeluaran (Rp)").fill("120000");
+  await page.getByLabel("Alasan koreksi").fill("Nominal catatan fixture salah.");
+  await page.getByRole("button", { name: "Simpan koreksi pengeluaran" }).click();
+  await page.getByRole("link", { name: "Hasil koreksi" }).click();
+  await expect(page.locator("[data-expense-amount]")).toHaveText("Rp 120.000");
+  await expect(page.getByRole("link", { name: "Catatan asli" })).toHaveAttribute("href", new URL(original).pathname);
+  await page.getByLabel("Alasan pembatalan").fill("Pembatalan catatan fixture TEST.");
+  await page.getByRole("button", { name: "Batalkan pencatatan", exact: true }).click();
+  await expect(page.getByText("Dikoreksi / dibatalkan", { exact: true })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 }); expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});

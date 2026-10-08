@@ -97,11 +97,11 @@ test("BUY operator prepares a paid order for shipping and holds a payment except
   await expect.poll(() => new URL(page.url()).pathname + new URL(page.url()).search).toBe(listOrigin);
   await page.goto("/admin?group=orders");
   await inspectAdminSurface(page, "overview");
-  await page.getByRole("link", { name: "Buka Action Queue", exact: true }).click();
-  await expect(page).toHaveURL(/\/admin\/queue\?group=orders$/);
-  await inspectAdminSurface(page, "queue");
+  await page.goto("/admin/orders?view=needs-action&page=1");
+  await expect(page).toHaveURL(/\/admin\/orders\?view=needs-action&page=1$/);
+  await inspectAdminSurface(page, "orders-list");
   await page.getByRole("link", { name: order.orderNumber, exact: true }).first().click();
-  await expect(page.getByRole("link", { name: "Kembali ke Action Queue", exact: true })).toHaveAttribute("href", "/admin/queue?group=orders");
+  await expect(page.getByRole("link", { name: "Kembali ke Orders", exact: true })).toHaveAttribute("href", "/admin/orders?view=needs-action&page=1");
   await inspectAdminSurface(page, "order-detail");
   await page.getByRole("button", { name: "Ubah ke Processing", exact: true }).click();
   await expect.poll(async () => (await prisma.order.findUniqueOrThrow({ where: { id: order.id } })).status).toBe("PROCESSING");
@@ -120,8 +120,8 @@ test("BUY operator prepares a paid order for shipping and holds a payment except
   await page.reload();
   await expect(page.getByRole("heading", { name: "Pembayaran perlu diperiksa", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Ubah ke Shipped", exact: true })).toHaveCount(0);
-  await page.getByRole("link", { name: "Kembali ke Action Queue", exact: true }).click();
-  await expect(page).toHaveURL(/\/admin\/queue\?group=orders$/);
+  await page.getByRole("link", { name: "Kembali ke Orders", exact: true }).click();
+  await expect(page).toHaveURL(/\/admin\/orders\?view=needs-action&page=1$/);
   await expect(page.getByText(order.orderNumber, { exact: true }).first()).toBeVisible();
 });
 
@@ -217,7 +217,7 @@ test("management editors and stock history retain their filtered list context", 
   await page.getByRole("link", { name: project.title, exact: true }).first().click();
   await inspectAdminSurface(page, "portfolio-editor");
   await page.getByLabel("Judul", { exact: true }).fill("Synthetic updated portfolio");
-  await page.getByRole("button", { name: "Simpan project", exact: true }).click();
+  await page.getByRole("button", { name: "Simpan proyek", exact: true }).click();
   await expect.poll(async () => (await prisma.portfolioProject.findUniqueOrThrow({ where: { id: project.id } })).title).toBe("Synthetic updated portfolio");
   await waitForAdminAction(page);
   await page.getByRole("link", { name: "Kembali ke Portfolio", exact: true }).click();
@@ -270,11 +270,14 @@ for (const enhanced of [true, false]) {
 test("MAKE operator records slicer review, publishes estimate, and sends immutable quote", async ({ page }) => {
   const adminId = await enterOwner(page);
   const customer = await testCustomer();
+  // This synthetic journey fixes its own v1 inputs; other suites may leave a
+  // later ACTIVE policy. Published quote snapshots remain unchanged.
+  await prisma.pricingRuleVersion.updateMany({ where: { code: CUSTOM_PRINT_V1_PER_UNIT_POLICY.code, status: "ACTIVE" }, data: { status: "RETIRED" } });
   const rule = await prisma.pricingRuleVersion.upsert({
     where: { code_version: { code: CUSTOM_PRINT_V1_PER_UNIT_POLICY.code, version: CUSTOM_PRINT_V1_PER_UNIT_POLICY.version } },
     create: { code: CUSTOM_PRINT_V1_PER_UNIT_POLICY.code, version: CUSTOM_PRINT_V1_PER_UNIT_POLICY.version,
       definitionJson: CUSTOM_PRINT_V1_PER_UNIT_POLICY, status: "ACTIVE", approvedAt: new Date(), approvedByAdminId: adminId },
-    update: {},
+    update: { status: "ACTIVE", definitionJson: CUSTOM_PRINT_V1_PER_UNIT_POLICY },
   });
   const request = await prisma.customPrintRequest.create({ data: {
     referenceNumber: `TEST-MAKE-${randomUUID()}`, customerName: "Rehearsal Customer Fixture", customerEmail: customer.email,
@@ -286,12 +289,17 @@ test("MAKE operator records slicer review, publishes estimate, and sends immutab
   const listOrigin = `/admin/custom-print?q=${request.referenceNumber}&status=SUBMITTED&page=1`;
   await page.goto(listOrigin);
   await inspectAdminSurface(page, "custom-print-list");
+  await expect(page.locator('[data-admin-list-position-ready="true"]')).toHaveCount(1);
   await page.getByRole("link", { name: request.referenceNumber, exact: true }).first().click();
-  await expect(page.getByRole("link", { name: "Kembali ke Custom Print", exact: true })).toHaveAttribute("href", listOrigin);
+  await expect(page).toHaveURL(new RegExp(`/admin/custom-print/${request.id}\\?returnTo=`), { timeout: 15_000 });
+  await expect(page.getByRole("link", { name: "Kembali ke Custom Print", exact: true })).toHaveAttribute("href", listOrigin, { timeout: 15_000 });
   await page.getByRole("link", { name: "Kembali ke Custom Print", exact: true }).click();
   await expect.poll(() => new URL(page.url()).pathname + new URL(page.url()).search).toBe(listOrigin);
-  await page.goto("/admin/queue?group=custom-print");
+  await expect(page.getByRole("link", { name: request.referenceNumber, exact: true }).first()).toBeFocused();
+  await page.goto("/admin/custom-print?view=needs-action&page=1");
   await page.getByRole("link", { name: request.referenceNumber, exact: true }).first().click();
+  await expect(page).toHaveURL(new RegExp(`/admin/custom-print/${request.id}\\?returnTo=`));
+  await page.getByRole("link", { name: "Buka Review & Quote", exact: true }).click();
   await expect(page).toHaveURL(/\/review\?step=review&returnTo=/);
   await expect(page.getByRole("link", { name: "Kembali ke detail request", exact: true })).toBeVisible();
   await inspectAdminSurface(page, "custom-print-review");
@@ -321,10 +329,10 @@ test("MAKE operator records slicer review, publishes estimate, and sends immutab
   await expect(prisma.customPrintQuote.update({ where: { id: quote.id }, data: { finalTotalRp: "1" } })).rejects.toThrow(/sent quote snapshots are immutable/);
   expect((await prisma.customPrintQuote.findUniqueOrThrow({ where: { id: quote.id } })).finalTotalRp.toString()).toBe(quote.finalTotalRp.toString());
   await page.getByRole("link", { name: "Kembali ke detail request", exact: true }).click();
-  await expect(page.getByRole("link", { name: "Kembali ke Action Queue", exact: true })).toHaveAttribute("href", "/admin/queue?group=custom-print");
+  await expect(page.getByRole("link", { name: "Kembali ke Custom Print", exact: true })).toHaveAttribute("href", "/admin/custom-print?view=needs-action&page=1");
   await inspectAdminSurface(page, "custom-print-detail");
-  await page.getByRole("link", { name: "Kembali ke Action Queue", exact: true }).click();
-  await expect(page).toHaveURL(/\/admin\/queue\?group=custom-print$/);
+  await page.getByRole("link", { name: "Kembali ke Custom Print", exact: true }).click();
+  await expect(page).toHaveURL(/\/admin\/custom-print\?view=needs-action&page=1$/);
   expect(await prisma.order.count({ where: { customerId: customer.id } })).toBe(0);
 
   // Synthetic accepted-order fixture verifies the two-way UI relation only.
@@ -342,14 +350,14 @@ test("MAKE operator records slicer review, publishes estimate, and sends immutab
         quantity: 1, unitPriceRp: quote.finalTotalRp, lineTotalRp: quote.finalTotalRp } },
     } });
   });
-  await page.goto(`/admin/custom-print/${request.id}?returnTo=${encodeURIComponent("/admin/queue?group=custom-print")}`);
+  await page.goto(`/admin/custom-print/${request.id}?returnTo=${encodeURIComponent("/admin/custom-print?view=needs-action&page=1")}`);
   await page.getByRole("link", { name: new RegExp(accepted.orderNumber), exact: false }).click();
   await expect(page).toHaveURL(new RegExp(`/admin/orders/${accepted.id}\\?returnTo=`));
-  await expect(page.getByRole("link", { name: "Kembali ke Action Queue", exact: true })).toHaveAttribute("href", "/admin/queue?group=custom-print");
+  await expect(page.getByRole("link", { name: "Kembali ke Custom Print", exact: true })).toHaveAttribute("href", "/admin/custom-print?view=needs-action&page=1");
   await expect(page.getByRole("button", { name: "Ubah ke Paid", exact: true })).toHaveCount(0);
   await inspectAdminSurface(page, "custom-order-detail");
   await page.getByRole("link", { name: new RegExp(request.referenceNumber), exact: false }).click();
   await expect(page).toHaveURL(new RegExp(`/admin/custom-print/${request.id}\\?returnTo=`));
-  await page.getByRole("link", { name: "Kembali ke Action Queue", exact: true }).click();
-  await expect(page).toHaveURL(/\/admin\/queue\?group=custom-print$/);
+  await page.getByRole("link", { name: "Kembali ke Custom Print", exact: true }).click();
+  await expect(page).toHaveURL(/\/admin\/custom-print\?view=needs-action&page=1$/);
 });

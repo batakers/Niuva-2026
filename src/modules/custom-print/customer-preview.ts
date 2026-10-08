@@ -4,7 +4,7 @@ import { z } from "zod";
 import { calculatePrintQuote, type PrintMaterial } from "@/modules/pricing/calculator";
 import {
   CUSTOM_PRINT_V1_RULE_CODE,
-  customPrintPricingPolicySchema,
+  storedCustomPrintPricingPolicySchema,
   parseActiveCustomPrintPricingPolicy,
 } from "@/modules/pricing/policy";
 
@@ -48,7 +48,7 @@ export const customerPreviewSnapshotSchema = z.object({
     id: z.uuid(),
     code: z.literal(CUSTOM_PRINT_V1_RULE_CODE),
     version: z.int().positive(),
-    definition: customPrintPricingPolicySchema,
+    definition: storedCustomPrintPricingPolicySchema,
   }),
   result: z.object({
     materialSubtotalRp: z.string(),

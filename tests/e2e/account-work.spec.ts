@@ -104,8 +104,8 @@ test("account displays reviewed MAKE components and declines the latest quote", 
     const rule = await prisma.pricingRuleVersion.upsert({
       where: { code_version: { code: "CUSTOM_PRINT_V1", version: 1 } },
       create: { code: "CUSTOM_PRINT_V1", version: 1, definitionJson: CUSTOM_PRINT_V1_PER_UNIT_POLICY,
-        status: "ACTIVE", approvedAt: new Date(), approvedByAdminId: admin.id },
-      update: { definitionJson: CUSTOM_PRINT_V1_PER_UNIT_POLICY, status: "ACTIVE",
+        status: "RETIRED", approvedAt: new Date(), approvedByAdminId: admin.id },
+      update: { definitionJson: CUSTOM_PRINT_V1_PER_UNIT_POLICY, status: "RETIRED",
         approvedAt: new Date(), approvedByAdminId: admin.id },
     });
     const fileId = randomUUID();

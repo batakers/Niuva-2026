@@ -109,6 +109,29 @@ enum StorageBucketScope {
   PUBLIC_MEDIA
 }
 
+enum StoredFilePurpose {
+  CUSTOMER_UPLOAD
+  FINANCIAL_EVIDENCE
+}
+
+enum BillingSourceKind {
+  ORDER_TOTAL
+  CUSTOM_SHIPPING
+  B2B
+}
+
+enum BillingMode {
+  FULL
+  DEPOSIT_BALANCE
+}
+
+enum InvoiceState {
+  DRAFT
+  ISSUED
+  VOID
+  SUPERSEDED
+}
+
 enum StoredFileStatus {
   PENDING
   UPLOADED
@@ -170,6 +193,16 @@ model AdminProfile {
   approvedPricingRules PricingRuleVersion[] @relation("PricingRuleApprovedBy")
   stockMovements       StockMovement[]      @relation("StockMovementAdmin")
   invitations          AdminInvitation[]
+  notificationState    AdminNotificationState?
+  notificationReceipts AdminNotificationReceipt[]
+  siteInformationPublications SiteInformation[]
+  siteInformationRevisions SiteInformationRevision[]
+  financeInvoices Invoice[]
+  manualPaymentEntries ManualB2BPaymentEntry[]
+  expenseEntries ExpenseEntry[]
+  billingSettings BillingInstructions[]
+  billingSettingsRevisions BillingInstructionsRevision[]
+  financialUploads StoredFile[] @relation("AdminFinancialUploads")
 
   @@index([isActive, role])
   @@map("admin_profiles")
@@ -430,6 +463,7 @@ model Customer {
   decidedB2BQuotes B2BQuote[] @relation("B2BQuoteDecidedBy")
   privacyRequests CustomerPrivacyRequest[]
   privacyConfirmations CustomerPrivacyConfirmation[]
+  billingCases BillingCase[]
 
   @@map("customers")
 }
@@ -476,6 +510,7 @@ model Order {
   shipmentRates   ShipmentRateSnapshot[]
   shipments       Shipment[]
   customer        Customer?               @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  billingCases BillingCase[]
 
   @@index([status, createdAt])
   @@index([customerId, createdAt])
@@ -669,6 +704,7 @@ model B2BInquiry {
   files              B2BInquiryFile[]
   customer           Customer?        @relation(fields: [customerId], references: [id], onDelete: SetNull)
   quotes             B2BQuote[]
+  billingCases BillingCase[]
 
   @@index([status, createdAt])
   @@index([createdAt])
@@ -696,6 +732,10 @@ model StoredFile {
   b2bInquiryLinks         B2BInquiryFile[]
   customPrintRequestLinks CustomPrintRequestFile[]
   uploadedByCustomer      Customer?                 @relation("CustomerUploadedFiles", fields: [uploadedByCustomerId], references: [id], onDelete: SetNull)
+  purpose StoredFilePurpose @default(CUSTOMER_UPLOAD)
+  uploadedByAdminId String? @map("uploaded_by_admin_id") @db.Uuid
+  uploadedByAdmin AdminProfile? @relation("AdminFinancialUploads", fields: [uploadedByAdminId], references: [id], onDelete: Restrict)
+  expenseProofs ExpenseEntry[]
 
   @@index([uploadStatus, createdAt])
   @@index([uploadStatus, uploadExpiresAt])
@@ -872,10 +912,178 @@ model B2BQuote {
   inquiry             B2BInquiry     @relation(fields: [inquiryId], references: [id], onDelete: Restrict)
   createdByAdmin      AdminProfile   @relation("B2BQuoteCreatedBy", fields: [createdByAdminId], references: [id], onDelete: Restrict)
   decidedByCustomer   Customer?      @relation("B2BQuoteDecidedBy", fields: [decidedByCustomerId], references: [id], onDelete: SetNull)
+  billingCases BillingCase[]
 
   @@unique([inquiryId, version])
   @@index([inquiryId, status])
   @@map("b2b_quotes")
+}
+
+model BillingCase {
+  id String @id @default(uuid()) @db.Uuid
+  sourceKey String @unique @map("source_key")
+  kind BillingSourceKind
+  orderId String? @map("order_id") @db.Uuid
+  order Order? @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  inquiryId String? @map("inquiry_id") @db.Uuid
+  inquiry B2BInquiry? @relation(fields: [inquiryId], references: [id], onDelete: Restrict)
+  customerId String? @map("customer_id") @db.Uuid
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  accountClosedAt DateTime? @map("account_closed_at") @db.Timestamptz(6)
+  acceptedQuoteId String? @map("accepted_quote_id") @db.Uuid
+  acceptedQuote B2BQuote? @relation(fields: [acceptedQuoteId], references: [id], onDelete: Restrict)
+  sourceVersion String @default("") @map("source_version")
+  version Int @default(1)
+  totalRp Decimal @map("total_rp") @db.Decimal(18, 0)
+  mode BillingMode @default(FULL)
+  depositRp Decimal? @map("deposit_rp") @db.Decimal(18, 0)
+  depositDueAt DateTime? @map("deposit_due_at") @db.Date
+  balanceDueAt DateTime? @map("balance_due_at") @db.Date
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  invoices Invoice[]
+  manualPayments ManualB2BPaymentEntry[]
+
+  @@unique([id, kind])
+  @@index([customerId, createdAt])
+  @@index([orderId])
+  @@index([inquiryId])
+  @@map("billing_cases")
+}
+
+model Invoice {
+  id String @id @default(uuid()) @db.Uuid
+  billingCaseId String @map("billing_case_id") @db.Uuid
+  billingCase BillingCase @relation(fields: [billingCaseId], references: [id], onDelete: Restrict)
+  revision Int
+  version Int @default(1)
+  state InvoiceState @default(DRAFT)
+  number String? @unique
+  documentJson Json? @map("document_json")
+  buyerJson Json? @map("buyer_json")
+  sourceVersion String @default("") @map("source_version")
+  idempotencyKey String @unique @map("idempotency_key")
+  issueKey String? @unique @map("issue_key")
+  reason String?
+  replacesId String? @unique @map("replaces_id") @db.Uuid
+  replaces Invoice? @relation("InvoiceReplacement", fields: [replacesId], references: [id], onDelete: Restrict)
+  replacement Invoice? @relation("InvoiceReplacement")
+  createdByAdminId String @map("created_by_admin_id") @db.Uuid
+  createdBy AdminProfile @relation(fields: [createdByAdminId], references: [id], onDelete: Restrict)
+  issuedAt DateTime? @map("issued_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([billingCaseId, revision])
+  @@index([state, createdAt])
+  @@map("invoices")
+}
+
+model InvoiceSequence {
+  month String @id
+  counter Int
+  @@map("invoice_sequences")
+}
+
+model ManualB2BPaymentEntry {
+  id String @id @default(uuid()) @db.Uuid
+  billingCaseId String @map("billing_case_id") @db.Uuid
+  billingKind BillingSourceKind @default(B2B) @map("billing_kind")
+  billingCase BillingCase @relation(fields: [billingCaseId, billingKind], references: [id, kind], onDelete: Restrict)
+  amountRp Decimal @map("amount_rp") @db.Decimal(18, 0)
+  receivedAt DateTime @map("received_at") @db.Date
+  reference String
+  note String?
+  reason String?
+  idempotencyKey String @unique @map("idempotency_key")
+  reversalOfId String? @unique @map("reversal_of_id") @db.Uuid
+  reversalOf ManualB2BPaymentEntry? @relation("ManualPaymentReversal", fields: [reversalOfId], references: [id], onDelete: Restrict)
+  reversedBy ManualB2BPaymentEntry? @relation("ManualPaymentReversal")
+  correctedFromId String? @unique @map("corrected_from_id") @db.Uuid
+  correctedFrom ManualB2BPaymentEntry? @relation("ManualPaymentCorrection", fields: [correctedFromId], references: [id], onDelete: Restrict)
+  correction ManualB2BPaymentEntry? @relation("ManualPaymentCorrection")
+  createdByAdminId String @map("created_by_admin_id") @db.Uuid
+  createdBy AdminProfile @relation(fields: [createdByAdminId], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([billingCaseId, receivedAt])
+  @@map("manual_b2b_payment_entries")
+}
+
+model ExpenseEntry {
+  id String @id @default(uuid()) @db.Uuid
+  amountRp Decimal @map("amount_rp") @db.Decimal(18, 0)
+  expenseDate DateTime @map("expense_date") @db.Date
+  category String
+  description String
+  proofFileId String? @map("proof_file_id") @db.Uuid
+  proofFile StoredFile? @relation(fields: [proofFileId], references: [id], onDelete: Restrict)
+  reason String?
+  idempotencyKey String @unique @map("idempotency_key")
+  reversalOfId String? @unique @map("reversal_of_id") @db.Uuid
+  reversalOf ExpenseEntry? @relation("ExpenseReversal", fields: [reversalOfId], references: [id], onDelete: Restrict)
+  reversedBy ExpenseEntry? @relation("ExpenseReversal")
+  correctedFromId String? @unique @map("corrected_from_id") @db.Uuid
+  correctedFrom ExpenseEntry? @relation("ExpenseCorrection", fields: [correctedFromId], references: [id], onDelete: Restrict)
+  correction ExpenseEntry? @relation("ExpenseCorrection")
+  createdByAdminId String @map("created_by_admin_id") @db.Uuid
+  createdBy AdminProfile @relation(fields: [createdByAdminId], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([expenseDate, createdAt])
+  @@map("expense_entries")
+}
+
+model BillingInstructions {
+  id String @id @default(uuid()) @db.Uuid
+  scope String @unique @default("DEFAULT")
+  version Int
+  valuesJson Json @map("values_json")
+  updatedByAdminId String @map("updated_by_admin_id") @db.Uuid
+  updatedBy AdminProfile @relation(fields: [updatedByAdminId], references: [id], onDelete: Restrict)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  revisions BillingInstructionsRevision[]
+  @@map("billing_instructions")
+}
+
+model BillingInstructionsRevision {
+  id String @id @default(uuid()) @db.Uuid
+  instructionsId String @map("instructions_id") @db.Uuid
+  instructions BillingInstructions @relation(fields: [instructionsId], references: [id], onDelete: Restrict)
+  version Int
+  valuesJson Json @map("values_json")
+  actorId String @map("actor_id") @db.Uuid
+  actor AdminProfile @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  @@unique([instructionsId, version])
+  @@map("billing_instructions_revisions")
+}
+
+model SiteInformation {
+  id                 String @id @default(uuid()) @db.Uuid
+  scope              String @unique @default("PUBLIC_PROFILE")
+  version            Int
+  valuesJson         Json @map("values_json")
+  publishedAt        DateTime @default(now()) @map("published_at") @db.Timestamptz(6)
+  publishedByAdminId String @map("published_by_admin_id") @db.Uuid
+  publishedBy        AdminProfile @relation(fields: [publishedByAdminId], references: [id], onDelete: Restrict)
+  revisions          SiteInformationRevision[]
+
+  @@map("site_information")
+}
+
+model SiteInformationRevision {
+  id                String @id @default(uuid()) @db.Uuid
+  siteInformationId String @map("site_information_id") @db.Uuid
+  siteInformation   SiteInformation @relation(fields: [siteInformationId], references: [id], onDelete: Restrict)
+  version           Int
+  valuesJson        Json @map("values_json")
+  actorId           String @map("actor_id") @db.Uuid
+  actor             AdminProfile @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([siteInformationId, version])
+  @@map("site_information_revisions")
 }
 
 model AuditLog {
@@ -889,9 +1097,33 @@ model AuditLog {
   afterJson    Json?          @map("after_json")
   metadataJson Json?          @map("metadata_json")
   createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  notificationReceipts AdminNotificationReceipt[]
 
   @@index([entityType, entityId, createdAt])
+  @@index([createdAt, id])
   @@map("audit_logs")
+}
+
+model AdminNotificationState {
+  profileId   String       @id @map("profile_id") @db.Uuid
+  activatedAt DateTime     @default(now()) @map("activated_at") @db.Timestamptz(6)
+  profile     AdminProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("admin_notification_states")
+}
+
+model AdminNotificationReceipt {
+  profileId      String       @map("profile_id") @db.Uuid
+  auditLogId     String       @map("audit_log_id") @db.Uuid
+  readAt         DateTime?    @map("read_at") @db.Timestamptz(6)
+  toastClaimedAt DateTime?    @map("toast_claimed_at") @db.Timestamptz(6)
+  profile        AdminProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  auditLog       AuditLog     @relation(fields: [auditLogId], references: [id], onDelete: Cascade)
+
+  @@id([profileId, auditLogId])
+  @@index([profileId, readAt])
+  @@index([auditLogId])
+  @@map("admin_notification_receipts")
 }
 
 model AnalyticsDailyPageView {

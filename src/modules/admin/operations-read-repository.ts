@@ -3,6 +3,7 @@ import type { PrismaClient, Prisma, OrderStatus, CustomPrintRequestStatus, Inqui
 import { isModelExtension } from "@/modules/custom-print/file-types";
 import type { AdminOrderRow, AdminCustomPrintRequestRow, AdminInquiryRow, AdminLinkedOrder, AdminLinkedRequest, AdminProductRow, AdminPortfolioRow } from "./operations";
 import type { AdminListQuery } from "./list-query";
+import { attentionRecordIds } from "./attention-filter";
 
 const ADMIN_PAGE_SIZE = 50;
 export type AdminReadPage<T> = Readonly<{ items: readonly T[]; hasNext: boolean; filteredTotal: number }>;
@@ -29,7 +30,8 @@ export class PrismaAdminOperationsReadRepository implements AdminOperationsReadR
 
   async listOrders(query: AdminListQuery): Promise<AdminReadPage<AdminOrderRow>> {
     const page = query.page;
-    const where: Prisma.OrderWhereInput = { ...(query.q ? { orderNumber: { contains: query.q, mode: "insensitive" } } : {}), ...(query.status ? { status: query.status as OrderStatus } : {}), ...(query.type ? { orderType: query.type } : {}) };
+    const ids = await attentionRecordIds(this.prisma, "orders", query.view);
+    const where: Prisma.OrderWhereInput = { ...(ids ? { id: { in: [...ids] } } : {}), ...(query.q ? { orderNumber: { contains: query.q, mode: "insensitive" } } : {}), ...(query.status ? { status: query.status as OrderStatus } : {}), ...(query.type ? { orderType: query.type } : {}) };
     const [rows, filteredTotal] = await Promise.all([
       this.prisma.order.findMany({
       where,
@@ -81,7 +83,8 @@ export class PrismaAdminOperationsReadRepository implements AdminOperationsReadR
 
   async listCustomPrintRequests(query: AdminListQuery): Promise<AdminReadPage<AdminCustomPrintRequestRow>> {
     const page = query.page;
-    const where: Prisma.CustomPrintRequestWhereInput = { ...(query.q ? { referenceNumber: { contains: query.q, mode: "insensitive" } } : {}), ...(query.status ? { status: query.status as CustomPrintRequestStatus } : {}) };
+    const ids = await attentionRecordIds(this.prisma, "custom-print", query.view);
+    const where: Prisma.CustomPrintRequestWhereInput = { ...(ids ? { id: { in: [...ids] } } : {}), ...(query.q ? { referenceNumber: { contains: query.q, mode: "insensitive" } } : {}), ...(query.status ? { status: query.status as CustomPrintRequestStatus } : {}) };
     const [rows, filteredTotal] = await Promise.all([
       this.prisma.customPrintRequest.findMany({
       where,
@@ -132,7 +135,8 @@ export class PrismaAdminOperationsReadRepository implements AdminOperationsReadR
 
   async listInquiries(query: AdminListQuery): Promise<AdminReadPage<AdminInquiryRow>> {
     const page = query.page;
-    const where: Prisma.B2BInquiryWhereInput = { ...(query.q ? { referenceNumber: { contains: query.q, mode: "insensitive" } } : {}), ...(query.status ? { status: query.status as InquiryStatus } : {}) };
+    const ids = await attentionRecordIds(this.prisma, "inquiries", query.view);
+    const where: Prisma.B2BInquiryWhereInput = { ...(ids ? { id: { in: [...ids] } } : {}), ...(query.q ? { referenceNumber: { contains: query.q, mode: "insensitive" } } : {}), ...(query.status ? { status: query.status as InquiryStatus } : {}) };
     const [rows, filteredTotal] = await Promise.all([
       this.prisma.b2BInquiry.findMany({
       where,

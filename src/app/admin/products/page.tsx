@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import Link from "next/link";
 import { AdminPageHeader } from "../admin-page-header";
 import { AdminListControls } from "../admin-list-controls";
+import { AdminListPosition } from "@/components/niuva/admin-list-position";
 import { parseAdminListQuery, adminListQueryParams, type AdminListQuery } from "@/modules/admin/list-query";
 import { buildAdminPageHref, withAdminReturnTo } from "@/modules/admin/navigation";
 
@@ -47,6 +48,7 @@ export default async function AdminProductsPage({
   return (
       <AdminShell active="products" role={result.role}>
         <main id="main-content" data-admin-surface="products">
+          <AdminListPosition listHref={returnTo} />
           <AdminPageHeader title="Products & Stock" description="Cari produk, periksa varian dan stok, lalu buka editor untuk memperbarui katalog." breadcrumbs={[{ label: "Products & Stock" }]} />
           <AdminListControls area="products" query={query} />
 
@@ -60,7 +62,7 @@ export default async function AdminProductsPage({
             <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
               <div>
                 <h2 className="text-xl font-semibold" id="products-list-title">Katalog internal</h2>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">Perubahan harga, stok, varian, media, dan publish state harus melewati permission dan audit server.</p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">Kelola harga, varian, stok, dan tampilan produk di situs.</p>
               </div>
               <p className="text-sm text-muted-foreground" role="status">{result.filteredTotal} hasil filter</p>
             </div>

@@ -34,9 +34,20 @@ export const customPrintPricingPolicySchema = z
   })
   .strict();
 
-export type CustomPrintPricingPolicy = z.infer<
-  typeof customPrintPricingPolicySchema
->;
+const rate = z.string().regex(/^[1-9]\d{0,8}$/);
+export const versionedCustomPrintPricingPolicySchema = z.object({
+  code: z.literal(CUSTOM_PRINT_V1_RULE_CODE),
+  version: z.int().min(2).max(1_000_000),
+  communalFilamentRateRpPerGram: z.object({ PLA: rate, ABS: rate }).strict(),
+  customerOwnedFilamentRateRpPerGram: z.object({ PLA: rate, ABS: rate }).strict(),
+  standardNiuvaStockRateRpPerGram: z.object({ PLA: z.tuple([rate, rate, rate]), ABS: z.tuple([rate, rate, rate]) }).strict(),
+  standardPrintTimeRateRpPerHour: rate,
+  oneToFortyNineGrams: z.literal("NO_MINIMUM_PROGRESSIVE_TIER"),
+  quantitySemantics: z.literal("PER_UNIT"),
+  rounding: z.literal("HALF_UP_FINAL_TOTAL_ONLY"),
+}).strict();
+export const storedCustomPrintPricingPolicySchema = z.union([customPrintPricingPolicySchema, versionedCustomPrintPricingPolicySchema]);
+export type CustomPrintPricingPolicy = z.infer<typeof storedCustomPrintPricingPolicySchema>;
 
 export const CUSTOM_PRINT_V1_PER_UNIT_POLICY = {
   code: CUSTOM_PRINT_V1_RULE_CODE,
@@ -62,11 +73,11 @@ export const CUSTOM_PRINT_V1_PER_UNIT_POLICY = {
 export function parseActiveCustomPrintPricingPolicy(
   definition: unknown,
 ): CustomPrintPricingPolicy {
-  const parsed = customPrintPricingPolicySchema.safeParse(definition);
+  const parsed = storedCustomPrintPricingPolicySchema.safeParse(definition);
 
   if (!parsed.success) {
     throw appError("PRICING_RULE_NOT_APPROVED", {
-      message: "Definisi pricing rule aktif tidak sesuai kebijakan Pricing v1.",
+      message: "Definisi tarif tidak sesuai kebijakan Custom Print yang disetujui.",
     });
   }
 

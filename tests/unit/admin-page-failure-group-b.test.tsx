@@ -83,7 +83,6 @@ import {
 } from "@/app/admin/admin-page-failure";
 import AdminPortfolioPage from "@/app/admin/portfolio/page";
 import AdminPortfolioDetailPage from "@/app/admin/portfolio/[id]/page";
-import AdminPricingPage from "@/app/admin/pricing/page";
 import AdminProductsPage from "@/app/admin/products/page";
 import AdminProductDetailPage from "@/app/admin/products/[id]/page";
 
@@ -134,8 +133,6 @@ const emptyList = { generatedAt: new Date("2026-01-01T00:00:00Z"), hasNext: fals
 const pages: readonly GroupBPage[] = [
   { name: "portfolio", boundary: "page:/admin/portfolio", page: AdminPortfolioPage, props: listProps, read: () => mocks.service.listPortfolio, successValue: emptyList, detail: false, safeContext: { op: "list", page: "1" } },
   { name: "products", boundary: "page:/admin/products", page: AdminProductsPage, props: listProps, read: () => mocks.service.listProducts, successValue: emptyList, detail: false, safeContext: { op: "list", page: "1" } },
-  { name: "pricing (list read)", boundary: "page:/admin/pricing", page: AdminPricingPage, props: listProps, read: () => mocks.service.listPricingRules, successValue: emptyList, detail: false, safeContext: { op: "list", page: "1" } },
-  { name: "pricing (active-rule read)", boundary: "page:/admin/pricing", page: AdminPricingPage, props: listProps, read: () => mocks.service.getActivePricingRule, successValue: null, detail: false, safeContext: { op: "list", page: "1" } },
   { name: "portfolio/[id]", boundary: "page:/admin/portfolio/[id]", page: AdminPortfolioDetailPage, props: detailProps, read: () => mocks.service.getPortfolio, successValue: null, detail: true, safeContext: { id: VALID_ID, op: "detail" } },
   { name: "products/[id]", boundary: "page:/admin/products/[id]", page: AdminProductDetailPage, props: detailProps, read: () => mocks.service.getProduct, successValue: null, detail: true, safeContext: { id: VALID_ID, op: "detail" } },
 ];

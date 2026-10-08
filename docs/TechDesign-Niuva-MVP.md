@@ -2375,3 +2375,44 @@ policy tidak mengunci login, enrollment TOTP, atau regenerasi kode pemulihan.
 Hook sebelum reset/change/set password di Better Auth tetap memvalidasi password
 baru 8–15; batas library untuk pemeriksaan password existing tidak membuka batas
 baru melalui API internal.
+
+## Addendum 7 Oktober 2026 — Admin & Akses, pencarian, dan linimasa
+
+Seluruh route Admin memakai AdminShell yang sama. Owner-only `/admin/admins`
+memeriksa `ADMIN_PROFILE_MANAGE` pada page dan Server Action. Daftar akun dan
+undangan dibaca dari AdminProfile/AdminInvitation. Penonaktifan mengunci profil
+Owner dan target dalam transaksi, memeriksa Owner aktif dan target berperan
+Admin, mengubah `isActive=false`, menghapus semua AdminAuthSession target, lalu
+mencatat audit. `requireAdmin()` tetap memeriksa profil aktif dan sesi MFA pada
+setiap boundary. Tidak ada perubahan role atau endpoint pembuatan Owner.
+
+`/admin/search` memvalidasi query 2–80 karakter di server dan membatasi hasil
+per domain. Query ke Order, B2BInquiry, dan CustomPrintRequest mengecualikan
+record dengan `accountClosedAt` terisi. Menu khusus Owner hanya diberikan kepada
+Owner. Halaman akun membaca identitas sesi sendiri; endpoint identitas navbar
+tidak menyimpan cache. Search tidak mengubah record atau menyimpan query.
+
+`/admin/activity` memproyeksikan AuditLog secara paginasi menjadi label,
+kelompok, waktu, dan tautan domain; JSON audit mentah dan identitas customer
+tidak dikirim ke UI. Admin biasa tidak menerima peristiwa AdminProfile,
+AdminInvitation, atau privasi Customer. Audit undangan dan penonaktifan akun
+ikut menjadi sumber linimasa. Ikon lonceng membuka linimasa; tidak ada state
+unread/read persistence dalam implementasi ini.
+
+## Addendum 8 Oktober 2026 — Kontrak redesign Admin
+
+Implementasi mengikuti [spec S01–S20](superpowers/specs/2026-10-08-admin-redesign-design.md) dan [paket A/B/C](superpowers/plans/2026-10-08-admin-redesign-implementation.md). Server Actions/route handlers memvalidasi input dan otorisasi; services memegang aturan bisnis dan repositories memegang akses database. Read/download/mutation tetap membutuhkan MFA dan AdminProfile aktif, serta permission domain; navigasi bukan batas keamanan.
+
+Tambahkan state/receipt notifikasi per profile, singleton Informasi Situs berversi, serta Finance BillingCase, invoice immutable/revision, transfer manual/reversal, expense/reversal, instruksi penerbit/rekening, dan purpose bukti private melalui migration aditif baru. Receipt audit adalah state turunan dan tidak boleh menghalangi cleanup audit privacy yang sah. Bukti finansial tidak memakai retensi CAD; aturan penyimpanan nyata yang belum disepakati tidak dipilih lewat kode.
+
+Finance commerce membaca PaymentAttempt/PaymentEvent existing; invoice tidak menjadi charge/receipt kedua. B2B manual terpisah dari checkout commerce. Owner menentukan terms/DP; kedua peran dapat melakukan koreksi pencatatan dengan reason/audit. Gunakan Decimal IDR, source/case locks, expected version, idempotency, satu active invoice per case, dan reversal/pengganti immutable. Void invoice mempertahankan uang masuk pada case; tidak melakukan refund, WON, produksi, atau provider request otomatis. Customer closure memakai lifecycle fences/accountClosedAt dan tidak memulihkan relasi lewat email.
+
+Tarif baru atomik berversi mempertahankan parser v1 dan snapshot quote terbit. Penerimaan laporan adalah gross confirmed incoming dengan refund/exception terpisah; jangan menebak nilai partial refund, laba, saldo rekening, unique visitors atau attribution. Agregat memakai kalender Asia/Jakarta dan `30d|13m`; kegagalan sumber diisolasi. Route Queue/Pricing lama menjadi redirect kompatibilitas berizin. Profil publik menerima DTO tervalidasi dari server dan fallback fakta approved, tanpa memindahkan service/intake constants ke kode server-only.
+
+### Kontrak implementasi Admin — 8 Oktober 2026
+
+- Tarif versi 1 tetap dibaca dengan nilai frozen; definisi versi 2 ke atas memakai tarif IDR string positif, `PER_UNIT`, progressive bands yang sama, dan pembulatan pada total akhir. Preview membawa active id/version/fingerprint; apply mengunci family, memeriksa ulang Owner aktif dan versi, membuat versi baru, serta memensiunkan versi lama atomik. Partial unique index menjamin satu ACTIVE per family dan menolak migrasi bila sudah terdapat duplikat; tidak ada perbaikan atau seed harga otomatis. Estimasi/draft/send baru memerlukan tarif aktif. Penerimaan dan pembayaran quote SENT membaca snapshot tersimpan beserta review/file/expiry/ownership fences.
+- Invoice menyimpan dokumen keuangan immutable dan buyer JSON terpisah untuk redaksi privacy. Satu invoice aktif per BillingCase, nomor bulanan Jakarta, revisi/reversal dan idempotency menjaga originals. Koreksi dari UI meninjau sumber/penerbit terbaru dan membawa fingerprint sumber; perubahan sesudah review ditolak. Instruksi transfer hanya untuk B2B; invoice commerce tetap mengarahkan pembayaran melalui pesanan/provider existing.
+- `StoredFilePurpose.FINANCIAL_EVIDENCE` membutuhkan uploader Admin, private scope, actual-content verification dan tepat satu Expense owner. Bukti opsional memiliki batas 10 MiB PDF/JPEG/PNG dan token intent 10 menit. Runtime nyata tetap disabled selama `approvedPolicyId` retensi finansial belum ditetapkan. Adapter storage sintetis hanya untuk environment test; retensi CAD tidak digunakan untuk bukti finansial.
+- Informasi Situs menyimpan publish/revision dengan expected version. Hanya DTO publik yang dicache 300 detik memakai tag `niuva-public-site-information`; publish menginvalidasi tag dan layout publik. Notifikasi/pencarian/Finance tetap berizin dan tidak memakai cache publik untuk state akun.
+- PDF memakai PDFKit dan font lokal berlisensi, template teks terbatas, pagination dan download pribadi. Struktur/tag dokumen bukan klaim sertifikasi PDF/UA. Bukti verifikasi serta batas local/loopback dicatat pada `docs/frontend/admin-redesign-verification-2026-10-08.md`.

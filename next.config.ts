@@ -19,7 +19,7 @@ if (serverActionsOriginsWarning !== null) {
 
 const nextConfig: NextConfig = {
   distDir: process.env.NIUVA_NEXT_DIST_DIR ?? ".next",
-  outputFileTracingIncludes: { "/admin/privacy/policy": ["./docs/legal/customer-terms-draft.md", "./docs/legal/customer-privacy-draft.md"] },
+  outputFileTracingIncludes: { "/admin/privacy/policy": ["./docs/legal/customer-terms-draft.md", "./docs/legal/customer-privacy-draft.md"], "/api/admin/invoices/*/pdf": ["./src/modules/finance/pdf-assets/SpaceGrotesk.ttf", "./src/modules/finance/pdf-assets/OFL.txt"] },
   logging: { incomingRequests: { ignore: [/\/account\/privacy\/confirm(?:\?|$)/, /\/(?:verify-email|reset-password)(?:\?|$)/, /\/api\/auth\/google\/callback(?:\?|$)/] } },
   // Dev-server only (`next dev`); empty unless NIUVA_DEV_ALLOWED_ORIGINS lists
   // hosts for real-device checks. Relative import: "@/" is not available here.

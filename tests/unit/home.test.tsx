@@ -14,6 +14,7 @@ vi.mock("@/features/frontend-preview/server", () => ({
 }));
 
 import { connection } from "next/server";
+vi.mock("@/modules/site-information/public-reader", async () => ({ getPublicSiteInformation: async () => (await import("@/modules/site-information/defaults")).defaultSiteInformation }));
 import Home, * as homeModule from "@/app/page";
 
 describe("public homepage", () => {

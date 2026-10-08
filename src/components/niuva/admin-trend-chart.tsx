@@ -1,0 +1,14 @@
+"use client";
+import { useId, useState } from "react";
+export type TrendSeries = Readonly<{ label: string; points: readonly Readonly<{ key: string; value: string }>[]; unit?: "Rp" | "jumlah" }>;
+/** Numeric conversion is only SVG positioning; labels keep canonical strings. */
+export function AdminTrendChart({ label, points, unit = "jumlah" }: TrendSeries) {
+  const id = useId(); const [selected, setSelected] = useState<number | null>(null);
+  const values = points.map(point => Number(point.value)); const max = Math.max(1, ...values); const x = (index: number) => 12 + index * 576 / Math.max(1, points.length - 1); const y = (value: number) => 144 - Math.max(0, value) / max * 128;
+  const path = points.map((_, index) => `${index ? "L" : "M"}${x(index)},${y(values[index] ?? 0)}`).join(" "); const current = selected === null ? null : points[selected];
+  return <div className="min-w-0"><svg role="img" aria-labelledby={id} viewBox="0 0 600 160" className="mt-4 h-40 w-full overflow-visible text-primary" onPointerMove={event => { if (points.length) { const rect = event.currentTarget.getBoundingClientRect(); setSelected(Math.max(0, Math.min(points.length - 1, Math.round((event.clientX - rect.left) / rect.width * (points.length - 1))))); } }} onPointerLeave={() => setSelected(null)}><title id={id}>{`${label}. Rincian setiap periode tersedia pada tabel data.`}</title><line x1="12" x2="588" y1="144" y2="144" className="stroke-border" /><path d={path} fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" />{selected !== null && current && <circle cx={x(selected)} cy={y(values[selected] ?? 0)} r="4" fill="currentColor" />}</svg>
+    <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground"><span>{points[0]?.key ?? "—"}</span><span>{points.at(-1)?.key ?? "—"}</span></div>
+    {current && <p className="mt-2 text-sm">{current.key}: {unit === "Rp" ? "Rp " : ""}{current.value}{unit === "jumlah" ? " kejadian" : ""}</p>}
+    <details className="mt-3"><summary className="min-h-11 cursor-pointer py-3 text-sm font-medium text-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">Lihat tabel data · {label}</summary><div className="max-h-72 overflow-auto rounded-lg border border-border" tabIndex={0} aria-label={`Tabel ${label}`}><table className="w-full text-sm"><caption className="sr-only">{label}</caption><thead><tr><th className="p-3 text-left">Periode (Jakarta)</th><th className="p-3 text-right">{unit === "Rp" ? "Rupiah" : "Jumlah"}</th></tr></thead><tbody>{points.map(point => <tr key={point.key} className="border-t border-border"><th className="p-3 text-left font-normal">{point.key}</th><td className="p-3 text-right">{point.value}</td></tr>)}</tbody></table></div></details>
+  </div>;
+}

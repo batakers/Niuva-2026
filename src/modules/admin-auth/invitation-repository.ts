@@ -27,7 +27,8 @@ function store(tx: Prisma.TransactionClient): AdminInvitationStore {
     },
     async hasAccount(email) { return Boolean(await tx.adminAuthUser.findFirst({ where: { email: { equals: email, mode: "insensitive" } }, select: { id: true } })); },
     async saveInvitation(data) {
-      await tx.adminInvitation.upsert({ where: { email: data.email }, create: data, update: { ...data, status: "PENDING", acceptedAt: null } });
+      const invitation = await tx.adminInvitation.upsert({ where: { email: data.email }, create: data, update: { ...data, status: "PENDING", acceptedAt: null } });
+      await tx.auditLog.create({ data: { actorType: "ADMIN", actorId: data.invitedByAdminId, entityType: "AdminInvitation", entityId: invitation.id, action: "admin.invitation.created", afterJson: { status: "PENDING" } } });
     },
     async activateAdmin(invitation, passwordHash, now) {
       const id = randomUUID();
@@ -37,6 +38,7 @@ function store(tx: Prisma.TransactionClient): AdminInvitationStore {
         profile: { create: { displayName: invitation.displayName, role: "ADMIN", isActive: true } },
       } });
       await tx.adminInvitation.update({ where: { id: invitation.id }, data: { status: "ACCEPTED", acceptedAt: now, tokenHash: null } });
+      await tx.auditLog.create({ data: { actorType: "SYSTEM", entityType: "AdminInvitation", entityId: invitation.id, action: "admin.invitation.accepted", afterJson: { status: "ACCEPTED" } } });
     },
   };
 }
@@ -50,6 +52,11 @@ export class PrismaAdminInvitationRepository implements AdminInvitationRepositor
     });
   }
   async markDelivery(tokenHash: string, status: "SENT" | "FAILED") {
-    await this.prisma.adminInvitation.updateMany({ where: { tokenHash, status: "PENDING" }, data: { status, ...(status === "FAILED" ? { tokenHash: null } : {}) } });
+    await this.prisma.$transaction(async tx => {
+      const invitation = await tx.adminInvitation.findUnique({ where: { tokenHash }, select: { id: true, invitedByAdminId: true, status: true } });
+      if (invitation?.status !== "PENDING") return;
+      const updated = await tx.adminInvitation.updateMany({ where: { id: invitation.id, tokenHash, status: "PENDING" }, data: { status, ...(status === "FAILED" ? { tokenHash: null } : {}) } });
+      if (updated.count === 1) await tx.auditLog.create({ data: { actorType: "SYSTEM", entityType: "AdminInvitation", entityId: invitation.id, action: status === "SENT" ? "admin.invitation.sent" : "admin.invitation.failed", afterJson: { status } } });
+    });
   }
 }

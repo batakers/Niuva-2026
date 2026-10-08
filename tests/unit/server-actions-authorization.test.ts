@@ -92,7 +92,7 @@ vi.mock("@/modules/providers/runtime", () => ({
   createShippingProviderForRuntime: () => ({}),
 }));
 
-vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
+vi.mock("next/cache", () => ({ revalidatePath: () => undefined, updateTag: () => undefined, unstable_cache: (read: unknown) => read }));
 
 // ---------------------------------------------------------------------------
 // Manifest
@@ -119,8 +119,36 @@ const PROJECT = { projectId: UUID };
 
 const ADMIN_ACTIONS_FILE = "src/app/admin/actions.ts";
 const ADMIN_INVITATION_ACTIONS_FILE = "src/app/admin/admins/new/actions.ts";
+const ADMIN_ACCESS_ACTIONS_FILE = "src/app/admin/admins/actions.ts";
 
+const BILLING_FIELDS = { issuerName: "Synthetic issuer", issuerAddress: "Synthetic address fixture", issuerEmail: "fixture@example.test", bankName: "Fixture bank", accountName: "Synthetic fixture", accountNumber: "00000000", transferInstructions: "Synthetic transfer instructions." };
+const PAYMENT_FIELDS = { paymentId: UUID, billingCaseId: UUID, expectedVersion: "1", amountRp: "1000", receivedDate: "2020-01-01", reference: "TEST-FIXTURE", confirmed: "confirmed", reason: "Synthetic correction", idempotencyKey: UUID_2 };
+const EXPENSE_FIELDS = { expenseId: UUID, expectedVersion: "1", amountRp: "1000", expenseDate: "2020-01-01", category: "OTHER", description: "Synthetic expense", reason: "Synthetic correction", idempotencyKey: UUID_2 };
+const RATES = { plaFirst: "1000", plaMiddle: "900", plaLast: "800", absFirst: "1200", absMiddle: "1100", absLast: "1000", machineHour: "5000", plaOwn: "500", absOwn: "700", plaCommunal: "500", absCommunal: "700" };
 const MANIFEST: Readonly<Record<string, Readonly<Record<string, ManifestEntry>>>> = {
+  "src/app/admin/finance/actions.ts": {
+    createInvoiceDraftAction: { permission: "FINANCE_WRITE", fields: { sourceKind: "ORDER_TOTAL", sourceId: UUID, idempotencyKey: UUID_2 } },
+    issueInvoiceAction: { permission: "FINANCE_WRITE", fields: { invoiceId: UUID, expectedVersion: "1", settingsVersion: "1", idempotencyKey: UUID_2 } },
+    replaceInvoiceAction: { permission: "FINANCE_CORRECT", fields: { ...{ invoiceId: UUID, expectedVersion: "1", settingsVersion: "1", idempotencyKey: UUID_2 }, reason: "Synthetic correction", expectedSourceVersion: "a".repeat(64) } },
+    voidInvoiceAction: { permission: "FINANCE_CORRECT", fields: { invoiceId: UUID, expectedVersion: "1", reason: "Synthetic cancellation" } },
+    reverseManualPaymentAction: { permission: "FINANCE_CORRECT", fields: PAYMENT_FIELDS },
+    correctManualPaymentAction: { permission: "FINANCE_CORRECT", fields: PAYMENT_FIELDS },
+  },
+  "src/app/admin/finance/expenses/actions.ts": {
+    recordExpenseAction: { permission: "FINANCE_WRITE", fields: EXPENSE_FIELDS },
+    correctExpenseAction: { permission: "FINANCE_CORRECT", fields: EXPENSE_FIELDS },
+    voidExpenseAction: { permission: "FINANCE_CORRECT", fields: EXPENSE_FIELDS },
+  },
+  "src/app/admin/finance/settings/actions.ts": { saveBillingSettingsAction: { permission: "BILLING_SETTINGS_MANAGE", fields: { ...BILLING_FIELDS, expectedVersion: "0" } } },
+  "src/app/admin/inquiries/[id]/billing/actions.ts": {
+    setB2BTermsAction: { permission: "B2B_BILLING_TERMS_MANAGE", fields: { inquiryId: UUID, acceptedQuoteId: UUID_2, expectedVersion: "0", mode: "FULL" } },
+    recordB2BTransferAction: { permission: "FINANCE_WRITE", fields: { ...PAYMENT_FIELDS, inquiryId: UUID } },
+  },
+  "src/app/admin/content/site-information/actions.ts": { publishSiteInformationAction: { permission: "SITE_CONTENT_WRITE", fields: { payload: JSON.stringify({ expectedVersion: 0, values: { shortDescription: "Synthetic company description.", email: "fixture@example.test", phone: "+628000000000", address: "Synthetic business address.", socialLinks: [] } }) } } },
+  "src/app/admin/settings/custom-print-rates/actions.ts": { tariffAction: { permission: "PRICING_RULE_ACTIVATE", fields: { phase: "preview", payload: JSON.stringify({ rates: RATES, expectedActiveId: null }) } } },
+  [ADMIN_ACCESS_ACTIONS_FILE]: {
+    deactivateAdminAction: { permission: "ADMIN_PROFILE_MANAGE", fields: { adminId: UUID_2 } },
+  },
   [ADMIN_INVITATION_ACTIONS_FILE]: {
     inviteAdminAction: { permission: "ADMIN_PROFILE_MANAGE", fields: { displayName: "Synthetic invited Admin", email: "fixture@example.test" } },
   },
@@ -335,7 +363,14 @@ function scanActionFiles(): Record<string, string[]> {
 }
 
 const loaders: Readonly<Record<string, () => Promise<Record<string, unknown>>>> = {
+  "src/app/admin/finance/actions.ts": () => import("@/app/admin/finance/actions"),
+  "src/app/admin/finance/expenses/actions.ts": () => import("@/app/admin/finance/expenses/actions"),
+  "src/app/admin/finance/settings/actions.ts": () => import("@/app/admin/finance/settings/actions"),
+  "src/app/admin/inquiries/[id]/billing/actions.ts": () => import("@/app/admin/inquiries/[id]/billing/actions"),
+  "src/app/admin/content/site-information/actions.ts": () => import("@/app/admin/content/site-information/actions"),
+  "src/app/admin/settings/custom-print-rates/actions.ts": () => import("@/app/admin/settings/custom-print-rates/actions"),
   [ADMIN_ACTIONS_FILE]: () => import("@/app/admin/actions"),
+  [ADMIN_ACCESS_ACTIONS_FILE]: () => import("@/app/admin/admins/actions"),
   [ADMIN_INVITATION_ACTIONS_FILE]: () => import("@/app/admin/admins/new/actions"),
 };
 

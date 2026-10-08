@@ -12,6 +12,7 @@ import { getProjectPreview } from "@/features/frontend-preview/server";
 import { publicCompanyProfile, publicServices } from "@/features/public/company-content";
 import { buildPageSocialMetadata } from "@/lib/site-metadata";
 import { cn } from "@/lib/utils";
+import { getPublicSiteInformation } from "@/modules/site-information/public-reader";
 
 const processSteps = [
   {
@@ -52,22 +53,26 @@ function PathArrow() {
   return <Icon aria-hidden="true" className="size-4" name="arrow-up-right" />;
 }
 
-export const metadata: Metadata = {
+export async function generateMetadata(): Promise<Metadata> {
+  const siteInformation = await getPublicSiteInformation();
+  return {
   title: "Niuva",
-  description: publicCompanyProfile.supportingCopy,
+  description: siteInformation.shortDescription,
   ...buildPageSocialMetadata({
     title: "Niuva",
-    description: publicCompanyProfile.supportingCopy,
+    description: siteInformation.shortDescription,
     path: "/",
   }),
   robots: { follow: true, index: true },
-};
+  };
+}
 
 // Time-based revalidation (render-strategy.md, 9.13). Must stay a static
 // literal. `revalidatePath("/")` in admin actions invalidates this entry.
 export const revalidate = 300;
 
 export default async function Home() {
+  const siteInformation = await getPublicSiteInformation();
   // Portfolio evidence is additive; a database outage must not take down the
   // company narrative and the primary contact paths on the homepage.
   const { projects } = await getProjectPreview(undefined).catch(() => ({ projects: [] as const }));
@@ -106,7 +111,7 @@ export default async function Home() {
                   {publicCompanyProfile.headline}
                 </h1>
                 <p className="mt-4 max-w-2xl text-base leading-7 text-neutral-300 sm:text-lg sm:leading-8">
-                  {publicCompanyProfile.supportingCopy}
+                  {siteInformation.shortDescription}
                 </p>
                 <div className="mt-6 flex flex-wrap items-center gap-3">
                   <NiuvaLink
@@ -443,13 +448,13 @@ export default async function Home() {
                   </Link>
                 </div>
                 <address className="mt-6 border-t border-brand-300 pt-5 text-sm not-italic leading-6 text-brand-900">
-                  <p>{publicCompanyProfile.contact.location}</p>
+                  <p>{siteInformation.address}</p>
                   <div className="mt-3 flex flex-col gap-1">
-                    <a className="underline underline-offset-4" href={`mailto:${publicCompanyProfile.contact.email}`}>
-                      {publicCompanyProfile.contact.email}
+                    <a className="underline underline-offset-4" href={`mailto:${siteInformation.email}`}>
+                      {siteInformation.email}
                     </a>
-                    <a className="underline underline-offset-4" href={publicCompanyProfile.contact.phoneHref}>
-                      {publicCompanyProfile.contact.phone}
+                    <a className="underline underline-offset-4" href={`tel:+${siteInformation.phone.replace(/\D/g, "")}`}>
+                      {siteInformation.phone}
                     </a>
                   </div>
                 </address>

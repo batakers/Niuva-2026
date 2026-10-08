@@ -1,0 +1,24 @@
+import { mkdir } from "node:fs/promises";
+import { expect, test } from "@playwright/test";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../../src/generated/prisma/client";
+import { getSafeTestDatabaseUrl } from "../../src/lib/db/test-safety";
+import { createAdminBrowserSession } from "./helpers/session";
+test.use({ trace: "off", screenshot: "off", video: "off" });
+const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: getSafeTestDatabaseUrl({ TEST_DATABASE_URL: process.env.TEST_DATABASE_URL }) }) });
+test.afterAll(() => prisma.$disconnect());
+test("Owner reviews and applies rates; ordinary Admin cannot open the tariff page", async ({ page, browser }) => {
+  await createAdminBrowserSession(page, prisma);
+  await page.goto("/admin/pricing"); await expect(page).toHaveURL(/\/admin\/settings\/custom-print-rates$/);
+  const input = page.getByLabel("PLA · 200 gram pertama (Rp)", { exact: true }); const old = await input.inputValue(); const next = old === "1100" ? "1200" : "1100";
+  await input.fill(next); await page.getByRole("button", { name: "Tinjau perubahan", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Tinjau perubahan tarif" })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 }); expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await mkdir(".local/admin-redesign/captures", { recursive: true }); await page.screenshot({ path: ".local/admin-redesign/captures/tariffs-review-390.png", fullPage: true });
+  await page.getByRole("checkbox", { name: /Saya sudah meninjau tarif baru/ }).check(); await page.getByRole("button", { name: "Terapkan tarif", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText(/Tarif versi \d+ berlaku/);
+  expect(await prisma.pricingRuleVersion.count({ where: { code: "CUSTOM_PRINT_V1", status: "ACTIVE" } })).toBe(1);
+  const context = await browser.newContext({ baseURL: "http://localhost:3107" }); const adminPage = await context.newPage();
+  await createAdminBrowserSession(adminPage, prisma, "ADMIN"); await adminPage.goto("/admin/settings/custom-print-rates");
+  await expect(adminPage.locator('[data-system-state="admin-access-forbidden"]')).toBeVisible(); await context.close();
+});

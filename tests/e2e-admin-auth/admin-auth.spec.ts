@@ -52,10 +52,12 @@ test("Admin enrolls TOTP, signs in again with a second factor and revokes the se
     await page.getByRole("button", { name: "Verifikasi kode" }).click();
     await expect(page).toHaveURL(/\/admin$/);
     await expect(page.getByRole("heading", { name: "Overview", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: /Buka menu akun/ }).click();
     await page.getByRole("link", { name: "Keamanan akun", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Keamanan akun Admin" })).toBeVisible();
     await page.goto("/admin");
     const logoutResponse = page.waitForResponse(response => response.url().endsWith("/api/admin/auth/sign-out"), { timeout: 15_000 });
+    await page.getByRole("button", { name: /Buka menu akun/ }).click();
     await page.getByRole("button", { name: "Keluar", exact: true }).click();
     expect((await logoutResponse).status()).toBe(200);
     await expect(page).toHaveURL(/\/admin\/sign-in$/);
@@ -68,6 +70,7 @@ test("Admin enrolls TOTP, signs in again with a second factor and revokes the se
     await page.getByLabel("Kode authenticator", { exact: true }).fill(generateTestAdminTotp(secret));
     await page.getByRole("button", { name: "Verifikasi kode" }).click();
     await expect(page).toHaveURL(/\/admin$/);
+    await page.getByRole("button", { name: /Buka menu akun/ }).click();
     await page.getByRole("link", { name: "Keamanan akun", exact: true }).click();
     const newPassword = "E2E-new-693!";
     await expect(page.getByRole("button", { name: "Ubah password", exact: true })).toBeEnabled();

@@ -12,7 +12,7 @@ const currencyFormatter = new Intl.NumberFormat("id-ID", { currency: "IDR", maxi
 export function CustomPrintReviewWorkspace({ data, step, returnTo }: Readonly<{ data: CustomPrintPageData; step: ReviewStep; returnTo: string }>) {
   const { request, pricing, activeRule, latestEstimate } = data;
   const review = request.review;
-  const estimateCurrent = latestEstimate !== null && isEstimateCurrent(latestEstimate.snapshot, review?.updatedAt);
+  const estimateCurrent = latestEstimate !== null && isEstimateCurrent(latestEstimate.snapshot, review?.updatedAt, activeRule?.id);
   const hasDraft = request.quotes.some(quote => quote.status === "DRAFT");
   return <div className="space-y-6">
     <nav aria-label="Tahapan review dan quote" className="flex flex-wrap gap-2">
@@ -47,7 +47,7 @@ export function CustomPrintReviewWorkspace({ data, step, returnTo }: Readonly<{ 
         <section aria-labelledby="estimate-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
           <h2 className="text-xl font-semibold" id="estimate-title">Estimasi produksi pascareview</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">Operator menilai seluruh biaya pekerjaan sebelum kisaran 100%–130% dipublikasikan. Faktor awal ini belum terkalibrasi oleh riwayat pekerjaan. Ongkir tidak termasuk.</p>
-          {latestEstimate ? <p className="mt-4 rounded-lg border border-info-border bg-info-background p-4 text-sm font-medium text-info">Versi {latestEstimate.version} · {currencyFormatter.format(BigInt(latestEstimate.lowerRp.toFixed(0)))}–{currencyFormatter.format(BigInt(latestEstimate.upperRp.toFixed(0)))} · terbit {dateFormatter.format(latestEstimate.publishedAt)}{estimateCurrent ? "" : " · review berubah, terbitkan versi baru"}</p> : <StatusNotice className="mt-4" title="Perlu review" description="Belum ada estimasi terbit untuk request ini." tone="info" />}
+          {latestEstimate ? <p className="mt-4 rounded-lg border border-info-border bg-info-background p-4 text-sm font-medium text-info">Versi {latestEstimate.version} · {currencyFormatter.format(BigInt(latestEstimate.lowerRp.toFixed(0)))}–{currencyFormatter.format(BigInt(latestEstimate.upperRp.toFixed(0)))} · terbit {dateFormatter.format(latestEstimate.publishedAt)}{estimateCurrent ? "" : " · review atau tarif berubah, terbitkan versi baru"}</p> : <StatusNotice className="mt-4" title="Perlu review" description="Belum ada estimasi terbit untuk request ini." tone="info" />}
           {review && activeRule && request.modelReady && ["QUOTE_READY", "QUOTE_SENT"].includes(request.status) ? <AdminActionForm action={publishCustomPrintEstimateAction} className="mt-5" submitLabel={latestEstimate ? "Terbitkan versi estimasi baru" : "Terbitkan estimasi"}>
             <input name="requestId" type="hidden" value={request.id} /><input name="pricingRuleVersionId" type="hidden" value={activeRule.id} />
             <label className="grid gap-2 text-sm font-medium" htmlFor="estimate-filament"><span>Sumber filamen hasil penilaian</span><select className={inputClass} id="estimate-filament" name="filamentSource" required><option value="NIUVA_STOCK">Stok Niuva</option><option value="COMMUNAL">Komunal</option><option value="CUSTOMER_OWN">Punya customer</option></select></label>

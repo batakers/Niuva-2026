@@ -48,7 +48,8 @@ test("Owner sees Add Admin, SMTP availability, responsive layout and keyboard fo
   await page.getByRole("button", { name: "Masuk", exact: true }).click();
   await enroll(page, owner.password);
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.getByRole("link", { name: "Tambah Admin", exact: true }).click();
+  await page.getByRole("navigation", { name: "Owner", exact: true }).getByRole("link", { name: "Admin & Akses", exact: true }).click();
+  await page.getByRole("link", { name: "Undang Admin", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Tambah Admin", exact: true })).toBeVisible();
   await expect(page.getByRole("status")).toContainText("Email undangan belum tersedia");
   await expect(page.getByLabel("Nama Admin")).toBeDisabled();
@@ -61,13 +62,13 @@ test("Owner sees Add Admin, SMTP availability, responsive layout and keyboard fo
   await page.setViewportSize({ width: 390, height: 844 });
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.screenshot({ path: ".impeccable/review/add-admin-mobile.png", fullPage: true });
-  await page.getByRole("link", { name: "Kembali ke Dashboard", exact: true }).focus();
-  await expect(page.getByRole("link", { name: "Kembali ke Dashboard", exact: true })).toBeFocused();
+  await page.getByRole("link", { name: "Kembali ke Admin & Akses", exact: true }).focus();
+  await expect(page.getByRole("link", { name: "Kembali ke Admin & Akses", exact: true })).toBeFocused();
   await page.keyboard.press("Tab");
   // Disabled invitation controls leave keyboard navigation available.
-  await expect(page.getByRole("link", { name: "Kembali ke Dashboard", exact: true })).not.toBeFocused();
+  await expect(page.getByRole("link", { name: "Kembali ke Admin & Akses", exact: true })).not.toBeFocused();
   await page.getByText("Menu Admin", { exact: true }).click();
-  await expect(page.getByRole("navigation", { name: "Owner mobile" }).getByRole("link", { name: "Tambah Admin", exact: true })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Owner mobile" }).getByRole("link", { name: "Admin & Akses", exact: true })).toBeVisible();
 });
 
 test("recipient creates a password, still needs real MFA, and cannot add other Admins", async ({ page }) => {
@@ -95,7 +96,7 @@ test("recipient creates a password, still needs real MFA, and cannot add other A
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Masuk", exact: true }).click();
   await enroll(page, password);
-  await expect(page.getByRole("link", { name: "Tambah Admin", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Admin & Akses", exact: true })).toHaveCount(0);
   await page.goto("/admin/admins/new");
   await expect(page.getByRole("heading", { name: "Tambah Admin", exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Kirim undangan", exact: true })).toHaveCount(0);

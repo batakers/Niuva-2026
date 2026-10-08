@@ -20,4 +20,9 @@ describe("Admin list query", () => {
     expect(parseAdminListQuery("products", { publication: "published", status: "NEW", q: " Print " })).toEqual({ page: 1, q: "Print", publication: "published" });
     expect(parseAdminListQuery("portfolio", { publication: ["draft"], type: "RETAIL" })).toEqual({ page: 1 });
   });
+  it("preserves validated attention context only on operational lists", () => {
+    expect(parseAdminListQuery("orders", { view: "needs-action" })).toEqual({ page: 1, view: "needs-action" });
+    expect(parseAdminListQuery("products", { view: "issues" })).toEqual({ page: 1 });
+    expect(parseAdminListQuery("inquiries", { view: ["issues"] })).toEqual({ page: 1 });
+  });
 });

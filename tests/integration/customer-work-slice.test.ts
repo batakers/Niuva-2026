@@ -15,6 +15,7 @@ import { CustomPrintService } from "@/modules/custom-print/service";
 import { B2BQuoteService } from "@/modules/inquiry/b2b-quote";
 import { InquiryService } from "@/modules/inquiry/service";
 import { CUSTOM_PRINT_V1_PER_UNIT_POLICY } from "@/modules/pricing/policy";
+import { editableRates, policyFromRates } from "@/modules/pricing/tariff-schema";
 import { QuoteService } from "@/modules/quote/service";
 import { RoughCustomShippingService } from "@/modules/shipping/rough-custom";
 
@@ -80,10 +81,10 @@ describe("Customer ownership and commercial slice", () => {
     const deleted = await uploaded("stl", owner.id);
     await prisma.storedFile.update({ where: { id: deleted.id }, data: { deletedAt: new Date() } });
     await expect(service.preview({ ...input, fileId: deleted.id }, owner.id)).rejects.toMatchObject({ code: "CONFLICT" });
-    await prisma.pricingRuleVersion.create({ data: { code: "CUSTOM_PRINT_V1", version: 2,
+    await expect(prisma.pricingRuleVersion.create({ data: { code: "CUSTOM_PRINT_V1", version: 2,
       definitionJson: CUSTOM_PRINT_V1_PER_UNIT_POLICY, status: "ACTIVE", approvedAt: new Date(),
-      approvedByAdminId: access.profile.id } });
-    expect((await service.preview(input, owner.id)).status).toBe("REVIEW_REQUIRED");
+      approvedByAdminId: access.profile.id } })).rejects.toMatchObject({ code: "P2002" });
+    expect((await service.preview(input, owner.id)).status).toBe("READY");
     expect((await new CustomerPreviewService(undefined, () => false).preview(input, owner.id)).status).toBe("REVIEW_REQUIRED");
   });
 
@@ -269,6 +270,10 @@ describe("Customer ownership and commercial slice", () => {
     expect(quote.materialSubtotalRp.toString()).not.toBe("2000");
     expect(quote.finalTotalRp.toString()).not.toBe("12000");
     await quoteService.send(quote.id);
+    // Issued v1 quote retains its reviewed price when a different tariff is active.
+    await prisma.pricingRuleVersion.update({ where: { id: rule.id }, data: { status: "RETIRED" } });
+    const changedRates = editableRates(CUSTOM_PRINT_V1_PER_UNIT_POLICY); changedRates.plaFirst = "1100";
+    await prisma.pricingRuleVersion.create({ data: { code: "CUSTOM_PRINT_V1", version: 2, status: "ACTIVE", definitionJson: policyFromRates(changedRates, 2), approvedByAdminId: access.profile.id } });
     const operations = new AdminOperationsService({ authorize: async () => access });
     expect(await operations.getCustomPrintLinkedOrders(request.request.id)).toEqual([]);
     await expect(quoteService.accept({ quoteId: quote.id, token: "wrong" })).rejects.toMatchObject({ code: "UNAUTHORIZED" });

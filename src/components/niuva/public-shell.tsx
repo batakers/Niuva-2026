@@ -2,7 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import NiuvaLogo from "@/components/ui/NiuvaLogo";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
-import { publicCompanyProfile } from "@/features/public/company-content";
+import { PublicSiteContact, PublicSiteDescription } from "./public-site-information";
 import { isLocalDemoMode } from "@/lib/env/server";
 import { PublicNavigation, type PublicHeaderAction } from "./public-navigation";
 
@@ -88,7 +88,7 @@ export function PublicShell({
         <div className="mx-auto grid max-w-public gap-8 px-5 py-10 sm:px-8 md:grid-cols-[minmax(0,1.2fr)_minmax(10rem,0.6fr)_minmax(13rem,0.8fr)]">
           <div className="space-y-4">
             <Link href="/" aria-label="Niuva, kembali ke halaman utama" className="inline-flex rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"><NiuvaLogo className="h-7 w-auto" /></Link>
-            <p className="max-w-md text-sm leading-6 text-muted-foreground">{publicCompanyProfile.supportingCopy}</p>
+            <p className="max-w-md text-sm leading-6 text-muted-foreground"><PublicSiteDescription /></p>
             <p className="text-xs text-muted-foreground">Niuva Inovasi Utama</p>
           </div>
           <nav aria-label="Navigasi footer">
@@ -106,13 +106,7 @@ export function PublicShell({
               ))}
             </nav>
             <address className="max-w-sm text-sm not-italic leading-6 text-muted-foreground">
-              <p>{publicCompanyProfile.contact.location}</p>
-              <a className="mt-3 block underline underline-offset-4 hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`mailto:${publicCompanyProfile.contact.email}`}>
-                {publicCompanyProfile.contact.email}
-              </a>
-              <a className="mt-1 block underline underline-offset-4 hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={publicCompanyProfile.contact.phoneHref}>
-                {publicCompanyProfile.contact.phone}
-              </a>
+              <PublicSiteContact />
             </address>
           </div>
         </div>

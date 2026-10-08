@@ -1,0 +1,42 @@
+import { randomUUID } from "node:crypto";
+import { describe, expect, it, vi } from "vitest";
+vi.mock("server-only", () => ({}));
+import { InvoiceService } from "@/modules/finance/invoice-service";
+import { BillingSettingsService } from "@/modules/finance/billing-settings-service";
+import { financeActor, financeOrder, financePrisma as prisma, testBillingInstructions } from "./helpers/finance";
+describe("invoice lifecycle", () => {
+  it("issues once with immutable snapshots, retains receipts after void and permits both-role correction", async () => {
+    const owner = await financeActor(), admin = await financeActor("ADMIN"), settings = new BillingSettingsService(), service = new InvoiceService();
+    await expect(settings.save(admin, { expectedVersion: 0, values: testBillingInstructions })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    const before = await settings.load(owner); const configured = await settings.save(owner, { expectedVersion: before.version, values: testBillingInstructions });
+    const order = await financeOrder();
+    const key = randomUUID();
+    const draft = await service.createDraft(admin, { source: { kind: "ORDER_TOTAL", orderId: order.id }, idempotencyKey: key });
+    expect((await service.createDraft(admin, { source: { kind: "ORDER_TOTAL", orderId: order.id }, idempotencyKey: key })).id).toBe(draft.id);
+    const issueInput = { invoiceId: draft.id, expectedVersion: draft.version, settingsVersion: configured.version, idempotencyKey: randomUUID() };
+    const issued = await service.issue(admin, issueInput);
+    expect((await service.issue(admin, issueInput)).number).toBe(issued.number);
+    expect(issued.number).toMatch(/^INV-\d{6}-\d{6}$/);
+    expect(issued.snapshot?.totalRp).toBe("100000");
+    await prisma.paymentAttempt.create({ data: { orderId: order.id, purpose: "ORDER_TOTAL", amountRp: "100000", providerOrderId: randomUUID(), expiresAt: new Date(Date.now() + 60_000), status: "SETTLED", settledAt: new Date() } });
+    const voided = await service.void(admin, { invoiceId: issued.id, expectedVersion: issued.version, reason: "Kesalahan dokumen fixture." });
+    expect(voided.billingCase.paidRp).toBe("100000");
+    expect(voided.snapshot).toEqual(issued.snapshot);
+    const replaced = await service.replace(admin, { invoiceId: voided.id, expectedVersion: voided.version, settingsVersion: configured.version, reason: "Koreksi dokumen fixture.", idempotencyKey: randomUUID() });
+    expect(replaced.billingCase.id).toBe(issued.billingCase.id); expect(replaced.billingCase.paidRp).toBe("100000"); expect(replaced.replacesId).toBe(issued.id);
+    await expect(prisma.invoice.update({ where: { id: replaced.id }, data: { documentJson: {} } })).rejects.toThrow();
+    await expect(service.issue(admin, { ...issueInput, totalRp: "1" })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+  });
+  it("serializes numbers and rejects changed source snapshots", async () => {
+    const owner = await financeActor(), settings = await new BillingSettingsService().load(owner), service = new InvoiceService();
+    const orders = await Promise.all([financeOrder(), financeOrder()]);
+    const drafts = await Promise.all(orders.map(order => service.createDraft(owner, { source: { kind: "ORDER_TOTAL", orderId: order.id }, idempotencyKey: randomUUID() })));
+    const issued = await Promise.all(drafts.map(draft => service.issue(owner, { invoiceId: draft.id, expectedVersion: draft.version, settingsVersion: settings.version, idempotencyKey: randomUUID() })));
+    expect(new Set(issued.map(invoice => invoice.number)).size).toBe(2);
+    const changed = await financeOrder(), draft = await service.createDraft(owner, { source: { kind: "ORDER_TOTAL", orderId: changed.id }, idempotencyKey: randomUUID() });
+    await prisma.order.update({ where: { id: changed.id }, data: { customerName: "Changed fixture buyer" } });
+    await expect(service.issue(owner, { invoiceId: draft.id, expectedVersion: draft.version, settingsVersion: settings.version, idempotencyKey: randomUUID() })).rejects.toMatchObject({ code: "CONFLICT" });
+    const zero = await financeOrder("0"), zeroDraft = await service.createDraft(owner, { source: { kind: "ORDER_TOTAL", orderId: zero.id }, idempotencyKey: randomUUID() });
+    expect(zeroDraft.billingCase.paymentState).toBe("NO_PAYMENT_REQUIRED");
+  });
+});

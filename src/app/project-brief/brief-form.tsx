@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useHydrated } from "@/components/niuva/use-hydrated";
 import { b2bInquiryInputSchema } from "@/modules/inquiry/schema";
+import { usePublicSiteInformation } from "@/components/niuva/public-site-information";
 import { createPublicWhatsAppHref } from "@/features/public/company-content";
 import { FormField } from "@/components/niuva/form-field";
 import { FileUploadField } from "@/components/niuva/file-upload-field";
@@ -57,6 +58,7 @@ export function BriefForm({
   previewEnabled?: boolean;
   uploadsEnabled?: boolean;
 }) {
+  const siteInformation = usePublicSiteInformation();
   const hydrated = useHydrated();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [result, setResult] = useState<Result>("idle");
@@ -179,7 +181,7 @@ export function BriefForm({
         {previewEnabled && result === "success" && <StatusNotice tone="success" title="Simulasi brief berhasil." description="Informasi lolos validasi. Ini hanya preview; belum ada inquiry, nomor referensi, atau pesan yang dikirim ke Niuva." />}
         {previewEnabled && result === "error" && <StatusNotice tone="error" title="Simulasi pengiriman gagal." description="Isian tetap tersedia. Pilih skenario berhasil lalu coba kembali untuk meninjau alur pemulihan." />}
         {!previewEnabled && result === "success" && referenceNumber && <StatusNotice tone="success" title="Brief tersimpan." description={demoMode ? `Referensi ${referenceNumber} tercatat di database demo lokal. WhatsApp masih berupa deep-link; tidak ada pesan otomatis yang dikirim.` : `Referensi ${referenceNumber} sudah tercatat. Tim Niuva dapat meninjau konteks ini sebelum percakapan lanjutan.`}
-          action={<div className="flex flex-wrap gap-2">{inquiryId ? <NiuvaLink href={`/account/inquiries/${inquiryId}`} variant="default" className="min-h-11">Pantau di akun</NiuvaLink> : null}<a href={createPublicWhatsAppHref(referenceNumber)} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center rounded-lg border border-border px-4 text-sm font-medium focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">Lanjutkan lewat WhatsApp</a>{demoMode ? <NiuvaLink href="/demo/action-queue" variant="outline" className="min-h-11">Lihat Action Queue demo</NiuvaLink> : null}</div>} />}
+          action={<div className="flex flex-wrap gap-2">{inquiryId ? <NiuvaLink href={`/account/inquiries/${inquiryId}`} variant="default" className="min-h-11">Pantau di akun</NiuvaLink> : null}<a href={createPublicWhatsAppHref(referenceNumber, siteInformation.phone)} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center rounded-lg border border-border px-4 text-sm font-medium focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">Lanjutkan lewat WhatsApp</a>{demoMode ? <NiuvaLink href="/demo/action-queue" variant="outline" className="min-h-11">Lihat Action Queue demo</NiuvaLink> : null}</div>} />}
         {!previewEnabled && result === "error" && <StatusNotice tone="error" title="Project brief belum terkirim." description="Isian tetap tersedia. Coba kirim lagi setelah layanan kembali tersedia." action={<Button type="button" variant="outline" className="min-h-11" onClick={() => setResult("idle")}>Coba lagi</Button>} />}
       </div>
       <fieldset disabled={result === "pending"} className="min-w-0 space-y-8">

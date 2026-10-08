@@ -1,0 +1,43 @@
+import { randomUUID } from "node:crypto";
+import { expect, test } from "@playwright/test";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../../src/generated/prisma/client";
+import { getSafeTestDatabaseUrl } from "../../src/lib/db/test-safety";
+import { isolatedActorHeaders } from "../e2e/helpers/actor";
+import { createAdminBrowserSession } from "./helpers/session";
+
+test.describe.configure({ mode: "serial", timeout: 120_000 });
+test.use({ trace: "off", screenshot: "off", video: "off" });
+let prisma: PrismaClient;
+test.beforeAll(() => { prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: getSafeTestDatabaseUrl({ TEST_DATABASE_URL: process.env.TEST_DATABASE_URL }), max: 2 }) }); });
+test.afterAll(async () => { await prisma?.$disconnect(); });
+test.beforeEach(async ({ context }, info) => { await context.setExtraHTTPHeaders(isolatedActorHeaders(info, "admin-notifications")); });
+
+test("bell history, focus, live attention, read persistence and no replay", async ({ page }) => {
+  const profile = await createAdminBrowserSession(page, prisma);
+  const bell = page.getByRole("button", { name: /Buka notifikasi/ });
+  await expect(bell).toBeVisible();
+  await expect(bell).toHaveAttribute("data-feed-ready", "true");
+  await bell.focus(); await page.keyboard.press("Enter");
+  const panel = page.getByRole("dialog", { name: "Notifikasi" });
+  await expect(panel).toBeVisible();
+  await page.keyboard.press("Escape"); await expect(bell).toBeFocused();
+  const inquiry = await prisma.b2BInquiry.create({ data: { referenceNumber: `INQ-NOTIF-${randomUUID()}`, publicTokenHash: randomUUID(), name: "Notification Customer", email: "notification@example.test", phone: "+628000000000", currentStage: "CAD", description: "Synthetic notification browser fixture", projectGoal: "TEST only", referenceLink: "https://example.test/fixture", targetQuantity: "1 prototype", confidentialityAck: true } });
+  const attention = await prisma.auditLog.create({ data: { actorType: "SYSTEM", entityType: "B2BInquiry", entityId: inquiry.id, action: "inquiry.submitted" } });
+  await expect(page.getByTestId("notification-toasts").getByText("Brief B2B baru diterima")).toBeVisible({ timeout: 30_000 });
+  await bell.click();
+  const row = panel.locator("li").filter({ has: page.locator(`a[href="/admin/inquiries/${inquiry.id}"]`) });
+  await row.getByRole("button", { name: "Tandai dibaca" }).click();
+  await expect.poll(async () => Boolean((await prisma.adminNotificationReceipt.findUnique({ where: { profileId_auditLogId: { profileId: profile.id, auditLogId: attention.id } } }))?.readAt)).toBe(true);
+  const routine = await prisma.auditLog.create({ data: { actorType: "SYSTEM", entityType: "B2BInquiry", entityId: inquiry.id, action: "inquiry.status.transition" } });
+  await expect.poll(() => prisma.adminNotificationReceipt.count({ where: { profileId: profile.id, auditLogId: routine.id } }), { timeout: 30_000 }).toBe(1);
+  await expect(page.getByTestId("notification-toasts").getByText("Status brief B2B diperbarui")).toHaveCount(0);
+  await row.getByRole("link", { name: "Brief B2B baru diterima", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/admin/inquiries/${inquiry.id}$`));
+  await page.reload(); await expect(bell).toHaveAttribute("data-feed-ready", "true");
+  await expect(page.getByTestId("notification-toasts").getByText("Brief B2B baru diterima")).toHaveCount(0);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await bell.click(); await expect(panel).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});

@@ -80,7 +80,7 @@ export class StoredFileRepository {
     fileId: string,
   ): Promise<PendingFileForConfirmation | null> {
     const file = await this.prisma.storedFile.findUnique({
-      where: { id: fileId },
+      where: { id: fileId, purpose: "CUSTOMER_UPLOAD" },
       select: {
         bucketScope: true,
         extension: true,
@@ -113,6 +113,7 @@ export class StoredFileRepository {
     const file = await this.prisma.storedFile.findFirst({
       where: {
         bucketScope: "PRIVATE_CUSTOMER",
+        purpose: "CUSTOMER_UPLOAD",
         deletedAt: null,
         id: input.fileId,
         uploadStatus: "VERIFIED",
@@ -198,6 +199,7 @@ export class StoredFileRepository {
         throw appError("NOT_FOUND");
       }
 
+      if (current.purpose === "FINANCIAL_EVIDENCE") throw appError("FORBIDDEN");
       assertFileTransition(current.uploadStatus, next);
 
       if (next === "VERIFIED") {

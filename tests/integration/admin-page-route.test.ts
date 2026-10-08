@@ -155,9 +155,14 @@ describe("Admin page route integration", () => {
     expect(authMocks.auth).toHaveBeenCalledOnce();
     expect(nextServerMocks.connection).toHaveBeenCalledOnce();
     expect(markup).toContain("Overview");
-    expect(markup).toContain(inquiry.referenceNumber);
-    expect(markup).toContain("Tren tayangan halaman");
-    expect(markup).toContain("Aktivitas bisnis");
+    expect(markup).toContain("/admin/inquiries?view=needs-action");
+    expect(markup).not.toContain(inquiry.referenceNumber);
+    const filtered = await new (await import("@/modules/admin/operations-read-repository")).PrismaAdminOperationsReadRepository(prisma).listInquiries({ page: 1, view: "needs-action" });
+    expect(filtered.items.map(item => item.id)).toContain(inquiry.id);
+    expect(markup).toContain("Ringkasan bisnis");
+    expect(markup).toContain("Aktivitas terbaru");
+    expect(markup).toContain("Pengumpulan tayangan belum aktif");
+    expect(markup).not.toContain("Tren tayangan halaman");
     expect(markup).toContain("Owner");
     expect(markup).not.toContain("admin-page@example.test");
     expect(markup).not.toContain("+628000000000");
@@ -165,7 +170,7 @@ describe("Admin page route integration", () => {
     expect(markup).not.toContain("Development-only preview");
   });
 
-  it("applies the queue group on the server before rendering rows", async () => {
+  it("redirects the retired queue to the authorized domain list", async () => {
     await prisma.adminProfile.create({ data: { authUser: { create: { id: ownerClerkUserId, email: ownerClerkUserId + "@example.test", name: "Fixture Owner" } }, clerkUserId: ownerClerkUserId, isActive: true, role: "OWNER" } });
     await prisma.b2BInquiry.create({ data: {
       confidentialityAck: true,
@@ -181,10 +186,7 @@ describe("Admin page route integration", () => {
       targetQuantity: "1 prototype",
     } });
 
-    const markup = renderToStaticMarkup(await AdminQueuePage({ searchParams: Promise.resolve({ group: "orders" }) }));
-    expect(markup).toContain("Action Queue");
-    expect(markup).toContain("0 pada kelompok ini");
-    expect(markup).not.toContain("INQ-20260914-GROUP001");
+    await expect(AdminQueuePage({ searchParams: Promise.resolve({ group: "orders" }) })).rejects.toMatchObject({ digest: expect.stringContaining("/admin/orders?view=needs-action") });
   });
 
   it("keeps the queue hidden when the Clerk identity has no active profile", async () => {

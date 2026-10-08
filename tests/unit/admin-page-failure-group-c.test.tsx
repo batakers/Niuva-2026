@@ -6,10 +6,10 @@ import type { AdminAccess } from "@/lib/auth/admin";
 import type { FailureEvent, FailureKind } from "@/lib/observability/logger";
 import { AppError } from "@/modules/shared/errors";
 
-// Task 3.9 (G3): admin pages of group C (Overview, Action Queue, stock history)
+// Admin pages of group C (Overview and stock history) record source failures.
 // record the failure cause BEFORE the "belum dapat dimuat" view is rendered.
 // Overview and stock history pass the FailureKind to AdminDataUnavailableView; the
-// Action Queue error view takes no `kind` and is unchanged, so only its log is checked.
+// The retired Queue performs an authorized redirect without loading operational data.
 // The privacy pages have no catch / unavailable view and are intentionally untouched.
 // **Validates: Requirements 8.4, 8.5, 27.4**
 
@@ -23,17 +23,20 @@ const mocks = vi.hoisted(() => {
     NotFoundSentinel,
     RedirectSentinel,
     analyticsLoad: vi.fn(),
+    activityList: vi.fn(),
     connection: vi.fn(),
     dashboardLoad: vi.fn(),
     getStockHistory: vi.fn(),
     loadAdminPageAccess: vi.fn(),
     notFound: vi.fn(),
+    redirect: vi.fn(),
     queueList: vi.fn(),
   };
 });
 
 vi.mock("next/navigation", () => ({
   notFound: mocks.notFound,
+  redirect: mocks.redirect,
   unstable_rethrow: (error: unknown) => {
     if (error instanceof mocks.NotFoundSentinel || error instanceof mocks.RedirectSentinel) throw error;
   },
@@ -59,8 +62,8 @@ vi.mock("@/app/admin/action-queue-view", () => ({
   AdminActionQueueView: () => <div data-testid="queue-view" />,
 }));
 vi.mock("@/app/admin/overview-view", () => ({
-  AdminOverviewView: ({ analytics }: Readonly<{ analytics: unknown }>) => (
-    <div data-analytics={analytics === null ? "missing" : "present"} data-testid="overview-view" />
+  AdminOverviewView: ({ data }: Readonly<{ data: { attention: { status: string }; traffic: { status: string } } }>) => (
+    <div data-attention={data.attention.status} data-analytics={data.traffic.status === "unavailable" ? "missing" : "present"} data-testid="overview-view" />
   ),
 }));
 
@@ -74,9 +77,17 @@ vi.mock("@/modules/admin/dashboard-service", () => ({
     return { load: mocks.dashboardLoad };
   }),
 }));
+vi.mock("@/modules/admin/reports/service", () => ({
+  AdminReportsService: vi.fn(function Reports() { return { load: mocks.analyticsLoad }; }),
+}));
 vi.mock("@/modules/analytics/service", () => ({
   AnalyticsService: vi.fn(function MockAnalyticsService() {
     return { load: mocks.analyticsLoad };
+  }),
+}));
+vi.mock("@/modules/admin/activity-timeline", () => ({
+  AdminActivityTimelineService: vi.fn(function MockAdminActivityTimelineService() {
+    return { list: mocks.activityList };
   }),
 }));
 vi.mock("@/modules/admin/operations", () => ({
@@ -139,28 +150,6 @@ const queueResult = { filteredTotal: 0, generatedAt: new Date("2026-01-01T00:00:
 
 const pages: readonly GroupCPage[] = [
   {
-    name: "overview (queue/dashboard read)",
-    boundary: "page:/admin",
-    page: AdminPage,
-    props: listProps,
-    read: () => mocks.dashboardLoad,
-    successValue: {},
-    unavailableTestId: "unavailable-view",
-    passesKind: true,
-    expectedContext: { group: "all", op: "overview" },
-  },
-  {
-    name: "queue",
-    boundary: "page:/admin/queue",
-    page: AdminQueuePage,
-    props: listProps,
-    read: () => mocks.queueList,
-    successValue: queueResult,
-    unavailableTestId: "queue-error-view",
-    passesKind: false,
-    expectedContext: { group: "all", op: "list" },
-  },
-  {
     name: "products/[id]/stock/[variantId]",
     boundary: "page:/admin/products/[id]/stock/[variantId]",
     page: AdminStockHistoryPage,
@@ -195,7 +184,8 @@ beforeEach(() => {
   });
   mocks.queueList.mockResolvedValue(queueResult);
   mocks.dashboardLoad.mockResolvedValue({});
-  mocks.analyticsLoad.mockResolvedValue({});
+  mocks.analyticsLoad.mockResolvedValue({ generatedAt: "2026-10-08T00:00:00Z", finance: { status: "unavailable", message: "Finance unavailable" }, operations: { status: "ok", data: { paidOrders: 0 } }, traffic: { status: "ok", data: {} } });
+  mocks.activityList.mockResolvedValue({ items: [], page: 1, hasNext: false });
   mocks.getStockHistory.mockResolvedValue(null);
 });
 
@@ -255,46 +245,31 @@ describe.each(pages)("admin group C page $name", (testCase) => {
   });
 });
 
-describe("admin overview analytics read", () => {
-  it("logs a failing analytics read and still renders Overview without analytics", async () => {
-    mocks.analyticsLoad.mockRejectedValue(databaseError());
-
-    const result = await run(pages[0] as GroupCPage);
-
-    expect(result.outcome).toBe("rendered");
-    expect(screen.queryByTestId("unavailable-view")).not.toBeInTheDocument();
-    expect(screen.getByTestId("overview-view")).toHaveAttribute("data-analytics", "missing");
-    expect(recorded).toHaveLength(1);
-    expect(recorded[0]).toMatchObject({ boundary: "page:/admin", kind: "DATABASE_UNAVAILABLE" });
-    expect(recorded[0]?.safeContext).toEqual({ op: "analytics", range: "30d" });
+describe("independent Overview source failures", () => {
+  it.each(failureSamples)("logs an attention source failure safely for %s", async (_label, makeError, kind) => {
+    mocks.queueList.mockRejectedValue(makeError());
+    render(await AdminPage(listProps));
+    expect(screen.getByTestId("overview-view")).toHaveAttribute("data-attention", "unavailable");
+    expect(recorded).toHaveLength(1); expect(recorded[0]).toMatchObject({ boundary: "page:/admin", kind, safeContext: { op: "attention" } });
     expect(JSON.stringify(recorded)).not.toContain("SECRET-DB-DETAIL");
   });
-
-  it("logs both reads when overview and analytics fail, and shows the unavailable view", async () => {
-    mocks.queueList.mockRejectedValue(timeoutError());
-    mocks.analyticsLoad.mockRejectedValue(databaseError());
-
-    await run(pages[0] as GroupCPage);
-
-    expect(recorded).toHaveLength(2);
-    expect(screen.getByTestId("unavailable-view")).toHaveAttribute("data-kind", "PROVIDER_TIMEOUT");
+  it("does not swallow control-flow signals from attention", async () => {
+    mocks.queueList.mockRejectedValue(new mocks.RedirectSentinel("NEXT_REDIRECT"));
+    await expect(AdminPage(listProps)).rejects.toBeInstanceOf(mocks.RedirectSentinel); expect(recorded).toHaveLength(0);
   });
-
-  it("does not swallow a control-flow signal from analytics", async () => {
-    mocks.analyticsLoad.mockRejectedValue(new mocks.RedirectSentinel("NEXT_REDIRECT"));
-    await expect((pages[0] as GroupCPage).page(listProps as never)).rejects.toBeInstanceOf(mocks.RedirectSentinel);
-    expect(recorded).toHaveLength(0);
+  it("renders a traffic failure while retaining attention", async () => {
+    mocks.analyticsLoad.mockResolvedValue({ generatedAt: "2026-10-08T00:00:00Z", finance: { status: "unavailable" }, operations: { status: "ok", data: { paidOrders: 0 } }, traffic: { status: "unavailable" } });
+    render(await AdminPage(listProps)); expect(screen.getByTestId("overview-view")).toHaveAttribute("data-analytics", "missing");
+    expect(screen.getByTestId("overview-view")).toHaveAttribute("data-attention", "ok");
   });
-
-  it("renders Overview with analytics and no log on the success path", async () => {
-    await run(pages[0] as GroupCPage);
-    expect(screen.getByTestId("overview-view")).toHaveAttribute("data-analytics", "present");
-    expect(recorded).toHaveLength(0);
+  it("keeps auth ahead of every data read", async () => {
+    mocks.loadAdminPageAccess.mockResolvedValue({ kind: "denied", state: "FORBIDDEN" });
+    render(await AdminPage(listProps)); expect(mocks.queueList).not.toHaveBeenCalled(); expect(mocks.analyticsLoad).not.toHaveBeenCalled(); expect(mocks.activityList).not.toHaveBeenCalled();
   });
 });
 
 describe("admin stock history page gates", () => {
-  const stockPage = pages[2] as GroupCPage;
+  const stockPage = pages[0] as GroupCPage;
 
   it("treats AppError NOT_FOUND as not-found without logging", async () => {
     mocks.getStockHistory.mockRejectedValue(new AppError("NOT_FOUND"));
@@ -307,6 +282,16 @@ describe("admin stock history page gates", () => {
     const result = await run({ ...stockPage, props: { params: Promise.resolve({ id: "x", variantId: VARIANT_ID }), searchParams: Promise.resolve({}) } });
     expect(result.outcome).toBe("not-found");
     expect(mocks.getStockHistory).not.toHaveBeenCalled();
+    expect(recorded).toHaveLength(0);
+  });
+});
+
+describe("retired Queue compatibility", () => {
+  it("redirects to the domain even when the former Queue data source is unavailable", async () => {
+    mocks.queueList.mockRejectedValue(databaseError());
+    mocks.redirect.mockImplementation((destination: string) => { throw new mocks.RedirectSentinel(destination); });
+    await expect(AdminQueuePage({ searchParams: Promise.resolve({ group: "orders" }) })).rejects.toThrow("/admin/orders?view=needs-action");
+    expect(mocks.queueList).not.toHaveBeenCalled();
     expect(recorded).toHaveLength(0);
   });
 });

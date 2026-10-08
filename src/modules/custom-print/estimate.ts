@@ -32,10 +32,11 @@ export const publishEstimateSchema = z.object({
 
 export type AdditionalCost = z.infer<typeof additionalCostSchema>;
 
-export function isEstimateCurrent(snapshot: unknown, reviewUpdatedAt: Date | null | undefined): boolean {
+export function isEstimateCurrent(snapshot: unknown, reviewUpdatedAt: Date | null | undefined, activePricingRuleId?: string): boolean {
   if (reviewUpdatedAt == null) return false;
-  const parsed = z.object({ reviewUpdatedAt: z.iso.datetime() }).safeParse(snapshot);
-  return parsed.success && parsed.data.reviewUpdatedAt === reviewUpdatedAt.toISOString();
+  const parsed = z.object({ reviewUpdatedAt: z.iso.datetime(), pricingRule: z.object({ id: z.uuid() }).optional() }).safeParse(snapshot);
+  return parsed.success && parsed.data.reviewUpdatedAt === reviewUpdatedAt.toISOString() &&
+    (activePricingRuleId === undefined || parsed.data.pricingRule?.id === activePricingRuleId);
 }
 
 export function calculateProductionRange(input: StandardPrintInput, additionalCosts: readonly AdditionalCost[]) {
@@ -77,6 +78,7 @@ export class CustomPrintEstimateService {
     const prisma = this.dependencies.prisma ?? getPrismaClient();
 
     return prisma.$transaction(async (transaction) => {
+      await transaction.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('niuva-custom-print-rates'))`;
       await transaction.$queryRaw(Prisma.sql`SELECT "id" FROM "custom_print_requests" WHERE "id" = ${parsed.requestId}::uuid FOR UPDATE`);
       const request = await transaction.customPrintRequest.findUnique({
         where: { id: parsed.requestId },

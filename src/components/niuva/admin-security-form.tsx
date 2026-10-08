@@ -34,7 +34,7 @@ export function AdminSecurityForm() {
   }
   function submit(event: FormEvent) { event.preventDefault(); void run("password"); }
   const inputClass = "min-h-11 w-full rounded-lg border border-border bg-card px-3 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
-  return <form className="max-w-lg space-y-5" onSubmit={submit} aria-busy={busy}>
+  return <form className="space-y-5 rounded-xl border border-border bg-card p-5 sm:p-6" onSubmit={submit} aria-busy={busy}>
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     {message && <p role="status" className="text-sm text-muted-foreground">{message}</p>}
     <label className="block space-y-2"><span className="text-sm font-medium">Password saat ini</span><input className={inputClass} type="password" autoComplete="current-password" required maxLength={128} value={password} onChange={event => setPassword(event.target.value)} disabled={busy || !hydrated}/></label>

@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import Link from "next/link";
 import { AdminPageHeader } from "../admin-page-header";
 import { AdminListControls } from "../admin-list-controls";
+import { AdminListPosition } from "@/components/niuva/admin-list-position";
 import { parseAdminListQuery, adminListQueryParams, type AdminListQuery } from "@/modules/admin/list-query";
 import { buildAdminPageHref, withAdminReturnTo } from "@/modules/admin/navigation";
 
@@ -34,6 +35,7 @@ export default async function AdminInquiriesPage({ searchParams }: Readonly<{ se
   return (
     <AdminShell active="inquiries" role={result.role}>
       <main className="space-y-8" data-admin-surface="inquiries" id="main-content">
+        <AdminListPosition listHref={returnTo} />
         <AdminPageHeader title="B2B Inquiries" description="Temukan brief proyek dan pantau tindak lanjut B2B. Review dan proposal tersedia pada setiap inquiry." breadcrumbs={[{ label: "B2B Inquiries" }]} />
           <AdminListControls area="inquiries" query={query} />
 
