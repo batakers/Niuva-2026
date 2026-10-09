@@ -84,7 +84,7 @@ describe("desktop Admin navigation preference", () => {
     window.localStorage.setItem(preferenceKey, "expanded");
     fireEvent(window, new StorageEvent("storage", { key: preferenceKey }));
     await waitFor(() => expect(screen.getByRole("button", { name: "Lipat navigasi Admin" })).toHaveAttribute("aria-expanded", "true"));
-    expect(screen.getByText("Menu Admin").closest("details")).not.toHaveAttribute("open");
+    expect(screen.getByRole("button", { name: "Menu Admin" })).toHaveAttribute("aria-expanded", "false");
   });
 
   it("uses the expanded default for an invalid stored choice", () => {

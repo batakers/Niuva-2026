@@ -1,10 +1,12 @@
 import { randomUUID } from "node:crypto";
-import { expect, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { hashPassword } from "better-auth/crypto";
 import type { PrismaClient } from "../../../src/generated/prisma/client";
 import { generateTestAdminTotp } from "../../helpers/admin-totp";
+import { isolatedActorHeaders } from "../../e2e/helpers/actor";
 
 export async function createAdminBrowserSession(page: Page, prisma: PrismaClient, role: "OWNER" | "ADMIN" = "OWNER") {
+  await page.context().setExtraHTTPHeaders(isolatedActorHeaders(test.info(), `admin-session-${role.toLowerCase()}`));
   const id = randomUUID(), password = `Test-${randomUUID()}!`;
   const email = `redesign-${id}@example.test`;
   const user = await prisma.adminAuthUser.create({ data: { id, email, name: `${role} Redesign Fixture`, emailVerified: true,

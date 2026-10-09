@@ -1,3 +1,5 @@
+import { Card } from "@/components/ui/card";
+import { Table, TableCaption, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import Link from "next/link";
@@ -75,24 +77,24 @@ export default async function AdminOrdersPage({
               </div>
             ) : (
               <>
-                <div className="mt-6 hidden overflow-x-auto rounded-xl border border-border bg-card lg:block">
-                  <table className="w-full min-w-[58rem] text-left text-sm">
-                    <caption className="sr-only">Daftar order terbaru</caption>
-                    <thead className="border-b border-border bg-muted text-xs uppercase tracking-[0.1em] text-muted-foreground">
-                      <tr>
-                        <th className="px-5 py-4 font-medium" scope="col">Order</th>
-                        <th className="px-5 py-4 font-medium" scope="col">Customer</th>
-                        <th className="px-5 py-4 font-medium" scope="col">Status</th>
-                        <th className="px-5 py-4 font-medium" scope="col">Pembayaran</th>
-                        <th className="px-5 py-4 text-right font-medium" scope="col">Total</th>
-                        <th className="px-5 py-4 text-right font-medium" scope="col">Diperbarui</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
+                <Card className="gap-0 py-0 ring-0 mt-6 hidden overflow-x-auto rounded-xl border border-border bg-card lg:block">
+                  <Table className="w-full min-w-[58rem] text-left text-sm">
+                    <TableCaption className="sr-only">Daftar order terbaru</TableCaption>
+                    <TableHeader className="border-b border-border bg-muted text-xs uppercase tracking-[0.1em] text-muted-foreground">
+                      <TableRow>
+                        <TableHead className="px-5 py-4 font-medium" scope="col">Order</TableHead>
+                        <TableHead className="px-5 py-4 font-medium" scope="col">Customer</TableHead>
+                        <TableHead className="px-5 py-4 font-medium" scope="col">Status</TableHead>
+                        <TableHead className="px-5 py-4 font-medium" scope="col">Pembayaran</TableHead>
+                        <TableHead className="px-5 py-4 text-right font-medium" scope="col">Total</TableHead>
+                        <TableHead className="px-5 py-4 text-right font-medium" scope="col">Diperbarui</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody className="divide-y divide-border">
                       {result.items.map((item) => <OrderTableRow item={item} key={item.id} returnTo={returnTo} />)}
-                    </tbody>
-                  </table>
-                </div>
+                    </TableBody>
+                  </Table>
+                </Card>
                 <div className="mt-6 grid gap-3 lg:hidden">
                   {result.items.map((item) => <OrderCard item={item} key={item.id} returnTo={returnTo} />)}
                 </div>
@@ -119,35 +121,35 @@ async function loadOrders(access: AdminAccess, query: AdminListQuery): Promise<O
 
 function SummaryCard({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <Card className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-4">
       <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{label}</p>
       <p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p>
-    </div>
+    </Card>
   );
 }
 
 function OrderTableRow({ item, returnTo }: Readonly<{ item: AdminOrderRow; returnTo: string }>) {
   return (
-    <tr>
-      <th className="px-5 py-4 align-top font-medium" scope="row">
+    <TableRow>
+      <TableHead className="px-5 py-4 align-top font-medium" scope="row">
         <Link className="block font-mono text-sm text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/orders/${item.id}`, returnTo)}>{item.orderNumber}</Link>
         <span className="mt-1 block text-xs font-normal text-muted-foreground">{orderTypeLabel(item.orderType)}</span>
-      </th>
-      <td className="px-5 py-4 align-top">
+      </TableHead>
+      <TableCell className="px-5 py-4 align-top">
         <span className="block font-medium">{item.customerName}</span>
         <span className="mt-1 block text-xs text-muted-foreground">{item.customerEmail}</span>
-      </td>
-      <td className="px-5 py-4 align-top"><StatusText value={item.status} /></td>
-      <td className="px-5 py-4 align-top text-muted-foreground">{item.paymentStatus ? formatStatus(item.paymentStatus) : "Belum tercatat"}</td>
-      <td className="px-5 py-4 text-right align-top font-semibold tabular-nums">{currencyFormatter.format(BigInt(item.grandTotalRp))}</td>
-      <td className="px-5 py-4 text-right align-top text-xs text-muted-foreground">{dateFormatter.format(item.updatedAt)}</td>
-    </tr>
+      </TableCell>
+      <TableCell className="px-5 py-4 align-top"><StatusText value={item.status} /></TableCell>
+      <TableCell className="px-5 py-4 align-top text-muted-foreground">{item.paymentStatus ? formatStatus(item.paymentStatus) : "Belum tercatat"}</TableCell>
+      <TableCell className="px-5 py-4 text-right align-top font-semibold tabular-nums">{currencyFormatter.format(BigInt(item.grandTotalRp))}</TableCell>
+      <TableCell className="px-5 py-4 text-right align-top text-xs text-muted-foreground">{dateFormatter.format(item.updatedAt)}</TableCell>
+    </TableRow>
   );
 }
 
 function OrderCard({ item, returnTo }: Readonly<{ item: AdminOrderRow; returnTo: string }>) {
   return (
-    <article className="rounded-xl border border-border bg-card p-5">
+    <Card as="article" className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <Link className="font-mono text-sm font-semibold text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/orders/${item.id}`, returnTo)}>{item.orderNumber}</Link>
@@ -161,7 +163,7 @@ function OrderCard({ item, returnTo }: Readonly<{ item: AdminOrderRow; returnTo:
         <div><dt className="text-xs text-muted-foreground">Pembayaran</dt><dd className="mt-1 font-medium">{item.paymentStatus ? formatStatus(item.paymentStatus) : "Belum tercatat"}</dd></div>
         <div><dt className="text-xs text-muted-foreground">Diperbarui</dt><dd className="mt-1 text-muted-foreground">{dateFormatter.format(item.updatedAt)}</dd></div>
       </dl>
-    </article>
+    </Card>
   );
 }
 

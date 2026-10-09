@@ -1,3 +1,5 @@
+import { buttonVariants } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import type { AdminRole } from "@/generated/prisma/client";
 import type { ActionQueueResult } from "@/modules/admin/action-queue";
@@ -14,7 +16,7 @@ export function AdminActionQueueView({
     <AdminShell active="queue" role={role}>
       <main className="space-y-6" data-admin-surface="queue" id="main-content">
         <AdminPageHeader title="Action Queue" description="Pekerjaan aktif yang memerlukan tindakan Owner atau Admin. Buka record untuk menyelesaikan pekerjaan." returnHref="/admin" returnLabel="Kembali ke Overview" breadcrumbs={[{ label: "Action Queue" }]} />
-        <section aria-labelledby="queue-list-title" className="min-w-0 rounded-xl border border-border bg-card p-4 sm:p-5">
+        <Card as="section" aria-labelledby="queue-list-title" className="gap-0 py-0 ring-0 min-w-0 rounded-xl border border-border bg-card p-4 sm:p-5">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold" id="queue-list-title">Daftar pekerjaan</h2>
@@ -25,7 +27,7 @@ export function AdminActionQueueView({
           <div className="mt-4"><WorkGroupFilters basePath="/admin/queue" group={result.group} /></div>
           <div className="mt-4"><AdminWorkList emptyMessage={result.totalOpen === 0 ? "Antrean pekerjaan sedang kosong." : undefined} items={result.items} returnTo={returnTo} /></div>
           {result.filteredTotal > result.items.length ? <p className="mt-4 text-xs text-muted-foreground">Menampilkan {result.items.length} dari {result.filteredTotal} pekerjaan pada kelompok ini.</p> : null}
-        </section>
+        </Card>
       </main>
     </AdminShell>
   );
@@ -38,7 +40,7 @@ export function AdminActionQueueErrorView({ role }: Readonly<{ role: AdminRole }
         <p className="text-sm font-medium text-brand-700">Niuva / Operations</p>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">Action Queue belum dapat dimuat</h1>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-destructive" role="alert">Sumber data operasional sedang tidak tersedia. Muat ulang halaman untuk mencoba lagi.</p>
-        <Link className="mt-5 inline-flex min-h-11 items-center rounded-lg border border-border px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href="/admin/queue">Muat ulang</Link>
+        <Link className={buttonVariants({ variant: "outline", className: "mt-5 inline-flex min-h-11 items-center rounded-lg border border-border px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" })} href="/admin/queue">Muat ulang</Link>
       </main>
     </AdminShell>
   );

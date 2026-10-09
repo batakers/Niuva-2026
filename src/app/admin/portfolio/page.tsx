@@ -1,3 +1,4 @@
+import { Card } from "@/components/ui/card";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import Link from "next/link";
@@ -94,14 +95,14 @@ async function loadPortfolio(access: AdminAccess, query: AdminListQuery): Promis
 }
 
 function SummaryCard({ label, value }: Readonly<{ label: string; value: string }>) {
-  return <div className="rounded-xl border border-border bg-card p-4"><p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></div>;
+  return <Card className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-4"><p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></Card>;
 }
 
 function PortfolioCard({ item, returnTo }: Readonly<{ item: AdminPortfolioRow; returnTo: string }>) {
   const isCardOnly = isApprovedCardOnlyPortfolioProject(item);
 
   return (
-    <article className="rounded-xl border border-border bg-card p-5 sm:p-6">
+    <Card as="article" className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.1em] text-brand-700">{item.serviceLabel}</p>
@@ -121,6 +122,6 @@ function PortfolioCard({ item, returnTo }: Readonly<{ item: AdminPortfolioRow; r
         <div><dt className="text-xs text-muted-foreground">Diperbarui</dt><dd className="mt-1 text-muted-foreground">{dateFormatter.format(item.updatedAt)}</dd></div>
       </dl>
       <p className="mt-4 text-xs leading-5 text-muted-foreground"><Link className="font-semibold text-brand-700 underline-offset-4 hover:underline" href={withAdminReturnTo(`/admin/portfolio/${item.id}`, returnTo)}>Buka editor project</Link>. {isCardOnly ? "Card-only memakai ringkasan publik; media dapat ditambahkan kemudian jika asetnya disetujui." : "Publish action tetap memerlukan pengecekan izin dan kelengkapan bukti."}</p>
-    </article>
+    </Card>
   );
 }

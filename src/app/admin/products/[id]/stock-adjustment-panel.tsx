@@ -1,3 +1,6 @@
+import { Label } from "@/components/ui/label";
+import { NativeInput as Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 import { withAdminReturnTo } from "@/modules/admin/navigation";
 
@@ -18,14 +21,14 @@ export function StockAdjustmentPanel({
         <input name="variantId" type="hidden" value={variantId} />
         <input name="productId" type="hidden" value={productId} />
         <input name="expectedStockOnHand" type="hidden" value={stockOnHand} />
-        <label className="grid gap-2 text-sm font-medium" htmlFor={`stock-${variantId}`}>
+        <Label className="grid gap-2 text-sm font-medium" htmlFor={`stock-${variantId}`}>
           <span>Stok fisik baru</span>
-          <input className={inputClass} defaultValue={stockOnHand} id={`stock-${variantId}`} min={0} name="stockOnHand" required type="number" />
-        </label>
-        <label className="grid gap-2 text-sm font-medium" htmlFor={`reason-${variantId}`}>
+          <Input className={inputClass} defaultValue={stockOnHand} id={`stock-${variantId}`} min={0} name="stockOnHand" required type="number" />
+        </Label>
+        <Label className="grid gap-2 text-sm font-medium" htmlFor={`reason-${variantId}`}>
           <span>Alasan penyesuaian</span>
-          <textarea className={`${inputClass} min-h-24`} id={`reason-${variantId}`} maxLength={500} name="reason" required rows={3} />
-        </label>
+          <Textarea className={`${inputClass} min-h-24`} id={`reason-${variantId}`} maxLength={500} name="reason" required rows={3} />
+        </Label>
       </AdminActionForm>
       <Link
         className="inline-flex min-h-11 w-fit items-center text-sm font-semibold text-brand-700 underline underline-offset-4 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"

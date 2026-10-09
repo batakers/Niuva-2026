@@ -1,3 +1,4 @@
+import { Card } from "@/components/ui/card";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
@@ -64,7 +65,7 @@ export default async function AdminStockHistoryPage({
           <Balance label="Tersedia" value={history.variant.available} />
         </section>
 
-        <section aria-labelledby="movements-title" className="rounded-xl border border-border bg-card p-5 sm:p-6">
+        <Card as="section" aria-labelledby="movements-title" className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-5 sm:p-6">
           <h2 className="text-xl font-semibold" id="movements-title">Perubahan saldo</h2>
           {history.movements.length === 0 ? (
             <p className="mt-5 text-sm text-muted-foreground">Tidak ada perubahan pada halaman ini.</p>
@@ -87,12 +88,12 @@ export default async function AdminStockHistoryPage({
             </ol>
           )}
           <AdminPagination basePath={`/admin/products/${id}/stock/${variantId}`} hasNext={history.hasNext} page={history.page} query={{ returnTo }} />
-        </section>
+        </Card>
       </main>
     </AdminShell>
   );
 }
 
 function Balance({ label, value }: Readonly<{ label: string; value: number }>) {
-  return <div className="rounded-xl border border-border bg-card p-4"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></div>;
+  return <Card className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-4"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></Card>;
 }

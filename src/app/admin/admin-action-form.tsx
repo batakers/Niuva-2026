@@ -1,5 +1,6 @@
 "use client";
 
+import { FieldSet } from "@/components/ui/field";
 import { useActionState, type ReactNode } from "react";
 import Link from "next/link";
 
@@ -35,12 +36,12 @@ export function AdminActionForm({
         }
       }}
     >
-      <fieldset className="grid gap-4" disabled={pending}>
+      <FieldSet className="grid gap-4" disabled={pending}>
         {children}
         <Button className="min-h-11 w-fit" disabled={pending} type="submit">
           {pending ? "Memproses…" : submitLabel}
         </Button>
-      </fieldset>
+      </FieldSet>
       {state.status !== "idle" && state.message ? (
         <div
           aria-live="polite"

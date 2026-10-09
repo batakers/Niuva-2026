@@ -71,7 +71,7 @@ async function inspectAdminSurface(page: Page, name: string) {
     await page.setViewportSize({ width, height: 900 });
     await expect(page.locator("main[data-admin-surface]")).toBeVisible();
     await expect(page.locator('main#main-content[aria-live="polite"]')).toHaveCount(0);
-    if (width < 1024) await expect(page.locator("summary").filter({ hasText: "Menu Admin" })).toBeVisible();
+    if (width < 1024) await expect(page.getByText("Menu Admin", { exact: true })).toBeVisible();
     else await expect(page.getByRole("navigation", { name: "Operasional", exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     await page.screenshot({ path: resolve(directory, `${name}-${width}.png`), fullPage: true, caret: "initial" });
