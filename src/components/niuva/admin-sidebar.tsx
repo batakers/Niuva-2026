@@ -4,6 +4,8 @@ import { createContext, useContext, useSyncExternalStore, type ReactNode } from 
 import Link from "next/link";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAdminPointerPress } from "./admin-interaction-motion";
+import motion from "./admin-interaction-motion.module.css";
 
 const preferenceKey = "niuva.admin.sidebar.v1";
 const preferenceEvent = "niuva:admin-sidebar-change";
@@ -68,16 +70,18 @@ export function AdminSidebarLayout({ children }: Readonly<{ children: ReactNode 
 
 export function AdminSidebarToggle() {
   const { collapsed, toggle } = useContext(SidebarContext);
+  const press = useAdminPointerPress();
   const label = collapsed ? "Perluas navigasi Admin" : "Lipat navigasi Admin";
   const Icon = collapsed ? PanelLeftOpen : PanelLeftClose;
 
   return (
     <Tooltip>
       <TooltipTrigger
+        {...press}
         aria-controls="admin-desktop-sidebar"
         aria-expanded={!collapsed}
         aria-label={label}
-        className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        className={`${motion.press} inline-flex size-11 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50`}
         onClick={toggle}
         render={<button type="button" />}
       >

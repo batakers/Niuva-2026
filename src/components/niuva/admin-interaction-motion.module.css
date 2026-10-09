@@ -1,0 +1,104 @@
+.notificationPanel,
+.accountPanel,
+.toastStack {
+  opacity: 1;
+  transform: scale(1);
+  transition-property: opacity, transform;
+  transition-duration: var(--duration-normal-token);
+  transition-timing-function: var(--ease-standard-token);
+}
+
+.notificationPanel {
+  transform-origin: var(--transform-origin);
+}
+
+.accountPanel {
+  transform-origin: top right;
+  transition-duration: var(--duration-fast-token);
+}
+
+.notificationPanel[data-starting-style],
+.notificationPanel[data-ending-style],
+.accountPanel[data-exiting="true"] {
+  opacity: 0;
+  transform: scale(0.98);
+}
+
+.notificationPanel[data-ending-style],
+.toastStack[data-exiting="true"] {
+  transition-duration: var(--duration-fast-token);
+}
+
+.toastStack {
+  transform: translateY(0);
+}
+
+.toastStack[data-exiting="true"] {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.accountPanel[data-exiting="true"],
+.toastStack[data-exiting="true"] {
+  pointer-events: none;
+}
+
+@starting-style {
+  .accountPanel[data-motion="true"] {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+
+  .toastStack[data-motion="true"] {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.notificationPanel[data-motion="false"],
+.accountPanel[data-motion="false"],
+.toastStack[data-motion="false"] {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+.chevron {
+  transform: rotate(0deg);
+  transition: transform var(--duration-fast-token) var(--ease-standard-token);
+}
+
+.chevron[data-open="true"] {
+  transform: rotate(180deg);
+}
+
+.accountTrigger[data-motion="false"] .chevron {
+  transition: none;
+}
+
+.press {
+  transform: translateY(0);
+}
+
+.press[data-press-motion="true"] {
+  transition: transform 100ms var(--ease-standard-token);
+}
+
+.press[data-pointer-pressed="true"] {
+  transform: translateY(1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notificationPanel,
+  .accountPanel,
+  .toastStack,
+  .press {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .chevron {
+    transition: none !important;
+  }
+}
