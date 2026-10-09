@@ -1,9 +1,13 @@
 "use client";
 
-import { createContext, useContext, useSyncExternalStore, type ReactNode } from "react";
+import { useCallback, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import Link from "next/link";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { SidebarMenuButton, SidebarProvider, useSidebar } from "@/components/ui/sidebar";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useHydrated } from "./use-hydrated";
 import { useAdminPointerPress } from "./admin-interaction-motion";
 import motion from "./admin-interaction-motion.module.css";
 
@@ -37,8 +41,6 @@ function subscribe(onChange: () => void) {
   };
 }
 
-const SidebarContext = createContext({ collapsed: false, toggle: () => {} });
-
 export function AdminSidebarLayout({ children }: Readonly<{ children: ReactNode }>) {
   const collapsed = useSyncExternalStore(subscribe, readPreference, () => false);
 
@@ -55,21 +57,15 @@ export function AdminSidebarLayout({ children }: Readonly<{ children: ReactNode 
   }
 
   return (
-    <SidebarContext.Provider value={{ collapsed, toggle }}>
-      <TooltipProvider delay={150}>
-        <div
-          className="group/admin-shell grid min-h-dvh w-full lg:grid-cols-[13.25rem_minmax(0,1fr)] data-[sidebar-collapsed=true]:lg:grid-cols-[4rem_minmax(0,1fr)]"
-          data-sidebar-collapsed={collapsed}
-        >
-          {children}
-        </div>
-      </TooltipProvider>
-    </SidebarContext.Provider>
+    <TooltipProvider delay={150}>
+      <SidebarProvider open={!collapsed} onOpenChange={toggle}>{children}</SidebarProvider>
+    </TooltipProvider>
   );
 }
 
 export function AdminSidebarToggle() {
-  const { collapsed, toggle } = useContext(SidebarContext);
+  const { open, toggleSidebar } = useSidebar();
+  const collapsed = !open;
   const press = useAdminPointerPress();
   const label = collapsed ? "Perluas navigasi Admin" : "Lipat navigasi Admin";
   const Icon = collapsed ? PanelLeftOpen : PanelLeftClose;
@@ -82,8 +78,8 @@ export function AdminSidebarToggle() {
         aria-expanded={!collapsed}
         aria-label={label}
         className={`${motion.press} inline-flex size-11 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50`}
-        onClick={toggle}
-        render={<button type="button" />}
+        onClick={toggleSidebar}
+        render={<Button variant="outline" size="icon" type="button" />}
       >
         <Icon aria-hidden="true" className="size-4 shrink-0" />
       </TooltipTrigger>
@@ -98,13 +94,13 @@ export function AdminSidebarLink({
   href,
   label,
 }: Readonly<{ active?: boolean; children: ReactNode; href: string; label: string }>) {
-  const { collapsed } = useContext(SidebarContext);
+  const { open } = useSidebar();
+  const collapsed = !open;
 
   return (
     <Tooltip disabled={!collapsed}>
       <TooltipTrigger
-        render={<Link href={href} aria-current={active ? "page" : undefined} />}
-        className={`inline-flex min-h-11 min-w-0 items-center rounded-lg border text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 ${collapsed ? "justify-center px-0" : "gap-3 px-3"} ${active ? "border-brand-300 bg-brand-50 text-brand-900" : "border-transparent text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground"}`}
+        render={<SidebarMenuButton isActive={active} render={<Link href={href} aria-current={active ? "page" : undefined} />} />}
       >
         {children}
         <span className={collapsed ? "sr-only" : undefined}>{label}</span>
@@ -112,4 +108,33 @@ export function AdminSidebarLink({
       <TooltipContent role="tooltip" side="right" sideOffset={12}>{label}</TooltipContent>
     </Tooltip>
   );
+}
+
+export function AdminMobileNavigation({ children }: Readonly<{ children: ReactNode }>) {
+  const hydrated = useHydrated();
+  const [open, setOpen] = useState(false);
+  const disclosure = useRef<HTMLDetailsElement | null>(null);
+  const preserveDisclosure = useCallback((node: HTMLDetailsElement | null) => {
+    if (!node && disclosure.current?.open) setOpen(true);
+    disclosure.current = node;
+  }, []);
+
+  // The native disclosure keeps every route available without JavaScript.
+  if (!hydrated) return <details ref={preserveDisclosure} onToggle={event => setOpen(event.currentTarget.open)} className="mt-3 lg:hidden">
+    <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-medium focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"><Menu aria-hidden className="size-4" />Menu Admin</summary>
+    <div className="mt-3 space-y-4 border-t border-border pt-4">{children}</div>
+  </details>;
+
+  return <Sheet open={open} onOpenChange={setOpen}>
+    <SheetTrigger render={<Button variant="outline" className="lg:hidden" />} aria-label="Menu Admin"><Menu aria-hidden className="size-4" /><span>Menu Admin</span></SheetTrigger>
+    <SheetContent side="left" className="w-80 max-w-[calc(100vw-2rem)] overflow-y-auto" onClick={event => {
+      if (event.target instanceof Element && event.target.closest("a")) setOpen(false);
+    }}>
+      <SheetHeader className="border-b border-border pb-4 pr-12">
+        <SheetTitle>Navigasi Admin</SheetTitle>
+        <SheetDescription>Pilih area kerja Niuva.</SheetDescription>
+      </SheetHeader>
+      <div className="space-y-4 px-3 pb-6">{children}</div>
+    </SheetContent>
+  </Sheet>;
 }

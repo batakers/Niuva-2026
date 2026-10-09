@@ -1,5 +1,8 @@
 "use client";
 
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronDown, LogOut, ShieldCheck, UserRound } from "lucide-react";
@@ -53,18 +56,18 @@ export function AdminAccountMenu({ role }: Readonly<{ role: AdminRole }>) {
     catch { setError("Keluar belum berhasil. Coba lagi."); setBusy(false); }
   }
   return <div className="relative" ref={menu}>
-    <button {...press} aria-expanded={open} className={`${motion.accountTrigger} ${motion.press} flex min-h-11 items-center gap-2 rounded-lg px-1 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-75 sm:px-2`} data-motion={animate} disabled={!hydrated} onClick={event => { if (open) menu.current?.querySelector("button")?.focus(); setPointerMotion(isPointerInteraction(event.nativeEvent)); setOpen(value => !value); }} type="button">
-      <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">{name.trim().charAt(0).toLocaleUpperCase("id-ID") || "A"}</span>
+    <Button variant="ghost" {...press} aria-expanded={open} className={`${motion.accountTrigger} ${motion.press} flex min-h-11 items-center gap-2 rounded-lg px-1 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-75 sm:px-2`} data-motion={animate} disabled={!hydrated} onClick={event => { if (open) menu.current?.querySelector("button")?.focus(); setPointerMotion(isPointerInteraction(event.nativeEvent)); setOpen(value => !value); }} type="button">
+      <Avatar aria-hidden="true" className="size-9"><AvatarFallback className="bg-primary text-primary-foreground">{name.trim().charAt(0).toLocaleUpperCase("id-ID") || "A"}</AvatarFallback></Avatar>
       <span className="hidden max-w-36 min-w-0 text-left sm:block"><strong className="block truncate text-xs">{name}</strong><span className="block text-[11px] text-muted-foreground">{role === "OWNER" ? "Owner" : "Admin"}</span></span>
       <ChevronDown aria-hidden="true" className={`${motion.chevron} hidden size-4 text-muted-foreground sm:block`} data-open={open} />
       <span className="sr-only">Buka menu akun {name}</span>
-    </button>
-    {present ? <div aria-hidden={!open || undefined} className={`${motion.accountPanel} absolute right-0 z-40 mt-2 w-64 rounded-xl border border-border bg-card p-2 shadow-floating`} data-exiting={!open} data-motion={animate} inert={!open}>
+    </Button>
+    {present ? <Card aria-hidden={!open || undefined} className={`gap-0 py-0 ring-0 ${motion.accountPanel} absolute right-0 z-40 mt-2 w-64 rounded-xl border border-border bg-card p-2 shadow-floating`} data-exiting={!open} data-motion={animate} inert={!open}>
       <div className="border-b border-border px-3 py-2"><p className="truncate text-sm font-semibold">{name}</p><p className="mt-0.5 truncate text-xs text-muted-foreground">{identity?.email ?? (role === "OWNER" ? "Owner" : "Admin")}</p></div>
-      <Link className="mt-1 flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href="/admin/account" onClick={event => { menu.current?.querySelector("button")?.focus(); setPointerMotion(isPointerInteraction(event.nativeEvent)); setOpen(false); }}><UserRound aria-hidden="true" className="size-4" />Akun saya</Link>
-      <Link className="flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href="/admin/security" onClick={event => { menu.current?.querySelector("button")?.focus(); setPointerMotion(isPointerInteraction(event.nativeEvent)); setOpen(false); }}><ShieldCheck aria-hidden="true" className="size-4" />Keamanan akun</Link>
-      <button className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50" disabled={busy} onClick={() => void logout()} type="button"><LogOut aria-hidden="true" className="size-4" />{busy ? "Keluar…" : "Keluar"}</button>
+      <Link className={buttonVariants({ variant: "ghost", className: "mt-1 flex min-h-11 w-full justify-start items-center gap-2 rounded-lg px-3 text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" })} href="/admin/account" onClick={event => { menu.current?.querySelector("button")?.focus(); setPointerMotion(isPointerInteraction(event.nativeEvent)); setOpen(false); }}><UserRound aria-hidden="true" className="size-4" />Akun saya</Link>
+      <Link className={buttonVariants({ variant: "ghost", className: "flex min-h-11 w-full justify-start items-center gap-2 rounded-lg px-3 text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" })} href="/admin/security" onClick={event => { menu.current?.querySelector("button")?.focus(); setPointerMotion(isPointerInteraction(event.nativeEvent)); setOpen(false); }}><ShieldCheck aria-hidden="true" className="size-4" />Keamanan akun</Link>
+      <Button variant="ghost" className="flex min-h-11 w-full justify-start items-center gap-2 rounded-lg px-3 text-left text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50" disabled={busy} onClick={() => void logout()} type="button"><LogOut aria-hidden="true" className="size-4" />{busy ? "Keluar…" : "Keluar"}</Button>
       {error ? <p role="alert" className="px-3 py-1 text-xs text-destructive-icon">{error}</p> : null}
-    </div> : null}
+    </Card> : null}
   </div>;
 }

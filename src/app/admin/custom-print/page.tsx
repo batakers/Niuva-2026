@@ -1,3 +1,4 @@
+import { Card } from "@/components/ui/card";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import Link from "next/link";
@@ -94,12 +95,12 @@ async function loadCustomPrintRequests(access: AdminAccess, query: AdminListQuer
 }
 
 function SummaryCard({ label, value }: Readonly<{ label: string; value: string }>) {
-  return <div className="rounded-xl border border-border bg-card p-4"><p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></div>;
+  return <Card className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-4"><p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></Card>;
 }
 
 function RequestCard({ item, returnTo }: Readonly<{ item: AdminCustomPrintRequestRow; returnTo: string }>) {
   return (
-    <article className="rounded-xl border border-border bg-card p-5 sm:p-6">
+    <Card as="article" className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <Link className="font-mono text-sm font-semibold text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/custom-print/${item.id}`, returnTo)}>{item.referenceNumber}</Link>
@@ -117,7 +118,7 @@ function RequestCard({ item, returnTo }: Readonly<{ item: AdminCustomPrintReques
         <div><dt className="text-xs text-muted-foreground">Model 3D/CAD</dt><dd className="mt-1 font-medium">{item.modelReady ? "Terverifikasi" : "Belum tersedia"}</dd></div>
       </dl>
       <p className="mt-5 text-xs leading-5 text-muted-foreground">Diperbarui {dateFormatter.format(item.updatedAt)}. <Link className="font-semibold text-brand-700 underline-offset-4 hover:underline" href={withAdminReturnTo(`/admin/custom-print/${item.id}`, returnTo)}>Buka detail dan aksi</Link>.</p>
-    </article>
+    </Card>
   );
 }
 

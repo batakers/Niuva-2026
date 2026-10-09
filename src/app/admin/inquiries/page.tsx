@@ -1,3 +1,5 @@
+import { Card } from "@/components/ui/card";
+import { Table, TableCaption, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import Link from "next/link";
@@ -60,24 +62,24 @@ export default async function AdminInquiriesPage({ searchParams }: Readonly<{ se
             </div>
           ) : (
             <>
-              <div className="mt-6 hidden overflow-x-auto rounded-xl border border-border bg-card lg:block">
-                <table className="w-full min-w-[58rem] text-left text-sm">
-                  <caption className="sr-only">Daftar B2B inquiries</caption>
-                  <thead className="border-b border-border bg-muted text-xs uppercase tracking-[0.1em] text-muted-foreground">
-                    <tr>
-                      <th className="px-5 py-4 font-medium" scope="col">Reference</th>
-                      <th className="px-5 py-4 font-medium" scope="col">Prospek</th>
-                      <th className="px-5 py-4 font-medium" scope="col">Stage</th>
-                      <th className="px-5 py-4 font-medium" scope="col">Status</th>
-                      <th className="px-5 py-4 font-medium" scope="col">Deadline</th>
-                      <th className="px-5 py-4 text-right font-medium" scope="col">Diperbarui</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
+              <Card className="gap-0 py-0 ring-0 mt-6 hidden overflow-x-auto rounded-xl border border-border bg-card lg:block">
+                <Table className="w-full min-w-[58rem] text-left text-sm">
+                  <TableCaption className="sr-only">Daftar B2B inquiries</TableCaption>
+                  <TableHeader className="border-b border-border bg-muted text-xs uppercase tracking-[0.1em] text-muted-foreground">
+                    <TableRow>
+                      <TableHead className="px-5 py-4 font-medium" scope="col">Reference</TableHead>
+                      <TableHead className="px-5 py-4 font-medium" scope="col">Prospek</TableHead>
+                      <TableHead className="px-5 py-4 font-medium" scope="col">Stage</TableHead>
+                      <TableHead className="px-5 py-4 font-medium" scope="col">Status</TableHead>
+                      <TableHead className="px-5 py-4 font-medium" scope="col">Deadline</TableHead>
+                      <TableHead className="px-5 py-4 text-right font-medium" scope="col">Diperbarui</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-border">
                     {result.items.map((item) => <InquiryRow item={item} key={item.id} returnTo={returnTo} />)}
-                  </tbody>
-                </table>
-              </div>
+                  </TableBody>
+                </Table>
+              </Card>
               <div className="mt-6 grid gap-3 lg:hidden">
                 {result.items.map((item) => <InquiryCard item={item} key={item.id} returnTo={returnTo} />)}
               </div>
@@ -101,11 +103,11 @@ async function loadInquiries(access: AdminAccess, query: AdminListQuery): Promis
     return { status: "unavailable", kind: recordAdminPageFailure(error, "page:/admin/inquiries", { op: "list", page: String(query.page) }) };
   }
 }
-function Summary({ label, value }: Readonly<{ label: string; value: string }>) { return <div className="rounded-xl border border-border bg-card p-4"><p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></div>; }
-function InquiryRow({ item, returnTo }: Readonly<{ item: AdminInquiryRow; returnTo: string }>) { return <tr><th className="px-5 py-4 align-top font-medium" scope="row"><Link className="font-mono text-sm text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/inquiries/${item.id}`, returnTo)}>{item.referenceNumber}</Link><span className="mt-1 block text-xs font-normal text-muted-foreground">{item.company ?? "Tanpa perusahaan"}</span></th><td className="px-5 py-4 align-top"><span className="block font-medium">{item.name}</span><span className="mt-1 block text-xs text-muted-foreground">{item.email}</span></td><td className="px-5 py-4 align-top">{formatStatus(item.currentStage)}</td><td className="px-5 py-4 align-top"><span className="rounded-md border border-brand-300 bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-800">{formatStatus(item.status)}</span></td><td className="px-5 py-4 align-top text-muted-foreground">{item.targetDeadline ? dateFormatter.format(item.targetDeadline) : "—"}</td><td className="px-5 py-4 text-right align-top text-xs text-muted-foreground">{dateFormatter.format(item.updatedAt)}</td></tr>; }
+function Summary({ label, value }: Readonly<{ label: string; value: string }>) { return <Card className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-4"><p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></Card>; }
+function InquiryRow({ item, returnTo }: Readonly<{ item: AdminInquiryRow; returnTo: string }>) { return <TableRow><TableHead className="px-5 py-4 align-top font-medium" scope="row"><Link className="font-mono text-sm text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/inquiries/${item.id}`, returnTo)}>{item.referenceNumber}</Link><span className="mt-1 block text-xs font-normal text-muted-foreground">{item.company ?? "Tanpa perusahaan"}</span></TableHead><TableCell className="px-5 py-4 align-top"><span className="block font-medium">{item.name}</span><span className="mt-1 block text-xs text-muted-foreground">{item.email}</span></TableCell><TableCell className="px-5 py-4 align-top">{formatStatus(item.currentStage)}</TableCell><TableCell className="px-5 py-4 align-top"><span className="rounded-md border border-brand-300 bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-800">{formatStatus(item.status)}</span></TableCell><TableCell className="px-5 py-4 align-top text-muted-foreground">{item.targetDeadline ? dateFormatter.format(item.targetDeadline) : "—"}</TableCell><TableCell className="px-5 py-4 text-right align-top text-xs text-muted-foreground">{dateFormatter.format(item.updatedAt)}</TableCell></TableRow>; }
 function InquiryCard({ item, returnTo }: Readonly<{ item: AdminInquiryRow; returnTo: string }>) {
   return (
-    <article aria-labelledby={`inquiry-${item.id}`} className="min-w-0 rounded-xl border border-border bg-card p-5">
+    <Card as="article" aria-labelledby={`inquiry-${item.id}`} className="gap-0 py-0 ring-0 min-w-0 rounded-xl border border-border bg-card p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="font-semibold" id={`inquiry-${item.id}`}>
@@ -123,7 +125,7 @@ function InquiryCard({ item, returnTo }: Readonly<{ item: AdminInquiryRow; retur
         <div><dt className="text-xs text-muted-foreground">Deadline</dt><dd className="mt-1 text-muted-foreground">{item.targetDeadline ? dateFormatter.format(item.targetDeadline) : "—"}</dd></div>
         <div><dt className="text-xs text-muted-foreground">Diperbarui</dt><dd className="mt-1 text-muted-foreground">{dateFormatter.format(item.updatedAt)}</dd></div>
       </dl>
-    </article>
+    </Card>
   );
 }
 function formatStatus(value: string): string { return value.toLocaleLowerCase("id").split("_").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" "); }

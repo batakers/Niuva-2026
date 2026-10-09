@@ -1,4 +1,7 @@
 "use client";
+import { Label } from "@/components/ui/label";
+import { NativeInput as Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useState, type FormEvent } from "react";
 import { postAdminAuth } from "./admin-auth-form";
 import { navigateAfterAdminAuth } from "./admin-auth-navigation";
@@ -37,14 +40,14 @@ export function AdminSecurityForm() {
   return <form className="space-y-5 rounded-xl border border-border bg-card p-5 sm:p-6" onSubmit={submit} aria-busy={busy}>
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     {message && <p role="status" className="text-sm text-muted-foreground">{message}</p>}
-    <label className="block space-y-2"><span className="text-sm font-medium">Password saat ini</span><input className={inputClass} type="password" autoComplete="current-password" required maxLength={128} value={password} onChange={event => setPassword(event.target.value)} disabled={busy || !hydrated}/></label>
-    <label className="block space-y-2"><span className="text-sm font-medium">Password baru</span><input className={inputClass} type="password" autoComplete="new-password" required minLength={ADMIN_PASSWORD_MIN_LENGTH} maxLength={ADMIN_PASSWORD_MAX_LENGTH} value={nextPassword} onChange={event => setNextPassword(event.target.value)} disabled={busy || !hydrated}/></label>
-    <label className="block space-y-2"><span className="text-sm font-medium">Konfirmasi password baru</span><input className={inputClass} type="password" autoComplete="new-password" required minLength={ADMIN_PASSWORD_MIN_LENGTH} maxLength={ADMIN_PASSWORD_MAX_LENGTH} value={confirmation} onChange={event => setConfirmation(event.target.value)} disabled={busy || !hydrated}/></label>
-    <button className="min-h-11 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50" type="submit" disabled={busy || !hydrated}>Ubah password</button>
+    <Label className="grid gap-2 block space-y-2"><span className="text-sm font-medium">Password saat ini</span><Input className={inputClass} type="password" autoComplete="current-password" required maxLength={128} value={password} onChange={event => setPassword(event.target.value)} disabled={busy || !hydrated}/></Label>
+    <Label className="grid gap-2 block space-y-2"><span className="text-sm font-medium">Password baru</span><Input className={inputClass} type="password" autoComplete="new-password" required minLength={ADMIN_PASSWORD_MIN_LENGTH} maxLength={ADMIN_PASSWORD_MAX_LENGTH} value={nextPassword} onChange={event => setNextPassword(event.target.value)} disabled={busy || !hydrated}/></Label>
+    <Label className="grid gap-2 block space-y-2"><span className="text-sm font-medium">Konfirmasi password baru</span><Input className={inputClass} type="password" autoComplete="new-password" required minLength={ADMIN_PASSWORD_MIN_LENGTH} maxLength={ADMIN_PASSWORD_MAX_LENGTH} value={confirmation} onChange={event => setConfirmation(event.target.value)} disabled={busy || !hydrated}/></Label>
+    <Button variant="default" className="min-h-11 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50" type="submit" disabled={busy || !hydrated}>Ubah password</Button>
     <div className="space-y-4 border-t border-border pt-5">
       <h2 className="text-lg font-semibold">Kode pemulihan</h2>
       <p className="text-sm leading-6 text-muted-foreground">Masukkan password saat ini sebelum membuat kode pemulihan baru. Kode lama akan dicabut; authenticator tetap aktif.</p>
-      <button className="min-h-11 rounded-lg border border-border px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50" type="button" disabled={busy || !hydrated || !password} onClick={() => void run("codes")}>Buat kode pemulihan baru</button>
+      <Button variant="outline" className="min-h-11 rounded-lg border border-border px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50" type="button" disabled={busy || !hydrated || !password} onClick={() => void run("codes")}>Buat kode pemulihan baru</Button>
       {codes.length > 0 && <ul aria-label="Kode pemulihan baru" className="grid grid-cols-2 gap-2 rounded-lg bg-muted p-4 font-mono text-sm">{codes.map(code => <li key={code}>{code}</li>)}</ul>}
     </div>
   </form>;

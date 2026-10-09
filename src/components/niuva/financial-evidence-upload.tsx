@@ -1,4 +1,6 @@
 "use client";
+import { Label } from "@/components/ui/label";
+import { NativeInput as Input } from "@/components/ui/input";
 import { useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -23,5 +25,5 @@ export function FinancialEvidenceUpload({ expenseId, enabled }: Readonly<{ expen
     } catch (error) { setMessage(error instanceof Error ? error.message : "Bukti belum dapat diunggah."); }
     finally { setBusy(false); }
   };
-  return <div className="space-y-3"><label className="grid gap-2 text-sm font-medium">Bukti pengeluaran (opsional)<input className="min-h-11 max-w-full text-sm" type="file" accept="image/jpeg,image/png,application/pdf" disabled={busy || !hydrated} onChange={event => setFile(event.target.files?.[0] ?? null)} /></label><p className="text-xs text-muted-foreground">JPEG, PNG, atau PDF · maksimal 10 MiB · akses privat.</p><Button disabled={!file || busy || !hydrated} type="button" variant="outline" onClick={upload}>{busy ? "Mengunggah…" : "Unggah bukti"}</Button>{message ? <p className="text-sm" role="status">{message}</p> : null}</div>;
+  return <div className="space-y-3"><Label className="grid gap-2 text-sm font-medium">Bukti pengeluaran (opsional)<Input className="min-h-11 max-w-full text-sm" type="file" accept="image/jpeg,image/png,application/pdf" disabled={busy || !hydrated} onChange={event => setFile(event.target.files?.[0] ?? null)} /></Label><p className="text-xs text-muted-foreground">JPEG, PNG, atau PDF · maksimal 10 MiB · akses privat.</p><Button disabled={!file || busy || !hydrated} type="button" variant="outline" onClick={upload}>{busy ? "Mengunggah…" : "Unggah bukti"}</Button>{message ? <p className="text-sm" role="status">{message}</p> : null}</div>;
 }

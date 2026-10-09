@@ -1,3 +1,6 @@
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { Table, TableCaption, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import Link from "next/link";
 import { withAdminReturnTo } from "@/modules/admin/navigation";
 import type { ActionQueueGroup, ActionQueueItem } from "@/modules/admin/action-queue";
@@ -57,46 +60,46 @@ export function AdminWorkList({
 }: Readonly<{ items: readonly ActionQueueItem[]; emptyMessage?: string; returnTo?: string }>) {
   if (items.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-border bg-card p-6" role="status">
+      <Card className="gap-0 py-0 ring-0 rounded-xl border border-dashed border-border bg-card p-6" role="status">
         <p className="font-semibold">{emptyMessage}</p>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">Pekerjaan baru akan muncul saat status operasional berubah.</p>
-      </div>
+      </Card>
     );
   }
 
   return (
     <>
-      <div className="hidden overflow-x-auto rounded-xl border border-border bg-card lg:block">
-        <table className="w-full text-left text-sm">
-          <caption className="sr-only">Pekerjaan operasional Niuva</caption>
-          <thead className="border-b border-border bg-muted text-xs font-medium text-muted-foreground">
-            <tr>
-              <th className="px-5 py-3 font-medium" scope="col">Pekerjaan</th>
-              <th className="px-5 py-3 font-medium" scope="col">Referensi</th>
-              <th className="px-5 py-3 font-medium" scope="col">Tindakan berikutnya</th>
-              <th className="px-5 py-3 text-right font-medium" scope="col">Diperbarui</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
+      <Card className="gap-0 py-0 ring-0 hidden overflow-x-auto rounded-xl border border-border bg-card lg:block">
+        <Table className="w-full text-left text-sm">
+          <TableCaption className="sr-only">Pekerjaan operasional Niuva</TableCaption>
+          <TableHeader className="border-b border-border bg-muted text-xs font-medium text-muted-foreground">
+            <TableRow>
+              <TableHead className="px-5 py-3 font-medium" scope="col">Pekerjaan</TableHead>
+              <TableHead className="px-5 py-3 font-medium" scope="col">Referensi</TableHead>
+              <TableHead className="px-5 py-3 font-medium" scope="col">Tindakan berikutnya</TableHead>
+              <TableHead className="px-5 py-3 text-right font-medium" scope="col">Diperbarui</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-border">
             {items.map((item) => (
-              <tr key={item.id}>
-                <th className="px-5 py-4 align-top font-medium" scope="row">
+              <TableRow key={item.id}>
+                <TableHead className="px-5 py-4 align-top font-medium" scope="row">
                   <span className="block">{item.title}</span>
                   <AttentionLabel item={item} />
-                </th>
-                <td className="px-5 py-4 align-top"><WorkLink item={item} returnTo={returnTo} /></td>
-                <td className="px-5 py-4 align-top text-muted-foreground">{item.nextAction}</td>
-                <td className="px-5 py-4 text-right align-top text-xs text-muted-foreground">
+                </TableHead>
+                <TableCell className="px-5 py-4 align-top"><WorkLink item={item} returnTo={returnTo} /></TableCell>
+                <TableCell className="px-5 py-4 align-top text-muted-foreground">{item.nextAction}</TableCell>
+                <TableCell className="px-5 py-4 text-right align-top text-xs text-muted-foreground">
                   <time dateTime={item.sourceUpdatedAt.toISOString()}>{formatAdminDate(item.sourceUpdatedAt)}</time>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </TableBody>
+        </Table>
+      </Card>
       <ul aria-label="Pekerjaan operasional Niuva" className="grid gap-3 lg:hidden">
         {items.map((item) => (
-          <li className="min-w-0 rounded-xl border border-border bg-card p-4" key={item.id}>
+          <Card as="li" className="gap-0 py-0 ring-0 min-w-0 rounded-xl border border-border bg-card p-4" key={item.id}>
             <div className="flex flex-wrap items-start justify-between gap-2">
               <strong className="text-sm font-semibold">{item.title}</strong>
               <AttentionLabel item={item} />
@@ -104,7 +107,7 @@ export function AdminWorkList({
             <p className="mt-3"><WorkLink item={item} returnTo={returnTo} /></p>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.nextAction}</p>
             <time className="mt-2 block text-xs text-muted-foreground" dateTime={item.sourceUpdatedAt.toISOString()}>{formatAdminDate(item.sourceUpdatedAt)}</time>
-          </li>
+          </Card>
         ))}
       </ul>
     </>
@@ -121,8 +124,8 @@ function WorkLink({ item, returnTo }: Readonly<{ item: ActionQueueItem; returnTo
 
 function AttentionLabel({ item }: Readonly<{ item: ActionQueueItem }>) {
   return (
-    <span className={`mt-1 inline-flex w-fit rounded-full border px-2.5 py-1 text-xs font-medium ${item.attention === "EXCEPTION" ? "border-warning-border bg-warning-background text-warning" : "border-info-border bg-info-background text-info"}`}>
+    <Badge variant="outline" className={`mt-1 inline-flex w-fit rounded-full border px-2.5 py-1 text-xs font-medium ${item.attention === "EXCEPTION" ? "border-warning-border bg-warning-background text-warning" : "border-info-border bg-info-background text-info"}`}>
       {item.attention === "EXCEPTION" ? "Exception" : "Perlu tindakan"}
-    </span>
+    </Badge>
   );
 }

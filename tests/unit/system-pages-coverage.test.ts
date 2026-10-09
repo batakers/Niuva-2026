@@ -52,7 +52,7 @@ const exclusionReasons: readonly ExclusionReason[] = [
 
 // The approved Admin redesign uses its shared neutral surface and bento skeleton.
 // SHA-256 with CRLF normalized to LF; accessibility assertions below still apply.
-const ADMIN_LOADING_SHA256 = "6b7dbebb3fa0b682a9cef8fd2b672cd1d2b1ead0bb891f8ff46c36d5b09ef06e";
+const ADMIN_LOADING_SHA256 = "292dcf5449a59be1e58ae0b6f0f800067f1148cebe5d848a65a09cb772eea746";
 
 function isAdminPath(relative: string): boolean {
   return relative === "admin" || relative.startsWith("admin/");

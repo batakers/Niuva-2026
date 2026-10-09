@@ -1,3 +1,5 @@
+import { Card } from "@/components/ui/card";
+import { Table, TableCaption, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import Link from "next/link";
@@ -94,14 +96,14 @@ async function loadProducts(access: AdminAccess, query: AdminListQuery): Promise
 }
 
 function SummaryCard({ label, value }: Readonly<{ label: string; value: string }>) {
-  return <div className="rounded-xl border border-border bg-card p-4"><p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></div>;
+  return <Card className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-4"><p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></Card>;
 }
 
 function ProductCard({ item, returnTo }: Readonly<{ item: AdminProductRow; returnTo: string }>) {
   const activeVariants = item.variants.filter((variant) => variant.isActive);
   const totalStock = activeVariants.reduce((total, variant) => total + variant.stockOnHand, 0);
   return (
-    <article className="min-w-0 rounded-xl border border-border bg-card p-5 sm:p-6">
+    <Card as="article" className="gap-0 py-0 ring-0 min-w-0 rounded-xl border border-border bg-card p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.1em] text-brand-700">{item.category?.name ?? "Tanpa kategori"}</p>
@@ -118,16 +120,16 @@ function ProductCard({ item, returnTo }: Readonly<{ item: AdminProductRow; retur
         {item.variants.length === 0 ? (
           <p className="text-sm text-warning">Belum ada varian aktif untuk ditawarkan.</p>
         ) : (
-          <table className="w-full min-w-[34rem] text-left text-sm">
-            <caption className="sr-only">Varian {item.name}</caption>
-            <thead className="text-xs uppercase tracking-[0.1em] text-muted-foreground"><tr><th className="pb-3 font-medium" scope="col">Varian</th><th className="pb-3 font-medium" scope="col">SKU</th><th className="pb-3 font-medium" scope="col">Harga</th><th className="pb-3 text-right font-medium" scope="col">Stok</th></tr></thead>
-            <tbody className="divide-y divide-border">
-              {item.variants.map((variant) => <tr key={variant.id}><th className="py-3 font-medium" scope="row">{variant.name}{!variant.isActive ? " (nonaktif)" : ""}</th><td className="py-3 font-mono text-xs text-muted-foreground">{variant.sku}</td><td className="py-3 tabular-nums">{currencyFormatter.format(BigInt(variant.priceRp))}</td><td className={`py-3 text-right font-semibold tabular-nums ${variant.stockOnHand === 0 ? "text-warning" : variant.stockOnHand <= 3 ? "text-warning" : "text-foreground"}`}>{variant.stockOnHand}</td></tr>)}
-            </tbody>
-          </table>
+          <Table className="w-full min-w-[34rem] text-left text-sm">
+            <TableCaption className="sr-only">Varian {item.name}</TableCaption>
+            <TableHeader className="text-xs uppercase tracking-[0.1em] text-muted-foreground"><TableRow><TableHead className="pb-3 font-medium" scope="col">Varian</TableHead><TableHead className="pb-3 font-medium" scope="col">SKU</TableHead><TableHead className="pb-3 font-medium" scope="col">Harga</TableHead><TableHead className="pb-3 text-right font-medium" scope="col">Stok</TableHead></TableRow></TableHeader>
+            <TableBody className="divide-y divide-border">
+              {item.variants.map((variant) => <TableRow key={variant.id}><TableHead className="py-3 font-medium" scope="row">{variant.name}{!variant.isActive ? " (nonaktif)" : ""}</TableHead><TableCell className="py-3 font-mono text-xs text-muted-foreground">{variant.sku}</TableCell><TableCell className="py-3 tabular-nums">{currencyFormatter.format(BigInt(variant.priceRp))}</TableCell><TableCell className={`py-3 text-right font-semibold tabular-nums ${variant.stockOnHand === 0 ? "text-warning" : variant.stockOnHand <= 3 ? "text-warning" : "text-foreground"}`}>{variant.stockOnHand}</TableCell></TableRow>)}
+            </TableBody>
+          </Table>
         )}
       </div>
       <p className="mt-4 text-xs leading-5 text-muted-foreground">Total stok varian aktif: {totalStock}. <Link className="font-semibold text-brand-700 underline-offset-4 hover:underline" href={withAdminReturnTo(`/admin/products/${item.id}`, returnTo)}>Buka editor dan adjustment</Link>.</p>
-    </article>
+    </Card>
   );
 }

@@ -1,3 +1,9 @@
+import { buttonVariants } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Table, TableCaption, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { NativeInput as Input } from "@/components/ui/input";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
@@ -85,10 +91,10 @@ export default async function AdminOrderDetailPage({
   return (
     <AdminShell active="orders" role={access.profile.role}>
       <main className="space-y-8" data-admin-surface="order-detail" id="main-content">
-        <AdminPageHeader actions={<div className="flex flex-wrap gap-2"><Link className="inline-flex min-h-11 items-center rounded-lg border border-border bg-card px-4 text-sm font-semibold text-brand-700" href={`/admin/finance/invoices/new?kind=ORDER_TOTAL&sourceId=${id}`}>Penagihan pesanan</Link>{order.orderType === "CUSTOM_PRINT" ? <Link className="inline-flex min-h-11 items-center rounded-lg border border-border bg-card px-4 text-sm font-semibold text-brand-700" href={`/admin/finance/invoices/new?kind=CUSTOM_SHIPPING&sourceId=${id}`}>Tagihan ongkir final</Link> : null}</div>} title="Detail order" description={`${order.orderNumber} · ${formatStatus(order.status)} · ${order.orderType === "CUSTOM_PRINT" ? "Custom print" : "Retail"}`} returnHref={returnTo} returnLabel="Kembali ke Orders" breadcrumbs={[{ label: "Orders", href: returnTo }, { label: order.orderNumber }]} />
+        <AdminPageHeader actions={<div className="flex flex-wrap gap-2"><Link className={buttonVariants({ variant: "outline", className: "inline-flex min-h-11 items-center rounded-lg border border-border bg-card px-4 text-sm font-semibold text-brand-700" })} href={`/admin/finance/invoices/new?kind=ORDER_TOTAL&sourceId=${id}`}>Penagihan pesanan</Link>{order.orderType === "CUSTOM_PRINT" ? <Link className={buttonVariants({ variant: "outline", className: "inline-flex min-h-11 items-center rounded-lg border border-border bg-card px-4 text-sm font-semibold text-brand-700" })} href={`/admin/finance/invoices/new?kind=CUSTOM_SHIPPING&sourceId=${id}`}>Tagihan ongkir final</Link> : null}</div>} title="Detail order" description={`${order.orderNumber} · ${formatStatus(order.status)} · ${order.orderType === "CUSTOM_PRINT" ? "Custom print" : "Retail"}`} returnHref={returnTo} returnLabel="Kembali ke Orders" breadcrumbs={[{ label: "Orders", href: returnTo }, { label: order.orderNumber }]} />
 
         {paymentHeld ? (
-          <section aria-labelledby="payment-exception-title" className="rounded-xl border border-warning-border bg-warning-background p-5 text-warning sm:p-6">
+          <Card as="section" aria-labelledby="payment-exception-title" className="gap-0 py-0 ring-0 rounded-xl border border-warning-border bg-warning-background p-5 text-warning sm:p-6">
             <h2 className="text-xl font-semibold" id="payment-exception-title">Pembayaran perlu diperiksa</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6">Proses dan pengiriman order ditahan. Owner perlu mencocokkan referensi pembayaran di dashboard Midtrans dan menangani refund sesuai kondisi order. Refund tidak otomatis mengembalikan stok fisik.</p>
             <ul className="mt-4 space-y-3 text-sm">
@@ -99,15 +105,15 @@ export default async function AdminOrderDetailPage({
                 </li>
               ))}
             </ul>
-          </section>
+          </Card>
         ) : null}
 
-        {order.orderType === "CUSTOM_PRINT" ? <section aria-labelledby="source-requests-title" className="min-w-0 rounded-xl border border-border bg-card p-5 sm:p-6">
+        {order.orderType === "CUSTOM_PRINT" ? <Card as="section" aria-labelledby="source-requests-title" className="gap-0 py-0 ring-0 min-w-0 rounded-xl border border-border bg-card p-5 sm:p-6">
           <h2 className="text-xl font-semibold" id="source-requests-title">Request asal</h2>
           {sourceRequests.length === 0 ? <p className="mt-3 text-sm text-muted-foreground">Tidak ada relasi request pada item order ini.</p> : <ul className="mt-3 grid gap-2">{sourceRequests.map(request => <li key={request.id}><Link className="inline-flex min-h-11 items-center text-sm font-semibold text-brand-700 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/custom-print/${request.id}`, returnTo)}>{request.referenceNumber} · {formatStatus(request.status)}</Link></li>)}</ul>}
-        </section> : null}
+        </Card> : null}
         <div className="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,0.65fr)]">
-        <section aria-labelledby="order-actions-title" className="min-w-0 rounded-xl border border-border bg-card p-5 sm:p-6 xl:col-start-2 xl:row-span-3">
+        <Card as="section" aria-labelledby="order-actions-title" className="gap-0 py-0 ring-0 min-w-0 rounded-xl border border-border bg-card p-5 sm:p-6 xl:col-start-2 xl:row-span-3">
           <h2 className="text-xl font-semibold" id="order-actions-title">Aksi operasional</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Pilih tindakan sesuai tahap order. Pembatalan order berbayar tetap memerlukan tindak lanjut refund terpisah.</p>
           <div className="mt-5 flex flex-wrap gap-2">
@@ -158,10 +164,10 @@ export default async function AdminOrderDetailPage({
               </AdminActionForm>
             </div>
           ) : null}
-        </section>
+        </Card>
 
         {order.orderType === "CUSTOM_PRINT" && !["CANCELLED", "COMPLETED", "SHIPPED"].includes(currentStatus) ? (
-          <section aria-labelledby="custom-address-title" className="min-w-0 rounded-xl border border-border bg-card p-5 sm:p-6">
+          <Card as="section" aria-labelledby="custom-address-title" className="gap-0 py-0 ring-0 min-w-0 rounded-xl border border-border bg-card p-5 sm:p-6">
             <h2 className="text-xl font-semibold" id="custom-address-title">Alamat pengiriman</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Order custom dibuat tanpa alamat. Simpan alamat penerima sebelum meminta rate provider dan membuat tagihan shipping.</p>
             <AdminActionForm action={saveCustomShippingAddressAction} className="mt-5" submitLabel="Simpan alamat pengiriman">
@@ -169,21 +175,21 @@ export default async function AdminOrderDetailPage({
               <div className="grid gap-4 sm:grid-cols-2">
                 <ShipmentMetadataField label="Nama penerima" name="recipientName" value={order.address?.recipientName ?? ""} />
                 <ShipmentMetadataField label="Nomor telepon" name="phone" value={order.address?.phone ?? ""} />
-                <label className="grid gap-1.5 text-sm font-medium sm:col-span-2" htmlFor="addressLine">
+                <Label className="grid gap-1.5 text-sm font-medium sm:col-span-2" htmlFor="addressLine">
                   Alamat lengkap
-                  <textarea className="min-h-24 rounded-lg border border-input bg-background px-3 py-2 text-base font-normal shadow-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50" defaultValue={order.address?.addressLine ?? ""} id="addressLine" name="addressLine" required rows={3} />
-                </label>
+                  <Textarea className="min-h-24 rounded-lg border border-input bg-background px-3 py-2 text-base font-normal shadow-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50" defaultValue={order.address?.addressLine ?? ""} id="addressLine" name="addressLine" required rows={3} />
+                </Label>
                 <ShipmentMetadataField label="Kecamatan (opsional)" name="district" value={order.address?.district ?? ""} required={false} />
                 <ShipmentMetadataField label="Kota atau kabupaten" name="city" value={order.address?.city ?? ""} />
                 <ShipmentMetadataField label="Provinsi" name="province" value={order.address?.province ?? ""} />
                 <ShipmentMetadataField label="Kode pos" name="postalCode" value={order.address?.postalCode ?? ""} />
               </div>
             </AdminActionForm>
-          </section>
+          </Card>
         ) : null}
 
         <div className="grid min-w-0 gap-6 sm:grid-cols-2 xl:grid-cols-1">
-          <section aria-labelledby="customer-title" className="min-w-0 rounded-xl border border-border bg-card p-5 sm:p-6">
+          <Card as="section" aria-labelledby="customer-title" className="gap-0 py-0 ring-0 min-w-0 rounded-xl border border-border bg-card p-5 sm:p-6">
             <h2 className="text-xl font-semibold" id="customer-title">Customer & alamat</h2>
             <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2">
               <Info label="Nama" value={order.customerName} />
@@ -192,9 +198,9 @@ export default async function AdminOrderDetailPage({
               {order.address ? <Info label="Penerima" value={`${order.address.recipientName} · ${order.address.phone}`} /> : null}
             </dl>
             {order.address ? <div className="mt-5 border-t border-border pt-4 text-sm leading-6"><p className="text-xs text-muted-foreground">Alamat pengiriman</p><p className="mt-1">{order.address.addressLine}, {order.address.district ? `${order.address.district}, ` : ""}{order.address.city}, {order.address.province} {order.address.postalCode} · {order.address.countryCode}</p></div> : <StatusNotice className="mt-5" tone="warning" title="Alamat belum tercatat" description="Order ini belum memiliki alamat pengiriman di database." />}
-          </section>
+          </Card>
 
-          <section aria-labelledby="totals-title" className="min-w-0 rounded-xl border border-border bg-card p-5 sm:p-6">
+          <Card as="section" aria-labelledby="totals-title" className="gap-0 py-0 ring-0 min-w-0 rounded-xl border border-border bg-card p-5 sm:p-6">
             <h2 className="text-xl font-semibold" id="totals-title">Ringkasan nilai</h2>
             <dl className="mt-5 grid gap-4 text-sm">
               <Info label="Subtotal" value={formatMoney(order.itemsSubtotalRp)} />
@@ -202,13 +208,13 @@ export default async function AdminOrderDetailPage({
               <div className="border-t border-border pt-4"><dt className="text-xs text-muted-foreground">Total order</dt><dd className="mt-1 text-2xl font-semibold tabular-nums">{formatMoney(order.grandTotalRp)}</dd></div>
               <Info label="Diperbarui" value={dateFormatter.format(order.updatedAt)} />
             </dl>
-          </section>
+          </Card>
         </div>
 
-        <section aria-labelledby="items-title" className="min-w-0 rounded-xl border border-border bg-card p-5 sm:p-6">
+        <Card as="section" aria-labelledby="items-title" className="gap-0 py-0 ring-0 min-w-0 rounded-xl border border-border bg-card p-5 sm:p-6">
           <h2 className="text-xl font-semibold" id="items-title">Item order</h2>
-          {order.items.length === 0 ? <p className="mt-4 text-sm text-muted-foreground">Belum ada item tersimpan.</p> : <div className="mt-5 overflow-x-auto"><table className="w-full min-w-[40rem] text-left text-sm"><caption className="sr-only">Item pada {order.orderNumber}</caption><thead className="border-b border-border text-xs uppercase tracking-[0.1em] text-muted-foreground"><tr><th className="pb-3 font-medium" scope="col">Item</th><th className="pb-3 font-medium" scope="col">SKU</th><th className="pb-3 text-right font-medium" scope="col">Qty</th><th className="pb-3 text-right font-medium" scope="col">Total</th></tr></thead><tbody className="divide-y divide-border">{order.items.map((item, index) => <tr key={`${item.skuSnapshot ?? item.nameSnapshot}-${index}`}><th className="py-3 font-medium" scope="row">{item.nameSnapshot}<span className="mt-1 block text-xs font-normal text-muted-foreground">{formatStatus(item.itemType)}</span></th><td className="py-3 font-mono text-xs text-muted-foreground">{item.skuSnapshot ?? "—"}</td><td className="py-3 text-right tabular-nums">{item.quantity}</td><td className="py-3 text-right font-semibold tabular-nums">{formatMoney(item.lineTotalRp)}</td></tr>)}</tbody></table></div>}
-        </section>
+          {order.items.length === 0 ? <p className="mt-4 text-sm text-muted-foreground">Belum ada item tersimpan.</p> : <div className="mt-5 overflow-x-auto"><Table className="w-full min-w-[40rem] text-left text-sm"><TableCaption className="sr-only">Item pada {order.orderNumber}</TableCaption><TableHeader className="border-b border-border text-xs uppercase tracking-[0.1em] text-muted-foreground"><TableRow><TableHead className="pb-3 font-medium" scope="col">Item</TableHead><TableHead className="pb-3 font-medium" scope="col">SKU</TableHead><TableHead className="pb-3 text-right font-medium" scope="col">Qty</TableHead><TableHead className="pb-3 text-right font-medium" scope="col">Total</TableHead></TableRow></TableHeader><TableBody className="divide-y divide-border">{order.items.map((item, index) => <TableRow key={`${item.skuSnapshot ?? item.nameSnapshot}-${index}`}><TableHead className="py-3 font-medium" scope="row">{item.nameSnapshot}<span className="mt-1 block text-xs font-normal text-muted-foreground">{formatStatus(item.itemType)}</span></TableHead><TableCell className="py-3 font-mono text-xs text-muted-foreground">{item.skuSnapshot ?? "—"}</TableCell><TableCell className="py-3 text-right tabular-nums">{item.quantity}</TableCell><TableCell className="py-3 text-right font-semibold tabular-nums">{formatMoney(item.lineTotalRp)}</TableCell></TableRow>)}</TableBody></Table></div>}
+        </Card>
 
         <div className="grid min-w-0 gap-6 xl:col-span-2 lg:grid-cols-3">
           <RecordList title="Pembayaran" empty="Belum ada percobaan pembayaran." items={order.paymentAttempts.map((attempt) => `${attempt.providerOrderId} · ${formatStatus(attempt.status)} · ${formatMoney(attempt.amountRp)}`)} />
@@ -228,9 +234,9 @@ function Info({ label, value }: Readonly<{ label: string; value: string }>) {
 
 function MeasurementField({ label, name }: Readonly<{ label: string; name: string }>) {
   return (
-    <label className="grid gap-1.5 text-sm font-medium" htmlFor={name}>
+    <Label className="grid gap-1.5 text-sm font-medium" htmlFor={name}>
       {label}
-      <input
+      <Input
         className="min-h-11 rounded-lg border border-input bg-background px-3 text-base font-normal shadow-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         id={name}
         inputMode="decimal"
@@ -239,15 +245,15 @@ function MeasurementField({ label, name }: Readonly<{ label: string; name: strin
         required
         type="text"
       />
-    </label>
+    </Label>
   );
 }
 
 function ShipmentMetadataField({ label, name, required = true, value }: Readonly<{ label: string; name: string; required?: boolean; value: string }>) {
   return (
-    <label className="grid gap-1.5 text-sm font-medium" htmlFor={name}>
+    <Label className="grid gap-1.5 text-sm font-medium" htmlFor={name}>
       {label}
-      <input
+      <Input
         className="min-h-11 rounded-lg border border-input bg-background px-3 text-base font-normal shadow-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         defaultValue={value}
         id={name}
@@ -255,13 +261,13 @@ function ShipmentMetadataField({ label, name, required = true, value }: Readonly
         required={required}
         type="text"
       />
-    </label>
+    </Label>
   );
 }
 
 function RecordList({ empty, items, title }: Readonly<{ empty: string; items: readonly string[]; title: string }>) {
   const id = `${title.toLocaleLowerCase("id").replaceAll(/[^a-z0-9]+/g, "-")}-title`;
-  return <section aria-labelledby={id} className="rounded-xl border border-border bg-card p-5"><h2 className="text-lg font-semibold" id={id}>{title}</h2>{items.length === 0 ? <p className="mt-4 text-sm text-muted-foreground">{empty}</p> : <ul className="mt-4 grid gap-3 text-sm">{items.map((item) => <li className="border-t border-border pt-3 leading-6" key={item}>{item}</li>)}</ul>}</section>;
+  return <Card as="section" aria-labelledby={id} className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-5"><h2 className="text-lg font-semibold" id={id}>{title}</h2>{items.length === 0 ? <p className="mt-4 text-sm text-muted-foreground">{empty}</p> : <ul className="mt-4 grid gap-3 text-sm">{items.map((item) => <li className="border-t border-border pt-3 leading-6" key={item}>{item}</li>)}</ul>}</Card>;
 }
 
 function formatMoney(value: string): string { return currencyFormatter.format(BigInt(value)); }

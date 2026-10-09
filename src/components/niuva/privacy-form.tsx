@@ -1,5 +1,10 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Button } from "@/components/ui/button";
+import { NativeInput as Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
+import { Textarea } from "@/components/ui/textarea";
 import { privacyOwnerSchema, privacyRequestSchema, isPrivacyResponseUrl } from "@/modules/customer-privacy/validation";
 import { useHydrated } from "./use-hydrated";
 
@@ -14,6 +19,10 @@ export function PrivacyForm({ action, mode, fields = [], hidden = {}, label, pre
   const [message, setMessage] = useState("");
   const busy = useRef(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const FieldLabel = mode === "owner" ? Label : "label";
+  const TextInput = mode === "owner" ? Input : "input";
+  const LongInput = mode === "owner" ? Textarea : "textarea";
+  const Selection = mode === "owner" ? NativeSelect : "select";
   useEffect(() => { const restore = () => { busy.current = false; setPending(false); }; window.addEventListener("pageshow", restore); return () => window.removeEventListener("pageshow", restore); }, []);
   useEffect(() => { const field = Object.keys(initialErrors)[0]; if (field) (formRef.current?.elements.namedItem(field) as HTMLElement | null)?.focus(); }, [initialErrors]);
   function focusError(fieldErrors: Readonly<Record<string, string>>) {
@@ -63,12 +72,12 @@ export function PrivacyForm({ action, mode, fields = [], hidden = {}, label, pre
       const error = errors[field.name];
       const common = { id, name: field.name, required: field.required, "aria-invalid": Boolean(error), "aria-describedby": `${id}-help ${error ? `${id}-error` : ""}`, className: privacyControlClass, defaultValue: field.defaultValue };
       return <div key={field.name}>
-        {field.kind === "checkbox" ? <label className="flex min-h-11 items-start gap-3 py-3" htmlFor={id}><input type="checkbox" id={id} name={field.name} required={field.required} defaultChecked={field.defaultValue === "on"} aria-invalid={Boolean(error)} aria-describedby={`${id}-help ${error ? `${id}-error` : ""}`} className="mt-1 size-5 shrink-0 accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" /><span className="text-sm leading-6">{field.label}</span></label> : <><label htmlFor={id} className="mb-2 block text-sm font-medium">{field.label}</label>{field.kind === "textarea" ? <textarea {...common} rows={4} maxLength={field.name === "holdReason" ? 1000 : 3000} /> : field.kind === "select" ? <select {...common}>{field.options?.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select> : <input {...common} type={field.kind === "date" ? "date" : "text"} />}</>}
+        {field.kind === "checkbox" ? <FieldLabel className="flex min-h-11 items-start gap-3 py-3" htmlFor={id}><input type="checkbox" id={id} name={field.name} required={field.required} defaultChecked={field.defaultValue === "on"} aria-invalid={Boolean(error)} aria-describedby={`${id}-help ${error ? `${id}-error` : ""}`} className="mt-1 size-5 shrink-0 accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" /><span className="text-sm leading-6">{field.label}</span></FieldLabel> : <><FieldLabel htmlFor={id} className="mb-2 block text-sm font-medium">{field.label}</FieldLabel>{field.kind === "textarea" ? <LongInput {...common} rows={4} maxLength={field.name === "holdReason" ? 1000 : 3000} /> : field.kind === "select" ? <Selection {...common}>{field.options?.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</Selection> : <TextInput {...common} type={field.kind === "date" ? "date" : "text"} />}</>}
         <p id={`${id}-help`} className="mt-2 text-sm leading-6 text-muted-foreground">{field.help}</p>
         {error ? <p id={`${id}-error`} className="mt-1 text-sm text-destructive">{error}</p> : null}
       </div>;
     })}
-    <button type="submit" disabled={pending} className={`inline-flex min-h-11 max-w-full items-center justify-center rounded-lg px-4 py-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 ${danger ? "border border-destructive bg-destructive/10 text-destructive hover:bg-destructive/20" : "bg-primary text-primary-foreground hover:bg-brand-800"}`}>{label}</button>
+    {mode === "owner" ? <Button type="submit" disabled={pending} variant={danger ? "destructive" : "default"}>{label}</Button> : <button type="submit" disabled={pending} className={`inline-flex min-h-11 max-w-full items-center justify-center rounded-lg px-4 py-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 ${danger ? "border border-destructive bg-destructive/10 text-destructive hover:bg-destructive/20" : "bg-primary text-primary-foreground hover:bg-brand-800"}`}>{label}</button>}
     <p role="status" aria-live="polite" className="min-h-6 text-sm leading-6 text-muted-foreground">{pending ? "Memproses permintaan…" : message}</p>
   </form>;
 }
