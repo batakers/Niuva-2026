@@ -3,8 +3,8 @@ import { buildAdminPageHref, normalizeAdminReturnTo, withAdminReturnTo } from "@
 
 describe("Admin return context", () => {
   it("preserves the originating root and its navigation query", () => {
-    expect(normalizeAdminReturnTo("/admin/inquiries?status=NEW&page=3", "/admin/inquiries"))
-      .toBe("/admin/inquiries?status=NEW&page=3");
+    expect(normalizeAdminReturnTo("/admin/custom-print?status=SUBMITTED&page=3", "/admin/custom-print"))
+      .toBe("/admin/custom-print?status=SUBMITTED&page=3");
   });
   it.each([undefined, ["/admin/orders"], "https://example.test/admin", "//example.test/admin", "/admin\\orders", "/admin\n", "/admin/%2e%2e/orders", "/admin/../admin/orders", "/admin/orders/record"])("rejects unsafe or non-root return targets: %s", (value) => {
     expect(normalizeAdminReturnTo(value, "/admin/orders")).toBe("/admin/orders");
@@ -12,8 +12,8 @@ describe("Admin return context", () => {
   it("strips nested context, unrelated query and fragment", () => {
     expect(normalizeAdminReturnTo("/admin/queue?group=orders&range=30d&returnTo=%2Fadmin&token=private#row", "/admin"))
       .toBe("/admin/queue?group=orders&range=30d");
-    expect(normalizeAdminReturnTo("/admin/inquiries?type=RETAIL&status=wrong&page=bad", "/admin"))
-      .toBe("/admin/inquiries");
+    expect(normalizeAdminReturnTo("/admin/custom-print?type=RETAIL&status=wrong&page=bad", "/admin"))
+      .toBe("/admin/custom-print");
   });
   it("keeps one root context through workspace and related links", () => {
     const href = withAdminReturnTo("/admin/custom-print/request/review?step=quote&returnTo=%2Fadmin", "/admin/queue?group=custom-print");

@@ -32,9 +32,16 @@ export const publicCompanyProfile = {
 
 export function createPublicWhatsAppHref(referenceNumber: string, phone: string = publicCompanyProfile.contact.phone): string {
   const phoneNumber = phone.replace(/\D/g, "");
-  const message = `Halo Niuva, saya baru mengirim project brief dengan referensi ${referenceNumber}.`;
+  const message = `Halo Niuva, saya baru mengirim permintaan Custom Print dengan referensi ${referenceNumber}.`;
 
   return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+}
+
+export function createB2BWhatsAppHref(phone: string, service?: string): string {
+  const message = service
+    ? `Halo Niuva, saya ingin membahas kebutuhan ${service}.`
+    : "Halo Niuva, saya ingin membahas kebutuhan proyek.";
+  return `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`;
 }
 
 export const publicServices = [

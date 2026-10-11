@@ -155,10 +155,12 @@ describe("Admin page route integration", () => {
     expect(authMocks.auth).toHaveBeenCalledOnce();
     expect(nextServerMocks.connection).toHaveBeenCalledOnce();
     expect(markup).toContain("Overview");
-    expect(markup).toContain("/admin/inquiries?view=needs-action");
+    expect(markup).not.toContain("/admin/inquiries");
     expect(markup).not.toContain(inquiry.referenceNumber);
-    const filtered = await new (await import("@/modules/admin/operations-read-repository")).PrismaAdminOperationsReadRepository(prisma).listInquiries({ page: 1, view: "needs-action" });
-    expect(filtered.items.map(item => item.id)).toContain(inquiry.id);
+    expect(await prisma.b2BInquiry.findUnique({ where: { id: inquiry.id } })).toMatchObject({
+      referenceNumber: inquiry.referenceNumber,
+      status: "NEW",
+    });
     expect(markup).toContain("Ringkasan bisnis");
     expect(markup).toContain("Aktivitas terbaru");
     expect(markup).toContain("Pengumpulan tayangan belum aktif");

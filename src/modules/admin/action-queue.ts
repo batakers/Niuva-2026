@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const ACTION_QUEUE_LIMIT = 50;
-export const ACTION_QUEUE_GROUPS = ["all", "inquiries", "custom-print", "orders"] as const;
+export const ACTION_QUEUE_GROUPS = ["all", "custom-print", "orders"] as const;
 const actionQueueGroupSchema = z.enum(ACTION_QUEUE_GROUPS);
 export type ActionQueueGroup = z.infer<typeof actionQueueGroupSchema>;
 
@@ -114,6 +114,8 @@ export function projectActionQueueSignals(
   const uniqueSignals = new Map<string, ActionQueueSignal>();
 
   for (const signal of signals) {
+    // Legacy signals may remain in adapters; retired B2B is never active work.
+    if (signal.kind === "B2B_INQUIRY") continue;
     if (
       signal.kind === "QUOTE_PREPARATION" &&
       signal.workflowKey !== undefined &&
@@ -140,7 +142,7 @@ export function projectActionQueueSignals(
     group === "all" || actionQueueGroupForKind(item.kind) === group,
   );
 
-  const groups = { inquiries: 0, "custom-print": 0, orders: 0 };
+  const groups = { "custom-print": 0, orders: 0 };
   for (const item of allItems) groups[actionQueueGroupForKind(item.kind)] += 1;
 
   return {
@@ -155,7 +157,6 @@ export function projectActionQueueSignals(
 }
 
 function actionQueueGroupForKind(kind: ActionQueueKind): Exclude<ActionQueueGroup, "all"> {
-  if (kind === "B2B_INQUIRY") return "inquiries";
   if (kind === "CUSTOM_PRINT_REVIEW" || kind === "QUOTE_PREPARATION" || kind === "QUOTE_SEND") {
     return "custom-print";
   }
@@ -180,7 +181,7 @@ function toActionQueueItem(signal: ActionQueueSignal): ActionQueueItem {
 function actionQueueHref(signal: ActionQueueSignal): string {
   switch (signal.kind) {
     case "B2B_INQUIRY":
-      return `/admin/inquiries/${encodeURIComponent(signal.entityId)}`;
+      return "/admin";
     case "CUSTOM_PRINT_REVIEW":
       return `/admin/custom-print/${encodeURIComponent(signal.entityId)}/review?step=review`;
     case "QUOTE_PREPARATION":

@@ -19,7 +19,7 @@ describe("legitimate customer directory", () => {
     const a = await customer(), b = await customer();
     const linked = await order(a.id, a.email); await order(null, a.email); await order(a.id, a.email, true); await order(b.id, a.email);
     const result = await service.list(access, { q: a.email, page: 1 });
-    expect(result.items).toMatchObject([{ id: a.id, orderCount: 1, customPrintCount: 0, inquiryCount: 0 }]);
+    expect(result.items).toMatchObject([{ id: a.id, orderCount: 1, customPrintCount: 0 }]);
     const detail = await service.detail(access, a.id);
     expect(detail).toMatchObject({ customer: { id: a.id }, orders: { items: [{ id: linked.id }] } });
     expect(JSON.stringify(detail)).not.toContain("publicTokenHash");
@@ -30,7 +30,7 @@ describe("legitimate customer directory", () => {
     expect(await service.detail(access, a.id)).toBeNull();
     const recreated = await customer(a.email);
     const detail = await service.detail(access, recreated.id);
-    expect(detail).toMatchObject({ orders: { items: [] }, customPrint: { items: [] }, inquiries: { items: [] } });
+    expect(detail).toMatchObject({ orders: { items: [] }, customPrint: { items: [] } });
   });
   it("denies inactive accounts and paginates twenty records with stable ordering", async () => {
     await expect(service.list({ ...access, profile: { ...access.profile, isActive: false } }, {})).rejects.toMatchObject({ code: "FORBIDDEN" });

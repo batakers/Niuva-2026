@@ -67,7 +67,7 @@ const cases: ReadonlyArray<{ call: Call; limit: number; path: string }> = [
   {
     call: (ip) =>
       postClaim(
-        requestFrom("/api/account/claim", ip, { kind: "B2B_INQUIRY", token: "t".repeat(40) }),
+        requestFrom("/api/account/claim", ip, { kind: "CUSTOM_PRINT_REQUEST", token: "t".repeat(40) }),
       ),
     limit: 5,
     path: "/api/account/claim",
@@ -89,7 +89,7 @@ const cases: ReadonlyArray<{ call: Call; limit: number; path: string }> = [
 ];
 
 beforeEach(() => {
-  mocks.claim.mockReset().mockResolvedValue({ id: "w", kind: "B2B_INQUIRY", referenceNumber: "R" });
+  mocks.claim.mockReset().mockResolvedValue({ id: "w", kind: "CUSTOM_PRINT_REQUEST", referenceNumber: "R" });
   mocks.appendAccountModel.mockReset().mockResolvedValue({ ok: true });
   mocks.request.mockReset().mockResolvedValue({ quotes: [{ id: "quote-1" }] });
   mocks.accept.mockReset().mockResolvedValue({ ok: true });

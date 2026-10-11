@@ -125,55 +125,31 @@ test("BUY operator prepares a paid order for shipping and holds a payment except
   await expect(page.getByText(order.orderNumber, { exact: true }).first()).toBeVisible();
 });
 
-test("DEVELOP operator qualifies an inquiry and publishes an account proposal", async ({ page }) => {
+test("B2B work is absent from authenticated Admin while its history remains stored", async ({ page }) => {
   await enterOwner(page);
   const customer = await testCustomer();
-  const searchReference = `TEST-DEVELOP-${randomUUID()}`;
-  const inquiryData = {
-    name: "Rehearsal Customer Fixture", email: customer.email, phone: "+628000000000",
-    projectGoal: "Synthetic operator rehearsal", currentStage: "IDEA" as const,
-    description: "Synthetic development brief for operator browser verification.", targetQuantity: "1 prototype",
-    confidentialityAck: true, customerId: customer.id,
-  };
   const inquiry = await prisma.b2BInquiry.create({ data: {
-    ...inquiryData, referenceNumber: `${searchReference}-TARGET`, publicTokenHash: randomUUID(),
-    updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+    referenceNumber: `TEST-LEGACY-${randomUUID()}`, publicTokenHash: randomUUID(),
+    name: "Historical Fixture", email: customer.email, phone: "+628000000000",
+    projectGoal: "Historical project", currentStage: "IDEA", description: "Historical B2B fixture.",
+    targetQuantity: "1", confidentialityAck: true, customerId: customer.id,
   } });
-  await prisma.b2BInquiry.createMany({ data: Array.from({ length: 50 }, (_, index) => ({
-    ...inquiryData, referenceNumber: `${searchReference}-PAGE1-${index}`, publicTokenHash: randomUUID(),
-  })) });
-  const origin = `/admin/inquiries?q=${encodeURIComponent(searchReference)}&status=NEW&page=2`;
-  await page.goto(origin);
-  await inspectAdminSurface(page, "inquiries-list");
-  await page.getByRole("link", { name: inquiry.referenceNumber, exact: true }).first().click();
-  await expect(page.getByRole("link", { name: "Kembali ke B2B Inquiries", exact: true })).toHaveAttribute("href", origin);
-  await inspectAdminSurface(page, "inquiry-detail");
-  for (const status of ["Contacted", "Qualified"] as const) {
-    await page.getByRole("button", { name: `Ubah ke ${status}`, exact: true }).click();
-    await expect.poll(async () => (await prisma.b2BInquiry.findUniqueOrThrow({ where: { id: inquiry.id } })).status).toBe(status.toUpperCase());
-    await waitForAdminAction(page);
+  await page.goto("/admin");
+  await inspectAdminSurface(page, "overview");
+  await expect(page.locator('a[href^="/admin/inquiries"]')).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /B2B/ })).toHaveCount(0);
+  await page.goto(`/admin/search?q=${encodeURIComponent(inquiry.referenceNumber)}`);
+  await expect(page.getByRole("link", { name: inquiry.referenceNumber, exact: true })).toHaveCount(0);
+  for (const route of ["/admin/inquiries", `/admin/inquiries/${inquiry.id}`, `/admin/inquiries/${inquiry.id}/proposal`, `/admin/inquiries/${inquiry.id}/billing`]) {
+    expect((await page.goto(route))?.status(), route).toBe(404);
   }
-  await page.getByRole("link", { name: "Buka workspace proposal", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Proposal B2B", exact: true })).toBeVisible();
-  await inspectAdminSurface(page, "b2b-proposal");
-  await page.getByLabel("Scope pekerjaan").fill("Synthetic scope for operator rehearsal only.");
-  await page.getByLabel("Asumsi proposal").fill("Synthetic assumptions for test verification.");
-  await page.getByLabel("Pos biaya IDR").fill("Test design | 10000");
-  await page.getByLabel("Berlaku sampai tanggal").fill(new Date(Date.now() + 7 * 86400_000).toISOString().slice(0, 10));
-  page.once("dialog", dialog => dialog.accept());
-  await page.getByRole("button", { name: "Kirim versi proposal", exact: true }).click();
-  await expect.poll(async () => prisma.b2BQuote.count({ where: { inquiryId: inquiry.id, status: "SENT" } })).toBe(1);
-  await waitForAdminAction(page);
-  const quote = await prisma.b2BQuote.findFirstOrThrow({ where: { inquiryId: inquiry.id } });
-  expect(quote.totalRp.toString()).toBe("10000");
-  expect((await prisma.b2BInquiry.findUniqueOrThrow({ where: { id: inquiry.id } })).status).toBe("QUALIFIED");
-  await page.getByRole("link", { name: "Kembali ke detail inquiry", exact: true }).click();
-  await expect(page.getByText("Versi 1 · SENT", { exact: true })).toBeVisible();
-  await page.getByRole("link", { name: "Kembali ke B2B Inquiries", exact: true }).click();
-  await expect.poll(() => new URL(page.url()).pathname + new URL(page.url()).search).toBe(origin);
-  await page.reload();
-  await expect.poll(() => new URL(page.url()).pathname + new URL(page.url()).search).toBe(origin);
-  expect(await prisma.order.count({ where: { customerId: customer.id } })).toBe(0);
+  await page.goto("/admin/reports?tab=b2b");
+  await expect(page.getByRole("link", { name: "B2B", exact: true })).toHaveCount(0);
+  await page.goto("/admin/finance/invoices/new?kind=B2B&sourceId=" + inquiry.id);
+  await expect(page.getByRole("button", { name: "Buat draft untuk ditinjau" })).toHaveCount(0);
+  await expect(page.locator('a[href^="/admin/inquiries"]')).toHaveCount(0);
+  expect((await prisma.b2BInquiry.findUniqueOrThrow({ where: { id: inquiry.id } })).status).toBe("NEW");
+  expect(await prisma.b2BQuote.count({ where: { inquiryId: inquiry.id } })).toBe(0);
 });
 
 test("management editors and stock history retain their filtered list context", async ({ page }) => {

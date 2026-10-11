@@ -15,7 +15,7 @@ test("public navigation supports mobile menu, escape, skip link and real routes"
   await toggle.click();
   const nav = page.getByRole("navigation", { name: "Navigasi utama" });
   await expect(nav.getByRole("link", { name: "Layanan", exact: true })).toBeVisible();
-  await expect(nav.getByRole("link", { name: "Brief Proyek", exact: true })).toHaveAttribute("href", "/project-brief");
+  await expect(nav.getByRole("link", { name: "Brief Proyek", exact: true })).toHaveCount(0);
   await page.keyboard.press("Escape");
   await expect(toggle).toBeFocused();
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
@@ -24,8 +24,7 @@ test("public navigation supports mobile menu, escape, skip link and real routes"
   await expect(page).toHaveURL(/\/services$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dukungan yang mengikuti tahap proyek Anda.");
   await expect(page.locator("section[id]")).toHaveCount(4);
-  await page.getByRole("link", { name: "Diskusikan kebutuhan", exact: true }).click();
-  await expect(page).toHaveURL(/\/project-brief$/);
+  await expect(page.getByRole("main").getByRole("link", { name: "Hubungi Kami" }).first()).toHaveAttribute("href", /^https:\/\/wa\.me\//);
 });
 
 test("public navigation exposes active cues on exact, dynamic, and mobile routes", async ({ page }) => {
@@ -37,7 +36,6 @@ test("public navigation exposes active cues on exact, dynamic, and mobile routes
     { label: "Shop", path: "/shop/contoh-dock-modular-meja?preview=examples" },
     { label: "Custom Print", path: "/custom-print/request" },
     { label: "Cart", path: "/cart?preview=examples" },
-    { label: "Brief Proyek", path: "/project-brief" },
   ] as const;
 
   for (const routeCase of routeCases) {
@@ -166,7 +164,7 @@ test("public company and service routes render approved content", async ({ page 
   await expect(main.getByText("+62 851-1767-8901")).toBeVisible();
   await expect(main.getByText(/Bandung Techno Park/)).toBeVisible();
 
-  await page.getByRole("link", { name: "Lihat layanan" }).click();
+  await page.getByRole("main").getByRole("link", { name: "Lihat layanan", exact: true }).first().click();
   await expect(page).toHaveURL(/\/services$/);
   await expect(page.locator("section[id]")).toHaveCount(4);
   await expect(page.getByRole("heading", { name: "Research & Development" })).toBeVisible();
@@ -190,7 +188,7 @@ test("public company and service routes render approved content", async ({ page 
   expect(errors).toEqual([]);
 });
 
-test("four service details lead to an editable contextual brief and only approved project details", async ({ page, request }) => {
+test("four service details offer contextual WhatsApp and only approved project details", async ({ page, request }) => {
   const slugs = ["research-development", "consultant-workshop", "design-prototyping", "apparel-merchandise"];
   for (const slug of slugs) {
     const response = await request.get(`/services/${slug}`);
@@ -206,17 +204,14 @@ test("four service details lead to an editable contextual brief and only approve
   await expect(page.locator('a[href="/projects/smart-drop-box-pg"]')).toHaveCount(1);
   await expect(page.locator('a[href="/projects/elips-tandem-bike"]')).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-  const cta = page.getByRole("link", { name: "Diskusikan layanan ini" });
-  await expect(cta).toHaveAttribute("href", "/project-brief?service=design-prototyping");
+  const cta = page.getByRole("main").getByRole("link", { name: "Hubungi Kami" }).first();
+  await expect(cta).toHaveAttribute("href", /^https:\/\/wa\.me\//);
+  expect(new URL((await cta.getAttribute("href"))!).searchParams.get("text")).toContain("Design & Prototyping");
   await cta.focus();
   await expect(cta).toBeFocused();
   await page.setViewportSize({ width: 1280, height: 900 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-  await cta.click();
-  const selection = page.locator('[name="preferredService"]');
-  await expect(selection).toHaveValue("design-prototyping");
-  await selection.selectOption("research-development");
-  await expect(selection).toHaveValue("research-development");
+  await expect(page.getByRole("form", { name: "Form project brief" })).toHaveCount(0);
 });
 
 test("Foundation/Typography authorization is present on product PublicShell routes", async ({ page }) => {
@@ -246,39 +241,7 @@ test("Foundation/Typography authorization is present on product PublicShell rout
   }
 });
 
-test("project brief persists through the API and offers a reference-based WhatsApp handoff", async ({ page }) => {
-  let capturedBody: Record<string, unknown> | undefined;
-  await page.route("**/api/project-brief", async route => {
-    const postData = route.request().postData();
-    capturedBody = postData ? JSON.parse(postData) as Record<string, unknown> : undefined;
-    await route.fulfill({
-      status: 201,
-      contentType: "application/json",
-      body: JSON.stringify({ inquiryId: "51194c92-0b89-420e-88df-73ed2deeeab4", referenceNumber: "INQ-20260913-ABCDEFGH" }),
-    });
-  });
-  await page.goto("/project-brief");
-  await page.getByRole("button", { name: "Kirim project brief" }).click();
-  await expect(page.getByRole("alert").filter({ hasText: "Periksa kembali brief Anda." })).toBeVisible();
-  for (const [name,value] of Object.entries({ name: "Kontak contoh", phone: "+628000000000", projectGoal: "Meninjau prototype", description: "Skenario pengujian frontend.", targetQuantity: "1 prototype", targetDeadline: "2026-10-01", referenceLink: "https://example.test/reference" })) await page.getByRole("form", { name: "Form project brief" }).locator(`[name="${name}"]`).fill(value);
-  await page.locator('[name="currentStage"]').selectOption("CAD");
-  await page.getByRole("checkbox").check();
-  await page.getByRole("button", { name: "Kirim project brief" }).click();
-  await expect(page.getByText("Brief tersimpan.")).toBeVisible();
-  await expect(page.locator('[name="projectGoal"]')).toHaveValue("Meninjau prototype");
-  await expect(page.getByRole("link", { name: "Lanjutkan lewat WhatsApp" })).toHaveAttribute(
-    "href",
-    /https:\/\/wa\.me\/6285117678901\?text=/,
-  );
-  await expect(page.getByText("opaque-access-token")).toHaveCount(0);
-  expect(capturedBody).toMatchObject({
-    name: "Kontak contoh",
-    email: "demo-customer@example.test",
-    projectGoal: "Meninjau prototype",
-    currentStage: "CAD",
-    confidentialityAck: true,
-  });
-});
+
 
 for (const width of [320, 390, 768, 1024, 1280, 1440]) {
   test(`public pages keep one main heading and no horizontal overflow at ${width}px`, async ({ page }) => {

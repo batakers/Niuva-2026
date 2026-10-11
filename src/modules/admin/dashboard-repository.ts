@@ -12,20 +12,13 @@ export class PrismaDashboardRepository implements DashboardReader {
   async load(window: DashboardWindow): Promise<DashboardSource> {
     const createdWithinWindow = { gte: window.start, lt: window.end };
     const [
-      newInquiries,
       submittedCustomPrint,
       paidOrders,
-      inquiries,
       customPrintRequests,
       orders,
     ] = await Promise.all([
-      this.prisma.b2BInquiry.count({ where: { status: "NEW" } }),
       this.prisma.customPrintRequest.count({ where: { status: "SUBMITTED" } }),
       this.prisma.order.count({ where: { status: "PAID" } }),
-      this.prisma.b2BInquiry.findMany({
-        where: { createdAt: createdWithinWindow },
-        select: { createdAt: true },
-      }),
       this.prisma.customPrintRequest.findMany({
         where: { createdAt: createdWithinWindow },
         select: { createdAt: true },
@@ -37,10 +30,10 @@ export class PrismaDashboardRepository implements DashboardReader {
     ]);
 
     return {
-      newInquiries,
+      newInquiries: 0,
       submittedCustomPrint,
       paidOrders,
-      inquiryCreatedAt: inquiries.map((record) => record.createdAt),
+      inquiryCreatedAt: [],
       customPrintCreatedAt: customPrintRequests.map((record) => record.createdAt),
       orderCreatedAt: orders.map((record) => record.createdAt),
     };

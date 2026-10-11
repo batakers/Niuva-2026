@@ -140,10 +140,7 @@ const MANIFEST: Readonly<Record<string, Readonly<Record<string, ManifestEntry>>>
     voidExpenseAction: { permission: "FINANCE_CORRECT", fields: EXPENSE_FIELDS },
   },
   "src/app/admin/finance/settings/actions.ts": { saveBillingSettingsAction: { permission: "BILLING_SETTINGS_MANAGE", fields: { ...BILLING_FIELDS, expectedVersion: "0" } } },
-  "src/app/admin/inquiries/[id]/billing/actions.ts": {
-    setB2BTermsAction: { permission: "B2B_BILLING_TERMS_MANAGE", fields: { inquiryId: UUID, acceptedQuoteId: UUID_2, expectedVersion: "0", mode: "FULL" } },
-    recordB2BTransferAction: { permission: "FINANCE_WRITE", fields: { ...PAYMENT_FIELDS, inquiryId: UUID } },
-  },
+
   "src/app/admin/content/site-information/actions.ts": { publishSiteInformationAction: { permission: "SITE_CONTENT_WRITE", fields: { payload: JSON.stringify({ expectedVersion: 0, values: { shortDescription: "Synthetic company description.", email: "fixture@example.test", phone: "+628000000000", address: "Synthetic business address.", socialLinks: [] } }) } } },
   "src/app/admin/settings/custom-print-rates/actions.ts": { tariffAction: { permission: "PRICING_RULE_ACTIVATE", fields: { phase: "preview", payload: JSON.stringify({ rates: RATES, expectedActiveId: null }) } } },
   [ADMIN_ACCESS_ACTIONS_FILE]: {
@@ -290,20 +287,8 @@ const MANIFEST: Readonly<Record<string, Readonly<Record<string, ManifestEntry>>>
       },
     },
     replacePortfolioMediaAction: { permission: "PORTFOLIO_WRITE", fields: { ...PROJECT, mediaJson: "[]" } },
-    transitionInquiryAction: {
-      permission: "INQUIRY_MANAGE",
-      fields: { inquiryId: UUID, currentStatus: "NEW", nextStatus: "CONTACTED" },
-    },
-    sendB2BQuoteAction: {
-      permission: "INQUIRY_MANAGE",
-      fields: {
-        inquiryId: UUID,
-        assumptions: "Asumsi harga berlaku.",
-        lineItemsText: "Jasa cetak | 1000000",
-        scope: "Lingkup pekerjaan cetak 3D.",
-        validUntil: "2099-01-01",
-      },
-    },
+
+
   },
 };
 
@@ -366,7 +351,7 @@ const loaders: Readonly<Record<string, () => Promise<Record<string, unknown>>>> 
   "src/app/admin/finance/actions.ts": () => import("@/app/admin/finance/actions"),
   "src/app/admin/finance/expenses/actions.ts": () => import("@/app/admin/finance/expenses/actions"),
   "src/app/admin/finance/settings/actions.ts": () => import("@/app/admin/finance/settings/actions"),
-  "src/app/admin/inquiries/[id]/billing/actions.ts": () => import("@/app/admin/inquiries/[id]/billing/actions"),
+
   "src/app/admin/content/site-information/actions.ts": () => import("@/app/admin/content/site-information/actions"),
   "src/app/admin/settings/custom-print-rates/actions.ts": () => import("@/app/admin/settings/custom-print-rates/actions"),
   [ADMIN_ACTIONS_FILE]: () => import("@/app/admin/actions"),

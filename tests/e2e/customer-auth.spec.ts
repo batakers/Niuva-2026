@@ -58,7 +58,6 @@ test("auth route switching retains context, query, and fragment", async ({ page 
   for (const [returnTo, context] of [
     ["/checkout?preview=examples#summary", "Masuk atau buat akun untuk melanjutkan checkout Anda."],
     ["/custom-print/request?type=model", "Masuk atau buat akun untuk melanjutkan permintaan Custom Print Anda."],
-    ["/project-brief", "Masuk atau buat akun untuk melanjutkan Project Brief Anda."],
   ]) {
     await page.goto(`/login?returnTo=${encodeURIComponent(returnTo)}`);
     await expect(page.getByText(context, { exact: true })).toBeVisible();

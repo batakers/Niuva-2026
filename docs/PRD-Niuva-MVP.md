@@ -1,5 +1,30 @@
 # Product Requirements Document: Niuva MVP
 
+## Keputusan fase aktif B2B — 11 Oktober 2026
+
+Keputusan Owner ini menggantikan ketentuan lama tentang Project Brief, inquiry
+B2B, proposal B2B di akun Customer, dan pengelolaannya di Admin.
+
+- DEVELOP/B2B memakai halaman layanan dan portfolio sebagai informasi awal.
+  Calon klien membuka WhatsApp langsung, tanpa login dan tanpa mengisi form.
+- CTA utama berbunyi **Hubungi Kami**, tanpa keterangan tambahan di bawah tombol.
+  Konteks layanan dapat disertakan dalam pesan awal.
+- Pembahasan kebutuhan, negosiasi, penawaran, finalisasi, dan pencatatan B2B
+  menjadi urusan admin WhatsApp dengan calon klien. Website tidak membuat
+  inquiry, proposal, atau penagihan B2B baru.
+- Project Brief, proposal B2B pada akun Customer, daftar/detail/workspace inquiry
+  Admin, serta proyeksi B2B pada antrean, pencarian, direktori Customer, dan
+  laporan operasional dikeluarkan dari pengalaman aktif.
+- Data historis, akses file privat, kewajiban privasi/retensi, dan dokumen
+  keuangan lama tetap dipertahankan. Keputusan ini tidak mengizinkan penghapusan
+  data atau perubahan migration.
+- MAKE/Custom Print dan BUY tetap mengikuti kontrak login, review operator,
+  quote, pembayaran, dan pengiriman masing-masing.
+
+Rincian penerapan: [desain B2B WhatsApp](superpowers/specs/2026-10-11-b2b-whatsapp-design.md).
+Persetujuan arah produk ini terpisah dari penerimaan visual implementasi,
+perangkat fisik/AT, provider, staging, dan produksi.
+
 ## Product Overview
 
 **App Name:** Niuva  

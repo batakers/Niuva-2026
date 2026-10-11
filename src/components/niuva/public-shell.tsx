@@ -5,6 +5,7 @@ import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { PublicSiteContact, PublicSiteDescription } from "./public-site-information";
 import { isLocalDemoMode } from "@/lib/env/server";
 import { PublicNavigation, type PublicHeaderAction } from "./public-navigation";
+import { B2BContactLink } from "./b2b-contact-link";
 
 const typography = {
   "--font-body": "var(--font-public-sans)", "--font-body-token": "var(--font-public-sans)",
@@ -26,7 +27,6 @@ const defaultFunctionalStatusByScope: Readonly<Record<string, PublicScreenFuncti
   "custom-print": "frontend-preview",
   "order-status": "frontend-preview",
   "product-detail": "frontend-preview",
-  "project-brief": "server-backed",
   "quote-review": "frontend-preview",
   shop: "frontend-preview",
 };
@@ -37,21 +37,20 @@ export function PublicShell({
   children,
   functionalStatus,
   headerAction,
+  contactService,
   scope,
 }: {
   children: ReactNode;
   functionalStatus?: PublicScreenFunctionalStatus;
   headerAction?: PublicHeaderAction;
+  contactService?: string;
   scope: string;
 }) {
   const resolvedFunctionalStatus = functionalStatus ?? defaultFunctionalStatusByScope[scope];
-  const resolvedHeaderAction = headerAction === undefined
-    ? b2bHeaderScopes.has(scope) ? { href: "/project-brief", label: "Diskusikan Proyek" } : null
-    : headerAction;
+  const resolvedHeaderAction = headerAction ?? null;
+  const showB2BContact = headerAction === undefined && b2bHeaderScopes.has(scope);
   const demoMode = isLocalDemoMode();
-  const productRouteProofStatus = scope === "project-brief"
-    ? "approved-owner"
-    : "pending-owner-review";
+  const productRouteProofStatus = "pending-owner-review";
 
   return (
     <div className="min-h-screen bg-background text-foreground"
@@ -59,7 +58,6 @@ export function PublicShell({
       data-product-screen-proof-status={productRouteProofStatus} data-typography-propagation="approved" data-typography-version="1.0"
       data-runtime-mode={demoMode ? "demo" : "standard"}
       data-homepage={scope === "homepage" ? "" : undefined}
-      data-project-brief={scope === "project-brief" ? "" : undefined}
       data-product-screen-functional={resolvedFunctionalStatus}>
       <a href="#main-content" className="sr-only z-50 rounded-lg bg-background px-4 py-3 text-sm font-medium focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
         Lewati ke konten utama
@@ -69,7 +67,7 @@ export function PublicShell({
           <Link href="/" aria-label="Niuva, kembali ke halaman utama" className="shrink-0 rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
             <NiuvaLogo className="h-7 w-auto sm:h-8" priority />
           </Link>
-          <PublicNavigation action={resolvedHeaderAction} />
+          <PublicNavigation action={resolvedHeaderAction} showB2BContact={showB2BContact} contactService={contactService} />
           {demoMode ? (
             <span
               aria-label="Mode demo lokal aktif"
@@ -81,6 +79,7 @@ export function PublicShell({
             </span>
           ) : null}
           {resolvedHeaderAction ? <NiuvaLink href={resolvedHeaderAction.href} size="sm" className="min-h-11 hidden xl:inline-flex">{resolvedHeaderAction.label}</NiuvaLink> : null}
+          {showB2BContact ? <B2BContactLink className="hidden xl:inline-flex" service={contactService} size="sm" /> : null}
         </div>
       </header>
       {children}
@@ -94,9 +93,10 @@ export function PublicShell({
           <nav aria-label="Navigasi footer">
             <p className="text-sm font-semibold text-foreground">Jelajahi</p>
             <div className="mt-3 flex flex-col items-start">
-              {[["/services", "Layanan"], ["/projects", "Projects"], ["/custom-print", "Custom Print"], ["/shop", "Shop"], ["/project-brief", "Diskusikan Proyek"]].map(([href, label]) => (
+              {[["/services", "Layanan"], ["/projects", "Projects"], ["/custom-print", "Custom Print"], ["/shop", "Shop"]].map(([href, label]) => (
                 <Link key={href} href={href} className="inline-flex min-h-11 items-center rounded-lg text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">{label}</Link>
               ))}
+              <B2BContactLink variant="link" className="justify-start px-0 text-muted-foreground" />
             </div>
           </nav>
           <div className="space-y-5">

@@ -27,7 +27,6 @@ const manifest: Record<string, ManifestEntry> = {
   "account/page.tsx": { status: "excluded", reason: "X2-redirect-guard" },
   "account/privacy/page.tsx": { status: "excluded", reason: "X2-redirect-guard" },
   "account/privacy/confirm/page.tsx": { status: "excluded", reason: "X2-redirect-guard" },
-  "account/inquiries/[id]/page.tsx": { status: "excluded", reason: "X1-404-contract" },
   "account/orders/[id]/page.tsx": { status: "excluded", reason: "X1-404-contract" },
   "account/make/[id]/page.tsx": { status: "excluded", reason: "X1-404-contract" },
   "cart/page.tsx": { status: "covered", loading: "cart/loading.tsx" },
@@ -37,7 +36,6 @@ const manifest: Record<string, ManifestEntry> = {
   "custom-print/requests/[token]/page.tsx": { status: "excluded", reason: "X1-404-contract" },
   "orders/[token]/page.tsx": { status: "excluded", reason: "X1-404-contract" },
   "quote/[token]/page.tsx": { status: "excluded", reason: "X1-404-contract" },
-  "project-brief/page.tsx": { status: "excluded", reason: "X2-redirect-guard" },
   "demo/action-queue/page.tsx": { status: "excluded", reason: "X4-non-product" },
   "internal-testing/policy/page.tsx": { status: "excluded", reason: "X4-non-product" },
   "internal-testing/google-consent/page.tsx": { status: "excluded", reason: "X4-non-product" },
@@ -83,8 +81,8 @@ const nonAdminLoadingFiles = allFiles
   .sort();
 
 describe("loading coverage manifest (Property 11)", () => {
-  it("lists all 17 non-admin connection() pages found by the scan, and nothing stale", () => {
-    expect(scannedConnectionPages).toHaveLength(17);
+  it("lists all 15 non-admin connection() pages found by the scan, and nothing stale", () => {
+    expect(scannedConnectionPages).toHaveLength(15);
     expect(scannedConnectionPages).toEqual(Object.keys(manifest).sort());
   });
 

@@ -1,47 +1,5 @@
-import { readJsonBody } from "@/lib/http/body";
-import { requireCustomer } from "@/lib/auth/customer";
-import { assertPublicMutationRequest } from "@/lib/http/public-mutation";
-import {
-  apiError,
-  apiSuccess,
-  createCorrelationId,
-} from "@/lib/http/response";
-import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
-import { InquiryService } from "@/modules/inquiry/service";
-import { createInquiryAdminNotificationFromEnvironment } from "@/modules/notifications/resend";
-
-export const runtime = "nodejs";
-
-const PROJECT_BRIEF_MAX_BODY_BYTES = 32 * 1_024;
-const projectBriefRateLimiter = createInMemoryRateLimiter({
-  limit: 5,
-  maxKeys: 256,
-  windowMs: 60_000,
-});
-
+/** Retired intake boundary. Do not read the body, authenticate, or create records. */
 export async function POST(request: Request) {
-  const correlationId = createCorrelationId();
-
-  try {
-    assertPublicMutationRequest(request, projectBriefRateLimiter, {
-      endpointId: "POST /api/project-brief",
-    });
-    const customer = await requireCustomer();
-    const payload = await readJsonBody(request, {
-      maxBytes: PROJECT_BRIEF_MAX_BODY_BYTES,
-    });
-    const result = await new InquiryService({
-      notificationFactory: createInquiryAdminNotificationFromEnvironment,
-    }).submit(payload, customer);
-
-    return apiSuccess(
-      {
-        inquiryId: result.inquiry.id,
-        referenceNumber: result.inquiry.referenceNumber,
-      },
-      { correlationId, status: 201 },
-    );
-  } catch (error) {
-    return apiError(error, correlationId);
-  }
+  void request;
+  return Response.json({ error: { code: "B2B_RETIRED", message: "Hubungi tim Niuva melalui WhatsApp dari halaman layanan." } }, { status: 410, headers: { "Cache-Control": "no-store" } });
 }

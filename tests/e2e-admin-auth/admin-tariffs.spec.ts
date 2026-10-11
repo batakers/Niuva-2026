@@ -14,7 +14,7 @@ test("Owner reviews and applies rates; ordinary Admin cannot open the tariff pag
   await input.fill(next); await page.getByRole("button", { name: "Tinjau perubahan", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Tinjau perubahan tarif" })).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 }); expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
-  await mkdir(".local/admin-redesign/captures", { recursive: true }); await page.screenshot({ path: ".local/admin-redesign/captures/tariffs-review-390.png", fullPage: true });
+  await mkdir(".local/admin-redesign/captures", { recursive: true }); await page.screenshot({ path: ".local/admin-redesign/captures/tariffs-review-390.png", fullPage: true, caret: "initial" });
   await page.getByRole("checkbox", { name: /Saya sudah meninjau tarif baru/ }).check(); await page.getByRole("button", { name: "Terapkan tarif", exact: true }).click();
   await expect(page.getByRole("status")).toContainText(/Tarif versi \d+ berlaku/);
   expect(await prisma.pricingRuleVersion.count({ where: { code: "CUSTOM_PRINT_V1", status: "ACTIVE" } })).toBe(1);

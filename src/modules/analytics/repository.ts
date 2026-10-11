@@ -58,13 +58,12 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
 
   async business(window: ReportWindow): Promise<BusinessRows> {
     const withinWindow = { gte: window.start, lt: window.end };
-    const [briefs, customPrint, paidOrders] = await Promise.all([
-      this.prisma.b2BInquiry.findMany({ where: { createdAt: withinWindow }, select: { createdAt: true } }),
+    const [customPrint, paidOrders] = await Promise.all([
       this.prisma.customPrintRequest.findMany({ where: { createdAt: withinWindow }, select: { createdAt: true } }),
       this.prisma.order.findMany({ where: { paidAt: withinWindow }, select: { paidAt: true } }),
     ]);
     return {
-      briefs: briefs.map((row) => row.createdAt),
+      briefs: [],
       customPrint: customPrint.map((row) => row.createdAt),
       paidOrders: paidOrders.flatMap((row) => row.paidAt === null ? [] : [row.paidAt]),
     };

@@ -22,6 +22,11 @@ async function actor(role: "OWNER" | "ADMIN"): Promise<AdminAccess> {
 async function event(action = "inquiry.submitted", entityType = "B2BInquiry", entityId = inquiryId) {
   return prisma.auditLog.create({ data: { id: randomUUID(), entityType, entityId, action, actorType: "SYSTEM", createdAt: sameTime, metadataJson: { private: "TEST-PRIVATE-MUST-NOT-LEAK" } } });
 }
+async function attentionEvent() {
+  const id = randomUUID();
+  await prisma.customPrintRequest.create({ data: { id, referenceNumber: `CP-TEST-${id}`, publicTokenHash: randomUUID(), customerName: "TEST Customer", customerEmail: "notifications@example.test", customerPhone: "+628000000000", materialRequested: "PLA", quantity: 1 } });
+  return event("custom-print.request.submitted", "CustomPrintRequest", id);
+}
 beforeEach(async () => {
   await prisma.auditLog.deleteMany();
   owner = await actor("OWNER"); adminA = await actor("ADMIN"); adminB = await actor("ADMIN");
@@ -71,7 +76,7 @@ describe("persistent per-account notifications", () => {
   it("suppresses old popups on bootstrap and atomically claims new events even at the same timestamp", async () => {
     await event();
     expect((await service.bootstrap(adminA)).toastCandidates).toEqual([]);
-    const fresh = await event();
+    const fresh = await attentionEvent();
     const [left, right] = await Promise.all([service.poll(adminA, {}), service.poll(adminA, {})]);
     expect([...left.toastCandidates, ...right.toastCandidates].map(row => row.id)).toEqual([fresh.id]);
     expect((await service.bootstrap(adminA)).toastCandidates).toEqual([]);
@@ -80,10 +85,12 @@ describe("persistent per-account notifications", () => {
   it("shows routine updates in history while only attention-worthy new events become popups", async () => {
     await service.bootstrap(adminA);
     const routine = await event("inquiry.status.transition");
-    const attention = await event();
+    const retired = await event();
+    const attention = await attentionEvent();
     const feed = await service.poll(adminA, {});
     expect(feed.items.map(row => row.id)).toEqual(expect.arrayContaining([routine.id, attention.id]));
     expect(feed.toastCandidates.map(row => row.id)).toEqual([attention.id]);
+    expect(feed.items.find(row => row.id === retired.id)).toMatchObject({ href: null, requiresAttention: false });
   });
   it("rejects inactive profiles and foreign/Owner-only receipt mutations", async () => {
     const hidden = await event("admin.deactivated", "AdminProfile", owner.profile.id);

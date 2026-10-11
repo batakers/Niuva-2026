@@ -15,7 +15,6 @@ export function getAdminNavigationForRole(role: AdminRole): readonly AdminNavGro
       { area: "overview", label: "Overview", href: "/admin", icon: "overview" },
       { area: "orders", label: "Orders", href: "/admin/orders", icon: "orders" },
       { area: "custom-print", label: "Custom Print", href: "/admin/custom-print", icon: "custom-print" },
-      { area: "inquiries", label: "B2B Inquiries", href: "/admin/inquiries", icon: "inquiries" },
     ] },
     { label: "Kelola", items: [{ area: "products", label: "Products & Stock", href: "/admin/products", icon: "products" }, { area: "customers", label: "Customers", href: "/admin/customers", icon: "customers" }] },
     { label: "Keuangan", items: [{ area: "invoices", label: "Invoice", href: "/admin/finance/invoices", icon: "invoices" }, { area: "payments", label: "Pembayaran", href: "/admin/finance/payments", icon: "payments" }, { area: "expenses", label: "Pengeluaran", href: "/admin/finance/expenses", icon: "expenses" }] },

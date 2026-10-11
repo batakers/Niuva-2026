@@ -61,10 +61,12 @@ describe("Admin dashboard projection", () => {
     const window = dashboardWindow(new Date("2026-09-25T17:10:00.000Z"));
 
     const result = await new PrismaDashboardRepository(prisma).load(window);
-    expect(result.newInquiries).toBe(7);
+    expect(result.newInquiries).toBe(0);
+    expect(result.inquiryCreatedAt).toEqual([]);
+    expect(calls.some(call => call.model === "inquiries")).toBe(false);
     expect(result.submittedCustomPrint).toBe(4);
     expect(result.paidOrders).toBe(2);
-    expect(calls.filter((call) => call.action === "findMany")).toHaveLength(3);
+    expect(calls.filter((call) => call.action === "findMany")).toHaveLength(2);
     for (const call of calls.filter((entry) => entry.action === "findMany")) {
       expect(call.args).toEqual({
         where: { createdAt: { gte: window.start, lt: window.end } },
@@ -72,7 +74,6 @@ describe("Admin dashboard projection", () => {
       });
     }
     expect(calls.filter((call) => call.action === "count").map((call) => call.args)).toEqual([
-      { where: { status: "NEW" } },
       { where: { status: "SUBMITTED" } },
       { where: { status: "PAID" } },
     ]);

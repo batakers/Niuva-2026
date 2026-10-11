@@ -125,7 +125,7 @@ export function ProjectList({ projects, previewMode = null }: ProjectListProps) 
           ) : undefined}
           description={projects.length
             ? "Ubah pencarian atau hapus filter untuk melihat pilihan lainnya."
-            : "Studi kasus akan ditampilkan setelah materi dan izin publikasinya siap. Anda tetap dapat memulai diskusi melalui project brief."}
+            : "Studi kasus akan ditampilkan setelah materi dan izin publikasinya siap. Anda dapat membahas kebutuhan dengan tim melalui WhatsApp."}
           title={projects.length ? "Tidak ada project yang cocok." : "Cerita di balik proyek sedang disiapkan."}
           tone="info"
         />

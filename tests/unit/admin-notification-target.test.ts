@@ -22,7 +22,7 @@ describe("notification record destinations", () => {
     ["Order", "order.status.transition", `/admin/orders/${id}`],
     ["PaymentAttempt", "state.transition", `/admin/orders/${parentId}`],
     ["PaymentEvent", "payment.webhook.processed", `/admin/orders/${id}`],
-    ["B2BQuote", "b2b.quote.accepted", `/admin/inquiries/${parentId}/proposal`],
+    ["B2BQuote", "b2b.quote.accepted", null],
     ["CustomPrintQuote", "quote.sent", `/admin/custom-print/${parentId}/review`],
   ])("resolves %s through its legitimate parent", async (entityType, action, href) => {
     const result = await new AdminActivityTimelineService(database(entityType, action)).list(access);

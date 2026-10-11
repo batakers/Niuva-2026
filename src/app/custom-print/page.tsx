@@ -3,6 +3,7 @@ import Image from "next/image";
 import { connection } from "next/server";
 import { typographySystemTokens as type } from "@/design/typography";
 import { PublicShell } from "@/components/niuva/public-shell";
+import { B2BContactLink } from "@/components/niuva/b2b-contact-link";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Icon, type IconName } from "@/components/ui/Icon";
@@ -330,13 +331,13 @@ export default async function CustomPrintPage() {
                   : "Kirim deskripsi dan link tanpa upload. Foto dan model baru dapat diunggah setelah storage privat tersedia."
                 : previewEnabled
                   ? "Preview model hanya menguji metadata lokal; tidak membuat request nyata."
-                  : "Pengiriman request belum tersedia. Anda tetap dapat menjelaskan kebutuhan melalui Project Brief saat layanan itu aktif."}
+                  : "Pengiriman request belum tersedia. Hubungi tim Niuva melalui WhatsApp untuk membahas kebutuhan Anda."}
               action={customerAuthEnabled && databaseEnabled
                 ? <NiuvaLink className="min-h-11" href="/custom-print/request?mode=reference">Mulai dari referensi</NiuvaLink>
                 : customerAuthEnabled && (liveEnabled || previewEnabled)
                   ? <NiuvaLink className="min-h-11" href="/custom-print/request">Saya punya model</NiuvaLink>
                   : undefined}
-              secondaryAction={customerAuthEnabled ? <NiuvaLink className="min-h-11" href={liveEnabled ? "/custom-print/request" : "/project-brief"} variant="outline">{liveEnabled ? "Saya punya model" : "Diskusikan kebutuhan khusus"}</NiuvaLink> : undefined}
+              secondaryAction={customerAuthEnabled && liveEnabled ? <NiuvaLink className="min-h-11" href="/custom-print/request" variant="outline">Saya punya model</NiuvaLink> : <B2BContactLink />}
             />
           </div>
         </section>

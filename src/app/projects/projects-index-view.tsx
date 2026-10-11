@@ -1,4 +1,5 @@
 import { PublicShell } from "@/components/niuva/public-shell";
+import { B2BContactLink } from "@/components/niuva/b2b-contact-link";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { typographySystemTokens as type } from "@/design/typography";
@@ -34,7 +35,7 @@ export function ProjectsIndexView({ projects, retryHref, scenario }: ProjectsInd
           <div className="mt-3 flex flex-wrap gap-2">{[["examples","Contoh sintetis"],["empty","Kosong"],["loading","Memuat"],["error","Gagal"]].map(([value,label]) => <NiuvaLink className="min-h-11" key={value} href={`/projects?preview=${value}`} variant="outline" size="sm" aria-current={scenario === value ? "page" : undefined}>{label}</NiuvaLink>)}</div>
         </aside>}
         <section className="mt-16 flex flex-col gap-6 border-t border-border pt-8 sm:flex-row sm:items-center sm:justify-between">
-          <div><h2 className={type.subheading.className}>Punya konteks yang ingin dibahas?</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Mulai dari tujuan, bukan dari jawaban yang sudah lengkap.</p></div><NiuvaLink className="min-h-11" href="/project-brief">Diskusikan Proyek</NiuvaLink>
+          <div><h2 className={type.subheading.className}>Punya proyek yang ingin dibahas?</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Ceritakan kebutuhan proyek Anda kepada tim Niuva.</p></div><B2BContactLink />
         </section>
       </main>
     </PublicShell>

@@ -35,7 +35,6 @@ vi.mock("@/modules/shared/access-token", () => ({
   getRouteAccessTokenEntityId: () => "quote-id",
 }));
 
-import { POST as postProjectBrief } from "@/app/api/project-brief/route";
 import { POST as postQuoteAccept } from "@/app/api/quote/[token]/accept/route";
 import { POST as postQuoteDecline } from "@/app/api/quote/[token]/decline/route";
 
@@ -65,11 +64,6 @@ const cases: ReadonlyArray<{ call: Call; limit: number; path: string }> = [
     call: (ip) => postQuoteDecline(requestFrom("/api/quote/token/decline", ip), tokenContext),
     limit: 5,
     path: "/api/quote/[token]/decline",
-  },
-  {
-    call: (ip) => postProjectBrief(requestFrom("/api/project-brief", ip)),
-    limit: 5,
-    path: "/api/project-brief",
   },
 ];
 

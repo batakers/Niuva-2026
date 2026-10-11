@@ -1,26 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const DEMO_REFERENCE_PATTERN = /INQ-[0-9]{8}-[A-Z0-9]{8}/;
-
-async function fillProjectBrief(page: Page): Promise<void> {
-  const form = page.getByRole("form", { name: "Form project brief" });
-  for (const [name, value] of Object.entries({
-    name: "Demo Client",
-    email: "demo-client@example.test",
-    phone: "+628000000001",
-    projectGoal: "Memeriksa alur demo lokal",
-    description: "Brief sintetis untuk verifikasi Project Brief sampai Action Queue.",
-    targetQuantity: "1 prototype",
-    targetDeadline: "2026-10-01",
-    referenceLink: "https://example.test/local-demo",
-  })) {
-    await form.locator(`[name="${name}"]`).fill(value);
-  }
-
-  await form.locator('[name="currentStage"]').selectOption("CAD");
-  await form.getByRole("checkbox", { name: /Persetujuan kerahasiaan/ }).check();
-}
-
 async function fillCheckout(page: Page): Promise<void> {
   await page.getByLabel("Nama pemesan").fill("Demo Client");
   await page.getByLabel("Email").fill("demo-client@example.test");
@@ -34,7 +13,7 @@ async function fillCheckout(page: Page): Promise<void> {
   await page.getByLabel("Kode pos").fill("40132");
 }
 
-test("Project Brief persists to Action Queue and continues to local demo checkout", async ({ page }) => {
+test("B2B uses WhatsApp while local demo checkout remains available", async ({ page }) => {
   test.slow();
   const externalProviderRequests: string[] = [];
   page.on("request", (request) => {
@@ -44,22 +23,11 @@ test("Project Brief persists to Action Queue and continues to local demo checkou
   });
 
   await page.goto("/project-brief");
-  await expect(page.locator("[data-demo-badge]")).toHaveText("Demo lokal");
-  await fillProjectBrief(page);
-  await page.getByRole("button", { name: "Kirim project brief" }).click();
-  await expect(page.getByText("Brief tersimpan.")).toBeVisible({ timeout: 30_000 });
-
-  const successText = await page.getByRole("status").filter({ hasText: "INQ-" }).textContent();
-  const referenceNumber = successText?.match(DEMO_REFERENCE_PATTERN)?.[0];
-  expect(referenceNumber).toMatch(DEMO_REFERENCE_PATTERN);
-  if (referenceNumber === undefined) {
-    throw new Error("Reference demo tidak ditemukan pada konfirmasi Project Brief.");
-  }
-
-  await page.getByRole("link", { name: "Lihat Action Queue demo" }).click();
-  await expect(page).toHaveURL(/\/demo\/action-queue$/);
+  await expect(page).toHaveURL(/\/services$/);
+  await expect(page.getByRole("main").getByRole("link", { name: "Hubungi Kami" }).first()).toHaveAttribute("href", /^https:\/\/wa\.me\//);
+  await page.goto("/demo/action-queue");
   await expect(page.getByRole("heading", { level: 1, name: "Action Queue demo" })).toBeVisible();
-  await expect(page.locator(`[data-demo-queue-item][data-reference="${referenceNumber}"]`)).toBeVisible();
+  await expect(page.getByRole("link", { name: "Buka Custom Print" })).toHaveAttribute("href", "/custom-print");
 
   await page.goto("/shop");
   await expect(page.getByRole("heading", { name: "Desk Organizer Demo" })).toBeVisible();

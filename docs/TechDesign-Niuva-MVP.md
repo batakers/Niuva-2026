@@ -1,5 +1,32 @@
 # Technical Design Document: Niuva MVP
 
+## Batas teknis B2B fase aktif — 11 Oktober 2026
+
+Mengikuti keputusan B2B pada PRD tanggal yang sama, website hanya menyediakan
+kontak WhatsApp untuk DEVELOP. Nomor tujuan berasal dari Site Information publik,
+dengan pesan singkat berisi konteks layanan bila tersedia. Link berupa anchor
+langsung sehingga tetap dapat digunakan tanpa JavaScript, login, atau form.
+
+- `/project-brief` menjadi redirect kompatibilitas ke `/services`, atau ke
+  `/services/[slug]` jika parameter layanan valid. Route ini tidak membaca sesi.
+- `POST /api/project-brief` dan endpoint keputusan proposal B2B lama merespons
+  `410 Gone`, `Cache-Control: no-store`, tanpa autentikasi, parsing payload,
+  pengiriman email, atau penulisan database.
+- Halaman B2B akun Customer dan Admin beserta Server Actions pengelolaan inquiry,
+  proposal, dan billing B2B dihapus. Claim publik menerima MAKE saja.
+- Repository pengalaman aktif tidak mengambil inquiry B2B untuk akun, antrean,
+  pencarian, direktori Customer, atau laporan operasional. Notifikasi B2B lama
+  tidak membentuk tautan ke halaman yang dihentikan atau memicu perhatian baru.
+- Sumber draft invoice baru dibatasi ke order BUY/MAKE dan shipping MAKE. Dokumen
+  invoice/pembayaran historis tetap dapat dibaca melalui modul keuangan.
+- Schema, migration, record historis, audit, file privat, dan alur privasi/retensi
+  dipertahankan. Modul domain historis tidak menjadi entry point aktif; penghapusan
+  data memerlukan keputusan tersendiri.
+- Alur MAKE dan BUY beserta otorisasi dan validasi server tidak berubah.
+
+Ketentuan ini menggantikan entry point dan proyeksi B2B lama dalam dokumen ini.
+Rincian: [desain B2B WhatsApp](superpowers/specs/2026-10-11-b2b-whatsapp-design.md).
+
 **Document:** `TechDesign-Niuva-MVP.md`  
 **Version:** 1.0  
 **Status:** Approved Technical Direction — Ready for Part 4 / Implementation Planning  

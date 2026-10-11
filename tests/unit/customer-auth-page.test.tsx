@@ -24,7 +24,6 @@ describe("Customer auth page", () => {
   it.each([
     ["/checkout?preview=examples#summary", "Masuk atau buat akun untuk melanjutkan checkout Anda."],
     ["/custom-print/request?type=model", "Masuk atau buat akun untuk melanjutkan permintaan Custom Print Anda."],
-    ["/project-brief", "Masuk atau buat akun untuk melanjutkan Project Brief Anda."],
   ])("keeps destination context %s", async (returnTo, description) => {
     render(await CustomerAuthPage({ mode: "login", searchParams: Promise.resolve({ returnTo }) }));
     expect(screen.getByText(description)).toBeInTheDocument();

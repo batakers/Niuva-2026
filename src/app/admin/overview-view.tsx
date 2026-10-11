@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, BriefcaseBusiness, Clock3, Printer, ShoppingBag, TriangleAlert } from "lucide-react";
+import { ArrowUpRight, Clock3, Printer, ShoppingBag, TriangleAlert } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,6 @@ export function AdminOverviewView({ data, role }: Readonly<{ data: AdminOverview
   const { range, attention, finance, paidOrders, activity, traffic } = data;
   const queue = attention.status === "ok" ? attention.data : null;
   const cards = [
-    { title: "B2B perlu ditindaklanjuti", value: queue?.summary.groups.inquiries, href: "/admin/inquiries?view=needs-action", note: "Tinjau brief proyek baru", icon: BriefcaseBusiness },
     { title: "Custom Print perlu tindakan", value: queue?.summary.groups["custom-print"], href: "/admin/custom-print?view=needs-action", note: "Review, siapkan, atau kirim quote", icon: Printer },
     { title: "Order perlu tindakan", value: queue?.summary.groups.orders, href: "/admin/orders?view=needs-action", note: "Proses, ukur paket, atau periksa", icon: ShoppingBag },
     { title: "Isu / perlu perhatian", value: queue?.summary.exceptions, href: queue?.summary.exceptions ? "#admin-issues" : "/admin/orders?view=issues", note: "Pembayaran dan pengiriman", icon: TriangleAlert },
@@ -32,7 +31,7 @@ export function AdminOverviewView({ data, role }: Readonly<{ data: AdminOverview
       } />
       <p className="flex items-start gap-2 text-xs leading-5 text-muted-foreground"><Clock3 aria-hidden className="mt-0.5 size-4 shrink-0" /><span>Diperbarui {time(data.generatedAt)} WIB · Kartu perhatian menampilkan pekerjaan yang masih terbuka.</span></p>
 
-      <section aria-label="Pekerjaan perlu perhatian saat ini" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section aria-label="Pekerjaan perlu perhatian saat ini" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {cards.map(item => <Link key={item.title} href={item.href} className="group min-w-0 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
           <Card className="h-full gap-4 transition-colors group-hover:ring-primary/40 motion-reduce:transition-none">
             <CardHeader>

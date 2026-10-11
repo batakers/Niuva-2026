@@ -3,6 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 
 import { PublicShell } from "@/components/niuva/public-shell";
+import { B2BContactLink } from "@/components/niuva/b2b-contact-link";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { typographySystemTokens as type } from "@/design/typography";
 import { publicServices } from "@/features/public/company-content";
@@ -44,7 +45,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
   }
 
   return (
-    <PublicShell scope="services" headerAction={{ href: `/project-brief?service=${encodeURIComponent(service.slug)}`, label: "Buat Project Brief" }}>
+    <PublicShell scope="services" contactService={service.title}>
       <main id="main-content">
         <section className="border-b border-border bg-card">
           <div className="mx-auto max-w-public px-5 py-10 sm:px-8 sm:py-14">
@@ -53,7 +54,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
             <h1 className={`${type.display.className} mt-4 max-w-4xl`}>{service.title}</h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">{service.websiteFraming}</p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
-              <NiuvaLink className="min-h-11" href={`/project-brief?service=${encodeURIComponent(service.slug)}`}>Buat Project Brief</NiuvaLink>
+              <B2BContactLink service={service.title} />
               <NiuvaLink className="min-h-11" href="#related-projects-title" variant="outline">Lihat proyek terkait</NiuvaLink>
             </div>
           </div>
@@ -79,7 +80,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
           <div className="mx-auto grid max-w-public gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] lg:gap-16">
             <div><p className="text-sm font-medium text-brand-700">Proses peninjauan</p><h2 className={`${type.heading.className} mt-3`} id="service-review-title">Langkah awal dibuat jelas sebelum ruang lingkup disepakati.</h2></div>
             <ol className="divide-y divide-border border-y border-border">
-              <li className="grid gap-2 py-5 sm:grid-cols-[9rem_minmax(0,1fr)]"><h3 className="font-semibold">Bagikan konteks</h3><p className="text-sm leading-6 text-muted-foreground">Ceritakan tujuan, tahap saat ini, dan bahan awal melalui Project Brief.</p></li>
+              <li className="grid gap-2 py-5 sm:grid-cols-[9rem_minmax(0,1fr)]"><h3 className="font-semibold">Bagikan konteks</h3><p className="text-sm leading-6 text-muted-foreground">Ceritakan tujuan, tahap saat ini, dan bahan awal melalui WhatsApp.</p></li>
               <li className="grid gap-2 py-5 sm:grid-cols-[9rem_minmax(0,1fr)]"><h3 className="font-semibold">Tinjau kebutuhan</h3><p className="text-sm leading-6 text-muted-foreground">Tim Niuva meninjau informasi tersebut untuk memahami keputusan dan batasan yang perlu dibahas bersama.</p></li>
               <li className="grid gap-2 py-5 sm:grid-cols-[9rem_minmax(0,1fr)]"><h3 className="font-semibold">Tentukan lanjutan</h3><p className="text-sm leading-6 text-muted-foreground">Arah kerja dan output dibahas sesuai ruang lingkup yang kemudian disepakati; brief belum menjadi janji hasil atau jadwal.</p></li>
             </ol>
@@ -93,7 +94,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
               <NiuvaLink className="min-h-11" href="/projects" variant="outline">Semua projects</NiuvaLink>
             </div>
             {relatedProjects.length === 0 ? (
-              <p className="mt-8 max-w-2xl text-sm leading-6 text-muted-foreground">Detail project terkait belum tersedia untuk ditampilkan. Anda tetap dapat menjelaskan kebutuhan melalui Project Brief.</p>
+              <p className="mt-8 max-w-2xl text-sm leading-6 text-muted-foreground">Detail project terkait belum tersedia untuk ditampilkan. Anda dapat membahas kebutuhan dengan tim melalui WhatsApp.</p>
             ) : (
               <ul className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {relatedProjects.slice(0, 3).map((project) => {
@@ -112,8 +113,8 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
 
         <section className="border-t border-border bg-card">
           <div className="mx-auto flex max-w-public flex-col gap-5 px-5 py-14 sm:px-8 md:flex-row md:items-end md:justify-between">
-            <div><h2 className={type.heading.className}>Siap membahas konteks proyek Anda?</h2><p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">Mulai dari informasi yang sudah tersedia. Pilihan layanan ini akan terbawa ke Project Brief dan tetap dapat Anda ubah.</p></div>
-            <NiuvaLink className="min-h-11 shrink-0" href={`/project-brief?service=${encodeURIComponent(service.slug)}`}>Diskusikan layanan ini</NiuvaLink>
+            <div><h2 className={type.heading.className}>Ceritakan kebutuhan proyek Anda.</h2><p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">Tim Niuva membahas kebutuhan, penawaran, dan kesepakatan proyek bersama Anda melalui WhatsApp.</p></div>
+            <B2BContactLink service={service.title} className="shrink-0" />
           </div>
         </section>
       </main>

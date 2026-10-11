@@ -10,7 +10,7 @@
 
 ## Project
 
-- **What this is:** Website operasional responsif yang menyatukan company profile dan project brief B2B, retail ready-made, serta custom 3D print berbasis review operator.
+- **What this is:** Website operasional responsif yang menyatukan company profile dan kontak WhatsApp B2B, retail ready-made, serta custom 3D print berbasis review operator.
 - **Who it is for:** Calon klien B2B, customer retail/B2C, serta Owner/Admin Niuva yang bukan pengguna teknis.
 - **Current phase:** Foundation/Typography v1.0 is authorized across product screens by DS-DEC-019. `DESIGN.md` is the active visual guide; former AUiS proofs and decisions are archived, and their historical acceptance remains limited to the surfaces reviewed. Public, catalog, authenticated-admin, and quote evidence in `docs/frontend/mvp-release-readiness.md` is local/loopback/non-production only. Visual acceptance, physical-device/AT, provider, and production readiness remain separate.
 
@@ -81,6 +81,10 @@ user request and the authority order above.
   index them only through a scoped, authority-checked change.
 
 ## Gotchas
+
+- B2B fase aktif mengikuti addendum PRD/Tech Design 11 Oktober 2026: kontak
+  WhatsApp langsung tanpa login/form. Jangan mengaktifkan kembali Project Brief,
+  proposal akun Customer, atau inquiry Admin; data historis dan privasi tetap dijaga.
 
 - The current user-selected guidance level is **C — Somewhere in between**. The
   older `User level: A` metadata in the PRD/Tech Design does not override it.
