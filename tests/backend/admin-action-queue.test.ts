@@ -114,7 +114,6 @@ describe("ActionQueueService", () => {
       "SHIPPING_EXCEPTION",
       "PACKAGE_MEASUREMENT",
       "QUOTE_SEND",
-      "B2B_INQUIRY",
       "CUSTOM_PRINT_REVIEW",
       "ORDER_PROCESSING",
     ]);
@@ -127,7 +126,7 @@ describe("ActionQueueService", () => {
       attention: "STANDARD",
       nextAction: "Ukur paket final untuk pengiriman",
     });
-    expect(result.items.find((item) => item.kind === "B2B_INQUIRY")?.href).toBe("/admin/inquiries/inquiry-1");
+    expect(result.items.some((item) => item.kind === "B2B_INQUIRY")).toBe(false);
     expect(result.items.every((item) => !("customerEmail" in item))).toBe(true);
     expect(result.items.every((item) => !("providerPayload" in item))).toBe(true);
   });
@@ -153,9 +152,9 @@ describe("ActionQueueService", () => {
     for (let index = 0; index < 55; index += 1) {
       signals.push(
         signal(
-          "B2B_INQUIRY",
-          "inquiry-" + index,
-          "BRF-" + index,
+          "CUSTOM_PRINT_REVIEW",
+          "request-" + (index + 2),
+          "CP-" + index,
           new Date(Date.UTC(2026, 8, 11, 1, index)).toISOString(),
         ),
       );
@@ -173,7 +172,7 @@ describe("ActionQueueService", () => {
 
     expect(result.items).toHaveLength(50);
     expect(result.totalOpen).toBe(56);
-    expect(result.summary).toEqual({ groups: { inquiries: 55, "custom-print": 1, orders: 0 }, exceptions: 0 });
+    expect(result.summary).toEqual({ groups: { "custom-print": 56, orders: 0 }, exceptions: 0 });
     expect(result.filteredTotal).toBe(56);
     expect(result.priorityItems).toHaveLength(5);
     expect(result.items.filter((item) => item.kind === "QUOTE_PREPARATION")).toHaveLength(0);
@@ -196,7 +195,7 @@ describe("ActionQueueService", () => {
 
   it("filters de-duplicated work before the display limit and keeps global priorities", async () => {
     const signals: ActionQueueSignal[] = Array.from({ length: 55 }, (_, index) =>
-      signal("B2B_INQUIRY", `inquiry-${index}`, `BRF-${index}`, "2026-09-11T01:00:00.000Z"),
+      signal("CUSTOM_PRINT_REVIEW", `request-${index}`, `CP-${index}`, "2026-09-11T01:00:00.000Z"),
     );
     signals.push(signal("ORDER_PROCESSING", "paid-1", "ORD-1", "2026-09-11T02:00:00.000Z"));
     signals.push(signal("SHIPPING_EXCEPTION", "shipping-1", "ORD-2", "2026-09-11T03:00:00.000Z"));
@@ -208,7 +207,7 @@ describe("ActionQueueService", () => {
     }).list("orders");
 
     expect(result.totalOpen).toBe(57);
-    expect(result.summary).toEqual({ groups: { inquiries: 55, "custom-print": 0, orders: 2 }, exceptions: 1 });
+    expect(result.summary).toEqual({ groups: { "custom-print": 55, orders: 2 }, exceptions: 1 });
     expect(result.filteredTotal).toBe(2);
     expect(result.items.map((item) => item.kind)).toEqual(["SHIPPING_EXCEPTION", "ORDER_PROCESSING"]);
     expect(result.priorityItems[0].kind).toBe("SHIPPING_EXCEPTION");
@@ -309,7 +308,6 @@ describe("PrismaActionQueueRepository", () => {
     const signals = await new PrismaActionQueueRepository(prisma).listSignals();
 
     expect(signals.map((signal) => signal.kind)).toEqual([
-      "B2B_INQUIRY",
       "CUSTOM_PRINT_REVIEW",
       "QUOTE_PREPARATION",
       "QUOTE_SEND",
@@ -318,7 +316,6 @@ describe("PrismaActionQueueRepository", () => {
       "SHIPPING_EXCEPTION",
     ]);
     expect(signals.map((signal) => signal.reference)).toEqual([
-      "BRF-1",
       "CPR-1",
       "CPR-2",
       "QTE-1",
@@ -326,7 +323,8 @@ describe("PrismaActionQueueRepository", () => {
       "ORD-QC",
       "ORD-EXCEPTION",
     ]);
-    expect(calls).toHaveLength(6);
+    expect(calls).toHaveLength(5);
+    expect(calls.some(call => call.model === "b2BInquiry")).toBe(false);
 
     for (const call of calls) {
       expect(call.args).toMatchObject({

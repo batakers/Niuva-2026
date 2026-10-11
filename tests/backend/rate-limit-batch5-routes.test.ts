@@ -30,7 +30,6 @@ vi.mock("@/modules/providers/runtime", () => ({
   createShippingProviderForRuntime: () => ({}),
 }));
 
-import { POST as postInquiryDecision } from "@/app/api/account/inquiries/[id]/quotes/[quoteId]/decision/route";
 import { POST as postCheckout } from "@/app/api/checkout/route";
 
 function requestFrom(path: string, ip: string, body: unknown): Request {
@@ -45,23 +44,8 @@ function requestFrom(path: string, ip: string, body: unknown): Request {
   });
 }
 
-const decisionContext = {
-  params: Promise.resolve({ id: "inq-1", quoteId: "quote-1" }),
-} as unknown as Parameters<typeof postInquiryDecision>[1];
-
 type Call = (ip: string) => Promise<Response>;
 const cases: ReadonlyArray<{ call: Call; limit: number; path: string }> = [
-  {
-    call: (ip) =>
-      postInquiryDecision(
-        requestFrom("/api/account/inquiries/inq-1/quotes/quote-1/decision", ip, {
-          decision: "DECLINED",
-        }),
-        decisionContext,
-      ),
-    limit: 5,
-    path: "/api/account/inquiries/[id]/quotes/[quoteId]/decision",
-  },
   {
     call: (ip) => postCheckout(requestFrom("/api/checkout", ip, { any: "payload" })),
     limit: 5,

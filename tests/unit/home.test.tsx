@@ -34,7 +34,7 @@ describe("public homepage", () => {
     expect(screen.getByRole("heading", { name: "Mau produk siap beli?" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Kompetensi yang menghubungkan ide dengan bentuk." })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Satu alur kerja untuk keputusan yang lebih jelas." })).toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: /Diskusikan Proyek/ }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("link", { name: "Hubungi Kami" }).length).toBeGreaterThan(0);
     expect(document.querySelectorAll("[data-homepage] .font-mono")).toHaveLength(0);
     expect(document.querySelectorAll("[data-homepage] .font-technical")).toHaveLength(0);
     expect(document.querySelectorAll("[data-homepage] .uppercase")).toHaveLength(0);

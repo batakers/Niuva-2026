@@ -8,13 +8,13 @@ import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Icon } from "@/components/ui/Icon";
 import { useCartCount } from "@/features/cart/use-cart-count";
 import { useHydrated } from "./use-hydrated";
+import { B2BContactLink } from "./b2b-contact-link";
 
 const primaryLinks = [
   { href: "/services", label: "Layanan" },
   { href: "/projects", label: "Projects" },
   { href: "/custom-print", label: "Custom Print" },
   { href: "/shop", label: "Shop" },
-  { href: "/project-brief", label: "Brief Proyek" },
 ] as const;
 
 const utilityLinks = [
@@ -31,7 +31,7 @@ const navigationLinkClassName =
 
 export type PublicHeaderAction = Readonly<{ href: string; label: string }> | null;
 
-export function PublicNavigation({ action }: { action: PublicHeaderAction }) {
+export function PublicNavigation({ action, showB2BContact = false, contactService }: { action: PublicHeaderAction; showB2BContact?: boolean; contactService?: string }) {
   const hydrated = useHydrated();
   const cartCount = useCartCount();
   const pathname = usePathname();
@@ -87,6 +87,7 @@ export function PublicNavigation({ action }: { action: PublicHeaderAction }) {
         {action ? <NiuvaLink href={action.href} size="sm" className="mt-2 w-full justify-center xl:hidden" onClick={() => setOpen(false)}>
           {action.label}
         </NiuvaLink> : null}
+        {showB2BContact ? <B2BContactLink className="mt-2 w-full justify-center xl:hidden" service={contactService} size="sm" /> : null}
       </nav>
     </div>
   );

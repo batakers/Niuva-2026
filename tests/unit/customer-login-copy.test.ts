@@ -31,14 +31,12 @@ vi.mock("@/features/frontend-preview/server", () => ({
   getLiveShopProducts: async () => [],
 }));
 vi.mock("@/app/checkout/checkout-form", () => ({ CheckoutForm: () => null }));
-vi.mock("@/app/project-brief/brief-form", () => ({ BriefForm: () => null }));
 vi.mock("@/app/custom-print/request/request-form", () => ({ RequestForm: () => null }));
 vi.mock("@/app/custom-print/request/reference-request-form", () => ({ ReferenceRequestForm: () => null }));
 
 import CheckoutPage from "@/app/checkout/page";
 import CustomPrintPage from "@/app/custom-print/page";
 import CustomPrintRequestPage from "@/app/custom-print/request/page";
-import ProjectBriefPage from "@/app/project-brief/page";
 
 const UNAVAILABLE_TITLE = "Login Customer belum tersedia";
 const CUSTOM_PRINT_TITLE = "Login Customer belum tersedia pada runtime ini.";
@@ -72,13 +70,6 @@ const gatedPages = [
     description: "Checkout membutuhkan login Customer. Lengkapi konfigurasi autentikasi non-production sebelum melanjutkan.",
     render: () => CheckoutPage({ searchParams: Promise.resolve({}) }),
     loginRedirect: "REDIRECT:/login?returnTo=/checkout",
-  },
-  {
-    name: "project-brief",
-    title: UNAVAILABLE_TITLE,
-    description: "Project Brief memerlukan login Customer sebelum dapat dikirim pada runtime ini.",
-    render: () => ProjectBriefPage({ searchParams: Promise.resolve({}) }),
-    loginRedirect: `REDIRECT:/login?returnTo=${encodeURIComponent("/project-brief")}`,
   },
   {
     name: "custom-print/request",
@@ -126,9 +117,9 @@ describe("Customer login availability copy (R11)", () => {
     });
   });
 
-  it("project-brief and custom-print/request keep the notice without adding a link action", async () => {
+  it("custom-print/request keeps the notice without adding a link action", async () => {
     gatedAuth();
-    render(await ProjectBriefPage({ searchParams: Promise.resolve({}) }));
+    render(await CustomPrintRequestPage({ searchParams: Promise.resolve({}) }));
     expect(within(noticeContaining(UNAVAILABLE_TITLE)).queryByRole("link")).not.toBeInTheDocument();
   });
 

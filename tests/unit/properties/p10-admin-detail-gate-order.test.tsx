@@ -7,10 +7,8 @@ import type { AdminAccessState, AdminPageAccessResult } from "@/app/admin/admin-
 import type { AdminAccess } from "@/lib/auth/admin";
 import { AdminAccessView } from "@/app/admin/admin-access-view";
 import AdminOrderDetailPage from "@/app/admin/orders/[id]/page";
-import AdminInquiryDetailPage from "@/app/admin/inquiries/[id]/page";
 import AdminCustomPrintDetailPage from "@/app/admin/custom-print/[id]/page";
 import AdminCustomPrintReviewPage from "@/app/admin/custom-print/[id]/review/page";
-import AdminB2BProposalPage from "@/app/admin/inquiries/[id]/proposal/page";
 import AdminPortfolioDetailPage from "@/app/admin/portfolio/[id]/page";
 import AdminProductDetailPage from "@/app/admin/products/[id]/page";
 import AdminStockHistoryPage from "@/app/admin/products/[id]/stock/[variantId]/page";
@@ -108,7 +106,6 @@ vi.mock("@/components/niuva/admin-shell", () => ({
   AdminShell: () => null,
 }));
 vi.mock("@/components/niuva/status-notice", () => ({ StatusNotice: () => null }));
-vi.mock("@/app/admin/inquiries/[id]/b2b-quote-panel", () => ({ B2BQuoteAdminPanel: () => null }));
 vi.mock("@/app/admin/products/[id]/stock-adjustment-panel", () => ({ StockAdjustmentPanel: () => null }));
 vi.mock("@/app/admin/actions", () => {
   const action = () => undefined;
@@ -154,10 +151,8 @@ type PageUnderTest = Readonly<{
 
 const PAGES: readonly PageUnderTest[] = [
   { name: "orders/[id]", page: AdminOrderDetailPage, params: ["id"], read: "getOrder" },
-  { name: "inquiries/[id]", page: AdminInquiryDetailPage, params: ["id"], read: "getInquiry" },
   { name: "custom-print/[id]", page: AdminCustomPrintDetailPage, params: ["id"], read: "getCustomPrintRequest" },
   { name: "custom-print/[id]/review", page: AdminCustomPrintReviewPage, params: ["id"], read: "getCustomPrintRequest" },
-  { name: "inquiries/[id]/proposal", page: AdminB2BProposalPage, params: ["id"], read: "getInquiry" },
   { name: "portfolio/[id]", page: AdminPortfolioDetailPage, params: ["id"], read: "getPortfolio" },
   { name: "products/[id]", page: AdminProductDetailPage, params: ["id"], read: "getProduct" },
   { name: "products/[id]/stock/[variantId]", page: AdminStockHistoryPage, params: ["id", "variantId"], read: "getStockHistory" },
@@ -198,8 +193,8 @@ beforeEach(() => {
 });
 
 describe("Property 10: access, then UUID, then data", () => {
-  it("covers admin details and the two Core Operations workspaces", () => {
-    expect(PAGES).toHaveLength(8);
+  it("covers active admin details and the MAKE review workspace", () => {
+    expect(PAGES).toHaveLength(6);
   });
 
   describe.each(PAGES)("$name", (entry) => {

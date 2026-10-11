@@ -8,15 +8,15 @@ web
 
 ## Users
 
-- **Customer B2B:** Tim product, engineering, design, procurement, startup, dan perusahaan yang membutuhkan partner untuk R&D, konsultasi, desain, prototyping, merchandise, atau dukungan manufaktur. Mereka perlu memahami kapabilitas Niuva, mengirim konteks proyek, lalu melanjutkan konsultasi atau quotation.
+- **Customer B2B:** Tim product, engineering, design, procurement, startup, dan perusahaan yang membutuhkan partner untuk R&D, konsultasi, desain, prototyping, merchandise, atau dukungan manufaktur. Mereka perlu memahami kapabilitas Niuva, lalu menghubungi tim melalui WhatsApp untuk membahas kebutuhan hingga kesepakatan.
 - **Customer retail/B2C:** Mahasiswa, hobbyist, pembeli custom gift, customer dengan file 3D, serta customer yang baru memiliki ide atau referensi. Mereka perlu membeli produk ready-made atau mengajukan custom 3D print dengan konteks dan status yang jelas.
-- **Owner/Admin Niuva:** Pengguna internal non-teknis yang perlu mengelola inquiry, order, quotation custom print, product, stock, portfolio, dan pekerjaan yang membutuhkan tindakan tanpa menyentuh source code.
+- **Owner/Admin Niuva:** Pengguna internal non-teknis yang perlu mengelola order, quotation custom print, product, stock, portfolio, dan pekerjaan yang membutuhkan tindakan tanpa menyentuh source code.
 
 MVP melayani ketiga konteks tersebut; belum ada prioritas segmen eksternal yang lebih sempit yang ditetapkan.
 
 ## Product Purpose
 
-Niuva adalah website operasional responsif yang menyatukan company profile, project brief B2B, retail ready-made, dan custom 3D print dalam satu pengalaman. Produk membantu customer memilih jalur yang sesuai—Diskusikan Proyek, Custom 3D Print, atau Shop—lalu menyelesaikan inquiry atau transaksi tanpa kehilangan konteks.
+Niuva adalah website operasional responsif yang menyatukan company profile dan kontak WhatsApp B2B, retail ready-made, dan custom 3D print dalam satu pengalaman. Customer dapat melihat layanan untuk kebutuhan proyek, mengajukan Custom Print, atau berbelanja melalui Shop.
 
 Keberhasilan berarti alur B2B, retail, dan custom print dapat dijalankan end-to-end, sementara Owner/Admin dapat menyelesaikan tugas operasional utama tanpa bantuan teknis.
 
@@ -30,19 +30,19 @@ Janji utama produk: **Idea → Design → Prototype → Finished Product**.
 
 - Pengalaman digunakan melalui browser desktop dan mobile.
 - Customer memulai dari salah satu dari tiga konteks: memiliki ide atau project, sudah memiliki model 3D, atau ingin membeli produk siap jadi.
-- B2B berjalan melalui project brief terstruktur, reference ID, review Owner/Admin, dan kelanjutan komunikasi yang dapat menggunakan WhatsApp.
+- B2B berjalan langsung melalui WhatsApp tanpa login atau Project Brief. Pembahasan awal, negosiasi, finalisasi, dan pencatatan ditangani admin WhatsApp dengan calon klien.
 - Retail berjalan melalui katalog, variant dan stock, cart, Customer Google login, checkout, shipping, payment, serta account/order status.
 - Custom print berjalan melalui upload privat, konfigurasi awal, review dan slicing oleh operator, quotation, approval, payment, produksi, QC, pengukuran paket final, shipping, dan penyelesaian order.
-- Artefak kerja yang perlu dipahami sistem meliputi brief proyek, file 3D, data hasil slicing, quotation, snapshot commercial, payment, shipping, dan riwayat status.
+- Artefak kerja yang perlu dipahami sistem meliputi file 3D, data hasil slicing, quotation, snapshot commercial, payment, shipping, dan riwayat status.
 
 ## Capabilities and Constraints
 
 - Public experience menjelaskan company profile, empat layanan Niuva, proses kerja, project atau case study yang didukung bukti, dan tiga entry path.
-- B2B project brief memerlukan validasi server, reference ID, attachment privat, visibilitas admin, confirmation state, dan jalur tindak lanjut WhatsApp.
+- CTA B2B memakai **Hubungi Kami** tanpa keterangan tambahan di bawah tombol. Project Brief, proposal akun Customer, dan inquiry Admin tidak termasuk pengalaman aktif fase ini. Data historis tetap mengikuti privasi dan retensi yang berlaku.
 - Retail mendukung katalog, category, product variant, harga, stock, cart, checkout setelah Customer Google login, payment, shipping, dan account/order status. Account Customer read-only termasuk scope MVP.
 - Custom 3D print mendukung upload STL, 3MF, dan OBJ. STEP/STP hanya menjadi attachment untuk manual review pada MVP.
 - Harga custom tidak dihitung final secara otomatis dari geometry file. Operator memverifikasi material, slicer weight, print duration, configuration, dan catatan sebelum sistem membuat quote Pricing v1.
-- Owner/Admin menggunakan thin admin dengan Action Queue dan operasi untuk orders, B2B inquiries, custom print reviews, products dan stock, portfolio, serta pricing rules.
+- Owner/Admin menggunakan thin admin dengan Action Queue dan operasi untuk orders, custom print reviews, products dan stock, portfolio, serta pricing rules.
 - Clerk melindungi Owner/Admin. Customer memakai Google OAuth dan session opaque untuk checkout; token atau reference mechanism tetap melindungi akses status atau quote yang relevan.
 - File customer bersifat privat, menggunakan random storage key dan akses bertanda tangan berumur pendek. Batas file binary 100 MiB dan lifecycle 14/60/90 hari sudah ditetapkan; retensi catatan legal/akuntansi masih terbuka.
 - Catalog, stock, shipping, total, payment notification, dan state transition harus authoritative di server. Nilai komersial penting disimpan sebagai snapshot yang tidak berubah; perhitungan uang harus deterministik.

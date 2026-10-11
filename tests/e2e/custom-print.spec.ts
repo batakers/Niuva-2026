@@ -26,8 +26,7 @@ test("custom print landing explains the operator-reviewed path without instant-p
     await expect(page).toHaveURL(/\/custom-print\/request$/);
   }
   await page.goBack();
-  await page.getByRole("link", { name: "Diskusikan kebutuhan khusus" }).click();
-  await expect(page).toHaveURL(/\/project-brief$/);
+  await expect(page.getByRole("link", { name: "Hubungi Kami" }).first()).toHaveAttribute("href", /^https:\/\/wa\.me\//);
 });
 
 test("custom draft cards route to a preselected intake without checkout", async ({ page }) => {

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { B2BContactLink } from "@/components/niuva/b2b-contact-link";
 import { typographySystemTokens as type } from "@/design/typography";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
@@ -22,7 +23,6 @@ export function ProjectDetailView({ project, scenario }: Readonly<{
   const previewSuffix = scenario ? `?preview=${scenario}` : "";
   const cover = project.media.find((media) => media.url);
   const serviceSlug = publicServices.find((service) => service.title === project.serviceLabel)?.slug;
-  const briefHref = serviceSlug ? `/project-brief?service=${encodeURIComponent(serviceSlug)}` : "/project-brief";
   const storySections: StorySection[] = [
     ...(project.challenge ? [{ title: "Konteks dan tantangan", body: project.challenge }] : []),
     ...(project.process ? [{ title: "Proses dan keputusan", body: project.process }] : []),
@@ -31,7 +31,7 @@ export function ProjectDetailView({ project, scenario }: Readonly<{
   ];
 
   return (
-    <PublicShell scope="project-detail" headerAction={{ href: briefHref, label: "Diskusikan Proyek" }}>
+    <PublicShell scope="project-detail" contactService={publicServices.find(service => service.slug === serviceSlug)?.title}>
       <main className="mx-auto max-w-public px-5 py-10 sm:px-8 sm:py-14" id="main-content">
         <NiuvaLink className="min-h-11" href={`/projects${previewSuffix}`} size="sm" variant="outline">
           ← Semua projects{scenario === "examples" ? " contoh" : ""}
@@ -57,7 +57,7 @@ export function ProjectDetailView({ project, scenario }: Readonly<{
             )}
             <div className="mt-7 flex flex-wrap gap-3">
               {serviceSlug ? <NiuvaLink className="min-h-11" href={`/services/${serviceSlug}`} variant="outline">Lihat layanan terkait</NiuvaLink> : null}
-              <NiuvaLink className="min-h-11" href={briefHref}>Diskusikan kebutuhan Anda</NiuvaLink>
+              <B2BContactLink service={project.serviceLabel ?? undefined} />
             </div>
           </div>
           <p className="max-w-xl border-l-2 border-brand-300 pl-5 text-lg leading-8 text-muted-foreground">{project.summary}</p>
@@ -106,7 +106,7 @@ export function ProjectDetailView({ project, scenario }: Readonly<{
             <p className="mb-6 text-base leading-7 text-muted-foreground">
               Setiap kebutuhan membawa batasan yang berbeda. Ceritakan tujuan dan informasi awal yang sudah tersedia.
             </p>
-            <NiuvaLink className="min-h-11" href={briefHref}>Buat project brief</NiuvaLink>
+            <B2BContactLink service={project.serviceLabel ?? undefined} />
           </div>
         </section>
       </main>

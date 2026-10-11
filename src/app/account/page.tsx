@@ -23,7 +23,7 @@ import { ClaimForm } from "./claim-form";
 
 export const metadata: Metadata = {
   title: "Akun Customer · Niuva",
-  description: "Pantau Project Brief, MAKE, quote, dan order Niuva.",
+  description: "Pantau MAKE, quote, dan order Niuva.",
   robots: { index: false, follow: false },
 };
 
@@ -105,7 +105,7 @@ export default async function AccountPage() {
               <p className="text-sm font-medium text-brand-700">Akun Customer</p>
               <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">Pekerjaan dan order Anda.</h1>
               <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground">
-                Pantau Project Brief, MAKE, quote, dan order dari satu akun. Kelola permintaan terkait data Anda melalui Pusat privasi.
+                Pantau MAKE, quote, dan order dari satu akun. Kelola permintaan terkait data Anda melalui Pusat privasi.
               </p>
             </div>
             <CustomerLogoutButton />
@@ -156,10 +156,6 @@ export default async function AccountPage() {
           </Card>
 
           <div className="space-y-6">
-          <Card>
-            <CardHeader><CardTitle>Project Brief</CardTitle><CardDescription>Status inquiry dan proposal B2B Anda.</CardDescription></CardHeader>
-            <CardContent>{work.inquiries.length === 0 ? <p className="text-sm text-muted-foreground">Belum ada Project Brief.</p> : <div className="divide-y divide-border">{work.inquiries.map((inquiry) => <Link className="block py-4 first:pt-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700" href={`/account/inquiries/${inquiry.id}`} key={inquiry.id}><span className="font-semibold">{inquiry.referenceNumber}</span><span className="mt-1 block text-sm text-muted-foreground">{inquiry.status} · {dateFormatter.format(inquiry.createdAt)}{inquiry.quotes[0] ? ` · Proposal v${inquiry.quotes[0].version}: ${inquiry.quotes[0].status}` : ""}</span></Link>)}</div>}</CardContent>
-          </Card>
           <Card>
             <CardHeader><CardTitle>MAKE</CardTitle><CardDescription>Request custom print, estimasi pascareview, dan quote.</CardDescription></CardHeader>
             <CardContent>{work.requests.length === 0 ? <p className="text-sm text-muted-foreground">Belum ada request MAKE.</p> : <div className="divide-y divide-border">{work.requests.map((request) => {

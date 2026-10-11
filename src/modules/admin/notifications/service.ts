@@ -13,7 +13,7 @@ const readSchema = z.object({ ids: z.array(z.uuid()).min(1).max(100).transform(i
 const statusSchema = z.object({ status: z.string().optional(), processingResult: z.string().optional() });
 
 export function requiresNotificationAttention(event: Pick<NotificationEvent, "action" | "entityType" | "afterJson">): boolean {
-  if (["inquiry.submitted", "inquiry.notification.failed", "custom-print.request.submitted", "custom-print.request.model-attached", "custom-print.request.notification.failed", "admin.invitation.failed", "quote.declined", "b2b.quote.declined", "finance.b2b-payment.confirmed"].includes(event.action)) return true;
+  if (["custom-print.request.submitted", "custom-print.request.model-attached", "custom-print.request.notification.failed", "admin.invitation.failed", "quote.declined", "finance.b2b-payment.confirmed"].includes(event.action)) return true;
   const result = statusSchema.safeParse(event.afterJson);
   if (!result.success) return false;
   if (event.action === "payment.webhook.processed") return ["SETTLED", "AMOUNT_MISMATCH", "PROVIDER_TRANSACTION_CONFLICT", "SETTLEMENT_STATUS_CODE_INVALID", "LATE_SETTLEMENT_REFUND_REQUIRED", "PARTIAL_REFUND_REQUIRES_EXCEPTION"].includes(result.data.processingResult ?? "");

@@ -25,7 +25,7 @@ export function LocalDemoActionQueueView({
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
             Read-only projection dari database lokal untuk menunjukkan bahwa
-            project brief yang baru dikirim masuk ke antrean operasional.
+            permintaan Custom Print dan pesanan masuk ke antrean operasional.
           </p>
           <p className="mt-4 rounded-lg border border-warning-border bg-warning-background p-4 text-sm leading-6 text-warning">
             Demo lokal · tidak menggantikan auth Admin atau halaman Admin
@@ -53,8 +53,8 @@ export function LocalDemoActionQueueView({
             <div className="mt-6 rounded-xl border border-border bg-card p-6" role="status">
               <p className="font-semibold">Belum ada pekerjaan di demo.</p>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Kirim project brief dari halaman publik, lalu muat ulang halaman
-                ini untuk melihat reference baru.
+                Ajukan permintaan Custom Print dari halaman publik, lalu muat ulang
+                halaman ini untuk melihat reference baru.
               </p>
             </div>
           ) : (
@@ -66,7 +66,7 @@ export function LocalDemoActionQueueView({
           )}
 
           <div className="mt-6 flex flex-wrap gap-2">
-            <NiuvaLink href="/project-brief" variant="outline" className="min-h-11">Kirim brief lain</NiuvaLink>
+            <NiuvaLink href="/custom-print" variant="outline" className="min-h-11">Buka Custom Print</NiuvaLink>
             <NiuvaLink href="/shop" variant="outline" className="min-h-11">Lanjut ke katalog demo</NiuvaLink>
           </div>
           <p className="mt-4 text-xs leading-5 text-muted-foreground" role="status">

@@ -17,6 +17,6 @@ export default async function AdminQueuePage({
   const gate = await loadAdminPageAccess();
   if (gate.kind === "denied") return <AdminAccessView state={gate.state} />;
   const group = parseActionQueueGroup((await searchParams).group);
-  const destination = group === "orders" ? "/admin/orders?view=needs-action" : group === "custom-print" ? "/admin/custom-print?view=needs-action" : group === "inquiries" ? "/admin/inquiries?view=needs-action" : "/admin";
+  const destination = group === "orders" ? "/admin/orders?view=needs-action" : group === "custom-print" ? "/admin/custom-print?view=needs-action" : "/admin";
   redirect(destination);
 }

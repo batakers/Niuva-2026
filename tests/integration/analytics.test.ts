@@ -41,7 +41,7 @@ describe("analytics aggregate PostgreSQL", () => {
     expect(monthly.traffic?.points.at(-1)?.pageViews).toBe(25);
   });
 
-  it("mencocokkan tiga hasil bisnis dengan record dan menghitung paidAt setelah status lanjut", async () => {
+  it("mengabaikan B2B lama dan menghitung hasil MAKE BUY serta paidAt setelah status lanjut", async () => {
     const createdAt = new Date("2026-09-30T17:01:00.000Z");
     await prisma.b2BInquiry.create({ data: {
       referenceNumber: "BRF-ANALYTICS-1", name: "Fixture", email: "fixture@example.test",
@@ -63,9 +63,9 @@ describe("analytics aggregate PostgreSQL", () => {
       createdAt: new Date("2026-08-01T00:00:00.000Z"), paidAt: createdAt,
     } });
     const report = await new AnalyticsService(repository, () => now).load("30d");
-    expect(report.business).toMatchObject({ briefs: 1, customPrint: 1, paidOrders: 1 });
-    expect(report.business?.points.at(-1)).toMatchObject({ briefs: 1, customPrint: 1, paidOrders: 1 });
-    expect(await prisma.b2BInquiry.count()).toBe(report.business?.briefs);
+    expect(report.business).toMatchObject({ briefs: 0, customPrint: 1, paidOrders: 1 });
+    expect(report.business?.points.at(-1)).toMatchObject({ briefs: 0, customPrint: 1, paidOrders: 1 });
+    expect(await prisma.b2BInquiry.count()).toBe(1);
     expect(await prisma.customPrintRequest.count()).toBe(report.business?.customPrint);
     expect(await prisma.order.count({ where: { paidAt: { gte: reportWindow("30d", now).start } } })).toBe(report.business?.paidOrders);
   });

@@ -33,7 +33,7 @@ async function assertRouteShell(page: Page, route: string, width: number) {
   await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
   await expect(page.locator("[data-product-screen-proof-status]")).toHaveAttribute(
     "data-product-screen-proof-status",
-    route === "/" ? "pending-owner-review" : "approved-owner",
+    "pending-owner-review",
   );
   await assertNoHorizontalOverflow(page, route, width);
 }
@@ -68,19 +68,6 @@ async function assertHomepageMedia(page: Page, record: (value: Omit<MediaDiagnos
   expect(altTexts.every((altText) => altText.length > 0)).toBe(true);
 }
 
-async function fillRequiredBriefFields(page: Page) {
-  const form = page.getByRole("form", { name: "Form project brief" });
-  await form.getByLabel("Nama kontak").fill("Route proof contact");
-  await expect(form.locator('[name="email"]')).toHaveValue("demo-customer@example.test");
-  await form.getByLabel("Nomor WhatsApp").fill("+628000000001");
-  await form.getByLabel("Apa yang ingin dicapai?").fill("Memeriksa alur proof route.");
-  await form.getByLabel("Tahap saat ini").selectOption("CAD");
-  await form.getByLabel("Ceritakan kebutuhan dan batasannya").fill("Bukti teknis untuk route homepage dan project brief.");
-  await form.getByLabel("Target jumlah").fill("1 proof");
-  await form.getByLabel("Target waktu").fill("2026-10-01");
-  await form.getByLabel("Link referensi").fill("https://example.test/route-proof");
-  await form.getByLabel("Persetujuan kerahasiaan").check();
-}
 
 test("authorized product routes have named responsive and semantic proof", async ({ page }, testInfo) => {
   const started = Date.now();
@@ -127,15 +114,16 @@ test("authorized product routes have named responsive and semantic proof", async
     await page.goto("/");
     await assertRouteShell(page, "/", width);
     await assertAccessibleSections(page);
-    await expect(page.getByRole("link", { name: "Diskusikan Proyek" }).first()).toHaveAttribute(
+    await expect(page.getByRole("link", { name: "Hubungi Kami" }).first()).toHaveAttribute(
       "href",
-      "/project-brief",
+      /^https:\/\/wa\.me\//,
     );
 
     await page.goto("/project-brief");
-    await assertRouteShell(page, "/project-brief", width);
+    await expect(page).toHaveURL(/\/services$/);
+    await assertRouteShell(page, "/services", width);
     await assertAccessibleSections(page);
-    await expect(page.getByRole("form", { name: "Form project brief" })).toBeVisible();
+    await expect(page.getByRole("form", { name: "Form project brief" })).toHaveCount(0);
     record({ phase: "layout-complete" });
   }
 
@@ -159,44 +147,13 @@ test("authorized product routes have named responsive and semantic proof", async
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/project-brief");
-  const form = page.getByRole("form", { name: "Form project brief" });
-  const controlsWithoutLabels = await form.locator("input:not([type='hidden']), select, textarea").evaluateAll((controls) =>
-    controls
-      .filter((control) => {
-        const labelled = control.getAttribute("aria-label") || control.getAttribute("aria-labelledby") ||
-          (control instanceof HTMLInputElement || control instanceof HTMLSelectElement || control instanceof HTMLTextAreaElement
-            ? control.labels?.length
-            : undefined);
-        return !labelled;
-      })
-      .map((control) => control.outerHTML.slice(0, 120)),
-  );
-  expect(controlsWithoutLabels).toEqual([]);
-
-  await page.getByRole("button", { name: "Kirim project brief" }).click();
-  await expect(page.getByRole("alert").filter({ hasText: "Periksa kembali brief Anda." })).toBeVisible();
-  await expect(form.locator("div[tabindex='-1']").first()).toBeFocused();
-  await form.getByRole("link", { name: /Nama kontak/ }).click();
-  await expect(form.getByLabel("Nama kontak")).toBeFocused();
-
-  await page.reload();
-  await page.route("**/api/project-brief", async (route) => {
-    await route.fulfill({
-      status: 503,
-      contentType: "application/json",
-      body: JSON.stringify({ error: "proof failure" }),
-    });
-  });
-  await fillRequiredBriefFields(page);
-  await page.getByRole("button", { name: "Kirim project brief" }).click();
-  await expect(page.getByRole("alert").filter({ hasText: "Project brief belum terkirim." })).toBeVisible();
-  await expect(page.getByLabel("Nama kontak")).toHaveValue("Route proof contact");
-  await page.getByRole("button", { name: "Coba lagi" }).click();
-  await expect(page.getByRole("alert").filter({ hasText: "Project brief belum terkirim." })).toHaveCount(0);
-
-  await expect(page.getByText("Lampiran referensi — belum tersedia")).toBeVisible();
-  await expect(page.locator("input[type='file']")).toBeDisabled();
-  expect(consoleErrors.filter((message) => !message.includes("status of 503"))).toEqual([]);
+  await expect(page).toHaveURL(/\/services$/);
+  const contact = page.getByRole("main").getByRole("link", { name: "Hubungi Kami" }).first();
+  await contact.focus();
+  await expect(contact).toBeFocused();
+  await expect(contact).toHaveAttribute("href", /^https:\/\/wa\.me\//);
+  await expect(page.getByRole("form", { name: "Form project brief" })).toHaveCount(0);
+  expect(consoleErrors).toEqual([]);
   expect(pageErrors).toEqual([]);
   record({ phase: "proof-complete" });
   } catch (error) {

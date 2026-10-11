@@ -16,22 +16,12 @@ export class PrismaActionQueueRepository
 
   async listSignals(): Promise<readonly ActionQueueSignal[]> {
     const [
-      newInquiries,
       submittedCustomPrintRequests,
       quoteReadyRequests,
       draftQuotes,
       orderSignals,
       shippingExceptions,
     ] = await Promise.all([
-      this.prisma.b2BInquiry.findMany({
-        orderBy: [{ updatedAt: "asc" }, { id: "asc" }],
-        select: {
-          id: true,
-          referenceNumber: true,
-          updatedAt: true,
-        },
-        where: { status: "NEW", accountClosedAt: null },
-      }),
       this.prisma.customPrintRequest.findMany({
         orderBy: [{ updatedAt: "asc" }, { id: "asc" }],
         select: {
@@ -108,14 +98,6 @@ export class PrismaActionQueueRepository
     const heldOrders = new Set(paymentSignals.map((signal) => signal.entityId));
 
     return [
-      ...newInquiries.map(
-        (record): ActionQueueSignal => ({
-          entityId: record.id,
-          kind: "B2B_INQUIRY",
-          reference: record.referenceNumber,
-          sourceUpdatedAt: record.updatedAt,
-        }),
-      ),
       ...submittedCustomPrintRequests.map(
         (record): ActionQueueSignal => ({
           entityId: record.id,

@@ -237,7 +237,7 @@ describe("Private upload route integration", () => {
     expect(storageMock.deleteObject).not.toHaveBeenCalled();
   });
 
-  it("binds a confirmed private object to a Project Brief and verifies ownership", async () => {
+  it("does not consume a confirmed private upload through the retired brief route", async () => {
     const intentResponse = await postUploadIntent(
       publicRequest("/api/uploads/intents", {
         mimeType: "model/stl",
@@ -288,37 +288,10 @@ describe("Private upload route integration", () => {
       }),
     );
 
-    expect(briefResponse.status).toBe(201);
-    const briefBody = (await briefResponse.json()) as Record<string, unknown>;
-    const referenceNumber = briefBody.referenceNumber;
-    expect(referenceNumber).toMatch(/^INQ-[0-9]{8}-[A-Z0-9]{8}$/);
-    if (typeof referenceNumber !== "string") {
-      throw new Error("Project Brief tidak mengembalikan reference number.");
-    }
-
-    await expect(
-      prisma.b2BInquiry.findUnique({
-        select: {
-          files: { select: { fileId: true } },
-          referenceNumber: true,
-          status: true,
-        },
-        where: { referenceNumber },
-      }),
-    ).resolves.toMatchObject({
-      files: [{ fileId }],
-      referenceNumber,
-      status: "NEW",
-    });
-    await expect(
-      prisma.storedFile.findUnique({
-        select: { storageKey: true, uploadStatus: true },
-        where: { id: fileId },
-      }),
-    ).resolves.toMatchObject({
-      storageKey: pending?.storageKey,
-      uploadStatus: "VERIFIED",
-    });
+    expect(briefResponse.status).toBe(410);
+    expect(await prisma.b2BInquiry.count()).toBe(0);
+    expect(await prisma.b2BInquiryFile.count()).toBe(0);
+    expect((await prisma.storedFile.findUniqueOrThrow({ where: { id: fileId } })).uploadStatus).toBe("UPLOADED");
     expect(storageMock.deleteObject).not.toHaveBeenCalled();
   });
 

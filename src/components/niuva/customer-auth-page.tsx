@@ -71,7 +71,7 @@ export async function CustomerAuthPage({ mode, searchParams }: { mode: CustomerA
   const error = first(params.error);
   const status = first(params.status);
   const context = returnTo.split(/[?#]/)[0];
-  const description = (mode === "login" || mode === "register") ? ({ "/checkout": "Masuk atau buat akun untuk melanjutkan checkout Anda.", "/custom-print/request": "Masuk atau buat akun untuk melanjutkan permintaan Custom Print Anda.", "/project-brief": "Masuk atau buat akun untuk melanjutkan Project Brief Anda." } as Record<string, string>)[context] ?? copy[mode].description : copy[mode].description;
+  const description = (mode === "login" || mode === "register") ? ({ "/checkout": "Masuk atau buat akun untuk melanjutkan checkout Anda.", "/custom-print/request": "Masuk atau buat akun untuk melanjutkan permintaan Custom Print Anda." } as Record<string, string>)[context] ?? copy[mode].description : copy[mode].description;
   const linkClass = cn(focus, "inline-flex min-h-11 items-center text-sm font-medium text-primary underline underline-offset-4");
   return <div className="flex min-h-svh flex-col bg-background font-sans text-foreground" data-foundation-propagation="approved" data-foundation-scope="customer-auth" data-typography-propagation="approved" data-typography-version="1.0" data-product-screen-proof-status="pending-owner-review" data-product-screen-functional={capabilities.password ? "server-backed" : "capability-gated"} data-runtime-mode={isLocalDemoMode() ? "demo" : "standard"}>
     <a href="#main-content" className={cn(focus, "sr-only z-50 bg-background px-4 py-3 focus:not-sr-only focus:fixed focus:left-4 focus:top-4")}>Lewati ke konten utama</a>

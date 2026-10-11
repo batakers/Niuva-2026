@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PublicShell } from "@/components/niuva/public-shell";
+import { B2BContactLink } from "@/components/niuva/b2b-contact-link";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
-import { Icon } from "@/components/ui/Icon";
 import { typographySystemTokens as type } from "@/design/typography";
 import { publicServices } from "@/features/public/company-content";
 import { buildPageSocialMetadata } from "@/lib/site-metadata";
@@ -32,14 +32,14 @@ export default function ServicesPage() {
               <h1 className={`${type.display.className} mt-4 max-w-3xl`}>Dukungan yang mengikuti tahap proyek Anda.</h1></div>
             <div className="max-w-lg space-y-5 lg:pl-8">
               <p className="text-lg leading-8 text-muted-foreground">Mulai dari kebutuhan yang belum terpetakan, diskusi tim, desain yang perlu diuji, atau produk beridentitas brand. Pilih titik masuk yang paling dekat dengan kondisi Anda.</p>
-              <NiuvaLink href="/project-brief" className="min-h-11 gap-2">Diskusikan kebutuhan <Icon aria-hidden="true" className="size-4" name="arrow-up-right" /></NiuvaLink>
+              <B2BContactLink />
             </div>
           </div>
         </section>
         <section className="mx-auto max-w-public px-5 py-12 sm:px-8 sm:py-16" aria-labelledby="choose-service-title">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1fr)] lg:items-end">
             <div><p className="text-sm font-medium text-brand-700">Titik mulai</p><h2 id="choose-service-title" className={`${type.heading.className} mt-3`}>Cari layanan dari pekerjaan yang perlu dilakukan.</h2></div>
-            <p className="max-w-2xl text-base leading-7 text-muted-foreground">Keempat layanan dapat saling melengkapi. Detailnya membantu Anda melihat input, arah kerja, dan contoh proyek sebelum mengirim brief.</p>
+            <p className="max-w-2xl text-base leading-7 text-muted-foreground">Keempat layanan dapat saling melengkapi. Lihat kebutuhan awal, proses kerja, dan contoh proyek sebelum menghubungi tim Niuva.</p>
           </div>
           <nav aria-label="Lompat ke layanan" className="mt-8 flex flex-wrap gap-2">
             {publicServices.map((service) => <Link className="inline-flex min-h-11 items-center rounded-lg border border-border bg-card px-4 text-sm font-medium underline-offset-4 hover:border-brand-400 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`#${service.slug}`} key={service.slug}>{service.title}</Link>)}
@@ -58,7 +58,7 @@ export default function ServicesPage() {
                 </dl>
                 <div className="mt-5 flex flex-wrap gap-3">
                   <NiuvaLink className="min-h-11" href={`/services/${service.slug}`} variant="outline">Lihat detail layanan</NiuvaLink>
-                  <NiuvaLink className="min-h-11" href={`/project-brief?service=${encodeURIComponent(service.slug)}`} aria-label={`Buat brief untuk ${service.title.toLowerCase()}`}>Buat brief layanan ini</NiuvaLink>
+                  <B2BContactLink service={service.title} />
                 </div>
               </section>
             ))}
@@ -67,7 +67,7 @@ export default function ServicesPage() {
         <section className="border-t border-border bg-card">
           <div className="mx-auto grid max-w-public gap-6 px-5 py-12 sm:px-8 sm:py-16 md:grid-cols-2 md:items-center">
             <h2 className={type.heading.className}>Belum tahu harus mulai dari mana?</h2>
-            <div><p className="mb-5 text-base leading-7 text-muted-foreground">Tidak perlu menentukan semua detail sekarang. Tujuan dan batasan awal membantu kita memilih pembahasan yang relevan.</p><div className="flex flex-wrap gap-3"><NiuvaLink className="min-h-11" href="/project-brief">Ceritakan konteks proyek</NiuvaLink><NiuvaLink className="min-h-11" href="/projects" variant="outline">Lihat projects</NiuvaLink></div></div>
+            <div><p className="mb-5 text-base leading-7 text-muted-foreground">Ceritakan kebutuhan proyek Anda kepada tim Niuva. Pembahasan kebutuhan dan penawaran dilanjutkan melalui WhatsApp.</p><div className="flex flex-wrap gap-3"><B2BContactLink /><NiuvaLink className="min-h-11" href="/projects" variant="outline">Lihat projects</NiuvaLink></div></div>
           </div>
         </section>
       </main>

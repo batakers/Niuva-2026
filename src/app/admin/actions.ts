@@ -2,14 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import type { OrderStatus } from "@/generated/prisma/client";
-import type { InquiryStatus } from "@/generated/prisma/client";
 import { CatalogService } from "@/modules/catalog/service";
 import { CustomPrintService } from "@/modules/custom-print/service";
 import { CustomPrintAccessService } from "@/modules/custom-print/access-service";
 import { CustomPrintEstimateService } from "@/modules/custom-print/estimate";
 import { PrivateFileDownloadService } from "@/modules/files/download-service";
-import { InquiryService } from "@/modules/inquiry/service";
-import { B2BQuoteService } from "@/modules/inquiry/b2b-quote";
 import { OrderStatusService } from "@/modules/order/status-service";
 import { PortfolioService } from "@/modules/portfolio/service";
 import { PricingRuleAdminService } from "@/modules/pricing/admin-service";
@@ -51,15 +48,6 @@ const orderStatuses = new Set<OrderStatus>([
   "WAITING_FOR_APPROVAL",
   "WAITING_PAYMENT",
   "WAITING_SHIPPING_PAYMENT",
-]);
-const inquiryStatuses = new Set<InquiryStatus>([
-  "CLOSED",
-  "CONTACTED",
-  "LOST",
-  "NEW",
-  "QUALIFIED",
-  "QUOTED",
-  "WON",
 ]);
 
 export const transitionOrderAction: AdminAction = async (_previous, formData) => {
@@ -472,40 +460,6 @@ export const replacePortfolioMediaAction: AdminAction = async (_previous, formDa
   } catch (error) {
     return errorStateFrom(error);
   }
-};
-
-export const transitionInquiryAction: AdminAction = async (_previous, formData) => {
-  const inquiryId = text(formData, "inquiryId");
-  const current = text(formData, "currentStatus");
-  const next = text(formData, "nextStatus");
-  if (!inquiryId || !inquiryStatuses.has(current as InquiryStatus) || !inquiryStatuses.has(next as InquiryStatus)) return errorState("Status inquiry tidak valid.");
-  try {
-    await new InquiryService().transitionStatus(inquiryId, current as InquiryStatus, next as InquiryStatus);
-    revalidatePath(`/admin/inquiries/${inquiryId}`);
-    revalidatePath("/admin/inquiries");
-    revalidateAdminWork();
-    return successState("Status inquiry berhasil diperbarui.");
-  } catch (error) {
-    return errorStateFrom(error);
-  }
-};
-
-export const sendB2BQuoteAction: AdminAction = async (_previous, formData) => {
-  const inquiryId = text(formData, "inquiryId");
-  const lineItems = text(formData, "lineItemsText").split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((line) => {
-    const separator = line.lastIndexOf("|");
-    return separator < 0 ? { name: line, amountRp: "" } : {
-      name: line.slice(0, separator).trim(), amountRp: line.slice(separator + 1).trim(),
-    };
-  });
-  try {
-    await new B2BQuoteService().send({ inquiryId, scope: text(formData, "scope"),
-      assumptions: text(formData, "assumptions"), lineItems, validUntil: text(formData, "validUntil") });
-    revalidatePath(`/admin/inquiries/${inquiryId}`);
-    revalidatePath(`/admin/inquiries/${inquiryId}/proposal`);
-    revalidatePath(`/account/inquiries/${inquiryId}`);
-    return successState("Proposal B2B versi baru dikirim ke akun customer. Persetujuan tidak membuat order atau pembayaran.");
-  } catch (error) { return errorStateFrom(error); }
 };
 
 function text(formData: FormData, name: string): string {

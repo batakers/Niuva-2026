@@ -1,19 +1,15 @@
 import { expect, test } from "@playwright/test";
 import { loginCustomer } from "./helpers/customer";
 
-test("DEVELOP service selection stays editable and ignores unknown slugs", async ({ page }) => {
-  await loginCustomer(page);
-  await page.goto("/services");
-  const serviceLink = page.locator('a[href="/project-brief?service=research-development"]').first();
-  await expect(serviceLink).toBeVisible();
-  await serviceLink.click();
-  const selectedService = page.getByLabel("Dukungan yang dicari (opsional)");
-  await expect(selectedService).toHaveValue("research-development");
-  await selectedService.selectOption("design-prototyping");
-  await expect(selectedService).toHaveValue("design-prototyping");
+test("DEVELOP service links open contextual WhatsApp and legacy entry ignores unknown slugs", async ({ page }) => {
+  await page.goto("/services/research-development");
+  const contact = page.getByRole("main").getByRole("link", { name: "Hubungi Kami" }).first();
+  const href = new URL((await contact.getAttribute("href"))!);
+  expect(href.origin).toBe("https://wa.me");
+  expect(href.searchParams.get("text")).toContain("Research & Development");
   await page.goto("/project-brief?service=unknown-service");
-  await expect(page.getByLabel("Dukungan yang dicari (opsional)")).toHaveValue("");
-  await expect(page.getByLabel("Target waktu (jika sudah tahu)")).not.toHaveAttribute("required");
+  await expect(page).toHaveURL(/\/services$/);
+  await expect(page.getByRole("form", { name: "Form project brief" })).toHaveCount(0);
 });
 
 test("MAKE reference intake works without private storage when database is available", async ({ page }) => {

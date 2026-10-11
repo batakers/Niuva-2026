@@ -15,26 +15,26 @@ const generatedAt = new Date("2026-09-11T08:00:00.000Z");
 function item(overrides: Partial<ActionQueueItem> = {}): ActionQueueItem {
   return {
     attention: "STANDARD",
-    href: "/admin/inquiries/inquiry-1",
-    id: "action-queue:B2B_INQUIRY:inquiry-1",
-    kind: "B2B_INQUIRY",
-    nextAction: "Tinjau brief proyek baru",
-    reference: "BRF-NEW-1",
+    href: "/admin/custom-print/request-1",
+    id: "action-queue:CUSTOM_PRINT_REVIEW:request-1",
+    kind: "CUSTOM_PRINT_REVIEW",
+    nextAction: "Tinjau permintaan cetak",
+    reference: "CP-NEW-1",
     sourceUpdatedAt: new Date("2026-09-11T05:00:00.000Z"),
-    title: "Brief proyek baru",
+    title: "Permintaan cetak baru",
     ...overrides,
   };
 }
 
 function result(items: readonly ActionQueueItem[]): ActionQueueResult {
-  return { summary: { groups: { inquiries: items.filter(item => item.kind === "B2B_INQUIRY").length, "custom-print": items.filter(item => ["CUSTOM_PRINT_REVIEW", "QUOTE_PREPARATION", "QUOTE_SEND"].includes(item.kind)).length, orders: items.filter(item => !["B2B_INQUIRY", "CUSTOM_PRINT_REVIEW", "QUOTE_PREPARATION", "QUOTE_SEND"].includes(item.kind)).length }, exceptions: items.filter(item => item.attention === "EXCEPTION").length }, filteredTotal: items.length, generatedAt, group: "all", items, priorityItems: items.slice(0, 5), totalOpen: items.length };
+  return { summary: { groups: { "custom-print": items.filter(item => ["CUSTOM_PRINT_REVIEW", "QUOTE_PREPARATION", "QUOTE_SEND"].includes(item.kind)).length, orders: items.filter(item => !["B2B_INQUIRY", "CUSTOM_PRINT_REVIEW", "QUOTE_PREPARATION", "QUOTE_SEND"].includes(item.kind)).length }, exceptions: items.filter(item => item.attention === "EXCEPTION").length }, filteredTotal: items.length, generatedAt, group: "all", items, priorityItems: items.slice(0, 5), totalOpen: items.length };
 }
 
 describe("AdminActionQueueView", () => {
   it("carries the selected inbox context on record links", () => {
-    render(<AdminActionQueueView role="ADMIN" result={{ ...result([item()]), group: "inquiries" }} />);
-    for (const link of screen.getAllByRole("link", { name: "BRF-NEW-1" })) {
-      expect(new URL(link.getAttribute("href")!, "https://niuva.test").searchParams.get("returnTo")).toBe("/admin/queue?group=inquiries");
+    render(<AdminActionQueueView role="ADMIN" result={{ ...result([item()]), group: "custom-print" }} />);
+    for (const link of screen.getAllByRole("link", { name: "CP-NEW-1" })) {
+      expect(new URL(link.getAttribute("href")!, "https://niuva.test").searchParams.get("returnTo")).toBe("/admin/queue?group=custom-print");
     }
   });
   it("renders safe server-derived work rows with textual exception context", () => {

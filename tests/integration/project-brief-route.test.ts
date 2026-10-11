@@ -28,7 +28,6 @@ vi.mock("@/modules/payment/midtrans", () => ({
 import { Prisma } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { PrismaActionQueueRepository } from "@/modules/admin/action-queue-repository";
-import { ActionQueueService } from "@/modules/admin/action-queue-service";
 import { PrismaAdminProfileRepository } from "@/modules/admin/repository";
 import { requireAdminForSession } from "@/lib/auth/admin";
 import { POST as postCheckout } from "@/app/api/checkout/route";
@@ -104,145 +103,39 @@ beforeEach(async () => {
 afterAll(cleanIntegrationDatabase);
 
 describe("Project Brief route integration", () => {
-  it("rejects a brief without a Customer session before storing anything", async () => {
+  it("retires the brief without authenticating or storing anything", async () => {
     customerAuthMocks.requireCustomer.mockRejectedValueOnce(appError("UNAUTHORIZED"));
     const response = await postProjectBrief(new Request("http://127.0.0.1:3000/api/project-brief", {
       body: JSON.stringify({ confidentialityAck: true, currentStage: "IDEA", description: "Ide awal" }),
       headers: { "content-type": "application/json", origin: "http://127.0.0.1:3000" },
       method: "POST",
     }));
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(410);
+    expect(customerAuthMocks.requireCustomer).not.toHaveBeenCalled();
     await expect(prisma.b2BInquiry.count()).resolves.toBe(0);
   });
 
-  it("stores an IDEA brief without a target date or reference", async () => {
-    const payload = {
-      confidentialityAck: true,
-      currentStage: "IDEA",
-      description: "Gagasan awal untuk diskusi.",
-      email: "idea@example.test",
-      name: "Idea Client",
-      phone: "+628000000000",
-      preferredService: "research-development",
-      projectGoal: "Mencari arah prototipe",
-      targetQuantity: "Belum pasti, sekitar satu prototipe",
-    };
+
+
+  it("rejects valid brief payloads and keeps historical inquiries outside the action queue", async () => {
+    const legacy = await prisma.b2BInquiry.create({ data: {
+      referenceNumber: "INQ-LEGACY-FIXTURE", publicTokenHash: "legacy-fixture",
+      name: "Legacy Customer", email: "legacy@example.test", phone: "+628000000000",
+      projectGoal: "Historical project", currentStage: "IDEA", description: "Historical fixture",
+      targetQuantity: "1", confidentialityAck: true,
+    } });
     const response = await postProjectBrief(new Request("http://127.0.0.1:3000/api/project-brief", {
-      body: JSON.stringify(payload),
-      headers: { "content-type": "application/json", origin: "http://127.0.0.1:3000" },
       method: "POST",
+      headers: { "content-type": "application/json", origin: "http://127.0.0.1:3000" },
+      body: JSON.stringify({ name: "New Customer", phone: "+628000000000", projectGoal: "New project",
+        currentStage: "IDEA", description: "A complete former intake payload.", targetQuantity: "1", confidentialityAck: true }),
     }));
-    expect(response.status).toBe(201);
-    const body = (await response.json()) as { referenceNumber: string };
-    await expect(prisma.b2BInquiry.findUniqueOrThrow({
-      select: { preferredService: true, referenceLink: true, targetDeadline: true },
-      where: { referenceNumber: body.referenceNumber },
-    })).resolves.toEqual({
-      preferredService: "research-development",
-      referenceLink: null,
-      targetDeadline: null,
-    });
-  });
-
-  it("persists a valid brief and exposes it to the Action Queue", async () => {
-    const response = await postProjectBrief(
-      new Request("http://127.0.0.1:3000/api/project-brief", {
-        body: JSON.stringify({
-          confidentialityAck: true,
-          currentStage: "CAD",
-          description: "Integration route-to-database smoke.",
-          email: "integration@example.test",
-          name: "Integration Client",
-          phone: "+628000000000",
-          projectGoal: "Verify the Project Brief operational path",
-          referenceLink: "https://example.test/reference",
-          targetDeadline: "2026-10-01",
-          targetQuantity: "1 prototype",
-        }),
-        headers: {
-          "content-type": "application/json",
-          origin: "http://127.0.0.1:3000",
-        },
-        method: "POST",
-      }),
-    );
-
-    expect(response.status).toBe(201);
-    expect(response.headers.get("x-correlation-id")).toMatch(/^[0-9a-f-]{36}$/);
-
-    const body = (await response.json()) as Record<string, unknown>;
-    expect(typeof body.inquiryId).toBe("string");
-    expect(body).not.toHaveProperty("accessToken");
-    expect(body.referenceNumber).toMatch(/^INQ-[0-9]{8}-[A-Z0-9]{8}$/);
-
-    const referenceNumber = body.referenceNumber;
-    if (typeof referenceNumber !== "string") {
-      throw new Error("Response tidak mengembalikan reference number.");
-    }
-
-    const inquiry = await prisma.b2BInquiry.findUnique({
-      select: {
-        currentStage: true,
-        email: true,
-        id: true,
-        name: true,
-        referenceLink: true,
-        referenceNumber: true,
-        status: true,
-      },
-      where: { referenceNumber },
-    });
-
-    expect(inquiry).not.toBeNull();
-    if (inquiry === null) {
-      throw new Error("Inquiry tidak tersimpan pada database test.");
-    }
-
-    expect(inquiry).toMatchObject({
-      currentStage: "CAD",
-      email: "integration-customer@example.test",
-      name: "Integration Client",
-      referenceLink: "https://example.test/reference",
-      referenceNumber,
-      status: "NEW",
-    });
-
-    await expect(
-      prisma.auditLog.findFirst({
-        select: { action: true, entityId: true, entityType: true },
-        where: { action: "inquiry.submitted", entityId: inquiry.id },
-      }),
-    ).resolves.toEqual({
-      action: "inquiry.submitted",
-      entityId: inquiry.id,
-      entityType: "B2BInquiry",
-    });
-
-    // The service now authorizes; the DB is truncated per test, so seed the Owner profile.
-    await prisma.adminProfile.create({
-      data: { authUser: { create: { id: "clerk_test_owner", email: "project-admin@example.test", name: "Fixture Owner" } }, clerkUserId: "clerk_test_owner", isActive: true, role: "OWNER" },
-    });
-
-    const queue = await new ActionQueueService({
-      authorize: () =>
-        requireAdminForSession(
-          { userId: "clerk_test_owner", mfaVerified: true, twoFactorEnabled: true },
-          new PrismaAdminProfileRepository(prisma),
-        ),
-      now: () => new Date("2026-09-14T00:00:00.000Z"),
-      repository: new PrismaActionQueueRepository(prisma),
-    }).list();
-
-    expect(queue.items).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          kind: "B2B_INQUIRY",
-          nextAction: "Tinjau brief proyek baru",
-          reference: referenceNumber,
-          title: "Brief proyek baru",
-        }),
-      ]),
-    );
+    expect(response.status).toBe(410);
+    expect(customerAuthMocks.requireCustomer).not.toHaveBeenCalled();
+    expect(await prisma.b2BInquiry.count()).toBe(1);
+    expect(await prisma.auditLog.count({ where: { action: "inquiry.submitted" } })).toBe(0);
+    expect(await new PrismaActionQueueRepository(prisma).listSignals()).toEqual([]);
+    expect((await prisma.b2BInquiry.findUniqueOrThrow({ where: { id: legacy.id } })).status).toBe("NEW");
   });
 
   it("resolves an active Clerk user through the database-owned AdminProfile", async () => {

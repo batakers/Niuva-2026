@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { loginCustomer } from "./helpers/customer";
 
 test("public homepage exposes the Niuva narrative and entry paths", async ({ page }) => {
   await page.goto("/");
@@ -10,9 +9,9 @@ test("public homepage exposes the Niuva narrative and entry paths", async ({ pag
   await expect(page.getByRole("heading", { name: "Kompetensi yang menghubungkan ide dengan bentuk." })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Satu alur kerja untuk keputusan yang lebih jelas." })).toBeVisible();
   await expect(page.locator("[data-home-section='next-step']")).toBeVisible();
-  await expect(page.locator("header").getByRole("link", { name: "Diskusikan Proyek" })).toHaveAttribute(
+  await expect(page.locator("header").getByRole("link", { name: "Hubungi Kami" })).toHaveAttribute(
     "href",
-    "/project-brief",
+    /^https:\/\/wa\.me\/6285117678901\?text=/,
   );
   await expect(page.locator("[data-homepage] .font-mono")).toHaveCount(0);
   await expect(page.locator("[data-homepage] .font-technical")).toHaveCount(0);
@@ -34,47 +33,22 @@ test("public homepage exposes the Niuva narrative and entry paths", async ({ pag
   await expect(navigation.getByRole("link", { name: "Layanan", exact: true })).toBeVisible();
   await expect(navigation.getByRole("link", { name: "Cart", exact: true })).toBeVisible();
   await expect(navigation.getByRole("link", { name: "Akun", exact: true })).toBeVisible();
-  await expect(navigation.getByRole("link", { name: "Diskusikan Proyek", exact: true })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "Hubungi Kami", exact: true })).toBeVisible();
   await expect(navigation.getByRole("link", { name: "Pilih jalur", exact: true })).toHaveCount(0);
   await expect(navigation.getByRole("link", { name: "Cara kerja", exact: true })).toHaveCount(0);
 });
 
-test("Foundation proof keeps redesigned Home pending visual review and Project Brief accepted", async ({ page }) => {
-  await loginCustomer(page);
+test("Foundation proof keeps Home and the services destination pending visual review", async ({ page }) => {
   await page.goto("/");
-
   const homepage = page.locator("[data-homepage]");
   await expect(homepage).toHaveAttribute("data-foundation-propagation", "approved");
   await expect(homepage).toHaveAttribute("data-foundation-scope", "homepage");
   await expect(homepage).toHaveAttribute("data-product-screen-proof-status", "pending-owner-review");
   await expect(homepage).toHaveAttribute("data-typography-version", "1.0");
-  const homepageFont = await homepage.evaluate(
-    (element) => window.getComputedStyle(element).fontFamily,
-  );
-  expect(homepageFont).toContain("Space Grotesk");
-
+  await expect(homepage).toHaveCSS("font-family", /Space Grotesk/);
   await page.goto("/project-brief");
-
-  const projectBrief = page.locator("[data-project-brief]");
-  await expect(projectBrief).toHaveAttribute("data-foundation-propagation", "approved");
-  await expect(projectBrief).toHaveAttribute("data-foundation-scope", "project-brief");
-  await expect(projectBrief).toHaveAttribute("data-product-screen-functional", "server-backed");
-  await expect(projectBrief).toHaveAttribute("data-product-screen-proof-status", "approved-owner");
-  await expect(page.getByRole("heading", { level: 1, name: "Buat langkah awal proyek jadi jelas." })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Kirim project brief" })).toBeVisible();
-  await expect(page.locator("[data-project-brief-form]")).toBeVisible();
-
-  const projectBriefFont = await projectBrief.evaluate(
-    (element) => window.getComputedStyle(element).fontFamily,
-  );
-  expect(projectBriefFont).toContain("Space Grotesk");
-  await expect(projectBrief.locator("[data-font-family='fraunces']")).toHaveCSS(
-    "font-family",
-    /Fraunces/,
-  );
-  await expect(page.getByLabel(/Perusahaan atau tim/)).not.toHaveAttribute("required");
-  await expect(page.getByLabel(/Nomor WhatsApp/)).toHaveAttribute("required");
-  await expect(page.getByLabel(/Target waktu/)).not.toHaveAttribute("required");
-  await expect(page.locator("[data-motion-system]")).toHaveCount(0);
-  await expect(page.locator("[data-pattern-showcase]")).toHaveCount(0);
+  await expect(page).toHaveURL(/\/services$/);
+  await expect(page.locator("[data-foundation-scope='services']")).toHaveAttribute("data-product-screen-proof-status", "pending-owner-review");
+  await expect(page.getByRole("form", { name: "Form project brief" })).toHaveCount(0);
+  await expect(page.getByRole("main").getByRole("link", { name: "Hubungi Kami" }).first()).toBeVisible();
 });

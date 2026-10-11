@@ -3,6 +3,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { PublicShell } from "@/components/niuva/public-shell";
+import { B2BContactLink } from "@/components/niuva/b2b-contact-link";
 
 import { typographySystemTokens } from "@/design/typography";
 import { EvidenceCard } from "@/components/niuva";
@@ -114,14 +115,7 @@ export default async function Home() {
                   {siteInformation.shortDescription}
                 </p>
                 <div className="mt-6 flex flex-wrap items-center gap-3">
-                  <NiuvaLink
-                    className="gap-2"
-                    href="/project-brief"
-                    size="lg"
-                  >
-                    Diskusikan Proyek
-                    <PathArrow />
-                  </NiuvaLink>
+                  <B2BContactLink />
                   <Link
                     className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-neutral-600 px-4 text-sm font-medium text-neutral-50 transition-colors hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                     href="#project-proof"
@@ -184,7 +178,7 @@ export default async function Home() {
             <div className="mt-10 grid gap-4 lg:grid-cols-12">
               <Link
                 className="group flex min-h-72 flex-col justify-between rounded-xl border border-brand-300 bg-brand-100 p-6 transition-colors hover:border-brand-500 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:p-8 lg:col-span-7"
-                href="/project-brief"
+                href="/services"
               >
                 <div className="flex items-start justify-between gap-4">
                   <span className="text-xs font-medium text-brand-800">
@@ -202,7 +196,7 @@ export default async function Home() {
                   </p>
                 </div>
                 <span className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-brand-950">
-                  Diskusikan Proyek
+                  Lihat layanan
                   <Icon aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-1" name="arrow-right" />
                 </span>
               </Link>
@@ -425,13 +419,7 @@ export default async function Home() {
                   Mulai dari
                 </p>
                 <div className="mt-4 grid gap-2">
-                  <Link
-                    className="inline-flex items-center justify-between gap-3 rounded-lg border border-brand-300 bg-background px-3 py-2.5 text-sm font-semibold text-brand-950 transition-colors hover:border-brand-500 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                    href="/project-brief"
-                  >
-                    Diskusikan Proyek
-                    <PathArrow />
-                  </Link>
+                  <B2BContactLink />
                   <Link
                     className="inline-flex items-center justify-between gap-3 rounded-lg border border-brand-300 bg-background px-3 py-2.5 text-sm font-semibold text-brand-950 transition-colors hover:border-brand-500 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                     href="/services"

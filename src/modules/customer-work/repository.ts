@@ -58,14 +58,7 @@ export class CustomerWorkRepository {
   }
 
   async list(customerId: string) {
-    const [inquiries, requests] = await Promise.all([
-      this.prisma.b2BInquiry.findMany({
-        where: { customerId }, orderBy: { createdAt: "desc" },
-        select: { id: true, referenceNumber: true, status: true, createdAt: true,
-          quotes: { where: { status: { not: "DRAFT" } }, orderBy: { version: "desc" }, take: 1,
-            select: { id: true, status: true, version: true } } },
-      }),
-      this.prisma.customPrintRequest.findMany({
+    const requests = await this.prisma.customPrintRequest.findMany({
         where: { customerId }, orderBy: { createdAt: "desc" },
         select: { id: true, referenceNumber: true, status: true, intakeMode: true, createdAt: true,
           customerPreviewSnapshot: true,
@@ -74,9 +67,8 @@ export class CustomerWorkRepository {
             select: { id: true, status: true, version: true } },
           estimates: { orderBy: { version: "desc" }, take: 1,
             select: { lowerRp: true, upperRp: true, version: true, snapshot: true } } },
-      }),
-    ]);
-    return { inquiries, requests: requests.map((request) => ({ ...request,
+      });
+    return { requests: requests.map((request) => ({ ...request,
       estimates: request.estimates.filter((estimate) => isEstimateCurrent(estimate.snapshot, request.review?.updatedAt)) })) };
   }
 

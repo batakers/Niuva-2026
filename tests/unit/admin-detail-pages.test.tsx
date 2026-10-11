@@ -81,7 +81,6 @@ vi.mock("@/modules/inquiry/b2b-quote", () => ({
   }),
 }));
 
-vi.mock("@/app/admin/inquiries/[id]/b2b-quote-panel", () => ({ B2BQuoteAdminPanel: () => null }));
 vi.mock("@/app/admin/products/[id]/stock-adjustment-panel", () => ({ StockAdjustmentPanel: () => null }));
 vi.mock("@/app/admin/actions", () => ({
   createCustomShippingPaymentAction: vi.fn(),
@@ -108,8 +107,6 @@ vi.mock("@/app/admin/actions", () => ({
 
 import AdminCustomPrintDetailPage from "@/app/admin/custom-print/[id]/page";
 import AdminCustomPrintReviewPage from "@/app/admin/custom-print/[id]/review/page";
-import AdminB2BProposalPage from "@/app/admin/inquiries/[id]/proposal/page";
-import AdminInquiryDetailPage from "@/app/admin/inquiries/[id]/page";
 import AdminOrderDetailPage from "@/app/admin/orders/[id]/page";
 import AdminPortfolioDetailPage from "@/app/admin/portfolio/[id]/page";
 import AdminProductDetailPage from "@/app/admin/products/[id]/page";
@@ -139,10 +136,8 @@ const simpleInvalid = INVALID_IDS.map((id) => ({ id }));
 
 const cases: readonly PageCase[] = [
   { name: "orders/[id]", page: AdminOrderDetailPage, read: () => mocks.service.getOrder, props: simpleProps, validIds: { id: VALID_ID }, invalidIds: simpleInvalid },
-  { name: "inquiries/[id]", page: AdminInquiryDetailPage, read: () => mocks.service.getInquiry, props: simpleProps, validIds: { id: VALID_ID }, invalidIds: simpleInvalid },
   { name: "custom-print/[id]", page: AdminCustomPrintDetailPage, read: () => mocks.service.getCustomPrintRequest, props: simpleProps, validIds: { id: VALID_ID }, invalidIds: simpleInvalid },
   { name: "custom-print/[id]/review", page: AdminCustomPrintReviewPage, read: () => mocks.service.getCustomPrintRequest, props: simpleProps, validIds: { id: VALID_ID }, invalidIds: simpleInvalid },
-  { name: "inquiries/[id]/proposal", page: AdminB2BProposalPage, read: () => mocks.service.getInquiry, props: simpleProps, validIds: { id: VALID_ID }, invalidIds: simpleInvalid },
   { name: "portfolio/[id]", page: AdminPortfolioDetailPage, read: () => mocks.service.getPortfolio, props: simpleProps, validIds: { id: VALID_ID }, invalidIds: simpleInvalid },
   { name: "products/[id]", page: AdminProductDetailPage, read: () => mocks.service.getProduct, props: simpleProps, validIds: { id: VALID_ID }, invalidIds: simpleInvalid },
   {

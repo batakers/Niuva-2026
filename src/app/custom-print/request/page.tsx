@@ -89,7 +89,7 @@ export default async function CustomPrintRequestPage({
                   ? "Upload privat meneruskan file ke ruang penyimpanan tertutup untuk diperiksa operator sebelum estimasi dan produksi."
                   : previewEnabled
                     ? "Preview ini memeriksa metadata dan konfigurasi tanpa mengunggah isi file atau membuat request nyata."
-                    : "Upload custom print belum diaktifkan pada runtime ini. Diskusikan kebutuhan Anda melalui project brief."}
+                    : "Upload custom print belum diaktifkan pada runtime ini. Hubungi tim Niuva melalui WhatsApp untuk membahas kebutuhan Anda."}
               </p>
             </div>
 

@@ -17,39 +17,7 @@ function localTestDatabase(): PrismaClient {
   return new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 }
 
-test("Google login returns to a selected Project Brief and stores an IDEA brief without date or reference", async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/project-brief?service=research-development");
-  await expect(page).toHaveURL(/\/login\?returnTo=%2Fproject-brief%3Fservice%3Dresearch-development$/);
-  await page.getByRole("link", { name: "Lanjutkan dengan Google" }).click();
-  await expect(page).toHaveURL(/\/project-brief\?service=research-development$/);
-  const form = page.getByRole("form", { name: "Form project brief" });
-  await expect(form.getByLabel("Dukungan yang dicari (opsional)")).toHaveValue("research-development");
-  await form.getByLabel("Nama kontak").fill("E2E Account Client");
-  await form.getByLabel("Nomor WhatsApp").fill("+628000000000");
-  await form.getByLabel("Apa yang ingin dicapai?").fill("Memvalidasi konsep prototipe awal.");
-  await form.getByLabel("Tahap saat ini").selectOption("IDEA");
-  await form.getByLabel("Ceritakan kebutuhan dan batasannya").fill("Butuh diskusi fungsi dan bentuk awal produk.");
-  await form.getByLabel("Target jumlah").fill("Sekitar dua unit");
-  await form.getByLabel("Persetujuan kerahasiaan").check();
-  await form.getByRole("button", { name: "Kirim project brief" }).click();
-  await expect(page.getByText("Brief tersimpan.")).toBeVisible();
-  await page.getByRole("link", { name: "Pantau di akun" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Memvalidasi konsep prototipe awal." })).toBeVisible();
-  await expect(page.getByText("Belum diketahui")).toBeVisible();
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
-  const response = await page.reload();
-  const cacheControl = response?.headers()["cache-control"] ?? "";
-  // Next's development server forces no-cache; production uses the private no-store account rule.
-  expect(cacheControl).toMatch(/(?:no-store|no-cache)/);
-  expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(true);
-  for (const width of [390, 1280]) {
-    await page.setViewportSize({ width, height: 900 });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  }
-  await page.getByRole("link", { name: "Kembali ke akun" }).focus();
-  await expect(page.getByRole("link", { name: "Kembali ke akun" })).toBeFocused();
-});
+
 
 test("Google login preserves the reference intake mode", async ({ page }) => {
   await page.goto("/custom-print/request?mode=reference");
@@ -59,36 +27,33 @@ test("Google login preserves the reference intake mode", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Saya baru punya referensi" })).toHaveAttribute("aria-current", "page");
 });
 
-test("account shows and decides an operator B2B proposal without creating an order", async ({ page }) => {
+test("account excludes historical B2B work and leaves its records intact", async ({ page, request }) => {
   await loginCustomer(page);
   const prisma = localTestDatabase();
   try {
     const owner = await prisma.customer.findUniqueOrThrow({ where: { googleSubject: "local-demo-google-subject" } });
     const admin = await prisma.adminProfile.create({ data: { clerkUserId: `e2e_${randomUUID()}`, isActive: true, role: "OWNER" } });
     const inquiry = await prisma.b2BInquiry.create({ data: {
-      referenceNumber: `INQ-20260927-${randomUUID().slice(0, 8).toUpperCase()}`,
-      name: "E2E B2B", email: owner.email, phone: "+628000000000", projectGoal: "Proposal browser",
-      currentStage: "IDEA", description: "Proposal untuk uji keputusan Customer.", targetQuantity: "1",
+      referenceNumber: `INQ-20261011-${randomUUID().slice(0, 8).toUpperCase()}`,
+      name: "E2E B2B", email: owner.email, phone: "+628000000000", projectGoal: "Historical B2B fixture",
+      currentStage: "IDEA", description: "Historical record retained outside the active experience.", targetQuantity: "1",
       confidentialityAck: true, publicTokenHash: randomUUID(), customerId: owner.id,
     } });
     const quote = await prisma.b2BQuote.create({ data: { inquiryId: inquiry.id, version: 1, status: "SENT",
-      scope: "Rancang prototipe browser untuk validasi.", assumptions: "Spesifikasi final menyusul.",
+      scope: "Historical proposal fixture.", assumptions: "No active website workflow.",
       lineItems: [{ name: "Desain", amountRp: "1250000" }], totalRp: "1250000",
       validUntil: new Date(Date.now() + 24 * 60 * 60_000), createdByAdminId: admin.id, sentAt: new Date() } });
     const ordersBefore = await prisma.order.count();
-    await page.goto(`/account/inquiries/${inquiry.id}`);
-    await expect(page.getByText("Rancang prototipe browser untuk validasi.")).toBeVisible();
-    await expect(page.getByText("Total Rp 1250000")).toBeVisible();
-    const decisionResponse = page.waitForResponse(
-      (response) => response.request().method() === "POST" &&
-        new URL(response.url()).pathname === `/api/account/inquiries/${inquiry.id}/quotes/${quote.id}/decision`,
-      { timeout: 15_000 },
-    );
-    await page.getByRole("button", { name: "Setujui proposal" }).click();
-    expect((await decisionResponse).status()).toBe(200);
-    await expect(page.getByText("Proposal disetujui untuk tindak lanjut manual.", { exact: false })).toBeVisible();
-    await expect.poll(async () => (await prisma.b2BQuote.findUniqueOrThrow({ where: { id: quote.id } })).status).toBe("ACCEPTED");
-    expect((await prisma.b2BQuote.findUniqueOrThrow({ where: { id: quote.id } })).decidedByCustomerId).toBe(owner.id);
+    await page.goto("/account");
+    await expect(page.getByRole("heading", { name: "Project Brief", exact: true })).toHaveCount(0);
+    await expect(page.locator('a[href^="/account/inquiries/"]')).toHaveCount(0);
+    expect((await page.goto(`/account/inquiries/${inquiry.id}`))?.status()).toBe(404);
+    const response = await request.post(`/api/account/inquiries/${inquiry.id}/quotes/${quote.id}/decision`, {
+      data: { decision: "ACCEPTED" },
+    });
+    expect(response.status()).toBe(410);
+    expect((await prisma.b2BInquiry.findUniqueOrThrow({ where: { id: inquiry.id } })).projectGoal).toBe("Historical B2B fixture");
+    expect((await prisma.b2BQuote.findUniqueOrThrow({ where: { id: quote.id } })).status).toBe("SENT");
     expect(await prisma.order.count()).toBe(ordersBefore);
   } finally {
     await prisma.$disconnect();

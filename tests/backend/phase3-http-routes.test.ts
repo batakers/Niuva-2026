@@ -166,11 +166,9 @@ describe("Phase 3 public HTTP boundaries", () => {
       }),
     );
 
-    expect(projectBrief.status).toBe(201);
-    await expect(projectBrief.json()).resolves.toEqual({
-      inquiryId: "51194c92-0b89-420e-88df-73ed2deeeab4",
-      referenceNumber: "INQ-20260905-ABCDEFGH",
-    });
+    expect(projectBrief.status).toBe(410);
+    expect(mocks.inquirySubmit).not.toHaveBeenCalled();
+    await expect(projectBrief.json()).resolves.toMatchObject({ error: { code: "B2B_RETIRED" } });
     expect(customPrint.status).toBe(201);
     await expect(customPrint.json()).resolves.toEqual({
       requestId: "f60e715e-c94e-489d-bc69-b28ab2f6ed33",

@@ -79,7 +79,7 @@ describe("Admin search and activity visibility", () => {
     const createCustom = (suffix: string, closed: boolean) => prisma.customPrintRequest.create({ data: { referenceNumber: `${marker}-CUSTOM-${suffix}`, customerName: "Search Fixture", customerEmail: `${randomUUID()}@example.test`, customerPhone: "TEST", materialRequested: "PLA", quantity: 1, publicTokenHash: randomUUID(), accountClosedAt: closed ? new Date() : null } });
     await Promise.all([createOrder("OPEN", false), createOrder("CLOSED", true), createInquiry("OPEN", false), createInquiry("CLOSED", true), createCustom("OPEN", false), createCustom("CLOSED", true)]);
     const results = await new AdminGlobalSearchService(prisma).search(admin, marker);
-    expect(results.filter(item => item.kind !== "MENU").map(item => item.title).sort()).toEqual([`${marker}-B2B-OPEN`, `${marker}-CUSTOM-OPEN`, `${marker}-ORDER-OPEN`].sort());
+    expect(results.filter(item => item.kind !== "MENU").map(item => item.title).sort()).toEqual([`${marker}-CUSTOM-OPEN`, `${marker}-ORDER-OPEN`].sort());
   });
 
   it("hides Owner-only audit events from Admin activity", async () => {

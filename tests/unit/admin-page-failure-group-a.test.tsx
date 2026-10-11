@@ -82,7 +82,6 @@ vi.mock("@/modules/inquiry/b2b-quote", () => ({
     return { listForAdmin: mocks.listQuotes };
   }),
 }));
-vi.mock("@/app/admin/inquiries/[id]/b2b-quote-panel", () => ({ B2BQuoteAdminPanel: () => null }));
 vi.mock("@/app/admin/admin-action-form", () => ({ AdminActionForm: () => null }));
 vi.mock("@/app/admin/actions", () => ({
   createCustomShippingPaymentAction: vi.fn(),
@@ -109,8 +108,6 @@ import {
 } from "@/app/admin/admin-page-failure";
 import AdminCustomPrintPage from "@/app/admin/custom-print/page";
 import AdminCustomPrintDetailPage from "@/app/admin/custom-print/[id]/page";
-import AdminInquiriesPage from "@/app/admin/inquiries/page";
-import AdminInquiryDetailPage from "@/app/admin/inquiries/[id]/page";
 import AdminOrdersPage from "@/app/admin/orders/page";
 import AdminOrderDetailPage from "@/app/admin/orders/[id]/page";
 
@@ -159,10 +156,8 @@ const emptyList = { generatedAt: new Date("2026-01-01T00:00:00Z"), hasNext: fals
 
 const pages: readonly GroupAPage[] = [
   { name: "orders", boundary: "page:/admin/orders", page: AdminOrdersPage, props: listProps, read: () => mocks.service.listOrders, successValue: emptyList, detail: false },
-  { name: "inquiries", boundary: "page:/admin/inquiries", page: AdminInquiriesPage, props: listProps, read: () => mocks.service.listInquiries, successValue: emptyList, detail: false },
   { name: "custom-print", boundary: "page:/admin/custom-print", page: AdminCustomPrintPage, props: listProps, read: () => mocks.service.listCustomPrintRequests, successValue: emptyList, detail: false },
   { name: "orders/[id]", boundary: "page:/admin/orders/[id]", page: AdminOrderDetailPage, props: detailProps, read: () => mocks.service.getOrder, successValue: null, detail: true },
-  { name: "inquiries/[id]", boundary: "page:/admin/inquiries/[id]", page: AdminInquiryDetailPage, props: detailProps, read: () => mocks.service.getInquiry, successValue: null, detail: true },
   { name: "custom-print/[id]", boundary: "page:/admin/custom-print/[id]", page: AdminCustomPrintDetailPage, props: detailProps, read: () => mocks.service.getCustomPrintRequest, successValue: null, detail: true },
 ];
 
@@ -260,7 +255,7 @@ describe("admin custom-print detail secondary reads", () => {
     mocks.service[method].mockRejectedValue(databaseError());
     mocks.service.getCustomPrintRequest.mockResolvedValue(null);
 
-    const result = await run(pages[5] as GroupAPage);
+    const result = await run(pages.find(page => page.name === "custom-print/[id]") as GroupAPage);
 
     expect(result.outcome).toBe("not-found");
     expect(recorded).toHaveLength(0);
@@ -275,7 +270,7 @@ describe("admin custom-print detail secondary reads", () => {
     mocks.service.getCustomPrintRequest.mockResolvedValue({ id: VALID_ID, referenceNumber: "CP-FAILURE-FIXTURE", status: "SUBMITTED", customerId: null, customerName: "Synthetic", customerEmail: "synthetic@example.test", customerPhone: "081234567890", materialRequested: "PLA", colorRequested: null, quantity: 1, intakeMode: "MODEL_READY", modelReady: true, photoCount: 0, files: [], review: null, quotes: [], referenceLink: null, customerPreviewSnapshot: null, updatedAt: new Date(), notes: null, unitConfirmation: null });
     mocks.service.getCustomPrintLinkedOrders.mockResolvedValue([]);
     mocks.service[method].mockRejectedValue(databaseError());
-    const result = await run(pages[5] as GroupAPage);
+    const result = await run(pages.find(page => page.name === "custom-print/[id]") as GroupAPage);
     expect(result.outcome).toBe("rendered");
     expect(recorded).toHaveLength(1);
     expect(recorded[0]).toMatchObject({ boundary: "page:/admin/custom-print/[id]", kind: "DATABASE_UNAVAILABLE", safeContext: { op } });

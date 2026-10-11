@@ -9,7 +9,6 @@ import type { ReportRange } from "@/modules/analytics/contract";
 
 const groupLabels: Record<ActionQueueGroup, string> = {
   all: "Semua",
-  inquiries: "B2B Inquiries",
   "custom-print": "Custom Print",
   orders: "Orders",
 };

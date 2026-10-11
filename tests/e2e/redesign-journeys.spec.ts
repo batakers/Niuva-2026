@@ -6,24 +6,24 @@ test("public navigation keeps the four paths, separate utilities, and contextual
   await page.goto("/");
   const navigation = page.getByRole("navigation", { name: "Navigasi utama" });
   await expect(navigation.locator('[data-navigation-group="primary"] a')).toHaveText([
-    "Layanan", "Projects", "Custom Print", "Shop", "Brief Proyek",
+    "Layanan", "Projects", "Custom Print", "Shop",
   ]);
-  await expect(navigation.getByRole("link", { name: "Brief Proyek" })).toHaveAttribute("href", "/project-brief");
+  await expect(navigation.getByRole("link", { name: "Brief Proyek" })).toHaveCount(0);
   await expect(navigation.locator('[data-navigation-group="utility"] a')).toHaveText(["Cart", "Akun"]);
-  await expect(page.locator("header").getByRole("link", { name: "Diskusikan Proyek" })).toHaveAttribute("href", "/project-brief");
+  await expect(page.locator("header").getByRole("link", { name: "Hubungi Kami" })).toHaveAttribute("href", /^https:\/\/wa\.me\//);
 
   for (const [route, label, href] of [
-    ["/services/design-prototyping", "Buat Project Brief", "/project-brief?service=design-prototyping"],
+    ["/services/design-prototyping", "Hubungi Kami", /^https:\/\/wa\.me\//],
     ["/custom-print", "Pilih titik mulai", "#start-custom"],
     ["/shop?preview=examples", "Lihat Produk", "#catalog"],
     ["/shop/contoh-dock-modular-meja?preview=examples", "Pilih Varian", "#purchase-options"],
-  ]) {
+  ] as const) {
     await page.goto(route);
     await expect(page.locator("header").getByRole("link", { name: label })).toHaveAttribute("href", href);
   }
 
   await page.goto("/cart?preview=examples");
-  await expect(page.locator("header").getByRole("link", { name: "Diskusikan Proyek" })).toHaveCount(0);
+  await expect(page.locator("header").getByRole("link", { name: "Hubungi Kami" })).toHaveCount(0);
 
   await page.setViewportSize({ width: 1024, height: 768 });
   await page.goto("/");
@@ -40,12 +40,11 @@ test("public navigation keeps the four paths, separate utilities, and contextual
 });
 
 test("Home primary action stays above the fold and DEVELOP paths keep service context", async ({ page }) => {
-  await loginCustomer(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
   for (const [width, height] of [[390, 844], [1280, 720]]) {
     await page.setViewportSize({ width, height });
     await page.goto("/");
-    const action = page.getByRole("main").getByRole("link", { name: "Diskusikan Proyek" }).first();
+    const action = page.getByRole("main").getByRole("link", { name: "Hubungi Kami" }).first();
     const bounds = await action.boundingBox();
     expect(bounds, `Home CTA at ${width}px`).not.toBeNull();
     expect((bounds?.y ?? height) + (bounds?.height ?? 0), `Home CTA at ${width}px`).toBeLessThanOrEqual(height);
@@ -54,17 +53,18 @@ test("Home primary action stays above the fold and DEVELOP paths keep service co
   await page.getByRole("navigation", { name: "Navigasi utama" }).getByRole("link", { name: "Layanan" }).click();
   await page.getByRole("link", { name: "Lihat detail layanan" }).nth(2).click();
   await expect(page).toHaveURL(/\/services\/design-prototyping$/);
-  await page.getByRole("link", { name: "Diskusikan layanan ini" }).click();
-  await expect(page.locator('[name="preferredService"]')).toHaveValue("design-prototyping");
+  const serviceContact = page.getByRole("main").getByRole("link", { name: "Hubungi Kami" }).first();
+  const serviceUrl = new URL((await serviceContact.getAttribute("href"))!);
+  expect(serviceUrl.searchParams.get("text")).toContain("Design & Prototyping");
 
   await page.goto("/");
   await page.locator("#project-proof article a").first().click();
   const serviceHref = await page.getByRole("link", { name: "Lihat layanan terkait" }).getAttribute("href");
   expect(serviceHref).toMatch(/^\/services\//);
-  const briefHref = await page.getByRole("link", { name: "Buat project brief" }).getAttribute("href");
-  expect(briefHref).toMatch(/^\/project-brief\?service=/);
-  await page.getByRole("link", { name: "Buat project brief" }).click();
-  await expect(page.locator('[name="preferredService"]')).not.toHaveValue("");
+  const contact = page.getByRole("main").getByRole("link", { name: "Hubungi Kami" }).first();
+  const contactUrl = new URL((await contact.getAttribute("href"))!);
+  expect(contactUrl.origin).toBe("https://wa.me");
+  expect(contactUrl.searchParams.get("text")).toMatch(/^Halo Niuva, saya ingin membahas kebutuhan .+\.$/);
 });
 
 test("MAKE offers the available intake and BUY continues from catalog to cart", async ({ page }) => {

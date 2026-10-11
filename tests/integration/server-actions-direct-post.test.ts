@@ -92,7 +92,6 @@ function errorCodes(): string[] {
 
 let productId = "";
 let variantId = "";
-let inquiryId = "";
 
 beforeEach(async () => {
   await clean();
@@ -106,7 +105,7 @@ beforeEach(async () => {
     data: { productId, sku: "DIRECT-POST-1", name: "Biru", priceRp: "10000", stockOnHand: 5, weightGrams: "10" },
   });
   variantId = variant.id;
-  const inquiry = await prisma.b2BInquiry.create({
+  await prisma.b2BInquiry.create({
     data: {
       confidentialityAck: true,
       currentStage: "CAD",
@@ -121,7 +120,6 @@ beforeEach(async () => {
       targetQuantity: "1 prototype",
     },
   });
-  inquiryId = inquiry.id;
 });
 
 afterAll(clean);
@@ -138,16 +136,11 @@ function attempts(): ReadonlyArray<readonly [string, () => Promise<{ status: str
     ["updateProductAction", run(adminActions.updateProductAction, {
       productId, description: "Deskripsi diubah tanpa izin.", name: "Diretas", slug: "diretas",
     })],
-    ["transitionInquiryAction", run(adminActions.transitionInquiryAction, {
-      inquiryId, currentStatus: "NEW", nextStatus: "CONTACTED",
-    })],
+
     ["activatePricingRuleAction", run(adminActions.activatePricingRuleAction, {
       confirmation: "I_UNDERSTAND_NON_PRODUCTION", quantitySemantics: "PER_UNIT",
     })],
-    ["sendB2BQuoteAction", run(adminActions.sendB2BQuoteAction, {
-      inquiryId, assumptions: "Asumsi harga berlaku.", lineItemsText: "Jasa cetak | 1000000",
-      scope: "Lingkup pekerjaan cetak 3D.", validUntil: "2099-01-01",
-    })],
+
     ["replaceProductMediaAction", run(adminActions.replaceProductMediaAction, { productId, mediaJson: "[]" })],
   ];
 }
@@ -199,12 +192,12 @@ describe("direct Server Action call without proxy protection", () => {
       data: { authUser: { create: { id: "clerk_direct_post_owner", email: "clerk_direct_post_owner@example.test", name: "Fixture Admin" } }, clerkUserId: "clerk_direct_post_owner", isActive: true, role: "OWNER" },
     });
     mocks.auth.mockResolvedValue({ userId: "clerk_direct_post_owner" });
-    const result = await (adminActions.transitionInquiryAction as unknown as ActionFn)(
+    const result = await (adminActions.adjustStockAction as unknown as ActionFn)(
       { status: "idle" },
-      form({ inquiryId, currentStatus: "NEW", nextStatus: "CONTACTED" }),
+      form({ productId, variantId, expectedStockOnHand: "5", reason: "Penyesuaian stok hasil hitung fisik", stockOnHand: "99" }),
     );
     expect(result.status).toBe("success");
-    expect((await prisma.b2BInquiry.findUniqueOrThrow({ where: { id: inquiryId } })).status).toBe("CONTACTED");
+    expect((await prisma.productVariant.findUniqueOrThrow({ where: { id: variantId } })).stockOnHand).toBe(99);
   });
 });
 

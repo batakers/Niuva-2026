@@ -10,7 +10,7 @@ import { parseWithValidation } from "@/modules/shared/validation";
 
 export const runtime = "nodejs";
 const limiter = createInMemoryRateLimiter({ limit: 5, maxKeys: 256, windowMs: 60_000 });
-const schema = z.object({ kind: z.enum(["B2B_INQUIRY", "CUSTOM_PRINT_REQUEST"]), token: z.string().min(32).max(512) }).strict();
+const schema = z.object({ kind: z.literal("CUSTOM_PRINT_REQUEST"), token: z.string().min(32).max(512) }).strict();
 
 export async function POST(request: Request) {
   const correlationId = createCorrelationId();
