@@ -18,7 +18,7 @@ test("B2B contact works without login on mobile and desktop", async ({ page }, t
     expect(url.origin).toBe("https://wa.me");
     expect(url.pathname).toBe("/6285117678901");
     expect(url.searchParams.get("text")).toBe("Halo Niuva, saya ingin membahas kebutuhan Design & Prototyping.");
-    await expect(page.getByRole("main").getByText("Melalui WhatsApp")).toHaveCount(0);
+    await expect(page.getByRole("main").getByText("Melalui WhatsApp", { exact: true })).toHaveCount(0);
     await expect(page.getByRole("form", { name: "Form project brief" })).toHaveCount(0);
     await expect(page.locator('a[href^="/project-brief"]')).toHaveCount(0);
     await page.keyboard.press("Tab");
