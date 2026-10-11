@@ -10,74 +10,14 @@
 
 ## Foundation status
 
-- **Direction:** Precision Industrial + Creative Accent.
-- **Confirmed visual character:** Presisi dan engineered; kompeten dan tangible;
-  kreatif dan progresif.
-- **Confirmed visual exclusions:** Generic SaaS/startup teknologi; futuristik
-  berlebihan seperti cyberpunk, neon, glow, atau glassmorphism ekstrem; chaotic
-  dan dekoratif tanpa fungsi; serta AI Slop.
-- **Confirmed reference treatment:** Website Alethia diterima sebagai referensi
-  bahasa visual dan storytelling dengan prinsip `adopt`, `adapt`, dan `do not
-  copy`; bukan template, aset, atau identitas yang disalin.
-- **Confirmed reference principles for Niuva:** Editorial narrative, tangible
-  proof, kontras surface gelap-terang, controlled accent, selective technical
-  detail, dan directional CTA. Implementasinya harus memakai bukti produk, material,
-  prototipe, engineering, dan manufaktur Niuva sendiri.
-- **Confirmed adaptation constraints:** Visual language harus tetap membedakan
-  public, checkout, dan admin; tidak mengambil palette hijau/lime atau objek
-  alam Alethia; serta tidak memakai metrik, claim, atau visual dekoratif tanpa
-  bukti Niuva.
-- **Confirmed surface architecture:** Public memakai kombinasi dark stage untuk
-  hero/proof dan light surface untuk konten; checkout memakai light-first,
-  tenang, dan mudah dibaca; admin memakai surface netral yang padat dan
-  operasional.
-- **Confirmed color roles:** `#6390BB` menjadi aksen identitas Niuva; brand,
-  neutral, dan semantic mapping pada Visual Proof telah diterima sebagai
-  foundation resmi. Penggunaan reusable-nya mengikuti kontrak Design System.
-- **Approved foundation palette:** Brand scale memakai `#6390BB` sebagai
-  `brand-500` dengan rentang `#F5F9FC` sampai `#1F2E3B`; neutral industrial
-  scale memakai rentang `#F8FAFC` sampai `#020617`; semantic colors memakai
-  success, warning, error, dan info dengan foreground/background/border
-  variants yang teruji kontras. `#6390BB` tidak dipakai sebagai normal text
-  di atas putih, dan status tidak boleh disampaikan melalui warna saja.
-- **Confirmed neutral direction:** Cool industrial — neutral UI memakai
-  undertone abu-abu kebiruan untuk memberi kesan presisi, terukur, dan
-  engineered. Kehangatan Niuva datang dari bukti nyata produk, material,
-  prototipe, dan proses kerja; bukan dari menghangatkan core UI palette.
-  Swatch, tonal scale, contrast pairs, dan dark-mode mappings telah diterima
-  melalui Visual Proof.
-- **Confirmed semantic color rule:** Success, warning, error, dan info harus
-  memiliki peran fungsional yang jelas dan tidak boleh menjadi satu-satunya
-  cara menyampaikan status.
-- **Approved Typography System v1.0:** Space Grotesk menjadi family utama untuk
-  display, heading, subheading, body, UI, product, dan data. Fraunces dibatasi
-  sebagai editorial accent 5–10% untuk standalone statement atau quote; bukan
-  control, body panjang, atau data. Tidak ada family mono ketiga pada v1.0.
-- **Approved typography scale:** Anchor `16px`, modular ratio `1.25`, dan optical
-  rounding ke langkah `2px/4px`. Responsive steps: compact `0–639px`, standard
-  `640–1279px`, dan wide `>=1280px`. Display `40/43 → 48/51 → 60/63`, heading
-  `30/36 → 36/42 → 40/46`, subheading `22/29 → 24/31 → 24/31`, body `16/24`,
-  UI/data `14/20`, dan Fraunces accent `28/35 → 32/39 → 36/43`.
-- **Approved typography behavior:** Core weights `400/500/600`; `700` hanya
-  exception dan `300` tidak dipakai. Display tracking `-0.03em → -0.035em →
-  -0.04em`; heading `-0.02em → -0.025em → -0.03em`; subheading `-0.015em`;
-  body dan UI/data `0`; Fraunces `-0.01em`. Body measure dijaga `55–70ch` dan
-  UI/data memakai tabular numerals.
-- **Approved Fraunces policy:** Weight `500`, normal Roman,
-  `font-optical-sizing: auto`, hanya axis `opsz` yang dimuat; `SOFT`, `WONK`,
-  dan italic core v1 tidak dimuat. Technical micro-label tetap Space Grotesk
-  `12/18`, weight `500`, tracking `0.05em`, uppercase hanya untuk 1–3 kata.
-- **Evidence-backed identity accent:** `--brand-500: #6390BB`.
-- **Retained non-typography baseline:** Spacing, radius, elevation, motion,
-  and reduced-motion rules are in `DESIGN.md` and `src/app/globals.css`.
-  Typography classes used by product routes are in `src/design/typography.ts`;
-  the font contract is loaded by `src/app/layout.tsx`.
-- **Review state:** Historical AUiS proof acceptance is recorded in the archived
-  design document and remains scoped to that former proof. Named product-route
-  acceptance, including `/` and `/project-brief`, is recorded separately in
-  `docs/frontend/mvp-release-readiness.md`. The retired proof is not a current
-  review route; new visual review uses the implemented product route when
-  requested. Provider and production gates remain separate.
+- **Active visual authority:** [DESIGN.md](DESIGN.md) owns shared identity and Foundation/Typography v1.0. Numeric tokens, font roles, responsive scale, shapes, and component contracts are maintained there and in runtime source, rather than duplicated in this product-context file.
+- **Area application:** [Company](docs/design/company.md), [Commerce & Customer](docs/design/commerce.md), and [Admin](docs/design/admin.md) apply that identity to different tasks and densities. They do not define separate brands.
+- **Shared component decision:** The Owner approved shadcn/ui for every Niuva page on 11 October 2026. [DESIGN.md](DESIGN.md) owns the global component contract; the area guides keep distinct composition and density. Admin already uses this foundation; this documentation update does not implement or certify migration of the remaining surfaces.
+- **Direction:** The Precision Workshop is the active direction. Earlier labels such as Precision Industrial + Creative Accent describe its provenance, not a second active system. Minimalist Editorial × Precision Engineering is a hypothesis for evaluation, not automatic approval of new foundation values.
+- **Reference provenance:** Alethia was accepted as a storytelling/visual reference with adopt/adapt/do-not-copy treatment. Its green/lime palette, nature imagery, claims, and assets are not Niuva identity. Current reference reasoning is recorded in the [design audit](docs/design/audit-2026-10-11.md).
+- **Confirmed brand boundary:** Official logo colors and proportions remain locked. Evidence must come from Niuva products, prototypes, material, engineering, and processes. Status colors communicate function alongside labels.
+- **Proposal status:** The user permits evaluating alternative fonts or tokens. [Foundation proposals](docs/design/foundation-proposal.md) remain inactive until explicitly selected; this permission does not replace Foundation v1.0 or authorize a mass redesign.
+- **Review state:** Historical proof/route acceptance stays scoped to the reviewed surface and viewport. [Release readiness](docs/frontend/mvp-release-readiness.md) and the archived AUiS record preserve that evidence. New visual review uses actual product routes; technical checks, Owner acceptance, device/AT, provider, and production readiness remain separate.
 
 ## Language & locale
 
