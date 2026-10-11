@@ -43,10 +43,18 @@ migrations. Use the repository scripts:
 
 ## Read first, by task
 
-- For UI or redesign work, read `DESIGN.md`, the named route, and the shared
-  components/tokens it uses. That is enough to establish Niuva's visual
-  direction; consult product or technical authority when behavior, data, or
-  integration is also changing.
+- For UI or redesign work, read `DESIGN.md`, then the matching area guide:
+  `docs/design/company.md` for Company/services/projects,
+  `docs/design/commerce.md` for Shop/MAKE/checkout/Customer, or
+  `docs/design/admin.md` for Admin. Read the named route and its shared
+  components/tokens; consult product or technical authority when behavior,
+  data, or integration is also changing.
+- `docs/design/quality.md` owns visual-review and document-validation procedure.
+  The local `niuva-design` skill supplies an optional composition workflow;
+  `niuva-editorial` owns optional copy review. General craft skills, including
+  Impeccable, supplement these sources without replacing their area rules.
+  Audit reports, reference studies, and `foundation-proposal.md` are not active
+  visual contracts and do not authorize runtime foundation changes.
 - For product scope, read the relevant `docs/PRD-*.md` section and addenda.
   For architecture/security, read the relevant `docs/TechDesign-*.md` section.
 - Use `agent_docs/` summaries for orientation when helpful; they do not
@@ -128,6 +136,10 @@ user request and the authority order above.
   acceptance remains separately scoped.
 - Public pages, checkout, and admin share one Niuva identity but have different
   density and motion needs. Passing tests/build is not visual approval.
+- Owner's 11 October 2026 decision makes shadcn/ui the component foundation for
+  every Niuva page. Follow `DESIGN.md` Components and the existing local component
+  layer across all areas; global adoption is an approved direction, not a claim
+  of completed migration or authorization to migrate runtime in a docs-only task.
 - Route handlers and Server Actions own request/response boundaries only.
   Business rules live in domain services; database access lives in repositories.
 - Treat the current PRD as product authority and the Tech Design as technical
@@ -180,8 +192,9 @@ their own explicit user instruction; do not infer them from a coding request.
 ## Redesign halaman — route first
 
 - For an existing page named in a redesign request, edit that product route and
-  its necessary components. `DESIGN.md` is sufficient as the active Design
-  System guide. AUiS routes and registry are retired: do not use AUiS skills,
+  its necessary components. `DESIGN.md` and its matching area guide establish
+  the active Design System direction. AUiS routes and registry are retired:
+  do not use AUiS skills,
   recreate its styleguide, or make a separate preview a prerequisite.
 - If the request has no visual reference or direction, ask once: "Ada referensi
   atau arah visual tertentu? Jika tidak ada, saya pilih arah yang paling cocok
@@ -193,8 +206,8 @@ their own explicit user instruction; do not infer them from a coding request.
   keyboard/focus, accessibility, and reduced motion. Show the implemented page
   or its actual-route captures for the user's manual review. Until the user
   explicitly accepts it, report visual acceptance as unreviewed.
-- Keep page-specific composition in the route. Update `DESIGN.md` and shared
-  contracts only for durable Design System changes. Other optional design
+- Keep page-specific composition in the route. Update `DESIGN.md` or its owning
+  area guide only for durable Design System changes. Other optional design
   skills do not override this route-first rule. Make a separate prototype only
   when the user specifically requests one; it is not an AUiS registry step.
 

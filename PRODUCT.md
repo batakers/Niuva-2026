@@ -31,7 +31,7 @@ Janji utama produk: **Idea → Design → Prototype → Finished Product**.
 - Pengalaman digunakan melalui browser desktop dan mobile.
 - Customer memulai dari salah satu dari tiga konteks: memiliki ide atau project, sudah memiliki model 3D, atau ingin membeli produk siap jadi.
 - B2B berjalan langsung melalui WhatsApp tanpa login atau Project Brief. Pembahasan awal, negosiasi, finalisasi, dan pencatatan ditangani admin WhatsApp dengan calon klien.
-- Retail berjalan melalui katalog, variant dan stock, cart, Customer Google login, checkout, shipping, payment, serta account/order status.
+- Retail berjalan melalui katalog, variant dan stock, cart, login Customer (Google atau email/password terverifikasi), checkout, shipping, payment, serta account/order status.
 - Custom print berjalan melalui upload privat, konfigurasi awal, review dan slicing oleh operator, quotation, approval, payment, produksi, QC, pengukuran paket final, shipping, dan penyelesaian order.
 - Artefak kerja yang perlu dipahami sistem meliputi file 3D, data hasil slicing, quotation, snapshot commercial, payment, shipping, dan riwayat status.
 
@@ -39,11 +39,12 @@ Janji utama produk: **Idea → Design → Prototype → Finished Product**.
 
 - Public experience menjelaskan company profile, empat layanan Niuva, proses kerja, project atau case study yang didukung bukti, dan tiga entry path.
 - CTA B2B memakai **Hubungi Kami** tanpa keterangan tambahan di bawah tombol. Project Brief, proposal akun Customer, dan inquiry Admin tidak termasuk pengalaman aktif fase ini. Data historis tetap mengikuti privasi dan retensi yang berlaku.
-- Retail mendukung katalog, category, product variant, harga, stock, cart, checkout setelah Customer Google login, payment, shipping, dan account/order status. Account Customer read-only termasuk scope MVP.
+- Retail mendukung katalog, category, product variant, harga, stock, cart, checkout setelah login Customer, payment, shipping, dan account/order status. Account Customer read-only termasuk scope MVP.
 - Custom 3D print mendukung upload STL, 3MF, dan OBJ. STEP/STP hanya menjadi attachment untuk manual review pada MVP.
 - Harga custom tidak dihitung final secara otomatis dari geometry file. Operator memverifikasi material, slicer weight, print duration, configuration, dan catatan sebelum sistem membuat quote Pricing v1.
-- Owner/Admin menggunakan thin admin dengan Action Queue dan operasi untuk orders, custom print reviews, products dan stock, portfolio, serta pricing rules.
-- Clerk melindungi Owner/Admin. Customer memakai Google OAuth dan session opaque untuk checkout; token atau reference mechanism tetap melindungi akses status atau quote yang relevan.
+- Owner pada 11 Oktober 2026 menetapkan shadcn/ui sebagai dasar komponen seluruh halaman Company, Commerce/Customer, dan Admin. Kontrak penerapan dimiliki [DESIGN.md](DESIGN.md); Admin sudah memakai fondasi tersebut, sedangkan pemerataan route lain mengikuti pekerjaan implementasi berikutnya. Keputusan dokumentasi ini tidak menyatakan migrasi global sudah selesai.
+- Owner/Admin memakai dashboard shadcn/ui `base-nova` untuk pekerjaan order, review Custom Print, customer, product/stock, konten, keuangan, laporan, dan pengaturan sesuai permission. Navigasi aktif mengikuti `src/modules/admin/navigation-items.ts`; Queue/Pricing lama adalah jalur kompatibilitas, bukan komposisi utama.
+- Owner/Admin dilindungi Better Auth dengan MFA wajib; Customer memakai Google atau email/password terverifikasi. Kontrak auth, token/reference akses quote dan status, allowlist pengujian internal, serta gate pendaftaran publik mengikuti addenda [PRD](docs/PRD-Niuva-MVP.md) dan [Tech Design](docs/TechDesign-Niuva-MVP.md). Ringkasan ini tidak mengaktifkan pendaftaran atau provider.
 - File customer bersifat privat, menggunakan random storage key dan akses bertanda tangan berumur pendek. Batas file binary 100 MiB dan lifecycle 14/60/90 hari sudah ditetapkan; retensi catatan legal/akuntansi masih terbuka.
 - Catalog, stock, shipping, total, payment notification, dan state transition harus authoritative di server. Nilai komersial penting disimpan sebagai snapshot yang tidak berubah; perhitungan uang harus deterministik.
 - Sistem tidak mencakup automatic slicing, instant geometry pricing, full CMS atau page builder, full inventory/accounting, production scheduler, automated custom shipping sebelum ukuran paket final, atau customer-facing AI pada MVP.
