@@ -2,7 +2,7 @@
 
 **Versi:** DRAFT-TERMS-2026-10-03-v3. **Status:** draf untuk tinjauan Owner dan review kepatuhan berdasarkan sumber resmi; belum berlaku, belum diterbitkan sebagai policy resmi, dan bukan persetujuan pendaftaran publik. Tanggal berlaku ditetapkan setelah persetujuan final serta pemeriksaan prasyarat publikasi. Review tidak mensyaratkan perekrutan konsultan formal untuk memulai pekerjaan kode; persoalan yang membutuhkan keahlian atau keputusan pihak berwenang tetap dicatat.
 
-Revisi mengikuti keputusan Owner 3 Oktober 2026: target pendaftaran publik mencakup semua usia dan refund disetujui Owner lalu dijalankan aplikasi. Kemampuan publik tersebut masih harus dibuat dan diverifikasi. Pendaftaran yang tersedia saat ini tetap pengujian internal Development/test. Daftar prasyarat dan bukti ada dalam [paket kesiapan publik](customer-public-launch-readiness.md).
+**Rekonsiliasi draf — 13 Oktober 2026:** keputusan Owner 5 Oktober menetapkan akun **18+ melalui pernyataan usia** dan Owner sebagai pengesah dokumen; keputusan B2B 11 Oktober menetapkan kontak WhatsApp langsung. Refund penuh dengan approval Owner dan eksekusi/rekonsiliasi aplikasi tetap target. Identifier di atas tetap identifier draf, bukan versi resmi immutable atau bukti persetujuan Customer. Versi resmi dan tanggal berlaku belum ditetapkan. Pendaftaran yang tersedia masih internal Development/test; lihat [kontrak produk aktif](../PRD-Niuva-MVP.md#rekonsiliasi-kontrak-rilis--13-oktober-2026) dan [paket kesiapan publik](customer-public-launch-readiness.md).
 
 ## 1. Identitas dan kontak
 
@@ -10,19 +10,19 @@ Penyedia layanan adalah **PT. NIUVA INOVASI UTAMA**, beralamat di **Jl. Telekomu
 
 ## 2. Layanan dan pembentukan kesepakatan
 
-Niuva menyediakan informasi usaha, Shop, permintaan Custom Print, dan Project Brief B2B. Pengajuan permintaan belum merupakan penerimaan pekerjaan. Estimasi awal Custom Print belum menjadi harga final: operator memeriksa kebutuhan, berkas, berat dan durasi slicer sebelum menerbitkan quote. Produksi dan pembayaran mengikuti quote yang diterima serta divalidasi ulang oleh sistem. Pengiriman Custom Print dihitung setelah paket akhir diukur.
+Niuva menyediakan informasi usaha dan kontak WhatsApp B2B, Shop, serta permintaan Custom Print. Website tidak menerima Project Brief atau membuat proposal/penagihan B2B baru. Pengajuan Custom Print belum merupakan penerimaan pekerjaan. Estimasi awal Custom Print belum menjadi harga final: operator memeriksa kebutuhan, berkas, berat dan durasi slicer sebelum menerbitkan quote. Produksi dan pembayaran mengikuti quote yang diterima serta divalidasi ulang oleh sistem. Pengiriman Custom Print dihitung setelah paket akhir diukur.
 
-Untuk B2B, lingkup, hasil kerja, harga, tahapan pembayaran, jadwal, revisi, dan penerimaan hasil ditetapkan melalui kesepakatan kedua pihak. Komunikasi WhatsApp dapat menjadi kanal pembahasan; perubahan form B2B bukan bagian penerbitan draf ini. Kesepakatan khusus tidak menghapus hak yang diwajibkan hukum.
+Untuk B2B, pembahasan kebutuhan, lingkup, hasil kerja, harga, tahapan pembayaran, jadwal, revisi, penerimaan hasil dan pencatatan berlangsung melalui WhatsApp serta alat di luar website sesuai keputusan 11 Oktober. Data B2B historis tetap mengikuti privasi/retensi yang berlaku. Kesepakatan khusus tidak menghapus hak yang diwajibkan hukum.
 
 Sebelum publikasi, Owner harus menetapkan wilayah layanan, ketersediaan produk/bahan, pajak, metode pembayaran produksi, dan titik terbentuknya kontrak Shop (PUB-BIZ). Tampilan harga, stok, redirect pembayaran, dan simulasi browser bukan bukti pembayaran atau harga yang berwenang; sistem memvalidasi transaksi.
 
 ## 3. Akun Customer
 
-Target layanan mencakup **semua usia**, sehingga Niuva tidak menetapkan pembatasan umum akun 18+ dalam draf ini. Penggunaan akun anak mengikuti kelompok usia, kelayakan fitur, verifikasi yang proporsional, dan persetujuan orang tua atau wali yang dipersyaratkan hukum. Target tersebut tidak menjadi izin aktivasi akun anak tanpa memenuhi ketentuan terkait.
+Target pendaftaran akun Customer aktif adalah **usia 18 tahun ke atas**, melalui pernyataan usia yang terpisah dari persetujuan dokumen. Kontrol deklarasi telah diterapkan pada alur internal/test; public consent dan pendaftaran hosted belum tersedia. Pengguna menyatakan usianya, sedangkan sistem tidak memverifikasi usia sebenarnya. Tidak ada pengumpulan tanggal lahir, identitas resmi, KYC atau biometrik melalui kontrol ini.
 
-Orang tua atau wali memberikan persetujuan yang dapat dibuktikan untuk pemrosesan data anak dan mendampingi penggunaan layanan. Untuk transaksi anak, identitas pihak yang menyepakati pesanan/quote, memberi persetujuan pembayaran, dan menerima pengembalian dana harus ditetapkan serta diverifikasi sebelum transaksi. Pernyataan menjadi wali atau kesamaan alamat email saja tidak memberikan akses ke data atau riwayat akun anak.
+Akun anak, akun wali dan transaksi atas akun anak berada di luar scope rilis ini. Pernyataan dari orang yang mengaku wali atau kesamaan email tidak memberikan akses ke akun, riwayat atau refund pihak lain. Perluasan usia/metode membutuhkan keputusan dan kontrak tersendiri; requirement semua usia pada snapshot 3 Oktober tidak menjadi backlog aktif.
 
-Penilaian kelayakan tiap kelompok usia, desain pelindungan anak, mekanisme verifikasi, bukti hubungan/peran wali, kontrol transaksi, serta penanganan perubahan/penarikan persetujuan belum diterapkan (PUB-AGE, PUB-GUARDIAN). Hasil review harus menjadi informasi kelayakan akun yang jelas sebelum pendaftaran publik dibuka; tidak ada klaim bahwa checkbox atau tanggal lahir saja sudah memenuhi kewajiban tersebut.
+Risiko pernyataan usia yang tidak benar dan penanganan temuan data/pengguna di bawah umur tetap perlu review kepatuhan dan prosedur insiden yang sesuai. Keputusan produk 18+ tidak menjadi kesimpulan pemenuhan kewajiban hukum. Pengesahan policy final, bukti hosted dan izin aktivasi publik tetap terpisah dari kontrol teknis PUB-AGE.
 
 Pendaftaran memakai metode yang tersedia: Google atau email/password terverifikasi. Akun tidak digabungkan hanya karena alamat email sama. Customer menjaga akses akun dan memberi data yang benar.
 
@@ -68,7 +68,7 @@ Sebelum publikasi, tinjau konten yang dilarang, batas tanggung jawab yang sah, k
 
 Pemrosesan data dijelaskan dalam draf Kebijakan Privasi dengan versi terkait. Tidak ada promosi/pemasaran Customer dalam lingkup saat ini. Perubahan material memerlukan versi, tanggal berlaku, dan pemberitahuan yang jelas; persetujuan internal tidak dianggap persetujuan policy komersial.
 
-Sebelum publikasi: tinjauan kewajiban dan persetujuan final Owner; kelayakan akun anak dan mekanisme wali yang terbukti; validasi kanal keluhan, detail penerima/jam retur dan kesiapan petugas; kemampuan operasional refund penuh termasuk ongkir; kalender libur/WIB; metode pembayaran/pengiriman produksi; pencatatan status dana diterima; inventaris dan retensi transaksi; bukti keamanan, backup, provider, dan penghapusan. Input yang sudah dikonfirmasi dan kebutuhan tersisa dicatat dalam [catatan input/bukti](customer-public-input-evidence.md) serta matriks kesiapan. Perubahan draf ini tidak membuat fitur tersebut tersedia. Pembatalan otomatis, refund sebagian, atau pusat sengketa marketplace tidak ditambahkan oleh batch dokumen ini.
+Sebelum publikasi: tinjauan kewajiban dan pengesahan final Owner atas versi/tanggal berlaku; kontrol akun 18+ beserta batas self-declaration; validasi kanal keluhan, detail penerima/jam retur dan kesiapan petugas; kemampuan operasional refund penuh termasuk ongkir; kalender libur/WIB; metode pembayaran/pengiriman produksi; pencatatan status dana diterima; inventaris dan retensi transaksi; bukti keamanan, backup, provider, dan penghapusan. Input yang sudah dikonfirmasi dan kebutuhan tersisa dicatat dalam [catatan input/bukti](customer-public-input-evidence.md) serta matriks kesiapan. Perubahan draf ini tidak membuat fitur tersebut tersedia. Pembatalan otomatis, refund sebagian, atau pusat sengketa marketplace tidak ditambahkan oleh batch dokumen ini.
 
 ## Rujukan tinjauan
 

@@ -2,6 +2,8 @@
 
 Dokumen ini dibuat oleh task 23.7 dan diperbarui pada Tahap 12 (5 Oktober 2026; Req 32.1 sampai 32.4). Ini dokumen batas, bukan klaim kesiapan. Hasil checkpoint penutupan dirujuk dari `baseline-gate.md`.
 
+**Konteks setelah rekonsiliasi 13 Oktober:** tabel/angka di bawah tetap snapshot Tahap 12 dan pembaruan 6 Oktober, bukan status seluruh kode/lingkungan saat ini. [Handoff rilis aktif](../../../docs/frontend/mvp-release-readiness.md#peta-penghambat-rilis) memiliki delapan penghambat, pemilik, bukti, syarat penutupan dan baseline CI `a577b7c`. Admin sekarang Better Auth/TOTP; B2B baru melalui WhatsApp. Pernyataan lama tentang Clerk atau ketiadaan pengelolaan akses Admin dibaca dalam scope historis; halaman audit terpisah tetap deferred. Akun 18+ sudah dipilih/diimplementasikan sebagai deklarasi, sementara policy final/provider/hosted/recovery dan izin rilis tetap terbuka. Batch 1 hanya dokumentasi dan tidak menaikkan status formal register atau memberi aktivasi.
+
 **Pernyataan utama:**
 
 - Tidak ada klaim kesiapan production, staging, atau hosted di spec ini.

@@ -1,5 +1,7 @@
 # Laporan readiness operasional Niuva
 
+**Status dokumen setelah 13 Oktober 2026: snapshot historis.** Laporan/angka/konfigurasi di bawah merekam fase 20 September; status aktif dan pemilik/bukti/syarat penutupan rilis ada pada [handoff rilis](mvp-release-readiness.md#peta-penghambat-rilis). Admin saat ini memakai Better Auth/TOTP; B2B baru melalui WhatsApp sejak 11 Oktober. Clerk/inquiry/proposal B2B di tabel lama tidak menjadi requirement aktivasi kembali. Smoke R2/development dan penerimaan visual historis hanya berlaku pada tanggal/scope yang dicatat; tidak menjadi evidence staging/production saat ini.
+
 Snapshot: **2026-09-20** · checkout `main` · latest merged implementation PR [#11](https://github.com/batakers/Niuva-2026/pull/11) merged as `a171686`; earlier implementation PRs [#3](https://github.com/batakers/Niuva-2026/pull/3), [#5](https://github.com/batakers/Niuva-2026/pull/5), and [#10](https://github.com/batakers/Niuva-2026/pull/10) remain historical references.
 
 Laporan ini memisahkan bukti implementasi kode dari gate Owner, provider, dan

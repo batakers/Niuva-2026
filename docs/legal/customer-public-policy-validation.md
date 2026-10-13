@@ -2,7 +2,24 @@
 
 **Tanggal:** 3 Oktober 2026. **Paket:** PUBLIC-PREPARATION-2026-10-03-v1, Syarat/Privasi v3. Baseline tree kode sama dengan PR #38 / `origin/main` `6c12a5f`. Status: pemeriksaan dokumen dan regresi preview yang relevan; bukan hasil legal approval, uji provider, atau penerimaan production.
 
+## Rekonsiliasi dokumentasi — 13 Oktober 2026
+
+Metadata, simulasi SIM-01–21 dan hasil command 3 Oktober di bawah adalah **histori**, bukan hasil pengujian revisi ini. Arah aktif mengikuti [PRD terkini](../PRD-Niuva-MVP.md#rekonsiliasi-kontrak-rilis--13-oktober-2026): akun 18+ dengan deklarasi Owner 5 Oktober, Better Auth khusus Admin dan B2B WhatsApp 11 Oktober. Pengesahan policy final/versi/tanggal berlaku, provider/staging/recovery dan izin rilis tetap terbuka. Sumber hukum/provider yang disebut di bagian historis tidak dinyatakan diperiksa ulang pada batch dokumentasi ini.
+
+| Skenario aktif | Hasil yang harus tetap dibedakan | Bukti dan batas |
+| --- | --- | --- |
+| Deklarasi hilang, `off`, boolean atau direct signup/callback tanpa proof | Ditolak sebelum pending/proof/akun baru sesuai boundary; consent dokumen tidak menggantikan deklarasi | Kontrol source dan hasil lokal 6 Oktober tersedia pada [laporan implementasi](../../.kiro/specs/niuva-keputusan-lanjutan/implementation-report.md); bukan test baru atau public signup. |
+| Pengguna mengirim `on` dengan pernyataan usia tidak benar | Kontrol mencatat deklarasi; tidak mengetahui usia sebenarnya hanya dari checkbox | Risiko self-declaration tetap tercatat; tidak menjanjikan deteksi usia palsu, DOB/KYC atau akun wali. |
+| Pending/proof legacy, versi salah, waktu invalid, expiry/replay | Bukti tidak boleh dipalsukan/dikonsumsi untuk membuat akun baru; versi/waktu berasal dari server | Kontrak [deklarasi usia](../../src/modules/customer-auth/age-declaration.ts) dan spec 6 Oktober; public consent/proof ordinary Google masih pekerjaan berikutnya. |
+| Draf direkonsiliasi; Customer membuka pendaftaran | Draf/internal tetap bukan consent resmi, formal register dan grant tidak otomatis tertutup | Resolver internal/test, matrix/grant dan pengesahan Owner tetap batas terpisah. Identifier draf v3 belum versi resmi immutable. |
+| Admin login dan B2B contact | Better Auth/TOTP khusus Admin; B2B melalui WhatsApp tanpa form/login | Source baseline `a577b7c`; snapshot Clerk/Project Brief lama tidak menjadi requirement baru. |
+| Refund/outbox/job/restore | Requirement tersedia, tetapi hasil provider/pemulihan dan implementasi lengkap belum terbukti | Gunakan [matriks kesiapan aktif](customer-public-launch-readiness.md#matriks-kesiapan) dan [peta penghambat](../frontend/mvp-release-readiness.md#peta-penghambat-rilis); jangan menaikkan status dari simulasi dokumen. |
+
+Validasi batch dokumentasi: pemeriksaan link/anchor, konsistensi keputusan/source, kelengkapan pemilik/bukti/syarat penutupan dan diff. Hasil aktual dicatat pada plan pelaksanaan; suite aplikasi/provider tidak diklaim dijalankan oleh tabel ini.
+
 ## Metode dan batas
+
+**Metode snapshot 3 Oktober.** Target semua usia/wali pada bagian berikut telah digantikan keputusan 5 Oktober; requirement uang, tenggat dan closure yang tidak bertentangan tetap dirujuk kontrak aktif.
 
 Simulasi di bawah menelusuri keputusan Customer, kewenangan Owner/wali, tenggat, nominal, hasil provider serta data setelah closure melalui [Syarat](customer-terms-draft.md), [Privasi](customer-privacy-draft.md), [SOP layanan](customer-service-refund-sop.md), [SOP privasi](customer-privacy-retention-sop.md) dan [kontrak runtime](customer-public-runtime-contract.md). `COVERED_DOCUMENT` berarti alur/hasil yang diperlukan tertulis konsisten; tidak berarti fitur sudah diuji atau gate kesiapan tertutup. Blocker dirujuk ke [matriks kesiapan](customer-public-launch-readiness.md#matriks-kesiapan).
 
@@ -11,6 +28,8 @@ Authority yang dicocokkan: addendum PRD/Tech Design 1–3 Oktober, kontrak closu
 Sumber primer dicek: [UU PDP](https://jdih.komdigi.go.id/produk_hukum/view/id/832/t/undangundang%2Bnomor%2B27%2Btahun%2B2022), [PP 17/2025](https://peraturan.go.id/files/pp-no-17-tahun-2025.pdf), [Permen Komdigi 9/2026](https://jdih.komdigi.go.id/produk_hukum/view/id/1007/t/peraturan%2Bmenteri%2Bkomunikasi%2Bdan%2Bdigital%2Bnomor%2B9%2Btahun%2B2026), [PP 80/2019](https://www.peraturan.go.id/id/pp-no-80-tahun-2019), [UU KUP](https://www.pajak.go.id/id/undang-undang-nomor-28-tahun-2007), [cakupan metode refund](https://docs.midtrans.com/docs/what-payment-method-that-have-refund-feature) dan [Refund API](https://docs.midtrans.com/reference/refund-transaction). Ini pemeriksaan requirement terhadap sumber, bukan keputusan hukum atas kelayakan Niuva.
 
 ## Hasil simulasi dokumen
+
+**SIM-01–21 adalah hasil dokumen 3 Oktober.** Skenario akun anak/wali di sini merupakan histori target semua usia, bukan backlog aktif akun 18+; gunakan skenario rekonsiliasi di atas untuk batch berikutnya.
 
 | ID | Pemicu contoh | Hasil yang ditelusuri dalam paket | Hasil / bukti lanjutan |
 | --- | --- | --- | --- |
@@ -94,6 +113,6 @@ Tidak ada perubahan kode runtime, schema, permission, env atau konfigurasi
 proyek melalui penugasan Rheza dan pembaruan dokumen ini. Lint/typecheck,
 integration, E2E dan build tidak diulang untuk pembaruan dokumen lanjutan.
 
-Paket siap diajukan untuk review Owner/legal berdasarkan konsistensi dokumen dan regresi terarah di atas. Yang masih diperlukan: keputusan kelayakan/metode anak-wali, fakta bisnis/kalender/petugas/alamat retur, register data/provider/arsip/backup, capability/pendanaan refund per metode, lalu implementasi dan staging/recovery. Semua pemilik/bukti/syarat penutupan ada di matriks; tidak mengisi unknown dengan klaim kemampuan yang belum ada.
+Handoff 3 Oktober di atas adalah histori. Handoff aktif setelah rekonsiliasi mempertahankan keputusan 18+ dan identitas/Rheza/alamat retur yang sudah dikonfirmasi. Yang masih diperlukan: pengesahan policy final/versi/tanggal berlaku, detail bisnis/kalender/coverage, register data/provider/arsip/backup, cakupan/pendanaan refund per metode, penyelesaian implementasi serta staging/recovery. Akun anak/wali tidak ditambahkan ke scope aktif. Pemilik/bukti/syarat penutupan berada pada matriks kesiapan dan handoff rilis; unknown tidak diisi dengan klaim kemampuan.
 
 Tidak ada policy resmi/tanggal berlaku final, signup publik, refund otomatis, schema/endpoint baru, deployment, aktivasi provider, penggunaan credential production atau penerimaan visual/device/AT melalui pemeriksaan batch ini. Rollback draf memakai versi Git sebelumnya; transaksi/closure/refund yang nyata tidak diuji dengan destructive cleanup.

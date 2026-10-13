@@ -7,6 +7,15 @@ datasource db {
   provider = "postgresql"
 }
 
+model DeploymentDatabaseBinding {
+  id        Int      @id
+  bindingId String   @unique @map("binding_id") @db.Uuid
+  tier      String   @map("deployment_tier")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("deployment_database_bindings")
+}
+
 enum AdminRole {
   OWNER
   ADMIN

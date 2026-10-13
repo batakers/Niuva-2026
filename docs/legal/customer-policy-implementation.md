@@ -2,6 +2,8 @@
 
 Status: implementasi lokal/test, 2 Oktober 2026. Draf legal bukan penerimaan legal, dokumen resmi pendaftaran, atau izin publikasi.
 
+**Konteks setelah rekonsiliasi 13 Oktober:** seluruh bukti implementasi/presence di bawah tetap snapshot 2–3 Oktober. Keputusan akun aktif kini 18+ dengan self-declaration Owner 5 Oktober (kontrol dibangun 6 Oktober), Admin memakai Better Auth dan B2B baru melalui WhatsApp sejak 11 Oktober. [Kontrak aktif](../PRD-Niuva-MVP.md#rekonsiliasi-kontrak-rilis--13-oktober-2026) dan [handoff rilis](../frontend/mvp-release-readiness.md#peta-penghambat-rilis) menggantikan arahan lama yang bertentangan. Tidak ada provider/configuration smoke baru dalam pembaruan dokumentasi ini.
+
 **Catatan 3 Oktober 2026:** isi di bawah adalah snapshot implementasi PR #38.
 Preview Owner kini membaca [Syarat v3](customer-terms-draft.md) dan
 [Privasi v3](customer-privacy-draft.md) yang masih draf; referensi v2 dan usia 18
@@ -72,4 +74,4 @@ Rollback fitur: nonaktifkan konfigurasi pendaftaran internal untuk menutup akses
 
 ## Prasyarat publikasi
 
-Prasyarat snapshot 2 Oktober: review/persetujuan legal, verifikasi alamat identitas dan alamat retur, proses refund, usia minimal 18, daftar provider/lokasi produksi, perjanjian pemrosesan, hak privasi lain dan kanal tindak lanjut, kebijakan backup/penghapusan, pemisahan retensi transaksi, monitoring SLA/hold/cleanup, pengujian provider nyata dan penerimaan visual/device/AT. Batas umum 18+ telah digantikan pada 3 Oktober oleh target semua usia dengan asesmen kelayakan/risiko dan mekanisme anak/wali; gunakan matriks paket publik untuk prasyarat terkini. Tanpa promosi sesuai keputusan Owner. Dokumen pengujian internal tetap berbeda dari draf komersial.
+Prasyarat di atas merupakan snapshot 2 Oktober. Target semua usia pada revisi 3 Oktober kemudian digantikan keputusan Owner 5 Oktober: akun 18+ melalui deklarasi, bukan verifikasi usia; Owner menjadi pengesah dokumen. Identitas/alamat retur dan Rheza sudah dikonfirmasi. Versi/tanggal berlaku resmi, detail operasional, retensi transaksi, bukti hosted/provider/backup dan aktivasi tetap terbuka sesuai matriks paket publik terkini. Dokumen pengujian internal tetap berbeda dari draf komersial; histori ini tidak menjadi izin signup publik.

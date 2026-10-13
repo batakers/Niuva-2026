@@ -1,5 +1,18 @@
 # Technical Design Document: Niuva MVP
 
+## Rekonsiliasi kontrak teknis rilis — 13 Oktober 2026
+
+Mengikuti [kontrak produk aktif](PRD-Niuva-MVP.md#rekonsiliasi-kontrak-rilis--13-oktober-2026), keputusan Owner 5 Oktober dan source baseline `a577b7c326ff42d3a642cf5f0b93ccdf59c26bef`. Bagian bertanggal lebih lama yang bertentangan adalah snapshot, bukan requirement implementasi baru.
+
+- **Customer:** Google dan verified email/password, login sebelum checkout, serta akun terpisah dari Admin. Kontrol usia 18+ memakai `AGE-18-SELF-DECLARATION-2026-10-05-v1`; versi/waktu deklarasi ditetapkan server dan diperiksa saat konsumsi pending registration/proof. Tidak ada DOB/KYC/biometrik atau verifikasi usia; akun anak/wali di luar scope aktif.
+- **Policy:** resolver saat ini masih mengembalikan dokumen internal/test; ordinary Google signup dan email publik belum tersedia. Draf tidak menjadi consent resmi. Target public consent tetap berversi, terikat identitas/metode dan atomik; lifecycle lock/closed-business marker tidak boleh dilepas.
+- **Admin:** Better Auth dengan TOTP wajib mengikuti addendum 6–7 Oktober. Clerk dalam kontrak/snapshot lama tidak menjadi provider Admin yang harus diaktifkan kembali.
+- **Hosted:** deklarasi tier/mode, canonical origin, capability matrix/resolver dan integrasi guard provider sudah ada sebagian. Matrix production masih tidak mengizinkan mode, activation grants kosong, dan guard lama menolak production/live. Kode ini belum memberikan kemampuan staging/production; guard lama dipertahankan sesuai keputusan yang tercatat. Penyelesaian hosted harus memakai resource binding, origin/cookie/CSP dan izin per capability yang konsisten.
+- **Email, job, refund:** adapter/pemrosesan notifikasi dan cleanup lokal yang ada dipertahankan. Durable outbox, job operasional hosted dan workflow pengajuan/approval/refund/reconciliation lengkap masih pekerjaan berikutnya; status refund pada webhook bukan pengajuan refund oleh aplikasi.
+- **Batas yang tetap:** revalidasi server dan Decimal untuk uang, quote operator, R2 privat, upload 100 MiB/lifecycle 14/60/90, pengiriman MAKE setelah pengukuran paket, serta batas B2B 11 Oktober di bawah.
+
+[Handoff rilis](frontend/mvp-release-readiness.md#peta-penghambat-rilis) memiliki status/dependensi dan evidence; [kontrak Customer publik](legal/customer-public-runtime-contract.md) memiliki regresi target. Rate limit bersama mengikuti topologi hosting yang belum dibuktikan; checkout membutuhkan JavaScript dan cache ongkir tetap deferred sesuai [register keputusan](../.kiro/specs/niuva-audit-remediation/register-keputusan.md). Tidak ada migration, runtime, konfigurasi atau aktivasi melalui rekonsiliasi dokumen ini.
+
 ## Batas teknis B2B fase aktif — 11 Oktober 2026
 
 Mengikuti keputusan B2B pada PRD tanggal yang sama, website hanya menyediakan
@@ -2323,6 +2336,8 @@ cleanup tetap independen dari flag pendaftaran. Backup/provider/fiskal dan bukti
 publikasi tetap terpisah; inventory dan batas di dokumen implementasi legal.
 
 ## Addendum kontrak kesiapan Customer publik — 3 Oktober 2026
+
+**Konteks historis:** requirement semua usia/wali pada snapshot ini telah digantikan arah 18+ Owner 5 Oktober. Implementasi kontrol deklarasi tersedia sejak 6 Oktober; kontrak aktif dan batas hosted ada pada [rekonsiliasi 13 Oktober](#rekonsiliasi-kontrak-teknis-rilis--13-oktober-2026). Snapshot ini bukan bukti aktivasi publik.
 
 [Addendum PRD 3 Oktober](PRD-Niuva-MVP.md#addendum-persiapan-customer-publik--3-oktober-2026)
 menetapkan target public signup semua usia sesuai kelayakan hukum/fitur dan
