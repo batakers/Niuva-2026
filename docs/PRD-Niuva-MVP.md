@@ -1,5 +1,18 @@
 # Product Requirements Document: Niuva MVP
 
+## Rekonsiliasi kontrak rilis — 13 Oktober 2026
+
+Batch dokumentasi ini menyelaraskan keputusan yang sudah diberikan; tidak mengesahkan policy final atau mengaktifkan fitur. Untuk usia/pengesahan dokumen, gunakan keputusan Owner 5 Oktober pada [register RK-01–03](../.kiro/specs/niuva-audit-remediation/register-keputusan.md) dan [implementasi 6 Oktober](../.kiro/specs/niuva-keputusan-lanjutan/implementation-report.md). Untuk B2B, gunakan keputusan 11 Oktober di bawah. Ketentuan lama yang bertentangan adalah histori.
+
+- Target tetap pendaftaran Customer publik penuh melalui Google atau email/password terverifikasi, dengan login sebelum checkout. Arah akun aktif **18 tahun ke atas melalui pernyataan usia**, menggantikan target semua usia pada addendum 3 Oktober. Kontrol deklarasi sudah tersedia; deklarasi tidak memverifikasi usia. Akun anak/wali tidak masuk rilis ini; perubahan target memerlukan keputusan baru.
+- Owner menjadi pengesah dokumen. Draf Syarat/Privasi masih belum berlaku; versi resmi, tanggal berlaku dan pengesahan final belum tersedia. Review kepatuhan berbasis sumber resmi tetap dicatat; perekrutan konsultan formal bukan gate mulai coding dan keputusan ini bukan bukti kepatuhan hukum.
+- DEVELOP/B2B memakai kontak WhatsApp langsung tanpa login/form. MAKE dan BUY mempertahankan kontrak review/quote, harga server, pembayaran dan pengiriman masing-masing. Data B2B historis tetap dilindungi.
+- Owner/Admin memakai **Better Auth dengan TOTP wajib**, terpisah dari Customer. Rujukan Clerk dalam bagian lama merupakan histori sebelum addendum Admin 6 Oktober.
+- Refund versi pertama tetap penuh, disetujui Owner, dengan eksekusi dan rekonsiliasi aplikasi sebagai target. Penanganan notifikasi refund yang ada belum menjadi workflow refund lengkap.
+- Identitas/kontak/alamat retur dan penugasan Rheza yang sudah dikonfirmasi tidak dibuka ulang. Kalender/coverage, retensi arsip, resource hosted, cakupan provider dan fakta operasional yang belum tersedia tetap terbuka.
+
+Status implementasi dan delapan penghambat beserta pemilik/bukti/syarat penutupannya dimiliki [handoff rilis](frontend/mvp-release-readiness.md#peta-penghambat-rilis). [Paket Customer publik](legal/customer-public-launch-readiness.md) merinci gate policy/operasi. Bukti kode/CI lokal, pengesahan dokumen, penerimaan visual/device/AT, provider/staging dan production tetap terpisah. Batch 1 hanya menyelaraskan kontrak; batch implementasi, deployment dan aktivasi mengikuti instruksi masing-masing.
+
 ## Keputusan fase aktif B2B — 11 Oktober 2026
 
 Keputusan Owner ini menggantikan ketentuan lama tentang Project Brief, inquiry
@@ -1635,6 +1648,8 @@ legal merupakan prasyarat publikasi; tahap ini tidak mengubah B2B menjadi WA,
 melakukan refund otomatis, deployment ataupun penerimaan legal.
 
 ## Addendum persiapan Customer publik — 3 Oktober 2026
+
+**Konteks historis:** target semua usia dan requirement wali pada snapshot 3 Oktober di bawah digantikan keputusan 18+ Owner 5 Oktober. Gunakan [rekonsiliasi 13 Oktober](#rekonsiliasi-kontrak-rilis--13-oktober-2026) untuk kontrak aktif; refund penuh dan batas public-readiness yang tidak bertentangan tetap berlaku.
 
 Keputusan Owner menetapkan target **pendaftaran publik penuh**, dengan Google
 dan email/password terverifikasi, menggantikan target pilot Customer undangan.

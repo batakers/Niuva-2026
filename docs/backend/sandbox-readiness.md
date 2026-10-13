@@ -1,5 +1,7 @@
 # Kesiapan sandbox provider
 
+**Konteks setelah rekonsiliasi 13 Oktober 2026:** seluruh audit/presence/hasil bertanggal di bawah adalah histori. Status source dan bukti yang masih diperlukan dimiliki [handoff rilis](../frontend/mvp-release-readiness.md#peta-penghambat-rilis). Admin memakai Better Auth/TOTP, Customer target publik 18+ dengan deklarasi, dan B2B WhatsApp langsung. Rujukan Clerk atau target lama tidak menjadi requirement aktivasi kembali. Tidak ada pemeriksaan env/log privat atau provider baru dalam batch dokumentasi ini; ketiadaan file/key pada snapshot lama tidak membuktikan ketiadaan resource hosted saat ini.
+
 Tanggal audit: 2026-09-14. Baseline: `480efd268942533650ffcc79278128894a33691a`.
 Scope: checkout `C:\Portfolio\NIUVA 2026`, konfigurasi proses saat audit,
 dan file environment lokal. Keberadaan akun di dashboard provider, secret
@@ -12,7 +14,7 @@ membuktikan kredensial, koneksi, atau delivery provider.
 
 Snapshot presence-only terbaru per 2026-09-25 dicatat di
 [`provider-staging-intake.md`](./provider-staging-intake.md). Gunakan intake
-tersebut sebagai status environment saat ini; tabel dan hasil di bawah tetap
+tersebut untuk konteks intake historis dan tautan handoff aktif; tabel/hasil di bawah tetap
 merupakan audit historis tanpa nilai secret.
 
 ## Addendum — local demo mode (2026-09-15)

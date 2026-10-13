@@ -2,6 +2,8 @@
 
 Status: **OPEN — menunggu input Owner non-production**
 
+**Handoff aktif — 13 Oktober 2026:** gunakan [peta penghambat rilis](../frontend/mvp-release-readiness.md#peta-penghambat-rilis) dan [kontrak teknis terkini](../TechDesign-Niuva-MVP.md#rekonsiliasi-kontrak-teknis-rilis--13-oktober-2026). Admin kini Better Auth/TOTP, Customer target publik 18+ dengan deklarasi, dan B2B memakai WhatsApp langsung. Acceptance Clerk di bagian lama adalah histori, bukan instruksi mengaktifkannya kembali. WhatsApp otomatis/provider template bukan gate B2B direct link. Identitas/Rheza/alamat retur sudah dikonfirmasi; lengkapi hanya input yang masih terbuka. Tidak ada pembacaan env/log privat atau probe provider pada rekonsiliasi ini.
+
 Tanggal snapshot historis: **2026-09-25**.
 
 **Pembaruan 3 Oktober 2026:** presence lokal terbaru dan input Customer publik
@@ -16,7 +18,7 @@ staging/refund dan bukti hosted masih perlu dilengkapi.
 Dokumen ini adalah formulir intake dan urutan readiness. Ia tidak meminta
 secret dikirim melalui chat, commit, issue, atau dokumen repository. Secret
 harus tetap berada di environment manager atau `.env.local` yang diabaikan
-Git. Pemeriksaan yang dilakukan dari checkout ini hanya membaca nama key dan
+Git. Pemeriksaan historis yang dicatat di bawah hanya membaca nama key dan
 status kosong/non-empty, tanpa mencetak nilainya.
 
 ## Snapshot presence-only 25 September (historis)

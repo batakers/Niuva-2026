@@ -3,8 +3,9 @@
 Snapshot ledger awal: **2026-10-01** · checkout `codex/admin-navigation-docs-v03` · baseline
 `9605a96e936236b7e54b526f05e6b344747b24ab` sebagai sumber runtime; revisi sidebar/dokumentasi
 dikirim melalui branch di atas · scope lokal, non-provider dan non-production.
-Snapshot awal 2026-09-20 pada `a171686` dan addenda bertanggal tetap merupakan
-histori evidence masing-masing. Evidence implementasi terbaru 7 Oktober 2026 dicatat pada addendum Admin Operations di Bagian 1.
+Snapshot 2026-09-20 pada `a171686` dan addenda bertanggal tetap histori evidence
+masing-masing. Rekonsiliasi kontrak/status sumber terbaru **13 Oktober 2026**
+ada di Bagian 1; angka dan penerimaan snapshot lama tidak dipromosikan.
 
 Dokumen ini adalah ledger status terkini untuk handoff. Checklist fase lama di
 `tasks/todo.md` dan `tasks/plan.md` tetap dipertahankan sebagai histori rencana;
@@ -15,14 +16,55 @@ untuk status saat ini gunakan tabel di bawah dan
 
 Bagian ini berisi status yang dipakai untuk handoff: baseline terbaru, tabel
 keputusan readiness, input yang masih diperlukan, dan langkah berikutnya.
-Addendum bertanggal sebelumnya dipindahkan ke
-[Bagian 2](#bagian-2--arsip-evidence-bertanggal-historis); isinya dipertahankan
-dan hanya tingkat judul "Bukti implementasi Admin analytics — 2026-09-28" yang
-disejajarkan dengan addendum lain. Satu penanda historis ditambahkan pada
-catatan replay di addendum Customer Google OAuth 2026-09-25.
+Snapshot bertanggal di bawah dan [Bagian 2](#bagian-2--arsip-evidence-bertanggal-historis)
+dipertahankan sebagai histori; baseline sumber/peta 13 Oktober menjadi handoff
+aktif. Angka gate dan penerimaan lama tidak digabung menjadi hasil baru.
 
-**Batas evidence.** Evidence public, catalog, authenticated-admin, dan quote di
-dokumen ini bersifat **local/loopback/non-production**: database test loopback,
+### Baseline sumber dan batas bukti — 2026-10-13
+
+Baseline sumber: **`a577b7c326ff42d3a642cf5f0b93ccdf59c26bef`**, `main`, working tree bersih ketika inspeksi dimulai. [CI Quality pada commit tersebut](https://github.com/batakers/Niuva-2026/actions/runs/38331266192) berstatus success: lint, typecheck, unit/component, backend, Prisma validation, migration/integration pada PostgreSQL ephemeral, Chromium E2E dan production build. Ini evidence CI baseline kode, bukan hasil CI perubahan dokumen Batch 1 yang belum di-commit, provider/staging, atau produksi.
+
+Rekonsiliasi Batch 1 dilakukan pada worktree `codex/release-contract-batch-1`. Scope hanya authority/draf/status/handoff; tidak ada runtime, test aplikasi, schema/migration, dependency, env, workflow atau deployment config yang diubah. Tidak ada pembacaan env/log privat atau request provider. Validasi/review dokumen dicatat pada [plan Batch 1](../superpowers/plans/2026-10-13-release-contract-batch-1.md).
+
+Kontrak aktif berada pada [PRD](../PRD-Niuva-MVP.md#rekonsiliasi-kontrak-rilis--13-oktober-2026) dan [Tech Design](../TechDesign-Niuva-MVP.md#rekonsiliasi-kontrak-teknis-rilis--13-oktober-2026): Customer publik tetap target, akun **18+ melalui self-declaration** Owner 5 Oktober, Better Auth/TOTP khusus Admin, dan DEVELOP/B2B WhatsApp langsung sejak 11 Oktober. Kontrol deklarasi lokal sudah tersedia; pengesahan policy, public consent, bukti hosted dan aktivasi tetap terpisah. Formal RK-02/RK-03/RK-18 yang masih terbuka tidak berarti metode usia/sitemap harus dipilih atau dibangun ulang.
+
+### Peta penghambat rilis
+
+Status berikut adalah hasil pencocokan source/dokumen pada baseline di atas, bukan audit dashboard atau jaminan seluruh runtime. `PARTIAL` berarti fondasi ada tanpa kemampuan publik lengkap; `MISSING_WORKFLOW` berarti alur target lengkap belum tersedia; `UNVERIFIED` membutuhkan evidence lingkungan. Nama engineering/pengganti yang belum ditetapkan tetap terbuka. Rincian gate dimiliki [paket kesiapan publik](../legal/customer-public-launch-readiness.md#matriks-kesiapan), bukan diduplikasi sebagai keputusan bisnis baru di sini.
+
+| ID / penghambat | Status | Pemilik | Bukti tersedia / bukti yang masih diperlukan | Syarat penutupan |
+| --- | --- | --- | --- | --- |
+| REL-01 — akun dan consent publik | PARTIAL; policy final terbuka | Owner (pengesah), fungsi review; engineering belum bernama | [Resolver](../../src/modules/customer-auth/legal.ts) hanya internal/test; [akun Google baru](../../src/modules/customer-auth/repository.ts) membutuhkan proof internal. Kontrol 18+ ada; versi/tanggal berlaku resmi dan public consent belum tersedia | Owner mengesahkan dokumen/versi/tanggal; Google dan verified email/password membuat akun dengan proof/consent/deklarasi server yang benar. Internal/test tetap terpisah; tidak menghidupkan riwayat tertutup. PUB-POLICY, PUB-AGE; formal register tetap terpisah. |
+| REL-02 — capability hosted | PARTIAL; aktivasi tertutup | Engineering belum bernama; Owner untuk resource/izin | [Tier/mode/grants](../../src/lib/env/deployment.ts), [matrix/resolver](../../src/modules/capabilities/matrix.ts) dan origin ada; [guard lama](../../src/modules/providers/non-production.ts) menolak production/live, grants kosong. Binding/izin hosted belum terbukti | Staging sandbox memakai resource terpisah dan keputusan origin/cookie/CSP/capability yang konsisten. Production tetap tertutup sampai instruksi aktivasi tersendiri; tidak sekadar melepas guard. PUB-HOSTED. |
+| REL-03 — email persisten dan inbox | MISSING_WORKFLOW | Engineering belum bernama; Rheza untuk kanal/operasi; Owner untuk sender | [Mailer Customer](../../src/modules/customer-auth/email-mailer.ts) ditutup pada production; outbox test adalah fixture file. Durable queue/retry/expiry dan inbox hosted belum terbukti | Pesan persisten, retry terbatas/idempoten, proof expired/revoked/closed tidak terkirim ulang, kegagalan terlihat dan inbox/bounce diuji. PUB-EMAIL. |
+| REL-04 — job operasional | PARTIAL_LOCAL; hosted belum terbukti | Engineering belum bernama; Rheza/privasi; Owner untuk cadence/lag/coverage | Cleanup lokal tersedia; [vercel.json](../../vercel.json) hanya menjadwalkan retensi analytics. Scheduler retensi berkas, pelepasan reservasi stok dan rekonsiliasi pembayaran masih terbuka | Job resource-bound, aman diulang/overlap, deadline tetap, lag/last-success/alarm dan petugas terbukti. Cron analytics tidak menutup PUB-JOBS. |
+| REL-05 — refund lengkap | MISSING_WORKFLOW | Owner (approval); engineering belum bernama; Rheza/operasi pembayaran | Notifikasi/status/exception refund ada; [order berbayar](../../src/modules/order/status-service.ts) membutuhkan workflow refund. Case/approval/submit/reconciliation lengkap belum tersedia | Refund penuh sesuai arah produk; nominal server/Decimal, approval Owner, stable key/lock, hasil tak pasti/manual tidak menggandakan pembayaran. Detail kasus/cakupan merchant dibuktikan tanpa meminta ulang pilihan refund penuh. PUB-REFUND, PUB-REFUND-PROVIDER, PUB-REFUND-RECON. |
+| REL-06 — provider dan data pemenuhan | UNVERIFIED | Owner untuk akun/resource/data; engineering belum bernama; Rheza/operator | Adapter/test Google, email, payment/shipping dan R2 ada. Smoke development bertanggal tetap hanya evidence fase tersebut. Konfigurasi/resource saat ini tidak diperiksa dari env | OAuth/inbox, Midtrans sandbox/webhook, Biteship dan private R2 terbukti pada staging; stok/berat/dimensi paket sesuai produk dan paket MAKE diukur setelah selesai. PUB-PROVIDER, PUB-STAGING. |
+| REL-07 — privasi, operasi dan recovery | PARTIAL_LOCAL; review/resource terbuka | Owner; Rheza/privasi; fungsi akuntansi/review; engineering belum bernama | [Availability privasi](../../src/modules/customer-privacy/core.ts) masih internal/test. Identitas/alamat retur/Rheza terkonfirmasi; coverage/kalender, retensi arsip, provider delete dan restore belum terbukti | Hak Customer hosted, kontak pasca-closure, retensi per kategori, prosedur insiden dan latihan restore terbukti tanpa memulihkan akun/riwayat atau mengulang refund/email. PUB-DATA, PUB-RECORDS, PUB-SERVICE, PUB-INCIDENT, PUB-BACKUP. |
+| REL-08 — bukti alur terpadu dan rilis | UNVERIFIED_STAGING; release belum diizinkan | Engineering belum bernama; Owner untuk penerimaan/izin; Rheza/operator | CI baseline lulus; tidak ada bukti staging terpadu baru dari Batch 1. B2B WhatsApp dan layanan BUY/MAKE sudah memiliki source | Uji hosted BUY lalu MAKE termasuk failure/fulfillment/refund yang relevan; B2B membuka tujuan WhatsApp yang benar. Catat scope visual/device/AT, monitoring/rollback, hasil operasi dan keputusan rilis. Deployment/provider/production memerlukan instruksi tersendiri. PUB-STAGING, PUB-RELEASE. |
+
+### Urutan penyelesaian setelah Batch 1
+
+1. **Batch 1 — rekonsiliasi dokumen ini.** Selaraskan keputusan/source, pisahkan snapshot dan catat delapan penghambat. Hasilnya bukan policy resmi atau penutupan gate lingkungan.
+2. **Batch 2 — fondasi hosted, outbox dan kerangka job** (REL-02/03/04). Rancang slice implementasi yang dapat diuji dengan fixture. Resource/sender/topologi hosting dan petugas dikumpulkan sejak tahap ini; tidak harus menunggu semua fakta production untuk coding yang kontraknya jelas.
+3. **Batch 3 — akun publik dan privasi hosted** (REL-01, bagian REL-07). Memakai fondasi Batch 2; kontrol deklarasi 18+ yang ada dipertahankan. Versi policy final dan izin terkait diperlukan sebelum kemampuan dijanjikan/diaktifkan.
+4. **Batch 4 — refund dan rekonsiliasi** (REL-05). Memakai outbox/job untuk hasil dan retry; detail merchant/fallback dipenuhi bersamaan dengan pengembangan fixture.
+5. **Batch 5 — staging/provider/operasi/recovery** (REL-06/07/08). BUY lebih dahulu membuktikan akun→katalog→ongkir→payment→order→fulfillment, lalu MAKE menambah file/review/quote/paket akhir. Scope deployment/smoke diminta tersendiri saat resource dan skenario konkret siap.
+6. **Batch 6 — pemeriksaan rilis production** (REL-08). Evidence relevan, data operasional, dokumen berlaku, monitoring dan rollback dinilai sebelum instruksi deployment/aktivasi.
+
+Batch 2–6 adalah urutan rekomendasi dan dependensi, belum instruksi implementasi/aktivasi dari persetujuan Batch 1. Tiap batch dipecah menjadi hasil kecil yang dapat diperiksa. Pembaruan status dilakukan pada ledger ini dengan tanggal, source, lingkungan dan hasil aktual; tidak membuat roadmap paralel.
+
+**Handoff Batch 2 — 13 Oktober 2026:** Owner mengizinkan perancangan dan implementasi Slice 2.1. [Kontrak binding database](../superpowers/specs/2026-10-13-batch-2-database-binding-design.md) sudah diimplementasikan sebagai modul internal dengan **52 test baru**; [bukti lokal](../superpowers/plans/2026-10-13-batch-2-database-binding.md#hasil-implementasi-lokal--13-oktober-2026) mencatat gate aplikasi yang lulus, batas skip browser, dan review kode independen **0 findings**. Guard belum dihubungkan ke consumer aplikasi; penanda/resource hosted belum diprovision. REL-02 tetap partial lokal/unwired, REL-03/04 belum mempunyai durable outbox atau worker/job hosted; seluruh status PUB/RK/AG mengikuti evidence masing-masing. Provisioning, provider dan bukti hosted tetap hasil berikut yang terpisah.
+
+### Keputusan yang tidak dibuka ulang
+
+- Akun 18+ dengan deklarasi, Owner sebagai pengesah, refund penuh, identitas/kontak/alamat retur/Rheza, B2B WhatsApp serta batas file/lifecycle sudah tercatat. Detail operasional yang masih kosong dipenuhi tanpa mengulang keputusan tersebut.
+- Checkout membutuhkan JavaScript sesuai RK-13; guest checkout tidak dipulihkan. Cache ongkir deferred sesuai RK-14. Social OG asset menunggu Owner, bukan pengganti penyelesaian alur transaksi.
+- Rate limit lintas instance mengikuti topologi hosting RK-11/AG-5.15; [store in-memory](../../src/lib/security/rate-limit.ts) tidak menjamin batas lintas instance. Tidak memilih vendor/dependency/store baru pada Batch 1.
+- WhatsApp otomatis/cloud API merupakan roadmap terpisah. B2B direct link tidak membutuhkan implementasi sender/template otomatis. Redesign luas tidak menjadi prasyarat penyelesaian capability hosted yang tidak bergantung padanya.
+
+**Batas evidence snapshot terdahulu.** Evidence public, catalog, authenticated-admin, dan quote pada
+snapshot di bawah bersifat **local/loopback/non-production**: database test loopback,
 mock Customer OAuth, Clerk development, serta data katalog/quote lokal atau
 sintetis (lihat status `ACCEPTED_LOOPBACK`, `ACCEPTED_LOOPBACK_SYNTHETIC`,
 `ACCEPTED_HISTORICAL_NON_PRODUCTION`, dan `READY_NON_PRODUCTION` pada tabel
@@ -31,6 +73,8 @@ nyata, atau production. Penerimaan visual Owner, pemeriksaan perangkat fisik/AT,
 provider, dan production readiness tetap gate terpisah.
 
 ### Admin Operations architecture — 2026-10-07
+
+**Snapshot historis 7 Oktober.** Status lokal/uncommitted dan permukaan B2B pada laporan berikut adalah konteks saat itu; B2B aktif dipensiunkan 11 Oktober dan Admin kini Better Auth. Gunakan baseline/peta 13 Oktober di atas untuk handoff terkini.
 
 Sumber: [laporan implementasi dan validasi](./admin-operations-implementation-2026-10-07.md) dan [approved plan / checklist selesai](../superpowers/plans/2026-10-07-admin-operations-architecture.md). Baseline PR #46 `5b8aaad05882389df83776a3800367b768b94850`; working tree `codex/admin-operations-architecture`. Belum di-commit/push atau diterapkan hosted/production.
 
@@ -77,6 +121,8 @@ Rincian ada pada penanda di addendum tersebut.
 
 ## Keputusan readiness
 
+**Snapshot keputusan 30 September–1 Oktober.** Tabel ini dipertahankan sebagai evidence bertanggal, bukan daftar status kode/provider terkini. Rujukan Clerk, B2B dan pengiriman tautan historis dibaca dalam konteks fase tersebut. Handoff aktif adalah baseline/peta 13 Oktober di atas; angka historis tidak dinaikkan atau dijumlahkan.
+
 Jalur teknis MVP yang tidak membutuhkan provider eksternal sudah diaudit dan
 siap untuk development/loopback handoff. Ini bukan klaim production-ready:
 deployment, identitas bisnis resmi, pengiriman customer, WhatsApp, Biteship,
@@ -113,14 +159,16 @@ di tabel ini. Token status tabel ini tidak diubah oleh pembaruan baseline.
 
 ## Input yang masih diperlukan
 
-- Daftar customer dan kanal resmi untuk mengirim tautan route-bound v1. Jangan
-  menerbitkan atau mengirim tautan tanpa penerima yang terkonfirmasi.
-- Biodata perusahaan resmi untuk klaim publik, sender bisnis, invoice, dan
-  onboarding provider. Nilai sintetis tidak boleh dipromosikan.
+- Identitas/kontak/alamat retur dan Rheza sudah dikonfirmasi; lengkapi hanya
+  detail penerima/jam, coverage/pengganti, kalender, wilayah dan fakta layanan
+  yang masih terbuka pada [catatan input](../legal/customer-public-input-evidence.md).
+- Daftar penerima/kanal diperlukan hanya bila reissue tautan historis akan
+  dijalankan. Ini bukan allowlist atau prasyarat daftar Customer publik penuh.
 - Akun, sandbox key, callback, dan keputusan katalog/provider bila Owner ingin
   membuka Biteship atau Midtrans.
 - Input nomor bisnis/eligibility, template, penerima serta implementasi delivery
-  bila Owner kelak mengaktifkan roadmap WhatsApp. Pilihan sesi dan opt-in
+  hanya bila Owner kelak mengaktifkan roadmap WhatsApp otomatis; bukan gate
+  B2B WhatsApp langsung. Pilihan sesi dan opt-in
   tercatat pada [keputusan Owner](../Niuva%20Document/NIUVA_Use_Case_Specification.md#9-keputusan-owner-dan-input-terbuka).
 - Angka retensi legal/accounting per kategori record dari Owner dan akuntan/
   penasihat legal; tetap terbuka di luar lifecycle binary 14/60/90 hari.
@@ -130,13 +178,11 @@ di tabel ini. Token status tabel ini tidak diubah oleh pembaruan baseline.
 
 ## Handoff berikutnya
 
-1. Owner memberikan daftar penerima dan kanal; operator menjalankan reissue
-   manual satu per satu dari detail quote/order dan mencatat bukti delivery
-   tanpa menyimpan secret token.
-2. Setelah biodata dan provider tersedia, buka Goal terpisah untuk staging,
-   provider smoke, callback/payment, dan production acceptance.
-3. Jangan menandai `READY` di tabel ini sebagai bukti deployment atau aktivasi
-   provider.
+Gunakan urutan setelah Batch 1 dan REL-01–08 di atas. Pekerjaan pertama yang
+direkomendasikan adalah rancangan slice Batch 2 dengan source/kontrak yang
+sudah selaras. Reissue manual historis tetap mengikuti penerima terkonfirmasi
+bila diminta, tanpa menjadi pekerjaan wajib signup publik. Jangan memakai
+`READY` pada tabel historis sebagai bukti deployment atau aktivasi provider.
 
 ## Bagian 2 — Arsip evidence bertanggal (historis)
 

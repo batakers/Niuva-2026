@@ -2,6 +2,8 @@
 
 **Versi:** SERVICE-REFUND-2026-10-03-v1. **Status:** kontrak operasional untuk review dan implementasi; alur kasus/refund aplikasi belum tersedia pada baseline PR #38. Mengikuti [Syarat Layanan v3](customer-terms-draft.md), [addendum PRD](../PRD-Niuva-MVP.md#addendum-persiapan-customer-publik--3-oktober-2026) dan [matriks kesiapan](customer-public-launch-readiness.md). Nama status di bawah adalah konsep kontrak, bukan enum/schema runtime.
 
+**Rekonsiliasi 13 Oktober:** gunakan [kontrak produk aktif](../PRD-Niuva-MVP.md#rekonsiliasi-kontrak-rilis--13-oktober-2026): akun 18+ dengan deklarasi, pengesahan dokumen oleh Owner, B2B baru melalui WhatsApp di luar website. Refund penuh tetap arah produk; source baseline `a577b7c` menangani notifikasi/exception pembayaran, belum workflow pengajuan/approval/eksekusi refund. Pengesahan ruang lingkup kasus, cakupan merchant dan bukti hasil tetap terbuka; tidak meminta ulang pilihan refund penuh atau penugasan Rheza.
+
 ## Petugas, kanal dan kalender
 
 Owner bertanggung jawab atas keputusan, persetujuan refund dan eskalasi. **Rheza** telah ditetapkan Owner sebagai petugas utama layanan, privasi dan tindak lanjut pembayaran/refund pada 3 Oktober 2026. Petugas layanan menerima dan memantau kasus; petugas pembayaran memeriksa provider/rekonsiliasi; petugas privasi menangani data/closure. Aksi dan kewenangan tetap tercatat. Pengganti saat tidak tersedia, jam/coverage dan akses kanal belum dikonfirmasi (PUB-SERVICE). Penugasan ini tidak otomatis memberi Rheza role Owner atau permission aplikasi; tindakan yang memerlukan izin Owner tetap dilakukan/diperiksa pihak berizin. Aplikasi tidak memutuskan kelayakan refund tanpa Owner.
@@ -80,7 +82,9 @@ Tidak ada retry tanpa batas, pergantian key otomatis, atau pergantian manual han
 
 ## Akun ditutup, anak dan eskalasi
 
-Closure tetap mencabut akses dan tidak memulihkan riwayat. Kasus, order, nominal, refund_key, kewajiban biaya dan bukti tetap dapat ditangani terpisah dari FK akun; kontak terverifikasi minimum dipakai untuk penyelesaian. Daftar ulang tidak memberikan akses kasus lama. Penerima dana atau wali harus diverifikasi kewenangannya, bukan diambil dari akun baru dengan email sama.
+Akun anak/wali berada di luar scope akun aktif 18+; judul ini dipertahankan agar rujukan lama tetap dapat ditemukan. Temuan pihak di bawah umur atau sengketa kewenangan tetap ditinjau sesuai kewajiban yang berlaku, tanpa menganggap deklarasi usia sebagai verifikasi.
+
+Closure tetap mencabut akses dan tidak memulihkan riwayat. Kasus, order, nominal, refund_key, kewajiban biaya dan bukti tetap dapat ditangani terpisah dari FK akun; kontak terverifikasi minimum dipakai untuk penyelesaian. Daftar ulang tidak memberikan akses kasus lama. Penerima dana/pihak yang mewakili harus diverifikasi kewenangannya, bukan diambil dari akun baru dengan email sama. Tidak ada workflow akun anak baru dari SOP ini.
 
 Owner meninjau sengketa, kegagalan provider, keterlambatan SLA dan hak konsumen. Kanal/lembaga penyelesaian luar dan petugas backup wajib dikonfirmasi legal/Owner sebelum policy resmi (PUB-BIZ, PUB-SERVICE); jangan mengarang kontak lembaga atau forum eksklusif. Keluhan data diteruskan ke SOP privasi tanpa menunggu refund selesai.
 

@@ -303,3 +303,11 @@ Catatan: `ADMIN_NOTIFICATION_EMAIL` dan `ADMIN_PROFILE_ALLOW_UPDATE` dicatat ber
 - `CRON_SECRET` di `staging`/`production` wajib hanya bila job dijadwalkan; penjadwal di host belum terlihat dari repository.
 - `NIUVA_ANALYTICS_ENABLED`: aktif tidaknya di tier gated juga bergantung gate `PUB-POLICY` (keputusan Owner terbuka); register tidak memutuskannya.
 - Nilai nyata tidak dibaca dari `.env.local` atau `.env.test.local`. `.env.example` tidak diubah; selisih dengan register ini menjadi masukan task 7.27 setelah persetujuan tertulis.
+
+## 7. Database execution binding — Slice 2.1, 13 Oktober 2026
+
+| Nama env | Tier wajib | Status | Sumber / konsumen | Task pencatat | Contoh non-rahasia |
+| --- | --- | --- | --- | --- | --- |
+| `NIUVA_DATABASE_BINDING_ID` | Semua tier hanya saat guard binding dipanggil; opsional bagi build dan flow lama | `IN_USE` | `src/modules/database-binding/core.ts`, `service.ts`; parser khusus server, bukan global environment schema | Batch 2 Slice 2.1 | UUID penanda database yang ditetapkan saat provisioning; tidak diisi oleh startup |
+
+Expected ID berasal dari konfigurasi server, bukan request/job/row database. Guard memakai tier dari resolver yang ada dan menolak missing/invalid/mismatch. Tidak ada `NEXT_PUBLIC_`, nilai resource nyata, perubahan `.env*`, grant aktivasi atau provisioning melalui penambahan register ini. Kontrak role minimum dan batas clone/privileged writer ada pada [spec binding database](../../../docs/superpowers/specs/2026-10-13-batch-2-database-binding-design.md).

@@ -1,5 +1,7 @@
 # Input dan bukti menuju Customer publik
 
+**Rekonsiliasi 13 Oktober 2026:** keputusan Owner 5 Oktober menetapkan akun **18+ dengan pernyataan usia** dan pengesahan dokumen oleh Owner; keputusan B2B 11 Oktober menetapkan WhatsApp langsung. Source Admin memakai Better Auth. Tidak ada pembacaan env/log privat atau probe provider pada rekonsiliasi ini. Snapshot presence 3 Oktober tetap historis; status/dependensi terbaru ada pada [handoff rilis](../frontend/mvp-release-readiness.md#peta-penghambat-rilis).
+
 **Diperbarui:** 3 Oktober 2026. **Status:** catatan kerja untuk menutup input secara bertahap. Sumber keputusan: jawaban Owner pada percakapan ini; sumber teknis: checkout dan pemeriksaan lokal terbatas; sumber provider/hukum: dokumentasi resmi yang ditautkan. Tidak menyatakan legal approval, aktivasi provider atau kelulusan staging.
 
 ## Keputusan Owner yang sudah dicatat
@@ -9,11 +11,14 @@
 | Petugas utama Customer, privasi dan tindak lanjut pembayaran/refund | **Rheza**, dikonfirmasi Owner | Jam layanan, coverage akhir pekan/libur, pengganti dan akses kanal belum disebutkan. Penugasan operasional tidak otomatis memberikan role Owner/Admin atau permission aplikasi. |
 | Persetujuan refund | Tetap **Owner** sesuai keputusan sebelumnya | Rheza dapat menindaklanjuti kasus/pembayaran dalam kewenangannya; pengajuan provider tetap membutuhkan approval Owner dan rekonsiliasi. |
 | Alamat retur | **Jl. Telekomunikasi No.1, Sukapura, Kec. Dayeuhkolot, Kabupaten Bandung, Jawa Barat**; Owner mengonfirmasi alamat profil juga menerima retur | Detail penerima serta jam penerimaan akan diisi Owner. Customer mendapat instruksi nomor kasus, penerima, jadwal dan metode sebelum mengirim. |
-| Cara review | Kerjakan review internal berdasarkan sumber resmi dan lanjutkan pekerjaan yang sudah mempunyai kontrak; penunjukan konsultan formal tidak menjadi syarat mulai pekerjaan kode | Review substansi, keputusan yang sah, kelayakan anak, bukti provider dan kewajiban pelaporan tetap harus dipenuhi sebelum kemampuan terkait diaktifkan. Jawaban Owner bukan persetujuan final atas policy atau klasifikasi risiko. |
+| Cara review / pengesahan | Kerjakan review internal berdasarkan sumber resmi; Owner menjadi pengesah dokumen sesuai RK-01, keputusan 5 Oktober. Perekrutan konsultan formal bukan syarat mulai kode | Review kewajiban, versi/tanggal berlaku, pengesahan final dan bukti provider tetap terbuka. Keputusan produk 18+ bukan bukti kepatuhan hukum; kebutuhan keahlian/keputusan pihak berwenang dicatat spesifik. |
+| Usia akun | Owner 5 Oktober: 18+ melalui pernyataan usia, tanpa DOB/KYC/biometrik; menggantikan target semua usia 3 Oktober | Kontrol sudah diimplementasikan 6 Oktober. Self-declaration bukan verifikasi usia; formal RK-02/RK-03 dan izin publik tetap terpisah. Metode tidak diminta ulang. |
 
 Nama penasihat hukum/akuntansi tidak diwajibkan sebagai isian awal. Istilah **legal** di matriks adalah fungsi menilai kewajiban dan mencatat keputusan/bukti; Owner dapat mengatur review internal. Bila suatu persoalan memerlukan keahlian, verifikasi atau keputusan pihak berwenang, kebutuhan itu dicatat secara spesifik. Jangan mengubahnya menjadi persyaratan merekrut tim formal untuk seluruh pengembangan.
 
 ## Bukti konfigurasi lokal terbaru
+
+**Snapshot historis 3 Oktober; tidak diperiksa ulang 13 Oktober.** Angka terisi/kosong di bawah tidak menyatakan konfigurasi checkout/worktree atau resource hosted saat ini. Rujukan Clerk hanya untuk snapshot tersebut; runtime Admin kini Better Auth/database aplikasi.
 
 Pemeriksaan 3 Oktober membaca `.env.local` hanya untuk status terisi/kosong dan scope loopback; **tidak mencetak nilai** dan tidak mengirim request ke provider. Nama group mengikuti kontrak environment runtime. File staging/production diperiksa keberadaannya saja, tanpa membaca credential. Bukti ini menutup pertanyaan presence lokal, bukan PUB-PROVIDER/PUB-STAGING.
 
@@ -33,7 +38,7 @@ Snapshot 25 September di [intake provider](../backend/provider-staging-intake.md
 
 ## Review akun anak yang dapat dikerjakan sekarang
 
-Target semua usia dan dua metode autentikasi tetap mengikuti [PRD](../PRD-Niuva-MVP.md#addendum-persiapan-customer-publik--3-oktober-2026). [Penilaian kelompok usia](customer-public-launch-readiness.md#penilaian-akun-anak) membedakan akses anak, kelayakan fitur dan consent wali. Self-assessment memang merupakan bagian proses aturan; perekrutan konsultan eksternal bukan hasil yang dibuktikan oleh dokumen ini.
+**Arsip review 3 Oktober, bukan scope kerja aktif.** Judul dipertahankan untuk rujukan historis. Target semua usia telah digantikan 18+ Owner 5 Oktober; tabel berikut tidak memerintahkan implementasi akun anak/wali. [Kajian kelompok usia](customer-public-launch-readiness.md#penilaian-akun-anak) tetap bahan review bila target dibuka kembali. Risiko deklarasi usia keliru/temuan data anak tetap masuk review kepatuhan dan prosedur insiden yang relevan.
 
 | Bagian review | Temuan konkret / requirement | Status kerja |
 | --- | --- | --- |
@@ -55,8 +60,8 @@ Dokumentasi umum provider hanya menutup requirement produk/API, bukan fakta merc
 | --- | --- | --- |
 | Midtrans refund | API/refund_key, perbedaan accepted vs hasil bank, window/cutoff dan fallback terdokumentasi | Sandbox account tersedia, daftar metode/channel merchant, API refund aktif/eligible, batas waktu/ETA, prosedur saldo dan dana manual; lalu test sandbox. |
 | Pendanaan refund manual/biaya retur | Owner tetap menyetujui; nominal transaksi server dan biaya luar charge terpisah | Jalur pembayaran bisnis yang berwenang, siapa eksekutor, sumber dana, bukti transfer serta verifikasi penerima. Nomor rekening pribadi/credential tidak perlu dicatat di repo. |
-| Email | Resend lokal terisi | Sender/domain/from yang tersedia untuk hosted, penerima test, bukti inbox/bounce, retensi pesan/log dan purge provider. |
-| Penyimpanan/data | R2 dan PostgreSQL lokal tersedia | Vendor/resource hosted yang benar-benar dipilih, lokasi primary/backup, subprocessor/DPA, akses, retensi dan bukti delete. |
+| Email | Snapshot presence Resend 3 Oktober tersedia; konfigurasi saat ini tidak diperiksa ulang | Sender/domain/from yang tersedia untuk hosted, penerima test, bukti inbox/bounce, retensi pesan/log dan purge provider. |
+| Penyimpanan/data | Snapshot lokal R2/PostgreSQL tersedia; bukan evidence resource hosted saat ini | Vendor/resource hosted yang benar-benar dipilih, lokasi primary/backup, subprocessor/DPA, akses, retensi dan bukti delete. |
 | Backup/restore | Kontrak restore harus mempertahankan closure/holds/due dan rekonsiliasi refund/outbox | Resource, jadwal/expiry, pemilik, RPO/RTO yang disetujui dan latihan restore terisolasi. Tidak mengarang angka retensi atau kemampuan delete. |
 | Staging | Proyek terpisah tetap pilihan Owner | Nama/project/resource non-secret, URL HTTPS, provider sandbox, owner teknis dan aturan pengoperasian; deployment membutuhkan instruksi sendiri. |
 
@@ -66,8 +71,8 @@ Dokumentasi [cakupan refund](https://docs.midtrans.com/docs/what-payment-method-
 
 1. Catat jawaban Owner sekali pada catatan ini dan dokumen yang menggunakannya. Jangan meminta ulang nama petugas atau alamat yang sudah dikonfirmasi.
 2. Siapkan implementasi bagian yang kontraknya sudah jelas: consent berversi, kasus/approval/full refund/idempotensi, outbox/expiry, tier hosted dan job/monitoring. Desain serta test dengan fixture tidak memerlukan perekrutan konsultan formal. Eksekusi batch kode mengikuti scope yang diminta pengguna; catatan ini bukan perintah mengaktifkan resource.
-3. Lengkapi keputusan assurance/akses anak berdasarkan asesmen dan bukti metode/provider; fitur terkait tetap gagal tertutup sampai hasilnya sah dan teruji. Generic auth framework tidak menjadi alasan menyatakan usia/wali sudah verified.
+3. Pertahankan kontrol deklarasi 18+ yang sudah dipilih/diimplementasikan; selesaikan pengesahan policy dan review terbuka tanpa menambah akun anak/wali. Auth framework/deklarasi bukan bukti usia terverifikasi. Formal RK-02/RK-03 tidak dinaikkan oleh perubahan dokumen ini.
 4. Isi detail operasional yang belum diberikan saat tersedia, lalu lakukan simulasi Rheza/Owner terhadap SLA dan tindak lanjut pasca-closure. Coverage 72 jam kalender memerlukan penugasan nyata, termasuk akhir pekan/libur.
 5. Uji sandbox/staging/restore ketika resource non-production siap dan tindakan terkait diinstruksikan. Publikasi policy dan activation production mengikuti bukti serta instruksi terpisah.
 
-PUB-BIZ/PUB-SERVICE sekarang mempunyai input Owner yang sudah dikonfirmasi, tetapi belum tertutup seluruhnya. PUB-AGE/PUB-GUARDIAN dan bukti provider/backup tidak dinyatakan selesai hanya karena proses administratif disederhanakan. Daftar status/bukti lengkap tetap di [matriks kesiapan](customer-public-launch-readiness.md#matriks-kesiapan).
+PUB-BIZ/PUB-SERVICE mempunyai input terkonfirmasi, tetapi belum tertutup seluruhnya. PUB-AGE mempunyai kontrol lokal yang sudah ada; akun anak/wali di luar scope 18+, dengan status formal keputusan tetap terpisah. Pengesahan policy, provider/backup dan izin rilis tidak ditutup oleh rekonsiliasi ini. Status/bukti lengkap berada pada [matriks kesiapan](customer-public-launch-readiness.md#matriks-kesiapan).
