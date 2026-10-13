@@ -175,7 +175,7 @@ export default async function AdminOrderDetailPage({
               <div className="grid gap-4 sm:grid-cols-2">
                 <ShipmentMetadataField label="Nama penerima" name="recipientName" value={order.address?.recipientName ?? ""} />
                 <ShipmentMetadataField label="Nomor telepon" name="phone" value={order.address?.phone ?? ""} />
-                <Label className="grid gap-1.5 text-sm font-medium sm:col-span-2" htmlFor="addressLine">
+                <Label className="grid gap-4 text-sm font-medium sm:col-span-2" htmlFor="addressLine">
                   Alamat lengkap
                   <Textarea className="min-h-24 rounded-lg border border-input bg-background px-3 py-2 text-base font-normal shadow-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50" defaultValue={order.address?.addressLine ?? ""} id="addressLine" name="addressLine" required rows={3} />
                 </Label>
@@ -234,7 +234,7 @@ function Info({ label, value }: Readonly<{ label: string; value: string }>) {
 
 function MeasurementField({ label, name }: Readonly<{ label: string; name: string }>) {
   return (
-    <Label className="grid gap-1.5 text-sm font-medium" htmlFor={name}>
+    <Label className="grid gap-4 text-sm font-medium" htmlFor={name}>
       {label}
       <Input
         className="min-h-11 rounded-lg border border-input bg-background px-3 text-base font-normal shadow-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
@@ -251,7 +251,7 @@ function MeasurementField({ label, name }: Readonly<{ label: string; name: strin
 
 function ShipmentMetadataField({ label, name, required = true, value }: Readonly<{ label: string; name: string; required?: boolean; value: string }>) {
   return (
-    <Label className="grid gap-1.5 text-sm font-medium" htmlFor={name}>
+    <Label className="grid gap-4 text-sm font-medium" htmlFor={name}>
       {label}
       <Input
         className="min-h-11 rounded-lg border border-input bg-background px-3 text-base font-normal shadow-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"

@@ -52,6 +52,7 @@ Nilai unknown/unavailable memakai penjelasan; bukan nol palsu. Empty state membe
 - Navigasi link dan button mutasi tetap berbeda, termasuk ketika memakai prop render pada primitive Base UI.
 - Fokus ring, label icon-only, touch target 44px, Escape, focus trap/return, dan reduced motion diperiksa pada hasil aktual.
 - Inline status, bantuan, dan validation dekat field; angka atau bahasa teknis internal tidak menggantikan penjelasan bisnis.
+- Field vertikal mengikuti jarak global 16px antara label dan kontrol; bantuan/error tetap dekat ke kontrol. Checkbox/radio tetap inline dengan jarak internal sesuai kontraknya.
 - Tarif Custom Print mempertahankan Ubah → Tinjau → Terapkan khusus Owner dan snapshot/validasi existing. Perubahan visual tidak mengaktifkan tarif/provider atau menyelesaikan business TBD.
 
 Pencatatan keuangan manual existing tidak dihapus hanya karena intake inquiry/proposal B2B sudah dihentikan. Audit/design task tidak mengubah business logic tersebut.

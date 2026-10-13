@@ -30,11 +30,11 @@ export function ClaimForm() {
   }
 
   return <form action={claim} className="space-y-4">
-    <div><label className="mb-2 block text-sm font-medium" htmlFor="claim-kind">Jenis pekerjaan</label>
+    <div><label className="mb-4 block text-sm font-medium" htmlFor="claim-kind">Jenis pekerjaan</label>
       <select id="claim-kind" name="kind" className="min-h-11 w-full rounded-md border border-border bg-background px-3" required>
         <option value="CUSTOM_PRINT_REQUEST">MAKE</option>
       </select></div>
-    <div><label className="mb-2 block text-sm font-medium" htmlFor="claim-token">Token dari tautan privat lama</label>
+    <div><label className="mb-4 block text-sm font-medium" htmlFor="claim-token">Token dari tautan privat lama</label>
       <input id="claim-token" name="token" type="text" autoComplete="off" required minLength={32} className="min-h-11 w-full rounded-md border border-border bg-background px-3" /></div>
     <button type="submit" disabled={pending} className="min-h-11 rounded-md bg-brand-950 px-5 text-white disabled:opacity-50">{pending ? "Memproses…" : "Tautkan ke akun"}</button>
     {message && <p role="status" className="text-sm">{message}</p>}

@@ -70,7 +70,7 @@ export function AppendModelForm({ token, requestId }: Readonly<{ token?: string;
       onBusyChange={setUploadBusy}
       onFileChange={(nextId, nextExtension) => { setFileId(nextId); setExtension(nextExtension); setMessage(undefined); }}
     />
-    <label className="grid gap-2 text-sm font-medium" htmlFor="append-model-unit">
+    <label className="grid gap-4 text-sm font-medium" htmlFor="append-model-unit">
       Unit atau skala {extension === ".stl" ? "(wajib untuk STL)" : "(jika diketahui)"}
       <select className={controlClass} id="append-model-unit" onChange={(event) => setUnitConfirmation(event.target.value)} value={unitConfirmation}>
         <option value="">Belum ditentukan</option>

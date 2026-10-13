@@ -36,13 +36,14 @@ export function AdminSecurityForm() {
     finally { setBusy(false); }
   }
   function submit(event: FormEvent) { event.preventDefault(); void run("password"); }
+  const fieldClass = "flex flex-col items-stretch gap-4";
   const inputClass = "min-h-11 w-full rounded-lg border border-border bg-card px-3 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
   return <form className="space-y-5 rounded-xl border border-border bg-card p-5 sm:p-6" onSubmit={submit} aria-busy={busy}>
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     {message && <p role="status" className="text-sm text-muted-foreground">{message}</p>}
-    <Label className="grid gap-2 block space-y-2"><span className="text-sm font-medium">Password saat ini</span><Input className={inputClass} type="password" autoComplete="current-password" required maxLength={128} value={password} onChange={event => setPassword(event.target.value)} disabled={busy || !hydrated}/></Label>
-    <Label className="grid gap-2 block space-y-2"><span className="text-sm font-medium">Password baru</span><Input className={inputClass} type="password" autoComplete="new-password" required minLength={ADMIN_PASSWORD_MIN_LENGTH} maxLength={ADMIN_PASSWORD_MAX_LENGTH} value={nextPassword} onChange={event => setNextPassword(event.target.value)} disabled={busy || !hydrated}/></Label>
-    <Label className="grid gap-2 block space-y-2"><span className="text-sm font-medium">Konfirmasi password baru</span><Input className={inputClass} type="password" autoComplete="new-password" required minLength={ADMIN_PASSWORD_MIN_LENGTH} maxLength={ADMIN_PASSWORD_MAX_LENGTH} value={confirmation} onChange={event => setConfirmation(event.target.value)} disabled={busy || !hydrated}/></Label>
+    <Label className={fieldClass}><span className="text-sm font-medium">Password saat ini</span><Input className={inputClass} type="password" autoComplete="current-password" required maxLength={128} value={password} onChange={event => setPassword(event.target.value)} disabled={busy || !hydrated}/></Label>
+    <Label className={fieldClass}><span className="text-sm font-medium">Password baru</span><Input className={inputClass} type="password" autoComplete="new-password" required minLength={ADMIN_PASSWORD_MIN_LENGTH} maxLength={ADMIN_PASSWORD_MAX_LENGTH} value={nextPassword} onChange={event => setNextPassword(event.target.value)} disabled={busy || !hydrated}/></Label>
+    <Label className={fieldClass}><span className="text-sm font-medium">Konfirmasi password baru</span><Input className={inputClass} type="password" autoComplete="new-password" required minLength={ADMIN_PASSWORD_MIN_LENGTH} maxLength={ADMIN_PASSWORD_MAX_LENGTH} value={confirmation} onChange={event => setConfirmation(event.target.value)} disabled={busy || !hydrated}/></Label>
     <Button variant="default" className="min-h-11 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50" type="submit" disabled={busy || !hydrated}>Ubah password</Button>
     <div className="space-y-4 border-t border-border pt-5">
       <h2 className="text-lg font-semibold">Kode pemulihan</h2>

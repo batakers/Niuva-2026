@@ -21,11 +21,11 @@ export function StockAdjustmentPanel({
         <input name="variantId" type="hidden" value={variantId} />
         <input name="productId" type="hidden" value={productId} />
         <input name="expectedStockOnHand" type="hidden" value={stockOnHand} />
-        <Label className="grid gap-2 text-sm font-medium" htmlFor={`stock-${variantId}`}>
+        <Label className="grid gap-4 text-sm font-medium" htmlFor={`stock-${variantId}`}>
           <span>Stok fisik baru</span>
           <Input className={inputClass} defaultValue={stockOnHand} id={`stock-${variantId}`} min={0} name="stockOnHand" required type="number" />
         </Label>
-        <Label className="grid gap-2 text-sm font-medium" htmlFor={`reason-${variantId}`}>
+        <Label className="grid gap-4 text-sm font-medium" htmlFor={`reason-${variantId}`}>
           <span>Alasan penyesuaian</span>
           <Textarea className={`${inputClass} min-h-24`} id={`reason-${variantId}`} maxLength={500} name="reason" required rows={3} />
         </Label>
