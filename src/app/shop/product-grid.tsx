@@ -61,7 +61,7 @@ export function ProductGrid({ products, previewEnabled = false }: { products: re
             </div>
           </div>
           <div>
-            <label htmlFor="shop-search" className="mb-2 block text-sm font-semibold">Cari produk</label>
+            <label htmlFor="shop-search" className="mb-4 block text-sm font-semibold">Cari produk</label>
             <Input id="shop-search" type="search" className="h-11 bg-background" placeholder="Cari nama atau fungsi produk" value={query} onChange={event => setQuery(event.target.value)} />
           </div>
         </div>

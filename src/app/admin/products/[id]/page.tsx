@@ -52,7 +52,7 @@ export default async function AdminProductDetailPage({ params, searchParams }: R
           <AdminActionForm action={updateProductAction} className="mt-5" submitLabel="Simpan produk">
             <input name="productId" type="hidden" value={product.id} />
             <div className="grid gap-4 sm:grid-cols-2"><Field label="Nama produk" name="name" required value={product.name} /><Field label="Slug" name="slug" required value={product.slug} /><Field label="Category ID (opsional)" name="categoryId" value={product.category?.id ?? ""} /></div>
-            <Label className="grid gap-2 text-sm font-medium" htmlFor="product-description"><span>Deskripsi</span><Textarea className={textareaClass} defaultValue={product.description} id="product-description" name="description" required rows={4} /></Label>
+            <Label className="grid gap-4 text-sm font-medium" htmlFor="product-description"><span>Deskripsi</span><Textarea className={textareaClass} defaultValue={product.description} id="product-description" name="description" required rows={4} /></Label>
             <Label className="inline-flex min-h-11 items-center gap-3 text-sm font-medium" htmlFor="product-published"><input className="size-5 accent-primary" defaultChecked={product.isPublished} id="product-published" name="isPublished" type="checkbox" /><span>Publikasikan produk di katalog</span></Label>
           </AdminActionForm>
         </Card>
@@ -74,6 +74,6 @@ export default async function AdminProductDetailPage({ params, searchParams }: R
   );
 }
 
-function Field({ id, label, name, required, type = "text", value }: Readonly<{ id?: string; label: string; name: string; required?: boolean; type?: string; value: string }>) { const fieldId = id ?? name; return <Label className="grid gap-2 text-sm font-medium" htmlFor={fieldId}><span>{label}</span><Input className={inputClass} defaultValue={value} id={fieldId} name={name} required={required} type={type} /></Label>; }
+function Field({ id, label, name, required, type = "text", value }: Readonly<{ id?: string; label: string; name: string; required?: boolean; type?: string; value: string }>) { const fieldId = id ?? name; return <Label className="grid gap-4 text-sm font-medium" htmlFor={fieldId}><span>{label}</span><Input className={inputClass} defaultValue={value} id={fieldId} name={name} required={required} type={type} /></Label>; }
 const inputClass = "min-h-11 rounded-lg border border-input bg-background px-3 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm";
 const textareaClass = "min-h-24 rounded-lg border border-input bg-background px-3 py-2 text-base leading-6 outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm";

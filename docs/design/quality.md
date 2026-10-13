@@ -34,7 +34,7 @@ Untuk pekerjaan UI berikutnya, periksa pemakaian komponen shadcn/ui lokal sesuai
 
 1. Catat route, commit/working-tree state, sumber data, dan state yang sedang diperiksa. Jangan mengganti route yang sulit dirender dengan mock lalu mengklaim route tersebut sudah lulus.
 2. Periksa desktop sekitar 1440px dan compact 390px, lalu 320/768/1024/1280px sesuai breakpoint/konten yang berisiko. Ambil capture sebelum/sesudah pada data yang sebanding; sertakan bagian bawah halaman dan state penting, bukan hero saja.
-3. Uji keyboard, focus visibility/return, Escape, label/error association, heading/landmark, zoom 200%, nama/angka panjang, loading/empty/error/unavailable/success, dan reduced motion.
+3. Uji keyboard, focus visibility/return, Escape, label/error association, jarak 16px label–kontrol pada field vertikal, heading/landmark, zoom 200%, nama/angka panjang, loading/empty/error/unavailable/success, dan reduced motion. Pastikan jarak bantuan/error tetap dekat dengan kontrol.
 4. Periksa kontras pasangan aktual, termasuk opacity ring/teks, hover, dark surface, disabled, serta teks di atas media. Pasangan solid yang lolos lint tidak membuktikan semua state.
 5. Periksa tujuan link/CTA, nilai canonical, native/no-JS flow yang berlaku, dan tidak ada overflow halaman. Table scroll terlokalisasi harus disengaja serta dapat digunakan.
 6. Perbaiki defect yang ditemukan dalam scope, lalu konfirmasi hasil. Jalankan gate aplikasi yang diwajibkan untuk perubahan kode; screenshot tidak menggantikan test.
@@ -66,6 +66,7 @@ Untuk membandingkan versi, gunakan `designmd diff <before> <after>` terhadap dua
 | Warna | Resolve alias CSS pada :root dan .dark; bandingkan setiap mapping front matter dengan konteksnya. Jangan menyamakan input border dengan divider. |
 | Tipe | Bandingkan enam role compact, weight, tracking, dan line-height dengan typographySystemTokens; cocokkan seluruh langkah standard/wide dalam tabel dan pemuatan family di layout.tsx. |
 | Bentuk/jarak | Cocokkan rounded sm/md/lg/full ke radius control/card/media/pill dan spacing section/content/card ke runtime. Nama token dokumentasi bukan otomatis utility Tailwind. |
+| Form | Field vertikal memakai jarak 16px (`gap-4`) antara label dan kontrol; bantuan/error dekat kontrol. Checkbox/radio inline tidak memakai jarak vertikal ini. Cocokkan dengan Field/FormField dan halaman aktual. |
 | Komponen | Pastikan pasangan lint adalah subset representatif; dokumentasikan state yang belum ada pada varian tertentu. Periksa source untuk border, focus, dan behavior. |
 | Cakupan shadcn/ui | Company, Commerce/Customer, dan Admin mengacu pada satu kontrak komponen global dan konfigurasi lokal existing. Pisahkan keputusan yang disetujui dari status migrasi/visual acceptance yang benar-benar terbukti; perubahan dokumen saja tidak membuktikan adopsi seluruh route. |
 | Link/authority | Semua file link lokal resolve; panduan area punya jalur baca; proposal/arsip diberi status jelas; kontrak yang superseded tidak tersisa sebagai instruksi aktif. |

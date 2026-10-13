@@ -76,7 +76,7 @@ export function ProjectList({ projects, previewMode = null }: ProjectListProps) 
         disabled={!hydrated}
       >
         <div>
-          <label className="mb-2 block text-sm font-medium" htmlFor="project-search">
+          <label className="mb-4 block text-sm font-medium" htmlFor="project-search">
             Cari project
           </label>
           <Input
@@ -89,7 +89,7 @@ export function ProjectList({ projects, previewMode = null }: ProjectListProps) 
           />
         </div>
         <div>
-          <label className="mb-2 block text-sm font-medium" htmlFor="project-service">
+          <label className="mb-4 block text-sm font-medium" htmlFor="project-service">
             Layanan
           </label>
           <select

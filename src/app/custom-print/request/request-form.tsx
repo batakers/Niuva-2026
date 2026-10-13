@@ -634,7 +634,7 @@ export function RequestForm({
       {isPreview ? (
         <div className="my-6 rounded-lg border border-info-border bg-info-background p-4 text-info">
           <p className="text-sm font-semibold">Preview lokal dengan file contoh</p>
-          <label className="mb-2 mt-3 block text-sm" htmlFor="custom-upload-scenario">Hasil simulasi file</label>
+          <label className="mb-4 mt-3 block text-sm" htmlFor="custom-upload-scenario">Hasil simulasi file</label>
           <select
             className={controlClass}
             disabled={!hydrated || fileBusy || result === "pending"}

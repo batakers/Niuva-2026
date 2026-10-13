@@ -121,7 +121,7 @@ components:
 
 ## Overview
 
-**Status: aktif.** Konsep panduan disetujui Owner pada 11 Oktober 2026, dengan shadcn/ui sebagai dasar komponen seluruh halaman Niuva sesuai kontrak Components di bawah. Nilai fondasi tetap Foundation/Typography v1.0 yang diotorisasi DS-DEC-019. Pembaruan ini hanya dokumentasi; token dan UI runtime belum diubah. `version: alpha` di atas adalah versi format Google DESIGN.md, bukan versi fondasi Niuva.
+**Status: aktif.** Konsep panduan disetujui Owner pada 11 Oktober 2026, dengan shadcn/ui sebagai dasar komponen seluruh halaman Niuva sesuai kontrak Components di bawah. Nilai fondasi tetap Foundation/Typography v1.0 yang diotorisasi DS-DEC-019. Kontrak jarak field melengkapi penggunaan komponen form global tanpa mengubah skala token fondasi. `version: alpha` di atas adalah versi format Google DESIGN.md, bukan versi fondasi Niuva.
 
 **The Precision Workshop** berarti antarmuka membantu orang memeriksa kebutuhan, artefak, keputusan, dan langkah berikutnya. Niuva adalah partner pengembangan produk dengan kapabilitas manufaktur; jangan menyempitkan identitasnya menjadi toko printer atau startup SaaS. Kekhasan berasal dari pekerjaan dan bukti Niuva: prototipe yang sedang diuji, model yang perlu direview, produk yang bisa dibeli, atau order yang perlu ditangani.
 
@@ -218,7 +218,7 @@ Gunakan konfigurasi proyek yang sudah ada: [components.json](components.json) me
 | Komponen | Kontrak |
 | --- | --- |
 | Button / link aksi | Tinggi minimum 44px, radius control, label wrap. Link untuk navigasi; button untuk mutasi. Gunakan varian yang ada dan state aslinya; jangan menyatakan semua varian memiliki pressed color yang belum diimplementasikan. |
-| Form | Label nyata; input memakai `border-input`, bukan divider `border-border`. Bantuan/error dekat field; loading mencegah submit ganda tanpa menghilangkan konteks. Form native/progressive enhancement dipertahankan. |
+| Form | Label nyata; field vertikal memberi jarak 16px (`gap-4`) antara label dan kontrol agar fokus ring tidak terasa menempel. Bantuan/error tetap dekat ke kontrol. Checkbox/radio inline mengikuti jarak internalnya. Input memakai `border-input`, bukan divider `border-border`; loading mencegah submit ganda tanpa menghilangkan konteks. Form native/progressive enhancement dipertahankan. |
 | Focus / status | `focus-visible` jelas tanpa layout shift; pola ring 3px dan offset/separator sesuai surface. Validasi kontras aktual ring, termasuk opacity. Status loading/hasil memakai live region yang tepat; spinner dekoratif. |
 | Card / badge | Card mengelompokkan record atau satu tugas; landmark/heading tetap semantik. Jangan nest control di link seluruh card. Badge noninteraktif boleh 24px dan label wrap. |
 | Option chip | Komposisi Button shadcn dengan elemen button native minimum 44px, selected marker 18px, `aria-pressed`, dan unavailable yang jelas. Bukan pengganti semua selector. |

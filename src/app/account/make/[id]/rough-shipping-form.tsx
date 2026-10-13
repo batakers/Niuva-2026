@@ -29,8 +29,8 @@ export function RoughShippingForm({ requestId }: Readonly<{ requestId: string }>
   }
   return <form className="mt-4 space-y-4 rounded-xl border border-border bg-card p-6" onSubmit={(event) => void check(event)}>
     <p className="text-sm leading-6 text-muted-foreground">Isi tujuan lalu pilih cek ongkir. Rate testing ini berdiri sendiri dari estimasi produksi dan tidak menjadi tagihan. Paket final akan diukur ulang.</p>
-    <label className="grid gap-2 text-sm font-medium" htmlFor="rough-postal">Kode pos tujuan<input className="min-h-11 rounded-md border border-border bg-background px-3" id="rough-postal" name="postalCode" required inputMode="numeric" pattern="[0-9]{5}" maxLength={5} /></label>
-    <label className="grid gap-2 text-sm font-medium" htmlFor="rough-area">Area ID Biteship (opsional)<input className="min-h-11 rounded-md border border-border bg-background px-3" id="rough-area" name="areaId" /></label>
+    <label className="grid gap-4 text-sm font-medium" htmlFor="rough-postal">Kode pos tujuan<input className="min-h-11 rounded-md border border-border bg-background px-3" id="rough-postal" name="postalCode" required inputMode="numeric" pattern="[0-9]{5}" maxLength={5} /></label>
+    <label className="grid gap-4 text-sm font-medium" htmlFor="rough-area">Area ID Biteship (opsional)<input className="min-h-11 rounded-md border border-border bg-background px-3" id="rough-area" name="areaId" /></label>
     <button className="min-h-11 rounded-md bg-brand-950 px-5 text-white disabled:opacity-50" disabled={pending} type="submit">{pending ? "Memeriksa…" : "Cek ongkir kasar"}</button>
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     {result?.status === "PENDING" && <p role="status" className="text-sm">{result.message}</p>}

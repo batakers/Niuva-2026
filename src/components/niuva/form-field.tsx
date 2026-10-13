@@ -74,27 +74,29 @@ export function FormField({
       data-component="form-field"
       data-variant={variant}
     >
-      <div className="flex items-baseline justify-between gap-3">
-        <Label
-          className={cn(
-            "text-sm font-medium",
-            disabled && "cursor-not-allowed opacity-60",
-          )}
-          htmlFor={id}
-        >
-          {label}
-          {required ? (
-            <>
-              <span aria-hidden="true" className="text-destructive">
-                {" "}*
-              </span>
-              <span className="sr-only"> wajib</span>
-            </>
-          ) : null}
-        </Label>
-        {action ? <div className="shrink-0">{action}</div> : null}
+      <div className="flex flex-col gap-4">
+        <div className="flex items-baseline justify-between gap-3">
+          <Label
+            className={cn(
+              "text-sm font-medium",
+              disabled && "cursor-not-allowed opacity-60",
+            )}
+            htmlFor={id}
+          >
+            {label}
+            {required ? (
+              <>
+                <span aria-hidden="true" className="text-destructive">
+                  {" "}*
+                </span>
+                <span className="sr-only"> wajib</span>
+              </>
+            ) : null}
+          </Label>
+          {action ? <div className="shrink-0">{action}</div> : null}
+        </div>
+        {enhancedControl}
       </div>
-      {enhancedControl}
       {description ? (
         <p className="text-xs leading-5 text-muted-foreground" id={descriptionId}>
           {description}
