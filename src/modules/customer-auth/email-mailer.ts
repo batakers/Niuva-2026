@@ -4,11 +4,13 @@ import { buildCustomerAuthLink } from "./app-origin";
 import { isCustomerEmailTestRuntime } from "./email-test-runtime";
 import { parseServerEnvironment } from "@/lib/env/server";
 import { requireAllowed, type CapabilityContext } from "@/modules/capabilities/resolver";
-import { ResendEmailGateway } from "@/modules/notifications/resend";
+import { ResendEmailGateway, type ResendEmailResult } from "@/modules/notifications/resend";
 import { assertNonProductionProvider } from "@/modules/providers/non-production";
 import { appError } from "@/modules/shared/errors";
 import { assertInternalEmail, getInternalAuthConfig, isInternalAuthDatabase } from "./internal-testing";
-export type CustomerAuthMailer = { send: (input: { to: string; token: string; purpose: "verify" | "reset"; returnTo: string; idempotencyKey: string }) => Promise<void> };
+import { emailEnvelopeSchema, type PreparedCustomerEmail } from "../notifications/email-delivery";
+export type CustomerAuthMail = { to: string; token: string; purpose: "verify" | "reset"; returnTo: string; idempotencyKey: string; signal?: AbortSignal };
+export type CustomerAuthMailer = { prepare?(input: CustomerAuthMail): PreparedCustomerEmail; send(input: CustomerAuthMail): Promise<ResendEmailResult | void> };
 export type CustomerAuthMailerCapabilityConfig = Readonly<{
   apiKey: string;
   /** Caller-owned capability inputs; never read from process.env implicitly. */
@@ -42,28 +44,43 @@ export function assertCustomerAuthMailerAllowed(config: CustomerAuthMailerCapabi
   requireAllowed("emailSender", buildCustomerAuthMailerCapabilityContext(config));
 }
 export function createCustomerAuthMailer(source: Readonly<Record<string, string | undefined>> = process.env): CustomerAuthMailer | null {
-  if (isCustomerEmailTestRuntime(source)) return { async send(input) {
-    await mkdir(join(process.cwd(), "test-results"), { recursive: true });
-    await appendFile(join(process.cwd(), "test-results", "customer-email-test-outbox.jsonl"), JSON.stringify({ ...input, fixture: true }) + "\n");
-  } };
+  source = Object.freeze({ ...source });
+  if (isCustomerEmailTestRuntime(source)) {
+    const prepare = (input: CustomerAuthMail): PreparedCustomerEmail => ({
+      envelope: Object.freeze({ from: "fixture@example.test", to: input.to, subject: input.purpose, text: JSON.stringify({ token: input.token, returnTo: input.returnTo }) }),
+      async send(_envelope, idempotencyKey) {
+        await mkdir(join(process.cwd(), "test-results"), { recursive: true });
+        await appendFile(join(process.cwd(), "test-results", "customer-email-test-outbox.jsonl"), JSON.stringify({ ...input, idempotencyKey, signal: undefined, fixture: true }) + "\n");
+      },
+    });
+    return { prepare, async send(input) { const ready = prepare(input); return ready.send(ready.envelope, input.idempotencyKey, input.signal); } };
+  }
   const env = parseServerEnvironment(source);
   if (!env.RESEND_API_KEY || !env.EMAIL_FROM || !env.APP_URL || env.NODE_ENV === "production") return null;
   // Local Customer mail may only reach the configured participant. Missing or
   // invalid internal config cannot accidentally activate an unrestricted sender.
-  if (isInternalAuthDatabase() && !getInternalAuthConfig()) return null;
+  if (isInternalAuthDatabase(source) && !getInternalAuthConfig(source)) return null;
 
   const apiKey = env.RESEND_API_KEY;
   const from = env.EMAIL_FROM;
-  const gateway = new ResendEmailGateway({ apiKey, from, fetch: (url, options) => fetch(url, { ...options, signal: AbortSignal.timeout(10000) }) });
-  return { async send(input) {
-    assertCustomerAuthMailerAllowed({ apiKey, capabilityEnv: source, from, nodeEnv: env.NODE_ENV });
-    if (getInternalAuthConfig() || isInternalAuthDatabase()) assertInternalEmail(input.to, "password");
-    // Canonical origin for the active tier, resolved after the capability
-    // gate; an invalid origin throws before any link is built or sent.
-    const url = buildCustomerAuthLink(source, input.purpose, input.token);
-    if (url === null) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
-    await gateway.send({ to: input.to, idempotencyKey: input.idempotencyKey,
+  const prepare = (input: CustomerAuthMail): PreparedCustomerEmail => {
+    const check = () => {
+      assertCustomerAuthMailerAllowed({ apiKey, capabilityEnv: source, from, nodeEnv: env.NODE_ENV });
+      if (getInternalAuthConfig(source) || isInternalAuthDatabase(source)) assertInternalEmail(input.to, "password", getInternalAuthConfig(source));
+      const url = buildCustomerAuthLink(source, input.purpose, input.token);
+      if (url === null) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
+      return url;
+    };
+    const url = check();
+    const envelope = Object.freeze(emailEnvelopeSchema.parse({ from, to: input.to,
       subject: input.purpose === "verify" ? "Verifikasi email akun Niuva Anda" : "Atur ulang password Niuva Anda",
-      text: `${input.purpose === "verify" ? "Verifikasi alamat email Anda untuk menyelesaikan pendaftaran akun Niuva. Tautan berlaku 24 jam." : "Gunakan tautan berikut untuk mengatur ulang password. Tautan berlaku 30 menit."}\n\n${url.href}\n\nJika Anda tidak meminta tindakan ini, abaikan email ini.` });
-  } };
+      text: `${input.purpose === "verify" ? "Verifikasi alamat email Anda untuk menyelesaikan pendaftaran akun Niuva. Tautan berlaku 24 jam." : "Gunakan tautan berikut untuk mengatur ulang password. Tautan berlaku 30 menit."}\n\n${url.href}\n\nJika Anda tidak meminta tindakan ini, abaikan email ini.` }));
+    return { envelope, async send(saved, idempotencyKey, signal) {
+      check(); const value = emailEnvelopeSchema.parse(saved);
+      if (value.to !== input.to) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
+      const gateway = new ResendEmailGateway({ apiKey, from: value.from, fetch: (url, options) => fetch(url, { ...options, signal: options?.signal ? AbortSignal.any([options.signal, AbortSignal.timeout(10000)]) : AbortSignal.timeout(10000) }) });
+      return gateway.send({ to: value.to, subject: value.subject, text: value.text, idempotencyKey, signal });
+    } };
+  };
+  return { prepare, async send(input) { const ready = prepare(input); return ready.send(ready.envelope, input.idempotencyKey, input.signal); } };
 }
