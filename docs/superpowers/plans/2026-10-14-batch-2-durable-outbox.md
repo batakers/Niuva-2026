@@ -96,7 +96,7 @@ Satu reviewer independen fresh context memeriksa seluruh 13-path diff uncommitte
 Urutan berikut sama dengan ledger eksekusi, termasuk setiap behavior yang reviewer tidak nilai. Biaya menyatakan konsekuensi jika asumsi keputusan salah.
 
 1. Tahap rancangan/rencana dikerjakan internal sesuai permintaan implementasi dan AGENTS.md; tanpa persetujuan serial. Biaya: perubahan arah dapat memerlukan revisi terbatas; keputusan bisnis yang belum ada tetap terbuka.
-2. Ledger/capture Windows memakai write native dan dipertahankan; tanpa commit/push/penghapusan scratch otomatis. Biaya: pencatatan manual dan review memakai allowlist uncommitted, bukan commit range.
+2. Ledger/capture Windows memakai write native dan dipertahankan; commit/push baru dilakukan setelah Owner memintanya. Biaya: sebelum instruksi itu, hasil hanya tersedia lokal dan review memakai allowlist working tree, bukan commit range.
 3. Coverage dimatikan hanya saat focused RED/GREEN. Biaya: hasil focused tidak cukup untuk completion; full suites ber-coverage tetap wajib.
 4. Cipher factory lazy dan expiry cleanup memakai authority job/scheduledJobs terpisah dari email. Biaya: caller berikut harus menyediakan factory dan grant job sendiri; tidak memperoleh grant ambient.
 5. Review independen berjalan bersamaan dengan closing gates pada kode stabil. Biaya: fix sesudah review harus RED→GREEN dan green suite; hasil fix tidak mendapat review independen kedua.
@@ -121,4 +121,4 @@ Tidak ada; reviewer melaporkan nol Minor dan tidak ada finding yang diturunkan o
 
 Langkah berikut adalah Slice 2.3: rancangan/implementasi worker dan kerangka job memakai kontrak ini, termasuk protokol claim/send/retry/reconcile, producer wiring, lifecycle race dan observability. Cadence/lag/coverage serta resource/sender/hosted activation tetap keputusan dan bukti tersendiri. REL-03 hanya partial internal; queue bukan bukti delivery/inbox. Tidak ada production grant atau consumer lama yang dialihkan.
 
-Dokumen ini dan [spec](../specs/2026-10-14-batch-2-durable-outbox-design.md) disimpan bersama source sehingga handoff tidak bergantung pada chat atau scratch. Saat ini perubahan belum di-commit/push; worktree dan branch dipertahankan sampai ada instruksi Git berikutnya. Rollback tetap terbatas pada perubahan slice terhadap baseline; jangan drop tabel/data sebagai langkah otomatis.
+Dokumen ini dan [spec](../specs/2026-10-14-batch-2-durable-outbox-design.md) disimpan bersama source sehingga handoff tidak bergantung pada chat atau scratch. Implementasi Slice 2.2 tersedia di commit `5c3a4dd` pada branch lokal dan remote `codex/batch-2-durable-outbox`; SHA remote diverifikasi sama dengan lokal. Worktree dan branch dipertahankan untuk iterasi berikutnya. Rollback tetap terbatas pada perubahan slice terhadap baseline; jangan drop tabel/data sebagai langkah otomatis.
