@@ -79,7 +79,7 @@ Revert source perubahan Slice 2.3 terhadap baseline; tabel dan kolom aditif teta
 
 ## Hasil aktual
 
-Implementasi runtime, satu fix pass review dan seluruh closing gates **selesai lokal**. Baseline `13dd3cc5860fb8d52a616654a4315b63d12d6be5`, branch `codex/batch-2-durable-outbox`; perubahan Slice 2.3 belum di-commit/push. Main terpisah tetap bersih. Scope source final 19 file; tidak ada dependency, env file, existing migration, grants, workflow atau aktivasi yang berubah. Database tes milik pekerjaan ini sudah dihentikan melalui helper repo; data cluster, worktree dan scratch dipertahankan.
+Implementasi runtime, satu fix pass review dan seluruh closing gates **selesai lokal**. Baseline `13dd3cc5860fb8d52a616654a4315b63d12d6be5`, branch `codex/batch-2-durable-outbox`. Slice 2.3 dikomit sebagai `d9cfaa4` (worker, migration dan tests) serta `926aaea` (dokumentasi), keduanya dipush. [PR #55](https://github.com/batakers/Niuva-2026/pull/55) menggabungkan perubahan Slice 2.2 dan 2.3 menuju `main`; PR masih open dan GitHub menyatakan mergeable pada pemeriksaan terakhir. Main lokal terpisah tetap bersih. Scope source final 19 file; tidak ada dependency, env file, existing migration, grants, workflow atau aktivasi yang berubah. Database tes milik pekerjaan ini sudah dihentikan melalui helper repo; data cluster, worktree dan scratch dipertahankan.
 
 TDD awal: Task 1 unit 5 failed/19 passed → 24 passed; backend 26 failed/4 passed → 30 passed. Task 2 integration 10 failed/4 passed → 14 passed. Task 3 unit 1 failed/30 passed → 31 passed; backend 3 failed/31 passed → 34 passed; integration 36 failed/14 passed → 50 passed. Refinement rate-limit batch stop dan decimal Retry-After juga assertion RED→GREEN, menghasilkan 126 tes terfokus sebelum review.
 
