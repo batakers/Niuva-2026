@@ -7,6 +7,7 @@ import type { CustomPrintNotificationScheduler } from "@/modules/custom-print/se
 import type { InquiryNotificationScheduler } from "@/modules/inquiry/service";
 import { assertNonProductionProvider } from "@/modules/providers/non-production";
 import { appError } from "@/modules/shared/errors";
+import { EmailDeliveryError } from "./email-delivery";
 
 const RESEND_EMAILS_ENDPOINT = "https://api.resend.com/emails";
 
@@ -15,6 +16,7 @@ export type ResendEmailInput = Readonly<{
   subject: string;
   text: string;
   to: string;
+  signal?: AbortSignal;
 }>;
 
 export type ResendEmailResult = Readonly<{ id: string }>;
@@ -36,7 +38,8 @@ export class ResendEmailGateway {
   }
 
   async send(input: ResendEmailInput): Promise<ResendEmailResult> {
-    const response = await this.fetchImplementation(this.endpoint, {
+    let response: Response;
+    try { response = await this.fetchImplementation(this.endpoint, {
       body: JSON.stringify({
         from: this.config.from,
         subject: input.subject,
@@ -49,12 +52,21 @@ export class ResendEmailGateway {
         "Idempotency-Key": input.idempotencyKey,
       },
       method: "POST",
-    });
+      signal: input.signal,
+    }); } catch { throw new EmailDeliveryError("UNKNOWN"); }
 
     if (!response.ok) {
-      throw appError("PROVIDER_UNAVAILABLE", {
-        message: "Layanan email sedang tidak tersedia.",
-      });
+      if (response.status === 429 || response.status === 409) {
+        const body: unknown = await response.json().catch(() => null);
+        const name = body && typeof body === "object" && !Array.isArray(body) ? (body as Record<string, unknown>).name : undefined;
+        if (response.status === 429 && name === "rate_limit_exceeded" || response.status === 409 && name === "concurrent_idempotent_requests") {
+          const header = response.headers.get("Retry-After")?.trim() ?? "";
+          const seconds = /^\d+(?:\.\d+)?$/.test(header) ? Number(header) : 0;
+          const delay = Number.isFinite(seconds) && seconds > 0 && seconds <= 2_147_483.647 ? Math.ceil(seconds * 1000) : 0;
+          throw new EmailDeliveryError("RETRYABLE", delay);
+        }
+      }
+      throw new EmailDeliveryError(response.status >= 400 && response.status < 500 && response.status !== 408 ? "PERMANENT" : "UNKNOWN");
     }
 
     const responseBody: unknown = await response.json().catch(() => null);
@@ -64,9 +76,7 @@ export class ResendEmailGateway {
       typeof responseBody !== "object" ||
       Array.isArray(responseBody)
     ) {
-      throw appError("PROVIDER_UNAVAILABLE", {
-        message: "Layanan email memberi respons yang tidak valid.",
-      });
+      throw new EmailDeliveryError("UNKNOWN");
     }
 
     const responseRecord = responseBody as Readonly<Record<string, unknown>>;
@@ -75,9 +85,7 @@ export class ResendEmailGateway {
       typeof responseRecord.id !== "string" ||
       responseRecord.id.trim().length === 0
     ) {
-      throw appError("PROVIDER_UNAVAILABLE", {
-        message: "Layanan email memberi respons yang tidak valid.",
-      });
+      throw new EmailDeliveryError("UNKNOWN");
     }
 
     return { id: responseRecord.id };

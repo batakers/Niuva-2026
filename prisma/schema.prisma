@@ -25,6 +25,7 @@ model DurableOutboxMessage {
   templateVersion   String   @map("template_version")
   fingerprint       String
   sealedPayload     String?  @map("sealed_payload") @db.Text
+  sealedEnvelope    String?  @map("sealed_envelope") @db.Text
   createdAt         DateTime @map("created_at") @db.Timestamptz(6)
   dueAt             DateTime @map("due_at") @db.Timestamptz(6)
   expiresAt         DateTime @map("expires_at") @db.Timestamptz(6)

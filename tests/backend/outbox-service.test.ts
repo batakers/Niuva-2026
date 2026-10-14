@@ -42,7 +42,7 @@ describe("outbox service authority boundary", () => {
   });
   it("treats equality at the database deadline as expired and scrubs without reading proof", async () => {
     const now = new Date("2030-01-01T00:15:00Z");
-    let row: DurableOutboxMessage = { id: proofId, messageKey: "fixture-message", proofKind: "AUTH", proofId, purpose: "AUTH_VERIFY", templateVersion: "v1", fingerprint: "c".repeat(64), sealedPayload: "encrypted-fixture", createdAt: new Date("2030-01-01T00:00:00Z"), dueAt: new Date("2030-01-01T00:00:00Z"), expiresAt: now, state: "PENDING", attempts: 0, leaseId: null, leaseExpiresAt: null, terminalAt: null, failureCategory: null, providerReference: null };
+    let row: DurableOutboxMessage = { id: proofId, messageKey: "fixture-message", proofKind: "AUTH", proofId, purpose: "AUTH_VERIFY", templateVersion: "v1", fingerprint: "c".repeat(64), sealedPayload: "encrypted-fixture", sealedEnvelope: null, createdAt: new Date("2030-01-01T00:00:00Z"), dueAt: new Date("2030-01-01T00:00:00Z"), expiresAt: now, state: "PENDING", attempts: 0, leaseId: null, leaseExpiresAt: null, terminalAt: null, failureCategory: null, providerReference: null };
     class ExpiredRepository extends PrismaOutboxRepository {
       override async lock() {}
       override async now() { return now; }

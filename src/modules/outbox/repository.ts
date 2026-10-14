@@ -57,7 +57,7 @@ export class PrismaOutboxRepository {
   }
   async find(tx: Prisma.TransactionClient, id: string): Promise<DurableOutboxMessage | null> { return tx.durableOutboxMessage.findUnique({ where: { id } }); }
   async finish(tx: Prisma.TransactionClient, id: string, state: "CANCELLED" | "EXPIRED", now: Date): Promise<DurableOutboxMessage | null> {
-    await tx.durableOutboxMessage.updateMany({ where: { id, state: { in: ["PENDING", "LEASED"] } }, data: { state, sealedPayload: null, leaseId: null, leaseExpiresAt: null, terminalAt: now, failureCategory: state === "EXPIRED" ? "EXPIRED" : "PROOF_INVALID" } });
+    await tx.durableOutboxMessage.updateMany({ where: { id, state: { in: ["PENDING", "LEASED"] } }, data: { state, sealedPayload: null, sealedEnvelope: null, leaseId: null, leaseExpiresAt: null, terminalAt: now, failureCategory: state === "EXPIRED" ? "EXPIRED" : "PROOF_INVALID" } });
     return this.find(tx, id);
   }
   async expired(tx: Prisma.TransactionClient, now: Date, limit: number): Promise<{ id: string }[]> {
