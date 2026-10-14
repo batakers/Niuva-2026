@@ -16,6 +16,32 @@ model DeploymentDatabaseBinding {
   @@map("deployment_database_bindings")
 }
 
+model DurableOutboxMessage {
+  id                String   @id @default(uuid()) @db.Uuid
+  messageKey        String   @unique @map("message_key")
+  proofKind         String   @map("proof_kind")
+  proofId           String   @map("proof_id") @db.Uuid
+  purpose           String
+  templateVersion   String   @map("template_version")
+  fingerprint       String
+  sealedPayload     String?  @map("sealed_payload") @db.Text
+  createdAt         DateTime @map("created_at") @db.Timestamptz(6)
+  dueAt             DateTime @map("due_at") @db.Timestamptz(6)
+  expiresAt         DateTime @map("expires_at") @db.Timestamptz(6)
+  state             String   @default("PENDING")
+  attempts          Int      @default(0)
+  leaseId           String?  @map("lease_id") @db.Uuid
+  leaseExpiresAt    DateTime? @map("lease_expires_at") @db.Timestamptz(6)
+  terminalAt        DateTime? @map("terminal_at") @db.Timestamptz(6)
+  failureCategory   String?  @map("failure_category")
+  providerReference String?  @map("provider_reference")
+
+  @@unique([proofKind, proofId])
+  @@index([state, dueAt])
+  @@index([state, expiresAt])
+  @@map("durable_outbox_messages")
+}
+
 enum AdminRole {
   OWNER
   ADMIN

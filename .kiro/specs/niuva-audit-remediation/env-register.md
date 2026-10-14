@@ -311,3 +311,12 @@ Catatan: `ADMIN_NOTIFICATION_EMAIL` dan `ADMIN_PROFILE_ALLOW_UPDATE` dicatat ber
 | `NIUVA_DATABASE_BINDING_ID` | Semua tier hanya saat guard binding dipanggil; opsional bagi build dan flow lama | `IN_USE` | `src/modules/database-binding/core.ts`, `service.ts`; parser khusus server, bukan global environment schema | Batch 2 Slice 2.1 | UUID penanda database yang ditetapkan saat provisioning; tidak diisi oleh startup |
 
 Expected ID berasal dari konfigurasi server, bukan request/job/row database. Guard memakai tier dari resolver yang ada dan menolak missing/invalid/mismatch. Tidak ada `NEXT_PUBLIC_`, nilai resource nyata, perubahan `.env*`, grant aktivasi atau provisioning melalui penambahan register ini. Kontrak role minimum dan batas clone/privileged writer ada pada [spec binding database](../../../docs/superpowers/specs/2026-10-13-batch-2-database-binding-design.md).
+
+## 8. Durable outbox payload — Slice 2.2, 14 Oktober 2026
+
+| Nama env | Tier wajib | Status | Sumber / konsumen | Task pencatat | Contoh non-rahasia |
+| --- | --- | --- | --- | --- | --- |
+| `NIUVA_OUTBOX_ENCRYPTION_KEY_ID` | Saat cipher untuk enqueue dikonstruksi; opsional bagi build/global parser/cleanup | `IN_USE` | `src/modules/outbox/cipher.ts`, source server eksplisit | Batch 2 Slice 2.2 | ID key versi, karakter A–Z/a–z/0–9/underscore/hyphen, 1–64 karakter |
+| `NIUVA_OUTBOX_ENCRYPTION_KEY` | Saat cipher untuk enqueue dikonstruksi; opsional bagi build/global parser/cleanup | `IN_USE` | `src/modules/outbox/cipher.ts`, key AES-256-GCM 32 byte dalam base64 canonical | Batch 2 Slice 2.2 | Secret server tersendiri; tidak menuliskan contoh key atau nilai nyata |
+
+Config divalidasi oleh parser khusus dan disnapshot; tidak ada ambient config, `NEXT_PUBLIC_`, `.env*` edit, fallback key atau provisioning otomatis. Key ring retained untuk rotasi diberikan lewat dependency server eksplisit. Cipher factory hanya dipanggil setelah gate/binding dan proof valid; expiry cleanup memakai `scheduledJobs` dan binding tersendiri tanpa membutuhkan sender/key. Jadwal, penyimpanan/rotasi secret hosted dan izin resource masih perlu pembuktian lingkungan. Lihat [spec outbox](../../../docs/superpowers/specs/2026-10-14-batch-2-durable-outbox-design.md).
