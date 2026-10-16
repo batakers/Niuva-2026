@@ -6,25 +6,23 @@ import { CustomerEmailRepository } from "@/modules/customer-auth/email-repositor
 import { createOpaqueToken, hashOpaqueToken } from "@/modules/customer-auth/core";
 import { appError } from "@/modules/shared/errors";
 import { assertCustomerPrivacyAvailable, privacyPurposeSchema, privacyRequestSchema, privacyTokenSchema, privacyOwnerSchema } from "./core";
-import { createPrivacyMailer, type PrivacyMailer } from "./mailer";
+import { createCustomerPrivacyProofDelivery } from "../outbox/runtime";
+import type { CustomerPrivacyProofDelivery } from "../outbox/producer";
 import { CustomerPrivacyRepository, type PrivacyActor } from "./repository";
 
 export class CustomerPrivacyService {
-  constructor(readonly repository = new CustomerPrivacyRepository(), readonly mailer: PrivacyMailer | null = createPrivacyMailer(), readonly clock: () => Date = () => new Date(), readonly assertAvailable: () => void = assertCustomerPrivacyAvailable) {}
+  constructor(readonly repository = new CustomerPrivacyRepository(), readonly delivery: CustomerPrivacyProofDelivery | null = createCustomerPrivacyProofDelivery(repository), readonly clock: () => Date = () => new Date(), readonly assertAvailable: () => void = assertCustomerPrivacyAvailable) {}
   async throttle(actor: PrivacyActor, action: string) {
     await new CustomerEmailRepository(this.repository.prisma).limit(`privacy:${action}:${hashOpaqueToken(actor.customerId)}`, action === "confirm" ? 10 : 3, 3600000, this.clock());
   }
-  async sendConfirmation(actor: PrivacyActor, raw: unknown) {
+  async sendConfirmation(actor: PrivacyActor, raw: unknown): Promise<{ status: "queued" | "sent" }> {
     this.assertAvailable();
     const purpose = privacyPurposeSchema.parse(raw);
-    if (!this.mailer) throw appError("PROVIDER_UNAVAILABLE", { message: "Email konfirmasi belum tersedia. Tidak ada izin tindakan yang diberikan." });
+    if (!this.delivery) throw appError("PROVIDER_UNAVAILABLE", { message: "Email konfirmasi belum tersedia. Tidak ada izin tindakan yang diberikan." });
     await this.throttle(actor, "email");
     const token = createOpaqueToken();
-    const record = await this.repository.issue(actor, purpose, token, this.clock());
-    try { await this.mailer.send({ to: record.to, token, purpose, idempotencyKey: `privacy:${record.id}` }); }
-    catch { await this.repository.delivery(record.id, false, this.clock()); throw appError("PROVIDER_UNAVAILABLE", { message: "Email konfirmasi gagal dikirim. Tidak ada izin tindakan yang diberikan. Coba lagi nanti." }); }
-    await this.repository.delivery(record.id, true, this.clock());
-    return { status: "sent" };
+    const state = await this.delivery.issue(actor, purpose, token);
+    return { status: state === "queued" ? "queued" : "sent" };
   }
   async complete(actor: PrivacyActor, raw: { token?: unknown; purpose?: unknown; permanent?: unknown }) {
     this.assertAvailable();

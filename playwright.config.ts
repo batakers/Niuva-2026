@@ -1,4 +1,5 @@
 import { defineConfig } from "@playwright/test";
+import { E2E_OUTBOX_ENV } from "./tests/e2e/helpers/outbox";
 
 const ciTestDatabaseUrl =
   "postgresql://niuva_test@127.0.0.1:5432/niuva_test?schema=public";
@@ -34,6 +35,8 @@ export default defineConfig({
     stdout: "ignore",
     stderr: "pipe",
     env: {
+      ...E2E_OUTBOX_ENV,
+      APP_URL: e2eBaseUrl,
       ...(process.env.CI
         ? {
             DATABASE_URL: ciTestDatabaseUrl,

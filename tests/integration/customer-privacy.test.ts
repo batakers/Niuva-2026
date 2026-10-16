@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { inlinePrivacyProofDelivery } from "../helpers/inline-customer-delivery";
 import { afterEach, describe, expect, it } from "vitest";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { CustomerPrivacyRepository, serializePrivacyExport } from "@/modules/customer-privacy/repository";
@@ -63,8 +64,8 @@ describe("Customer privacy PostgreSQL lifecycle (isolated fixtures)", () => {
   it("persists privacy rate limits across service instances without sending on rejected attempts", async () => {
     const { actor } = await fixture(); let deliveries = 0;
     const mailer = { async send() { deliveries++; } };
-    for (let attempt = 0; attempt < 3; attempt++) await new CustomerPrivacyService(repository, mailer, () => now, () => {}).sendConfirmation(actor, "EXPORT");
-    await expect(new CustomerPrivacyService(repository, mailer, () => now, () => {}).sendConfirmation(actor, "EXPORT")).rejects.toMatchObject({ code: "RATE_LIMITED" });
+    for (let attempt = 0; attempt < 3; attempt++) await new CustomerPrivacyService(repository, inlinePrivacyProofDelivery(repository, mailer, () => now), () => now, () => {}).sendConfirmation(actor, "EXPORT");
+    await expect(new CustomerPrivacyService(repository, inlinePrivacyProofDelivery(repository, mailer, () => now), () => now, () => {}).sendConfirmation(actor, "EXPORT")).rejects.toMatchObject({ code: "RATE_LIMITED" });
     expect(deliveries).toBe(3);
   });
   it("cleans expired temporary records at seven days while preserving active sessions and pending registrations", async () => {
@@ -112,7 +113,7 @@ describe("Customer privacy PostgreSQL lifecycle (isolated fixtures)", () => {
   });
   it("provider failure never authorizes action, and resend invalidates previous confirmation", async () => {
     const { actor } = await fixture(); let sentToken = "";
-    const service = new CustomerPrivacyService(repository, { async send(mail) { sentToken = mail.token; throw new Error("fixture failure"); } }, () => now, () => {});
+    const service = new CustomerPrivacyService(repository, inlinePrivacyProofDelivery(repository, { async send(mail) { sentToken = mail.token; throw new Error("fixture failure"); } }, () => now), () => now, () => {});
     await expect(service.sendConfirmation(actor, "CLOSE")).rejects.toMatchObject({ code: "PROVIDER_UNAVAILABLE" });
     expect(await repository.preview(actor, sentToken, "CLOSE", now)).toBeNull();
     const old = await proof(actor, "EXPORT"); const newer = await proof(actor, "EXPORT");

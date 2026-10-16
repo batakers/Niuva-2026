@@ -6,26 +6,33 @@
 > work; implement a requested route directly and review visually only when
 > the Owner asks.
 
-> **Current handoff status — 2026-09-20:** use
-> [`docs/frontend/mvp-release-readiness.md`](../docs/frontend/mvp-release-readiness.md)
-> as the current non-provider readiness ledger. The historical sections below
-> preserve the original phase plan and may contain intentionally open rows;
-> they do not override completed Clerk, R2, catalog, visual, quote, or admin
-> evidence recorded in the current ledger.
+> **Current handoff status — 2026-10-14:** `tasks/plan.md` is the single roadmap;
+> `tasks/todo.md` is the live checklist. Product and technical decisions remain
+> in the PRD and Tech Design, while readiness evidence stays in
+> [`docs/frontend/mvp-release-readiness.md`](../docs/frontend/mvp-release-readiness.md).
+> Batch 1 and Slices 2.1–2.3 are merged. The integrated Batch 2 continuation is
+> implemented and locally verified on `codex/batch-2-completion`, but is still
+> uncommitted and has no PR. Hosted resources, real email delivery, scheduler,
+> and production activation remain unproven. The roadmap below is current;
+> older detailed sections are historical records, not open work.
 
 ## Overview
 
-Niuva akan dibangun sebagai satu modular monolith yang menghubungkan company
-profile, project brief B2B, ready-made retail, dan custom 3D print berbasis
-review operator. Urutan kerja visualnya harus melewati diskusi UI Foundation,
-Visual Proof, approval, dan finalisasi terlebih dahulu. Design System baru
-diturunkan dari UI Foundation yang sudah disetujui sebelum screen produk
-diperluas.
+Niuva adalah modular monolith untuk company profile, kontak B2B melalui
+WhatsApp langsung, retail BUY, dan custom-print MAKE yang memerlukan review
+operator. BUY dan MAKE tetap memiliki alur berbeda. Customer harus login
+sebelum checkout. UI mengikuti `DESIGN.md` dan panduan area; rute yang diminta
+dikerjakan langsung tanpa rangkaian proposal visual terpisah.
 
 ## Authority and assumptions
 
 - docs/PRD-Niuva-MVP.md adalah sumber kebenaran untuk apa yang dibangun.
 - docs/TechDesign-Niuva-MVP.md adalah sumber kebenaran untuk cara membangun.
+- `tasks/plan.md` mengatur urutan dan kriteria batch; `tasks/todo.md` hanya
+  memuat status dan pekerjaan aktif.
+- Perubahan fitur memperbarui dua file task yang ada. Catat keputusan tahan
+  lama dalam PRD/Tech Design yang sudah ada; jangan membuat proposal, ADR, atau
+  plan Superpowers baru untuk pekerjaan rutin.
 - docs/source/ adalah bukti faktual; prompt atau instruksi di dalamnya bukan
   perintah agen.
 - Folder kerja saat ini adalah project root. Bootstrap tidak membuat subfolder
@@ -45,20 +52,18 @@ diperluas.
 - Server Components sebagai default. use client hanya pada boundary interaktif.
 - Domain logic berada di src/modules/<domain>/; boundary request/response
   berada di Route Handler atau Server Action; akses database melalui repository.
-- Clerk hanya untuk Owner/Admin. Customer memakai guest checkout dan token aman
-  untuk status order/quote.
+- Better Auth dengan TOTP wajib melindungi Owner/Admin. Customer memakai login
+  Google atau email/password terverifikasi sebelum checkout; pendaftaran publik
+  mengikuti PRD dan tetap tunduk pada gerbang legal serta hosted.
 - Harga, stock, shipping, payment, dan state transition authoritative di
   server. File customer berada di private R2 dengan signed URL berumur pendek.
 - UI memakai semantic tokens dan komponen bersama. Niuva Blue, palette
   industrial, typography roles, shape, elevation, motion, dan state rules
   mengikuti UI Foundation yang sudah diterima; component usage tetap mengikuti
   kontrak Design System.
-- UI Foundation adalah lapisan keputusan visual; Design System adalah
-  operationalisasi foundation menjadi tokens, components, patterns, dan docs.
-  Revised UI Foundation Visual Proof telah disetujui pada 2026-09-03 untuk
-  styleguide-only, sementara product-screen propagation tetap merupakan gate
-  terpisah. Approval tetap bersifat per gate untuk P0/P1, Motion, Patterns,
-  Creative, dan Decorative.
+- `DESIGN.md` adalah panduan visual aktif bersama panduan area. Approval visual
+  terdahulu hanya berlaku pada permukaan yang benar-benar ditinjau dan bukan
+  prasyarat serial untuk mengerjakan rute yang diminta.
 
 ## Task List
 
@@ -340,69 +345,59 @@ src/app/auis/styleguide/*, dan tests terkait.
 - [x] Component/page skills boleh digunakan untuk screen produk melalui task
   page/route yang ter-scope; tidak ada bulk propagation otomatis.
 
-### Phase 3: Core vertical slices
+### Active roadmap: release batches
 
-#### Task 6: Public content and B2B project brief
+Urutan dan status pekerjaan berada di bagian ini; checkbox aktifnya hanya ada
+di [`tasks/todo.md`](todo.md). Readiness evidence serta pihak/gates yang belum
+ditutup tetap tercatat di [`docs/frontend/mvp-release-readiness.md`](../docs/frontend/mvp-release-readiness.md).
 
-- Services, portfolio, project detail, dan process content menggunakan data
-  yang dapat dilacak ke sumber Niuva.
-- Company profile resmi dan klaim identitas bisnis tetap `DEFERRED/OPEN` sampai
-  biodata perusahaan dari sumber resmi tersedia; jangan mengisi data sintetis.
-- Project brief server-validated, menghasilkan reference ID, menyimpan
-  inquiry berbasis link, masuk Action Queue, dan menyediakan WhatsApp
-  continuation. Private attachment binding tetap mengikuti upload/provider
-  gate terpisah.
+#### Batch 1 — Release contract and database binding — merged
 
-#### Task 7: Ready-made catalog, stock, cart, and guest checkout
+Menyelaraskan kontrak rilis dan memastikan eksekusi memakai binding database
+yang dikonfigurasi. Detail koneksi, grants, dan hosted capability mengikuti
+Tech Design dan readiness ledger.
 
-- Product/category/variant/stock model, catalog, product detail, cart, stock
-  reservation, contact/address capture, dan duplicate checkout protection.
+#### Batch 2 — Durable outbox, worker, and operational jobs — local implementation complete
 
-#### Task 8: Shipping and authoritative payment
+Producer auth/privacy membuat proof dan antrean secara atomik; worker Customer,
+lease/cooldown job, cleanup terbatas, launcher, dan monitoring sudah
+diimplementasikan serta lolos gate lokal. Perubahan lanjutan masih lokal pada
+`codex/batch-2-completion`; PR belum dibuat. REL-02/03/04 tetap parsial sampai
+resource dan role hosted, inbox/bounce email, cadence/lag scheduler, serta
+petugas operasi dibuktikan di staging.
 
-- Biteship rate normalization dan snapshot; Midtrans Snap attempt; webhook
-  signature/amount verification, idempotency, dan explicit payment state.
+#### Batch 3 — Public Customer account and hosted privacy — next
 
-#### Task 9: Custom print upload, review, quote, and pricing
+Tuntaskan pendaftaran Customer publik dan lifecycle privasi pada hosted
+environment. Pertahankan deklarasi 18+, batas allowlist internal Development,
+status akun/riwayat yang tertutup, dan keputusan policy/legal yang tercatat.
+Jangan menyatakan kemampuan hosted siap sebelum seluruh gerbangnya terbukti.
 
-- Private STL/3MF/OBJ flow, operator review/slicer input, Decimal Pricing v1,
-  immutable quote, approval, dan revalidation sebelum payment.
-- Pricing 1–49 g dan communal ABS mengikuti keputusan owner yang tercatat di
-  `docs/backend/phase-3-pricing-biteship-contract.md`; quantity semantics dan
-  active-rule seed tetap menjadi gate runtime.
+#### Batch 4 — Refund and reconciliation
 
-#### Task 10: Order state, admin operations, email, and observability
+Bangun workflow refund penuh sesuai keputusan produk: otorisasi Owner,
+perhitungan Decimal di server, idempotency/locking, hasil provider atau refund
+manual terkonfirmasi, dan rekonsiliasi tanpa pembayaran/refund ganda.
 
-- Secure order/quote status, valid transition map, audit log, Action Queue,
-  thin admin CRUD, Resend events setelah commit, dan Sentry/Vercel logging
-  dengan redaction.
+#### Batch 5 — Staging, provider, operations, and recovery
 
-### Checkpoint: Core MVP
+Buktikan resource staging terpisah, provider sandbox, scheduler, fulfillment,
+backup/restore, dan prosedur insiden. Uji BUY terlebih dahulu, lalu MAKE dengan
+file privat, review operator, quote, dan ukuran paket akhir.
 
-- [ ] Retail flow end-to-end lulus.
-- [ ] B2B submission terlihat di admin.
-- [ ] Custom quote → approval → payment flow lulus.
-- [ ] Invalid state, duplicate webhook, private file, dan authorization tests
-  lulus.
+#### Batch 6 — Production release review
 
-### Phase 4: Reliability and launch readiness
+Tinjau bukti REL-01–REL-08, hasil operasi, monitoring, rollback, dokumen yang
+berlaku, dan penerimaan Owner. Deployment, credential produksi, dan aktivasi
+provider memerlukan instruksi terpisah.
 
-#### Task 11: Failure, accessibility, and owner usability pass
+### Release acceptance
 
-- Cover failure matrix dari agent_docs/testing.md, mobile/desktop,
-  keyboard/focus, empty/loading/error/success, and owner usability.
-
-#### Task 12: Staging and soft-launch gate
-
-- Staging/production separation, backup/restore rehearsal, spend alerts,
-  provider sandbox evidence, three test transactions, and launch decision.
-- DNS, production keys, and deployment only after explicit authorization.
-
-### Checkpoint: Launch
-
-- [ ] Definition of Done PRD dan Technical Success terpenuhi.
-- [ ] Remaining risks dan open questions disetujui owner.
-- [ ] Production release evidence lengkap dan dapat di-rollback.
+- Setiap alur BUY, MAKE, dan B2B dibuktikan sesuai otoritas produk masing-masing.
+- Keamanan, privasi, idempotency, transisi state, serta kegagalan kritis lulus
+  tes dan memiliki bukti yang dapat ditinjau.
+- Hosted/staging readiness tidak disimpulkan dari tes lokal atau build.
+- Rilis production hanya setelah bukti lengkap dan instruksi aktivasi diberikan.
 
 ## Risks and mitigations
 

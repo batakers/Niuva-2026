@@ -2,6 +2,7 @@ import { readFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { isolatedActorHeaders } from "./helpers/actor";
+import { drainCustomerOutbox } from "./helpers/outbox";
 
 test.beforeEach(async ({ context }, testInfo) => {
   await context.setExtraHTTPHeaders(isolatedActorHeaders(testInfo));
@@ -19,6 +20,7 @@ async function loginPrivacyFixture(page: Page) {
   await page.getByRole("checkbox", { name: /Saya menyatakan/ }).check();
   await page.getByRole("button", { name: "Buat akun", exact: true }).click();
   await expect(page).toHaveURL(/\/verify-email\?/);
+  await drainCustomerOutbox();
   const rows = (await readFile(join(process.cwd(), "test-results/customer-email-test-outbox.jsonl"), "utf8")).trim().split("\n").map(line => JSON.parse(line) as { to: string; purpose: string; token: string; fixture: boolean });
   const token = rows.filter(row => row.fixture && row.to === email && row.purpose === "verify").at(-1)!.token;
   await page.goto(`/verify-email?token=${token}&returnTo=%2Faccount%2Fprivacy`);
@@ -31,6 +33,7 @@ async function loginPrivacyFixture(page: Page) {
 }
 
 async function privacyToken(purpose: string) {
+  await drainCustomerOutbox();
   const rows = (await readFile(join(process.cwd(), "test-results/customer-privacy-test-outbox.jsonl"), "utf8")).trim().split("\n").map(line => JSON.parse(line) as { purpose: string; token: string; fixture: boolean });
   const mail = rows.filter(row => row.fixture && row.purpose === purpose).at(-1);
   expect(mail).toBeTruthy(); return mail!.token;
@@ -44,7 +47,7 @@ async function expectInvalidPrivacyLink(page: Page) {
 }
 async function requestExport(page: Page) {
   await page.getByRole("button", { name: "Minta tautan unduhan", exact: true }).click();
-  await expect(page).toHaveURL(/status=sent/);
+  await expect(page).toHaveURL(/status=queued/);
   const token = await privacyToken("EXPORT");
   await page.goto(`/account/privacy/confirm?action=EXPORT&token=${token}`);
   await page.reload();
@@ -101,7 +104,7 @@ test("privacy forms and export work without JavaScript on 127.0.0.1", async ({ b
     await expect(page).toHaveURL(/status=received/);
     // Keep relative navigation on the same hostname to preserve session binding.
     await page.getByRole("button", { name: "Minta tautan unduhan" }).click();
-    await expect(page).toHaveURL(/status=sent/);
+    await expect(page).toHaveURL(/status=queued/);
     await page.goto(`${loopback.origin}/account/privacy/confirm?action=EXPORT&token=${await privacyToken("EXPORT")}`);
     const downloading = page.waitForEvent("download");
     await page.getByRole("button", { name: "Unduh JSON data saya" }).click();
@@ -124,7 +127,7 @@ test("pending restores after navigation and Owner privacy never becomes public",
 test("permanent closure consumes proof, clears access and cannot replay on disposable test account", async ({ page }) => {
   await loginPrivacyFixture(page);
   await page.getByRole("button", { name: "Minta konfirmasi penutupan" }).click();
-  await expect(page).toHaveURL(/status=sent/);
+  await expect(page).toHaveURL(/status=queued/);
   const token = await privacyToken("CLOSE");
   await page.goto(`/account/privacy/confirm?action=CLOSE&token=${token}`);
   await page.reload(); await page.getByRole("checkbox").check();

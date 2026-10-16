@@ -286,7 +286,7 @@ describe("transaction-bound durable outbox service", () => {
   it("never resurrects a terminal message on a duplicate enqueue", async () => {
     const f = await fixture(), s = service(), queued = await s.enqueue(input(f));
     expect(queued).toMatchObject({ state: "PENDING" });
-    await prisma.$transaction(tx => repository.finish(tx, queued.id, "CANCELLED", new Date()));
+    await prisma.$transaction(async tx => repository.finish(tx, queued.id, "CANCELLED", await repository.now(tx)));
     expect(await s.enqueue(input(f))).toMatchObject({ id: queued.id, duplicate: true, state: "CANCELLED" });
     expect(await prisma.durableOutboxMessage.findUnique({ where: { id: queued.id } })).toMatchObject({ sealedPayload: null });
   });

@@ -70,12 +70,15 @@ export class DurableOutboxService {
   }
   async expireBatch(limit = 100): Promise<number> {
     if (!z.number().int().min(1).max(100).safeParse(limit).success) throw appError("VALIDATION_ERROR");
-    return this.guarded("job", async tx => {
+    return this.guarded("job", async tx => this.expireIn(tx, await this.repository.now(tx), limit, false));
+  }
+  async expireIn(tx: Prisma.TransactionClient, now: Date, limit: number, dryRun: boolean): Promise<number> {
+      if (!z.number().int().min(1).max(100).safeParse(limit).success) throw appError("VALIDATION_ERROR");
       await this.repository.lock(tx);
-      const now = await this.repository.now(tx), expired = await this.repository.expired(tx, now, limit);
+      const expired = await this.repository.expired(tx, now, limit);
+      if (dryRun) return expired.length;
       let count = 0;
       for (const row of expired) if ((await this.repository.finish(tx, row.id, "EXPIRED", now))?.state === "EXPIRED") count++;
       return count;
-    });
   }
 }

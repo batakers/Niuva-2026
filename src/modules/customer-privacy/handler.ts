@@ -59,6 +59,7 @@ export function privacyPostHandler(action: "email" | "export" | "close" | "reque
       }
       const service = factory();
       let reference: string | undefined;
+      let emailStatus: "queued" | "sent" | undefined;
       if (action === "owner") {
         const domainInput = Object.fromEntries(Object.entries(raw).filter(([key]) => key !== "responseView" && key !== "returnTo"));
         const result = await service.handle(await requireAdmin(), domainInput);
@@ -68,7 +69,7 @@ export function privacyPostHandler(action: "email" | "export" | "close" | "reque
         const token = (await cookies()).get(CUSTOMER_SESSION_COOKIE)?.value;
         if (!token) throw appError("UNAUTHORIZED");
         const actor = { customerId: customer.id, sessionHash: hashOpaqueToken(token) };
-        if (action === "email") await service.sendConfirmation(actor, raw.purpose);
+        if (action === "email") emailStatus = (await service.sendConfirmation(actor, raw.purpose)).status;
         else if (action === "request") reference = (await service.request(actor, raw)).referenceNumber;
         else {
           const result = await service.complete(actor, { ...raw, purpose: action === "export" ? "EXPORT" : "CLOSE" });
@@ -79,7 +80,7 @@ export function privacyPostHandler(action: "email" | "export" | "close" | "reque
           return response;
         }
       }
-      const status = action === "email" ? "sent" : action === "owner" ? "updated" : "received";
+      const status = action === "email" ? emailStatus ?? "queued" : action === "owner" ? "updated" : "received";
       const path = action === "owner" ? ownerDetailPath ?? "/admin/privacy" : "/account/privacy";
       const query = new URLSearchParams({ status });
       if (reference) query.set("reference", reference);
