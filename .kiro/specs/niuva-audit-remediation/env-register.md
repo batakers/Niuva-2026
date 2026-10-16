@@ -320,3 +320,11 @@ Expected ID berasal dari konfigurasi server, bukan request/job/row database. Gua
 | `NIUVA_OUTBOX_ENCRYPTION_KEY` | Saat cipher untuk enqueue dikonstruksi; opsional bagi build/global parser/cleanup | `IN_USE` | `src/modules/outbox/cipher.ts`, key AES-256-GCM 32 byte dalam base64 canonical | Batch 2 Slice 2.2 | Secret server tersendiri; tidak menuliskan contoh key atau nilai nyata |
 
 Config divalidasi oleh parser khusus dan disnapshot; tidak ada ambient config, `NEXT_PUBLIC_`, `.env*` edit, fallback key atau provisioning otomatis. Key ring retained untuk rotasi diberikan lewat dependency server eksplisit. Cipher factory hanya dipanggil setelah gate/binding dan proof valid; expiry cleanup memakai `scheduledJobs` dan binding tersendiri tanpa membutuhkan sender/key. Jadwal, penyimpanan/rotasi secret hosted dan izin resource masih perlu pembuktian lingkungan. Lihat [spec outbox](../../../docs/superpowers/specs/2026-10-14-batch-2-durable-outbox-design.md).
+
+## 9. Operational job launcher — Batch 2 completion, 14 Oktober 2026
+
+| Nama env | Tier wajib | Status | Sumber / konsumen | Task pencatat | Contoh non-rahasia |
+| --- | --- | --- | --- | --- | --- |
+| `NIUVA_JOB_DATABASE_ROLE` | Wajib hanya saat launcher job dijalankan pada tier mana pun | `IN_USE` | `src/modules/jobs/runtime.ts` membaca snapshot proses; `src/modules/jobs/core.ts` memvalidasi bentuk identifier PostgreSQL; `src/modules/jobs/repository.ts` membandingkan current/session role dan privilege sebelum handler | Batch 2 completion | `niuva_job_runner` (nama contoh, tidak membuat role atau grant) |
+
+Variabel ini hanya dibaca launcher, tidak masuk `serverEnvironmentSchema` dan tidak diperlukan oleh web server atau build. Nilainya harus sama dengan role koneksi DB yang sudah diprovision secara terpisah; role tidak boleh superuser, pemilik binding marker, atau memiliki privilege pembuatan role/database maupun bypass RLS. Hak marker minimum dan pembatasan kolom mengikuti [spec job Batch 2](../../../docs/superpowers/specs/2026-10-14-batch-2-completion-design.md). Tidak ada role/grant nyata yang dibuat oleh pekerjaan ini.

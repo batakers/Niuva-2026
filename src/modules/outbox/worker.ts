@@ -9,7 +9,8 @@ import type { PrismaOutboxWorkerRepository } from "./worker-repository";
 import { outboxIdentity, outboxMetadataSchema } from "./core";
 import { parseDeliveryOutcome, parseWorkerPolicy, parseWorkerRequest, type AttemptAction, type DeliveryOutcome, type PreparedOutboxDelivery, type OutboxSender, type WorkerPolicy, type WorkerSummary } from "./worker-core";
 import type { EmailEnvelope } from "../notifications/email-delivery";
-export type OutboxWorkerOptions = { bound: Pick<BoundDatabaseService, "run">; repository: PrismaOutboxWorkerRepository; cipherFactory: () => OutboxPayloadCipher; senderFactory: () => OutboxSender; policy: unknown };
+export type OutboxWorkerCoordination = Readonly<{ beforeClaim(tx: Prisma.TransactionClient, now: Date): Promise<Date | null>; recordCooldown(tx: Prisma.TransactionClient, until: Date): Promise<void> }>;
+export type OutboxWorkerOptions = { bound: Pick<BoundDatabaseService, "run">; repository: PrismaOutboxWorkerRepository; cipherFactory: () => OutboxPayloadCipher; senderFactory: () => OutboxSender; policy: unknown; coordination?: OutboxWorkerCoordination };
 type Stopped = { kind: "stopped"; counter: "expired" | "cancelled" | "failed"; unknown?: boolean };
 type Claimed = { kind: "claimed"; row: DurableOutboxMessage; prepared: PreparedOutboxDelivery; envelope: EmailEnvelope; measuredAt: number; validForMs: number };
 type AttemptOutcome = DeliveryOutcome | { kind: "not-started" };
@@ -22,9 +23,11 @@ export class DurableOutboxWorker {
   private readonly cipherFactory: OutboxWorkerOptions["cipherFactory"];
   private readonly senderFactory: OutboxWorkerOptions["senderFactory"];
   private readonly policy: WorkerPolicy;
+  private readonly coordination: OutboxWorkerCoordination | undefined;
   constructor(options: OutboxWorkerOptions) {
     this.policy = parseWorkerPolicy(options.policy); this.bound = options.bound; this.repository = options.repository;
     this.cipherFactory = options.cipherFactory; this.senderFactory = options.senderFactory;
+    this.coordination = options.coordination ? Object.freeze({ ...options.coordination }) : undefined;
   }
   private async guarded<T>(operation: "job" | "outbox", work: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
     try { return await this.bound.run(operation, work); } catch { throw appError("PROVIDER_UNAVAILABLE"); }
@@ -55,6 +58,8 @@ export class DurableOutboxWorker {
     return this.guarded("outbox", async tx => {
       await this.repository.lock(tx);
       let now = await this.repository.now(tx);
+      const jobDeadline = this.coordination ? await this.coordination.beforeClaim(tx, now) : undefined;
+      if (jobDeadline === null) return null;
       const row = (await this.repository.candidates(tx, now, 1, true))[0];
       if (!row) return null;
       const stop = async (state: "FAILED" | "CANCELLED" | "EXPIRED", category: string, counter: Stopped["counter"], unknown = false): Promise<Stopped> => {
@@ -78,7 +83,8 @@ export class DurableOutboxWorker {
       now = await this.repository.now(tx);
       if (row.expiresAt <= now) return stop("EXPIRED", "EXPIRED", "expired");
       if (proof.expiresAt <= now) return stop("CANCELLED", "PROOF_INVALID", "cancelled");
-      const leaseExpiresAt = new Date(Math.min(now.getTime() + this.policy.leaseMs, row.expiresAt.getTime()));
+      if (jobDeadline && jobDeadline <= now) return null;
+      const leaseExpiresAt = new Date(Math.min(now.getTime() + this.policy.leaseMs, row.expiresAt.getTime(), jobDeadline?.getTime() ?? Infinity));
       const leased = await this.repository.claim(tx, row, randomUUID(), now, leaseExpiresAt, sealedEnvelope);
       return { kind: "claimed", row: leased, prepared, envelope, measuredAt, validForMs: leaseExpiresAt.getTime() - now.getTime() };
     });
@@ -120,6 +126,7 @@ export class DurableOutboxWorker {
         }
       } else { action = { state: "FAILED", failureCategory: outcome.kind === "unknown" ? "OUTCOME_UNKNOWN" : outcome.kind === "not-started" ? "SEND_WINDOW_EXPIRED" : "PERMANENT" }; counter = "failed"; }
       if (!await this.repository.finishOwned(tx, row, now, action)) return "lostLease";
+      if (outcome.kind === "retryable" && this.coordination) await this.coordination.recordCooldown(tx, new Date(now.getTime() + Math.max(this.policy.retryDelaysMs[row.attempts - 1] ?? 0, outcome.retryAfterMs ?? 0)));
       if (outcome.kind === "accepted" && valid) await this.repository.markDelivered(tx, proof, now);
       return counter;
     });

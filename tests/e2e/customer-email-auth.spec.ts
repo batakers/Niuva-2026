@@ -2,11 +2,13 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { isolatedActorHeaders } from "./helpers/actor";
+import { drainCustomerOutbox } from "./helpers/outbox";
 test.beforeEach(async ({ context }, testInfo) => {
   await context.setExtraHTTPHeaders(isolatedActorHeaders(testInfo));
 });
 const password = "a long test passphrase for niuva";
 async function mailToken(email: string, purpose: string) {
+  await drainCustomerOutbox();
   const content = await readFile(join(process.cwd(), "test-results/customer-email-test-outbox.jsonl"), "utf8");
   const lines = content.trim().split("\n").map(line => JSON.parse(line) as { to: string; purpose: string; token: string; fixture: boolean });
   const mail = lines.filter(mail => mail.to === email && mail.purpose === purpose && mail.fixture).at(-1);
@@ -55,7 +57,8 @@ test("age declaration stays unchecked, focuses validation, and rejects direct PO
 test("email registration verifies through POST, login works, reset revokes the session", async ({ page }) => {
   const email = `customer-email-${Date.now()}@example.test`;
   await register(page, email);
-  await expect(page.getByText("Email verifikasi dikirim ke")).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "masuk antrean" })).toBeVisible();
+  await expect(page.getByText("Email verifikasi dikirim ke")).toHaveCount(0);
   await page.goto("/account");
   await expect(page).toHaveURL(/\/login\?/);
   const token = await mailToken(email, "verify");
