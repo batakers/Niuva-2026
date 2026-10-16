@@ -147,17 +147,26 @@ describe("Customer privacy PostgreSQL lifecycle (isolated fixtures)", () => {
     await expect(new CustomerWorkRepository(prisma).claim({ customerId: fresh.id, kind: "B2B_INQUIRY", token: `${inquiry.id}.wrong` })).rejects.toMatchObject({ code: "UNAUTHORIZED" });
     await repository.handle(handle(privacy.id), ownerId, new Date(now.getTime() + 2000));
   });
-  it("serializes session/reset/verification issuance against closure; replay cannot recreate erased Customer", async () => {
+  it("serializes session issuance against closure; reset replay cannot recreate erased Customer", async () => {
     const { customer, actor } = await fixture(); const email = new CustomerEmailRepository(prisma); const auth = new CustomerAuthRepository(prisma);
     const reset = createOpaqueToken(); await email.issueToken({ tokenHash: hashOpaqueToken(reset), purpose: "reset", customerId: customer.id, expiresAt: new Date(now.getTime() + 1800000), returnTo: "/account" }, now);
     const token = await proof(actor, "CLOSE");
-    const race = await Promise.allSettled([repository.complete(actor, token, "CLOSE", now), email.consumeReset(reset, "NEXT-HASH", now), auth.createSession({ customerId: customer.id, tokenHash: randomUUID(), expiresAt: new Date(now.getTime() + DAY_MS) })]);
+    const race = await Promise.allSettled([repository.complete(actor, token, "CLOSE", now), auth.createSession({ customerId: customer.id, tokenHash: randomUUID(), expiresAt: new Date(now.getTime() + DAY_MS) })]);
     expect(race[0].status).toBe("fulfilled"); expect(await prisma.customer.findUnique({ where: { id: customer.id } })).toBeNull();
     expect(await prisma.customerSession.count({ where: { customerId: customer.id } })).toBe(0);
-    await expect(email.consumeReset(reset, "NEXT", now)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    await expect(email.consumeReset(reset, "NEXT-HASH", now)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
     await expect(email.issueToken({ tokenHash: randomUUID(), purpose: "reset", customerId: customer.id, expiresAt: new Date(now.getTime() + DAY_MS), returnTo: "/account" }, now)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
     await expect(email.createPending({ handleHash: randomUUID(), email: customer.email, normalizedEmail: customer.email, displayName: "Fixture", passwordHash: "HASH", termsVersion: "TEST", privacyVersion: "TEST", consentAt: now, expiresAt: new Date(now.getTime() + DAY_MS) })).rejects.toMatchObject({ code: "UNAUTHORIZED" });
     await prisma.$transaction(async tx => { await lockCustomerLifecycle(tx); expect(await eraseCustomerAccount(tx, customer.id, now)).toBe(false); });
+  });
+  it("requires a live session when password reset completes before privacy closure", async () => {
+    const { customer, actor } = await fixture(); const email = new CustomerEmailRepository(prisma);
+    const reset = createOpaqueToken(); await email.issueToken({ tokenHash: hashOpaqueToken(reset), purpose: "reset", customerId: customer.id, expiresAt: new Date(now.getTime() + 1800000), returnTo: "/account" }, now);
+    const token = await proof(actor, "CLOSE");
+    await email.consumeReset(reset, "NEXT-HASH", now);
+    await expect(repository.complete(actor, token, "CLOSE", now)).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    expect(await prisma.customer.findUnique({ where: { id: customer.id } })).not.toBeNull();
+    expect(await prisma.customerSession.count({ where: { customerId: customer.id, revokedAt: null } })).toBe(0);
   });
   it("idempotent requests keep original 72h deadline; resolution and hold edits never reset retention", async () => {
     const { actor } = await fixture(); const input = request();
