@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isPublicMediaKey } from "@/modules/public-media/schema";
 
 const requiredText = z.string().trim().min(1);
 const slug = z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
@@ -9,7 +10,7 @@ const nonNegativeMoney = z.string().trim().regex(/^\d+$/);
 const publicMediaStorageKey = z
   .string()
   .trim()
-  .regex(/^media\/products\/[a-z0-9]+(?:-[a-z0-9]+)*\.(?:png|jpe?g|webp)$/i, {
+  .refine(key => isPublicMediaKey(key, "product"), {
     message: "Media product harus memakai key publik yang diizinkan.",
   });
 

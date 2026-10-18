@@ -1,5 +1,6 @@
 import { Prisma, type PrismaClient } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
+import { assertOwnedPublicMedia } from "@/modules/public-media/repository";
 import { recordStockMovement, setStockWithinTransaction } from "@/modules/inventory/movement";
 import { appError } from "@/modules/shared/errors";
 
@@ -44,6 +45,7 @@ export type AdminProductPublishCheck = Readonly<{
 }>;
 
 export interface CatalogRepositoryPort {
+  listActiveCategories?(): Promise<readonly Readonly<{ id: string; name: string }>[]>;
   createProduct(input: CreateProductInput): Promise<Readonly<{ id: string }>>;
   createVariant(input: CreateVariantInput, adminId?: string): Promise<Readonly<{ id: string }>>;
   findPublishedProductBySlug(slug: string): Promise<PublicCatalogProduct | null>;
@@ -69,6 +71,12 @@ export interface CatalogRepositoryPort {
 }
 
 export class CatalogRepository implements CatalogRepositoryPort {
+  async listActiveCategories(): Promise<readonly Readonly<{ id: string; name: string }>[]> {
+    return this.prisma.category.findMany({
+      where: { isActive: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      select: { id: true, name: true },
+    });
+  }
   constructor(private readonly prisma: PrismaClient = getPrismaClient()) {}
 
   async findPublishedProducts(): Promise<readonly PublicCatalogProduct[]> {
@@ -323,6 +331,7 @@ export class CatalogRepository implements CatalogRepositoryPort {
         });
       }
 
+      await assertOwnedPublicMedia(transaction, { kind: "product", id: productId }, items.map(item => item.storageKey));
       await transaction.productMedia.deleteMany({ where: { productId } });
       if (items.length > 0) {
         await transaction.productMedia.createMany({

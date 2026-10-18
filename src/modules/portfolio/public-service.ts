@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
+import { publicMediaUrl } from "@/modules/public-media/schema";
 
 import type { ProjectPreviewItem } from "@/features/frontend-preview/types";
 import { PortfolioRepository } from "@/modules/portfolio/repository";
@@ -20,11 +21,7 @@ function asOptionalCopy(value: string): string | undefined {
 }
 
 function resolvePublicMediaUrl(storageKey: string): string | undefined {
-  if (!/^media\/portfolio\/[a-z0-9][a-z0-9-]*\.(?:png|jpe?g|webp)$/i.test(storageKey)) {
-    return undefined;
-  }
-
-  return `/${storageKey}`;
+  return publicMediaUrl(storageKey, "portfolio");
 }
 
 function resolveDetailReadiness(
