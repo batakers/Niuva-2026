@@ -53,7 +53,7 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 | T29 | M4 | TODO | Email order shipped | T06 | Status sah; isi berizin; tanpa private URL permanen. Integration. |
 | T30 | M4 | TODO | Notifikasi Admin persisten | T06 | Failure terlihat; request/order tetap tersimpan; tanpa WhatsApp otomatis. Integration. |
 | T31 | M4 | BLOCKED_INPUT | Dataset dan tarif launch | T15–T19; Owner | SKU/stok fisik/media/berat/dimensi/rule disetujui untuk target; seed lokal bukan aktivasi launch. Review/import verification. |
-| T32 | M5 | IN_PROGRESS | E2E Admin di CI | T02 | Workflow memasukkan suite; local 24/24 lulus. CI pertama gagal 1/24 pada batas assertion landing MFA 5s; delay 6s mereproduksi RED lokal, lalu penantian respons TOTP 200, navigasi dan status ready lulus GREEN. Guard 401 tetap; menunggu CI kandidat yang diperbaiki. |
+| T32 | M5 | DONE | E2E Admin di CI | T02 | Quality pada `4eb8471` sukses, termasuk seluruh 24 journey Owner/Admin/anonim. Regresi landing MFA 6s mencakup respons TOTP 200, navigasi, status ready dan guard 401; sumber auth tidak diubah. [Bukti CI](https://github.com/batakers/Niuva-2026/actions/runs/39155145353). |
 | T33 | M5 | BLOCKED_EXTERNAL | Dua BUY staging | T03–T14/T21–T31 | Dua variasi transaksi sukses; order/stock/payment/email/status konsisten. Hosted records. |
 | T34 | M5 | BLOCKED_EXTERNAL | Satu MAKE staging | T03–T14/T21–T31 | Model→review→estimasi→quote→bayar→produksi/QC→ongkir final→kirim pada request/order benar. Hosted records/operator. |
 | T35 | M5 | BLOCKED_EXTERNAL | Failure/refund staging | T21–T25 | Duplicate/nominal salah/late/timeout/full refund/manual exception benar dan teraudit. Sandbox. |
@@ -134,7 +134,11 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 - Reproduksi delay landing 6s gagal dengan pesan yang sama (RED). Test sekarang
   menunggu respons verifikasi TOTP 200, navigasi DOMContentLoaded dan status auth
   ready, lalu meneruskan pemeriksaan logout/password/TOTP existing (GREEN 1/1).
-  Tidak ada perubahan auth runtime, retry atau bypass MFA. CI ulang masih terbuka.
+  Tidak ada perubahan auth runtime, retry atau bypass MFA.
+- [CI ulang](https://github.com/batakers/Niuva-2026/actions/runs/39155145353)
+  **success** pada `4eb8471`, termasuk 24/24 Owner/Admin dan production build.
+  T32 ditutup berdasarkan bukti tersebut. Commit setelahnya hanya mencatat
+  status/bukti dokumentasi; gate provider/staging/production tetap terbuka.
 
 ### Bukti lokal 2026-10-18 — sebelum rekonsiliasi
 
