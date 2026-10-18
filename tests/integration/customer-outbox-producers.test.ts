@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { CustomerEmailRepository } from "@/modules/customer-auth/email-repository";
 import { CustomerEmailService } from "@/modules/customer-auth/email-service";
@@ -7,6 +7,7 @@ import { CustomerPrivacyRepository } from "@/modules/customer-privacy/repository
 import { CustomerPrivacyService } from "@/modules/customer-privacy/service";
 import { AGE_DECLARATION_VERSION } from "@/modules/customer-auth/age-declaration";
 import { hashOpaqueToken } from "@/modules/customer-auth/core";
+import { CustomerOutboxProducer } from "@/modules/outbox/producer";
 import { OutboxPayloadCipher } from "@/modules/outbox/cipher";
 import { PrismaOutboxRepository } from "@/modules/outbox/repository";
 import { DurableOutboxService } from "@/modules/outbox/service";
@@ -16,6 +17,10 @@ const prisma = getPrismaClient(), repository = new PrismaOutboxRepository();
 const cipher = new OutboxPayloadCipher({ activeKeyId: "producer-fixture", keys: { "producer-fixture": Buffer.alloc(32, 21).toString("base64") } });
 const bound = { run: <T>(_operation: "job" | "outbox", work: (tx: Prisma.TransactionClient) => Promise<T>) => prisma.$transaction(work) };
 let outbox: DurableOutboxService;
+function deliveries(queue = outbox) {
+  const producer = new CustomerOutboxProducer({ outbox: queue, authRepository: new CustomerEmailRepository(prisma), privacyRepository: new CustomerPrivacyRepository(prisma) });
+  return { auth: { issue: producer.auth.bind(producer) }, privacy: { issue: producer.privacy.bind(producer) } };
+}
 let pendingId: string;
 let email: string;
 async function cleanProducerFixtures() {
@@ -52,10 +57,8 @@ beforeEach(async () => {
 
 describe("auth and privacy durable outbox producers", () => {
   it("commits the verification proof with one encrypted message and no inline send or account", async () => {
-    const send = vi.fn();
-    const service = new CustomerEmailService(new CustomerEmailRepository(prisma), { send }, null, () => new Date(), outbox);
-    expect(await service.send("verify", email, "/checkout", { pendingId })).toEqual({ delivery: "queued" });
-    expect(send).not.toHaveBeenCalled();
+    const service = new CustomerEmailService(new CustomerEmailRepository(prisma), deliveries().auth, null);
+    expect(await service.send("verify", email, "/checkout", { pendingId })).toBe("queued");
     const proof = await prisma.customerEmailToken.findFirstOrThrow({ where: { pendingId } });
     const message = await prisma.durableOutboxMessage.findUniqueOrThrow({ where: { proofKind_proofId: { proofKind: "AUTH", proofId: proof.id } } });
     expect(message).toMatchObject({ state: "PENDING", purpose: "AUTH_VERIFY" });
@@ -65,15 +68,13 @@ describe("auth and privacy durable outbox producers", () => {
   });
   it("rolls back proof issuance and its cooldown if enqueue fails", async () => {
     const failed = new DurableOutboxService({ bound, repository, cipherFactory: () => { throw new Error("fixture key unavailable"); } });
-    const send = vi.fn();
-    const service = new CustomerEmailService(new CustomerEmailRepository(prisma), { send }, null, () => new Date(), failed);
+    const service = new CustomerEmailService(new CustomerEmailRepository(prisma), deliveries(failed).auth, null);
     await expect(service.send("verify", email, "/account", { pendingId })).rejects.toMatchObject({ code: "PROVIDER_UNAVAILABLE" });
     expect(await prisma.customerEmailToken.count({ where: { pendingId } })).toBe(0);
     expect(await prisma.customerPendingRegistration.findUniqueOrThrow({ where: { id: pendingId } })).toMatchObject({ sentAt: null, deliveryConfirmed: false });
-    expect(send).not.toHaveBeenCalled();
   });
   it("cancels the old message when resend revokes its proof", async () => {
-    const service = new CustomerEmailService(new CustomerEmailRepository(prisma), { send: vi.fn() }, null, () => new Date(), outbox);
+    const service = new CustomerEmailService(new CustomerEmailRepository(prisma), deliveries().auth, null);
     await service.send("verify", email, "/account", { pendingId });
     const oldProof = await prisma.customerEmailToken.findFirstOrThrow({ where: { pendingId } });
     const oldMessage = await prisma.durableOutboxMessage.findUniqueOrThrow({ where: { proofKind_proofId: { proofKind: "AUTH", proofId: oldProof.id } } });
@@ -85,7 +86,7 @@ describe("auth and privacy durable outbox producers", () => {
   it("queues password reset without requiring an inline mailer", async () => {
     const resetEmail = `privacy-producer-reset-${randomUUID()}@example.test`, now = new Date();
     const customer = await prisma.customer.create({ data: { email: resetEmail, normalizedEmail: resetEmail, emailVerifiedAt: now, passwordCredential: { create: { passwordHash: "fixture-password-hash" } } } });
-    const service = new CustomerEmailService(new CustomerEmailRepository(prisma), null, null, () => now, outbox);
+    const service = new CustomerEmailService(new CustomerEmailRepository(prisma), deliveries().auth, null, () => now);
     await service.forgot(resetEmail, "/account", `forgot-${randomUUID()}`);
     const proof = await prisma.customerEmailToken.findFirstOrThrow({ where: { customerId: customer.id, purpose: "reset" } });
     const message = await prisma.durableOutboxMessage.findUniqueOrThrow({ where: { proofKind_proofId: { proofKind: "AUTH", proofId: proof.id } } });
@@ -95,11 +96,10 @@ describe("auth and privacy durable outbox producers", () => {
     const customer = await prisma.customer.create({ data: { email: `privacy-${email}`, normalizedEmail: `privacy-${email}`, emailVerifiedAt: new Date() } });
     const actor = { customerId: customer.id, sessionHash: hashOpaqueToken(randomUUID()) };
     await prisma.customerSession.create({ data: { customerId: customer.id, tokenHash: actor.sessionHash, expiresAt: new Date(Date.now() + 3_600_000) } });
-    const send = vi.fn();
-    const service = new CustomerPrivacyService(new CustomerPrivacyRepository(prisma), { send }, () => new Date(), () => {}, outbox);
+    const service = new CustomerPrivacyService(new CustomerPrivacyRepository(prisma), deliveries().privacy, () => new Date(), () => {});
     expect(await service.sendConfirmation(actor, "EXPORT")).toEqual({ status: "queued" });
     const proof = await prisma.customerPrivacyConfirmation.findFirstOrThrow({ where: { customerId: customer.id } });
-    expect(proof.delivered).toBe(false); expect(send).not.toHaveBeenCalled();
+    expect(proof.delivered).toBe(false);
     const message = await prisma.durableOutboxMessage.findUniqueOrThrow({ where: { proofKind_proofId: { proofKind: "PRIVACY", proofId: proof.id } } });
     expect(message).toMatchObject({ purpose: "PRIVACY_EXPORT", state: "PENDING" });
     await prisma.customerSession.update({ where: { tokenHash: actor.sessionHash }, data: { revokedAt: new Date() } });

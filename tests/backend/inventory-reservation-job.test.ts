@@ -1,116 +1,42 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Prisma } from "@/generated/prisma/client";
-import type { BoundDatabaseService } from "@/modules/database-binding/service";
-import { appError } from "@/modules/shared/errors";
-import type { InventoryService } from "@/modules/inventory/service";
-import {
-  INVENTORY_RESERVATION_JOB_KEY,
-  InventoryReservationJobRunner,
-} from "@/modules/inventory/reservation-job";
-import type { PrismaScheduledJobRepository } from "@/modules/scheduled-jobs/repository";
-import { ScheduledJobService } from "@/modules/scheduled-jobs/service";
+import { describe, expect, it, vi } from "vitest";
+import { InventoryReservationJobRunner } from "@/modules/inventory/reservation-job";
+import type { OperationalJobRuntime } from "@/modules/jobs/runtime";
+import type { JobInspection } from "@/modules/jobs/monitoring";
 
-const now = new Date("2026-10-18T10:00:00.000Z");
-const expiredAt = new Date(now.getTime() - 5_000);
+const jobPolicy = { leaseMs: 60_000, minIntervalMs: 0, failureCooldownMs: 1000 };
 
-describe("inventory reservation job runner", () => {
-  let scheduledRepository: {
-    acquire: ReturnType<typeof vi.fn>;
-    finish: ReturnType<typeof vi.fn>;
-    find: ReturnType<typeof vi.fn>;
-    readNow: ReturnType<typeof vi.fn>;
-  };
-  let reservations: {
-    findMany: ReturnType<typeof vi.fn>;
-    count: ReturnType<typeof vi.fn>;
-    findFirst: ReturnType<typeof vi.fn>;
-  };
-  let inventory: { releaseExpired: ReturnType<typeof vi.fn> };
-  let runner: InventoryReservationJobRunner;
-
-  beforeEach(() => {
-    scheduledRepository = {
-      acquire: vi.fn(async (_tx: Prisma.TransactionClient, input: { leaseId: string }) => ({
-        acquired: true,
-        leaseId: input.leaseId,
-        leaseExpiresAt: new Date(now.getTime() + 300_000),
-      })),
-      finish: vi.fn(async () => true),
-      find: vi.fn(async () => null),
-      readNow: vi.fn(async () => now),
-    };
-    reservations = {
-      findMany: vi.fn(async () => [{ id: "reservation-1" }, { id: "reservation-2" }, { id: "reservation-3" }]),
-      count: vi.fn(async () => 3),
-      findFirst: vi.fn(async () => ({ expiresAt: expiredAt })),
-    };
-    const transaction = { stockReservation: reservations } as unknown as Prisma.TransactionClient;
-    const bound: Pick<BoundDatabaseService, "run"> = {
-      async run<T>(_operation: "outbox" | "job", work: (tx: Prisma.TransactionClient) => Promise<T>) {
-        return work(transaction);
-      },
-    };
-    const scheduledJobs = new ScheduledJobService({
-      bound,
-      repository: scheduledRepository as unknown as PrismaScheduledJobRepository,
-    });
-    inventory = {
-      releaseExpired: vi.fn(async () => [{ id: "reservation-1" }, { id: "reservation-2" }]),
-    };
-    runner = new InventoryReservationJobRunner({
-      bound,
-      inventory: inventory as unknown as Pick<InventoryService, "releaseExpired">,
-      scheduledJobRepository: scheduledRepository as unknown as PrismaScheduledJobRepository,
-      scheduledJobs,
-    });
+function fixture() {
+  const inspection: JobInspection = { checkedAt: new Date(0).toISOString(), jobs: [], outbox: { pending: 0, leased: 0, failed: 0, unknown: 0, expiredPending: 0, staleLeases: 0, dueLagMs: 0 }, privacy: { overdue: 0, overdueHolds: 0 }, inventory: { remainingDue: 0, lagMs: 0 }, alarms: [] };
+  const runtime = { run: vi.fn<OperationalJobRuntime["run"]>().mockResolvedValue({ job: "INVENTORY_RESERVATIONS", mode: "execute", state: "completed", counts: {} }), inspect: vi.fn<OperationalJobRuntime["inspect"]>().mockResolvedValue(inspection) };
+  return { runtime, endpoint: new InventoryReservationJobRunner({ runtime }) };
+}
+describe("INVENTORY_RESERVATIONS HTTP adapter to the canonical runner", () => {
+  it("validates before constructing the runtime or accessing its resource", async () => {
+    const { runtime } = fixture();
+    const factory = vi.fn(() => runtime);
+    const endpoint = new InventoryReservationJobRunner({ runtime: factory });
+    await expect(endpoint.run({ mode: "execute", limit: 1 })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    await expect(endpoint.status({ maxLagMs: 0 })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(factory).not.toHaveBeenCalled();
   });
-
-  it("keeps dry-run outside the job lease and inventory mutations", async () => {
-    const result = await runner.run({ mode: "dry-run", limit: 2 });
-
-    expect(result.summary).toMatchObject({ mode: "dry-run", limit: 2, eligible: 2, released: 0, remainingDue: 3 });
-    expect(result.status).toMatchObject({ jobKey: INVENTORY_RESERVATION_JOB_KEY, lagMs: 5_000, remainingDue: 3 });
-    expect(scheduledRepository.acquire).not.toHaveBeenCalled();
-    expect(scheduledRepository.finish).not.toHaveBeenCalled();
-    expect(inventory.releaseExpired).not.toHaveBeenCalled();
+  it("forwards validated work and policies to the shared runtime", async () => {
+    const { runtime, endpoint } = fixture();
+    await endpoint.run({ mode: "execute", limit: 2, jobPolicy });
+    expect(runtime.run).toHaveBeenCalledWith({ job: "INVENTORY_RESERVATIONS", mode: "execute", limit: 2 }, jobPolicy, undefined);
   });
-
-  it("leases the job, releases only the requested batch, and records safe status", async () => {
-    reservations.count.mockResolvedValueOnce(3).mockResolvedValueOnce(1).mockResolvedValue(1);
-    inventory.releaseExpired.mockResolvedValue([{ id: "reservation-1" }, { id: "reservation-2" }]);
-
-    const result = await runner.run({ mode: "execute", limit: 2 });
-
-    expect(scheduledRepository.acquire).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
-      jobKey: INVENTORY_RESERVATION_JOB_KEY,
-      leaseMs: 300_000,
-    }));
-    expect(inventory.releaseExpired).toHaveBeenCalledWith(undefined, now, 2);
-    expect(result.summary).toMatchObject({ mode: "execute", limit: 2, eligible: 2, released: 2, remainingDue: 1 });
-    expect(scheduledRepository.finish).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
-      jobKey: INVENTORY_RESERVATION_JOB_KEY,
-      status: "SUCCEEDED",
-      errorCategory: null,
-      lagMs: 5_000,
-      summary: { mode: "execute", limit: 2, eligible: 2, released: 2, remainingDue: 1 },
-    }));
+  it("preserves dry-run and uses shared inspection", async () => {
+    const { runtime, endpoint } = fixture();
+    await endpoint.run({ mode: "dry-run", limit: 1, jobPolicy });
+    expect(runtime.run.mock.calls[0][0].mode).toBe("dry-run");
+    await endpoint.status({ maxLagMs: 5000 });
+    expect(runtime.inspect).toHaveBeenCalledWith({ maxLagMs: 5000 });
   });
-
-  it("stores a safe failed status and rethrows when the inventory operation fails", async () => {
-    inventory.releaseExpired.mockRejectedValue(appError("PROVIDER_UNAVAILABLE", { message: "synthetic detail" }));
-
-    await expect(runner.run({ mode: "execute", limit: 2 })).rejects.toMatchObject({ code: "PROVIDER_UNAVAILABLE" });
-    expect(scheduledRepository.finish).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
-      status: "FAILED",
-      errorCategory: "PROVIDER_UNAVAILABLE",
-      summary: {},
-    }));
-    expect(JSON.stringify(scheduledRepository.finish.mock.calls)).not.toContain("synthetic detail");
-  });
-
-  it("rejects an invalid request as a validation error", async () => {
-    await expect(runner.run({ mode: "execute", limit: 101 })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
-    expect(scheduledRepository.acquire).not.toHaveBeenCalled();
-    expect(inventory.releaseExpired).not.toHaveBeenCalled();
+  it("rejects missing or invalid policy, unsafe limits and unknown fields before execution", async () => {
+    const { runtime, endpoint } = fixture();
+    for (const input of [{ mode: "execute", limit: 1 }, { mode: "execute", limit: 101, jobPolicy }, { mode: "execute", limit: 1, jobPolicy, extra: "private" }]) {
+      await expect(endpoint.run(input)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    }
+    expect(runtime.run).not.toHaveBeenCalled();
+    await expect(endpoint.status({ maxLagMs: 0 })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
   });
 });

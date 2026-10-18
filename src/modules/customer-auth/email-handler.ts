@@ -34,7 +34,7 @@ export function emailPostHandler(action: EmailAction, factory: () => CustomerEma
         const result = await service.register(input, ip);
         handle = result.handle;
         destination = "/verify-email";
-        status = result.delivery === "queued" ? "queued" : result.sent ? "sent" : result.handle ? "delivery_failed" : "registration_received";
+        status = result.queued ? "queued" : result.sent ? "sent" : result.handle ? "delivery_failed" : "registration_received";
       } else if (action === "login") {
         session = await service.login(input, ip);
         destination = session.returnTo;
@@ -43,7 +43,7 @@ export function emailPostHandler(action: EmailAction, factory: () => CustomerEma
         destination = "/login"; status = "verified";
       } else if (action === "resend") {
         handle = cookieStore.get(PENDING_REGISTRATION_COOKIE)?.value;
-        const result = await service.resend(handle ?? "", returnTo, ip); status = result.delivery;
+        const result = await service.resend(handle ?? "", returnTo, ip); status = result === "queued" ? "queued" : "sent";
       } else if (action === "forgot-password") {
         await service.forgot(input.email, returnTo, ip); status = "reset_requested";
       } else {

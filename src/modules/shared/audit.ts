@@ -22,7 +22,7 @@ export type DomainAuditEvent = Readonly<{
 export type AuditRecorder = (event: DomainAuditEvent) => void | Promise<void>;
 
 export function createPrismaAuditRecorder(
-  prisma?: PrismaClient,
+  prisma?: Pick<PrismaClient, "auditLog">,
 ): AuditRecorder {
   const repository = new AuditLogRepository(prisma ?? getPrismaClient());
 

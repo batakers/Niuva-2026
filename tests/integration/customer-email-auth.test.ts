@@ -6,6 +6,7 @@ import { CustomerEmailService } from "@/modules/customer-auth/email-service";
 import { CustomerAuthRepository } from "@/modules/customer-auth/repository";
 import { hashOpaqueToken } from "@/modules/customer-auth/core";
 import { AGE_DECLARATION_VERSION } from "@/modules/customer-auth/age-declaration";
+import { inlineAuthProofDelivery } from "../helpers/inline-customer-delivery";
 const prisma = getPrismaClient();
 const repo = new CustomerEmailRepository(prisma);
 const legal = { terms: { href: "/TEST-ONLY-terms", version: "TEST-TERMS-1" }, privacy: { href: "/TEST-ONLY-privacy", version: "TEST-PRIVACY-1" } };
@@ -27,7 +28,7 @@ beforeEach(async () => {
   await prisma.customer.deleteMany({ where: { normalizedEmail: { endsWith: "@example.test" } } });
   now = new Date("2026-10-01T12:00:00Z");
   mails = [];
-  service = new CustomerEmailService(repo, { async send(mail) { mails.push(mail); } }, legal, () => now);
+  service = new CustomerEmailService(repo, inlineAuthProofDelivery(repo, { async send(mail) { mails.push(mail); } }, () => now), legal, () => now);
 });
 describe("Customer email auth PostgreSQL", () => {
   it("keeps registration pending without session/order ownership, then creates credential and consent atomically", async () => {
@@ -69,7 +70,7 @@ describe("Customer email auth PostgreSQL", () => {
     expect(await prisma.customerPendingRegistration.count()).toBe(0);
   });
   it("gates registration without legal documents or mail service", async () => {
-    await expect(new CustomerEmailService(repo, service.mailer, null).register(data(), "ip")).rejects.toMatchObject({ code: "CUSTOMER_AUTH_UNAVAILABLE" });
+    await expect(new CustomerEmailService(repo, service.delivery, null).register(data(), "ip")).rejects.toMatchObject({ code: "CUSTOMER_AUTH_UNAVAILABLE" });
     await expect(new CustomerEmailService(repo, null, legal).register(data(), "ip")).rejects.toMatchObject({ code: "CUSTOMER_AUTH_UNAVAILABLE" });
   });
   it.each([undefined, "off", "false", true, false])("refuses invalid age declaration %j before persistence or email", async ageDeclaration => {
@@ -118,7 +119,7 @@ describe("Customer email auth PostgreSQL", () => {
     await expect(service.verify(mails[1].token, "ip")).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
   });
   it("records delivery failure without claiming sent or exposing a valid token", async () => {
-    const broken = new CustomerEmailService(repo, { async send() { throw new Error("provider failure"); } }, legal, () => now);
+    const broken = new CustomerEmailService(repo, inlineAuthProofDelivery(repo, { async send() { throw new Error("provider failure"); } }, () => now), legal, () => now);
     const registration = await broken.register(data(), "ip");
     expect(registration.sent).toBe(false);
     expect(registration.handle).toBeTruthy();
@@ -160,7 +161,7 @@ describe("Customer email auth PostgreSQL", () => {
   });
   it("persists rate limits across repository instances and resets expired windows", async () => {
     for (let i = 0; i < 5; i++) await service.throttle("login", "limited@example.test", "ip");
-    const another = new CustomerEmailService(new CustomerEmailRepository(prisma), service.mailer, legal, () => now);
+    const another = new CustomerEmailService(new CustomerEmailRepository(prisma), service.delivery, legal, () => now);
     await expect(another.throttle("login", "limited@example.test", "ip")).rejects.toMatchObject({ code: "RATE_LIMITED" });
     now = new Date(now.getTime() + 900001);
     await expect(another.throttle("login", "limited@example.test", "ip")).resolves.toBeUndefined();

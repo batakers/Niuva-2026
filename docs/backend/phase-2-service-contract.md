@@ -72,11 +72,15 @@ technical replay window and does not extend payment or stock availability.
 
 The internal `GET/POST /api/internal/jobs/inventory-reservations` surface
 reports status and accepts bounded dry-run/execute batches (maximum 100) behind
-`CRON_SECRET` and the scheduled-job database binding. Expiry locks payment
+`CRON_SECRET`, database binding and the canonical operational-job role guard.
+HTTP and CLI share `JobRunner`/`OperationalJobState`; POST requires an
+explicit `jobPolicy` and GET requires a positive `maxLagMs`. Expiry locks payment
 attempts, variants, then orders in the same order used by settlement. A still
 payable attempt holds the unpaid order and reservation; when its deadline is
 due, the job marks it `EXPIRED`, cancels the retail order, and releases active
-reservations atomically. Settled or refunded attempts are excluded, and repeat
+reservations and their audit atomically within the job lease transaction.
+A final lease check rolls the transaction back if authority expired.
+Settled or refunded attempts are excluded, and repeat
 runs do not apply a transition twice. This source and local PostgreSQL
 integration proof do not register a hosted schedule; Owner cadence and staging
 remain required before hosted operation.

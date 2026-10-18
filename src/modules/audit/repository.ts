@@ -19,7 +19,7 @@ export type AuditLogInput = Readonly<{
 }>;
 
 export class AuditLogRepository {
-  constructor(private readonly prisma: PrismaClient = getPrismaClient()) {}
+  constructor(private readonly prisma: Pick<PrismaClient, "auditLog"> = getPrismaClient()) {}
 
   async record(input: AuditLogInput) {
     return this.prisma.auditLog.create({

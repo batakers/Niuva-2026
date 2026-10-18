@@ -1,21 +1,19 @@
 import { createOpaqueToken, hashOpaqueToken, normalizeCustomerEmail, safeCustomerReturnTo } from "./core";
 import { hashPassword, verifyPassword, DUMMY_PASSWORD_HASH, registrationSchema, loginSchema, emailSchema, passwordSchema, tokenSchema } from "./password";
 import { CustomerEmailRepository } from "./email-repository";
-import { createCustomerAuthMailer, type CustomerAuthMailer } from "./email-mailer";
+import { createCustomerAuthProofDelivery } from "../outbox/runtime";
+import type { CustomerAuthProofDelivery } from "../outbox/producer";
 import { getCustomerAuthLegalDocuments, type CustomerAuthLegalDocuments } from "./legal";
 import { appError } from "@/modules/shared/errors";
 import { AGE_DECLARATION_VERSION } from "./age-declaration";
 import { assertInternalEmail, getInternalAuthConfig, internalExpiry, capInternalExpiry, assertInternalAccountActive, INTERNAL_TERMS_VERSION } from "./internal-testing";
-import { createRuntimeCustomerOutbox } from "@/modules/outbox/runtime";
-import type { DurableOutboxService } from "@/modules/outbox/service";
 
 export class CustomerEmailService {
   constructor(
     readonly repository = new CustomerEmailRepository(),
-    readonly mailer: CustomerAuthMailer | null = createCustomerAuthMailer(),
+    readonly delivery: CustomerAuthProofDelivery | null = createCustomerAuthProofDelivery(repository),
     readonly legal: CustomerAuthLegalDocuments | null = getCustomerAuthLegalDocuments(),
     readonly clock: () => Date = () => new Date(),
-    readonly outbox: DurableOutboxService | null = createRuntimeCustomerOutbox(),
   ) {}
   async throttle(action: "login" | "register" | "resend" | "forgot-password" | "reset-password" | "verify", email: string, ip: string) {
     const login = action === "login";
@@ -24,8 +22,8 @@ export class CustomerEmailService {
     await this.repository.limit(`ip:${action}:${hashOpaqueToken(ip)}`, login ? 30 : 20, windowMs, now);
     await this.repository.limit(`email:${action}:${hashOpaqueToken(email)}`, login ? 5 : action === "verify" ? 10 : 3, windowMs, now);
   }
-  async register(raw: unknown, ip: string) {
-    if (!this.legal || (!this.mailer && !this.outbox)) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
+  async register(raw: unknown, ip: string): Promise<{ handle: string | null; sent: boolean; queued?: boolean }> {
+    if (!this.legal || !this.delivery) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
     const input = registrationSchema.parse(raw);
     const normalizedEmail = normalizeCustomerEmail(input.email);
     const now = this.clock();
@@ -41,35 +39,15 @@ export class CustomerEmailService {
       ageDeclarationVersion: AGE_DECLARATION_VERSION, ageDeclaredAt: now,
       expiresAt: new Date(now.getTime() + 86400000), internalTestExpiresAt: internal ? internalExpiry(now) : null });
     try {
-      const delivery = await this.send("verify", pending.email, safeCustomerReturnTo(input.returnTo), { pendingId: pending.id });
-      return { handle, sent: delivery.delivery === "sent", delivery: delivery.delivery };
-    } catch { return { handle, sent: false, delivery: "failed" as const }; }
+      const state = await this.send("verify", pending.email, safeCustomerReturnTo(input.returnTo), { pendingId: pending.id });
+      return { handle, sent: state === "accepted", queued: state === "queued" };
+    } catch { return { handle, sent: false }; }
   }
   async send(purpose: "verify" | "reset", to: string, returnTo: string, owner: { pendingId?: string; customerId?: string }) {
-    const outbox = this.outbox;
-    if (!this.mailer && !outbox) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
+    if (!this.delivery) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
     const token = createOpaqueToken();
-    const now = this.clock();
-    const deadline = await this.repository.deliveryDeadline(owner, now);
-    const returnPath = safeCustomerReturnTo(returnTo);
-    if (outbox) {
-      await outbox.withTransaction(async ({ tx, now: databaseNow, enqueue }) => {
-        const record = await this.repository.issueTokenIn(tx, {
-          tokenHash: hashOpaqueToken(token), purpose, ...owner, returnTo: returnPath,
-          expiresAt: capInternalExpiry(new Date(databaseNow.getTime() + (purpose === "verify" ? 86400000 : 1800000)), deadline),
-        }, databaseNow);
-        const receipt = await enqueue({ kind: "AUTH", proofId: record.id, token });
-        if (receipt.state !== "PENDING") throw appError("PROVIDER_UNAVAILABLE");
-      });
-      return { delivery: "queued" as const };
-    }
-    const mailer = this.mailer;
-    if (!mailer) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
-    const record = await this.repository.issueToken({ tokenHash: hashOpaqueToken(token), purpose, ...owner, returnTo: returnPath, expiresAt: capInternalExpiry(new Date(now.getTime() + (purpose === "verify" ? 86400000 : 1800000)), deadline) }, now);
-    try { await mailer.send({ to, token, purpose, returnTo, idempotencyKey: `customer-${purpose}:${record.id}` }); }
-    catch { await this.repository.markDeliveryFailed(record.id, owner.pendingId); throw appError("PROVIDER_UNAVAILABLE"); }
-    if (owner.pendingId) await this.repository.confirmDelivery(owner.pendingId);
-    return { delivery: "sent" as const };
+    if (purpose === "verify" && !owner.pendingId || purpose === "reset" && !owner.customerId || owner.pendingId && owner.customerId) throw appError("VALIDATION_ERROR");
+    return this.delivery.issue({ to, token, purpose, returnTo: safeCustomerReturnTo(returnTo), owner: purpose === "verify" ? { pendingId: owner.pendingId! } : { customerId: owner.customerId! } });
   }
   async login(raw: unknown, ip: string) {
     const input = loginSchema.parse(raw);
@@ -104,7 +82,7 @@ export class CustomerEmailService {
     return this.repository.consumeVerification(token, this.clock());
   }
   async forgot(emailInput: unknown, returnTo: string, ip: string) {
-    if (!this.mailer && !this.outbox) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
+    if (!this.delivery) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
     const email = normalizeCustomerEmail(emailSchema.parse(emailInput));
     await this.throttle("forgot-password", email, ip);
     const started = Date.now();

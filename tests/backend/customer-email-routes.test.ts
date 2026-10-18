@@ -5,6 +5,7 @@ vi.mock("@/lib/db/prisma", () => ({ getPrismaClient: () => ({}) }));
 import { CustomerEmailService } from "@/modules/customer-auth/email-service";
 import { CustomerEmailRepository } from "@/modules/customer-auth/email-repository";
 import { emailPostHandler, PENDING_REGISTRATION_COOKIE } from "@/modules/customer-auth/email-handler";
+import { inlineAuthProofDelivery } from "../helpers/inline-customer-delivery";
 const service = new CustomerEmailService(new CustomerEmailRepository(), null, null);
 function request(action: string, input: Record<string, string> = {}, json = true) {
   return new Request(`https://app.example.test/api/auth/email/${action}`, { method: "POST", headers: { Origin: "https://app.example.test", "Content-Type": "application/x-www-form-urlencoded", ...(json ? { Accept: "application/json" } : {}) }, body: new URLSearchParams(input) });
@@ -13,7 +14,8 @@ beforeEach(() => { vi.restoreAllMocks(); mocks.cookies.clear(); });
 describe("Customer email auth POST boundaries", () => {
   it.each([undefined, "off", "false"])("rejects direct email registration with age declaration %s without side effects or details", async ageDeclaration => {
     const mailer = { send: vi.fn(async () => undefined) };
-    const realService = new CustomerEmailService(new CustomerEmailRepository(), mailer, { terms: { href: "/TEST-ONLY-terms", version: "TEST" }, privacy: { href: "/TEST-ONLY-privacy", version: "TEST" } });
+    const repository = new CustomerEmailRepository();
+    const realService = new CustomerEmailService(repository, inlineAuthProofDelivery(repository, mailer), { terms: { href: "/TEST-ONLY-terms", version: "TEST" }, privacy: { href: "/TEST-ONLY-privacy", version: "TEST" } });
     const pending = vi.spyOn(realService.repository, "createPending");
     const rateLimit = vi.spyOn(realService.repository, "limit");
     const response = await emailPostHandler("register", () => realService)(request("register", {
@@ -48,16 +50,16 @@ describe("Customer email auth POST boundaries", () => {
     expect(response.headers.get("set-cookie")).toContain("Max-Age=2592000");
   });
   it("preserves pending handle on delivery failure without claiming delivery", async () => {
-    vi.spyOn(service, "register").mockResolvedValue({ handle: "TEST-PENDING-HANDLE", sent: false, delivery: "failed" });
+    vi.spyOn(service, "register").mockResolvedValue({ handle: "TEST-PENDING-HANDLE", sent: false });
     const response = await emailPostHandler("register", () => service)(request("register"));
     expect(response.headers.get("set-cookie")).toContain(PENDING_REGISTRATION_COOKIE);
     expect((await response.json()).destination).toContain("status=delivery_failed");
   });
-  it("reports a durable queued email without claiming provider delivery", async () => {
-    vi.spyOn(service, "register").mockResolvedValue({ handle: "TEST-PENDING-HANDLE", sent: false, delivery: "queued" });
+  it("reports queue persistence without claiming provider acceptance", async () => {
+    vi.spyOn(service, "register").mockResolvedValue({ handle: "TEST-PENDING-HANDLE", sent: false, queued: true });
     const response = await emailPostHandler("register", () => service)(request("register"));
-    expect(response.headers.get("set-cookie")).toContain(PENDING_REGISTRATION_COOKIE);
     expect((await response.json()).destination).toContain("status=queued");
+    expect(response.headers.get("cache-control")).toBe("no-store");
   });
   it("reset clears the browser session and returns to login", async () => {
     vi.spyOn(service, "reset").mockResolvedValue("/checkout");

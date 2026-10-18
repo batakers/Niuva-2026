@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
+import { cookies } from "next/headers";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { PrivacyForm } from "@/components/niuva/privacy-form";
 import { requireCustomer } from "@/lib/auth/customer";
@@ -10,6 +11,7 @@ import { isAppError } from "@/modules/shared/errors";
 import { CustomerPrivacyRepository } from "@/modules/customer-privacy/repository";
 import { isCustomerPrivacyAvailable, PRIVACY_CONTACT, privacyKindLabels, privacyStatusLabels } from "@/modules/customer-privacy/core";
 import { PRIVACY_ERROR_MESSAGES } from "@/modules/customer-privacy/handler";
+import { CUSTOMER_SESSION_COOKIE, hashOpaqueToken } from "@/modules/customer-auth/core";
 import { typographySystemTokens as type } from "@/design/typography";
 
 export const metadata: Metadata = { title: "Pusat privasi · Niuva", robots: { index: false, follow: false } };
@@ -21,13 +23,15 @@ export default async function PrivacyPage({ searchParams }: { searchParams: Prom
   const params = await searchParams;
   const available = isCustomerPrivacyAvailable();
   const requests = available ? await new CustomerPrivacyRepository().list(customer.id) : [];
+  const sessionToken = (await cookies()).get(CUSTOMER_SESSION_COOKIE)?.value;
+  const delivery = available && sessionToken ? await new CustomerPrivacyRepository().confirmationDeliveryStatus({ customerId: customer.id, sessionHash: hashOpaqueToken(sessionToken) }, new Date()) : "none";
   const initialErrors: Record<string, string> = {};
   if (params.fields) { try { const parsed: unknown = JSON.parse(params.fields); if (parsed && typeof parsed === "object") for (const [key, value] of Object.entries(parsed)) if (["details", "correction"].includes(key) && typeof value === "string") initialErrors[key] = value; } catch { /* Ignore malformed status query. */ } }
   return <PublicShell functionalStatus={available ? "server-backed" : "capability-gated"} scope="account"><main id="main-content" className="mx-auto max-w-public px-5 py-10 sm:px-8 sm:py-16">
     <Link href="/account" className="inline-flex min-h-11 items-center text-sm font-medium text-primary underline underline-offset-4">Kembali ke akun</Link>
     <header className="mt-6 border-b border-border pb-8"><p className="text-sm font-medium text-primary">Akun / Privasi</p><h1 className={`mt-3 ${type.heading.className}`}>Kendali atas data Anda.</h1><p className={`mt-4 text-muted-foreground ${type.body.className}`}>Unduh salinan data, ajukan koreksi, atau tutup akun Niuva secara permanen. Permintaan terkait pesanan tetap ditangani melalui kontak resmi.</p><p className="mt-4 text-sm text-muted-foreground">Tersedia khusus Development lokal dan test. Policy Customer publik masih berupa draf.</p></header>
     {params.error ? <p role="alert" className="mt-6 rounded-lg border border-destructive p-4 text-sm">{PRIVACY_ERROR_MESSAGES[params.error] ?? "Permintaan gagal diproses."}</p> : null}
-    {params.status && ["queued", "sent", "received"].includes(params.status) ? <p role="status" className="mt-6 rounded-lg border border-border bg-card p-4 text-sm leading-6">{params.status === "queued" ? "Permintaan konfirmasi tersimpan dan menunggu pengiriman. Tautan baru dapat digunakan setelah layanan email menerima pengiriman." : params.status === "sent" ? "Provider menerima pengiriman email konfirmasi. Periksa inbox dan spam; buka tautan pada browser serta sesi ini dalam 15 menit. Penerimaan di inbox belum dikonfirmasi aplikasi." : "Permintaan diterima. Nomor dan status tersedia di bawah."}</p> : null}
+    {params.status && ["queued", "sent", "received"].includes(params.status) ? <p role="status" className="mt-6 rounded-lg border border-border bg-card p-4 text-sm leading-6">{params.status === "received" ? "Permintaan diterima. Nomor dan status tersedia di bawah." : delivery === "queued" ? "Email konfirmasi masuk antrean pengiriman. Setelah diterima, buka tautan pada browser dan sesi ini sebelum kedaluwarsa. Masa berlaku tautan tidak diperpanjang selama pengiriman." : delivery === "accepted" ? "Provider menerima pengiriman email konfirmasi. Periksa inbox dan spam; buka tautan pada browser serta sesi ini dalam 15 menit. Penerimaan di inbox belum dikonfirmasi aplikasi." : "Email konfirmasi belum tersedia. Minta tautan baru jika diperlukan."}</p> : null}
     {!available ? <p className="mt-8">Pusat privasi belum aktif pada lingkungan ini. Hubungi <a className="text-primary underline" href={`mailto:${PRIVACY_CONTACT}`}>{PRIVACY_CONTACT}</a>.</p> : <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <div className="space-y-10"><section aria-labelledby="export-heading" className="border-b border-border pb-8"><h2 id="export-heading" className={type.subheading.className}>Salinan data</h2><p className="mt-3 text-base leading-6 text-muted-foreground">JSON memuat profil, persetujuan, pesanan, Project Brief, Custom Print, metadata berkas, dan permintaan privasi milik Anda. Komunikasi di luar aplikasi dapat diminta melalui Data tambahan.</p><ul className="my-5 list-disc space-y-2 pl-5 text-sm leading-6 text-muted-foreground"><li>Password, token, kredensial provider, dan tautan berkas privat tidak disertakan.</li><li>Salinan disiapkan setelah Anda mengonfirmasi email dalam sesi ini.</li></ul><PrivacyForm prefix="export-email" mode="email" action="/api/account/privacy/confirmation-email" hidden={{ purpose: "EXPORT" }} label="Minta tautan unduhan" /></section>
         <section aria-labelledby="correction-heading"><h2 id="correction-heading" className={type.subheading.className}>Koreksi data</h2><p className="my-4 text-sm leading-6 text-muted-foreground">Owner memeriksa koreksi. Email login, metode akun, dan transaksi historis tidak diubah otomatis.</p><PrivacyForm prefix="correction" mode="request" action="/api/account/privacy/requests" hidden={{ kind: "CORRECTION", submissionKey: randomUUID() }} initialErrors={initialErrors} fields={[{ name: "details", label: "Data yang salah", kind: "textarea", required: true, help: "Sebutkan bagian data atau nomor pesanan. Jangan kirim password atau token." }, { name: "correction", label: "Koreksi yang diminta", kind: "textarea", required: true }]} label="Ajukan koreksi" /></section>

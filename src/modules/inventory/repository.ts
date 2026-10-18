@@ -291,122 +291,129 @@ export class InventoryRepository implements InventoryRepositoryPort {
     });
   }
 
-  async releaseExpired(
-    variantId?: string,
-    now = new Date(),
-    limit?: number,
-  ): Promise<readonly ReservationTransitionResult[]> {
-    return this.prisma.$transaction(async (transaction) => {
-      const candidates = await transaction.stockReservation.findMany({
-        where: expiredReservationWhere(now, variantId),
-        orderBy: [{ orderId: "asc" }, { variantId: "asc" }, { createdAt: "asc" }],
-        ...(limit === undefined ? {} : { take: limit }),
-        select: {
-          id: true,
-          orderId: true,
-          variantId: true,
-        },
-      });
-      const released: ReservationTransitionResult[] = [];
+  async releaseExpired(variantId?: string, now = new Date(), limit?: number): Promise<readonly ReservationTransitionResult[]> {
+    return this.prisma.$transaction(tx => releaseExpiredWithinTransaction(tx, variantId, now, limit));
+  }
+}
 
-      for (const candidate of candidates) {
-        // Match payment webhook locking: payment attempt, variant, then order.
-        // This lets a settlement either commit first or observe the expiry.
-        await transaction.$queryRaw`
-          SELECT "id" FROM "payment_attempts"
-          WHERE "order_id" = ${candidate.orderId}::uuid
-          ORDER BY "id" ASC
-          FOR UPDATE
-        `;
-        await lockVariant(transaction, candidate.variantId);
-        await transaction.$queryRaw`
-          SELECT "id" FROM "orders" WHERE "id" = ${candidate.orderId}::uuid FOR UPDATE
-        `;
-        const current = await transaction.stockReservation.findUnique({
-          where: { id: candidate.id },
+export async function expiredReservationBacklog(transaction: Prisma.TransactionClient, now: Date) {
+  const where = expiredReservationWhere(now);
+  const remainingDue = await transaction.stockReservation.count({ where });
+  const oldest = await transaction.stockReservation.findFirst({ where, orderBy: [{ expiresAt: "asc" }, { id: "asc" }], select: { expiresAt: true } });
+  return { remainingDue, lagMs: oldest ? Math.min(2_147_483_647, Math.max(0, now.getTime() - oldest.expiresAt.getTime())) : 0 };
+}
+
+export async function releaseExpiredWithinTransaction(
+  transaction: Prisma.TransactionClient, variantId: string | undefined, now: Date, limit?: number,
+): Promise<readonly ReservationTransitionResult[]> {
+  const candidates = await transaction.stockReservation.findMany({
+    where: expiredReservationWhere(now, variantId),
+    orderBy: [{ orderId: "asc" }, { variantId: "asc" }, { createdAt: "asc" }],
+    ...(limit === undefined ? {} : { take: limit }),
+    select: {
+      id: true,
+      orderId: true,
+      variantId: true,
+    },
+  });
+  const released: ReservationTransitionResult[] = [];
+
+  for (const candidate of candidates) {
+    // Match payment webhook locking: payment attempt, variant, then order.
+    // This lets a settlement either commit first or observe the expiry.
+    await transaction.$queryRaw`
+      SELECT "id" FROM "payment_attempts"
+      WHERE "order_id" = ${candidate.orderId}::uuid
+      ORDER BY "id" ASC
+      FOR UPDATE
+    `;
+    await lockVariant(transaction, candidate.variantId);
+    await transaction.$queryRaw`
+      SELECT "id" FROM "orders" WHERE "id" = ${candidate.orderId}::uuid FOR UPDATE
+    `;
+    const current = await transaction.stockReservation.findUnique({
+      where: { id: candidate.id },
+      select: {
+        expiresAt: true,
+        id: true,
+        orderId: true,
+        quantity: true,
+        status: true,
+        variantId: true,
+        order: {
           select: {
-            expiresAt: true,
-            id: true,
-            orderId: true,
-            quantity: true,
             status: true,
-            variantId: true,
-            order: {
-              select: {
-                status: true,
-                paymentAttempts: {
-                  orderBy: { id: "asc" },
-                  select: { expiresAt: true, id: true, status: true },
-                },
-              },
+            paymentAttempts: {
+              orderBy: { id: "asc" },
+              select: { expiresAt: true, id: true, status: true },
             },
           },
-        });
+        },
+      },
+    });
 
-        if (
-          current === null || current.status !== "ACTIVE" || current.expiresAt > now ||
-          !["PENDING_PAYMENT", "CANCELLED"].includes(current.order.status) ||
-          current.order.paymentAttempts.some((attempt) =>
-            attempt.status === "SETTLED" || attempt.status === "REFUNDED" ||
-            (attempt.status === "PENDING" && attempt.expiresAt > now)
-          )
-        ) {
-          continue;
-        }
+    if (
+      current === null || current.status !== "ACTIVE" || current.expiresAt > now ||
+      !["PENDING_PAYMENT", "CANCELLED"].includes(current.order.status) ||
+      current.order.paymentAttempts.some((attempt) =>
+        attempt.status === "SETTLED" || attempt.status === "REFUNDED" ||
+        (attempt.status === "PENDING" && attempt.expiresAt > now)
+      )
+    ) {
+      continue;
+    }
 
-        for (const attempt of current.order.paymentAttempts) {
-          if (attempt.status !== "PENDING" || attempt.expiresAt > now) continue;
-          await transitionPayment({
-            allowExpiry: true,
-            current: attempt.status,
-            entityId: attempt.id,
-            next: "EXPIRED",
-          });
-          await transaction.paymentAttempt.update({
-            where: { id: attempt.id },
-            data: { status: "EXPIRED" },
-          });
-        }
+    for (const attempt of current.order.paymentAttempts) {
+      if (attempt.status !== "PENDING" || attempt.expiresAt > now) continue;
+      await transitionPayment({
+        allowExpiry: true,
+        current: attempt.status,
+        entityId: attempt.id,
+        next: "EXPIRED",
+      });
+      await transaction.paymentAttempt.update({
+        where: { id: attempt.id },
+        data: { status: "EXPIRED" },
+      });
+    }
 
-        if (current.order.status === "PENDING_PAYMENT") {
-          await transitionRetailOrder({
-            allowCancellation: true,
-            current: "PENDING_PAYMENT",
-            entityId: current.orderId,
-            next: "CANCELLED",
-          });
-          await transaction.order.update({
-            where: { id: current.orderId },
-            data: { cancelledAt: now, status: "CANCELLED" },
-          });
-        }
+    if (current.order.status === "PENDING_PAYMENT") {
+      await transitionRetailOrder({
+        allowCancellation: true,
+        current: "PENDING_PAYMENT",
+        entityId: current.orderId,
+        next: "CANCELLED",
+      });
+      await transaction.order.update({
+        where: { id: current.orderId },
+        data: { cancelledAt: now, status: "CANCELLED" },
+      });
+    }
 
-        await transitionReservation({
-          current: current.status,
-          entityId: current.id,
-          next: "RELEASED",
-        });
+    await transitionReservation({
+      current: current.status,
+      entityId: current.id,
+      next: "RELEASED",
+    });
 
-        const updated = await transaction.stockReservation.update({
-          where: { id: current.id },
-          data: { status: "RELEASED" },
-          select: {
-            expiresAt: true,
-            id: true,
-            orderId: true,
-            quantity: true,
-            status: true,
-            variantId: true,
-          },
-        });
+    const updated = await transaction.stockReservation.update({
+      where: { id: current.id },
+      data: { status: "RELEASED" },
+      select: {
+        expiresAt: true,
+        id: true,
+        orderId: true,
+        quantity: true,
+        status: true,
+        variantId: true,
+      },
+    });
 
-        released.push({
-          ...updated,
-          previousStatus: current.status,
-        });
-      }
-
-      return released;
+    released.push({
+      ...updated,
+      previousStatus: current.status,
     });
   }
+
+  return released;
 }

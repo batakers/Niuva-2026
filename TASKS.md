@@ -27,10 +27,10 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 | T03 | M1 | BLOCKED_EXTERNAL | Kontrak hosted sandbox | T02 | Binding/origin/cookie/CSP konsisten; resource salah ditolak; production tetap tertutup. Integration. |
 | T04 | M1 | DONE | Producer auth ke outbox | T03 | Proof dan enqueue atomik; proof invalid tidak dikirim; retry tidak memberikan akun/sesi prematur. Integration lokal lulus; hosted delivery tetap menunggu T03. |
 | T05 | M1 | DONE | Producer privacy ke outbox | T04 | Proof sekali pakai/closure aman; revoked/expired dibatalkan. Integration lokal lulus; hosted delivery tetap menunggu T03. |
-| T06 | M1 | DONE | Launcher worker dan status | T04–T05 | Endpoint bearer-protected mendukung dry-run/execute/status dengan resource binding, lease job, cooldown lintas run, lag/last-success, dan safe counters; unknown menjadi partial failure dan worker tidak mengirim ulang otomatis. Unit/backend/integration lokal lulus; scheduler/provider hosted belum diaktifkan. |
+| T06 | M1 | DONE | Launcher worker dan status | T04–T05 | CLI dan endpoint bearer-protected memakai JobRunner/OperationalJobState yang sama dengan resource binding, role terbatas, policy eksplisit, lease/cooldown lintas run, monitor dan safe counters; unknown tidak memicu resend otomatis. Unit/backend/integration lokal lulus; scheduler/provider hosted belum diaktifkan. |
 | T07 | M1 | BLOCKED_EXTERNAL | Job expiry reservasi retail | T03 | Reservation due mengikuti policy existing; pending payment yang masih berlaku menahan pembatalan; attempt kedaluwarsa menjadi EXPIRED, order unpaid menjadi CANCELLED, dan stok dilepas atomik/idempoten; settled/refunded tidak pernah dilepas. Runner/backend/integration lokal lulus. Cadence dan scheduler hosted menunggu Owner/T03. |
 | T08 | M1 | TODO | Job retensi file Customer | T03 | 14/60/90 sesuai kelas; hold dihormati; bukti keuangan tidak terhapus. Integration. |
-| T09 | M1 | TODO | Cleanup auth/privacy hosted | T03 | Tenggat tidak berubah; overlap aman; last-success/lag/failure terlihat. Integration/hosted. |
+| T09 | M1 | BLOCKED_EXTERNAL | Cleanup auth/privacy hosted | T03 | Handler auth/privacy berbatas dari PR #56 memakai runner/lease/role/monitor canonical. Tenggat dan hold tetap; bukti lokal diwarisi lalu diuji ulang saat rekonsiliasi. Scheduler/role/resource hosted belum tersedia. |
 | T10 | M1 | IN_PROGRESS | Rate limit lintas instance | T03 | PostgreSQL bersama, HMAC IP stabil dengan secret bersama, dan pembersihan row kedaluwarsa diuji lokal; binding/topologi hosted belum dibuktikan. Integration. |
 | T11 | M2 | BLOCKED_INPUT | Pengesahan policy publik | T01; Owner | Isi/versi/tanggal disahkan; tidak menjanjikan kemampuan belum terbukti. Review Owner/fungsi review. |
 | T12 | M2 | BLOCKED_INPUT | Consent Google publik | T04/T11 | Consent/deklarasi terikat identitas server; tanpa proof ditolak; riwayat tertutup tidak tertaut ulang. Integration/E2E. |
@@ -96,9 +96,11 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
   ledger readiness tetap dipertahankan. Ini menghindari dua status aktif tanpa
   menghapus bukti lama; risiko bila keliru adalah tooling lama masih membaca
   checklist historis, sehingga entry point dokumentasi diberi pointer eksplisit.
-- Ruling: bekerja pada branch terpisah di checkout bersih, tanpa commit/push
-  atau implementer paralel. Perubahan tetap lokal dan dapat ditinjau; belum
-  ada instruksi commit/push atau tindakan eksternal.
+- Ruling awal 2026-10-18 sebelum instruksi delivery: bekerja pada branch
+  terpisah tanpa commit/push atau implementer paralel. Pengguna kemudian
+  mengizinkan commit/push dan menyetujui urutan rekonsiliasi, pengujian serta PR.
+  Checkpoint 9 commit diakhiri `817b57a` dan sudah di-push; izin ini bukan merge
+  ke main, deployment atau aktivasi provider.
 - Pre-flight: T04/T05 mengonsumsi transaksi dan proof dari outbox existing;
   T26–T30 memerlukan perluasan purpose, bukan pemakaian token auth sebagai event
   bisnis. T18/T19 memerlukan renderer dan ownership media publik; storage key
@@ -106,6 +108,24 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
   input/evidence eksternal yang tidak dapat diganti fixture.
 
 ## Log pelaksanaan
+
+### Rekonsiliasi dengan main — 2026-10-19
+
+- Merge source `7b3a09d` (PR #56) ke checkpoint `817b57a`; tidak mengubah main.
+- Ruling: producer dan runner `modules/jobs` dari main menjadi jalur canonical;
+  HTTP outbox/inventory memakai role, lease, cooldown dan monitor yang sama.
+  Tabel scheduled lama tetap dormant untuk menjaga migration immutable;
+  biayanya satu tabel kompatibilitas tanpa pembaca/penulis runtime.
+- Inventory expiry dipindahkan ke transaksi lease canonical dengan audit atomik
+  dan pemeriksaan lease akhir; kegagalan lease me-rollback status dan audit.
+- Migration gabungan 33/33 diterapkan ke database baru
+  `niuva_reconcile_test_20261019`; database lama tidak di-reset.
+- Adapter HTTP menerima policy eksplisit, GET membutuhkan maxLagMs; tidak
+  menetapkan cadence atau mengaktifkan scheduler/provider. T03/T07/T09 tetap
+  menunggu bukti hosted; policy publik masih draf.
+- Verifikasi akhir dan CI kandidat: menunggu penyelesaian gate rekonsiliasi.
+
+### Bukti lokal 2026-10-18 — sebelum rekonsiliasi
 
 - T01: PRODUCT/ROADMAP/TASKS/AGENTS, DoD, pointer histori dan authority addenda
   direkonsiliasi. Validasi 12 dokumen: 216 tautan lokal valid, tanpa target

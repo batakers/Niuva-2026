@@ -16,6 +16,7 @@ model DeploymentDatabaseBinding {
   @@map("deployment_database_bindings")
 }
 
+/// Retained for migration compatibility; runtime jobs use OperationalJobState.
 model ScheduledJobState {
   jobKey           String    @id @map("job_key")
   status           String    @default("IDLE")
@@ -33,6 +34,21 @@ model ScheduledJobState {
 
   @@index([status, leaseExpiresAt])
   @@map("scheduled_job_states")
+}
+
+model OperationalJobState {
+  name                String    @id
+  leaseId             String?   @map("lease_id") @db.Uuid
+  leaseExpiresAt      DateTime? @map("lease_expires_at") @db.Timestamptz(6)
+  cooldownUntil       DateTime? @map("cooldown_until") @db.Timestamptz(6)
+  lastStartedAt       DateTime? @map("last_started_at") @db.Timestamptz(6)
+  lastFinishedAt      DateTime? @map("last_finished_at") @db.Timestamptz(6)
+  lastSuccessAt       DateTime? @map("last_success_at") @db.Timestamptz(6)
+  lastFailureCategory String?   @map("last_failure_category")
+  counters            Json?
+  runCount            Int       @default(0) @map("run_count")
+
+  @@map("operational_job_states")
 }
 
 model DurableOutboxMessage {

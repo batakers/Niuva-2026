@@ -15,6 +15,7 @@ import { getCustomerAuthLegalDocuments } from "@/modules/customer-auth/legal";
 import { INTERNAL_AUTH_RETENTION_MS } from "@/modules/customer-auth/internal-testing";
 import { hashOpaqueToken } from "@/modules/customer-auth/core";
 import { AGE_DECLARATION_VERSION } from "@/modules/customer-auth/age-declaration";
+import { inlineAuthProofDelivery } from "../helpers/inline-customer-delivery";
 const prisma = getPrismaClient();
 let now = new Date("2026-10-02T00:00:00Z");
 const identity = { googleSubject: "internal-google-test", email: "internal-google@example.test", normalizedEmail: "internal-google@example.test" };
@@ -22,7 +23,7 @@ const repo = new CustomerAuthRepository(prisma);
 const password = "internal test long passphrase";
 const consentInput = { consent: "on", ageDeclaration: "on" };
 let mails: { token: string; to: string }[] = [];
-const emailService = () => new CustomerEmailService(new CustomerEmailRepository(prisma), { async send(mail) { mails.push(mail); } }, getCustomerAuthLegalDocuments(), () => now);
+const emailService = () => { const repository = new CustomerEmailRepository(prisma); return new CustomerEmailService(repository, inlineAuthProofDelivery(repository, { async send(mail) { mails.push(mail); } }, () => now), getCustomerAuthLegalDocuments(), () => now); };
 beforeEach(async () => {
   state.config = { origin: "http://127.0.0.1:3000", googleEmail: identity.email, passwordEmail: "internal-password@example.test" };
   now = new Date("2026-10-02T00:00:00Z"); mails = [];

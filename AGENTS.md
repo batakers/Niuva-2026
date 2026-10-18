@@ -148,6 +148,10 @@ user request and the authority order above.
   every Niuva page. Follow `DESIGN.md` Components and the existing local component
   layer across all areas; global adoption is an approved direction, not a claim
   of completed migration or authorization to migrate runtime in a docs-only task.
+- Operational jobs use `src/modules/jobs/` as the sole runner/lease authority; CLI
+  and internal HTTP adapters share its role guard, state and monitoring. Follow
+  `docs/backend/batch-2-operations.md`; the older scheduled-job table is retained
+  only for immutable migration compatibility.
 - Route handlers and Server Actions own request/response boundaries only.
   Business rules live in domain services; database access lives in repositories.
 - Treat the current PRD as product authority and the Tech Design as technical
