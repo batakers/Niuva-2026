@@ -53,7 +53,7 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 | T29 | M4 | TODO | Email order shipped | T06 | Status sah; isi berizin; tanpa private URL permanen. Integration. |
 | T30 | M4 | TODO | Notifikasi Admin persisten | T06 | Failure terlihat; request/order tetap tersimpan; tanpa WhatsApp otomatis. Integration. |
 | T31 | M4 | BLOCKED_INPUT | Dataset dan tarif launch | T15–T19; Owner | SKU/stok fisik/media/berat/dimensi/rule disetujui untuk target; seed lokal bukan aktivasi launch. Review/import verification. |
-| T32 | M5 | IN_PROGRESS | E2E Admin di CI | T02 | Workflow memasukkan suite; perbaikan menu mobile menunggu Sheet trigger pascahidrasi. Full authenticated Admin suite lulus lokal 24/24 pada PostgreSQL terisolasi dengan satu worker. CI pada diff ini belum berjalan. |
+| T32 | M5 | IN_PROGRESS | E2E Admin di CI | T02 | Workflow memasukkan suite; local 24/24 lulus. CI pertama gagal 1/24 pada batas assertion landing MFA 5s; delay 6s mereproduksi RED lokal, lalu penantian respons TOTP 200, navigasi dan status ready lulus GREEN. Guard 401 tetap; menunggu CI kandidat yang diperbaiki. |
 | T33 | M5 | BLOCKED_EXTERNAL | Dua BUY staging | T03–T14/T21–T31 | Dua variasi transaksi sukses; order/stock/payment/email/status konsisten. Hosted records. |
 | T34 | M5 | BLOCKED_EXTERNAL | Satu MAKE staging | T03–T14/T21–T31 | Model→review→estimasi→quote→bayar→produksi/QC→ongkir final→kirim pada request/order benar. Hosted records/operator. |
 | T35 | M5 | BLOCKED_EXTERNAL | Failure/refund staging | T21–T25 | Duplicate/nominal salah/late/timeout/full refund/manual exception benar dan teraudit. Sandbox. |
@@ -123,7 +123,18 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 - Adapter HTTP menerima policy eksplisit, GET membutuhkan maxLagMs; tidak
   menetapkan cadence atau mengaktifkan scheduler/provider. T03/T07/T09 tetap
   menunggu bukti hosted; policy publik masih draf.
-- Verifikasi akhir dan CI kandidat: menunggu penyelesaian gate rekonsiliasi.
+- Gate lokal pada kode `6440ccf`: unit/component **127/1.457**, backend
+  **93/695**, integration **49/368**, Chromium **112 passed/5 expected skips**,
+  Owner/Admin **24 passed**, dan build **93 static pages** lulus. Typecheck dan
+  Prisma validation lulus; lint 0 error/4 warning destructuring existing pada
+  handler Batch 2. Seluruhnya lokal/test/mock, bukan provider/staging/production.
+- [CI pertama](https://github.com/batakers/Niuva-2026/actions/runs/39153463094)
+  lulus sampai browser smoke, lalu 23/24 Admin lulus: landing MFA menunggu
+  navigasi /admin tetapi assertion default 5s habis pada runner baru.
+- Reproduksi delay landing 6s gagal dengan pesan yang sama (RED). Test sekarang
+  menunggu respons verifikasi TOTP 200, navigasi DOMContentLoaded dan status auth
+  ready, lalu meneruskan pemeriksaan logout/password/TOTP existing (GREEN 1/1).
+  Tidak ada perubahan auth runtime, retry atau bypass MFA. CI ulang masih terbuka.
 
 ### Bukti lokal 2026-10-18 — sebelum rekonsiliasi
 

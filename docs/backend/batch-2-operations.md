@@ -68,7 +68,10 @@ dan reservation released dalam satu transaksi. Payment settled/refunded
 tetap terlindungi. Lock attempt → variant → order dipertahankan. Audit
 reservation berada pada transaksi yang sama; pemeriksaan lease terakhir
 menggagalkan seluruh transaksi jika lease tak lagi sah. Monitor menampilkan
-remaining due dan lag reservation. Migration baru hanya memperluas allowlist
+remaining due dan lag reservation. Role inventory memerlukan akses yang
+sesuai ke order/payment/reservation, lock varian, dan audit; inspeksi juga
+memerlukan pembacaan backlog inventory. Tinjau grant tiap resource sebelum
+pemakaian hosted. Migration baru hanya memperluas allowlist
 nama operational job; tidak menghapus data atau mengubah migration lama.
 
 Adapter ini tidak memasang scheduler, cadence, ambang alarm atau sender
