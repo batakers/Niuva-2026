@@ -67,7 +67,10 @@ test("Owner sees Add Admin, SMTP availability, responsive layout and keyboard fo
   await page.keyboard.press("Tab");
   // Disabled invitation controls leave keyboard navigation available.
   await expect(page.getByRole("link", { name: "Kembali ke Admin & Akses", exact: true })).not.toBeFocused();
-  await page.getByText("Menu Admin", { exact: true }).click();
+  // Wait for the hydrated Sheet trigger so the test never clicks the
+  // server-rendered native disclosure while it is being replaced.
+  await page.getByRole("button", { name: "Menu Admin", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Navigasi Admin", exact: true })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Owner mobile" }).getByRole("link", { name: "Admin & Akses", exact: true })).toBeVisible();
 });
 

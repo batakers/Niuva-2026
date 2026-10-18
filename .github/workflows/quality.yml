@@ -75,5 +75,10 @@ jobs:
       - name: Browser E2E tests
         run: corepack pnpm test:e2e
 
+      - name: Authenticated Owner and Admin browser journeys
+        run: corepack pnpm test:e2e:admin-auth
+        env:
+          TEST_DATABASE_URL: postgresql://niuva_test@127.0.0.1:5432/niuva_test?schema=public
+
       - name: Production build
         run: corepack pnpm build
