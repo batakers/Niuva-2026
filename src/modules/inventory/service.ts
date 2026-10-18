@@ -21,6 +21,8 @@ const manualAdjustmentSchema = z.object({
 
 type AuthorizeAdmin = () => Promise<AdminAccess>;
 
+export const MAX_EXPIRED_RESERVATIONS_PER_BATCH = 100;
+
 export type InventoryServiceDependencies = Readonly<{
   audit?: AuditRecorder;
   authorizeAdmin?: AuthorizeAdmin;
@@ -76,8 +78,14 @@ export class InventoryService {
     return this.transitionReservation(reservationId, "RELEASED", now);
   }
 
-  async releaseExpired(variantId?: string, now = new Date()) {
-    const released = await this.repositoryFactory().releaseExpired(variantId, now);
+  async releaseExpired(variantId?: string, now = new Date(), limit?: number) {
+    if (
+      limit !== undefined &&
+      (!Number.isSafeInteger(limit) || limit < 1 || limit > MAX_EXPIRED_RESERVATIONS_PER_BATCH)
+    ) {
+      throw appError("VALIDATION_ERROR");
+    }
+    const released = await this.repositoryFactory().releaseExpired(variantId, now, limit);
 
     for (const reservation of released) {
       await this.auditTransition(reservation, "RELEASED");

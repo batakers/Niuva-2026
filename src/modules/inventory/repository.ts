@@ -1,6 +1,8 @@
 import { Prisma, type PrismaClient, type StockReservationStatus } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { appError } from "@/modules/shared/errors";
+import { transitionPayment } from "@/modules/payment/transitions";
+import { transitionRetailOrder } from "@/modules/order/transitions";
 
 import { transitionReservation } from "./transitions";
 import { lockVariant } from "./lock-variant";
@@ -35,7 +37,7 @@ export type StockAdjustmentResult = Readonly<{
 
 export interface InventoryRepositoryPort {
   findAvailableQuantity(variantId: string, now?: Date): Promise<number>;
-  releaseExpired(variantId?: string, now?: Date): Promise<readonly ReservationTransitionResult[]>;
+  releaseExpired(variantId?: string, now?: Date, limit?: number): Promise<readonly ReservationTransitionResult[]>;
   reserve(input: Readonly<{
     expiresAt: Date;
     orderId: string;
@@ -51,6 +53,25 @@ export interface InventoryRepositoryPort {
     next: StockReservationStatus,
     now?: Date,
   ): Promise<ReservationTransitionResult>;
+}
+
+export function expiredReservationWhere(now: Date, variantId?: string): Prisma.StockReservationWhereInput {
+  return {
+    expiresAt: { lte: now },
+    ...(variantId === undefined ? {} : { variantId }),
+    status: "ACTIVE",
+    order: {
+      status: { in: ["PENDING_PAYMENT", "CANCELLED"] },
+      paymentAttempts: {
+        none: {
+          OR: [
+            { status: { in: ["SETTLED", "REFUNDED"] } },
+            { status: "PENDING", expiresAt: { gt: now } },
+          ],
+        },
+      },
+    },
+  };
 }
 
 export async function reserveWithinTransaction(
@@ -273,24 +294,34 @@ export class InventoryRepository implements InventoryRepositoryPort {
   async releaseExpired(
     variantId?: string,
     now = new Date(),
+    limit?: number,
   ): Promise<readonly ReservationTransitionResult[]> {
     return this.prisma.$transaction(async (transaction) => {
       const candidates = await transaction.stockReservation.findMany({
-        where: {
-          expiresAt: { lte: now },
-          ...(variantId === undefined ? {} : { variantId }),
-          status: "ACTIVE",
-        },
-        orderBy: [{ variantId: "asc" }, { createdAt: "asc" }],
+        where: expiredReservationWhere(now, variantId),
+        orderBy: [{ orderId: "asc" }, { variantId: "asc" }, { createdAt: "asc" }],
+        ...(limit === undefined ? {} : { take: limit }),
         select: {
           id: true,
+          orderId: true,
           variantId: true,
         },
       });
       const released: ReservationTransitionResult[] = [];
 
       for (const candidate of candidates) {
+        // Match payment webhook locking: payment attempt, variant, then order.
+        // This lets a settlement either commit first or observe the expiry.
+        await transaction.$queryRaw`
+          SELECT "id" FROM "payment_attempts"
+          WHERE "order_id" = ${candidate.orderId}::uuid
+          ORDER BY "id" ASC
+          FOR UPDATE
+        `;
         await lockVariant(transaction, candidate.variantId);
+        await transaction.$queryRaw`
+          SELECT "id" FROM "orders" WHERE "id" = ${candidate.orderId}::uuid FOR UPDATE
+        `;
         const current = await transaction.stockReservation.findUnique({
           where: { id: candidate.id },
           select: {
@@ -300,11 +331,54 @@ export class InventoryRepository implements InventoryRepositoryPort {
             quantity: true,
             status: true,
             variantId: true,
+            order: {
+              select: {
+                status: true,
+                paymentAttempts: {
+                  orderBy: { id: "asc" },
+                  select: { expiresAt: true, id: true, status: true },
+                },
+              },
+            },
           },
         });
 
-        if (current === null || current.status !== "ACTIVE" || current.expiresAt > now) {
+        if (
+          current === null || current.status !== "ACTIVE" || current.expiresAt > now ||
+          !["PENDING_PAYMENT", "CANCELLED"].includes(current.order.status) ||
+          current.order.paymentAttempts.some((attempt) =>
+            attempt.status === "SETTLED" || attempt.status === "REFUNDED" ||
+            (attempt.status === "PENDING" && attempt.expiresAt > now)
+          )
+        ) {
           continue;
+        }
+
+        for (const attempt of current.order.paymentAttempts) {
+          if (attempt.status !== "PENDING" || attempt.expiresAt > now) continue;
+          await transitionPayment({
+            allowExpiry: true,
+            current: attempt.status,
+            entityId: attempt.id,
+            next: "EXPIRED",
+          });
+          await transaction.paymentAttempt.update({
+            where: { id: attempt.id },
+            data: { status: "EXPIRED" },
+          });
+        }
+
+        if (current.order.status === "PENDING_PAYMENT") {
+          await transitionRetailOrder({
+            allowCancellation: true,
+            current: "PENDING_PAYMENT",
+            entityId: current.orderId,
+            next: "CANCELLED",
+          });
+          await transaction.order.update({
+            where: { id: current.orderId },
+            data: { cancelledAt: now, status: "CANCELLED" },
+          });
         }
 
         await transitionReservation({
