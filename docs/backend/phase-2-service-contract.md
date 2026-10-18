@@ -70,6 +70,17 @@ Retail reservations and their payment attempts expire after 30 minutes under
 the approved closure policy. The 24-hour idempotency record TTL remains a
 technical replay window and does not extend payment or stock availability.
 
+The internal `GET/POST /api/internal/jobs/inventory-reservations` surface
+reports status and accepts bounded dry-run/execute batches (maximum 100) behind
+`CRON_SECRET` and the scheduled-job database binding. Expiry locks payment
+attempts, variants, then orders in the same order used by settlement. A still
+payable attempt holds the unpaid order and reservation; when its deadline is
+due, the job marks it `EXPIRED`, cancels the retail order, and releases active
+reservations atomically. Settled or refunded attempts are excluded, and repeat
+runs do not apply a transition twice. This source and local PostgreSQL
+integration proof do not register a hosted schedule; Owner cadence and staging
+remain required before hosted operation.
+
 ### Quotes and custom shipping
 
 Quote drafts calculate from the persisted review with Decimal arithmetic and

@@ -1,5 +1,11 @@
 # Niuva MVP Task List
 
+> **HISTORICAL — 18 Oktober 2026.** Jangan mengeksekusi atau bulk-close checklist
+> lama sebagai backlog terkini. [TASKS.md](../TASKS.md) adalah satu backlog aktif;
+> [ROADMAP.md](../ROADMAP.md) memiliki dependensi dan
+> [DoD v1](../docs/v1-definition-of-done.md) memiliki batas selesai. Histori di
+> bawah tidak dihapus; penerimaannya tidak meluas ke runtime baru.
+
 > **Visual workflow update — 2026-09-27:** AUiS routes and registry were
 > retired. Historical styleguide tasks below do not gate work on product
 > routes. Current UI rules live in root `AGENTS.md` and `DESIGN.md`.

@@ -1,5 +1,37 @@
 # Technical Design Document: Niuva MVP
 
+## Kontrak implementasi v1 — 18 Oktober 2026
+
+Mengikuti [persetujuan v1 pada PRD](PRD-Niuva-MVP.md#kontrak-penyelesaian-v1--18-oktober-2026),
+[TASKS.md](../TASKS.md) menjadi backlog/execution ledger aktif dan
+[DoD](v1-definition-of-done.md) memisahkan task, kandidat dan rilis.
+Pertahankan modular monolith, Zod boundary, permission, Decimal,
+snapshot/idempotency dan lifecycle/closure Customer.
+
+Create Admin memakai Server Actions → domain service → repository. Upload
+media publik mempunyai intent/confirm, key server, validasi gambar/ukuran,
+ownership dan renderer host/key terkendali; media statis lama tetap didukung.
+Jangan memperluas URL allowlist ke file privat Customer atau melemahkan
+invariant existing. Perubahan schema memakai migration baru yang ditinjau.
+
+Pada diff implementasi lokal 18 Oktober 2026, producer auth/privacy telah
+memasukkan pesan terenkripsi ke outbox secara atomik bersama perubahan proof.
+Tanpa konfigurasi hosted outbox, jalur inline tetap dibatasi test lokal.
+Queue hanya berarti menunggu pengiriman. Worker dan sender auth/privacy sudah
+ada; endpoint internal bearer-protected menyediakan dry-run/execute/status,
+state job persisten, lock overlap, cooldown lintas run, counter aman dan lag.
+Endpoint tetap memerlukan capability/database binding. Scheduler cadence,
+sender/provider hosted, inbox/bounce dan purpose email bisnis belum tersedia.
+Resource staging belum disediakan sehingga binding runtime dan pengiriman nyata
+tetap tertutup.
+Refund membutuhkan kasus/approval/attempt/reconciliation persisten; accepted
+provider bukan status selesai. Job terautorisasi/resource-bound, aman overlap,
+terbatas per batch, dan mempertahankan deadline bisnis.
+
+Policy resmi/resource/izin/bukti eksternal tetap prasyarat aktivasi yang
+relevan. Implementasi dengan fixture dapat berjalan sebelum seluruh input
+production tersedia; guard/grant tidak dibuka melalui dokumen ini.
+
 ## Rekonsiliasi kontrak teknis rilis — 13 Oktober 2026
 
 Mengikuti [kontrak produk aktif](PRD-Niuva-MVP.md#rekonsiliasi-kontrak-rilis--13-oktober-2026), keputusan Owner 5 Oktober dan source baseline `a577b7c326ff42d3a642cf5f0b93ccdf59c26bef`. Bagian bertanggal lebih lama yang bertentangan adalah snapshot, bukan requirement implementasi baru.
@@ -8,10 +40,10 @@ Mengikuti [kontrak produk aktif](PRD-Niuva-MVP.md#rekonsiliasi-kontrak-rilis--13
 - **Policy:** resolver saat ini masih mengembalikan dokumen internal/test; ordinary Google signup dan email publik belum tersedia. Draf tidak menjadi consent resmi. Target public consent tetap berversi, terikat identitas/metode dan atomik; lifecycle lock/closed-business marker tidak boleh dilepas.
 - **Admin:** Better Auth dengan TOTP wajib mengikuti addendum 6–7 Oktober. Clerk dalam kontrak/snapshot lama tidak menjadi provider Admin yang harus diaktifkan kembali.
 - **Hosted:** deklarasi tier/mode, canonical origin, capability matrix/resolver dan integrasi guard provider sudah ada sebagian. Matrix production masih tidak mengizinkan mode, activation grants kosong, dan guard lama menolak production/live. Kode ini belum memberikan kemampuan staging/production; guard lama dipertahankan sesuai keputusan yang tercatat. Penyelesaian hosted harus memakai resource binding, origin/cookie/CSP dan izin per capability yang konsisten.
-- **Email, job, refund:** adapter/pemrosesan notifikasi dan cleanup lokal yang ada dipertahankan. Durable outbox, job operasional hosted dan workflow pengajuan/approval/refund/reconciliation lengkap masih pekerjaan berikutnya; status refund pada webhook bukan pengajuan refund oleh aplikasi.
+- **Email, job, refund:** producer auth/privacy kini menulis ke durable outbox secara transaksional; worker memakai `POST /api/internal/jobs/outbox` dengan `CRON_SECRET`, status job persisten tersedia melalui `GET` terproteksi, dan setiap run tetap memeriksa capability/database binding. Scheduler/cadence, delivery hosted dan email bisnis masih terbuka. Job cleanup hosted dan workflow pengajuan/approval/refund/reconciliation juga belum lengkap; status refund pada webhook bukan pengajuan refund oleh aplikasi.
 - **Batas yang tetap:** revalidasi server dan Decimal untuk uang, quote operator, R2 privat, upload 100 MiB/lifecycle 14/60/90, pengiriman MAKE setelah pengukuran paket, serta batas B2B 11 Oktober di bawah.
 
-[Handoff rilis](frontend/mvp-release-readiness.md#peta-penghambat-rilis) memiliki status/dependensi dan evidence; [kontrak Customer publik](legal/customer-public-runtime-contract.md) memiliki regresi target. Rate limit bersama mengikuti topologi hosting yang belum dibuktikan; checkout membutuhkan JavaScript dan cache ongkir tetap deferred sesuai [register keputusan](../.kiro/specs/niuva-audit-remediation/register-keputusan.md). Tidak ada migration, runtime, konfigurasi atau aktivasi melalui rekonsiliasi dokumen ini.
+[Handoff rilis](frontend/mvp-release-readiness.md#peta-penghambat-rilis) memiliki status/dependensi dan evidence; [kontrak Customer publik](legal/customer-public-runtime-contract.md) memiliki regresi target. Shared PostgreSQL rate limiter memakai HMAC IP stabil dengan `BETTER_AUTH_SECRET` pada tier hosted dan membersihkan row kedaluwarsa bertahap; dua klien lokal sudah diuji, tetapi binding/topologi hosted belum terbukti. Checkout membutuhkan JavaScript dan cache ongkir tetap deferred sesuai [register keputusan](../.kiro/specs/niuva-audit-remediation/register-keputusan.md). Resource staging belum tersedia sehingga provider/hosted belum dapat diuji.
 
 ## Batas teknis B2B fase aktif — 11 Oktober 2026
 

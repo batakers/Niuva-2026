@@ -20,6 +20,38 @@ Niuva adalah website operasional responsif yang menyatukan company profile dan k
 
 Keberhasilan berarti alur B2B, retail, dan custom print dapat dijalankan end-to-end, sementara Owner/Admin dapat menyelesaikan tugas operasional utama tanpa bantuan teknis.
 
+## Kontrak v1.0 — 18 Oktober 2026
+
+Owner menyetujui implementasi [roadmap v1](ROADMAP.md) dengan
+[TASKS.md](TASKS.md) sebagai satu backlog aktif dan
+[Definition of Done](docs/v1-definition-of-done.md) sebagai batas selesai.
+Keputusan ini mempertahankan PRD/addenda, Tech Design dan DESIGN sebagai
+authority rinci. Scope tidak tumbuh saat task dikerjakan; tambahan masuk versi
+berikutnya kecuali pengguna mengubah kontrak secara eksplisit.
+
+| Journey/area | Kemampuan wajib v1 |
+| --- | --- |
+| DEVELOP | Profil, empat layanan, portfolio berbukti, dan kontak WhatsApp langsung tanpa login/form. |
+| BUY | Katalog/varian, cart, login, tarif pengiriman, pembayaran, status, fulfillment dan penanganan refund. |
+| MAKE | Intake model/referensi, upload privat, review/slicing operator, simulasi/estimasi/quote terpisah, keputusan quote, pembayaran, produksi/QC, paket final dan shipping. |
+| Customer | Google atau verified email/password, target publik 18+ dengan deklarasi, akun/data sendiri, tindakan MAKE/quote yang diizinkan dan hak privasi. |
+| Owner/Admin | Operasi existing ditambah pembuatan draft produk/varian/project dan upload media publik sederhana melalui Dashboard, tanpa database/source. |
+| Keuangan | Invoice/PDF, catatan pembayaran dan pengeluaran sesuai permission; koreksi pencatatan tidak menjalankan refund provider. |
+| Keandalan | Email minimum, outbox, job, monitoring, reconciliation, backup/restore dan SOP yang dapat dijalankan petugas. |
+
+Konten mandiri memakai draft → lengkapi → publish. Media publik Admin dibatasi
+JPEG/PNG/WebP 10 MiB/file dan 12 item/gallery dengan verifikasi/ownership server;
+file Customer privat tidak boleh dipakai. Dukungan ini adalah target baru yang
+disetujui, bukan klaim bahwa UI upload sudah tersedia. Pencatatan resi manual
+dapat menutup v1 bila kontrak pemenuhan terpenuhi; booking/label/tracking provider
+otomatis dan WhatsApp otomatis bukan gate v1.
+
+Kandidat rilis memerlukan dua transaksi BUY dengan variasi dan satu MAKE sampai
+pengiriman pada staging, ditambah failure/refund, operasi Owner/Admin,
+aksesibilitas dan restore. Status RELEASED memerlukan instruksi production,
+smoke dan handover tersendiri. Tidak ada aktivasi provider atau pengesahan
+policy melalui persetujuan implementasi ini.
+
 ## Positioning
 
 Niuva diposisikan sebagai **product-development partner dengan manufacturing capability**, bukan hanya jasa 3D printing.
@@ -39,7 +71,7 @@ Janji utama produk: **Idea → Design → Prototype → Finished Product**.
 
 - Public experience menjelaskan company profile, empat layanan Niuva, proses kerja, project atau case study yang didukung bukti, dan tiga entry path.
 - CTA B2B memakai **Hubungi Kami** tanpa keterangan tambahan di bawah tombol. Project Brief, proposal akun Customer, dan inquiry Admin tidak termasuk pengalaman aktif fase ini. Data historis tetap mengikuti privasi dan retensi yang berlaku.
-- Retail mendukung katalog, category, product variant, harga, stock, cart, checkout setelah login Customer, payment, shipping, dan account/order status. Account Customer read-only termasuk scope MVP.
+- Retail mendukung katalog, category, product variant, harga, stock, cart, checkout setelah login Customer, payment, shipping, dan account/order status. Profil/ringkasan akun tidak bebas diedit; tindakan MAKE, keputusan quote dan privasi yang secara eksplisit diizinkan kontrak tetap tersedia, hanya untuk data milik sendiri.
 - Custom 3D print mendukung upload STL, 3MF, dan OBJ. STEP/STP hanya menjadi attachment untuk manual review pada MVP.
 - Harga custom tidak dihitung final secara otomatis dari geometry file. Operator memverifikasi material, slicer weight, print duration, configuration, dan catatan sebelum sistem membuat quote Pricing v1.
 - Owner pada 11 Oktober 2026 menetapkan shadcn/ui sebagai dasar komponen seluruh halaman Company, Commerce/Customer, dan Admin. Kontrak penerapan dimiliki [DESIGN.md](DESIGN.md); Admin sudah memakai fondasi tersebut, sedangkan pemerataan route lain mengikuti pekerjaan implementasi berikutnya. Keputusan dokumentasi ini tidak menyatakan migrasi global sudah selesai.
@@ -57,7 +89,7 @@ mengaktifkan pricing rule atau provider produksi.
 
 **OPEN — keputusan yang belum boleh diisi diam-diam:**
 
-- Quantity semantics dan active-rule seeding Pricing v1.
+- Verifikasi quantity semantics, versi/rule dan aktivasi untuk database launch. PER_UNIT telah dicatat aktif pada Development loopback; ini tidak membuktikan keadaan atau mengizinkan seed/aktivasi pada lingkungan launch.
 - Izin mempublikasikan nama atau logo client dan outcome kuantitatif case study.
 - Dataset launch untuk product, SKU, variant, media, dan stock awal.
 - Retensi catatan legal/akuntansi di luar lifecycle file binary.

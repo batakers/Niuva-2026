@@ -1,6 +1,6 @@
 # Niuva
 
-Website operasional responsif yang menyatukan company profile, project brief
+Website operasional responsif yang menyatukan company profile, kontak WhatsApp
 B2B, retail ready-made, dan custom 3D print berbasis review operator.
 
 ## Mulai dari sini
@@ -13,14 +13,18 @@ B2B, retail ready-made, dan custom 3D print berbasis review operator.
 - [Technical Design](docs/TechDesign-Niuva-MVP.md) — bagaimana sistem dibangun.
 - [DESIGN.md](DESIGN.md) — authority UX dan visual.
 - [PRODUCT.md](PRODUCT.md) — konteks produk dan batasan operasional.
+- [ROADMAP.md](ROADMAP.md) — milestone v1 berbasis dependensi.
+- [TASKS.md](TASKS.md) — satu backlog aktif dan bukti pelaksanaan.
+- [Definition of Done v1](docs/v1-definition-of-done.md) — batas selesai task,
+  kandidat rilis, dan production.
 
 ## Fase saat ini
 
-Niuva berada pada fase foundation dan penutupan readiness non-provider/non-
-production. Bukti public, catalog, authenticated-admin, dan quote yang ada
-masih bersifat local/loopback/non-production. Aktivasi provider, deployment,
-propagasi design system ke product screen, serta production acceptance tetap
-merupakan gate terpisah.
+Niuva menjalankan roadmap penutupan v1 yang disetujui pada 18 Oktober 2026.
+Bukti public, catalog, authenticated-admin, dan quote yang tercatat tetap
+memiliki cakupan lingkungannya. Pendaftaran publik, provider/staging, backup/
+restore, operasi dan production belum dinyatakan selesai oleh persetujuan
+rencana. Aktivasi provider dan deployment memerlukan instruksi tersendiri.
 
 Gunakan [MVP release readiness](docs/frontend/mvp-release-readiness.md) untuk
 status handoff terkini dan [docs/README.md](docs/README.md) untuk dokumen

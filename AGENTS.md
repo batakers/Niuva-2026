@@ -12,7 +12,7 @@
 
 - **What this is:** Website operasional responsif yang menyatukan company profile dan kontak WhatsApp B2B, retail ready-made, serta custom 3D print berbasis review operator.
 - **Who it is for:** Calon klien B2B, customer retail/B2C, serta Owner/Admin Niuva yang bukan pengguna teknis.
-- **Current phase:** Foundation/Typography v1.0 is authorized across product screens by DS-DEC-019. `DESIGN.md` is the active visual guide; former AUiS proofs and decisions are archived, and their historical acceptance remains limited to the surfaces reviewed. Public, catalog, authenticated-admin, and quote evidence in `docs/frontend/mvp-release-readiness.md` is local/loopback/non-production only. Visual acceptance, physical-device/AT, provider, and production readiness remain separate.
+- **Current phase:** Implement the approved v1.0 closure roadmap from 18 October 2026. `PRODUCT.md` freezes scope, `ROADMAP.md` owns milestone dependencies, `TASKS.md` is the one active backlog/execution ledger, and `docs/v1-definition-of-done.md` owns completion. Foundation/Typography v1.0 remains authorized by DS-DEC-019; `DESIGN.md` is the visual authority. Evidence in `docs/frontend/mvp-release-readiness.md` keeps its recorded local/non-production scope. Visual, physical-device/AT, provider, staging and production acceptance remain separate.
 
 ## Commands
 
@@ -42,6 +42,13 @@ migrations. Use the repository scripts:
   and explicit deployment approval.
 
 ## Read first, by task
+
+- Read the active task and its acceptance criteria in `TASKS.md`, dependencies
+  in `ROADMAP.md`, current diff, and the owning authorities. `tasks/plan.md`,
+  `tasks/todo.md` and phase checklists are history, not a second active backlog.
+  Record DONE only with actual verification; code/merge alone does not close
+  external gates. Audit/proposal requests remain read-only until implementation
+  is authorized. Never turn missing business input into a default value.
 
 - For UI or redesign work, read `DESIGN.md`, then the matching area guide:
   `docs/design/company.md` for Company/services/projects,
@@ -104,8 +111,9 @@ user request and the authority order above.
   Tetap gunakan database test terisolasi dan jangan reset database lama untuk
   membuat gate lulus.
 - The current PRD addenda require Customer login before checkout (Google or
-  verified email/password) and
-  includes a read-only Customer account. Better Auth with mandatory TOTP protects Owner/Admin only; do
+  verified email/password). Account profile/summary is read-only except the
+  explicitly permitted MAKE/quote/privacy workflow actions on owned records.
+  Better Auth with mandatory TOTP protects Owner/Admin only; do
   not restore the historical guest-checkout scope.
 - Internal Customer Development policy and retention are defined in the
   2 October 2026 PRD/Tech Design addenda. Internal documents do not authorize
@@ -188,6 +196,10 @@ their own explicit user instruction; do not infer them from a coding request.
 4. Record a decision in the owning authority only when it changes a durable
    product, design, technical, or operational contract. Ordinary work needs a
    concise completion report, not a new decision log.
+5. Complete one task or a clear dependency chain, verify its acceptance criteria,
+   and record dated evidence/status in `TASKS.md`. Stop expanding the slice when
+   those criteria and the task DoD are met. Do not relabel fixture, source, CI,
+   local browser or historic Owner review as provider/staging/production proof.
 
 ## Redesign halaman — route first
 
