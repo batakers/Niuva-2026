@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import Link from "next/link";
@@ -50,7 +51,7 @@ export default async function AdminPortfolioPage({
       <AdminShell active="portfolio" role={result.role}>
         <main id="main-content" data-admin-surface="portfolio">
           <AdminListPosition listHref={returnTo} />
-          <AdminPageHeader title="Portfolio" description="Cari proyek dan pantau publikasi. Buka editor untuk memperbarui konten dan media yang sudah disetujui." breadcrumbs={[{ label: "Portfolio" }]} />
+          <AdminPageHeader title="Portfolio" description="Cari proyek dan pantau publikasi. Buka editor untuk memperbarui konten dan media yang sudah disetujui." breadcrumbs={[{ label: "Portfolio" }]} actions={<Button nativeButton={false} role="link" render={<Link href="/admin/portfolio/new" />}>Tambah project</Button>} />
           <AdminListControls area="portfolio" query={query} />
 
           <section aria-label="Ringkasan portfolio" className="mt-6 grid gap-3 sm:grid-cols-3">

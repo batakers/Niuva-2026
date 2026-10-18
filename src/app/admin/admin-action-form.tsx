@@ -1,13 +1,15 @@
 "use client";
 
 import { FieldSet } from "@/components/ui/field";
-import { useActionState, type ReactNode } from "react";
+import { createContext, useActionState, useContext, useState, type ReactNode } from "react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import type { AdminAction, AdminActionState } from "./actions";
 
 const initialState: AdminActionState = { status: "idle" };
+const FormBusyContext = createContext<(busy: boolean) => void>(() => {});
+export function useAdminFormBusy() { return useContext(FormBusyContext); }
 
 export function AdminActionForm({
   action,
@@ -25,21 +27,23 @@ export function AdminActionForm({
   submitLabel?: string;
 }>) {
   const [state, formAction, pending] = useActionState(action, initialState);
+  const [busy, setBusy] = useState(false);
 
   return (
     <form
       action={formAction}
       className={className}
       onSubmit={(event) => {
+        if (busy) { event.preventDefault(); return; }
         if (confirmMessage !== undefined && !window.confirm(confirmMessage)) {
           event.preventDefault();
         }
       }}
     >
-      <FieldSet className="grid gap-4" disabled={pending}>
-        {children}
-        <Button className="min-h-11 w-fit" disabled={pending} type="submit">
-          {pending ? "Memproses…" : submitLabel}
+      <FieldSet className="grid gap-4" disabled={pending || busy}>
+        <FormBusyContext value={setBusy}>{children}</FormBusyContext>
+        <Button className="min-h-11 w-fit" disabled={pending || busy} type="submit">
+          {busy ? "Menunggu foto…" : pending ? "Memproses…" : submitLabel}
         </Button>
       </FieldSet>
       {state.status !== "idle" && state.message ? (

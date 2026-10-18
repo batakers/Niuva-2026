@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Table, TableCaption, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import type { Metadata } from "next";
 import { connection } from "next/server";
@@ -51,7 +52,7 @@ export default async function AdminProductsPage({
       <AdminShell active="products" role={result.role}>
         <main id="main-content" data-admin-surface="products">
           <AdminListPosition listHref={returnTo} />
-          <AdminPageHeader title="Products & Stock" description="Cari produk, periksa varian dan stok, lalu buka editor untuk memperbarui katalog." breadcrumbs={[{ label: "Products & Stock" }]} />
+          <AdminPageHeader title="Products & Stock" description="Cari produk, periksa varian dan stok, lalu buka editor untuk memperbarui katalog." breadcrumbs={[{ label: "Products & Stock" }]} actions={<Button nativeButton={false} role="link" render={<Link href="/admin/products/new" />}>Tambah produk</Button>} />
           <AdminListControls area="products" query={query} />
 
           <section aria-label="Ringkasan products" className="mt-6 grid gap-3 sm:grid-cols-3">
