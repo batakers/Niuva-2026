@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/image", () => ({
   default: () => null,
@@ -16,8 +16,37 @@ vi.mock("@/features/frontend-preview/server", () => ({
 import { connection } from "next/server";
 vi.mock("@/modules/site-information/public-reader", async () => ({ getPublicSiteInformation: async () => (await import("@/modules/site-information/defaults")).defaultSiteInformation }));
 import Home, * as homeModule from "@/app/page";
+import { getProjectPreview } from "@/features/frontend-preview/server";
+import type { ProjectPreviewItem } from "@/features/frontend-preview/types";
+
+beforeEach(() => vi.mocked(getProjectPreview).mockResolvedValue({ projects: [], scenario: null }));
+
+const published: ProjectPreviewItem = {
+  id: "project-test", slug: "proyek-yang-terbit", title: "Proyek yang terbit",
+  summary: "Ringkasan bukti proyek", serviceLabel: "Design & Prototyping",
+  clientName: null, year: null, tags: [], detailReadiness: "summary-only",
+  media: [{ altText: "Artefak proyek yang terbit", sortOrder: 0, url: "/media/portfolio/published.png" }],
+};
 
 describe("public homepage", () => {
+  it("does not keep a hero project link when no published detail is available", async () => {
+    const { container } = render(await Home());
+    expect(container.querySelector('[data-home-section="hero"] a[href^="/projects/"]')).toBeNull();
+  });
+
+  it("selects the hero from the published collection rather than a fixed slug", async () => {
+    vi.mocked(getProjectPreview).mockResolvedValue({ projects: [published], scenario: null });
+    const { container } = render(await Home());
+    const link = container.querySelector('[data-home-section="hero"] a[href^="/projects/"]');
+    expect(link).toHaveAttribute("href", `/projects/${published.slug}`);
+    expect(link).toHaveTextContent(published.title);
+  });
+
+  it("does not link card-only projects from the hero", async () => {
+    vi.mocked(getProjectPreview).mockResolvedValue({ projects: [{ ...published, detailReadiness: "card-only" }], scenario: null });
+    const { container } = render(await Home());
+    expect(container.querySelector('[data-home-section="hero"] a[href^="/projects/"]')).toBeNull();
+  });
   it("uses time-based revalidation and no request-time connection() (Req 16.1)", async () => {
     render(await Home());
     expect(homeModule.revalidate).toBe(300);
