@@ -19,14 +19,15 @@ export class CustomerPrivacyRepository {
     return session;
   }
   async issue(actor: PrivacyActor, purpose: PrivacyPurpose, token: string, now: Date) {
-    return this.prisma.$transaction(async tx => {
-      await lockCustomerLifecycle(tx);
-      const session = await this.active(tx, actor, now);
-      await tx.customerPrivacyConfirmation.updateMany({ where: { customerId: actor.customerId, sessionHash: actor.sessionHash, purpose, consumedAt: null }, data: { consumedAt: now } });
-      const expiresAt = capInternalExpiry(new Date(Math.min(now.getTime() + PRIVACY_CONFIRMATION_MS, session.expiresAt.getTime())), session.customer.internalTestExpiresAt);
-      const proof = await tx.customerPrivacyConfirmation.create({ data: { customerId: actor.customerId, sessionHash: actor.sessionHash, tokenHash: hashOpaqueToken(token), purpose, expiresAt, createdAt: now } });
-      return { id: proof.id, to: session.customer.email };
-    });
+    return this.prisma.$transaction(tx => this.issueIn(tx, actor, purpose, token, now));
+  }
+  async issueIn(tx: Prisma.TransactionClient, actor: PrivacyActor, purpose: PrivacyPurpose, token: string, now: Date) {
+    await lockCustomerLifecycle(tx);
+    const session = await this.active(tx, actor, now);
+    await tx.customerPrivacyConfirmation.updateMany({ where: { customerId: actor.customerId, sessionHash: actor.sessionHash, purpose, consumedAt: null }, data: { consumedAt: now } });
+    const expiresAt = capInternalExpiry(new Date(Math.min(now.getTime() + PRIVACY_CONFIRMATION_MS, session.expiresAt.getTime())), session.customer.internalTestExpiresAt);
+    const proof = await tx.customerPrivacyConfirmation.create({ data: { customerId: actor.customerId, sessionHash: actor.sessionHash, tokenHash: hashOpaqueToken(token), purpose, expiresAt, createdAt: now } });
+    return { id: proof.id, to: session.customer.email, expiresAt };
   }
   async delivery(id: string, delivered: boolean, now: Date) {
     await this.prisma.customerPrivacyConfirmation.updateMany({ where: { id, consumedAt: null, customerId: { not: null } }, data: delivered ? { delivered: true } : { consumedAt: now } });

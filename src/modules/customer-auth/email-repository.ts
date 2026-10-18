@@ -1,4 +1,4 @@
-import type { PrismaClient, CustomerPendingRegistration } from "@/generated/prisma/client";
+import type { Prisma, PrismaClient, CustomerPendingRegistration } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { appError } from "@/modules/shared/errors";
 import { hashOpaqueToken } from "./core";
@@ -40,31 +40,33 @@ export class CustomerEmailRepository {
     return record.internalTestExpiresAt;
   }
   async issueToken(input: { tokenHash: string; purpose: "verify" | "reset"; customerId?: string; pendingId?: string; expiresAt: Date; returnTo: string }, now: Date) {
-    return this.prisma.$transaction(async tx => {
-      await lockCustomerLifecycle(tx);
-      // Serialize issue/consume operations for a single destination across workers.
-      const key = input.pendingId ?? input.customerId ?? "";
-      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${key}))`;
-      if (input.pendingId) {
-        const pending = await tx.customerPendingRegistration.findUnique({ where: { id: input.pendingId } });
-        if (!pending || pending.completedAt || pending.expiresAt <= now) throw appError("VALIDATION_ERROR");
-        assertInternalAccountActive(pending.internalTestExpiresAt, now);
-        if (pending.internalTestExpiresAt) assertInternalEmail(pending.email, "password");
-        input.expiresAt = capInternalExpiry(input.expiresAt, pending.internalTestExpiresAt);
-        if (pending.sentAt && now.getTime() - pending.sentAt.getTime() < 60000) throw appError("RATE_LIMITED");
-        // Reserve resend cooldown before contacting the provider.
-        await tx.customerPendingRegistration.update({ where: { id: pending.id }, data: { sentAt: now, deliveryConfirmed: false, expiresAt: input.expiresAt } });
-      }
-      if (input.customerId) {
-        const customer = await tx.customer.findUnique({ where: { id: input.customerId } });
-        if (!customer) throw appError("VALIDATION_ERROR");
-        assertInternalAccountActive(customer.internalTestExpiresAt, now);
-        if (customer.internalTestExpiresAt) assertInternalEmail(customer.email, "password");
-        input.expiresAt = capInternalExpiry(input.expiresAt, customer.internalTestExpiresAt);
-      }
-      await tx.customerEmailToken.updateMany({ where: { purpose: input.purpose, ...(input.pendingId ? { pendingId: input.pendingId } : { customerId: input.customerId }), consumedAt: null }, data: { consumedAt: now } });
-      return tx.customerEmailToken.create({ data: input });
-    });
+    return this.prisma.$transaction(tx => this.issueTokenIn(tx, input, now));
+  }
+  async issueTokenIn(tx: Prisma.TransactionClient, input: { tokenHash: string; purpose: "verify" | "reset"; customerId?: string; pendingId?: string; expiresAt: Date; returnTo: string }, now: Date) {
+    await lockCustomerLifecycle(tx);
+    // Serialize issue/consume operations for a single destination across workers.
+    const key = input.pendingId ?? input.customerId ?? "";
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${key}))`;
+    let expiresAt = input.expiresAt;
+    if (input.pendingId) {
+      const pending = await tx.customerPendingRegistration.findUnique({ where: { id: input.pendingId } });
+      if (!pending || pending.completedAt || pending.expiresAt <= now) throw appError("VALIDATION_ERROR");
+      assertInternalAccountActive(pending.internalTestExpiresAt, now);
+      if (pending.internalTestExpiresAt) assertInternalEmail(pending.email, "password");
+      expiresAt = capInternalExpiry(expiresAt, pending.internalTestExpiresAt);
+      if (pending.sentAt && now.getTime() - pending.sentAt.getTime() < 60000) throw appError("RATE_LIMITED");
+      // Reserve resend cooldown before contacting the provider.
+      await tx.customerPendingRegistration.update({ where: { id: pending.id }, data: { sentAt: now, deliveryConfirmed: false, expiresAt } });
+    }
+    if (input.customerId) {
+      const customer = await tx.customer.findUnique({ where: { id: input.customerId } });
+      if (!customer) throw appError("VALIDATION_ERROR");
+      assertInternalAccountActive(customer.internalTestExpiresAt, now);
+      if (customer.internalTestExpiresAt) assertInternalEmail(customer.email, "password");
+      expiresAt = capInternalExpiry(expiresAt, customer.internalTestExpiresAt);
+    }
+    await tx.customerEmailToken.updateMany({ where: { purpose: input.purpose, ...(input.pendingId ? { pendingId: input.pendingId } : { customerId: input.customerId }), consumedAt: null }, data: { consumedAt: now } });
+    return tx.customerEmailToken.create({ data: { ...input, expiresAt } });
   }
   async markDeliveryFailed(tokenId: string, pendingId?: string) {
     await this.prisma.$transaction(async tx => {

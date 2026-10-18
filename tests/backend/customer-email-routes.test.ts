@@ -48,10 +48,16 @@ describe("Customer email auth POST boundaries", () => {
     expect(response.headers.get("set-cookie")).toContain("Max-Age=2592000");
   });
   it("preserves pending handle on delivery failure without claiming delivery", async () => {
-    vi.spyOn(service, "register").mockResolvedValue({ handle: "TEST-PENDING-HANDLE", sent: false });
+    vi.spyOn(service, "register").mockResolvedValue({ handle: "TEST-PENDING-HANDLE", sent: false, delivery: "failed" });
     const response = await emailPostHandler("register", () => service)(request("register"));
     expect(response.headers.get("set-cookie")).toContain(PENDING_REGISTRATION_COOKIE);
     expect((await response.json()).destination).toContain("status=delivery_failed");
+  });
+  it("reports a durable queued email without claiming provider delivery", async () => {
+    vi.spyOn(service, "register").mockResolvedValue({ handle: "TEST-PENDING-HANDLE", sent: false, delivery: "queued" });
+    const response = await emailPostHandler("register", () => service)(request("register"));
+    expect(response.headers.get("set-cookie")).toContain(PENDING_REGISTRATION_COOKIE);
+    expect((await response.json()).destination).toContain("status=queued");
   });
   it("reset clears the browser session and returns to login", async () => {
     vi.spyOn(service, "reset").mockResolvedValue("/checkout");

@@ -6,6 +6,8 @@ import { getCustomerAuthLegalDocuments, type CustomerAuthLegalDocuments } from "
 import { appError } from "@/modules/shared/errors";
 import { AGE_DECLARATION_VERSION } from "./age-declaration";
 import { assertInternalEmail, getInternalAuthConfig, internalExpiry, capInternalExpiry, assertInternalAccountActive, INTERNAL_TERMS_VERSION } from "./internal-testing";
+import { createRuntimeCustomerOutbox } from "@/modules/outbox/runtime";
+import type { DurableOutboxService } from "@/modules/outbox/service";
 
 export class CustomerEmailService {
   constructor(
@@ -13,6 +15,7 @@ export class CustomerEmailService {
     readonly mailer: CustomerAuthMailer | null = createCustomerAuthMailer(),
     readonly legal: CustomerAuthLegalDocuments | null = getCustomerAuthLegalDocuments(),
     readonly clock: () => Date = () => new Date(),
+    readonly outbox: DurableOutboxService | null = createRuntimeCustomerOutbox(),
   ) {}
   async throttle(action: "login" | "register" | "resend" | "forgot-password" | "reset-password" | "verify", email: string, ip: string) {
     const login = action === "login";
@@ -22,7 +25,7 @@ export class CustomerEmailService {
     await this.repository.limit(`email:${action}:${hashOpaqueToken(email)}`, login ? 5 : action === "verify" ? 10 : 3, windowMs, now);
   }
   async register(raw: unknown, ip: string) {
-    if (!this.legal || !this.mailer) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
+    if (!this.legal || (!this.mailer && !this.outbox)) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
     const input = registrationSchema.parse(raw);
     const normalizedEmail = normalizeCustomerEmail(input.email);
     const now = this.clock();
@@ -38,19 +41,35 @@ export class CustomerEmailService {
       ageDeclarationVersion: AGE_DECLARATION_VERSION, ageDeclaredAt: now,
       expiresAt: new Date(now.getTime() + 86400000), internalTestExpiresAt: internal ? internalExpiry(now) : null });
     try {
-      await this.send("verify", pending.email, safeCustomerReturnTo(input.returnTo), { pendingId: pending.id });
-      return { handle, sent: true };
-    } catch { return { handle, sent: false }; }
+      const delivery = await this.send("verify", pending.email, safeCustomerReturnTo(input.returnTo), { pendingId: pending.id });
+      return { handle, sent: delivery.delivery === "sent", delivery: delivery.delivery };
+    } catch { return { handle, sent: false, delivery: "failed" as const }; }
   }
   async send(purpose: "verify" | "reset", to: string, returnTo: string, owner: { pendingId?: string; customerId?: string }) {
-    if (!this.mailer) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
+    const outbox = this.outbox;
+    if (!this.mailer && !outbox) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
     const token = createOpaqueToken();
     const now = this.clock();
     const deadline = await this.repository.deliveryDeadline(owner, now);
-    const record = await this.repository.issueToken({ tokenHash: hashOpaqueToken(token), purpose, ...owner, returnTo: safeCustomerReturnTo(returnTo), expiresAt: capInternalExpiry(new Date(now.getTime() + (purpose === "verify" ? 86400000 : 1800000)), deadline) }, now);
-    try { await this.mailer.send({ to, token, purpose, returnTo, idempotencyKey: `customer-${purpose}:${record.id}` }); }
+    const returnPath = safeCustomerReturnTo(returnTo);
+    if (outbox) {
+      await outbox.withTransaction(async ({ tx, now: databaseNow, enqueue }) => {
+        const record = await this.repository.issueTokenIn(tx, {
+          tokenHash: hashOpaqueToken(token), purpose, ...owner, returnTo: returnPath,
+          expiresAt: capInternalExpiry(new Date(databaseNow.getTime() + (purpose === "verify" ? 86400000 : 1800000)), deadline),
+        }, databaseNow);
+        const receipt = await enqueue({ kind: "AUTH", proofId: record.id, token });
+        if (receipt.state !== "PENDING") throw appError("PROVIDER_UNAVAILABLE");
+      });
+      return { delivery: "queued" as const };
+    }
+    const mailer = this.mailer;
+    if (!mailer) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
+    const record = await this.repository.issueToken({ tokenHash: hashOpaqueToken(token), purpose, ...owner, returnTo: returnPath, expiresAt: capInternalExpiry(new Date(now.getTime() + (purpose === "verify" ? 86400000 : 1800000)), deadline) }, now);
+    try { await mailer.send({ to, token, purpose, returnTo, idempotencyKey: `customer-${purpose}:${record.id}` }); }
     catch { await this.repository.markDeliveryFailed(record.id, owner.pendingId); throw appError("PROVIDER_UNAVAILABLE"); }
     if (owner.pendingId) await this.repository.confirmDelivery(owner.pendingId);
+    return { delivery: "sent" as const };
   }
   async login(raw: unknown, ip: string) {
     const input = loginSchema.parse(raw);
@@ -77,7 +96,7 @@ export class CustomerEmailService {
     if (!pending) throw appError("VALIDATION_ERROR");
     if (pending.internalTestExpiresAt) assertInternalEmail(pending.email, "password");
     await this.throttle("resend", pending.normalizedEmail, ip);
-    await this.send("verify", pending.email, returnTo, { pendingId: pending.id });
+    return this.send("verify", pending.email, returnTo, { pendingId: pending.id });
   }
   async verify(token: string, ip: string) {
     tokenSchema.parse(token);
@@ -85,7 +104,7 @@ export class CustomerEmailService {
     return this.repository.consumeVerification(token, this.clock());
   }
   async forgot(emailInput: unknown, returnTo: string, ip: string) {
-    if (!this.mailer) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
+    if (!this.mailer && !this.outbox) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
     const email = normalizeCustomerEmail(emailSchema.parse(emailInput));
     await this.throttle("forgot-password", email, ip);
     const started = Date.now();
