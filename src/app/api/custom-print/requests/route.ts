@@ -6,7 +6,7 @@ import {
   apiSuccess,
   createCorrelationId,
 } from "@/lib/http/response";
-import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
+import { createRuntimeRateLimiter } from "@/lib/security/shared-rate-limit";
 import { CustomPrintService } from "@/modules/custom-print/service";
 import { readCustomerPreviewSnapshot } from "@/modules/custom-print/customer-preview";
 import { createCustomPrintAdminNotificationFromEnvironment } from "@/modules/notifications/resend";
@@ -14,7 +14,7 @@ import { createCustomPrintAdminNotificationFromEnvironment } from "@/modules/not
 export const runtime = "nodejs";
 
 const CUSTOM_PRINT_REQUEST_MAX_BODY_BYTES = 32 * 1_024;
-const customPrintRequestRateLimiter = createInMemoryRateLimiter({
+const customPrintRequestRateLimiter = createRuntimeRateLimiter({ namespace: "src/app/api/custom-print/requests/route.ts",
   limit: 5,
   maxKeys: 256,
   windowMs: 60_000,
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   const correlationId = createCorrelationId();
 
   try {
-    assertPublicMutationRequest(request, customPrintRequestRateLimiter, {
+    await assertPublicMutationRequest(request, customPrintRequestRateLimiter, {
       endpointId: "POST /api/custom-print/requests",
     });
     const customer = await requireCustomer();

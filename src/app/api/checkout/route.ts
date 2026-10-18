@@ -6,7 +6,7 @@ import {
   apiSuccess,
   createCorrelationId,
 } from "@/lib/http/response";
-import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
+import { createRuntimeRateLimiter } from "@/lib/security/shared-rate-limit";
 import { CheckoutService } from "@/modules/checkout/service";
 import {
   createPaymentProviderForRuntime,
@@ -17,7 +17,7 @@ import { RetailShippingRateService } from "@/modules/shipping/retail-rate-servic
 export const runtime = "nodejs";
 
 const CHECKOUT_MAX_BODY_BYTES = 16 * 1_024;
-const checkoutRateLimiter = createInMemoryRateLimiter({
+const checkoutRateLimiter = createRuntimeRateLimiter({ namespace: "src/app/api/checkout/route.ts",
   limit: 5,
   maxKeys: 256,
   windowMs: 60_000,
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   const correlationId = createCorrelationId();
 
   try {
-    assertPublicMutationRequest(request, checkoutRateLimiter, {
+    await assertPublicMutationRequest(request, checkoutRateLimiter, {
       endpointId: "POST /api/checkout",
     });
     const customer = await requireCustomer();

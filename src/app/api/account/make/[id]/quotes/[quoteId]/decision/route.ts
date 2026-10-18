@@ -3,7 +3,7 @@ import { requireCustomer } from "@/lib/auth/customer";
 import { readJsonBody } from "@/lib/http/body";
 import { assertPublicMutationRequest } from "@/lib/http/public-mutation";
 import { apiError, apiSuccess, createCorrelationId } from "@/lib/http/response";
-import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
+import { createRuntimeRateLimiter } from "@/lib/security/shared-rate-limit";
 import { CustomerWorkRepository } from "@/modules/customer-work/repository";
 import { createPaymentProviderForRuntime } from "@/modules/providers/runtime";
 import { QuoteService } from "@/modules/quote/service";
@@ -11,13 +11,13 @@ import { appError } from "@/modules/shared/errors";
 import { parseWithValidation } from "@/modules/shared/validation";
 
 export const runtime = "nodejs";
-const limiter = createInMemoryRateLimiter({ limit: 5, maxKeys: 256, windowMs: 60_000 });
+const limiter = createRuntimeRateLimiter({ namespace: "src/app/api/account/make/[id]/quotes/[quoteId]/decision/route.ts", limit: 5, maxKeys: 256, windowMs: 60_000 });
 const schema = z.object({ decision: z.enum(["accept", "decline"]) }).strict();
 
 export async function POST(request: Request, context: RouteContext<"/api/account/make/[id]/quotes/[quoteId]/decision">) {
   const correlationId = createCorrelationId();
   try {
-    assertPublicMutationRequest(request, limiter, {
+    await assertPublicMutationRequest(request, limiter, {
       endpointId: "POST /api/account/make/[id]/quotes/[quoteId]/decision",
     });
     const customer = await requireCustomer();

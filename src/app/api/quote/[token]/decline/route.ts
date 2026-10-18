@@ -4,14 +4,14 @@ import {
   apiSuccess,
   createCorrelationId,
 } from "@/lib/http/response";
-import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
+import { createRuntimeRateLimiter } from "@/lib/security/shared-rate-limit";
 import { getRouteAccessTokenEntityId } from "@/modules/shared/access-token";
 import { appError } from "@/modules/shared/errors";
 import { QuoteService } from "@/modules/quote/service";
 
 export const runtime = "nodejs";
 
-const quoteDecisionRateLimiter = createInMemoryRateLimiter({
+const quoteDecisionRateLimiter = createRuntimeRateLimiter({ namespace: "src/app/api/quote/[token]/decline/route.ts",
   limit: 5,
   maxKeys: 256,
   windowMs: 60_000,
@@ -24,7 +24,7 @@ export async function POST(
   const correlationId = createCorrelationId();
 
   try {
-    assertPublicMutationRequest(request, quoteDecisionRateLimiter, {
+    await assertPublicMutationRequest(request, quoteDecisionRateLimiter, {
       endpointId: "POST /api/quote/[token]/decline",
     });
     const { token } = await context.params;

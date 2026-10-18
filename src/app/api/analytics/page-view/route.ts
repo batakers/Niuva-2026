@@ -1,12 +1,12 @@
 import { createHash, randomBytes } from "node:crypto";
 import { isSameOriginRequest } from "@/lib/security/origin";
-import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
+import { createRuntimeRateLimiter } from "@/lib/security/shared-rate-limit";
 import { classifyDevice, countryCode, pageViewSchema } from "@/modules/analytics/contract";
 import { PrismaAnalyticsRepository, type AnalyticsRepository } from "@/modules/analytics/repository";
 
 const MAX_BODY_BYTES = 512;
 const processSalt = randomBytes(32);
-const limiter = createInMemoryRateLimiter({ limit: 60, windowMs: 60_000, maxKeys: 10_000 });
+const limiter = createRuntimeRateLimiter({ namespace: "src/app/api/analytics/page-view/route.ts", limit: 60, windowMs: 60_000, maxKeys: 10_000 });
 const noStore = { "Cache-Control": "no-store" };
 
 async function readBoundedBody(request: Request): Promise<string | "TOO_LARGE" | null> {
@@ -62,7 +62,7 @@ export async function handlePageView(
   if (Number.isFinite(size) && size > MAX_BODY_BYTES) {
     return Response.json({ error: "Payload terlalu besar." }, { status: 413, headers: noStore });
   }
-  const limit = limiter.check(rateKey(request));
+  const limit = await limiter.check(rateKey(request));
   if (!limit.allowed) {
     return Response.json(
       { error: "Terlalu banyak permintaan." },

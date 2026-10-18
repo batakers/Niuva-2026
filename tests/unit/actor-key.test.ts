@@ -1,6 +1,6 @@
-import { createHash } from "node:crypto";
+import { createHmac } from "node:crypto";
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { deriveActorKey } from "@/lib/security/actor-key";
 
@@ -16,15 +16,17 @@ function keyFor(
     customerId: overrides.customerId,
     headers: new Headers(headers),
     processSalt: salt,
+    sharedSecret: null,
   });
 }
 
 function anonKey(ip: string, endpointId = endpoint): string {
-  const digest = createHash("sha256").update(salt + ip).digest("hex");
+  const digest = createHmac("sha256", salt).update(ip).digest("hex");
   return `i:${endpointId}:${digest}`;
 }
 
 describe("deriveActorKey", () => {
+  afterEach(() => vi.unstubAllEnvs());
   it("uses the customer key when a customer session exists", () => {
     expect(keyFor({ "x-real-ip": "1.1.1.1" }, { customerId: "cus_1" })).toBe(
       `c:${endpoint}:cus_1`,
@@ -101,6 +103,21 @@ describe("deriveActorKey", () => {
     const a = deriveActorKey({ endpointId: endpoint, headers, processSalt: "s1" });
     const b = deriveActorKey({ endpointId: endpoint, headers, processSalt: "s2" });
     expect(a).not.toBe(b);
+  });
+
+  it("uses one stable HMAC key across instances with different process salts", () => {
+    const headers = new Headers({ "x-real-ip": "1.1.1.1" });
+    const a = deriveActorKey({ endpointId: endpoint, headers, processSalt: "instance-a", sharedSecret: "shared-auth-secret" });
+    const b = deriveActorKey({ endpointId: endpoint, headers, processSalt: "instance-b", sharedSecret: "shared-auth-secret" });
+    const expectedDigest = createHmac("sha256", "shared-auth-secret").update("1.1.1.1").digest("hex");
+    expect(a).toBe(`i:${endpoint}:${expectedDigest}`);
+    expect(b).toBe(a);
+  });
+
+  it("fails closed in hosted tiers when the shared hashing secret is absent", () => {
+    vi.stubEnv("NIUVA_DEPLOYMENT_TIER", "staging");
+    vi.stubEnv("BETTER_AUTH_SECRET", "");
+    expect(() => deriveActorKey({ endpointId: endpoint, headers: new Headers({ "x-real-ip": "1.1.1.1" }) })).toThrow(/required for hosted runtimes/);
   });
 
   it("is stable within a process when no salt is injected", () => {

@@ -1,18 +1,18 @@
 import { readJsonBody } from "@/lib/http/body";
 import { assertPublicMutationRequest } from "@/lib/http/public-mutation";
 import { apiError, apiSuccess, createCorrelationId } from "@/lib/http/response";
-import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
+import { createRuntimeRateLimiter } from "@/lib/security/shared-rate-limit";
 import { CustomPrintAccessService } from "@/modules/custom-print/access-service";
 import { getCurrentCustomer } from "@/lib/auth/customer";
 
 export const runtime = "nodejs";
 
-const limiter = createInMemoryRateLimiter({ limit: 5, maxKeys: 256, windowMs: 60_000 });
+const limiter = createRuntimeRateLimiter({ namespace: "src/app/api/custom-print/requests/[token]/files/route.ts", limit: 5, maxKeys: 256, windowMs: 60_000 });
 
 export async function POST(request: Request, context: RouteContext<"/api/custom-print/requests/[token]/files">) {
   const correlationId = createCorrelationId();
   try {
-    assertPublicMutationRequest(request, limiter, {
+    await assertPublicMutationRequest(request, limiter, {
       endpointId: "POST /api/custom-print/requests/[token]/files",
     });
     const { token } = await context.params;

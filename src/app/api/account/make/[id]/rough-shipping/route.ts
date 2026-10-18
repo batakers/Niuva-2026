@@ -1,13 +1,13 @@
 import { requireCustomer } from "@/lib/auth/customer";
 import { readJsonBody } from "@/lib/http/body";
 import { apiError, apiSuccess, createCorrelationId } from "@/lib/http/response";
-import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
+import { createRuntimeRateLimiter } from "@/lib/security/shared-rate-limit";
 import { assertSameOriginRequest } from "@/lib/security/origin";
 import { RoughCustomShippingService } from "@/modules/shipping/rough-custom";
 import { appError } from "@/modules/shared/errors";
 
 export const runtime = "nodejs";
-const limiter = createInMemoryRateLimiter({ limit: 2, maxKeys: 256, windowMs: 10 * 60_000 });
+const limiter = createRuntimeRateLimiter({ namespace: "src/app/api/account/make/[id]/rough-shipping/route.ts", limit: 2, maxKeys: 256, windowMs: 10 * 60_000 });
 
 export async function POST(request: Request, context: RouteContext<"/api/account/make/[id]/rough-shipping">) {
   const correlationId = createCorrelationId();
@@ -15,7 +15,7 @@ export async function POST(request: Request, context: RouteContext<"/api/account
     assertSameOriginRequest(request);
     const customer = await requireCustomer();
     const { id } = await context.params;
-    const rate = limiter.check(`${customer.id}:${id}`);
+    const rate = await limiter.check(`${customer.id}:${id}`);
     if (!rate.allowed) throw appError("RATE_LIMITED", {
       details: { retryAfterSeconds: String(rate.retryAfterSeconds) },
     });
