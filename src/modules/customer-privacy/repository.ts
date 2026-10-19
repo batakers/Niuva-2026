@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { PrismaClient, Prisma } from "@/generated/prisma/client";
+import { releasePrivacyCaseOnFiles, retainPrivacyCaseOnFiles } from "../files/retention-privacy-holds";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { appError } from "@/modules/shared/errors";
 import { assertInternalAccountActive, capInternalExpiry } from "@/modules/customer-auth/internal-testing";
@@ -107,6 +108,8 @@ export class CustomerPrivacyRepository {
       const result = await tx.customerPrivacyRequest.update({ where: { id: row.id }, data: { status: input.status, response: input.response, outcome: input.outcome || null, handledBy: ownerId, resolvedAt,
         ...(resolvedAt ? { contentDeleteAt: new Date(resolvedAt.getTime() + 7 * DAY_MS), receiptDeleteAt: new Date(resolvedAt.getTime() + 30 * DAY_MS) } : {}),
         holdCategory: input.holdCategory || null, holdReason: input.holdCategory ? input.holdReason : null, holdOwnerId: input.holdCategory ? ownerId : null, holdReviewAt: reviewAt } });
+      if (result.holdCategory && row.customerId) await retainPrivacyCaseOnFiles(tx, row.customerId, row.id);
+      if (!result.holdCategory) await releasePrivacyCaseOnFiles(tx, row.id);
       await tx.auditLog.create({ data: { actorType: "ADMIN", actorId: ownerId, entityType: "CUSTOMER_PRIVACY_REQUEST", entityId: row.id, action: "PRIVACY_REQUEST_HANDLED", metadataJson: { status: result.status, result: result.outcome, operation: result.holdCategory ? "hold" : "response" } } });
       return result;
     });

@@ -18,6 +18,7 @@ export function RefundWorkflowForm({ action, mode, submissionKey, version, perma
   const [category, setCategory] = useState(state.values?.category ?? "");
   const [returnState, setReturnState] = useState(state.values?.returnState ?? "");
   const [reference, setReference] = useState(state.values?.reference ?? "");
+  const [receivedAt, setReceivedAt] = useState(state.values?.receivedAt ?? "");
   const messageRef = useRef<HTMLParagraphElement>(null), id = useId();
   useEffect(() => { if (state.status === "error") messageRef.current?.focus(); }, [state]);
   const intake = mode === "request" || mode === "intake";
@@ -42,6 +43,10 @@ export function RefundWorkflowForm({ action, mode, submissionKey, version, perma
       {hasReference ? <Field><FieldLabel htmlFor={`${id}-reference`}>{mode === "intake" ? "Referensi verifikasi pihak yang menghubungi" : "Referensi bukti retur"}{mode === "approve" && returnState !== "RECEIVED" ? " (bila ada)" : ""}</FieldLabel>
         <NativeInput id={`${id}-reference`} name="reference" type="text" maxLength={200} minLength={5} required={mode !== "approve" || returnState === "RECEIVED"} value={reference} onChange={event => setReference(event.target.value)} aria-describedby={`${id}-reference-help`} />
         <p id={`${id}-reference-help`} className="text-sm text-muted-foreground">Gunakan nomor kasus, catatan pemeriksaan, atau resi. Hindari URL berkas privat.</p>
+      </Field> : null}
+      {mode === "intake" ? <Field><FieldLabel htmlFor={`${id}-received-at`}>Waktu pertama diterima (WIB)</FieldLabel>
+        <NativeInput id={`${id}-received-at`} name="receivedAt" type="datetime-local" step={60} required value={receivedAt} onChange={event => setReceivedAt(event.target.value)} aria-describedby={`${id}-received-at-help`} />
+        <p id={`${id}-received-at-help`} className="text-sm text-muted-foreground">Gunakan waktu pengajuan pertama diterima melalui kanal layanan, termasuk bila baru dicatat sekarang.</p>
       </Field> : null}
       <Button type="submit" className="min-h-11 w-fit max-w-full whitespace-normal" disabled={pending}>{pending ? "Menyimpan…" : label}</Button>
     </FieldSet>

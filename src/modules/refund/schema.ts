@@ -5,7 +5,7 @@ const evidence = z.string().trim().min(5).max(200).refine(value => !/https?:\/\/
 export const refundRequestSchema = z.strictObject({
   orderId: z.uuid(), submissionKey: z.uuid(), category: z.enum(["DELIVERY_DELAY", "ITEM_ISSUE", "OTHER"]), reason,
 });
-export const refundAdminIntakeSchema = refundRequestSchema.extend({ contactVerificationReference: evidence });
+export const refundAdminIntakeSchema = refundRequestSchema.extend({ contactVerificationReference: evidence, receivedAt: z.iso.datetime({ offset: true }) });
 export const refundReviewSchema = z.strictObject({
   orderId: z.uuid(), expectedVersion: z.number().int().positive(), submissionKey: z.uuid(), reason,
   returnState: z.enum(["NOT_REQUIRED", "PENDING", "RECEIVED", "WAIVED"]), returnEvidenceReference: evidence.optional(),

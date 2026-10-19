@@ -99,3 +99,20 @@ test("Customer refund form supports native submission and recovery without JavaS
     await page.screenshot({ path: ".local/refund/captures/customer-native-390.png", fullPage: true });
   } finally { await context.close(); }
 });
+
+test("Admin intake preserves the first receipt from a service channel in WIB", async ({ page }) => {
+  const order = await customerOrder(page.context());
+  await createAdminBrowserSession(page, prisma, "ADMIN");
+  await page.goto(`/admin/orders/${order.id}/refund`);
+  await page.getByLabel("Jenis pengajuan", { exact: true }).selectOption("OTHER");
+  await page.getByLabel("Alasan pengajuan", { exact: true }).fill("Pengajuan fixture diterima melalui kanal layanan sebelumnya.");
+  await page.getByLabel("Referensi verifikasi pihak yang menghubungi", { exact: true }).fill("SERVICE-REFUND-BROWSER-001");
+  const receivedAt = new Date(Date.now() - 86400000);
+  const receivedLocal = new Date(receivedAt.getTime() + 7 * 3600000).toISOString().slice(0, 16);
+  await page.getByLabel("Waktu pertama diterima (WIB)", { exact: true }).fill(receivedLocal);
+  await capture(page, "staff-intake");
+  await page.getByRole("button", { name: "Catat pengajuan", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Pengajuan dan pembayaran", exact: true })).toBeVisible();
+  const refund = await prisma.refundCase.findUniqueOrThrow({ where: { orderId: order.id } });
+  expect(refund.receivedAt.toISOString()).toBe(new Date(`${receivedLocal}:00+07:00`).toISOString());
+});

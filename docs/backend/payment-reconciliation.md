@@ -73,16 +73,18 @@ bukan seluruh payment/refund selesai atau provider hosted telah dibuktikan.
 ## Dependensi, migration dan rollback
 
 Branch T24 bergantung eksplisit pada PR #59 (T21/T22), karena receipt refund baru
-harus dikenali guard kasus yang sama. PR menarget main agar workflow Quality
-existing berjalan, dengan dependency PR #59 dan diff khusus sejak `28f9037`
-dicatat untuk review T24. Tidak ada merge otomatis. Kode T08 tidak disalin.
+harus dikenali guard kasus yang sama. Integrasi 20 Oktober memakai main setelah
+PR #59 terverifikasi merged pada `bcd04d9`, termasuk T08 dan perbaikan retensi
+refund/waktu intake. Diff baru tetap T24; kasus/approval, tabel dan migration
+dependensi tidak diduplikasi. Kedua job retensi dan reconciliation memakai
+runner, batas HTTP dan monitoring canonical yang sama.
 Migration baru menjaga whitelist job T08 yang sudah disetujui untuk
 baseline gabungan; **urutan migration kandidat harus menyertakan T08 sebelum
 T24**. Jangan men-deploy migration job dari sibling branch dalam urutan acak:
 migration T08 lama mengganti whitelist job. Review dan uji ulang baseline gabungan
 diperlukan sebelum deployment; tidak ada migration historis yang diedit.
 
-Resource test baru memakai 35 migration pada PostgreSQL loopback. File job
+Bukti awal T24 memakai 35 migration pada PostgreSQL loopback. File job
 reconciliation membuat database `niuva_status_test_<uuid>` tersendiri melalui
 helper terjaga dan Prisma CLI; query batch tidak diberi filter khusus test.
 Database lama dipertahankan. Tanggal,

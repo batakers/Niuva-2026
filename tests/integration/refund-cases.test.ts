@@ -221,11 +221,16 @@ describe("refund lifecycle and persisted constraints", () => {
   it("records contact verification for staff intake on a detached order", async () => {
     const o = await order(), admin = await actor("ADMIN"); await payment(o.id);
     await prisma.order.update({ where: { id: o.id }, data: { accountClosedAt: new Date() } });
-    const input = { orderId: o.id, submissionKey: randomUUID(), category: "OTHER", reason, contactVerificationReference: "SERVICE-CONTACT-001" };
+    const receivedAt = new Date(Date.now() - 2 * 86400000).toISOString();
+    const input = { orderId: o.id, submissionKey: randomUUID(), category: "OTHER", reason, contactVerificationReference: "SERVICE-CONTACT-001", receivedAt };
     const row = await service(admin).intake(input);
     expect(row.status).toBe("REQUESTED");
+    expect(row.receivedAt).toBe(receivedAt);
+    expect((await service(admin).intake(input)).receivedAt).toBe(receivedAt);
     expect((await service(admin).adminOrder(o.id)).contactVerificationReference).toBe("SERVICE-CONTACT-001");
     await expect(service(admin).intake({ ...input, contactVerificationReference: undefined })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    await expect(service(admin).intake({ ...input, receivedAt: undefined })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    await expect(service(admin).intake({ ...input, receivedAt: new Date(Date.now() + 86400000).toISOString() })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
   });
   it("rejects negative money and duplicate payment allocation at the database boundary", async () => {
     const f = await fixture(); const row = await service().request(f.customer.id, f.input);

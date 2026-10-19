@@ -24,7 +24,11 @@ export async function reviewRefundAction(orderId: string, operation: z.infer<typ
     const base = { orderId, submissionKey: data.get("submissionKey"), reason: data.get("reason") };
     const versioned = { ...base, expectedVersion: Number(data.get("expectedVersion")) };
     const reference = data.get("reference");
-    if (selected === "intake") await service.intake({ ...base, category: data.get("category"), contactVerificationReference: reference });
+    if (selected === "intake") {
+      const receivedAt = data.get("receivedAt");
+      await service.intake({ ...base, category: data.get("category"), contactVerificationReference: reference,
+        receivedAt: typeof receivedAt === "string" ? `${receivedAt}:00+07:00` : receivedAt });
+    }
     else if (selected === "approve") await service.approve({ ...versioned, returnState: data.get("returnState"), ...(typeof reference === "string" && reference.trim() ? { returnEvidenceReference: reference } : {}) });
     else if (selected === "refresh") await service.refresh(versioned);
     else await service.receiveReturn({ ...versioned, returnEvidenceReference: reference });

@@ -17,8 +17,10 @@ import { expireRetailReservationsIn } from "../inventory/expiry-service";
 import { createPaymentReconciliationHandler } from "../payment/reconciliation-job";
 import { PaymentReconciliationRepository } from "../payment/reconciliation-repository";
 import { createMidtransStatusGateway, type PaymentStatusGateway } from "../payment/status-gateway";
+import { createR2PrivateObjectStorageFromEnvironment, type PrivateObjectStorage } from "../files/r2";
+import { CustomerFileRetentionJob } from "./file-retention";
 
-export function createJobHandlers(options: { prisma: PrismaClient; bound: Pick<BoundDatabaseService, "run">; source: Readonly<Record<string, string | undefined>>; workerPolicy?: unknown; senderFactory?: () => OutboxSender; paymentStatusFactory?: () => PaymentStatusGateway }): Readonly<Record<JobName, JobHandler>> {
+export function createJobHandlers(options: { prisma: PrismaClient; bound: Pick<BoundDatabaseService, "run">; source: Readonly<Record<string, string | undefined>>; workerPolicy?: unknown; senderFactory?: () => OutboxSender; paymentStatusFactory?: () => PaymentStatusGateway; fileStorageFactory?: () => Pick<PrivateObjectStorage, "deleteObject"> }): Readonly<Record<JobName, JobHandler>> {
   const source = Object.freeze({ ...options.source }), bound = options.bound;
   const workerPolicy = options.workerPolicy === undefined ? undefined : parseWorkerPolicy(options.workerPolicy);
   const cipherFactory = () => new OutboxPayloadCipher(readOutboxCipherConfig(source));
@@ -27,6 +29,7 @@ export function createJobHandlers(options: { prisma: PrismaClient; bound: Pick<B
   const authCleanup = new InternalAuthCleanupRepository(options.prisma), privacyCleanup = new CustomerPrivacyCleanupRepository(options.prisma);
   return Object.freeze({
     PAYMENT_RECONCILIATION: createPaymentReconciliationHandler(options.paymentStatusFactory ?? (() => createMidtransStatusGateway(source)), new PaymentReconciliationRepository(options.prisma)),
+    CUSTOMER_FILE_RETENTION: context => new CustomerFileRetentionJob(options.fileStorageFactory ?? (() => createR2PrivateObjectStorageFromEnvironment(source))).run(context),
     INVENTORY_RESERVATIONS: context => context.withLease(async (tx, now) => {
       const before = await expiredReservationBacklog(tx, now);
       const released = context.request.mode === "dry-run" ? 0 : await expireRetailReservationsIn(tx, now, context.request.limit);

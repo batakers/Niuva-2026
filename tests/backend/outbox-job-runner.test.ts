@@ -6,7 +6,7 @@ import type { JobInspection } from "@/modules/jobs/monitoring";
 const jobPolicy = { leaseMs: 60_000, minIntervalMs: 0, failureCooldownMs: 1000 };
 const workerPolicy = { leaseMs: 10_000, sendTimeoutMs: 1000, retryDelaysMs: [1000] };
 function fixture() {
-  const inspection: JobInspection = { checkedAt: new Date(0).toISOString(), jobs: [], outbox: { pending: 0, leased: 0, failed: 0, unknown: 0, expiredPending: 0, staleLeases: 0, dueLagMs: 0 }, privacy: { overdue: 0, overdueHolds: 0 }, inventory: { remainingDue: 0, lagMs: 0 }, payment: { remainingDue: 0, lagMs: 0 }, alarms: [] };
+  const inspection: JobInspection = { checkedAt: new Date(0).toISOString(), jobs: [], outbox: { pending: 0, leased: 0, failed: 0, unknown: 0, expiredPending: 0, staleLeases: 0, dueLagMs: 0 }, privacy: { overdue: 0, overdueHolds: 0 }, inventory: { remainingDue: 0, lagMs: 0 }, payment: { remainingDue: 0, lagMs: 0 }, files: { pendingDeletion: 0, failedDeletion: 0, held: 0, overdueHolds: 0, oldestPendingLagMs: 0 }, alarms: [] };
   const runtime = { run: vi.fn<OperationalJobRuntime["run"]>().mockResolvedValue({ job: "OUTBOX_DELIVERY", mode: "execute", state: "completed", counts: {} }), inspect: vi.fn<OperationalJobRuntime["inspect"]>().mockResolvedValue(inspection) };
   return { runtime, endpoint: new CustomerOutboxJobRunner({ runtime }) };
 }
