@@ -16,6 +16,10 @@ Untuk memahami proyek dari awal, baca berurutan:
 5. [Design System](../DESIGN.md) — authority UX dan visual.
 6. [MVP release readiness](frontend/mvp-release-readiness.md) — status handoff
    teknis terkini.
+7. [Roadmap v1](../ROADMAP.md), [backlog aktif](../TASKS.md) dan
+   [Definition of Done](v1-definition-of-done.md) — rencana yang disetujui
+   18 Oktober 2026, pelaksanaan dan batas selesai. Checklist `tasks/` lama
+   dipertahankan sebagai histori, bukan backlog aktif kedua.
 
 Untuk aturan kerja agent, approval gate, dan area terlindungi, baca
 [AGENTS.md](../AGENTS.md). Untuk skill agent, ikuti routing ke
@@ -111,6 +115,7 @@ tidak menggantikan PRD, Technical Design, `DESIGN.md`, atau kontrak lifecycle.
 | Area | Dokumen | Role | Lifecycle | Kapan dibaca |
 | --- | --- | --- | --- | --- |
 | Meta | [docs/README.md](README.md) | Navigation hub | `ACTIVE` | Saat mencari dokumen yang tepat atau menilai status navigasi. |
+| Release | [v1-definition-of-done.md](v1-definition-of-done.md) | Task/candidate/release completion | `ACTIVE` | Saat memutuskan task, kandidat atau rilis v1 dapat disebut selesai. |
 | Archive | [AUiS archive guide](archive/auis-retired/README.md) | Retired design-history guide | `HISTORICAL` | Saat menelusuri keputusan desain AUiS lama; gunakan `DESIGN.md` untuk panduan aktif. |
 | Archive | [DESIGN before retirement](archive/auis-retired/DESIGN-before-retirement.md) | Retired Design System | `HISTORICAL` | Untuk provenance dan keputusan desain lama, bukan authority visual saat ini. |
 | Archive | [Component contracts](archive/auis-retired/component-contracts.md) | Retired component contracts | `HISTORICAL` | Saat menelusuri kontrak dan acceptance visual historis; bukan otorisasi propagation saat ini. |

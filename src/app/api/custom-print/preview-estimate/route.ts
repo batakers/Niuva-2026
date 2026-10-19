@@ -2,17 +2,17 @@ import { requireCustomer } from "@/lib/auth/customer";
 import { readJsonBody } from "@/lib/http/body";
 import { assertPublicMutationRequest } from "@/lib/http/public-mutation";
 import { apiError, apiSuccess, createCorrelationId } from "@/lib/http/response";
-import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
+import { createRuntimeRateLimiter } from "@/lib/security/shared-rate-limit";
 import { CustomerPreviewService } from "@/modules/custom-print/customer-preview-service";
 
 export const runtime = "nodejs";
 
-const previewRateLimiter = createInMemoryRateLimiter({ limit: 15, maxKeys: 256, windowMs: 60_000 });
+const previewRateLimiter = createRuntimeRateLimiter({ namespace: "src/app/api/custom-print/preview-estimate/route.ts", limit: 15, maxKeys: 256, windowMs: 60_000 });
 
 export async function POST(request: Request) {
   const correlationId = createCorrelationId();
   try {
-    assertPublicMutationRequest(request, previewRateLimiter, {
+    await assertPublicMutationRequest(request, previewRateLimiter, {
       endpointId: "POST /api/custom-print/preview-estimate",
     });
     const customer = await requireCustomer();

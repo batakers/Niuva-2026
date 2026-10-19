@@ -10,7 +10,7 @@ import {
   safeCustomerReturnTo,
   createCustomerOAuthState,
 } from "@/modules/customer-auth/core";
-import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
+import { createRuntimeRateLimiter } from "@/lib/security/shared-rate-limit";
 import { customerCookieSecure } from "@/modules/customer-auth/app-origin";
 import { customerAuthOrigin } from "@/modules/customer-auth/origin";
 import {
@@ -20,7 +20,7 @@ import {
 
 export const runtime = "nodejs";
 
-const googleStartRateLimiter = createInMemoryRateLimiter({
+const googleStartRateLimiter = createRuntimeRateLimiter({ namespace: "src/app/api/auth/google/start/route.ts",
   limit: 10,
   maxKeys: 512,
   windowMs: 15 * 60 * 1_000,
@@ -47,9 +47,9 @@ export async function GET(request: Request): Promise<Response> {
     new URL(request.url).searchParams.get("returnTo") ?? undefined,
   );
 
-  if (!googleStartRateLimiter.check(rateLimitKey(request)).allowed) {
-    return loginRedirect(request, "rate_limited", returnTo);
-  }
+  try {
+    if (!(await googleStartRateLimiter.check(rateLimitKey(request))).allowed) return loginRedirect(request, "rate_limited", returnTo);
+  } catch { return loginRedirect(request, "unavailable", returnTo); }
 
   if (!isCustomerGoogleAuthAvailable()) {
     return loginRedirect(request, "unavailable", returnTo);

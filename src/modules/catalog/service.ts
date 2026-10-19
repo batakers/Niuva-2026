@@ -51,6 +51,13 @@ export class CatalogService {
     return this.repositoryFactory().findPublishedProducts();
   }
 
+  async listCategories() {
+    requireAdminPermission(await this.authorizeAdmin(), "CATALOG_WRITE");
+    const repository = this.repositoryFactory();
+    if (!repository.listActiveCategories) throw appError("PROVIDER_UNAVAILABLE");
+    return repository.listActiveCategories();
+  }
+
   async getPublicProduct(slug: string) {
     return this.repositoryFactory().findPublishedProductBySlug(slug);
   }

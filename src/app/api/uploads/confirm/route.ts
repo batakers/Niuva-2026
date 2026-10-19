@@ -5,13 +5,13 @@ import {
   apiSuccess,
   createCorrelationId,
 } from "@/lib/http/response";
-import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
+import { createRuntimeRateLimiter } from "@/lib/security/shared-rate-limit";
 import { UploadService } from "@/modules/files/upload-service";
 
 export const runtime = "nodejs";
 
 const UPLOAD_CONFIRM_MAX_BODY_BYTES = 4 * 1_024;
-const uploadConfirmRateLimiter = createInMemoryRateLimiter({
+const uploadConfirmRateLimiter = createRuntimeRateLimiter({ namespace: "src/app/api/uploads/confirm/route.ts",
   limit: 20,
   maxKeys: 256,
   windowMs: 60_000,
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   const correlationId = createCorrelationId();
 
   try {
-    assertPublicMutationRequest(request, uploadConfirmRateLimiter, {
+    await assertPublicMutationRequest(request, uploadConfirmRateLimiter, {
       endpointId: "POST /api/uploads/confirm",
     });
     const payload = await readJsonBody(request, {

@@ -1,5 +1,11 @@
 # Implementation Plan: Niuva MVP
 
+> **HISTORICAL — 18 Oktober 2026.** Isi dan checklist di bawah dipertahankan
+> sebagai histori fase, bukan backlog aktif. Gunakan [ROADMAP.md](../ROADMAP.md),
+> [TASKS.md](../TASKS.md), dan [DoD v1](../docs/v1-definition-of-done.md).
+> Guest checkout, Clerk, Project Brief dan AUiS yang telah digantikan tidak
+> menjadi requirement baru. Bukti lama tetap terbatas pada scope asalnya.
+
 > **Visual workflow update — 2026-09-27:** AUiS routes and registry were
 > retired. The foundation/styleguide approval sequence and old source paths
 > below are historical. Use root `AGENTS.md` and `DESIGN.md` for current UI

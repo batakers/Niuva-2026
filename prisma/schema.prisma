@@ -16,6 +16,26 @@ model DeploymentDatabaseBinding {
   @@map("deployment_database_bindings")
 }
 
+/// Retained for migration compatibility; runtime jobs use OperationalJobState.
+model ScheduledJobState {
+  jobKey           String    @id @map("job_key")
+  status           String    @default("IDLE")
+  leaseId          String?   @map("lease_id") @db.Uuid
+  leaseExpiresAt   DateTime? @map("lease_expires_at") @db.Timestamptz(6)
+  cooldownUntil    DateTime? @map("cooldown_until") @db.Timestamptz(6)
+  lastStartedAt    DateTime? @map("last_started_at") @db.Timestamptz(6)
+  lastFinishedAt   DateTime? @map("last_finished_at") @db.Timestamptz(6)
+  lastSuccessAt    DateTime? @map("last_success_at") @db.Timestamptz(6)
+  lastFailureAt    DateTime? @map("last_failure_at") @db.Timestamptz(6)
+  lastErrorCategory String?  @map("last_error_category")
+  lastSummary      Json?     @map("last_summary")
+  lastLagMs        Int?      @map("last_lag_ms")
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([status, leaseExpiresAt])
+  @@map("scheduled_job_states")
+}
+
 model OperationalJobState {
   name                String    @id
   leaseId             String?   @map("lease_id") @db.Uuid
@@ -254,6 +274,7 @@ model AdminProfile {
   billingSettings BillingInstructions[]
   billingSettingsRevisions BillingInstructionsRevision[]
   financialUploads StoredFile[] @relation("AdminFinancialUploads")
+  publicAssets PublicMediaAsset[]
 
   @@index([isActive, role])
   @@map("admin_profiles")
@@ -405,6 +426,7 @@ model PortfolioProject {
   createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
   media        PortfolioMedia[]
+  publicAssets PublicMediaAsset[]
 
   @@index([isPublished, isFeatured, publishedAt])
   @@map("portfolio_projects")
@@ -436,6 +458,47 @@ model Category {
   @@map("categories")
 }
 
+model RequestRateLimit {
+  key       String @id
+  namespace String
+  count     Int
+  resetAt   DateTime @map("reset_at") @db.Timestamptz(6)
+
+  @@index([resetAt])
+  @@map("request_rate_limits")
+}
+
+enum PublicMediaAssetStatus {
+  PENDING
+  VERIFYING
+  VERIFIED
+  FAILED
+}
+
+model PublicMediaAsset {
+  id            String @id @default(uuid()) @db.Uuid
+  productId     String? @map("product_id") @db.Uuid
+  projectId     String? @map("project_id") @db.Uuid
+  uploadedById  String @map("uploaded_by_id") @db.Uuid
+  storageKey    String @unique @map("storage_key")
+  quarantineKey String @unique @map("quarantine_key")
+  contentType   String @map("content_type")
+  sizeBytes     Int @map("size_bytes")
+  sha256        String?
+  status        PublicMediaAssetStatus @default(PENDING)
+  expiresAt     DateTime @map("expires_at") @db.Timestamptz(6)
+  verifiedAt    DateTime? @map("verified_at") @db.Timestamptz(6)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  product       Product? @relation(fields: [productId], references: [id], onDelete: Restrict, map: "public_media_product_fk")
+  project       PortfolioProject? @relation(fields: [projectId], references: [id], onDelete: Restrict, map: "public_media_project_fk")
+  uploadedBy    AdminProfile @relation(fields: [uploadedById], references: [id], onDelete: Restrict, map: "public_media_admin_fk")
+
+  @@index([productId, status])
+  @@index([projectId, status])
+  @@index([status, expiresAt])
+  @@map("public_media_assets")
+}
+
 model Product {
   id          String           @id @default(uuid()) @db.Uuid
   categoryId  String?          @map("category_id") @db.Uuid
@@ -448,6 +511,7 @@ model Product {
   category    Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   media       ProductMedia[]
   variants    ProductVariant[]
+  publicAssets PublicMediaAsset[]
 
   @@index([isPublished, createdAt])
   @@index([categoryId, isPublished])

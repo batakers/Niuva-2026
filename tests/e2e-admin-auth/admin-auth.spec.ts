@@ -1,11 +1,23 @@
 import { randomUUID } from "node:crypto";
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { hashPassword } from "better-auth/crypto";
 import { PrismaClient } from "../../src/generated/prisma/client";
 import { getSafeTestDatabaseUrl } from "../../src/lib/db/test-safety";
 import { generateTestAdminTotp } from "../helpers/admin-totp";
 import { isolatedActorHeaders } from "../e2e/helpers/actor";
+
+async function verifyAuthenticatorAndLand(page: Page) {
+  const verification = page.waitForResponse(response =>
+    response.request().method() === "POST" && response.url().endsWith("/api/admin/auth/two-factor/verify-totp"),
+    { timeout: 15_000 });
+  await page.getByRole("button", { name: "Verifikasi kode" }).click();
+  expect((await verification).status()).toBe(200);
+  await page.waitForURL(/\/admin$/, { waitUntil: "domcontentloaded", timeout: 30_000 });
+  const status = await page.request.get("/api/admin/auth/status");
+  expect(status.status()).toBe(200);
+  expect(await status.json()).toMatchObject({ stage: "ready" });
+}
 
 test.beforeEach(async ({ context }, testInfo) => {
   await context.setExtraHTTPHeaders(isolatedActorHeaders(testInfo, "admin"));
@@ -36,6 +48,16 @@ test("Admin enrolls TOTP, signs in again with a second factor and revokes the se
   const id = randomUUID(), email = `e2e-admin-${id}@example.test`, password = "E2E-only-admin-password-572!";
   await prisma.adminAuthUser.create({ data: { id, name: "Admin Fixture", email, emailVerified: true, accounts: { create: { id: randomUUID(), accountId: id, providerId: "credential", password: await hashPassword(password) } }, profile: { create: { role: "OWNER", isActive: true } } } });
   try {
+    // Reproduce a first document landing slower than the default 5s assertion
+    // budget, as happens while /admin is being compiled on a fresh CI runner.
+    let delayedLanding = false;
+    await page.route("**/admin", async route => {
+      if (route.request().isNavigationRequest() && !delayedLanding) {
+        delayedLanding = true;
+        await new Promise(resolve => setTimeout(resolve, 6000));
+      }
+      await route.continue();
+    });
     await page.goto("/admin/sign-in");
     await page.getByLabel("Email Admin").fill(email);
     await page.getByLabel("Password", { exact: true }).fill(password);
@@ -49,8 +71,7 @@ test("Admin enrolls TOTP, signs in again with a second factor and revokes the se
     const secret = text!.split(": ").at(-1)!;
     await page.getByLabel("Saya sudah menyimpan kode pemulihan").check();
     await page.getByLabel("Kode authenticator", { exact: true }).fill(generateTestAdminTotp(secret));
-    await page.getByRole("button", { name: "Verifikasi kode" }).click();
-    await expect(page).toHaveURL(/\/admin$/);
+    await verifyAuthenticatorAndLand(page);
     await expect(page.getByRole("heading", { name: "Overview", exact: true })).toBeVisible();
     await page.getByRole("button", { name: /Buka menu akun/ }).click();
     await page.getByRole("link", { name: "Keamanan akun", exact: true }).click();
@@ -68,8 +89,7 @@ test("Admin enrolls TOTP, signs in again with a second factor and revokes the se
     await expect(page.getByLabel("Kode authenticator", { exact: true })).toBeVisible();
     expect((await page.request.get("/api/admin/orders")).status()).toBe(401);
     await page.getByLabel("Kode authenticator", { exact: true }).fill(generateTestAdminTotp(secret));
-    await page.getByRole("button", { name: "Verifikasi kode" }).click();
-    await expect(page).toHaveURL(/\/admin$/);
+    await verifyAuthenticatorAndLand(page);
     await page.getByRole("button", { name: /Buka menu akun/ }).click();
     await page.getByRole("link", { name: "Keamanan akun", exact: true }).click();
     const newPassword = "E2E-new-693!";
@@ -86,8 +106,7 @@ test("Admin enrolls TOTP, signs in again with a second factor and revokes the se
     await page.getByRole("button", { name: "Masuk", exact: true }).click();
     await expect(page.getByLabel("Kode authenticator", { exact: true })).toBeVisible();
     await page.getByLabel("Kode authenticator", { exact: true }).fill(generateTestAdminTotp(secret));
-    await page.getByRole("button", { name: "Verifikasi kode" }).click();
-    await expect(page).toHaveURL(/\/admin$/);
+    await verifyAuthenticatorAndLand(page);
   } finally {
     await prisma.adminProfile.deleteMany({ where: { authUserId: id } });
     await prisma.adminAuthUser.deleteMany({ where: { id } });

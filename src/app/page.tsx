@@ -80,6 +80,8 @@ export default async function Home() {
   const selectedProjects = projects
     .filter((project) => project.detailReadiness !== "card-only")
     .slice(0, 3);
+  const heroProject = selectedProjects.find((project) => project.media.some((media) => media.url));
+  const heroMedia = heroProject?.media.find((media) => media.url);
 
   const capabilityCards = publicServices.map((service, index) => ({
     actionLabel: "Tinjau layanan",
@@ -100,7 +102,7 @@ export default async function Home() {
           id="hero"
         >
           <div className="mx-auto max-w-public px-5 sm:px-8">
-            <div className="grid gap-8 py-10 sm:py-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-center lg:gap-12">
+            <div className={cn("grid gap-8 py-10 sm:py-14 lg:items-center lg:gap-12", heroProject && "lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]")}>
               <div className="max-w-3xl">
                 <SectionMarker className="text-brand-300">
                   Niuva · mitra pengembangan produk
@@ -126,27 +128,27 @@ export default async function Home() {
                 </div>
               </div>
 
-              <Link
+              {heroProject && heroMedia?.url ? <Link
                 className="group block rounded-xl border border-neutral-700 bg-card p-3 text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand-300 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
-                href="/projects/konsep-desain-eksterior-motor-ev-pindad"
+                href={`/projects/${heroProject.slug}`}
               >
                 <figure>
                   <div className="relative aspect-[5/4] overflow-hidden rounded-lg bg-white">
                     <Image
-                      alt="Visualisasi samping konsep motor listrik berwarna hijau"
+                      alt={heroMedia.altText}
                       className="object-contain"
                       fill
                       priority
                       sizes="(min-width: 1024px) 45vw, 100vw"
-                      src="/media/portfolio/cs-02-motor-ev.png"
+                      src={heroMedia.url}
                     />
                   </div>
                   <figcaption className="flex flex-wrap items-center justify-between gap-2 px-1 pt-3 text-sm">
-                    <span>Konsep desain eksterior motor EV</span>
+                    <span>{heroProject.title}</span>
                     <span className="inline-flex items-center gap-1 font-semibold text-brand-300 underline-offset-4 group-hover:underline">Lihat cerita proyek <PathArrow /></span>
                   </figcaption>
                 </figure>
-              </Link>
+              </Link> : null}
             </div>
           </div>
         </section>

@@ -7,7 +7,7 @@ vi.mock("next/server", () => ({ connection: async () => undefined }));
 vi.mock("@/app/admin/admin-page-access", () => ({ loadAdminPageAccess: async () => ({ kind: "granted", access: { authUserId: "fixture", profile: { id: "7614b2eb-6e0c-4a27-9162-e94fb377ebd4", role: "OWNER", isActive: true } } }) }));
 vi.mock("@/modules/admin/operations", () => ({ AdminOperationsService: class { getProduct = mocks.read; getPortfolio = mocks.read; } }));
 vi.mock("@/app/admin/actions", () => ({ adjustStockAction: vi.fn(), replaceProductMediaAction: vi.fn(), updateProductAction: vi.fn(), updateVariantAction: vi.fn(), replacePortfolioMediaAction: vi.fn(), updatePortfolioAction: vi.fn() }));
-vi.mock("@/app/admin/admin-action-form", () => ({ AdminActionForm: ({ children }: { children: ReactNode }) => <form>{children}</form> }));
+vi.mock("@/app/admin/admin-action-form", async importOriginal => ({ ...await importOriginal<typeof import("@/app/admin/admin-action-form")>(), AdminActionForm: ({ children }: { children: ReactNode }) => <form>{children}</form> }));
 vi.mock("@/components/niuva/admin-shell", () => ({ AdminShell: ({ children }: { children: ReactNode }) => <>{children}</>, AdminDataUnavailableView: () => <p>Unavailable</p> }));
 import ProductPage from "@/app/admin/products/[id]/page";
 import PortfolioPage from "@/app/admin/portfolio/[id]/page";

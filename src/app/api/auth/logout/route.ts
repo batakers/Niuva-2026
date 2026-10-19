@@ -7,12 +7,12 @@ import {
 import { apiError, createCorrelationId } from "@/lib/http/response";
 import { assertSameOriginRequest } from "@/lib/security/origin";
 import { CUSTOMER_SESSION_COOKIE } from "@/modules/customer-auth/core";
-import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
+import { createRuntimeRateLimiter } from "@/lib/security/shared-rate-limit";
 import { appError } from "@/modules/shared/errors";
 
 export const runtime = "nodejs";
 
-const logoutRateLimiter = createInMemoryRateLimiter({
+const logoutRateLimiter = createRuntimeRateLimiter({ namespace: "src/app/api/auth/logout/route.ts",
   limit: 20,
   maxKeys: 512,
   windowMs: 15 * 60 * 1_000,
@@ -30,7 +30,7 @@ export async function POST(request: Request): Promise<Response> {
   try {
     const forwarded = request.headers.get("x-forwarded-for")?.split(",", 1)[0]?.trim();
     const key = forwarded || new URL(request.url).origin;
-    if (!logoutRateLimiter.check(key).allowed) {
+    if (!(await logoutRateLimiter.check(key)).allowed) {
       return apiError(appError("RATE_LIMITED"), correlationId);
     }
 

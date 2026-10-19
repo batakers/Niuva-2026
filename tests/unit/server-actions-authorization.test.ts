@@ -126,6 +126,11 @@ const PAYMENT_FIELDS = { paymentId: UUID, billingCaseId: UUID, expectedVersion: 
 const EXPENSE_FIELDS = { expenseId: UUID, expectedVersion: "1", amountRp: "1000", expenseDate: "2020-01-01", category: "OTHER", description: "Synthetic expense", reason: "Synthetic correction", idempotencyKey: UUID_2 };
 const RATES = { plaFirst: "1000", plaMiddle: "900", plaLast: "800", absFirst: "1200", absMiddle: "1100", absLast: "1000", machineHour: "5000", plaOwn: "500", absOwn: "700", plaCommunal: "500", absCommunal: "700" };
 const MANIFEST: Readonly<Record<string, Readonly<Record<string, ManifestEntry>>>> = {
+  "src/app/admin/content-create-actions.ts": {
+    createProductDraftAction: { permission: "CATALOG_WRITE", fields: { name: "Synthetic draft", slug: "synthetic-draft", description: "Synthetic description" } },
+    createVariantAction: { permission: "CATALOG_WRITE", fields: { productId: UUID, name: "Synthetic variant", sku: "SYNTHETIC-SKU", priceRp: "1000", weightGrams: "20", stockOnHand: "1", isActive: "on" } },
+    createPortfolioDraftAction: { permission: "PORTFOLIO_WRITE", fields: { title: "Synthetic project", slug: "synthetic-project", summary: "Synthetic summary", serviceLabel: "Design & Prototyping" } },
+  },
   "src/app/admin/finance/actions.ts": {
     createInvoiceDraftAction: { permission: "FINANCE_WRITE", fields: { sourceKind: "ORDER_TOTAL", sourceId: UUID, idempotencyKey: UUID_2 } },
     issueInvoiceAction: { permission: "FINANCE_WRITE", fields: { invoiceId: UUID, expectedVersion: "1", settingsVersion: "1", idempotencyKey: UUID_2 } },
@@ -348,6 +353,7 @@ function scanActionFiles(): Record<string, string[]> {
 }
 
 const loaders: Readonly<Record<string, () => Promise<Record<string, unknown>>>> = {
+  "src/app/admin/content-create-actions.ts": () => import("@/app/admin/content-create-actions"),
   "src/app/admin/finance/actions.ts": () => import("@/app/admin/finance/actions"),
   "src/app/admin/finance/expenses/actions.ts": () => import("@/app/admin/finance/expenses/actions"),
   "src/app/admin/finance/settings/actions.ts": () => import("@/app/admin/finance/settings/actions"),

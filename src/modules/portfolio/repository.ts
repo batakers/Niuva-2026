@@ -1,7 +1,9 @@
 import { Prisma, type PrismaClient } from "@/generated/prisma/client";
 import { getPrismaClient } from "@/lib/db/prisma";
+import { assertOwnedPublicMedia } from "@/modules/public-media/repository";
 import { appError } from "@/modules/shared/errors";
 import type {
+  CreatePortfolioProjectInput,
   ReplacePortfolioMediaInput,
   UpdatePortfolioProjectInput,
 } from "./schema";
@@ -9,6 +11,13 @@ import { isApprovedCardOnlyPortfolioProject } from "./public-content";
 
 export class PortfolioRepository {
   constructor(private readonly prisma: PrismaClient = getPrismaClient()) {}
+
+  async createProject(input: CreatePortfolioProjectInput): Promise<Readonly<{ id: string }>> {
+    return this.prisma.portfolioProject.create({
+      data: { ...input, isPublished: false, isFeatured: false, publishedAt: null },
+      select: { id: true },
+    });
+  }
 
   async listPublishedProjects() {
     return this.prisma.portfolioProject.findMany({
@@ -175,6 +184,7 @@ export class PortfolioRepository {
           details: { items: "Portfolio terbit harus memiliki minimal satu media." },
         });
       }
+      await assertOwnedPublicMedia(transaction, { kind: "portfolio", id: projectId }, items.map(item => item.storageKey));
       await transaction.portfolioMedia.deleteMany({ where: { projectId } });
       if (items.length > 0) {
         await transaction.portfolioMedia.createMany({

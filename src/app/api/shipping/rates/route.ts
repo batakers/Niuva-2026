@@ -6,14 +6,14 @@ import {
   apiSuccess,
   createCorrelationId,
 } from "@/lib/http/response";
-import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
+import { createRuntimeRateLimiter } from "@/lib/security/shared-rate-limit";
 import { createShippingProviderForRuntime } from "@/modules/providers/runtime";
 import { RetailShippingRateService } from "@/modules/shipping/retail-rate-service";
 
 export const runtime = "nodejs";
 
 const SHIPPING_RATES_MAX_BODY_BYTES = 8 * 1_024;
-const shippingRatesRateLimiter = createInMemoryRateLimiter({
+const shippingRatesRateLimiter = createRuntimeRateLimiter({ namespace: "src/app/api/shipping/rates/route.ts",
   limit: 10,
   maxKeys: 256,
   windowMs: 60_000,
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   const correlationId = createCorrelationId();
 
   try {
-    assertPublicMutationRequest(request, shippingRatesRateLimiter, {
+    await assertPublicMutationRequest(request, shippingRatesRateLimiter, {
       endpointId: "POST /api/shipping/rates",
     });
     await requireCustomer();

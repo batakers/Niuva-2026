@@ -10,6 +10,7 @@ import { parseWithValidation } from "@/modules/shared/validation";
 import { isApprovedCardOnlyPortfolioProject } from "./public-content";
 import { PortfolioRepository } from "./repository";
 import {
+  createPortfolioProjectSchema,
   replacePortfolioMediaSchema,
   updatePortfolioProjectSchema,
   type ReplacePortfolioMediaInput,
@@ -34,6 +35,22 @@ export class PortfolioService {
     this.authorizeAdmin = dependencies.authorizeAdmin ?? requireAdmin;
     this.repositoryFactory = () =>
       dependencies.repository ?? new PortfolioRepository();
+  }
+
+  async createProject(input: unknown) {
+    const parsed = parseWithValidation(createPortfolioProjectSchema, input);
+    const admin = await this.authorizeAdmin();
+    requireAdminPermission(admin, "PORTFOLIO_WRITE");
+    const created = await this.repositoryFactory().createProject(parsed);
+    await recordAudit(this.audit, {
+      action: "portfolio.project.created",
+      actorId: admin.profile.id,
+      actorType: "ADMIN",
+      afterJson: { isPublished: false, slug: parsed.slug },
+      entityId: created.id,
+      entityType: "PortfolioProject",
+    });
+    return created;
   }
 
   async updateProject(projectId: string, input: unknown) {

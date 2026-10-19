@@ -2,7 +2,7 @@
 
 **Status:** implementasi dan verifikasi lokal. Dokumen ini tidak menandai role, database, provider, cron, alarm, atau domain staging/production siap.
 
-Paket Batch 2 menghubungkan producer Customer dengan durable outbox, worker, expiry/cleanup, job runner dan pemeriksaan status. Urutan/kriteria batch ada di [plan aktif](../../tasks/plan.md), daftar kerja di [todo aktif](../../tasks/todo.md), release gate di [peta kesiapan](../frontend/mvp-release-readiness.md), dan nama konfigurasi proses di [environment register](../../.kiro/specs/niuva-audit-remediation/env-register.md).
+Paket Batch 2 menghubungkan producer Customer dengan durable outbox, worker, expiry/cleanup, job runner dan pemeriksaan status. Scope dan urutan aktif ada di [ROADMAP](../../ROADMAP.md) dan [TASKS](../../TASKS.md); [plan](../../tasks/plan.md) serta [todo](../../tasks/todo.md) Batch 2 merupakan histori, release gate di [peta kesiapan](../frontend/mvp-release-readiness.md), dan nama konfigurasi proses di [environment register](../../.kiro/specs/niuva-audit-remediation/env-register.md).
 
 ## Prasyarat
 
@@ -12,7 +12,7 @@ Paket Batch 2 menghubungkan producer Customer dengan durable outbox, worker, exp
 - Untuk `OUTBOX_DELIVERY`, runtime juga membutuhkan konfigurasi cipher outbox dan konfigurasi mailer Customer yang lolos guard capability/origin. Itu tidak membuka provider live. Tidak ada contoh atau nilai key pada runbook.
 - `OUTBOX_EXPIRY`, kedua cleanup dan `inspect` tidak memerlukan cipher atau sender. `dry-run` tidak menulis status job atau data bisnis dan tidak membuat cipher/sender.
 
-`NIUVA_JOB_DATABASE_ROLE` hanya dikonsumsi saat launcher dijalankan; ia bukan konfigurasi web app. Pengisian variabel atau konfigurasi dari contoh tidak membuktikan role nyata mempunyai grant yang tepat.
+`NIUVA_JOB_DATABASE_ROLE` dikonsumsi launcher CLI dan endpoint HTTP job internal; producer Customer biasa tidak memerlukan variabel role job. Endpoint HTTP tetap menolak koneksi yang tidak memenuhi pembatasan role/marker yang sama. Pengisian variabel atau konfigurasi dari contoh tidak membuktikan role nyata mempunyai grant yang tepat.
 
 ## Menjalankan satu job
 
@@ -40,14 +40,48 @@ Perintah `inspect` membutuhkan ambang lag eksplisit dalam milidetik:
 corepack pnpm exec jiti scripts/run-operational-job.ts inspect '{"maxLagMs":120000}'
 ```
 
-`120000` hanya contoh format lokal; tentukan ambang operasi sebenarnya bersama Owner dan petugas sebelum mengaktifkan monitoring atau scheduler. Output berisi status terakhir empat job, counter allowlist, backlog outbox, lease kedaluwarsa, privacy overdue/hold dan alarm. Ia tidak menampilkan recipient, token, payload atau raw error, dan tidak mengirim notifikasi.
+`120000` hanya contoh format lokal; tentukan ambang operasi sebenarnya bersama Owner dan petugas sebelum mengaktifkan monitoring atau scheduler. Output berisi status terakhir lima job, counter allowlist, backlog outbox, lease kedaluwarsa, privacy overdue/hold dan alarm. Ia tidak menampilkan recipient, token, payload atau raw error, dan tidak mengirim notifikasi.
 
 Exit code `0` berarti run tidak gagal atau pemeriksaan tidak menemukan alarm; run dapat berstatus `busy` atau `cooldown`. Exit code `1` menunjukkan input/runtime gagal atau lease hilang/gagal. Exit code `2` berarti `inspect` menemukan alarm. Ringkasan CLI sengaja hanya berisi kode kategori aman.
+
+## Adapter HTTP dan expiry reservasi — 19 Oktober 2026
+
+Endpoint internal `/api/internal/jobs/outbox` dan
+`/api/internal/jobs/inventory-reservations` memakai bearer `CRON_SECRET`.
+POST JSON menerima `mode`, `limit`, dan `jobPolicy` dengan field
+`leaseMs`, `minIntervalMs`, `failureCooldownMs` eksplisit.
+Outbox juga wajib menerima `workerPolicy` dengan `leaseMs`,
+`sendTimeoutMs`, `retryDelaysMs`; field itu ditolak untuk inventory.
+Batas execute outbox HTTP adalah 10; batas lainnya 100.
+GET membutuhkan query `maxLagMs` positif dan mengembalikan inspeksi yang sama
+dengan CLI. Input divalidasi sebelum runtime dibangun.
+
+Keduanya memakai `JobRunner`, `PrismaJobRepository`,
+`OperationalJobState`, role guard dan monitor yang sama dengan CLI.
+Tidak ada lease kedua pada adapter HTTP. Modul lama `scheduled-jobs` hanya
+alias kompatibilitas; model/tabel `ScheduledJobState` tetap ada supaya
+migration yang sudah di-push tidak diubah dan tidak digunakan runtime.
+
+Inventory mengikuti tenggat retail existing: attempt PENDING yang masih
+berlaku menahan pembatalan; saat due, attempt expired, order unpaid cancelled,
+dan reservation released dalam satu transaksi. Payment settled/refunded
+tetap terlindungi. Lock attempt → variant → order dipertahankan. Audit
+reservation berada pada transaksi yang sama; pemeriksaan lease terakhir
+menggagalkan seluruh transaksi jika lease tak lagi sah. Monitor menampilkan
+remaining due dan lag reservation. Role inventory memerlukan akses yang
+sesuai ke order/payment/reservation, lock varian, dan audit; inspeksi juga
+memerlukan pembacaan backlog inventory. Tinjau grant tiap resource sebelum
+pemakaian hosted. Migration baru hanya memperluas allowlist
+nama operational job; tidak menghapus data atau mengubah migration lama.
+
+Adapter ini tidak memasang scheduler, cadence, ambang alarm atau sender
+hosted. Nilai policy/lag harus disetujui dan resource harus dibuktikan sebelum
+pemakaian hosted.
 
 ## Bukti lokal dan batas penggunaan
 
 Regression/E2E lokal menjalankan producer, worker dan sender fixture secara terpisah dengan binding serta key sintetis. Migration `OperationalJobState` diterapkan pada database test loopback terisolasi. Bukti tersebut tidak menguji credential provider sungguhan, inbox/bounce, hak role pada resource hosted, cadence cron, monitoring eksternal, staging atau production.
 
-Sebelum memakai job terjadwal, pemilik operasi perlu menetapkan database/role dan grants, secret management, sender dan bukti inbox, nilai lease/cooldown/lag, cadence, tujuan alarm serta petugas. Provisioning dan aktivasi resource memerlukan instruksi tersendiri. Job retensi file R2, reservasi stok, pembayaran/refund dan recovery belum termasuk empat handler ini.
+Sebelum memakai job terjadwal, pemilik operasi perlu menetapkan database/role dan grants, secret management, sender dan bukti inbox, nilai lease/cooldown/lag, cadence, tujuan alarm serta petugas. Provisioning dan aktivasi resource memerlukan instruksi tersendiri. Job `INVENTORY_RESERVATIONS` ditambahkan pada rekonsiliasi 19 Oktober 2026; retensi file R2, pembayaran/refund dan recovery tetap terbuka.
 
 Rollback source sebelum aktivasi dapat mengembalikan kode ke baseline. Jangan menghapus tabel aditif atau reset data untuk rollback. Jika suatu saat email sudah diterima provider, rollback aplikasi tidak dapat menariknya kembali.

@@ -2,12 +2,12 @@ import { z } from "zod";
 import type { Prisma } from "../../generated/prisma/client";
 import { appError } from "../shared/errors";
 
-export const jobNameSchema = z.enum(["OUTBOX_DELIVERY", "OUTBOX_EXPIRY", "CUSTOMER_AUTH_CLEANUP", "CUSTOMER_PRIVACY_CLEANUP"]);
+export const jobNameSchema = z.enum(["OUTBOX_DELIVERY", "OUTBOX_EXPIRY", "CUSTOMER_AUTH_CLEANUP", "CUSTOMER_PRIVACY_CLEANUP", "INVENTORY_RESERVATIONS"]);
 const elapsed = z.number().int().min(0).max(2147483647);
 const duration = elapsed.min(1);
 const requestSchema = z.strictObject({ job: jobNameSchema, mode: z.enum(["dry-run", "execute"]), limit: z.number().int().min(1).max(100) });
 const policySchema = z.strictObject({ leaseMs: duration, minIntervalMs: elapsed, failureCooldownMs: duration });
-const counter = z.enum(["scanned", "claimed", "accepted", "retried", "failed", "unknown", "cancelled", "expired", "lostLease", "cleaned", "customers", "pending", "consentProofs", "caseContents", "caseReceipts", "activeHolds", "overdueHolds", "confirmations", "sessions", "emailTokens", "internalGoogleConsents", "authRateLimits", "pendingRegistrations", "closureFences", "privacyAuditEvents"]);
+const counter = z.enum(["scanned", "claimed", "accepted", "retried", "failed", "unknown", "cancelled", "expired", "lostLease", "cleaned", "customers", "pending", "consentProofs", "caseContents", "caseReceipts", "activeHolds", "overdueHolds", "confirmations", "sessions", "emailTokens", "internalGoogleConsents", "authRateLimits", "pendingRegistrations", "closureFences", "privacyAuditEvents", "released", "remainingDue", "lagMs"]);
 const resultSchema = z.strictObject({ counts: z.partialRecord(counter, z.number().int().min(0).max(Number.MAX_SAFE_INTEGER)), cooldownMs: elapsed.optional(), failure: z.enum(["JOB_FAILED", "DELIVERY_FAILED", "OUTCOME_UNKNOWN"]).optional() });
 export type JobName = z.infer<typeof jobNameSchema>;
 export type JobRequest = z.infer<typeof requestSchema>;

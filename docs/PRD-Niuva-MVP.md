@@ -1,5 +1,26 @@
 # Product Requirements Document: Niuva MVP
 
+## Kontrak penyelesaian v1 — 18 Oktober 2026
+
+Owner menyetujui [scope v1](../PRODUCT.md#kontrak-v10--18-oktober-2026),
+[roadmap](../ROADMAP.md), [backlog aktif](../TASKS.md) dan
+[Definition of Done](v1-definition-of-done.md). Scope Admin kini mencakup
+pembuatan draft produk, varian, portfolio dan upload media publik sederhana
+melalui Dashboard, tanpa database/source dan tanpa full CMS/page builder.
+Media Admin JPEG/PNG/WebP maksimal 10 MiB/file dan 12 item/gallery; ownership,
+validasi server dan pemisahan dari file Customer privat wajib dipertahankan.
+
+Profil/ringkasan akun Customer tidak bebas diedit; tindakan MAKE/quote/privasi
+yang diizinkan tetap berlaku pada data sendiri. B2B WhatsApp, public Customer
+18+ melalui deklarasi, refund penuh berapproval Owner dan kontrak auth/file/
+pricing existing tetap berlaku. Pencatatan resi manual yang memenuhi kontrak
+cukup untuk v1; otomatisasi WhatsApp/booking/label/tracking bukan syarat rilis.
+
+Persetujuan ini mengizinkan implementasi dan pengujian lokal pada scope rencana;
+tidak mengesahkan policy final, menetapkan data bisnis/retensi/merchant yang
+masih terbuka, atau mengizinkan provisioning/deployment/provider production.
+Checklist/snapshot lama yang bertentangan tidak menjadi requirement baru.
+
 ## Rekonsiliasi kontrak rilis — 13 Oktober 2026
 
 Batch dokumentasi ini menyelaraskan keputusan yang sudah diberikan; tidak mengesahkan policy final atau mengaktifkan fitur. Untuk usia/pengesahan dokumen, gunakan keputusan Owner 5 Oktober pada [register RK-01–03](../.kiro/specs/niuva-audit-remediation/register-keputusan.md) dan [implementasi 6 Oktober](../.kiro/specs/niuva-keputusan-lanjutan/implementation-report.md). Untuk B2B, gunakan keputusan 11 Oktober di bawah. Ketentuan lama yang bertentangan adalah histori.

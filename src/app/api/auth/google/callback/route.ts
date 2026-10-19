@@ -19,11 +19,11 @@ import { CustomerAuthService } from "@/modules/customer-auth/service";
 import { INTERNAL_GOOGLE_CONSENT_COOKIE, getInternalAuthConfig } from "@/modules/customer-auth/internal-testing";
 import { createGoogleOAuthAdapter, getCustomerGoogleOAuthConfig } from "@/modules/customer-auth/google";
 import { customerCookieSecure } from "@/modules/customer-auth/app-origin";
-import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
+import { createRuntimeRateLimiter } from "@/lib/security/shared-rate-limit";
 
 export const runtime = "nodejs";
 
-const googleCallbackRateLimiter = createInMemoryRateLimiter({
+const googleCallbackRateLimiter = createRuntimeRateLimiter({ namespace: "src/app/api/auth/google/callback/route.ts",
   limit: 10,
   maxKeys: 512,
   windowMs: 15 * 60 * 1_000,
@@ -81,9 +81,9 @@ export async function GET(request: Request): Promise<Response> {
     return response;
   };
 
-  if (!googleCallbackRateLimiter.check(rateLimitKey(request)).allowed) {
-    return failedResponse("rate_limited");
-  }
+  try {
+    if (!(await googleCallbackRateLimiter.check(rateLimitKey(request))).allowed) return failedResponse("rate_limited");
+  } catch { return failedResponse("unavailable"); }
 
   if (!isCustomerGoogleAuthAvailable()) {
     return failedResponse("unavailable");

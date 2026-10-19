@@ -23,6 +23,7 @@ import { AdminDataUnavailableView, AdminShell } from "@/components/niuva/admin-s
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { AdminOperationsService } from "@/modules/admin/operations";
 import { StockAdjustmentPanel } from "./stock-adjustment-panel";
+import { createVariantAction } from "../../content-create-actions";
 
 export const metadata: Metadata = { title: "Product detail admin · Niuva", robots: { follow: false, index: false } };
 const currencyFormatter = new Intl.NumberFormat("id-ID", { currency: "IDR", maximumFractionDigits: 0, style: "currency" });
@@ -60,14 +61,32 @@ export default async function AdminProductDetailPage({ params, searchParams }: R
         <Card as="section" aria-labelledby="media-title" className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-5 sm:p-6">
           <h2 className="text-xl font-semibold" id="media-title">Foto produk</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">Gunakan foto produk yang sudah tersedia di penyimpanan publik Niuva. Susun urutan dan deskripsinya sebelum disimpan.</p>
-          <AdminActionForm action={replaceProductMediaAction} className="mt-5" submitLabel="Simpan foto"><input name="productId" type="hidden" value={product.id} /><AdminMediaEditor label="Foto produk" media={product.media} /></AdminActionForm>
+          <AdminActionForm action={replaceProductMediaAction} className="mt-5" submitLabel="Simpan foto"><input name="productId" type="hidden" value={product.id} /><AdminMediaEditor label="Foto produk" media={product.media} owner={{ kind: "product", id: product.id }} /></AdminActionForm>
           {product.media.length === 0 ? <StatusNotice className="mt-5" tone="warning" title="Belum ada foto" description="Produk tetap tersimpan sebagai draft sampai media production dipetakan." /> : <ul className="mt-5 grid gap-2 text-sm sm:grid-cols-2">{product.media.map((media) => <li className="rounded-lg border border-border px-3 py-2" key={media.id}><span className="font-mono text-xs">{media.storageKey}</span><span className="mt-1 block text-muted-foreground">{media.altText}</span></li>)}</ul>}
         </Card>
 
         <Card as="section" aria-labelledby="variants-title" className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-5 sm:p-6">
           <h2 className="text-xl font-semibold" id="variants-title">Varian &amp; stok</h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">Harga, dimensi, dan status varian ditulis ke database melalui CatalogService. Penyesuaian stok menjaga reservasi aktif tetap aman.</p>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">Kelola harga, ukuran paket, dan ketersediaan setiap varian. Penyesuaian stok menjaga reservasi aktif tetap aman.</p>
           {product.variants.length === 0 ? <p className="mt-5 text-sm text-muted-foreground">Belum ada varian.</p> : <div className="mt-5 grid gap-5">{product.variants.map((variant) => <article className="rounded-lg border border-border p-4" key={variant.id}><div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-semibold">{variant.name}</h3><p className="mt-1 font-mono text-xs text-muted-foreground">{variant.sku}</p></div><span className="rounded-md border border-border bg-muted px-2.5 py-1 text-xs font-semibold">{variant.isActive ? "Aktif" : "Nonaktif"}</span></div><AdminActionForm action={updateVariantAction} className="mt-5" submitLabel="Simpan varian"><input name="variantId" type="hidden" value={variant.id} /><input name="productId" type="hidden" value={product.id} /><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><Field id={`variant-name-${variant.id}`} label="Nama" name="name" required value={variant.name} /><Field id={`variant-sku-${variant.id}`} label="SKU" name="sku" required value={variant.sku} /><Field id={`variant-price-${variant.id}`} label="Harga (Rp)" name="priceRp" required value={variant.priceRp} /><Field id={`variant-weight-${variant.id}`} label="Berat (g)" name="weightGrams" required value={variant.weightGrams} /><Field id={`variant-length-${variant.id}`} label="Panjang (cm)" name="lengthCm" value={variant.lengthCm ?? ""} /><Field id={`variant-width-${variant.id}`} label="Lebar (cm)" name="widthCm" value={variant.widthCm ?? ""} /><Field id={`variant-height-${variant.id}`} label="Tinggi (cm)" name="heightCm" value={variant.heightCm ?? ""} /></div><Label className="inline-flex min-h-11 items-center gap-3 text-sm font-medium" htmlFor={`variant-active-${variant.id}`}><input className="size-5 accent-primary" defaultChecked={variant.isActive} id={`variant-active-${variant.id}`} name="isActive" type="checkbox" /><span>Varian aktif</span></Label></AdminActionForm><div className="mt-5 border-t border-border pt-5"><div><p className="text-sm font-semibold">Stok fisik tersimpan</p><p className="mt-1 text-xs text-muted-foreground">{variant.stockOnHand} unit · {currencyFormatter.format(BigInt(variant.priceRp))} per unit</p></div><StockAdjustmentPanel productId={product.id} stockOnHand={variant.stockOnHand} variantId={variant.id} returnTo={returnTo} /></div></article>)}</div>}
+        </Card>
+        <Card as="section" aria-labelledby="new-variant-title" className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-5 sm:p-6">
+          <h2 className="text-xl font-semibold" id="new-variant-title">Tambah varian</h2>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">Gunakan SKU berbeda untuk setiap varian. Stok awal dicatat sebagai saldo pembukaan.</p>
+          <AdminActionForm action={createVariantAction} className="mt-5" submitLabel="Simpan varian baru" successLinkLabel="Kembali ke editor produk">
+            <input name="productId" type="hidden" value={product.id} />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field id="new-variant-name" label="Nama varian" name="name" required value="" />
+              <Field id="new-variant-sku" label="SKU" name="sku" required value="" />
+              <Field id="new-variant-price" label="Harga (Rp)" name="priceRp" required value="" />
+              <Field id="new-variant-stock" label="Stok awal (unit)" name="stockOnHand" type="number" required value="0" />
+              <Field id="new-variant-weight" label="Berat (g)" name="weightGrams" required value="" />
+              <Field id="new-variant-length" label="Panjang paket (cm)" name="lengthCm" value="" />
+              <Field id="new-variant-width" label="Lebar paket (cm)" name="widthCm" value="" />
+              <Field id="new-variant-height" label="Tinggi paket (cm)" name="heightCm" value="" />
+            </div>
+            <Label className="inline-flex min-h-11 items-center gap-3 text-sm font-medium" htmlFor="new-variant-active"><input className="size-5 accent-primary" id="new-variant-active" name="isActive" type="checkbox" defaultChecked /><span>Varian aktif</span></Label>
+          </AdminActionForm>
         </Card>
       </main>
     </AdminShell>

@@ -1,4 +1,8 @@
-# Niuva MVP — TODO Aktif
+# Niuva MVP — TODO historis
+
+> Superseded untuk eksekusi v1.0 oleh [TASKS.md](../TASKS.md) dan
+> [ROADMAP.md](../ROADMAP.md) sejak 18 Oktober 2026. Isi Batch 2 di bawah
+> dipertahankan sebagai histori; jangan menjadikannya backlog aktif kedua.
 
 > Diperbarui 16 Oktober 2026. File ini hanya memuat pekerjaan yang masih
 > terbuka; hapus item setelah selesai dan pindahkan konteks yang masih perlu

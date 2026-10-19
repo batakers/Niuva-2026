@@ -6,7 +6,6 @@ import {
 import type { CustomPrintNotificationScheduler } from "@/modules/custom-print/service";
 import type { InquiryNotificationScheduler } from "@/modules/inquiry/service";
 import { assertNonProductionProvider } from "@/modules/providers/non-production";
-import { appError } from "@/modules/shared/errors";
 import { EmailDeliveryError } from "./email-delivery";
 
 const RESEND_EMAILS_ENDPOINT = "https://api.resend.com/emails";

@@ -12,6 +12,8 @@ import { PrismaOutboxWorkerRepository } from "../outbox/worker-repository";
 import { DurableOutboxWorker } from "../outbox/worker";
 import { parseWorkerPolicy, type OutboxSender } from "../outbox/worker-core";
 import type { JobHandler, JobName } from "./core";
+import { expiredReservationBacklog } from "../inventory/repository";
+import { expireRetailReservationsIn } from "../inventory/expiry-service";
 
 export function createJobHandlers(options: { prisma: PrismaClient; bound: Pick<BoundDatabaseService, "run">; source: Readonly<Record<string, string | undefined>>; workerPolicy?: unknown; senderFactory?: () => OutboxSender }): Readonly<Record<JobName, JobHandler>> {
   const source = Object.freeze({ ...options.source }), bound = options.bound;
@@ -21,6 +23,13 @@ export function createJobHandlers(options: { prisma: PrismaClient; bound: Pick<B
   const outbox = new DurableOutboxService({ bound, repository: new PrismaOutboxRepository(), cipherFactory });
   const authCleanup = new InternalAuthCleanupRepository(options.prisma), privacyCleanup = new CustomerPrivacyCleanupRepository(options.prisma);
   return Object.freeze({
+    INVENTORY_RESERVATIONS: context => context.withLease(async (tx, now) => {
+      const before = await expiredReservationBacklog(tx, now);
+      const released = context.request.mode === "dry-run" ? 0 : await expireRetailReservationsIn(tx, now, context.request.limit);
+      const after = context.request.mode === "dry-run" ? before : await expiredReservationBacklog(tx, now);
+      if (context.lease) await context.verifyLease(tx);
+      return { counts: { scanned: Math.min(before.remainingDue, context.request.limit), released, ...after } };
+    }),
     OUTBOX_DELIVERY: async context => {
       const worker = new DurableOutboxWorker({ bound, repository: new PrismaOutboxWorkerRepository(), cipherFactory, senderFactory, policy: workerPolicy,
         coordination: { beforeClaim: tx => context.verifyLease(tx), recordCooldown: (tx, until) => context.recordCooldown(tx, until) } });

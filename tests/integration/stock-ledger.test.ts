@@ -63,6 +63,103 @@ async function orderFixture(variantId: string, quantity: number, expiresAt = new
   return { order, reservation };
 }
 
+describe("expired stock reservations", () => {
+  it("releases expired reservations in bounded, repeatable batches", async () => {
+    const { variant } = await fixture();
+    const now = new Date("2026-10-18T10:00:00.000Z");
+    const expiresAt = new Date(now.getTime() - 1_000);
+    const fixtures = await Promise.all([
+      orderFixture(variant.id, 1, expiresAt),
+      orderFixture(variant.id, 1, expiresAt),
+      orderFixture(variant.id, 1, expiresAt),
+    ]);
+
+    const firstBatch = await inventory.releaseExpired(undefined, now, 2);
+    expect(firstBatch).toHaveLength(2);
+    await expect(prisma.stockReservation.count({ where: { status: "ACTIVE" } })).resolves.toBe(1);
+
+    const secondBatch = await inventory.releaseExpired(undefined, now, 2);
+    expect(secondBatch).toHaveLength(1);
+    await expect(inventory.releaseExpired(undefined, now, 2)).resolves.toHaveLength(0);
+    await expect(prisma.stockReservation.findMany({ where: { id: { in: fixtures.map(({ reservation }) => reservation.id) } } }))
+      .resolves.toMatchObject(fixtures.map(() => ({ status: "RELEASED" })));
+    await expect(prisma.order.findMany({ where: { id: { in: fixtures.map(({ order }) => order.id) } } }))
+      .resolves.toMatchObject(fixtures.map(() => ({ status: "CANCELLED" })));
+    await expect(prisma.productVariant.findUniqueOrThrow({ where: { id: variant.id } })).resolves.toMatchObject({ stockOnHand: 5 });
+  });
+
+  it("expires due payment attempts and cancels the unpaid order with its reservation", async () => {
+    const { variant } = await fixture();
+    const reservationExpiresAt = new Date(Date.now() - 1_000);
+    const paymentExpiresAt = new Date(Date.now() + 30_000);
+    const { order, reservation } = await orderFixture(variant.id, 1, reservationExpiresAt);
+    const attempt = await prisma.paymentAttempt.create({
+      data: {
+        amountRp: "10000",
+        expiresAt: paymentExpiresAt,
+        orderId: order.id,
+        providerOrderId: `pending-${crypto.randomUUID()}`,
+        purpose: "ORDER_TOTAL",
+      },
+    });
+
+    await expect(inventory.releaseExpired(undefined, new Date(paymentExpiresAt.getTime() + 1), 10)).resolves.toHaveLength(1);
+    await expect(prisma.paymentAttempt.findUniqueOrThrow({ where: { id: attempt.id } }))
+      .resolves.toMatchObject({ status: "EXPIRED" });
+    await expect(prisma.order.findUniqueOrThrow({ where: { id: order.id } }))
+      .resolves.toMatchObject({ status: "CANCELLED" });
+    await expect(prisma.stockReservation.findUniqueOrThrow({ where: { id: reservation.id } }))
+      .resolves.toMatchObject({ status: "RELEASED" });
+  });
+
+  it("waits to cancel or release while a pending provider attempt is still payable", async () => {
+    const { variant } = await fixture();
+    const now = new Date();
+    const { order, reservation } = await orderFixture(variant.id, 1, new Date(now.getTime() - 1_000));
+    const attempt = await prisma.paymentAttempt.create({
+      data: {
+        amountRp: "10000",
+        expiresAt: new Date(Date.now() + 60_000),
+        orderId: order.id,
+        providerOrderId: `pending-${crypto.randomUUID()}`,
+        purpose: "ORDER_TOTAL",
+      },
+    });
+
+    await expect(inventory.releaseExpired(undefined, now, 10)).resolves.toHaveLength(0);
+    await expect(prisma.paymentAttempt.findUniqueOrThrow({ where: { id: attempt.id } }))
+      .resolves.toMatchObject({ status: "PENDING" });
+    await expect(prisma.order.findUniqueOrThrow({ where: { id: order.id } }))
+      .resolves.toMatchObject({ status: "PENDING_PAYMENT" });
+    await expect(prisma.stockReservation.findUniqueOrThrow({ where: { id: reservation.id } }))
+      .resolves.toMatchObject({ status: "ACTIVE" });
+  });
+
+  it("does not release an expired reservation for a paid order", async () => {
+    const { variant } = await fixture();
+    const now = new Date("2026-10-18T10:00:00.000Z");
+    const { order, reservation } = await orderFixture(variant.id, 1, new Date(now.getTime() - 1_000));
+    await prisma.order.update({ where: { id: order.id }, data: { status: "PAID" } });
+    await prisma.paymentAttempt.create({
+      data: {
+        amountRp: "10000",
+        expiresAt: new Date(Date.now() + 60_000),
+        orderId: order.id,
+        providerOrderId: `settled-${crypto.randomUUID()}`,
+        purpose: "ORDER_TOTAL",
+        settledAt: now,
+        status: "SETTLED",
+      },
+    });
+
+    await expect(inventory.releaseExpired(undefined, now, 10)).resolves.toHaveLength(0);
+    await expect(prisma.stockReservation.findUniqueOrThrow({ where: { id: reservation.id } }))
+      .resolves.toMatchObject({ status: "ACTIVE" });
+    await expect(prisma.productVariant.findUniqueOrThrow({ where: { id: variant.id } }))
+      .resolves.toMatchObject({ stockOnHand: 5 });
+  });
+});
+
 describe("stock movement ledger", () => {
   it("records opening, manual adjustment and consumption with a reconciled balance", async () => {
     const { admin, product, variant } = await fixture();

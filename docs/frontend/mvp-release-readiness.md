@@ -1,11 +1,26 @@
 # MVP release readiness — non-provider closure
 
+## Pelaksanaan v1 — 18 Oktober 2026
+
+Owner menyetujui implementasi [ROADMAP](../../ROADMAP.md) dan
+[TASKS](../../TASKS.md) dari audit baseline
+`f4799c77fedb86f185db29d6f9b9cbfd63828047`.
+[DoD](../v1-definition-of-done.md) memisahkan task, kandidat siap rilis dan
+RELEASED. TASKS adalah backlog aktif; ledger ini tetap pemilik bukti lingkungan
+dan penutupan REL/PUB, bukan backlog kedua. Checklist `tasks/` lama merupakan
+histori. Snapshot bertanggal tetap menunjukkan evidence pada baseline masing-
+masing; addenda 18–19 Oktober dan tabel aktif mencatat status diff lokal serta
+jawaban Owner. Persetujuan rencana tidak menutup REL/PUB, mengesahkan policy
+atau memberi izin deployment/provider. Hasil CI baseline tidak dipromosikan
+menjadi hasil CI diff.
+
 Snapshot ledger awal: **2026-10-01** · checkout `codex/admin-navigation-docs-v03` · baseline
 `9605a96e936236b7e54b526f05e6b344747b24ab` sebagai sumber runtime; revisi sidebar/dokumentasi
 dikirim melalui branch di atas · scope lokal, non-provider dan non-production.
 Snapshot 2026-09-20 pada `a171686` dan addenda bertanggal tetap histori evidence
-masing-masing. Rekonsiliasi kontrak/status sumber terbaru **13 Oktober 2026**
-ada di Bagian 1; angka dan penerimaan snapshot lama tidak dipromosikan.
+masing-masing. Rekonsiliasi kontrak **13 Oktober 2026** tetap menjadi latar
+produk/teknis; addendum 18 Oktober di Bagian 1 memperbarui status implementasi
+dan evidence lokal. Angka dan penerimaan snapshot lama tidak dipromosikan.
 
 Dokumen ini adalah ledger status terkini untuk handoff. Checklist fase lama di
 `tasks/todo.md` dan `tasks/plan.md` tetap dipertahankan sebagai histori rencana;
@@ -14,11 +29,11 @@ untuk status saat ini gunakan tabel di bawah dan
 
 ## Bagian 1 — Status terkini (evidence aktif)
 
-Bagian ini berisi status yang dipakai untuk handoff: baseline terbaru, tabel
-keputusan readiness, input yang masih diperlukan, dan langkah berikutnya.
-Snapshot bertanggal di bawah dan [Bagian 2](#bagian-2--arsip-evidence-bertanggal-historis)
-dipertahankan sebagai histori; baseline sumber/peta 13 Oktober menjadi handoff
-aktif. Angka gate dan penerimaan lama tidak digabung menjadi hasil baru.
+Bagian ini berisi status yang dipakai untuk handoff: kontrak aktif, addendum
+implementasi lokal 18 Oktober, tabel readiness, input yang masih diperlukan,
+dan langkah berikutnya. Snapshot bertanggal di bawah dan
+[Bagian 2](#bagian-2--arsip-evidence-bertanggal-historis) dipertahankan sebagai
+histori. Angka gate dan penerimaan lama tidak digabung menjadi hasil baru.
 
 ### Baseline sumber dan batas bukti — 2026-10-13
 
@@ -28,42 +43,107 @@ Rekonsiliasi Batch 1 dilakukan pada worktree `codex/release-contract-batch-1`. S
 
 Kontrak aktif berada pada [PRD](../PRD-Niuva-MVP.md#rekonsiliasi-kontrak-rilis--13-oktober-2026) dan [Tech Design](../TechDesign-Niuva-MVP.md#rekonsiliasi-kontrak-teknis-rilis--13-oktober-2026): Customer publik tetap target, akun **18+ melalui self-declaration** Owner 5 Oktober, Better Auth/TOTP khusus Admin, dan DEVELOP/B2B WhatsApp langsung sejak 11 Oktober. Kontrol deklarasi lokal sudah tersedia; pengesahan policy, public consent, bukti hosted dan aktivasi tetap terpisah. Formal RK-02/RK-03/RK-18 yang masih terbuka tidak berarti metode usia/sitemap harus dipilih atau dibangun ulang.
 
+### Addendum implementasi lokal dan input Owner — 2026-10-18
+
+Pada checkout `codex/niuva-v1-closure`, lint penuh dan typecheck resmi lulus
+setelah T07. Backend terbaru **92 / 690**, integration terbaru **45 / 337**
+pada PostgreSQL test terisolasi (serial), dan production build mengenali route
+job baru serta menghasilkan **93 static pages**. Prisma validation, unit
+**126 / 1.454**, default E2E **112 passed / 5 skipped**, dan authenticated Admin
+E2E **24 passed** berasal dari verifikasi lokal sebelumnya pada diff yang sama;
+tidak diulang untuk perubahan backend T07. Integration serial diperlukan karena
+suite berbagi database fixture; run paralel sempat mendapat satu kegagalan
+`outbox_clock`, sedangkan test itu lulus saat dijalankan sendiri dan suite serial
+lulus seluruhnya. Build memakai `CIRCLE_NODE_TOTAL=2` (satu worker). Workflow CI
+pada diff ini belum dijalankan. Hasil lokal tidak membuktikan provider, staging,
+perangkat fisik, assistive technology atau production.
+
+Owner mengonfirmasi resource staging belum tersedia dan Syarat/Kebijakan
+Privasi masih draf. Karena itu hosted capability tetap tertutup dan public
+consent/signup/privacy belum siap. Producer auth/privacy kini enqueue pesan
+terenkripsi secara atomik pada source; password reset menggunakan jalur outbox
+ketika inline mailer tidak ada. Upload media mengikat ukuran pada signed PUT
+dan membuang quarantine object setelah confirm gagal. Launcher outbox dan
+reservation-expiry tersedia pada source; cadence scheduler hosted, provider send,
+dan inbox belum terbukti. Pembuatan draft
+produk, varian, portfolio dan boundary upload media Admin memiliki bukti lokal;
+storage hosted dan jalur browser upload/render media tetap terbuka.
+
+### Rekonsiliasi main dan v1 closure — 2026-10-19
+
+Source PR #56 (`7b3a09d`) digabung dengan checkpoint v1 `817b57a`.
+Producer auth/privacy dan runner `modules/jobs` dari main dipertahankan;
+adapter HTTP memakai runtime, role guard, lease/cooldown dan
+`OperationalJobState` yang sama dengan CLI. Inventory expiry memakai
+transaksi lease dan audit yang sama, termasuk pemeriksaan lease terakhir.
+Tabel scheduled lama hanya kompatibilitas migration dan tidak dipakai runtime.
+Migration gabungan 33/33 lulus pada database test baru. Kode `6440ccf`
+lulus lokal: 127/1.457 unit/component, 93/695 backend, 49/368 integration,
+112 Chromium + 5 expected skips, 24 Owner/Admin, dan build 93 static pages.
+Typecheck/Prisma validation lulus; lint 0 error dan 4 warning destructuring
+existing dari Batch 2.
+
+[CI pertama](https://github.com/batakers/Niuva-2026/actions/runs/39153463094)
+lulus sampai browser smoke, tetapi 1/24 Admin gagal pada assertion 5s ketika
+navigasi MFA ke /admin masih berjalan. Delay landing 6s mereproduksi kegagalan
+lokal; test kini menunggu respons TOTP 200, navigasi dan status auth ready.
+Regresi terarah lulus tanpa perubahan guard/MFA runtime.
+[CI ulang pada `4eb8471`](https://github.com/batakers/Niuva-2026/actions/runs/39155145353)
+**success**, termasuk 24 journey Owner/Admin dan production build. T32 kini
+DONE berdasarkan bukti CI kode tersebut; pembaruan penutup hanya dokumentasi.
+Bukti hosted/provider tidak berubah.
+
+Handoff lokal PR #56 tanggal 14 Oktober mencatat unit/component 1.437,
+backend 670, integration 338, E2E 112 dengan 5 expected skip dan build
+90 static pages. Angka historis ini tidak menjadi hasil gabungan branch v1.
+Runbook sekarang merujuk TASKS/ROADMAP sebagai backlog aktif.
+
 ### Peta penghambat rilis
 
-Status berikut adalah hasil pencocokan source/dokumen pada baseline di atas, bukan audit dashboard atau jaminan seluruh runtime. `PARTIAL` berarti fondasi ada tanpa kemampuan publik lengkap; `MISSING_WORKFLOW` berarti alur target lengkap belum tersedia; `UNVERIFIED` membutuhkan evidence lingkungan. Nama engineering/pengganti yang belum ditetapkan tetap terbuka. Rincian gate dimiliki [paket kesiapan publik](../legal/customer-public-launch-readiness.md#matriks-kesiapan), bukan diduplikasi sebagai keputusan bisnis baru di sini.
+Status berikut menggabungkan pencocokan source/dokumen, bukti diff lokal 18
+Oktober, dan jawaban Owner tentang staging/policy. Ini bukan audit seluruh
+runtime atau jaminan readiness. `PARTIAL` berarti fondasi ada tanpa kemampuan
+publik lengkap; `MISSING_WORKFLOW` berarti alur target lengkap belum tersedia;
+`UNVERIFIED` membutuhkan evidence lingkungan. Nama engineering/pengganti yang
+belum ditetapkan tetap terbuka. Rincian gate dimiliki [paket kesiapan publik](../legal/customer-public-launch-readiness.md#matriks-kesiapan).
 
 | ID / penghambat | Status | Pemilik | Bukti tersedia / bukti yang masih diperlukan | Syarat penutupan |
 | --- | --- | --- | --- | --- |
-| REL-01 — akun dan consent publik | PARTIAL; policy final terbuka | Owner (pengesah), fungsi review; engineering belum bernama | [Resolver](../../src/modules/customer-auth/legal.ts) hanya internal/test; [akun Google baru](../../src/modules/customer-auth/repository.ts) membutuhkan proof internal. Kontrol 18+ ada; versi/tanggal berlaku resmi dan public consent belum tersedia | Owner mengesahkan dokumen/versi/tanggal; Google dan verified email/password membuat akun dengan proof/consent/deklarasi server yang benar. Internal/test tetap terpisah; tidak menghidupkan riwayat tertutup. PUB-POLICY, PUB-AGE; formal register tetap terpisah. |
-| REL-02 — capability hosted | PARTIAL; aktivasi tertutup | Engineering belum bernama; Owner untuk resource/izin | [Tier/mode/grants](../../src/lib/env/deployment.ts), [matrix/resolver](../../src/modules/capabilities/matrix.ts) dan origin ada; [guard lama](../../src/modules/providers/non-production.ts) menolak production/live, grants kosong. Binding/izin hosted belum terbukti | Staging sandbox memakai resource terpisah dan keputusan origin/cookie/CSP/capability yang konsisten. Production tetap tertutup sampai instruksi aktivasi tersendiri; tidak sekadar melepas guard. PUB-HOSTED. |
-| REL-03 — email persisten dan inbox | PARTIAL_INTERNAL; workflow hosted belum tersedia | Engineering belum bernama; Rheza untuk kanal/operasi; Owner untuk sender | [Producer](../../src/modules/outbox/producer.ts) mengantrekan proof auth/privacy dalam transaksi yang sama; [worker](../../src/modules/outbox/worker.ts) memakai lease, retry terbatas, timeout/fencing dan [sender Customer](../../src/modules/outbox/customer-sender.ts). Tes browser memakai worker dan mailer sintetis. Provider, scheduler, inbox/bounce hosted belum terbukti; persetujuan provider production tetap tertutup | Pesan persisten, retry terbatas/idempoten, proof expired/revoked/closed tidak terkirim ulang, kegagalan terlihat dan inbox/bounce diuji. PUB-EMAIL. |
-| REL-04 — job operasional | PARTIAL_LOCAL; hosted belum terbukti | Engineering belum bernama; Rheza/privasi; Owner untuk cadence/lag/coverage | [Runner dan lease persisten](../../src/modules/jobs/runner.ts), [adapter cleanup](../../src/modules/jobs/handlers.ts), [launcher](../../src/modules/jobs/cli.ts) dan [monitor](../../src/modules/jobs/monitoring.ts) kini tersedia lokal. [vercel.json](../../vercel.json) hanya menjadwalkan retensi analytics. Scheduler hosted, ambang/cadence/petugas, retensi berkas, pelepasan reservasi stok dan rekonsiliasi pembayaran masih terbuka | Job resource-bound, aman diulang/overlap, deadline tetap, lag/last-success/alarm dan petugas terbukti. Cron analytics tidak menutup PUB-JOBS. |
+| REL-01 — akun dan consent publik | BLOCKED_INPUT; policy final terbuka | Owner (pengesah), fungsi review; engineering belum bernama | [Resolver](../../src/modules/customer-auth/legal.ts) hanya internal/test; [akun Google baru](../../src/modules/customer-auth/repository.ts) membutuhkan proof internal. Kontrol 18+ ada; Owner mengonfirmasi Syarat dan Privasi masih draf serta belum disahkan; public consent belum tersedia | Owner mengesahkan dokumen/versi/tanggal; Google dan verified email/password membuat akun dengan proof/consent/deklarasi server yang benar. Internal/test tetap terpisah; tidak menghidupkan riwayat tertutup. PUB-POLICY, PUB-AGE; formal register tetap terpisah. |
+| REL-02 — capability hosted | BLOCKED_EXTERNAL; aktivasi tertutup | Engineering belum bernama; Owner untuk resource/izin | [Tier/mode/grants](../../src/lib/env/deployment.ts), [matrix/resolver](../../src/modules/capabilities/matrix.ts) dan origin ada; [guard lama](../../src/modules/providers/non-production.ts) menolak production/live, grants kosong. Owner mengonfirmasi staging resource belum tersedia; shared PostgreSQL limiter hanya diuji lokal dan binding hosted belum dibuktikan | Sediakan staging sandbox terpisah dan putuskan origin/cookie/CSP/capability yang konsisten. Production tetap tertutup sampai instruksi aktivasi tersendiri; tidak sekadar melepas guard. PUB-HOSTED. |
+| REL-03 — email persisten dan inbox | PARTIAL_LOCAL; hosted delivery belum tersedia | Engineering belum bernama; Rheza untuk kanal/operasi; Owner untuk sender | [Outbox](../../src/modules/outbox/service.ts) menyimpan pesan terenkripsi/dedup/revalidation/expiry. [Worker](../../src/modules/outbox/worker.ts) memakai lease/retry/fencing dan [sender Customer](../../src/modules/outbox/customer-sender.ts). Producer auth/privacy enqueue atomik; [launcher](../../src/app/api/internal/jobs/outbox/route.ts) mencatat hasil safe ke job state, termasuk outcome unknown. Queue accepted belum membuktikan inbox; provider hosted/bounce dan email bisnis belum tersedia | Pesan persisten, retry terbatas/idempoten, proof expired/revoked/closed tidak terkirim ulang, kegagalan terlihat dan inbox/bounce diuji. PUB-EMAIL. |
+| REL-04 — job operasional | PARTIAL_LOCAL; scheduler/hosted belum tersedia | Engineering belum bernama; Rheza/privasi; Owner untuk cadence/lag/coverage | [Outbox job](../../src/app/api/internal/jobs/outbox/route.ts) dan [inventory expiry job](../../src/app/api/internal/jobs/inventory-reservations/route.ts) memakai bearer auth dan database binding; CLI dan HTTP berbagi JobRunner/OperationalJobState serta role guard; runner expiry mengunci payment attempt → variant → order, membatalkan order unpaid saat attempt due, melepas reservation idempoten, dan melindungi settlement. Backend 93/695 dan integration 49/368 serial lulus lokal. `vercel.json` tetap hanya menjadwalkan analytics; Owner cadence dan staging belum tersedia. Retensi Customer, alarm dan payment reconciliation masih terbuka | Job resource-bound, aman diulang/overlap, deadline tetap, lag/last-success/alarm dan petugas terbukti. Owner menetapkan cadence; staging memverifikasi launcher/scheduler. Cron analytics tidak menutup PUB-JOBS. |
 | REL-05 — refund lengkap | MISSING_WORKFLOW | Owner (approval); engineering belum bernama; Rheza/operasi pembayaran | Notifikasi/status/exception refund ada; [order berbayar](../../src/modules/order/status-service.ts) membutuhkan workflow refund. Case/approval/submit/reconciliation lengkap belum tersedia | Refund penuh sesuai arah produk; nominal server/Decimal, approval Owner, stable key/lock, hasil tak pasti/manual tidak menggandakan pembayaran. Detail kasus/cakupan merchant dibuktikan tanpa meminta ulang pilihan refund penuh. PUB-REFUND, PUB-REFUND-PROVIDER, PUB-REFUND-RECON. |
-| REL-06 — provider dan data pemenuhan | UNVERIFIED | Owner untuk akun/resource/data; engineering belum bernama; Rheza/operator | Adapter/test Google, email, payment/shipping dan R2 ada. Smoke development bertanggal tetap hanya evidence fase tersebut. Konfigurasi/resource saat ini tidak diperiksa dari env | OAuth/inbox, Midtrans sandbox/webhook, Biteship dan private R2 terbukti pada staging; stok/berat/dimensi paket sesuai produk dan paket MAKE diukur setelah selesai. PUB-PROVIDER, PUB-STAGING. |
+| REL-06 — provider dan data pemenuhan | BLOCKED_EXTERNAL | Owner untuk akun/resource/data; engineering belum bernama; Rheza/operator | Adapter/test Google, email, payment/shipping dan R2 ada. Smoke development bertanggal tetap hanya evidence fase tersebut. Owner mengonfirmasi resource staging/provider sandbox belum tersedia; tidak ada secret/env yang diperiksa | OAuth/inbox, Midtrans sandbox/webhook, Biteship dan private R2 terbukti pada staging; stok/berat/dimensi paket sesuai produk dan paket MAKE diukur setelah selesai. PUB-PROVIDER, PUB-STAGING. |
 | REL-07 — privasi, operasi dan recovery | PARTIAL_LOCAL; review/resource terbuka | Owner; Rheza/privasi; fungsi akuntansi/review; engineering belum bernama | [Availability privasi](../../src/modules/customer-privacy/core.ts) masih internal/test. Identitas/alamat retur/Rheza terkonfirmasi; coverage/kalender, retensi arsip, provider delete dan restore belum terbukti | Hak Customer hosted, kontak pasca-closure, retensi per kategori, prosedur insiden dan latihan restore terbukti tanpa memulihkan akun/riwayat atau mengulang refund/email. PUB-DATA, PUB-RECORDS, PUB-SERVICE, PUB-INCIDENT, PUB-BACKUP. |
-| REL-08 — bukti alur terpadu dan rilis | UNVERIFIED_STAGING; release belum diizinkan | Engineering belum bernama; Owner untuk penerimaan/izin; Rheza/operator | CI baseline lulus; tidak ada bukti staging terpadu baru dari Batch 1. B2B WhatsApp dan layanan BUY/MAKE sudah memiliki source | Uji hosted BUY lalu MAKE termasuk failure/fulfillment/refund yang relevan; B2B membuka tujuan WhatsApp yang benar. Catat scope visual/device/AT, monitoring/rollback, hasil operasi dan keputusan rilis. Deployment/provider/production memerlukan instruksi tersendiri. PUB-STAGING, PUB-RELEASE. |
+| REL-08 — bukti alur terpadu dan rilis | BLOCKED_EXTERNAL; release belum diizinkan | Engineering belum bernama; Owner untuk penerimaan/izin; Rheza/operator | Lint/typecheck/unit/backend/integration/default E2E/authenticated Admin E2E/build lulus lokal pada diff; Next/Playwright memakai worker terbatas karena batas memori lokal. [Quality pada `4eb8471`](https://github.com/batakers/Niuva-2026/actions/runs/39155145353) success setelah regresi landing MFA dibuktikan RED→GREEN; seluruh gate termasuk Owner/Admin dan build lulus. Pembaruan penutup hanya dokumentasi. Owner mengonfirmasi staging belum tersedia. B2B WhatsApp dan layanan BUY/MAKE memiliki source | Uji hosted BUY lalu MAKE termasuk failure/fulfillment/refund yang relevan; B2B membuka tujuan WhatsApp yang benar. Catat scope visual/device/AT, monitoring/rollback, hasil operasi dan keputusan rilis. Deployment/provider/production memerlukan instruksi tersendiri. PUB-STAGING, PUB-RELEASE. |
 
-### Hubungan dengan roadmap kerja
+### Urutan rekomendasi setelah Batch 1 — snapshot 2026-10-13
 
-Urutan dan kriteria Batch 1–6 ada di [`tasks/plan.md`](../../tasks/plan.md);
-pekerjaan aktif hanya ada di [`tasks/todo.md`](../../tasks/todo.md). Ledger ini
-hanya menyimpan evidence readiness per route, provider, lingkungan, dan hasil
-aktual. Persetujuan Batch 2 tidak mengaktifkan provider, scheduler, atau
-deployment.
+1. **Batch 1 — rekonsiliasi dokumen ini.** Selaraskan keputusan/source, pisahkan snapshot dan catat delapan penghambat. Hasilnya bukan policy resmi atau penutupan gate lingkungan.
+2. **Batch 2 — fondasi hosted, outbox dan kerangka job** (REL-02/03/04). Rancang slice implementasi yang dapat diuji dengan fixture. Resource/sender/topologi hosting dan petugas dikumpulkan sejak tahap ini; tidak harus menunggu semua fakta production untuk coding yang kontraknya jelas.
+3. **Batch 3 — akun publik dan privasi hosted** (REL-01, bagian REL-07). Memakai fondasi Batch 2; kontrol deklarasi 18+ yang ada dipertahankan. Versi policy final dan izin terkait diperlukan sebelum kemampuan dijanjikan/diaktifkan.
+4. **Batch 4 — refund dan rekonsiliasi** (REL-05). Memakai outbox/job untuk hasil dan retry; detail merchant/fallback dipenuhi bersamaan dengan pengembangan fixture.
+5. **Batch 5 — staging/provider/operasi/recovery** (REL-06/07/08). BUY lebih dahulu membuktikan akun→katalog→ongkir→payment→order→fulfillment, lalu MAKE menambah file/review/quote/paket akhir. Scope deployment/smoke diminta tersendiri saat resource dan skenario konkret siap.
+6. **Batch 6 — pemeriksaan rilis production** (REL-08). Evidence relevan, data operasional, dokumen berlaku, monitoring dan rollback dinilai sebelum instruksi deployment/aktivasi.
+
+Urutan Batch 2–6 di atas adalah rekomendasi pada snapshot 13 Oktober. Urutan
+eksekusi aktif kini mengikuti [ROADMAP](../../ROADMAP.md) dan backlog
+[TASKS](../../TASKS.md) yang disetujui pada 18 Oktober. Persetujuan itu tetap
+tidak memberikan izin aktivasi provider/deployment. Bukti readiness dicatat
+di ledger ini berdasarkan tanggal, source, lingkungan dan hasil aktual.
 
 **Handoff Batch 2 — 13 Oktober 2026:** Owner mengizinkan perancangan dan implementasi Slice 2.1. [Kontrak binding database](../superpowers/specs/2026-10-13-batch-2-database-binding-design.md) sudah diimplementasikan sebagai modul internal dengan **52 test baru**; [bukti lokal](../superpowers/plans/2026-10-13-batch-2-database-binding.md#hasil-implementasi-lokal--13-oktober-2026) mencatat gate aplikasi yang lulus, batas skip browser, dan review kode independen **0 findings**. Guard belum dihubungkan ke consumer aplikasi; penanda/resource hosted belum diprovision. REL-02 tetap partial lokal/unwired, REL-03/04 belum mempunyai durable outbox atau worker/job hosted; seluruh status PUB/RK/AG mengikuti evidence masing-masing. Provisioning, provider dan bukti hosted tetap hasil berikut yang terpisah.
 
 **Handoff Slice 2.2 — 14 Oktober 2026:** Owner meminta implementasi [durable outbox](../superpowers/specs/2026-10-14-batch-2-durable-outbox-design.md). API internal menyediakan enqueue atomik dengan producer, payload auth/privacy terenkripsi, identitas pesan immutable/idempoten, pemeriksaan proof/akun/sesi dan scrub expiry/cancellation. Waktu database dibaca sebagai epoch agar tidak bergeser oleh zona waktu. [Plan dan hasil lokal](../superpowers/plans/2026-10-14-batch-2-durable-outbox.md) mencatat **108 tes baru**, gate aplikasi lulus dan satu finding Important review independen yang sudah diperbaiki dengan RED→GREEN serta full suites. Verifikasi pending lain dengan email sama yang sudah membuat akun membatalkan pesan sibling dan menolak enqueue baru. Enqueue tidak mengubah delivery flags; tidak ada worker, send provider, scheduler, consumer wiring atau provisioning hosted dari slice ini. REL-03 hanya maju menjadi partial internal; PUB/RK/AG dan izin aktivasi tetap mengikuti evidence masing-masing. Titik lanjut adalah Slice 2.3 worker/kerangka job, lalu pembuktian hosted.
 
-**Handoff Slice 2.3 — 14 Oktober 2026:** Owner memilih worker/job dan sambungan mailer Customer existing, tanpa key produksi/aktivasi. [Rancangan](../superpowers/specs/2026-10-14-batch-2-outbox-worker-design.md) mengikat empat purpose, claim/finalize dalam transaksi singkat, send di luar transaksi, revalidation/lease fencing, receipt/abort dan flags hanya setelah acceptance proof yang masih sah. **144 tes worker lulus** (35 unit, 38 backend, 71 integrasi); [plan dan bukti penutup](../superpowers/plans/2026-10-14-batch-2-outbox-worker.md) mencatat seluruh gates final: 1.434 unit/component, 664 backend, 312 integrasi, 112 E2E dengan 5 expected skips dan build 90 static pages. Satu review fresh context menemukan 3 Important yang diperbaiki dengan 9 regression assertions RED→GREEN serta full suites: preparation/config failure mempertahankan row, elapsed claim/commit mengurangi validitas sebelum send, dan envelope terenkripsi immutable dipersist melalui satu migration aditif untuk replay persis setelah worker reconstruction. Existing migrations utuh; penerapan migration hanya pada DB tes lokal. Dry-run hanya job authority dan tidak membuka cipher/sender. Timeout/hasil tidak pasti/lease abandoned berhenti tanpa resend otomatis; batch mengembalikan cooldown dan berhenti pada retryable/unknown. Snapshot Slice 2.3 ini digantikan oleh handoff penuntasan Batch 2 di bawah.
-
-**Handoff Batch 2 — penuntasan lokal, 14 Oktober 2026:** Producer auth/privacy membuat proof dan antrean pada satu transaksi; route mengakui status antrean secara jujur; worker memakai mailer Customer dan diuji dengan fixture lokal sintetis. Job memakai identitas database terbatas, lease/cooldown persisten, cleanup berbatas, launcher, dan monitoring. Catatan urutan/status ada di [`tasks/plan.md`](../../tasks/plan.md) dan [`tasks/todo.md`](../../tasks/todo.md); prosedur operasional ada di [runbook](../backend/batch-2-operations.md). Unit/component 1.437, backend 670, integration 338, E2E 112 lulus dengan 5 expected skip, dan build menghasilkan 90 halaman statis; migration baru hanya diterapkan ke database test loopback. REL-02/03/04 tetap parsial sampai resource/role, sender inbox/bounce, scheduler, ambang lag/cadence, petugas, retensi file, fulfillment/payment, dan recovery dibuktikan di staging. Tidak ada key produksi, provisioning hosted, scheduler, provider, atau deployment yang diaktifkan.
+**Handoff Slice 2.3 — 14 Oktober 2026:** Owner memilih worker/job dan sambungan mailer Customer existing, tanpa key produksi/aktivasi. [Rancangan](../superpowers/specs/2026-10-14-batch-2-outbox-worker-design.md) mengikat empat purpose, claim/finalize dalam transaksi singkat, send di luar transaksi, revalidation/lease fencing, receipt/abort dan flags hanya setelah acceptance proof yang masih sah. **144 tes worker lulus** (35 unit, 38 backend, 71 integrasi); [plan dan bukti penutup](../superpowers/plans/2026-10-14-batch-2-outbox-worker.md) mencatat seluruh gates final: 1.434 unit/component, 664 backend, 312 integrasi, 112 E2E dengan 5 expected skips dan build 90 static pages. Satu review fresh context menemukan 3 Important yang diperbaiki dengan 9 regression assertions RED→GREEN serta full suites: preparation/config failure mempertahankan row, elapsed claim/commit mengurangi validitas sebelum send, dan envelope terenkripsi immutable dipersist melalui satu migration aditif untuk replay persis setelah worker reconstruction. Existing migrations utuh; penerapan migration hanya pada DB tes lokal. Dry-run hanya job authority dan tidak membuka cipher/sender. Timeout/hasil tidak pasti/lease abandoned berhenti tanpa resend otomatis; batch mengembalikan cooldown dan berhenti pada retryable/unknown. Sambungan worker→mailer belum mengalihkan producer inline atau menjalankan cron. Producer enqueue, launcher/identity/cadence/rate coordination/monitoring serta bukti hosted/inbox tetap berikutnya; seluruh PUB/RK/AG dan production activation mengikuti evidence masing-masing.
 
 ### Keputusan yang tidak dibuka ulang
 
 - Akun 18+ dengan deklarasi, Owner sebagai pengesah, refund penuh, identitas/kontak/alamat retur/Rheza, B2B WhatsApp serta batas file/lifecycle sudah tercatat. Detail operasional yang masih kosong dipenuhi tanpa mengulang keputusan tersebut.
 - Checkout membutuhkan JavaScript sesuai RK-13; guest checkout tidak dipulihkan. Cache ongkir deferred sesuai RK-14. Social OG asset menunggu Owner, bukan pengganti penyelesaian alur transaksi.
-- Rate limit lintas instance mengikuti topologi hosting RK-11/AG-5.15; [store in-memory](../../src/lib/security/rate-limit.ts) tidak menjamin batas lintas instance. Tidak memilih vendor/dependency/store baru pada Batch 1.
+- Rate limit kini memakai store PostgreSQL bersama dan memiliki bukti dua-klien lokal; batas lintas instance pada topologi hosted belum diverifikasi karena resource staging belum tersedia. Keputusan store mengikuti topologi hosting RK-11/AG-5.15.
 - WhatsApp otomatis/cloud API merupakan roadmap terpisah. B2B direct link tidak membutuhkan implementasi sender/template otomatis. Redesign luas tidak menjadi prasyarat penyelesaian capability hosted yang tidak bergantung padanya.
 
 **Batas evidence snapshot terdahulu.** Evidence public, catalog, authenticated-admin, dan quote pada

@@ -1,11 +1,28 @@
 import { z } from "zod";
+import { isPublicMediaKey } from "@/modules/public-media/schema";
+import { portfolioServiceCategories } from "@/features/public/company-content";
 
 const requiredText = z.string().trim().min(1);
 const slug = z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+
+export const createPortfolioProjectSchema = z.object({
+  title: requiredText.max(240),
+  slug: slug.max(240),
+  summary: requiredText.max(2000),
+  serviceLabel: z.enum(portfolioServiceCategories),
+  challenge: z.string().trim().max(12000).default(""),
+  process: z.string().trim().max(12000).default(""),
+  result: z.string().trim().max(12000).default(""),
+  clientName: z.string().trim().min(1).max(240).nullable().default(null),
+  isPublished: z.literal(false).default(false),
+  isFeatured: z.literal(false).default(false),
+}).strict();
+
+export type CreatePortfolioProjectInput = z.infer<typeof createPortfolioProjectSchema>;
 const publicMediaStorageKey = z
   .string()
   .trim()
-  .regex(/^media\/portfolio\/[a-z0-9]+(?:-[a-z0-9]+)*\.(?:png|jpe?g|webp)$/i, {
+  .refine(key => isPublicMediaKey(key, "portfolio"), {
     message: "Media portfolio harus memakai key publik yang diizinkan.",
   });
 

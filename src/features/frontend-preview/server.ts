@@ -1,4 +1,5 @@
 import "server-only";
+import { publicMediaUrl } from "@/modules/public-media/schema";
 
 import { isLocalDemoMode } from "@/lib/env/server";
 import {
@@ -104,13 +105,7 @@ export async function getShopPreview(requested: unknown) {
 }
 
 function resolvePublicProductMediaUrl(storageKey: string): string | undefined {
-  // Product media is public only when it follows the allowlisted static-media
-  // convention. Private/customer keys never cross this serialization boundary.
-  if (!/^media\/products\/[a-z0-9][a-z0-9-]*\.(?:png|jpe?g|webp)$/i.test(storageKey)) {
-    return undefined;
-  }
-
-  return `/${storageKey}`;
+  return publicMediaUrl(storageKey, "product");
 }
 
 export async function getLiveShopProducts(): Promise<readonly PublicShopProduct[]> {

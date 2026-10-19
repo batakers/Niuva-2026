@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHmac, randomBytes } from "node:crypto";
 
 const MAX_IP_LENGTH = 64;
 const defaultProcessSalt = randomBytes(16).toString("hex");
@@ -9,6 +9,8 @@ export type ActorKeyInput = Readonly<{
   headers: Headers;
   /** Injectable for tests; defaults to a random per-process value. */
   processSalt?: string;
+  /** Stable across hosted instances; defaults to the existing Admin auth secret. */
+  sharedSecret?: string | null;
 }>;
 
 function extractIpCandidate(headers: Headers): string {
@@ -29,6 +31,7 @@ export function deriveActorKey({
   endpointId,
   headers,
   processSalt = defaultProcessSalt,
+  sharedSecret = process.env.BETTER_AUTH_SECRET,
 }: ActorKeyInput): string {
   const normalizedCustomerId = customerId?.trim() ?? "";
 
@@ -36,8 +39,13 @@ export function deriveActorKey({
     return `c:${endpointId}:${normalizedCustomerId}`;
   }
 
-  const digest = createHash("sha256")
-    .update(processSalt + extractIpCandidate(headers))
+  const key = sharedSecret?.trim();
+  const tier = process.env.NIUVA_DEPLOYMENT_TIER?.trim();
+  if (!key && (tier === "staging" || tier === "production")) {
+    throw new Error("Shared rate-limit hashing secret is required for hosted runtimes.");
+  }
+  const digest = createHmac("sha256", key || processSalt)
+    .update(extractIpCandidate(headers))
     .digest("hex");
 
   return `i:${endpointId}:${digest}`;
