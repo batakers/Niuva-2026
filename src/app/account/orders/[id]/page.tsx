@@ -35,5 +35,6 @@ export default async function AccountOrderPage({ params }: PageProps<"/account/o
       </dl></section>
     {payment && <section className="mt-6 rounded-xl border border-border bg-card p-6"><h2 className="text-xl font-semibold">Pembayaran</h2><p className="mt-2 text-sm">{payment.status} · Rp {payment.amountRp.toFixed(0)}</p>{payment.status === "PENDING" && payment.expiresAt > new Date() && payment.redirectUrl?.startsWith("https://") ? <a className="mt-4 inline-block underline underline-offset-4" href={payment.redirectUrl} rel="noopener noreferrer" referrerPolicy="no-referrer">Lanjutkan pembayaran</a> : null}</section>}
     {shipment && <section className="mt-6 rounded-xl border border-border bg-card p-6"><h2 className="text-xl font-semibold">Pengiriman</h2><p className="mt-2 text-sm">{shipment.status}{shipment.courierCode ? ` · ${shipment.courierCode}` : ""}{shipment.trackingNumber ? ` · ${shipment.trackingNumber}` : ""}</p></section>}
+    <Link className="mt-6 inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4" href={`/account/orders/${id}/refund`}>Pengajuan dan status refund</Link>
   </main></PublicShell>;
 }

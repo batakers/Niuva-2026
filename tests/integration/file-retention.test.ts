@@ -28,6 +28,7 @@ beforeAll(async () => { f = await operationalJobFixture(); });
 afterEach(async () => {
   await f.admin.$transaction(async tx => {
     await tx.auditLog.deleteMany({ where: { entityId: { in: [...files, ...admins, ...privacyCases] } } });
+    await tx.refundCase.deleteMany({ where: { orderId: { in: orders } } });
     await tx.paymentAttempt.deleteMany({ where: { orderId: { in: orders } } });
     await tx.orderItem.deleteMany({ where: { orderId: { in: orders } } });
     await tx.order.deleteMany({ where: { id: { in: orders } } });
@@ -89,6 +90,14 @@ async function linked(state: "unpaid" | "completed" | "active" | "cancelled" = "
     } }); orders.push(order.id);
   }
   return { file, quote, request, access };
+}
+
+async function refundDispute(orderId: string, access: AdminAccess, status: "REQUESTED" | "APPROVED" | "RECONCILING" = "REQUESTED") {
+  return f.admin.refundCase.create({ data: {
+    orderId, status, version: status === "REQUESTED" ? 1 : 2, approvedVersion: status === "REQUESTED" ? null : 2,
+    category: "ITEM_ISSUE", reason: "Fixture unresolved model dispute", requesterType: "ADMIN", requestedByAdminId: access.profile.id,
+    contactVerificationReference: "SERVICE-REFUND-RETENTION", submissionKey: randomUUID(), requestHash: "a".repeat(64), snapshotHash: "b".repeat(64), amountRp: "1",
+  } });
 }
 
 describe("lease-bound Customer file retention", () => {
@@ -249,6 +258,48 @@ describe("lease-bound Customer file retention", () => {
     expect(await f.admin.customPrintRequest.count({ where: { id: { in: requests } } })).toBe(4);
     expect(await f.admin.customPrintQuote.count({ where: { requestId: { in: requests } } })).toBe(4);
     expect(await f.admin.order.count({ where: { id: { in: orders } } })).toBe(3);
+  });
+  it.each(["REQUESTED", "APPROVED", "RECONCILING"] as const)("holds overdue completed models while a refund is %s, including after Customer closure", async status => {
+    const { file, request, access } = await linked("completed");
+    const order = await f.admin.order.findFirstOrThrow({ where: { id: { in: orders } } });
+    const email = `refund-retention-${randomUUID()}@example.test`;
+    const customer = await f.admin.customer.create({ data: { email, normalizedEmail: email } }); customers.push(customer.id);
+    await f.admin.order.update({ where: { id: order.id }, data: { customerId: customer.id } });
+    await f.admin.customPrintRequest.update({ where: { id: request.id }, data: { customerId: customer.id } });
+    await f.admin.storedFile.update({ where: { id: file.id }, data: { uploadedByCustomerId: customer.id } });
+    const refund = await refundDispute(order.id, access, status);
+    const deletes = vi.fn<(key: string) => Promise<void>>().mockResolvedValue(undefined);
+    expect(await runner(deletes).run(run())).toMatchObject({ state: "completed", counts: { activeHolds: 1, deleted: 0 } });
+    await f.admin.$transaction(async tx => { await lockCustomerLifecycle(tx); await eraseCustomerAccount(tx, customer.id, new Date()); });
+    expect(await runner(deletes).run(run())).toMatchObject({ counts: { activeHolds: 1, deleted: 0 } });
+    expect(deletes).not.toHaveBeenCalled();
+    expect((await f.admin.storedFile.findUniqueOrThrow({ where: { id: file.id } })).uploadStatus).toBe("VERIFIED");
+    await f.admin.refundCase.update({ where: { id: refund.id }, data: { status: "COMPLETED", version: 2, approvedVersion: 2 } });
+    expect(await runner(deletes).run(run())).toMatchObject({ counts: { deleted: 1 } });
+    expect(deletes).toHaveBeenCalledTimes(1);
+  });
+  it("rechecks a refund dispute opened after the deletion claim before touching storage", async () => {
+    const { file, access } = await linked("completed");
+    const order = await f.admin.order.findFirstOrThrow({ where: { id: { in: orders } } });
+    let opened = false;
+    const bound: Pick<BoundDatabaseService, "run"> = {
+      async run<T>(operation: "outbox" | "job", work: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
+        const result = await f.bound.run(operation, work);
+        if (!opened && await f.admin.storedFile.count({ where: { id: file.id, uploadStatus: "DELETE_PENDING" } }) === 1) {
+          opened = true;
+          await refundDispute(order.id, access);
+        }
+        return result;
+      },
+    };
+    const deletes = vi.fn<(key: string) => Promise<void>>().mockResolvedValue(undefined);
+    const guarded = new JobRunner({ bound, expectedRole: f.role, repository: new PrismaJobRepository(), policy,
+      handlers: createJobHandlers({ prisma: f.client, bound, source: f.source, fileStorageFactory: () => ({ deleteObject: deletes }) }) });
+    expect(await guarded.run(run())).toMatchObject({ state: "completed", counts: { claimed: 1, activeHolds: 1, deleted: 0 } });
+    expect(deletes).not.toHaveBeenCalled();
+    expect((await f.admin.storedFile.findUniqueOrThrow({ where: { id: file.id } })).uploadStatus).toBe("DELETE_PENDING");
+    await f.admin.refundCase.update({ where: { orderId: order.id }, data: { status: "COMPLETED", version: 2, approvedVersion: 2 } });
+    expect(await runner(deletes).run(run())).toMatchObject({ counts: { claimed: 0, deleted: 1 } });
   });
   it("blocks a new payable order after an irreversible deletion claim", async () => {
     const { file, quote } = await linked();

@@ -1,7 +1,7 @@
 // @vitest-environment node
 /**
  * Task 5.22 (Req 12.5): every Server Action under src/app must reject a call
- * made without admin authorization, at the service layer. A Server Action is a
+ * made without its actor's authorization, at the service layer. A Server Action is a
  * POST to the route that uses it, so the proxy matcher is not a sufficient guard.
  *
  * The manifest below is an explicit allowlist (action -> required permission).
@@ -23,11 +23,19 @@ import { appError, isAppError } from "@/modules/shared/errors";
 const state = vi.hoisted(() => ({
   adminCalls: 0,
   authorize: null as null | (() => unknown),
+  customerCalls: 0,
+  authorizeCustomer: null as null | (() => unknown),
   dbCalls: [] as string[],
   denyAll: false,
   errors: [] as unknown[],
   permissions: [] as string[],
 }));
+
+vi.mock("@/lib/auth/customer", () => ({ requireCustomer: async () => {
+  state.customerCalls += 1;
+  if (state.authorizeCustomer === null) throw new Error("Customer scenario not configured");
+  return state.authorizeCustomer();
+} }));
 
 vi.mock("@/lib/auth/admin", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/auth/admin")>();
@@ -120,12 +128,17 @@ const PROJECT = { projectId: UUID };
 const ADMIN_ACTIONS_FILE = "src/app/admin/actions.ts";
 const ADMIN_INVITATION_ACTIONS_FILE = "src/app/admin/admins/new/actions.ts";
 const ADMIN_ACCESS_ACTIONS_FILE = "src/app/admin/admins/actions.ts";
+const ADMIN_REFUND_ACTIONS_FILE = "src/app/admin/orders/[id]/refund/actions.ts";
+const CUSTOMER_REFUND_ACTIONS_FILE = "src/app/account/orders/[id]/refund/actions.ts";
+const REFUND_FIELDS = { submissionKey: UUID_2, reason: "Synthetic refund reason.", category: "OTHER", expectedVersion: "1", returnState: "NOT_REQUIRED", reference: "TEST-CONTACT-VERIFIED" };
+const CUSTOMER_MANIFEST = { [CUSTOMER_REFUND_ACTIONS_FILE]: ["requestRefundAction"] };
 
 const BILLING_FIELDS = { issuerName: "Synthetic issuer", issuerAddress: "Synthetic address fixture", issuerEmail: "fixture@example.test", bankName: "Fixture bank", accountName: "Synthetic fixture", accountNumber: "00000000", transferInstructions: "Synthetic transfer instructions." };
 const PAYMENT_FIELDS = { paymentId: UUID, billingCaseId: UUID, expectedVersion: "1", amountRp: "1000", receivedDate: "2020-01-01", reference: "TEST-FIXTURE", confirmed: "confirmed", reason: "Synthetic correction", idempotencyKey: UUID_2 };
 const EXPENSE_FIELDS = { expenseId: UUID, expectedVersion: "1", amountRp: "1000", expenseDate: "2020-01-01", category: "OTHER", description: "Synthetic expense", reason: "Synthetic correction", idempotencyKey: UUID_2 };
 const RATES = { plaFirst: "1000", plaMiddle: "900", plaLast: "800", absFirst: "1200", absMiddle: "1100", absLast: "1000", machineHour: "5000", plaOwn: "500", absOwn: "700", plaCommunal: "500", absCommunal: "700" };
 const MANIFEST: Readonly<Record<string, Readonly<Record<string, ManifestEntry>>>> = {
+  [ADMIN_REFUND_ACTIONS_FILE]: { reviewRefundAction: { permission: "PAYMENT_REFUND_FULL", fields: REFUND_FIELDS } },
   "src/app/admin/content-create-actions.ts": {
     createProductDraftAction: { permission: "CATALOG_WRITE", fields: { name: "Synthetic draft", slug: "synthetic-draft", description: "Synthetic description" } },
     createVariantAction: { permission: "CATALOG_WRITE", fields: { productId: UUID, name: "Synthetic variant", sku: "SYNTHETIC-SKU", priceRp: "1000", weightGrams: "20", stockOnHand: "1", isActive: "on" } },
@@ -353,6 +366,7 @@ function scanActionFiles(): Record<string, string[]> {
 }
 
 const loaders: Readonly<Record<string, () => Promise<Record<string, unknown>>>> = {
+  [ADMIN_REFUND_ACTIONS_FILE]: async () => { const mod = await import("@/app/admin/orders/[id]/refund/actions"); return { reviewRefundAction: mod.reviewRefundAction.bind(null, UUID, "approve") }; },
   "src/app/admin/content-create-actions.ts": () => import("@/app/admin/content-create-actions"),
   "src/app/admin/finance/actions.ts": () => import("@/app/admin/finance/actions"),
   "src/app/admin/finance/expenses/actions.ts": () => import("@/app/admin/finance/expenses/actions"),
@@ -404,6 +418,8 @@ function expectRejectedBeforeDomainWork(result: ActionResult): void {
 beforeEach(() => {
   state.adminCalls = 0;
   state.authorize = null;
+  state.customerCalls = 0;
+  state.authorizeCustomer = null;
   state.dbCalls = [];
   state.denyAll = false;
   state.errors = [];
@@ -414,9 +430,20 @@ describe("Server Action authorization manifest (scan)", () => {
   it("lists every actions.ts / \"use server\" file and export under src/app", () => {
     const scanned = scanActionFiles();
     const expected = Object.fromEntries(
-      Object.entries(MANIFEST).map(([file, actions]) => [file, Object.keys(actions).sort()]),
+      [...Object.entries(MANIFEST).map(([file, actions]) => [file, Object.keys(actions).sort()]), ...Object.entries(CUSTOMER_MANIFEST)],
     );
     expect(scanned).toEqual(expected);
+  });
+
+  it("lists the Customer action exports and requires a Customer session even when an Admin session exists", async () => {
+    const mod = await import("@/app/account/orders/[id]/refund/actions");
+    expect(Object.keys(mod).sort()).toEqual(CUSTOMER_MANIFEST[CUSTOMER_REFUND_ACTIONS_FILE]);
+    state.authorize = () => access("OWNER", true);
+    state.authorizeCustomer = () => { throw appError("UNAUTHORIZED"); };
+    const result = await mod.requestRefundAction(UUID, { status: "idle" }, formData(REFUND_FIELDS));
+    expect(result.status).toBe("error"); expect(state.customerCalls).toBe(1);
+    expect(state.adminCalls).toBe(0); expect(state.dbCalls).toEqual([]);
+    expect(errorCodes()).toContain("UNAUTHORIZED");
   });
 
   it("has a loader for every manifest file and exports exactly the manifest actions at runtime", async () => {
@@ -470,6 +497,21 @@ for (const [file, actions] of Object.entries(MANIFEST)) {
 }
 
 describe("permission-specific checks", () => {
+  it.each(["intake", "approve", "refresh", "receive-return"] as const)("refund %s checks its permission before rate-limit or domain database work", async operation => {
+    state.authorize = () => access("OWNER", true); state.denyAll = true;
+    const { reviewRefundAction } = await import("@/app/admin/orders/[id]/refund/actions");
+    const result = await reviewRefundAction(UUID, operation, { status: "idle" }, formData(REFUND_FIELDS));
+    expectRejectedBeforeDomainWork(result);
+    expect(state.permissions).toEqual([operation === "intake" ? "FINANCE_WRITE" : "PAYMENT_REFUND_FULL"]);
+  });
+
+  it("refund approval rejects an active ADMIN role before database work", async () => {
+    state.authorize = () => access("ADMIN", true);
+    const { reviewRefundAction } = await import("@/app/admin/orders/[id]/refund/actions");
+    const result = await reviewRefundAction(UUID, "approve", { status: "idle" }, formData(REFUND_FIELDS));
+    expectRejectedBeforeDomainWork(result); expect(errorCodes()).toContain("FORBIDDEN");
+  });
+
   it("activatePricingRuleAction rejects an active ADMIN role (Owner-only permission) with the real matrix", async () => {
     state.authorize = () => access("ADMIN", true);
     const action = (await loaders[ADMIN_ACTIONS_FILE]!()).activatePricingRuleAction as ActionFn;

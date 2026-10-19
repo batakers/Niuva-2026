@@ -41,6 +41,7 @@ export class FileRetentionRepository {
         customerId: true, status: true, updatedAt: true,
         quotes: { select: { status: true, expiresAt: true, createdAt: true, sentAt: true, orderItems: { select: { order: { select: {
           id: true, status: true, completedAt: true, cancelledAt: true, updatedAt: true, paymentAttempts: { select: { status: true } },
+          refundCase: { select: { status: true } },
         } } } } } },
       } } } },
     } });
@@ -51,7 +52,8 @@ export class FileRetentionRepository {
     const orders = [...new Map(request?.quotes.flatMap(quote => quote.orderItems.map(item => [item.order.id, item.order] as const))).values()];
     const facts: FileRetentionFacts = {
       ...row, hasFinancialOwner: row.expenseProofs.length > 0, hasHistoricalOwner: row.b2bInquiryLinks.length > 0,
-      held: row.retentionHoldOwnerId !== null || row.retentionPrivacyHoldCaseIds.length > 0 || privacyHolds > 0,
+      held: row.retentionHoldOwnerId !== null || row.retentionPrivacyHoldCaseIds.length > 0 || privacyHolds > 0
+        || orders.some(order => order.refundCase !== null && order.refundCase.status !== "COMPLETED"),
       request: request ? { ...request, orders: orders.map(order => ({ ...order,
         pendingPayment: order.paymentAttempts.some(attempt => attempt.status === "PENDING"),
         settledPayment: order.paymentAttempts.some(attempt => attempt.status === "SETTLED"),

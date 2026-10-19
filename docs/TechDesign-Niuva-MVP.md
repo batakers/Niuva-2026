@@ -2490,3 +2490,12 @@ Tarif baru atomik berversi mempertahankan parser v1 dan snapshot quote terbit. P
 - `StoredFilePurpose.FINANCIAL_EVIDENCE` membutuhkan uploader Admin, private scope, actual-content verification dan tepat satu Expense owner. Bukti opsional memiliki batas 10 MiB PDF/JPEG/PNG dan token intent 10 menit. Runtime nyata tetap disabled selama `approvedPolicyId` retensi finansial belum ditetapkan. Adapter storage sintetis hanya untuk environment test; retensi CAD tidak digunakan untuk bukti finansial.
 - Informasi Situs menyimpan publish/revision dengan expected version. Hanya DTO publik yang dicache 300 detik memakai tag `niuva-public-site-information`; publish menginvalidasi tag dan layout publik. Notifikasi/pencarian/Finance tetap berizin dan tidak memakai cache publik untuk state akun.
 - PDF memakai PDFKit dan font lokal berlisensi, template teks terbatas, pagination dan download pribadi. Struktur/tag dokumen bukan klaim sertifikasi PDF/UA. Bukti verifikasi serta batas local/loopback dicatat pada `docs/frontend/admin-redesign-verification-2026-10-08.md`.
+
+### Kasus dan persetujuan refund — 19 Oktober 2026
+
+T21–T22 memakai kasus/alokasi pembayaran server, approval Owner immutable,
+revision/idempotency, syarat/receipt retur, lifecycle lock dan proyeksi privacy
+yang didefinisikan pada [refund workflow](backend/refund-workflow.md).
+Submission provider dan hasil dana tetap T23/T25; approved/ready tidak
+menyelesaikan kasus, menambah stock, atau membuka akun/order tertutup.
+Bukti lokal/delivery berada di TASKS dan ledger readiness; bukan aktivasi hosted.

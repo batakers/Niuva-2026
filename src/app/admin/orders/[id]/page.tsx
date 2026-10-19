@@ -116,6 +116,7 @@ export default async function AdminOrderDetailPage({
         <Card as="section" aria-labelledby="order-actions-title" className="gap-0 py-0 ring-0 min-w-0 rounded-xl border border-border bg-card p-5 sm:p-6 xl:col-start-2 xl:row-span-3">
           <h2 className="text-xl font-semibold" id="order-actions-title">Aksi operasional</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Pilih tindakan sesuai tahap order. Pembatalan order berbayar tetap memerlukan tindak lanjut refund terpisah.</p>
+          <Link className={buttonVariants({ variant: "outline", className: "mt-4 min-h-11" })} href={`/admin/orders/${id}/refund`}>Pengajuan dan persetujuan refund</Link>
           <div className="mt-5 flex flex-wrap gap-2">
             {nextStatuses.length === 0 ? <p className="text-sm text-muted-foreground">Tidak ada tindakan status lanjutan dari tahap ini.</p> : nextStatuses.map((next) => (
               <AdminActionForm action={transitionOrderAction} confirmMessage={next === "CANCELLED" ? "Batalkan order ini? Status tidak dapat dibuka kembali otomatis." : undefined} key={next} submitLabel={`Ubah ke ${formatStatus(next)}`}>
