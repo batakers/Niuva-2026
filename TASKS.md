@@ -179,6 +179,18 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
   dengan 25 journey lain lulus; satu rerun job pada SHA sama lulus. Tidak ada
   pelemahan test/workflow. Hasil itu bukan CI diff T26–T30 dan tidak menutup
   BLOCKED_EXTERNAL T24.
+- Checkpoint delivery T26–T30: kode `ae36ad68eb0462320eb45f2aae47c96224c0644c`,
+  40 file (1.033 penambahan/68 penghapusan), sudah di-push pada
+  `codex/v1-business-notifications` dan diajukan sebagai
+  [draft PR #61](https://github.com/batakers/Niuva-2026/pull/61).
+  Main menjadi target Quality dengan dependency #60/#59 eksplisit;
+  [diff notifikasi saja](https://github.com/batakers/Niuva-2026/compare/codex/v1-payment-reconciliation...codex/v1-business-notifications)
+  tersedia terpisah. Seluruh command/gate di atas lulus pada runtime diff kode;
+  CI PR #61 masih menunggu verifikasi SHA head, bukan memakai CI #60.
+  Rollback menghentikan launcher baru sambil mempertahankan intent/key/receipt
+  terminal. Tidak ada merge ke main, force push, deployment, email provider,
+  scheduler, atau operasi uang nyata. Berikutnya T23/T25 memakai baseline aman
+  T24 dengan dependensi kasus/approval yang sudah dicatat.
 
 ### T24 — reconciliation pembayaran, 2026-10-19
 
