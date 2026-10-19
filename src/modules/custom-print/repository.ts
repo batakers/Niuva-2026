@@ -1,3 +1,4 @@
+import { assertRequestFilesRetained } from "../files/retention-guard";
 import {
   Prisma,
   type OrderStatus,
@@ -537,6 +538,7 @@ export class CustomPrintQuoteRepository {
         where: { requestId: input.requestId }, orderBy: { version: "desc" },
         select: { id: true, lowerRp: true, upperRp: true, snapshot: true },
       });
+      await assertRequestFilesRetained(transaction, input.requestId);
       const request = await transaction.customPrintRequest.findUnique({
         where: { id: input.requestId },
         select: { customerId: true, review: { select: { updatedAt: true } } },
@@ -655,6 +657,7 @@ export class CustomPrintQuoteRepository {
       });
       if (quoteHint === null) throw appError("NOT_FOUND");
       await transaction.$queryRaw(Prisma.sql`SELECT "id" FROM "custom_print_requests" WHERE "id" = ${quoteHint.requestId}::uuid FOR UPDATE`);
+      await assertRequestFilesRetained(transaction, quoteHint.requestId);
       const quote = await transaction.customPrintQuote.findUnique({
         where: { id: quoteId },
         select: { estimateId: true, finalTotalRp: true, requestId: true, status: true,
@@ -860,6 +863,8 @@ export class CustomPrintQuoteRepository {
       if (quote.status !== "SENT") {
         throw appError("QUOTE_NOT_READY");
       }
+
+      await assertRequestFilesRetained(transaction, quote.requestId);
 
       const latest = await transaction.customPrintQuote.findFirst({
         where: { requestId: quote.requestId },
