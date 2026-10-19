@@ -47,6 +47,7 @@ model OperationalJobState {
   lastFailureCategory String?   @map("last_failure_category")
   counters            Json?
   runCount            Int       @default(0) @map("run_count")
+  fileRetentionCursorId String? @map("file_retention_cursor_id") @db.Uuid
 
   @@map("operational_job_states")
 }
@@ -209,6 +210,7 @@ enum StoredFileStatus {
   VERIFIED
   REJECTED
   DELETED
+  DELETE_PENDING
 }
 
 enum CustomPrintRequestStatus {
@@ -274,6 +276,7 @@ model AdminProfile {
   billingSettings BillingInstructions[]
   billingSettingsRevisions BillingInstructionsRevision[]
   financialUploads StoredFile[] @relation("AdminFinancialUploads")
+  fileRetentionHolds StoredFile[] @relation("FileRetentionHoldOwner")
   publicAssets PublicMediaAsset[]
   refundIntakes RefundCase[]
   refundApprovals RefundApproval[]
@@ -968,10 +971,22 @@ model StoredFile {
   uploadedByAdminId String? @map("uploaded_by_admin_id") @db.Uuid
   uploadedByAdmin AdminProfile? @relation("AdminFinancialUploads", fields: [uploadedByAdminId], references: [id], onDelete: Restrict)
   expenseProofs ExpenseEntry[]
+  retentionClass String? @map("retention_class")
+  retentionEligibleAt DateTime? @map("retention_eligible_at") @db.Timestamptz(6)
+  retentionStartedAt DateTime? @map("retention_started_at") @db.Timestamptz(6)
+  retentionAttempts Int @default(0) @map("retention_attempts")
+  retentionLastFailure String? @map("retention_last_failure")
+  retentionPrivacyHoldCaseIds String[] @default([]) @map("retention_privacy_hold_case_ids") @db.Uuid
+  retentionHoldReason String? @map("retention_hold_reason")
+  retentionHoldReviewAt DateTime? @map("retention_hold_review_at") @db.Timestamptz(6)
+  retentionHoldOwnerId String? @map("retention_hold_owner_id") @db.Uuid
+  retentionHoldOwner AdminProfile? @relation("FileRetentionHoldOwner", fields: [retentionHoldOwnerId], references: [id], onDelete: Restrict, onUpdate: NoAction)
 
   @@index([uploadStatus, createdAt])
   @@index([uploadStatus, uploadExpiresAt])
   @@index([uploadedByCustomerId, uploadStatus])
+  @@index([createdAt, id])
+  @@index([uploadStatus, retentionStartedAt])
   @@map("stored_files")
 }
 

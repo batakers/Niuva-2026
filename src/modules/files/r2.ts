@@ -40,7 +40,7 @@ export interface PrivateObjectStorage {
     expiresInSeconds: number;
     key: string;
   }>): Promise<string>;
-  deleteObject(key: string): Promise<void>;
+  deleteObject(key: string, options?: Readonly<{ signal?: AbortSignal }>): Promise<void>;
   headObject(key: string): Promise<ObjectStorageHead>;
   /** One bounded stream snapshot for CAD format, actual size, and checksum. */
   inspectObject(key: string, maxBytes: number): Promise<ObjectContentInspection>;
@@ -254,9 +254,10 @@ export class R2PrivateObjectStorage implements PrivateObjectStorage {
     }
   }
 
-  async deleteObject(key: string): Promise<void> {
+  async deleteObject(key: string, options?: Readonly<{ signal?: AbortSignal }>): Promise<void> {
     await this.client.send(
       new DeleteObjectCommand({ Bucket: this.config.privateBucket, Key: key }),
+      { abortSignal: options?.signal },
     );
   }
 }

@@ -72,6 +72,12 @@ lock, menghapus FK akun dan meninggalkan marker order; pendaftaran ulang dengan
 email sama tidak memperoleh kasus lama. Owner tetap dapat menangani kasus
 melalui order yang detached. Intake staf dari kanal layanan memerlukan
 referensi verifikasi pihak yang berwenang dan tidak memulihkan akun.
+Intake staf wajib menyertakan waktu penerimaan pertama dari kanal layanan;
+form memakai WIB, API menerima ISO dengan offset, dan repository menolak waktu
+di masa depan terhadap clock database. Waktu tersebut ikut audit dan tetap
+dipertahankan saat retry atau refresh. Customer memakai waktu penerimaan server.
+Kasus refund yang belum COMPLETED menahan retensi model MAKE melalui relasi
+order, termasuk setelah closure dan pada pemeriksaan ulang sebelum efek storage.
 
 Ekspor privacy menyertakan kasus/nominal/alokasi milik Customer melalui
 proyeksi eksplisit. Owner decision internal, operation key/hash, provider

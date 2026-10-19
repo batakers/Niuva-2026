@@ -1,7 +1,7 @@
 import type { RefundCaseStatus } from "@/generated/prisma/client";
 export type RefundFormState = Readonly<{
   status: "idle" | "success" | "error"; message?: string;
-  values?: Readonly<{ reason: string; category: string; returnState: string; reference: string }>;
+  values?: Readonly<{ reason: string; category: string; returnState: string; reference: string; receivedAt?: string }>;
 }>;
 
 export type RefundCaseView = Readonly<{

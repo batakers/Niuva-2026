@@ -7,6 +7,7 @@ export type FileUploadStatus =
   | "UPLOADED"
   | "VERIFIED"
   | "REJECTED"
+  | "DELETE_PENDING"
   | "DELETED";
 
 export type FileBucketScope = "PRIVATE_CUSTOMER" | "PUBLIC_MEDIA";
@@ -14,10 +15,11 @@ export type FileBucketScope = "PRIVATE_CUSTOMER" | "PUBLIC_MEDIA";
 const ALLOWED_FILE_TRANSITIONS: Readonly<
   Record<FileUploadStatus, readonly FileUploadStatus[]>
 > = {
-  PENDING: ["UPLOADED", "REJECTED", "DELETED"],
-  UPLOADED: ["VERIFIED", "REJECTED", "DELETED"],
-  VERIFIED: ["DELETED"],
-  REJECTED: ["DELETED"],
+  PENDING: ["UPLOADED", "REJECTED", "DELETE_PENDING", "DELETED"],
+  UPLOADED: ["VERIFIED", "REJECTED", "DELETE_PENDING", "DELETED"],
+  VERIFIED: ["DELETE_PENDING", "DELETED"],
+  REJECTED: ["DELETE_PENDING", "DELETED"],
+  DELETE_PENDING: ["DELETED"],
   DELETED: [],
 };
 
