@@ -167,6 +167,11 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
   lulus seluruh suite, tanpa perubahan kode/tes. Build saja memakai tier
   production/mode mock/origin loopback dan satu worker. Bukti browser lokal
   tidak ditambah pada delivery backend ini; CI head PR diperiksa terpisah.
+- Delivery kode: commit `239247a`, branch `codex/v1-customer-file-retention`,
+  [draft PR #58](https://github.com/batakers/Niuva-2026/pull/58) ke main.
+  Pada checkpoint pembuatan PR, CI head belum selesai dan tidak diklaim lulus.
+  PR tidak di-merge; task independen berikutnya bercabang dari `origin/main`,
+  bukan dari commit T08 yang belum di-merge.
 
 ### Rekonsiliasi dengan main — 2026-10-19
 
