@@ -109,6 +109,13 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 
 ## Log pelaksanaan
 
+### Pemulihan sinkronisasi E2E PR #60 — 2026-10-20
+
+- Quality run `39329168932` pada head integrasi `ce8b6ab` gagal pada satu test notifikasi Admin (26 passed, 1 failed): poll persistence `readAt` selama 5 detik dimulai setelah klik tanpa menunggu POST selesai. Review ulang tidak menemukan regresi runtime T24 pada jalur Custom Print tersebut; log CI konsisten dengan kegagalan sinkronisasi, tanpa bukti bahwa respons HTTP akhirnya sukses.
+- Respons POST yang sengaja ditunda 6 detik mereproduksi kegagalan assertion database yang sama (RED: 1 failed). Helper `confirmRead` yang sudah ada pada branch #61 diambil hanya untuk test existing ini: waiter dipasang sebelum klik, respons wajib `200` dan `Cache-Control: no-store`, lalu assertion database semula tetap dijalankan tanpa mengubah timeout. Penundaan satu request dipertahankan sebagai regresi. Tidak ada fitur email #61 atau kode runtime yang diambil.
+- GREEN: test notifikasi tersebut lulus dengan respons lambat dan seluruh assertion persistence, no replay, navigasi/focus serta mobile tetap aktif. Review independen tidak menemukan pelemahan test. Lint ulang (0 error; 4 warning existing) dan strict typecheck ulang lulus.
+- Bukti RED `C:/Users/FAIZ/.codex/tmp/niuva-integration-20261020/pr60-1792446751263/`; GREEN `pr60-1792446830798/`; static ulang `pr60-1792446880776/`. Seluruh gate lokal pada produk T24 sebelumnya telah lulus seperti log berikut. Commit perbaikan test harus memperoleh Quality baru yang sukses sebelum Ready/merge; run gagal tidak dipakai sebagai bukti kelulusan.
+
 ### Integrasi PR #60 setelah PR #59 — 2026-10-20
 
 - PR #59 terverifikasi MERGED dengan squash `bcd04d9ee6f806524a37b243ff27921897f5c0d8`; Quality pada head `85f63c5` dan hasil squash main keduanya SUCCESS. T24 kemudian diintegrasikan pada worktree terpisah tanpa menyentuh worktree T23/T25.
