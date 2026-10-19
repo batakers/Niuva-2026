@@ -47,7 +47,8 @@ journey authenticated browser lulus. Ada 18 skenario refund dan 10 direct-action
 termasuk boundary Customer tanpa proxy Admin. Browser mencakup Customer,
 Owner dengan TOTP, penolakan Admin,
 native POST/error recovery tanpa JavaScript serta capture 1440/390/320px.
-Gate akhir dan delivery dicatat pada TASKS; hasil ini masih bukti lokal.
+Kode `7903870` dikirim pada [draft PR #59](https://github.com/batakers/Niuva-2026/pull/59).
+CI head PR masih menunggu pada checkpoint delivery; hasil di atas bukti lokal.
 
 Approval tidak mengirim uang. T23/T25, merchant/window/fallback manual,
 reconciliation/sandbox dan REL-05 tetap terbuka; penerimaan visual Owner,

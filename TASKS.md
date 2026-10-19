@@ -163,8 +163,12 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
   override build tidak diberikan ke unit/backend. Diff check dan scan credential
   pattern lulus; tidak ada env, workflow atau migration historis di diff.
 - Cakupan DONE T21/T22 adalah acceptance criteria kasus/approval lokal pada
-  tabel, bukan keseluruhan SOP atau release. Delivery Git/PR dicatat setelah
-  commit; CI diff belum diklaim sebelum run pada head yang bersangkutan tersedia.
+  tabel, bukan keseluruhan SOP atau release. Kode dan bukti lokal dikirim sebagai
+  `790387000db8c925aec5f8c76044940747a10649` pada branch
+  `codex/v1-refund-cases`, [draft PR #59](https://github.com/batakers/Niuva-2026/pull/59).
+  PR tidak di-merge. CI diff masih menunggu pada checkpoint delivery ini dan
+  tidak diganti dengan hasil historis main/T08. Rollback mempertahankan seluruh
+  tabel/history/audit; jangan drop/reset tabel saat menutup entry point baru.
 - Kontrak rinci: [refund workflow](docs/backend/refund-workflow.md). Submission,
   merchant/window/manual exception dan hasil dana/reconciliation tetap T23/T25;
   task ini tidak menyatakan dana telah dikembalikan. Kalender SLA/coverage dan
