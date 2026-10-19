@@ -163,8 +163,10 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
   fixture sendiri melalui helper terjaga. Build saja memakai tier production /
   mode mock / satu worker; override build tidak masuk unit/backend/integration.
 - Diff check dan scan pola credential lulus; migration historis/env/workflow
-  tidak diubah. Kode siap delivery; SHA/PR ditambahkan sesudah commit. CI T24
-  belum diklaim. Kontrak/risiko/rollback pada
+  tidak diubah. Commit kode `e3941f6fb33ba3f175a88c3928433fa21ed44eb9`, branch
+  `codex/v1-payment-reconciliation`, [draft PR #60](https://github.com/batakers/Niuva-2026/pull/60)
+  sudah di-push. PR #59 adalah dependensi eksplisit; belum ada merge. CI T24
+  masih menunggu pada checkpoint delivery. Kontrak/risiko/rollback pada
   [reconciliation pembayaran](docs/backend/payment-reconciliation.md).
 
 ### T21–T22 — kasus dan persetujuan refund, 2026-10-19

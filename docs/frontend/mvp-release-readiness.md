@@ -49,6 +49,8 @@ Ada 14 skenario integration reconciliation; database file terpisah mencegah
 polling fixture file lain. Regresi penuh terakhir memakai resource baru dengan
 35 migration dan tidak mereset database lama. Tidak ada klaim CI T24 sebelum
 run pada head PR tersedia; Quality PR #59 di bawah tetap bukti dependensi.
+Kode T24 `e3941f6` dikirim pada [draft PR #60](https://github.com/batakers/Niuva-2026/pull/60),
+menarget main untuk Quality dan mencatat dependency #59. CI diff T24 masih menunggu.
 
 ### Refund T21–T22 — 19 Oktober 2026
 
