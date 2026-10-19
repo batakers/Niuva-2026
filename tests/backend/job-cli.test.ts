@@ -6,7 +6,7 @@ import { appError } from "@/modules/shared/errors";
 const request = JSON.stringify({ job: "OUTBOX_EXPIRY", mode: "dry-run", limit: 10 });
 const policy = JSON.stringify({ leaseMs: 60000, minIntervalMs: 0, failureCooldownMs: 1000 });
 function fixture() {
-  const runtime: OperationalJobRuntime = { async run(value) { return { job: value.job, mode: value.mode, state: "completed", counts: { expired: 0 } }; }, async inspect() { return { checkedAt: "2026-10-14T00:00:00.000Z", jobs: [], outbox: { pending: 0, leased: 0, failed: 0, unknown: 0, expiredPending: 0, staleLeases: 0, dueLagMs: 0 }, privacy: { overdue: 0, overdueHolds: 0 }, inventory: { remainingDue: 0, lagMs: 0 }, alarms: [] }; } };
+  const runtime: OperationalJobRuntime = { async run(value) { return { job: value.job, mode: value.mode, state: "completed", counts: { expired: 0 } }; }, async inspect() { return { checkedAt: "2026-10-14T00:00:00.000Z", jobs: [], outbox: { pending: 0, leased: 0, failed: 0, unknown: 0, expiredPending: 0, staleLeases: 0, dueLagMs: 0 }, privacy: { overdue: 0, overdueHolds: 0 }, inventory: { remainingDue: 0, lagMs: 0 }, payment: { remainingDue: 0, lagMs: 0 }, alarms: [] }; } };
   return { runtime, factory: vi.fn(() => runtime) };
 }
 describe("operational job CLI", () => {

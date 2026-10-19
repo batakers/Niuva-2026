@@ -20,7 +20,7 @@ export class OperationalJobHttpEndpoint {
     if (!parsed.success) throw appError("VALIDATION_ERROR");
     const input = parsed.data;
     const needsWorker = this.job === "OUTBOX_DELIVERY";
-    if (needsWorker !== (input.workerPolicy !== undefined) || needsWorker && input.mode === "execute" && input.limit > 10) throw appError("VALIDATION_ERROR");
+    if (needsWorker !== (input.workerPolicy !== undefined) || (needsWorker || this.job === "PAYMENT_RECONCILIATION") && input.mode === "execute" && input.limit > 10) throw appError("VALIDATION_ERROR");
     const request = parseJobRequest({ job: this.job, mode: input.mode, limit: input.limit });
     const policy = parseJobPolicy(input.jobPolicy);
     const workerPolicy = needsWorker ? parseWorkerPolicy(input.workerPolicy) : undefined;

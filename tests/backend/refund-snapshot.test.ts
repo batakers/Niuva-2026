@@ -23,7 +23,7 @@ describe("full-refund server payment snapshot", () => {
     expect(snapshot.allocations[0].source).toBe("LATE_SETTLEMENT");
   });
   it("requires reconciliation before a legacy full or partial refund can be submitted again", () => {
-    for (const p of [payment({ status: "REFUNDED" }), payment({ events: [{ processingResult: "PARTIAL_REFUND_REQUIRES_EXCEPTION" }] }), payment({ events: [{ processingResult: "REFUNDED_AFTER_LATE_SETTLEMENT" }] })]) {
+    for (const p of [payment({ status: "REFUNDED" }), payment({ events: [{ processingResult: "PARTIAL_REFUND_REQUIRES_EXCEPTION" }] }), payment({ events: [{ processingResult: "REFUNDED_AFTER_LATE_SETTLEMENT" }] }), payment({ events: [{ processingResult: "REFUND_REQUIRES_RECONCILIATION" }, { processingResult: "STALE_SETTLED" }] })]) {
       expect(() => buildRefundSnapshot("order", "IDR", [p])).toThrow();
     }
   });
@@ -37,5 +37,6 @@ describe("full-refund server payment snapshot", () => {
   it("holds an unresolved payment verification exception until a verified receipt supersedes it", () => {
     expect(() => buildRefundSnapshot("order", "IDR", [payment({ events: [{ processingResult: "AMOUNT_MISMATCH" }] })])).toThrow();
     expect(buildRefundSnapshot("order", "IDR", [payment({ events: [{ processingResult: "AMOUNT_MISMATCH" }, { processingResult: "SETTLED" }] })]).totalRp).toBe("9007199254740993");
+    expect(buildRefundSnapshot("order", "IDR", [payment({ status: "EXPIRED", settledAt: null, events: [{ processingResult: "AMOUNT_MISMATCH" }, { processingResult: "LATE_SETTLEMENT_REFUND_REQUIRED" }] })]).allocations[0].source).toBe("LATE_SETTLEMENT");
   });
 });

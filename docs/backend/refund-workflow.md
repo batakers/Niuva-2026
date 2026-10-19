@@ -48,6 +48,11 @@ diselesaikan ditolak untuk pengajuan/approval baru sampai hasilnya
 direkonsiliasi. Ini mencegah refund kedua berdasarkan asumsi. Bukti dana final
 dan penyelesaian exception adalah T23/T25, bukan keputusan default T21.
 
+T24 menambahkan receipt `REFUND_REQUIRES_RECONCILIATION` ketika Get Status
+melaporkan refund yang belum mempunyai bukti hasil dana. Receipt ini juga
+menahan pengajuan/approval; settlement ulang tidak menghapus ketidakpastian
+refund. Lihat [reconciliation pembayaran](payment-reconciliation.md).
+
 Hanya Owner aktif dengan `PAYMENT_REFUND_FULL` dapat approve, refresh atau
 memenuhi syarat retur. Approval memeriksa kembali versi dan fingerprint semua
 alokasi server. Pembayaran yang berubah memerlukan refresh dan review ulang.

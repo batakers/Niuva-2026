@@ -7,10 +7,11 @@ export const PAYMENT_EXCEPTION_RESULTS = [
   "PARTIAL_REFUND_REQUIRES_EXCEPTION",
   "PROVIDER_TRANSACTION_CONFLICT",
   "SETTLEMENT_STATUS_CODE_INVALID",
+  "REFUND_REQUIRES_RECONCILIATION",
 ] as const;
 
 export type PaymentIssue = Readonly<{
-  kind: "FULL_REFUND" | "LATE_SETTLEMENT" | "PARTIAL_REFUND" | "PAYMENT_VERIFICATION";
+  kind: "FULL_REFUND" | "LATE_SETTLEMENT" | "PARTIAL_REFUND" | "PAYMENT_VERIFICATION" | "REFUND_RECONCILIATION";
   occurredAt: Date;
   paymentAttemptId: string;
   providerOrderId: string;
@@ -49,9 +50,12 @@ export function getPaymentIssues(
       const result = event.processingResult;
       if (result === "SETTLED" || result === "STALE_SETTLED") {
         pending.delete("PAYMENT_VERIFICATION");
+      } else if (result === "REFUND_REQUIRES_RECONCILIATION") {
+        if (!pending.has("REFUND_RECONCILIATION")) pending.set("REFUND_RECONCILIATION", event.receivedAt);
       } else if (result === "PARTIAL_REFUND_REQUIRES_EXCEPTION") {
         if (!pending.has("PARTIAL_REFUND")) pending.set("PARTIAL_REFUND", event.receivedAt);
       } else if (result === "LATE_SETTLEMENT_REFUND_REQUIRED" && !settled) {
+        pending.delete("PAYMENT_VERIFICATION");
         // Earlier versions classified a replay of an already-settled attempt
         // as late. Its successful settlement receipt is authoritative.
         if (!pending.has("LATE_SETTLEMENT")) pending.set("LATE_SETTLEMENT", event.receivedAt);
@@ -78,5 +82,6 @@ export const PAYMENT_ISSUE_LABELS: Readonly<Record<PaymentIssue["kind"], string>
   FULL_REFUND: "Refund penuh terkonfirmasi; order masih perlu ditangani Owner",
   LATE_SETTLEMENT: "Pembayaran masuk setelah order tidak lagi dapat dibayar",
   PARTIAL_REFUND: "Refund parsial membutuhkan pemeriksaan Owner",
+  REFUND_RECONCILIATION: "Hasil refund membutuhkan rekonsiliasi dan pemeriksaan Owner",
   PAYMENT_VERIFICATION: "Data pembayaran belum cocok dengan catatan NIUVA",
 };

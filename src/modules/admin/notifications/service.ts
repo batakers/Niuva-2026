@@ -16,7 +16,7 @@ export function requiresNotificationAttention(event: Pick<NotificationEvent, "ac
   if (["custom-print.request.submitted", "custom-print.request.model-attached", "custom-print.request.notification.failed", "admin.invitation.failed", "quote.declined", "finance.b2b-payment.confirmed"].includes(event.action)) return true;
   const result = statusSchema.safeParse(event.afterJson);
   if (!result.success) return false;
-  if (event.action === "payment.webhook.processed") return ["SETTLED", "AMOUNT_MISMATCH", "PROVIDER_TRANSACTION_CONFLICT", "SETTLEMENT_STATUS_CODE_INVALID", "LATE_SETTLEMENT_REFUND_REQUIRED", "PARTIAL_REFUND_REQUIRES_EXCEPTION"].includes(result.data.processingResult ?? "");
+  if (["payment.webhook.processed", "payment.reconciliation.processed"].includes(event.action)) return ["SETTLED", "AMOUNT_MISMATCH", "PROVIDER_TRANSACTION_CONFLICT", "SETTLEMENT_STATUS_CODE_INVALID", "LATE_SETTLEMENT_REFUND_REQUIRED", "PARTIAL_REFUND_REQUIRES_EXCEPTION", "REFUND_REQUIRES_RECONCILIATION", "UNAVAILABLE", "NOT_FOUND"].includes(result.data.processingResult ?? "");
   return event.entityType === "Shipment" && ["EXCEPTION", "FAILED", "RETURNED"].includes(result.data.status ?? "");
 }
 

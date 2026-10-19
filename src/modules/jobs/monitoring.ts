@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { expiredReservationBacklog } from "../inventory/repository";
+import { paymentReconciliationBacklog } from "../payment/reconciliation-repository";
 import type { BoundDatabaseService } from "../database-binding/service";
 import { appError } from "../shared/errors";
 import { jobNameSchema, parseJobResult, parseJobRole, type JobName, type JobResult } from "./core";
@@ -8,13 +9,14 @@ import type { PrismaJobRepository } from "./repository";
 const inspectionSchema = z.strictObject({ maxLagMs: z.number().int().min(1).max(2147483647) });
 export type JobInspectionRequest = z.infer<typeof inspectionSchema>;
 export function parseJobInspectionRequest(raw: unknown): JobInspectionRequest { const value = inspectionSchema.safeParse(raw); if (!value.success) throw appError("VALIDATION_ERROR"); return value.data; }
-export type JobAlarm = { code: "JOB_NEVER_RUN" | "JOB_STALE_LEASE" | "JOB_LAG" | "JOB_FAILED" | "JOB_INVALID_STATE" | "OUTBOX_UNKNOWN" | "OUTBOX_STALE_LEASE" | "OUTBOX_LAG" | "OUTBOX_EXPIRED" | "PRIVACY_OVERDUE" | "PRIVACY_HOLD_OVERDUE" | "INVENTORY_LAG"; job?: JobName };
+export type JobAlarm = { code: "JOB_NEVER_RUN" | "JOB_STALE_LEASE" | "JOB_LAG" | "JOB_FAILED" | "JOB_INVALID_STATE" | "OUTBOX_UNKNOWN" | "OUTBOX_STALE_LEASE" | "OUTBOX_LAG" | "OUTBOX_EXPIRED" | "PRIVACY_OVERDUE" | "PRIVACY_HOLD_OVERDUE" | "INVENTORY_LAG" | "PAYMENT_RECONCILIATION_LAG"; job?: JobName };
 export type JobInspection = {
   checkedAt: string;
   jobs: { name: JobName; state: "never-run" | "running" | "stale-lease" | "failed" | "idle"; lastStartedAt: string | null; lastFinishedAt: string | null; lastSuccessAt: string | null; successLagMs: number | null; cooldownUntil: string | null; counts: JobResult["counts"] }[];
   outbox: { pending: number; leased: number; failed: number; unknown: number; expiredPending: number; staleLeases: number; dueLagMs: number };
   privacy: { overdue: number; overdueHolds: number };
   inventory: { remainingDue: number; lagMs: number };
+  payment: { remainingDue: number; lagMs: number };
   alarms: JobAlarm[];
 };
 export class JobMonitoring {
@@ -54,7 +56,9 @@ export class JobMonitoring {
       if (overdueHolds > 0) alarms.push({ code: "PRIVACY_HOLD_OVERDUE" });
       const inventory = await expiredReservationBacklog(tx, now);
       if (inventory.lagMs > request.maxLagMs) alarms.push({ code: "INVENTORY_LAG" });
-      return { checkedAt: now.toISOString(), jobs, inventory, outbox: { pending, leased, failed, unknown, expiredPending, staleLeases, dueLagMs }, privacy: { overdue, overdueHolds }, alarms };
+      const payment = await paymentReconciliationBacklog(tx, now);
+      if (payment.lagMs > request.maxLagMs) alarms.push({ code: "PAYMENT_RECONCILIATION_LAG" });
+      return { checkedAt: now.toISOString(), jobs, inventory, payment, outbox: { pending, leased, failed, unknown, expiredPending, staleLeases, dueLagMs }, privacy: { overdue, overdueHolds }, alarms };
     }); } catch { throw appError("PROVIDER_UNAVAILABLE"); }
   }
 }

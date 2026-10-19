@@ -51,6 +51,7 @@ const labels: Readonly<Record<string, string>> = {
   "quote.payment.prepared": "Pembayaran quote disiapkan",
   "quote.public-token.reissued": "Tautan quote diperbarui",
   "payment.webhook.processed": "Pembaruan pembayaran diterima",
+  "payment.reconciliation.processed": "Pemeriksaan status pembayaran dicatat",
   "catalog.product.created": "Produk ditambahkan",
   "catalog.product.updated": "Produk diperbarui",
   "catalog.product.media.replaced": "Media produk diperbarui",

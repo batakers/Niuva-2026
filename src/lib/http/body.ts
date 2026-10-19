@@ -3,8 +3,9 @@ import { appError } from "@/modules/shared/errors";
 type ReadJsonBodyOptions = {
   maxBytes: number;
 };
+type ReadableBody = Pick<Request, "headers" | "body">;
 
-function getDeclaredBodySize(request: Request): number | undefined {
+function getDeclaredBodySize(request: ReadableBody): number | undefined {
   const contentLength = request.headers.get("content-length");
 
   if (contentLength === null || !/^\d+$/.test(contentLength)) {
@@ -16,7 +17,7 @@ function getDeclaredBodySize(request: Request): number | undefined {
   return Number.isSafeInteger(size) ? size : undefined;
 }
 
-export async function readBoundedText(request: Request, maxBytes: number): Promise<string> {
+export async function readBoundedText(request: ReadableBody, maxBytes: number): Promise<string> {
   const declaredBodySize = getDeclaredBodySize(request);
 
   if (declaredBodySize !== undefined && declaredBodySize > maxBytes) {
@@ -68,7 +69,7 @@ export async function readBoundedText(request: Request, maxBytes: number): Promi
 }
 
 export async function readJsonBody(
-  request: Request,
+  request: ReadableBody,
   { maxBytes }: ReadJsonBodyOptions,
 ): Promise<unknown> {
   if (!Number.isSafeInteger(maxBytes) || maxBytes < 1) {

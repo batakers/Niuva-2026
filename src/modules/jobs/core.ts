@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { Prisma } from "../../generated/prisma/client";
 import { appError } from "../shared/errors";
 
-export const jobNameSchema = z.enum(["OUTBOX_DELIVERY", "OUTBOX_EXPIRY", "CUSTOMER_AUTH_CLEANUP", "CUSTOMER_PRIVACY_CLEANUP", "INVENTORY_RESERVATIONS"]);
+export const jobNameSchema = z.enum(["OUTBOX_DELIVERY", "OUTBOX_EXPIRY", "CUSTOMER_AUTH_CLEANUP", "CUSTOMER_PRIVACY_CLEANUP", "INVENTORY_RESERVATIONS", "PAYMENT_RECONCILIATION"]);
 const elapsed = z.number().int().min(0).max(2147483647);
 const duration = elapsed.min(1);
 const requestSchema = z.strictObject({ job: jobNameSchema, mode: z.enum(["dry-run", "execute"]), limit: z.number().int().min(1).max(100) });
