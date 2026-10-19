@@ -57,7 +57,13 @@ test("Owner navigates search, activity, account and deactivates an Admin", async
   await expect(page.getByRole("link", { name: /Orders.*Halaman Admin/ })).toBeVisible();
   if (process.env.NIUVA_ADMIN_UX_EVIDENCE === "1") await page.screenshot({ path: resolve(".local/admin-dashboard-ux/captures/search-1440.png"), fullPage: true });
   await page.getByRole("button", { name: /Buka notifikasi/ }).click();
+  await page.route(url => url.pathname === "/admin/activity", async route => {
+    await new Promise(resolve => setTimeout(resolve, 6000));
+    await route.continue();
+  }, { times: 1 });
+  const activityNavigation = page.waitForURL("**/admin/activity");
   await page.getByRole("link", { name: "Lihat semua aktivitas" }).click();
+  await activityNavigation;
   await expect(page.getByRole("heading", { name: "Linimasa aktivitas" })).toBeVisible();
   if (process.env.NIUVA_ADMIN_UX_EVIDENCE === "1") await page.screenshot({ path: resolve(".local/admin-dashboard-ux/captures/activity-1440.png"), fullPage: true });
   await page.getByRole("button", { name: /Buka menu akun/ }).click();

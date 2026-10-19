@@ -201,6 +201,13 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
   Kedua journey notifikasi lulus lokal pada DB test retained; lint 0 error/4
   warning existing dan strict typecheck lulus. Penyebab durasi CI tidak diasumsikan
   sebagai bug runtime; runtime/workflow tidak diubah. CI SHA berikutnya menunggu.
+- Quality head `4f77b3c` melewati kedua journey notifikasi, namun
+  [gagal](https://github.com/batakers/Niuva-2026/actions/runs/39269592478/job/118118068595)
+  pada heading linimasa Admin setelah klik navigasi (26 journey lulus). Kasus
+  yang sama muncul di run pertama T24. Tes navigasi kini menunggu URL tujuan
+  terkomit sebelum assertion heading 5 detik; request linimasa sengaja ditunda
+  6 detik. Journey lengkap search → activity → account → deactivation lulus
+  lokal pada DB retained (55 detik), tanpa mengubah runtime/workflow.
 
 ### T24 — reconciliation pembayaran, 2026-10-19
 

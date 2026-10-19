@@ -69,6 +69,11 @@ Skenario request tertunda 6 detik dan baris fixture berdasarkan UUID order
 lulus dalam dua journey notifikasi lokal pada DB retained; lint/typecheck
 lulus (empat warning existing). Runtime dan workflow tidak berubah; CI pada
 SHA perbaikan harus diperiksa sebelum menyebut diff ini lulus CI.
+Head `4f77b3c` kemudian melewati tes notifikasi, namun gagal pada heading
+linimasa Admin dengan 26 journey lulus. Tes navigasi menunggu URL terkomit
+sebelum assertion heading existing; regression request tertunda 6 detik dan
+seluruh journey search/activity/account/deactivation lulus lokal (55 detik).
+CI SHA berikutnya tetap memerlukan verifikasi sendiri.
 
 ### Reconciliation T24 — 19 Oktober 2026
 
