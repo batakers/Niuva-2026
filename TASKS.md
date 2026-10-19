@@ -29,7 +29,7 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 | T05 | M1 | DONE | Producer privacy ke outbox | T04 | Proof sekali pakai/closure aman; revoked/expired dibatalkan. Integration lokal lulus; hosted delivery tetap menunggu T03. |
 | T06 | M1 | DONE | Launcher worker dan status | T04–T05 | CLI dan endpoint bearer-protected memakai JobRunner/OperationalJobState yang sama dengan resource binding, role terbatas, policy eksplisit, lease/cooldown lintas run, monitor dan safe counters; unknown tidak memicu resend otomatis. Unit/backend/integration lokal lulus; scheduler/provider hosted belum diaktifkan. |
 | T07 | M1 | BLOCKED_EXTERNAL | Job expiry reservasi retail | T03 | Reservation due mengikuti policy existing; pending payment yang masih berlaku menahan pembatalan; attempt kedaluwarsa menjadi EXPIRED, order unpaid menjadi CANCELLED, dan stok dilepas atomik/idempoten; settled/refunded tidak pernah dilepas. Runner/backend/integration lokal lulus. Cadence dan scheduler hosted menunggu Owner/T03. |
-| T08 | M1 | TODO | Job retensi file Customer | T03 | 14/60/90 sesuai kelas; hold dihormati; bukti keuangan tidak terhapus. Integration. |
+| T08 | M1 | BLOCKED_EXTERNAL | Job retensi file Customer | T03 | 14/60/90 sesuai kelas; hold Owner/privasi tetap setelah closure/purge receipt; order aktif dan bukti keuangan/histori B2B/media publik dilindungi. Klaim DELETE_PENDING, retry key sama, final lease, cursor bounded, HTTP/CLI canonical dan monitoring lulus lokal. Resource/scheduler/R2 hosted menunggu T03. |
 | T09 | M1 | BLOCKED_EXTERNAL | Cleanup auth/privacy hosted | T03 | Handler auth/privacy berbatas dari PR #56 memakai runner/lease/role/monitor canonical. Tenggat dan hold tetap; bukti lokal diwarisi lalu diuji ulang saat rekonsiliasi. Scheduler/role/resource hosted belum tersedia. |
 | T10 | M1 | IN_PROGRESS | Rate limit lintas instance | T03 | PostgreSQL bersama, HMAC IP stabil dengan secret bersama, dan pembersihan row kedaluwarsa diuji lokal; binding/topologi hosted belum dibuktikan. Integration. |
 | T11 | M2 | BLOCKED_INPUT | Pengesahan policy publik | T01; Owner | Isi/versi/tanggal disahkan; tidak menjanjikan kemampuan belum terbukti. Review Owner/fungsi review. |
@@ -108,6 +108,65 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
   input/evidence eksternal yang tidak dapat diganti fixture.
 
 ## Log pelaksanaan
+
+### T08 — retensi file Customer, 2026-10-19
+
+- Owner melaporkan squash merge PR #57. GitHub memverifikasi commit merge
+  `54a97bbc5448f99ddc2e54a3759a2ca6c12e89ee` pada main, isi file sama dengan
+  kandidat `cc1ced6`; [Quality pada main](https://github.com/batakers/Niuva-2026/actions/runs/39185705585)
+  sukses. Checkout main disinkronkan fast-forward; T08 dikerjakan pada
+  `codex/v1-customer-file-retention` berdasarkan commit tersebut.
+- Satu job canonical CUSTOMER_FILE_RETENTION memakai lease/role/binding dan
+  monitor existing. HTTP execute maksimal 10, CLI maksimal 100, scan maksimal
+  100 record/run dengan cursor persisten; dry-run tidak menulis atau membuat
+  adapter storage. Tidak memasang cron/cadence/provider.
+- Klaim DELETE_PENDING dicatat sebelum delete; upload/reuse/quote baru diblokir.
+  Hold/order/lease diperiksa ulang sebelum storage I/O. Konfirmasi storage dan
+  final lease diperlukan sebelum tombstone dan audit selesai. Timeout/error
+  setelah panggilan storage tetap unknown; retry idempoten memakai key sama.
+- Hold khusus file hanya Owner aktif, diaudit, dan tidak lepas otomatis saat
+  review overdue. Hold privacy terkait ikut dihormati. Financial evidence,
+  record bisnis, public media dan histori B2B tidak masuk penghapusan binary.
+- Migration baru diterapkan bersama 33 migration existing pada database test
+  baru `niuva_file_retention_test_20261019_v3`; migration lama tidak diedit.
+  Percobaan awal pada database sintetis terpisah menemukan salah nama constraint
+  di migration baru; diperbaiki dari nama canonical sebelum bukti fresh 34/34.
+- Prisma migrate diff tidak menemukan perbedaan T08; hanya constraint/index
+  komposit manual finance existing di luar representasi schema yang terdeteksi
+  (`manual_b2b_payment_entries`), tidak dihapus atau diubah oleh pekerjaan ini.
+- Gate pada diff lokal di atas `54a97bb`: unit/component **127 file/1.457
+  passed**, backend **95/706**, integration **50/382** (serial, URL test v4
+  eksplisit), termasuk **14** integration retensi. Lint **0 error/4 warning
+  existing**, TypeScript strict, Prisma validation, dan production build
+  **93 static pages** lulus. Build memakai `CIRCLE_NODE_TOTAL=2` (satu worker),
+  tier production/mode mock dan origin loopback; peringatan origin HTTP memang
+  bukan bukti hosted HTTPS. Tidak ada aktivasi provider/deployment.
+- Perintah utama: `pnpm test --reporter=dot --maxWorkers=2`, Vitest backend
+  dengan config repository/maxWorkers=2, Vitest integration dengan config
+  repository dan TEST_DATABASE_URL v4, `pnpm lint`, `tsc --noEmit
+  --incremental false`, `pnpm db:generate`, `pnpm db:validate`, migration deploy
+  hanya ke database test baru, `pnpm build`, dan `git diff --check`.
+  E2E browser tidak diulang pada diff backend ini; CI/E2E main bukan hasil CI
+  diff T08 yang belum di-commit/push.
+- Scheduler/cadence/role/storage hosted belum tersedia. T08 tetap
+  BLOCKED_EXTERNAL; policy publik masih draf. Hold kasus memakai kontrol Owner
+  existing; hold file khusus/orphan masih layanan domain, sehingga interface
+  dan SOP penanganannya perlu dibuktikan saat T36/T39. Tidak menghubungkan ulang
+  histori detached dengan pencocokan email. Migration belum diterapkan ke
+  database aplikasi. Rollback harus mempertahankan klaim/tombstone, tidak
+  mengklaim memulihkan objek yang sudah dihapus; lihat runbook.
+- Verifikasi ulang delivery 2026-10-19 pada branch yang sama: `corepack pnpm
+  db:generate`, `lint`, `typecheck`, `db:validate`, `test:integration`,
+  `test --reporter=dot --maxWorkers=2`, `test:backend --reporter=dot
+  --maxWorkers=2`, `build`, dan `git diff --check` lulus. Unit/component
+  **127 file/1.457 tes**, backend **95 file/706 tes**; build **93 halaman**.
+  Integration memakai database loopback baru
+  `niuva_t08_test_20261019_delivery`, dengan **34 migration** berhasil diterapkan.
+  Satu percobaan unit memakai override tier production untuk build dan gagal
+  pada 19 pemeriksaan secret rate-limit; pengulangan tanpa override build
+  lulus seluruh suite, tanpa perubahan kode/tes. Build saja memakai tier
+  production/mode mock/origin loopback dan satu worker. Bukti browser lokal
+  tidak ditambah pada delivery backend ini; CI head PR diperiksa terpisah.
 
 ### Rekonsiliasi dengan main — 2026-10-19
 

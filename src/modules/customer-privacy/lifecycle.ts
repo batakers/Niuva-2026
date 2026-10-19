@@ -2,6 +2,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { appError } from "../shared/errors";
 import { hashOpaqueToken, createOpaqueToken } from "../customer-auth/core";
 import { DAY_MS, closureIdentityHash, closureGoogleHash } from "./core";
+import { preserveCustomerFilePrivacyHolds } from "../files/retention-privacy-holds";
 
 // All auth writers and permanent closure share this transaction lock. The
 // feature is local/test only; this favors a simple, auditable lock order.
@@ -20,6 +21,7 @@ export async function assertFreshAccountIntent(tx: Prisma.TransactionClient, ema
 export async function eraseCustomerAccount(tx: Prisma.TransactionClient, id: string, now: Date) {
   const customer = await tx.customer.findUnique({ where: { id } });
   if (!customer) return false;
+  await preserveCustomerFilePrivacyHolds(tx, id);
   const expiresAt = new Date(now.getTime() + 30 * DAY_MS);
   await tx.customerClosureFence.upsert({ where: { identityHash: closureIdentityHash(customer.normalizedEmail) }, create: { identityHash: closureIdentityHash(customer.normalizedEmail), closedAt: now, expiresAt }, update: { closedAt: now, expiresAt } });
   if (customer.googleSubject) await tx.customerClosureFence.upsert({ where: { identityHash: closureGoogleHash(customer.googleSubject) }, create: { identityHash: closureGoogleHash(customer.googleSubject), closedAt: now, expiresAt }, update: { closedAt: now, expiresAt } });
