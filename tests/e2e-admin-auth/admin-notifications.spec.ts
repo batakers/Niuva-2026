@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../../src/generated/prisma/client";
 import { getSafeTestDatabaseUrl } from "../../src/lib/db/test-safety";
@@ -12,6 +12,14 @@ let prisma: PrismaClient;
 test.beforeAll(() => { prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: getSafeTestDatabaseUrl({ TEST_DATABASE_URL: process.env.TEST_DATABASE_URL }), max: 2 }) }); });
 test.afterAll(async () => { await prisma?.$disconnect(); });
 test.beforeEach(async ({ context }, info) => { await context.setExtraHTTPHeaders(isolatedActorHeaders(info, "admin-notifications")); });
+
+async function confirmRead(page: Page, button: Locator) {
+  const acknowledgment = page.waitForResponse(response => new URL(response.url()).pathname === "/api/admin/notifications/read" && response.request().method() === "POST");
+  await button.click();
+  const response = await acknowledgment;
+  expect(response.status()).toBe(200);
+  expect(response.headers()["cache-control"]).toBe("no-store");
+}
 
 test("bell history, focus, live attention, read persistence and no replay", async ({ page }) => {
   const profile = await createAdminBrowserSession(page, prisma);
@@ -27,7 +35,7 @@ test("bell history, focus, live attention, read persistence and no replay", asyn
   await expect(page.getByTestId("notification-toasts").getByText("Permintaan Custom Print diterima")).toBeVisible({ timeout: 30_000 });
   await bell.click();
   const row = panel.locator("li").filter({ has: page.locator(`a[href="/admin/custom-print/${request.id}"]`) });
-  await row.getByRole("button", { name: "Tandai dibaca" }).click();
+  await confirmRead(page, row.getByRole("button", { name: "Tandai dibaca" }));
   await expect.poll(async () => Boolean((await prisma.adminNotificationReceipt.findUnique({ where: { profileId_auditLogId: { profileId: profile.id, auditLogId: attention.id } } }))?.readAt)).toBe(true);
   const routine = await prisma.auditLog.create({ data: { actorType: "SYSTEM", entityType: "CustomPrintRequest", entityId: request.id, action: "custom-print.request.status.transition" } });
   await expect.poll(() => prisma.adminNotificationReceipt.count({ where: { profileId: profile.id, auditLogId: routine.id } }), { timeout: 30_000 }).toBe(1);
@@ -54,10 +62,14 @@ test("business email failure remains readable and links to its persisted order",
   await expect(page.getByTestId("notification-toasts").getByText("Email Customer perlu diperiksa")).toBeVisible({ timeout: 30_000 });
   await bell.click();
   const panel = page.getByRole("dialog", { name: "Notifikasi" });
-  const row = panel.locator("li").filter({ has: page.getByRole("link", { name: "Email Customer perlu diperiksa", exact: true }) });
+  const row = panel.locator("li").filter({ has: page.locator(`a[href="/admin/orders/${order.id}"]`) });
   await expect(row.getByRole("link", { name: "Email Customer perlu diperiksa", exact: true })).toHaveAttribute("href", `/admin/orders/${order.id}`);
   await expect(row).not.toContainText(email); await expect(row).not.toContainText("OUTCOME_UNKNOWN");
-  await row.getByRole("button", { name: "Tandai dibaca" }).click();
+  await page.route("**/api/admin/notifications/read", async route => {
+    await new Promise(resolve => setTimeout(resolve, 6000));
+    await route.continue();
+  }, { times: 1 });
+  await confirmRead(page, row.getByRole("button", { name: "Tandai dibaca" }));
   await expect.poll(async () => Boolean((await prisma.adminNotificationReceipt.findUnique({ where: { profileId_auditLogId: { profileId: profile.id, auditLogId: event.id } } }))?.readAt)).toBe(true);
   await page.reload(); await expect(bell).toHaveAttribute("data-feed-ready", "true");
   await expect(page.getByTestId("notification-toasts").getByText("Email Customer perlu diperiksa")).toHaveCount(0);

@@ -191,6 +191,16 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
   terminal. Tidak ada merge ke main, force push, deployment, email provider,
   scheduler, atau operasi uang nyata. Berikutnya T23/T25 memakai baseline aman
   T24 dengan dependensi kasus/approval yang sudah dicatat.
+- Perbaikan verifikasi PR #61, 19 Oktober: Quality pada head `2e6cc708`
+  [gagal](https://github.com/batakers/Niuva-2026/actions/runs/39262424690/job/118093387737)
+  saat poll receipt read notifikasi 5 detik (25 journey lulus, satu belum berjalan).
+  Tes kini menunggu acknowledgment POST read yang berstatus 200/no-store sebelum
+  memeriksa DB; batas poll dan assertion persistence/reload tetap. Fixture baris
+  memakai order UUID sendiri agar run berulang aman tanpa reset DB. Skenario
+  bisnis menunda request 6 detik untuk membuktikan sinkronisasi tersebut.
+  Kedua journey notifikasi lulus lokal pada DB test retained; lint 0 error/4
+  warning existing dan strict typecheck lulus. Penyebab durasi CI tidak diasumsikan
+  sebagai bug runtime; runtime/workflow tidak diubah. CI SHA berikutnya menunggu.
 
 ### T24 — reconciliation pembayaran, 2026-10-19
 

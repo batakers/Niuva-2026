@@ -62,6 +62,14 @@ Kode `ae36ad68eb0462320eb45f2aae47c96224c0644c` telah di-push dan dikirim pada
 sebagai dependensi eksplisit. CI PR notifikasi masih menunggu; hasil CI
 dependensi tidak digunakan sebagai penggantinya. Tidak ada merge/deployment.
 
+Quality head `2e6cc708` PR #61 gagal pada poll receipt read notifikasi 5 detik,
+dengan 25 journey lulus. Tes diperkuat untuk menunggu POST read 200/no-store
+sebelum poll DB, tanpa mengubah batas poll atau persistence/reload assertion.
+Skenario request tertunda 6 detik dan baris fixture berdasarkan UUID order
+lulus dalam dua journey notifikasi lokal pada DB retained; lint/typecheck
+lulus (empat warning existing). Runtime dan workflow tidak berubah; CI pada
+SHA perbaikan harus diperiksa sebelum menyebut diff ini lulus CI.
+
 ### Reconciliation T24 — 19 Oktober 2026
 
 Branch `codex/v1-payment-reconciliation` bergantung eksplisit pada `28f9037`
