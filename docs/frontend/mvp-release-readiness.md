@@ -35,6 +35,26 @@ dan langkah berikutnya. Snapshot bertanggal di bawah dan
 [Bagian 2](#bagian-2--arsip-evidence-bertanggal-historis) dipertahankan sebagai
 histori. Angka gate dan penerimaan lama tidak digabung menjadi hasil baru.
 
+### Refund T21–T22 — 19 Oktober 2026
+
+Branch `codex/v1-refund-cases` berawal dari main `54a97bb`, terpisah dari T08.
+Pengajuan/alokasi server, approval Owner/retur/idempotency dan lifecycle diuji
+dengan fixture pada database loopback baru `niuva_refund_test_20261019` dan
+`niuva_refund_regression_test_20261019` (34 migration, tanpa reset database lama).
+Gate akhir: lint 0 error/4 warning existing, typecheck/schema, unit/component
+127/1.466, backend 95/706, integration 50/390, build 93/93 static pages dan dua
+journey authenticated browser lulus. Ada 18 skenario refund dan 10 direct-action,
+termasuk boundary Customer tanpa proxy Admin. Browser mencakup Customer,
+Owner dengan TOTP, penolakan Admin,
+native POST/error recovery tanpa JavaScript serta capture 1440/390/320px.
+Gate akhir dan delivery dicatat pada TASKS; hasil ini masih bukti lokal.
+
+Approval tidak mengirim uang. T23/T25, merchant/window/fallback manual,
+reconciliation/sandbox dan REL-05 tetap terbuka; penerimaan visual Owner,
+physical-device/AT, provider/staging dan production tidak ditutup oleh tes ini.
+T08 telah dikirim pada [draft PR #58](https://github.com/batakers/Niuva-2026/pull/58),
+Quality sukses di head `64f9e96`; scheduler/private R2 hosted tetap terbuka.
+
 ### Baseline sumber dan batas bukti — 2026-10-13
 
 Baseline sumber: **`a577b7c326ff42d3a642cf5f0b93ccdf59c26bef`**, `main`, working tree bersih ketika inspeksi dimulai. [CI Quality pada commit tersebut](https://github.com/batakers/Niuva-2026/actions/runs/38331266192) berstatus success: lint, typecheck, unit/component, backend, Prisma validation, migration/integration pada PostgreSQL ephemeral, Chromium E2E dan production build. Ini evidence CI baseline kode, bukan hasil CI perubahan dokumen Batch 1 yang belum di-commit, provider/staging, atau produksi.

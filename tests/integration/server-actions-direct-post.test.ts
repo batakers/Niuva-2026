@@ -6,8 +6,8 @@
  * Honest limits: Next encrypts/obfuscates action ids, so a real HTTP POST with a
  * valid id cannot be forged here. The real action functions are therefore
  * invoked directly (what the framework does after decoding the id), with the
- * real auth boundary (requireAdmin -> AdminProfile lookup in the local test DB)
- * and only the Clerk session mocked as absent/unknown. The e2e spec covers the
+ * real auth boundaries with their local test DB lookups and only the session
+ * transport mocked. The e2e spec covers the
  * HTTP side (bogus Next-Action id on admin routes).
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
@@ -16,6 +16,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
+  customerToken: undefined as string | undefined,
   errors: [] as unknown[],
 }));
 
@@ -24,7 +25,7 @@ vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
 vi.mock("@/lib/auth/admin-engine", () => ({
   getAdminAuth: () => ({ api: { getSession: async () => { const value = await mocks.auth(); return value?.userId ? { user: { id: value.userId, twoFactorEnabled: true }, session: { mfaVerified: true } } : null; } } }),
 }));
-vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
+vi.mock("next/headers", () => ({ headers: async () => new Headers(), cookies: async () => ({ get: () => mocks.customerToken ? { value: mocks.customerToken } : undefined }) }));
 
 vi.mock("@/lib/env/server", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/env/server")>();
@@ -54,6 +55,9 @@ vi.mock("@/lib/observability/report", async (importOriginal) => {
 });
 
 import * as adminActions from "@/app/admin/actions";
+import { requestRefundAction } from "@/app/account/orders/[id]/refund/actions";
+import { createOpaqueToken, hashOpaqueToken } from "@/modules/customer-auth/core";
+import { randomUUID } from "node:crypto";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { config as proxyConfig } from "@/proxy";
 import { isAppError } from "@/modules/shared/errors";
@@ -77,6 +81,11 @@ async function snapshot(): Promise<unknown> {
     pricing: await prisma.pricingRuleVersion.count(),
     products: await prisma.product.findMany({ orderBy: { id: "asc" } }),
     variants: await prisma.productVariant.findMany({ orderBy: { id: "asc" } }),
+    refundCases: await prisma.refundCase.count(),
+    refundApprovals: await prisma.refundApproval.count(),
+    orders: await prisma.order.count(),
+    payments: await prisma.paymentAttempt.count(),
+    movements: await prisma.stockMovement.count(),
   };
 }
 
@@ -96,6 +105,7 @@ let variantId = "";
 beforeEach(async () => {
   await clean();
   mocks.auth.mockReset();
+  mocks.customerToken = undefined;
   mocks.errors = [];
   const product = await prisma.product.create({
     data: { description: "Produk uji aksi langsung.", name: "Produk uji", slug: "direct-post-product" },
@@ -146,6 +156,28 @@ function attempts(): ReadonlyArray<readonly [string, () => Promise<{ status: str
 }
 
 describe("direct Server Action call without proxy protection", () => {
+  it.each(["missing", "unknown", "expired", "revoked"])("Customer refund rejects a %s session through its real auth boundary", async scenario => {
+    const token = createOpaqueToken();
+    mocks.customerToken = scenario === "missing" ? undefined : token;
+    mocks.auth.mockResolvedValue({ userId: "admin-session-is-not-a-customer" });
+    let customerId: string | undefined;
+    try {
+      if (scenario === "expired" || scenario === "revoked") {
+        const email = `refund-direct-${randomUUID()}@example.test`;
+        const customer = await prisma.customer.create({ data: { email, normalizedEmail: email, emailVerifiedAt: new Date(), sessions: { create: {
+          tokenHash: hashOpaqueToken(token), expiresAt: new Date(Date.now() + (scenario === "expired" ? -60000 : 60000)), revokedAt: scenario === "revoked" ? new Date() : null,
+        } } } });
+        customerId = customer.id;
+      }
+      const before = await snapshot();
+      const result = await requestRefundAction(randomUUID(), { status: "idle" }, form({ submissionKey: randomUUID(), category: "OTHER", reason: "Synthetic direct action refund request." }));
+      expect(result.status).toBe("error"); expect(errorCodes()).toContain("UNAUTHORIZED");
+      expect(mocks.auth).not.toHaveBeenCalled(); expect(await snapshot()).toEqual(before);
+    } finally {
+      if (customerId) { await prisma.customerSession.deleteMany({ where: { customerId } }); await prisma.customer.delete({ where: { id: customerId } }); }
+    }
+  });
+
   it("rejects with UNAUTHORIZED and writes nothing when there is no Clerk session", async () => {
     mocks.auth.mockResolvedValue({ userId: null });
     const before = await snapshot();
@@ -241,11 +273,11 @@ describe("proxy matcher versus routes that use Server Actions", () => {
     expect(importers.length).toBeGreaterThan(0);
     const routes = [...new Set(importers.map(routeOf))].sort();
     const outside = routes.filter((route) => !matcherCovers(route));
-    // Current state: every action is used under /admin/*, which the matcher
-    // covers. If this list ever becomes non-empty, the action on that route has
-    // no proxy protection and relies solely on the service-layer checks above.
-    expect(outside).toEqual([]);
-    expect(routes.every((route) => route.startsWith("/admin"))).toBe(true);
+    // Account proxy entries write CSP only. This exact route relies on the
+    // real Customer guard tested above and the positive authenticated E2E.
+    const customerRoutes = ["/account/orders/[id]/refund"];
+    expect(outside).toEqual(customerRoutes);
+    expect(routes.filter(route => !route.startsWith("/admin"))).toEqual(customerRoutes);
   });
 
   it("models the worst case: a route outside the matcher gives no proxy protection", () => {

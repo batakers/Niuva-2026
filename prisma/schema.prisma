@@ -275,6 +275,10 @@ model AdminProfile {
   billingSettingsRevisions BillingInstructionsRevision[]
   financialUploads StoredFile[] @relation("AdminFinancialUploads")
   publicAssets PublicMediaAsset[]
+  refundIntakes RefundCase[]
+  refundApprovals RefundApproval[]
+  refundReturnReceipts RefundReturnReceipt[]
+  refundCaseRevisions RefundCaseRevision[]
 
   @@index([isActive, role])
   @@map("admin_profiles")
@@ -579,6 +583,7 @@ model Customer {
   privacyRequests CustomerPrivacyRequest[]
   privacyConfirmations CustomerPrivacyConfirmation[]
   billingCases BillingCase[]
+  refundRequests RefundCase[]
 
   @@map("customers")
 }
@@ -626,6 +631,7 @@ model Order {
   shipments       Shipment[]
   customer        Customer?               @relation(fields: [customerId], references: [id], onDelete: SetNull)
   billingCases BillingCase[]
+  refundCase RefundCase?
 
   @@index([status, createdAt])
   @@index([customerId, createdAt])
@@ -770,6 +776,7 @@ model PaymentAttempt {
   settledAt             DateTime?            @map("settled_at") @db.Timestamptz(6)
   order                 Order                @relation(fields: [orderId], references: [id], onDelete: Restrict)
   events                PaymentEvent[]
+  refundAllocation      RefundAllocation?
 
   @@index([orderId, status])
   @@index([status, expiresAt])
@@ -792,6 +799,116 @@ model PaymentEvent {
   @@index([paymentAttemptId])
   @@index([providerOrderId])
   @@map("payment_events")
+}
+
+enum RefundCaseStatus {
+  REQUESTED
+  APPROVED
+  RECONCILING
+  COMPLETED
+}
+
+model RefundCase {
+  id String @id @default(uuid()) @db.Uuid
+  orderId String @unique @map("order_id") @db.Uuid
+  order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  status RefundCaseStatus @default(REQUESTED)
+  version Int @default(1)
+  category String
+  reason String
+  requesterType String @map("requester_type")
+  requestedByCustomerId String? @map("requested_by_customer_id") @db.Uuid
+  requestedByCustomer Customer? @relation(fields: [requestedByCustomerId], references: [id], onDelete: SetNull)
+  requestedByAdminId String? @map("requested_by_admin_id") @db.Uuid
+  requestedByAdmin AdminProfile? @relation(fields: [requestedByAdminId], references: [id], onDelete: Restrict)
+  contactVerificationReference String? @map("contact_verification_reference")
+  submissionKey String @unique @map("submission_key") @db.Uuid
+  requestHash String @map("request_hash") @db.Char(64)
+  currency String @default("IDR") @db.Char(3)
+  amountRp Decimal @map("amount_rp") @db.Decimal(18, 0)
+  snapshotHash String @map("snapshot_hash") @db.Char(64)
+  approvedVersion Int? @map("approved_version")
+  readyAt DateTime? @map("ready_at") @db.Timestamptz(6)
+  receivedAt DateTime @default(now()) @map("received_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  allocations RefundAllocation[]
+  approvals RefundApproval[]
+  revisions RefundCaseRevision[]
+
+  @@index([status, receivedAt])
+  @@map("refund_cases")
+}
+
+model RefundAllocation {
+  id String @id @default(uuid()) @db.Uuid
+  caseId String @map("case_id") @db.Uuid
+  refundCase RefundCase @relation(fields: [caseId], references: [id], onDelete: Restrict)
+  paymentAttemptId String @unique @map("payment_attempt_id") @db.Uuid
+  paymentAttempt PaymentAttempt @relation(fields: [paymentAttemptId], references: [id], onDelete: Restrict)
+  purpose String
+  provider String
+  providerOrderId String @map("provider_order_id")
+  providerTransactionId String? @map("provider_transaction_id")
+  amountRp Decimal @map("amount_rp") @db.Decimal(18, 0)
+  source String
+
+  @@index([caseId])
+  @@map("refund_allocations")
+}
+
+model RefundApproval {
+  id String @id @default(uuid()) @db.Uuid
+  caseId String @map("case_id") @db.Uuid
+  refundCase RefundCase @relation(fields: [caseId], references: [id], onDelete: Restrict)
+  caseVersion Int @map("case_version")
+  ownerId String @map("owner_id") @db.Uuid
+  owner AdminProfile @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  submissionKey String @unique @map("submission_key") @db.Uuid
+  requestHash String @map("request_hash") @db.Char(64)
+  reason String
+  amountRp Decimal @map("amount_rp") @db.Decimal(18, 0)
+  snapshotHash String @map("snapshot_hash") @db.Char(64)
+  snapshotJson Json @map("snapshot_json")
+  returnState String @map("return_state")
+  returnEvidenceReference String? @map("return_evidence_reference")
+  returnSatisfiedAt DateTime? @map("return_satisfied_at") @db.Timestamptz(6)
+  approvedAt DateTime @default(now()) @map("approved_at") @db.Timestamptz(6)
+  returnReceipt RefundReturnReceipt?
+
+  @@unique([caseId, caseVersion])
+  @@map("refund_approvals")
+}
+
+model RefundReturnReceipt {
+  id String @id @default(uuid()) @db.Uuid
+  approvalId String @unique @map("approval_id") @db.Uuid
+  approval RefundApproval @relation(fields: [approvalId], references: [id], onDelete: Restrict)
+  ownerId String @map("owner_id") @db.Uuid
+  owner AdminProfile @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  submissionKey String @unique @map("submission_key") @db.Uuid
+  requestHash String @map("request_hash") @db.Char(64)
+  reason String
+  evidenceReference String @map("evidence_reference")
+  receivedAt DateTime @default(now()) @map("received_at") @db.Timestamptz(6)
+
+  @@map("refund_return_receipts")
+}
+
+model RefundCaseRevision {
+  id String @id @default(uuid()) @db.Uuid
+  caseId String @map("case_id") @db.Uuid
+  refundCase RefundCase @relation(fields: [caseId], references: [id], onDelete: Restrict)
+  caseVersion Int @map("case_version")
+  ownerId String @map("owner_id") @db.Uuid
+  owner AdminProfile @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  submissionKey String @unique @map("submission_key") @db.Uuid
+  requestHash String @map("request_hash") @db.Char(64)
+  reason String
+  snapshotJson Json @map("snapshot_json")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([caseId, caseVersion])
+  @@map("refund_case_revisions")
 }
 
 model B2BInquiry {

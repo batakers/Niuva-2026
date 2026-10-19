@@ -29,7 +29,7 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 | T05 | M1 | DONE | Producer privacy ke outbox | T04 | Proof sekali pakai/closure aman; revoked/expired dibatalkan. Integration lokal lulus; hosted delivery tetap menunggu T03. |
 | T06 | M1 | DONE | Launcher worker dan status | T04–T05 | CLI dan endpoint bearer-protected memakai JobRunner/OperationalJobState yang sama dengan resource binding, role terbatas, policy eksplisit, lease/cooldown lintas run, monitor dan safe counters; unknown tidak memicu resend otomatis. Unit/backend/integration lokal lulus; scheduler/provider hosted belum diaktifkan. |
 | T07 | M1 | BLOCKED_EXTERNAL | Job expiry reservasi retail | T03 | Reservation due mengikuti policy existing; pending payment yang masih berlaku menahan pembatalan; attempt kedaluwarsa menjadi EXPIRED, order unpaid menjadi CANCELLED, dan stok dilepas atomik/idempoten; settled/refunded tidak pernah dilepas. Runner/backend/integration lokal lulus. Cadence dan scheduler hosted menunggu Owner/T03. |
-| T08 | M1 | TODO | Job retensi file Customer | T03 | 14/60/90 sesuai kelas; hold dihormati; bukti keuangan tidak terhapus. Integration. |
+| T08 | M1 | BLOCKED_EXTERNAL | Job retensi file Customer | T03 | Delivery terpisah di draft PR #58, head `64f9e96`, Quality sukses. 14/60/90, hold, retry/lease/cursor dan proteksi data diuji lokal. Scheduler/R2 hosted belum terbukti; kode PR #58 bukan ancestor branch T21–T22. |
 | T09 | M1 | BLOCKED_EXTERNAL | Cleanup auth/privacy hosted | T03 | Handler auth/privacy berbatas dari PR #56 memakai runner/lease/role/monitor canonical. Tenggat dan hold tetap; bukti lokal diwarisi lalu diuji ulang saat rekonsiliasi. Scheduler/role/resource hosted belum tersedia. |
 | T10 | M1 | IN_PROGRESS | Rate limit lintas instance | T03 | PostgreSQL bersama, HMAC IP stabil dengan secret bersama, dan pembersihan row kedaluwarsa diuji lokal; binding/topologi hosted belum dibuktikan. Integration. |
 | T11 | M2 | BLOCKED_INPUT | Pengesahan policy publik | T01; Owner | Isi/versi/tanggal disahkan; tidak menjanjikan kemampuan belum terbukti. Review Owner/fungsi review. |
@@ -42,8 +42,8 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 | T18 | M3 | DONE | Upload media publik Admin | T03 | Signed PUT membatasi ukuran deklarasi; gambar diverifikasi server; upload tertolak dibersihkan dari quarantine; key/storage publik terpisah dari file Customer. Boundary dan storage fixture integration lokal lulus; provider hosted menunggu T03. |
 | T19 | M3 | IN_PROGRESS | Editor media dan publikasi | T15–T18 | Upload/pilih, urutan/alt, ownership benar, renderer mendukung media baru. Unit/integration lokal lulus; browser upload/render media dengan storage hosted belum dibuktikan. |
 | T20 | M3 | DONE | Hero mengikuti published state | T17 | Unpublish/missing/card-only tidak menaut ke detail invalid. Regression unit lulus. |
-| T21 | M4 | TODO | Pengajuan kasus refund | T02; kontrak aktif | Order/payment sah; nominal server; Customer lain ditolak. Integration. |
-| T22 | M4 | TODO | Persetujuan refund Owner | T21 | Owner-only; syarat retur/alasan/audit; approval berulang tidak membuat eksekusi ganda. Integration. |
+| T21 | M4 | DONE | Pengajuan kasus refund | T02; kontrak aktif | Kasus/alokasi persisten, nominal Decimal server dan ownership/closure diuji integration lokal; UI/API dan native form tersedia. Provider/hasil dana tetap T23/T25. |
+| T22 | M4 | DONE | Persetujuan refund Owner | T21 | Owner aktif saja; alasan/retur/audit, version/snapshot immutable, overlap dan approval/receipt ulang diuji integration lokal. Persetujuan belum mengeksekusi uang. |
 | T23 | M4 | TODO | Submission refund | T22; merchant | Stable key/attempt; timeout perlu reconciliation; fallback manual berizin punya bukti. Adapter/integration/sandbox. |
 | T24 | M4 | TODO | Reconciliation pembayaran | T03 | Status tak pasti/terlambat diperiksa ke provider; order/settlement/stock movement tidak ganda. Integration/sandbox. |
 | T25 | M4 | TODO | Reconciliation refund | T23 | Accepted belum selesai; hasil provider/manual direkonsiliasi; tidak ada refund ganda. Integration/sandbox. |
@@ -108,6 +108,67 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
   input/evidence eksternal yang tidak dapat diganti fixture.
 
 ## Log pelaksanaan
+
+### T21–T22 — kasus dan persetujuan refund, 2026-10-19
+
+- Baseline `54a97bb` dari `origin/main`; branch `codex/v1-refund-cases` tidak
+  membawa commit T08. Delivery T08 telah selesai pada branch tersendiri:
+  commit kode `239247a`, checkpoint `64f9e96`, [draft PR #58](https://github.com/batakers/Niuva-2026/pull/58).
+  [Quality head T08](https://github.com/batakers/Niuva-2026/actions/runs/39193466516)
+  sukses pada `64f9e961cc72bfb74d67a6b54d1f26fb093e330c`; PR tetap draft/open,
+  tidak di-merge dan hosted tetap BLOCKED_EXTERNAL.
+- Domain refund menyimpan satu kasus per order, alokasi unik per pembayaran,
+  Decimal IDR dari pembayaran server, submission key/hash, version dan audit.
+  MAKE mengalokasikan pembayaran order dan ongkir final terpisah. Pending retry
+  tidak menjadi penerimaan; late settlement yang terverifikasi tidak membuka
+  kembali order batal. Refund lama/parsial/exception tak pasti menunggu
+  reconciliation, bukan dikirim ulang atau diasumsikan gagal.
+- Owner aktif dengan permission `PAYMENT_REFUND_FULL` menyetujui snapshot
+  immutable. Admin biasa/Owner nonaktif/role palsu ditolak. Retur PENDING
+  membuat approval bersyarat tanpa readyAt; receipt Owner eksplisit membuka
+  kesiapan setelah bukti. Refresh membatalkan approval aktif, menjaga waktu
+  penerimaan asli dan riwayat. Tidak mengubah lifecycle order atau stock.
+- Route aktual Customer dan Admin berada di detail order `/refund`, dengan
+  Server Actions native, origin/body/Zod/rate limit pada API, nilai server,
+  error recovery dan summary kasus. Intake staf membutuhkan referensi
+  verifikasi kontak; akun tertutup tidak dipulihkan. Ekspor privacy memakai
+  proyeksi refund milik akun dan tidak membawa approval internal/key/reference.
+- Migration baru `20261019030000_refund_cases` diterapkan bersama 33 migration
+  baseline ke database loopback baru `niuva_refund_test_20261019`. Tidak ada
+  migration historis, database aplikasi atau resource provider yang diubah.
+- Verifikasi akhir diff lokal: lint **0 error/4 warning existing**, typecheck,
+  Prisma validate, **127 file/1.466 unit-component**, **95/706 backend**,
+  **50/390 integration**, production build **93/93 static pages** dan
+  **2 authenticated browser journey** lulus. Integration mencakup **18 skenario
+  refund** dan **10 direct-action**, termasuk cookie Customer hilang, unknown,
+  expired dan revoked melalui guard nyata. Browser membuktikan Customer,
+  Owner/TOTP, penolakan Admin, approval ulang, retur, serta native POST/error
+  recovery tanpa JavaScript. Capture fixture pada 1440/390/320px, keyboard/fokus
+  dan reduced motion dicatat di `.local/refund/captures/`. Acceptance visual
+  Owner, perangkat fisik/AT, provider/staging dan production tetap terpisah.
+  Capture menunggu font/frame layout dan tetap memeriksa overflow pada 320px.
+- Regresi scan action/loading/proxy diperluas dengan route yang benar dan
+  otorisasi Customer sendiri; tidak melemahkan scan atau mengubah proxy Admin.
+  Fixture ekspor privacy diberi field refund yang baru. Satu invocation target
+  ditolak safety guard karena URL aplikasi/test disamakan dalam shell; invocation
+  dikoreksi tanpa mengubah guard, env file atau database. Semua hasil akhir di
+  atas berasal dari pengulangan pada konfigurasi terisolasi yang sah.
+- Gate penuh memakai `niuva_refund_regression_test_20261019`, browser memakai
+  `niuva_refund_test_20261019`; keduanya baru dan loopback port 55432. Migration
+  34/34 berhasil. Perintah resmi: `pnpm lint`, `pnpm typecheck`, `pnpm db:validate`,
+  `pnpm test --reporter=dot --maxWorkers=2`, `pnpm test:backend --reporter=dot
+  --maxWorkers=2`, `pnpm test:integration`, `pnpm build`, dan
+  `pnpm test:e2e:admin-auth tests/e2e-admin-auth/admin-refund.spec.ts` melalui
+  `corepack`. Build saja memakai tier production/mode mock dan satu worker;
+  override build tidak diberikan ke unit/backend. Diff check dan scan credential
+  pattern lulus; tidak ada env, workflow atau migration historis di diff.
+- Cakupan DONE T21/T22 adalah acceptance criteria kasus/approval lokal pada
+  tabel, bukan keseluruhan SOP atau release. Delivery Git/PR dicatat setelah
+  commit; CI diff belum diklaim sebelum run pada head yang bersangkutan tersedia.
+- Kontrak rinci: [refund workflow](docs/backend/refund-workflow.md). Submission,
+  merchant/window/manual exception dan hasil dana/reconciliation tetap T23/T25;
+  task ini tidak menyatakan dana telah dikembalikan. Kalender SLA/coverage dan
+  retensi legal finansial tetap input Owner, tanpa default baru.
 
 ### Rekonsiliasi dengan main — 2026-10-19
 
