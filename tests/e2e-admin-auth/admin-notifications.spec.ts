@@ -41,3 +41,33 @@ test("bell history, focus, live attention, read persistence and no replay", asyn
   await bell.click(); await expect(panel).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 });
+
+test("business email failure remains readable and links to its persisted order", async ({ page }) => {
+  const profile = await createAdminBrowserSession(page, prisma);
+  const bell = page.getByRole("button", { name: /Buka notifikasi/ });
+  await expect(bell).toHaveAttribute("data-feed-ready", "true");
+  const suffix = randomUUID(), email = `email-failure-${suffix}@example.test`;
+  const customer = await prisma.customer.create({ data: { email, normalizedEmail: email, emailVerifiedAt: new Date() } });
+  const order = await prisma.order.create({ data: { orderNumber: `TEST-EMAIL-${suffix}`, orderType: "RETAIL", customerId: customer.id,
+    customerName: "Synthetic Customer", customerEmail: email, customerPhone: "+628000000000", itemsSubtotalRp: "100000", shippingTotalRp: "0", grandTotalRp: "100000", publicTokenHash: randomUUID() } });
+  const event = await prisma.auditLog.create({ data: { entityType: "Order", entityId: order.id, actorType: "SYSTEM", action: "outbox.business.failed", afterJson: { purpose: "ORDER_RECEIVED", state: "FAILED", failureCategory: "OUTCOME_UNKNOWN" } } });
+  await expect(page.getByTestId("notification-toasts").getByText("Email Customer perlu diperiksa")).toBeVisible({ timeout: 30_000 });
+  await bell.click();
+  const panel = page.getByRole("dialog", { name: "Notifikasi" });
+  const row = panel.locator("li").filter({ has: page.getByRole("link", { name: "Email Customer perlu diperiksa", exact: true }) });
+  await expect(row.getByRole("link", { name: "Email Customer perlu diperiksa", exact: true })).toHaveAttribute("href", `/admin/orders/${order.id}`);
+  await expect(row).not.toContainText(email); await expect(row).not.toContainText("OUTCOME_UNKNOWN");
+  await row.getByRole("button", { name: "Tandai dibaca" }).click();
+  await expect.poll(async () => Boolean((await prisma.adminNotificationReceipt.findUnique({ where: { profileId_auditLogId: { profileId: profile.id, auditLogId: event.id } } }))?.readAt)).toBe(true);
+  await page.reload(); await expect(bell).toHaveAttribute("data-feed-ready", "true");
+  await expect(page.getByTestId("notification-toasts").getByText("Email Customer perlu diperiksa")).toHaveCount(0);
+  await page.emulateMedia({ reducedMotion: "reduce" }); await page.setViewportSize({ width: 320, height: 760 });
+  await bell.click(); await expect(panel).toBeVisible();
+  await expect(row.getByRole("button", { name: "Tandai dibaca" })).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  await row.getByRole("link", { name: "Email Customer perlu diperiksa", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/admin/orders/${order.id}$`));
+  await expect(page.getByRole("heading", { name: "Detail order", exact: true })).toBeVisible();
+  await expect(page.getByRole("main")).toContainText(order.orderNumber);
+  expect((await prisma.order.findUniqueOrThrow({ where: { id: order.id } })).status).toBe("PENDING_PAYMENT");
+});

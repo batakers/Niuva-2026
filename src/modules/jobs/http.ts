@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { appError } from "../shared/errors";
 import { parseWorkerPolicy } from "../outbox/worker-core";
+import { parseBusinessPolicy } from "../outbox/business-core";
 import { parseJobPolicy, parseJobRequest, type JobName } from "./core";
 import { parseJobInspectionRequest } from "./monitoring";
 import type { OperationalJobRuntime } from "./runtime";
@@ -10,6 +11,7 @@ const inputSchema = z.strictObject({
   limit: z.number().int().min(1).max(100),
   jobPolicy: z.unknown(),
   workerPolicy: z.unknown().optional(),
+  businessPolicy: z.unknown().optional(),
 });
 
 /** HTTP and CLI share the same runner, role guard, lease, cooldown and monitoring. */
@@ -20,11 +22,12 @@ export class OperationalJobHttpEndpoint {
     if (!parsed.success) throw appError("VALIDATION_ERROR");
     const input = parsed.data;
     const needsWorker = this.job === "OUTBOX_DELIVERY";
-    if (needsWorker !== (input.workerPolicy !== undefined) || (needsWorker || this.job === "PAYMENT_RECONCILIATION") && input.mode === "execute" && input.limit > 10) throw appError("VALIDATION_ERROR");
+    const needsBusiness = this.job === "OUTBOX_BUSINESS";
+    if (needsWorker !== (input.workerPolicy !== undefined) || needsBusiness !== (input.businessPolicy !== undefined) || (needsWorker || needsBusiness || this.job === "PAYMENT_RECONCILIATION") && input.mode === "execute" && input.limit > 10) throw appError("VALIDATION_ERROR");
     const request = parseJobRequest({ job: this.job, mode: input.mode, limit: input.limit });
     const policy = parseJobPolicy(input.jobPolicy);
-    const workerPolicy = needsWorker ? parseWorkerPolicy(input.workerPolicy) : undefined;
-    return this.resolveRuntime().run(request, policy, workerPolicy);
+    const executionPolicy = needsWorker ? parseWorkerPolicy(input.workerPolicy) : needsBusiness ? parseBusinessPolicy(input.businessPolicy) : undefined;
+    return this.resolveRuntime().run(request, policy, executionPolicy);
   }
   async status(raw: unknown) {
     const request = parseJobInspectionRequest(raw);

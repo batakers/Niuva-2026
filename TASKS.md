@@ -47,11 +47,11 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 | T23 | M4 | TODO | Submission refund | T22; merchant | Stable key/attempt; timeout perlu reconciliation; fallback manual berizin punya bukti. Adapter/integration/sandbox. |
 | T24 | M4 | BLOCKED_EXTERNAL | Reconciliation pembayaran | T03; guard refund T21/T22 | Get Status/receipt/lease canonical, late/unknown/refund hold dan balapan webhook diuji fixture lokal. Sandbox/merchant serta cadence/role/resource hosted belum terbukti. |
 | T25 | M4 | TODO | Reconciliation refund | T23 | Accepted belum selesai; hasil provider/manual direkonsiliasi; tidak ada refund ganda. Integration/sandbox. |
-| T26 | M4 | TODO | Email order received | T06 | Pesan persisten/dedup; email gagal tidak membatalkan order. Integration. |
-| T27 | M4 | TODO | Email payment confirmed | T06 | Hanya settlement otoritatif; webhook duplikat tidak menduplikasi pesan. Integration. |
-| T28 | M4 | TODO | Email quote available | T06 | Quote/version/access benar; quote superseded/invalid tidak dikirim sebagai aktif. Integration. |
-| T29 | M4 | TODO | Email order shipped | T06 | Status sah; isi berizin; tanpa private URL permanen. Integration. |
-| T30 | M4 | TODO | Notifikasi Admin persisten | T06 | Failure terlihat; request/order tetap tersimpan; tanpa WhatsApp otomatis. Integration. |
+| T26 | M4 | DONE | Email order received | T06; rantai T24 | Pesan persisten/dedup; email gagal tidak membatalkan order. Integration lokal lulus; inbox/hosted tetap T03/T33–T34. |
+| T27 | M4 | DONE | Email payment confirmed | T06/T24 | Hanya settlement otoritatif; webhook duplikat tidak menduplikasi pesan. Integration lokal lulus; provider/hosted terpisah. |
+| T28 | M4 | DONE | Email quote available | T06; rantai T26 | Quote/version/access benar; quote superseded/invalid tidak dikirim sebagai aktif. Integration lokal lulus. |
+| T29 | M4 | DONE | Email order shipped | T06; rantai T26 | Status sah; isi berizin; tanpa private URL permanen. Integration lokal lulus, tanpa backfill tanggal historis. |
+| T30 | M4 | DONE | Notifikasi Admin persisten | T06/T26–T29 | Failure terlihat; request/order tetap tersimpan; tanpa WhatsApp otomatis. Integration dan browser lokal lulus; visual Owner/perangkat/AT belum diterima. |
 | T31 | M4 | BLOCKED_INPUT | Dataset dan tarif launch | T15–T19; Owner | SKU/stok fisik/media/berat/dimensi/rule disetujui untuk target; seed lokal bukan aktivasi launch. Review/import verification. |
 | T32 | M5 | DONE | E2E Admin di CI | T02 | Quality pada `4eb8471` sukses, termasuk seluruh 24 journey Owner/Admin/anonim. Regresi landing MFA 6s mencakup respons TOTP 200, navigasi, status ready dan guard 401; sumber auth tidak diubah. [Bukti CI](https://github.com/batakers/Niuva-2026/actions/runs/39155145353). |
 | T33 | M5 | BLOCKED_EXTERNAL | Dua BUY staging | T03–T14/T21–T31 | Dua variasi transaksi sukses; order/stock/payment/email/status konsisten. Hosted records. |
@@ -108,6 +108,77 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
   input/evidence eksternal yang tidak dapat diganti fixture.
 
 ## Log pelaksanaan
+
+### T26–T30 — email bisnis minimum dan perhatian Admin, 2026-10-19
+
+- Audit ulang: main `54a97bb`; PR #58/#59/#60 draft/open; working tree T24
+  bersih sesudah checkpoint `adc28f0`. Branch `codex/v1-business-notifications`
+  bergantung eksplisit pada #60: proyeksi email settlement memakai guard
+  ketidakpastian/refund T24 dan helper database fixture terisolasi yang sama.
+  Ini perluasan satu worker/proof/purpose untuk empat email minimum, bukan
+  pemakaian token auth sebagai event bisnis. Main tidak diubah.
+- Order/payment/quote/fulfillment canonical menjadi bukti persisten; proyeksi
+  ke antrean dilakukan job sesudah transaksi agar kegagalan email tidak
+  membatalkan request/order. Deadline pengiriman berasal dari event asli dan
+  policy eksplisit, tanpa default kalender/SLA atau konfigurasi hosted baru.
+  Recipient/access/closure, versi quote dan status pembayaran diperiksa ulang.
+- Konten minimum mengarahkan ke akun milik Customer; tidak menaruh token auth,
+  quote capability atau private storage URL pada email. Penerimaan provider,
+  inbox/bounce, scheduler dan production tetap memiliki gate sendiri.
+- Implementasi: `src/modules/outbox/business-{core,repository,job,mailer,attention}.ts`
+  dan core/service/repository/worker/cipher contract existing; `src/modules/jobs/`
+  memakai satu runner/lease dengan OUTBOX_BUSINESS dan policy eksplisit.
+  Endpoint `src/app/api/internal/jobs/business-notifications/route.ts` memakai
+  bearer, body 4 KiB, no-store dan batas execute 10. Schema/migration baru
+  `20261019050000_business_notifications` menambah Order.shippedAt nullable;
+  `src/modules/order/repository.ts` membekukan transisi SHIPPED pertama.
+  `src/modules/custom-print/estimate-current.ts` memisahkan pemeriksaan snapshot
+  murni dari modul auth/Next; export API lama tetap tersedia.
+- AC terbukti: T26 source/order intent persisten, publisher overlap/dedup dan
+  kegagalan cipher/sender tidak membatalkan order; T27 settlement/ongkir final,
+  duplikat webhook serta penahanan pending/late/verification/refund; T28 quote
+  current/version/review/model/expiry, termasuk DRAFT pengganti dan pricing
+  rule SENT yang retired; T29 status, timestamp pertama, resi terkini dan
+  account URL; T30 audit gagal/unknown, toast/history/read per akun, target
+  berizin dan record bisnis tetap tersimpan. Semua memakai fixture sintetis.
+- Gate final lokal 19 Oktober: `pnpm lint` 0 error/4 warning existing,
+  `pnpm typecheck`, `pnpm db:validate`; `pnpm test --maxWorkers=4`
+  **127 file/1.466 test**, `pnpm test:backend --maxWorkers=4`
+  **100/736**, full `pnpm test:integration` **52/423**, termasuk 19 skenario
+  bisnis. Chromium Admin **27/27**, default **112 passed/5 skipped** pada
+  port 3118; kelima skip adalah spec public-content-production-path yang
+  mensyaratkan tier production. Build produksi **93/93 halaman statis** lulus
+  dengan database test dan provider guard tertutup. Bukan bukti production.
+- Resource baru: `niuva_business_test_20261019`,
+  `niuva_business_regression_test_20261019`, dan
+  `niuva_business_final_test_20261019`; replay 36 migration sukses. Publisher
+  dan reconciliation masing-masing memakai database UUID baru melalui helper
+  terisolasi; resource dipertahankan, database lama tidak di-reset.
+  File test berubah: `tests/backend/business-{email-core,mailer,notifications-route}.test.ts`,
+  `tests/integration/business-notifications.test.ts`, tiga regression outbox,
+  job-monitoring, serta `tests/e2e-admin-auth/admin-notifications.spec.ts`.
+- Temuan/perbaikan aktual: fixture file VERIFIED wajib memiliki satu pemilik;
+  setup/cleanup diurutkan atomik tanpa melemahkan constraint. Ekspektasi payload
+  Resend diperbaiki menjadi array recipient. Test image optimizer existing
+  timeout pada full backend default, lulus sendiri dan full suite empat worker
+  tanpa mengubah timeout/assertion/coverage. Loader browser sempat gagal akibat
+  import auth/Next transitif; ekstraksi utility murni memperbaikinya. RPC tool
+  300 detik tidak dipakai sebagai hasil browser; run native terpantau membuktikan
+  hasil Admin/default di atas. Tidak ada test/workflow yang dilemahkan.
+- Batas teknis umur pesan 24 jam mengikuti window key Resend, diperiksa pula
+  pada enqueue langsung; policy operasional tetap wajib diisi, bukan default
+  SLA. Retry memakai key/envelope lama, unknown terminal tidak diulang.
+  [Kontrak dan rollback](docs/backend/business-notifications.md) serta ledger
+  readiness diperbarui; tidak ada dependency, credential, activation, atau
+  kalender/SLA baru. DONE di sini mengikuti AC teknis lokal minimum, bukan
+  penerimaan inbox, bounce, cadence/role hosted, visual atau rilis. Commit/PR
+  dan CI head dicatat pada checkpoint delivery berikutnya.
+- Verifikasi dependensi T24: Quality pada head `adc28f01774646dc9ca40a4cf14edc7ae5af60fe`
+  [SUCCESS](https://github.com/batakers/Niuva-2026/actions/runs/39246997823/job/118053840138),
+  selesai 19 Oktober 12:33 UTC. Run pertama gagal pada navigasi linimasa Admin
+  dengan 25 journey lain lulus; satu rerun job pada SHA sama lulus. Tidak ada
+  pelemahan test/workflow. Hasil itu bukan CI diff T26–T30 dan tidak menutup
+  BLOCKED_EXTERNAL T24.
 
 ### T24 — reconciliation pembayaran, 2026-10-19
 

@@ -4,14 +4,17 @@ import { assertRecordedAgeDeclaration } from "../customer-auth/age-declaration";
 import { closureIdentityHash } from "../customer-privacy/core";
 import { lockCustomerLifecycle } from "../customer-privacy/lifecycle";
 import { appError } from "../shared/errors";
-import { outboxPayloadSchema } from "./core";
+import { outboxRecipientSchema } from "./core";
 import type { OutboxInput, ProofProjection } from "./core";
+import { isBusinessKind } from "./business-core";
+import { readBusinessProof } from "./business-repository";
+import { recordBusinessDeliveryFailure } from "./business-attention";
 
 function active(deadline: Date | null, now: Date) { return deadline === null || deadline > now; }
 function deadline(...values: (Date | null)[]) { return new Date(Math.min(...values.filter((value): value is Date => value !== null).map(value => value.getTime()))); }
 function recipient(owner: { email: string; normalizedEmail: string }): string | null {
   const email = normalizeCustomerEmail(owner.email);
-  return owner.normalizedEmail === email && outboxPayloadSchema.shape.to.safeParse(email).success ? email : null;
+  return owner.normalizedEmail === email && outboxRecipientSchema.safeParse(email).success ? email : null;
 }
 export class PrismaOutboxRepository {
   async lock(tx: Prisma.TransactionClient): Promise<void> { await lockCustomerLifecycle(tx); }
@@ -21,7 +24,8 @@ export class PrismaOutboxRepository {
     if (typeof milliseconds !== "number" || !Number.isSafeInteger(milliseconds) || !Number.isFinite(new Date(milliseconds).getTime())) throw appError("PROVIDER_UNAVAILABLE");
     return new Date(milliseconds);
   }
-  async proof(tx: Prisma.TransactionClient, input: Pick<OutboxInput, "kind" | "proofId">, now: Date): Promise<ProofProjection | null> {
+  async proof(tx: Prisma.TransactionClient, input: Pick<OutboxInput, "kind" | "proofId"> & { deliveryDeadline?: Date }, now: Date): Promise<ProofProjection | null> {
+    if (isBusinessKind(input.kind)) return readBusinessProof(tx, { kind: input.kind, proofId: input.proofId, deliveryDeadline: input.deliveryDeadline }, now);
     if (input.kind === "AUTH") {
       const proof = await tx.customerEmailToken.findUnique({ where: { id: input.proofId }, include: { pending: true, customer: { include: { passwordCredential: true } } } });
       if (!proof || proof.consumedAt || proof.expiresAt <= now || safeCustomerReturnTo(proof.returnTo) !== proof.returnTo) return null;
@@ -57,8 +61,10 @@ export class PrismaOutboxRepository {
   }
   async find(tx: Prisma.TransactionClient, id: string): Promise<DurableOutboxMessage | null> { return tx.durableOutboxMessage.findUnique({ where: { id } }); }
   async finish(tx: Prisma.TransactionClient, id: string, state: "CANCELLED" | "EXPIRED", now: Date): Promise<DurableOutboxMessage | null> {
-    await tx.durableOutboxMessage.updateMany({ where: { id, state: { in: ["PENDING", "LEASED"] } }, data: { state, sealedPayload: null, sealedEnvelope: null, leaseId: null, leaseExpiresAt: null, terminalAt: now, failureCategory: state === "EXPIRED" ? "EXPIRED" : "PROOF_INVALID" } });
-    return this.find(tx, id);
+    const changed = await tx.durableOutboxMessage.updateMany({ where: { id, state: { in: ["PENDING", "LEASED"] } }, data: { state, sealedPayload: null, sealedEnvelope: null, leaseId: null, leaseExpiresAt: null, terminalAt: now, failureCategory: state === "EXPIRED" ? "EXPIRED" : "PROOF_INVALID" } });
+    const row = await this.find(tx, id);
+    if (row && changed.count === 1) await recordBusinessDeliveryFailure(tx, row, state, row.failureCategory, now);
+    return row;
   }
   async expired(tx: Prisma.TransactionClient, now: Date, limit: number): Promise<{ id: string }[]> {
     return tx.durableOutboxMessage.findMany({ where: { state: { in: ["PENDING", "LEASED"] }, expiresAt: { lte: now } }, select: { id: true }, orderBy: [{ expiresAt: "asc" }, { id: "asc" }], take: limit });

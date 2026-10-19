@@ -1,12 +1,14 @@
 import { Prisma, type DurableOutboxMessage } from "../../generated/prisma/client";
 import { PrismaOutboxRepository } from "./repository";
-import { outboxIdentity, type ProofProjection } from "./core";
+import { isBusinessProof, outboxIdentity, type ProofProjection } from "./core";
 import type { AttemptAction } from "./worker-core";
 import { appError } from "../shared/errors";
+import { recordBusinessDeliveryFailure } from "./business-attention";
 export class PrismaOutboxWorkerRepository extends PrismaOutboxRepository {
   async discard(tx: Prisma.TransactionClient, row: DurableOutboxMessage, now: Date, state: "FAILED" | "CANCELLED" | "EXPIRED", failureCategory: string): Promise<boolean> {
     if (!["PENDING", "LEASED"].includes(row.state)) return false;
     const result = await tx.durableOutboxMessage.updateMany({ where: { id: row.id, state: row.state, attempts: row.attempts, leaseId: row.leaseId }, data: { state, failureCategory, terminalAt: now, sealedPayload: null, sealedEnvelope: null, leaseId: null, leaseExpiresAt: null } });
+    if (result.count === 1) await recordBusinessDeliveryFailure(tx, row, state, failureCategory, now);
     return result.count === 1;
   }
   async candidates(tx: Prisma.TransactionClient, now: Date, limit: number, lock: boolean): Promise<DurableOutboxMessage[]> {
@@ -29,9 +31,11 @@ export class PrismaOutboxWorkerRepository extends PrismaOutboxRepository {
       ...(action.state === "PENDING" ? { dueAt: action.dueAt, terminalAt: null } : { terminalAt: now, sealedPayload: null, sealedEnvelope: null, providerReference: action.providerReference ?? null }),
     };
     const result = await tx.durableOutboxMessage.updateMany({ where: { id: row.id, state: "LEASED", leaseId: row.leaseId, leaseExpiresAt: { gt: now } }, data });
+    if (result.count === 1) await recordBusinessDeliveryFailure(tx, row, action.state, action.failureCategory, now);
     return result.count === 1;
   }
   async markDelivered(tx: Prisma.TransactionClient, proof: ProofProjection, now: Date): Promise<void> {
+    if (isBusinessProof(proof)) return;
     const current = await this.proof(tx, { kind: proof.kind, proofId: proof.proofId }, now);
     if (!current || outboxIdentity(current).fingerprint !== outboxIdentity(proof).fingerprint) return;
     if (proof.purpose === "AUTH_VERIFY") await tx.customerPendingRegistration.updateMany({ where: { id: proof.ownerId, completedAt: null, expiresAt: { gt: now } }, data: { deliveryConfirmed: true } });

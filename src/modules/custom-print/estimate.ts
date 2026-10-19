@@ -12,6 +12,7 @@ import { appError } from "@/modules/shared/errors";
 import { parseWithValidation } from "@/modules/shared/validation";
 
 import { isModelExtension } from "./file-types";
+export { isEstimateCurrent } from "./estimate-current";
 
 export const additionalCostSchema = z.object({
   name: z.string().trim().min(2).max(80),
@@ -31,13 +32,6 @@ export const publishEstimateSchema = z.object({
 });
 
 export type AdditionalCost = z.infer<typeof additionalCostSchema>;
-
-export function isEstimateCurrent(snapshot: unknown, reviewUpdatedAt: Date | null | undefined, activePricingRuleId?: string): boolean {
-  if (reviewUpdatedAt == null) return false;
-  const parsed = z.object({ reviewUpdatedAt: z.iso.datetime(), pricingRule: z.object({ id: z.uuid() }).optional() }).safeParse(snapshot);
-  return parsed.success && parsed.data.reviewUpdatedAt === reviewUpdatedAt.toISOString() &&
-    (activePricingRuleId === undefined || parsed.data.pricingRule?.id === activePricingRuleId);
-}
 
 export function calculateProductionRange(input: StandardPrintInput, additionalCosts: readonly AdditionalCost[]) {
   const baseline = calculatePrintQuote(input);

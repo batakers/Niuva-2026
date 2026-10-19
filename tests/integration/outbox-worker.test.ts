@@ -10,7 +10,7 @@ import { PrismaDatabaseBindingRepository } from "@/modules/database-binding/repo
 import { OutboxPayloadCipher } from "@/modules/outbox/cipher";
 import { DurableOutboxService } from "@/modules/outbox/service";
 import { PrismaOutboxWorkerRepository } from "@/modules/outbox/worker-repository";
-import type { OutboxInput, OutboxPurpose } from "@/modules/outbox/core";
+import type { LegacyOutboxInput, LegacyOutboxPurpose } from "@/modules/outbox/core";
 import { outboxMetadataSchema } from "@/modules/outbox/core";
 import { DurableOutboxWorker } from "@/modules/outbox/worker";
 import { CustomerOutboxSender } from "@/modules/outbox/customer-sender";
@@ -25,11 +25,11 @@ const prisma = getPrismaClient(), repository = new PrismaOutboxWorkerRepository(
 const cipher = new OutboxPayloadCipher({ activeKeyId: "worker-fixture", keys: { "worker-fixture": Buffer.alloc(32, 13).toString("base64") } });
 const customers: string[] = [], pendings: string[] = [], proofs: string[] = [], fences: string[] = [];
 let ownsMarker = false;
-type Fixture = OutboxInput & { ownerId: string; purpose: OutboxPurpose; to: string; sessionHash: string | null; row: DurableOutboxMessage };
+type Fixture = LegacyOutboxInput & { ownerId: string; purpose: LegacyOutboxPurpose; to: string; sessionHash: string | null; row: DurableOutboxMessage };
 function bound(capabilities = ["emailDelivery", "scheduledJobs"], overrides: Record<string, string | undefined> = {}) {
   return new BoundDatabaseService({ context: { env: { NODE_ENV: "production", NIUVA_DEPLOYMENT_TIER: "staging", NIUVA_PROVIDER_MODE: "sandbox", APP_URL: "https://staging.example.test", DATABASE_URL: process.env.TEST_DATABASE_URL, NIUVA_DATABASE_BINDING_ID: bindingId, RESEND_API_KEY: "synthetic-worker", EMAIL_FROM: "fixture@example.test", ...overrides }, hasActivationGrant: (tier, capability) => tier === "staging" && capabilities.includes(capability) }, repositoryFactory: () => new PrismaDatabaseBindingRepository(prisma) });
 }
-async function fixture(purpose: OutboxPurpose = "AUTH_VERIFY"): Promise<Fixture> {
+async function fixture(purpose: LegacyOutboxPurpose = "AUTH_VERIFY"): Promise<Fixture> {
   const now = new Date(), ownerId = randomUUID(), to = `worker-${ownerId}@example.test`, token = createOpaqueToken(), expiresAt = new Date(now.getTime() + 900_000);
   let proofId: string, sessionHash: string | null = null;
   if (purpose === "AUTH_VERIFY") {
@@ -163,7 +163,7 @@ function worker(sender: OutboxSender, options: { capabilities?: string[]; env?: 
   return new DurableOutboxWorker({ bound: bound(options.capabilities, options.env), repository: options.repository ?? repository, senderFactory: () => sender, cipherFactory: options.cipherFactory ?? (() => cipher), policy: options.policy ?? policy });
 }
 function fakeSender(send: OutboxSender["send"] = async () => ({ kind: "accepted", providerReference: "provider-fixture" })): OutboxSender {
-  return { assertReady() {}, send, prepare(input) { return { envelope: { from: "fixture@example.test", to: input.payload.to, subject: input.metadata.purpose, text: input.payload.token }, send: (_envelope, signal) => send(input, signal) }; } };
+  return { assertReady() {}, send, prepare(input) { if ("business" in input.payload) throw new Error("Auth/privacy fixture expected"); return { envelope: { from: "fixture@example.test", to: input.payload.to, subject: input.metadata.purpose, text: input.payload.token }, send: (_envelope, signal) => send(input, signal) }; } };
 }
 async function close(f: Fixture) { fences.push(closureIdentityHash(f.to)); await prisma.$transaction(async tx => { await lockCustomerLifecycle(tx); await eraseCustomerAccount(tx, f.ownerId, new Date()); }); }
 async function invalidate(f: Fixture, change: string) {

@@ -10,7 +10,7 @@ import { eraseCustomerAccount, lockCustomerLifecycle } from "@/modules/customer-
 import { CustomerEmailRepository } from "@/modules/customer-auth/email-repository";
 import { BoundDatabaseService } from "@/modules/database-binding/service";
 import { PrismaDatabaseBindingRepository } from "@/modules/database-binding/repository";
-import { outboxIdentity, type OutboxInput, type OutboxPurpose, type ProofProjection } from "@/modules/outbox/core";
+import { outboxIdentity, type LegacyOutboxInput, type LegacyOutboxPurpose, type LegacyProofProjection, type OutboxInput, type OutboxPurpose } from "@/modules/outbox/core";
 import { OutboxPayloadCipher } from "@/modules/outbox/cipher";
 import { PrismaOutboxRepository } from "@/modules/outbox/repository";
 import { DurableOutboxService, type OutboxTransaction } from "@/modules/outbox/service";
@@ -20,9 +20,9 @@ const bindingId = randomUUID();
 const cipher = new OutboxPayloadCipher({ activeKeyId: "integration-v1", keys: { "integration-v1": Buffer.alloc(32, 11).toString("base64") } });
 let ownsMarker = false;
 const customers: string[] = [], pendings: string[] = [], proofs: string[] = [], fences: string[] = [];
-type Fixture = OutboxInput & { ownerId: string; to: string; purpose: OutboxPurpose; expiresAt: Date; sessionHash: string | null };
+type Fixture = LegacyOutboxInput & { ownerId: string; to: string; purpose: LegacyOutboxPurpose; expiresAt: Date; sessionHash: string | null };
 
-async function fixture(purpose: OutboxPurpose = "AUTH_VERIFY"): Promise<Fixture> {
+async function fixture(purpose: LegacyOutboxPurpose = "AUTH_VERIFY"): Promise<Fixture> {
   const now = new Date(), ownerId = randomUUID(), to = `outbox-${ownerId}@example.test`, token = createOpaqueToken();
   const expiresAt = new Date(now.getTime() + (purpose.startsWith("PRIVACY") ? 900_000 : 1_800_000));
   if (purpose === "AUTH_VERIFY") {
@@ -45,10 +45,10 @@ async function fixture(purpose: OutboxPurpose = "AUTH_VERIFY"): Promise<Fixture>
   proofs.push(record.id);
   return { kind: "PRIVACY", proofId: record.id, token, ownerId, to, purpose, expiresAt, sessionHash };
 }
-function projection(f: Fixture): ProofProjection {
+function projection(f: Fixture): LegacyProofProjection {
   return { kind: f.kind, proofId: f.proofId, purpose: f.purpose, to: f.to, tokenHash: hashOpaqueToken(f.token), returnTo: f.purpose === "AUTH_VERIFY" ? "/checkout" : f.purpose === "AUTH_RESET" ? "/account" : null, ownerId: f.ownerId, sessionHash: f.sessionHash, expiresAt: f.expiresAt };
 }
-function dataFor(p: ProofProjection) {
+function dataFor(p: LegacyProofProjection) {
   const now = new Date();
   const meta = { id: randomUUID(), ...outboxIdentity(p), proofKind: p.kind, proofId: p.proofId, purpose: p.purpose, templateVersion: "v1" as const, expiresAt: p.expiresAt };
   return { ...meta, createdAt: now, dueAt: now, sealedPayload: cipher.seal({ to: p.to, token: "a".repeat(43), returnTo: p.returnTo }, meta) };

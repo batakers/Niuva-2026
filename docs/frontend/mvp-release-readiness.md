@@ -35,6 +35,29 @@ dan langkah berikutnya. Snapshot bertanggal di bawah dan
 [Bagian 2](#bagian-2--arsip-evidence-bertanggal-historis) dipertahankan sebagai
 histori. Angka gate dan penerimaan lama tidak digabung menjadi hasil baru.
 
+### Email bisnis T26–T30 — 19 Oktober 2026
+
+Branch `codex/v1-business-notifications` berawal dari `adc28f0` PR #60,
+dengan dependensi eksplisit pada guard pembayaran/refund T24 dan T21/T22.
+AC teknis lokal minimum T26–T30 selesai: source facts/proof, encrypted outbox,
+dedup/expiry/retry, current quote/recipient/closure, first-shipped timestamp dan
+feed Admin persisten. [Kontrak](../backend/business-notifications.md) menjelaskan
+deadline teknis 24 jam/key provider, tanpa default SLA/kalender atau activation.
+Kode T08 tetap terpisah; kandidat gabungan harus menguji urutan migration.
+
+Gate lokal: lint 0 error/4 warning existing, typecheck/schema; unit 127/1.466,
+backend 100/736 (empat worker, coverage tetap aktif), integration penuh 52/423
+pada resource baru dengan 36 migration. Ada 19 skenario bisnis. Chromium Admin
+27/27, default 112 passed/5 production-tier-specific skipped pada local-test
+port 3118. Build 93/93 halaman statis lulus. Import utility snapshot dipisahkan
+dari modul auth/Next setelah loader browser menemukan dependensi transitif;
+RPC timeout bukan hasil tes dan diganti run native yang terpantau.
+
+Inbox/bounce, scheduler/cadence/role hosted, policy publik, visual Owner,
+perangkat/AT dan release tetap terbuka. Semua provider fixture, tanpa email,
+refund, deployment atau activation sungguhan. CI diff notifikasi belum diklaim
+sebelum head PR tersedia. Detail bukti dan checkpoint delivery ada di TASKS.
+
 ### Reconciliation T24 — 19 Oktober 2026
 
 Branch `codex/v1-payment-reconciliation` bergantung eksplisit pada `28f9037`
@@ -50,7 +73,11 @@ polling fixture file lain. Regresi penuh terakhir memakai resource baru dengan
 35 migration dan tidak mereset database lama. Tidak ada klaim CI T24 sebelum
 run pada head PR tersedia; Quality PR #59 di bawah tetap bukti dependensi.
 Kode T24 `e3941f6` dikirim pada [draft PR #60](https://github.com/batakers/Niuva-2026/pull/60),
-menarget main untuk Quality dan mencatat dependency #59. CI diff T24 masih menunggu.
+menarget main untuk Quality dan mencatat dependency #59.
+[Quality head adc28f01774646dc9ca40a4cf14edc7ae5af60fe](https://github.com/batakers/Niuva-2026/actions/runs/39246997823/job/118053840138)
+SUCCESS, selesai 19 Oktober 12:33 UTC setelah satu rerun pada SHA yang sama.
+Run pertama gagal di satu navigasi linimasa Admin, 25 journey lain lulus;
+tidak ada perubahan/pelemahan test atau workflow untuk rerun tersebut.
 
 ### Refund T21–T22 — 19 Oktober 2026
 

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { appError, isAppError } from "../shared/errors";
 import { parseWorkerPolicy } from "../outbox/worker-core";
+import { parseBusinessPolicy } from "../outbox/business-core";
 import { parseJobPolicy, parseJobRequest, parseJobResult } from "./core";
 import { parseJobInspectionRequest } from "./monitoring";
 import type { OperationalJobRuntime } from "./runtime";
@@ -14,9 +15,10 @@ export async function executeJobCli(args: readonly string[], factory: () => Oper
     }
     if (args[0] !== "run" || args.length < 3 || args.length > 4) throw appError("VALIDATION_ERROR");
     const request = parseJobRequest(json(args[1])), policy = parseJobPolicy(json(args[2]));
-    const workerPolicy = args[3] === undefined ? undefined : parseWorkerPolicy(json(args[3]));
-    if (request.job === "OUTBOX_DELIVERY" && !workerPolicy || request.job !== "OUTBOX_DELIVERY" && workerPolicy) throw appError("VALIDATION_ERROR");
-    const result = await factory().run(request, policy, workerPolicy);
+    const requiresPolicy = ["OUTBOX_DELIVERY", "OUTBOX_BUSINESS"].includes(request.job);
+    if (requiresPolicy !== (args[3] !== undefined)) throw appError("VALIDATION_ERROR");
+    const executionPolicy = args[3] === undefined ? undefined : request.job === "OUTBOX_BUSINESS" ? parseBusinessPolicy(json(args[3])) : parseWorkerPolicy(json(args[3]));
+    const result = await factory().run(request, policy, executionPolicy);
     const state = z.enum(["completed", "failed", "busy", "cooldown", "lost-lease"]).parse(result.state);
     const safe = parseJobResult({ counts: result.counts, ...(result.cooldownMs === undefined ? {} : { cooldownMs: result.cooldownMs }) });
     return { exitCode: state === "failed" || state === "lost-lease" ? 1 : 0, output: { job: request.job, mode: request.mode, state, ...safe } };

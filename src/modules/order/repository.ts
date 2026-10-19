@@ -128,6 +128,7 @@ export class OrderRepository {
         where: { id: orderId, status: currentStatus },
         data: orderStatusData(nextStatus, timestamp),
       });
+      if (updated.count === 1 && nextStatus === "SHIPPED") await transaction.order.updateMany({ where: { id: orderId, shippedAt: null }, data: { shippedAt: timestamp } });
       return updated.count === 0 ? null : readMutationState(transaction, orderId);
     });
   }

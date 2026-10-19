@@ -40,11 +40,19 @@ Perintah `inspect` membutuhkan ambang lag eksplisit dalam milidetik:
 corepack pnpm exec jiti scripts/run-operational-job.ts inspect '{"maxLagMs":120000}'
 ```
 
-`120000` hanya contoh format lokal; tentukan ambang operasi sebenarnya bersama Owner dan petugas sebelum mengaktifkan monitoring atau scheduler. Output berisi status terakhir lima job, counter allowlist, backlog outbox, lease kedaluwarsa, privacy overdue/hold dan alarm. Ia tidak menampilkan recipient, token, payload atau raw error, dan tidak mengirim notifikasi.
+`120000` hanya contoh format lokal; tentukan ambang operasi sebenarnya bersama Owner dan petugas sebelum mengaktifkan monitoring atau scheduler. Output berisi status job yang terdaftar pada runner, counter allowlist, backlog outbox, lease kedaluwarsa, privacy overdue/hold dan alarm. Ia tidak menampilkan recipient, token, payload atau raw error, dan tidak mengirim notifikasi.
 
 Exit code `0` berarti run tidak gagal atau pemeriksaan tidak menemukan alarm; run dapat berstatus `busy` atau `cooldown`. Exit code `1` menunjukkan input/runtime gagal atau lease hilang/gagal. Exit code `2` berarti `inspect` menemukan alarm. Ringkasan CLI sengaja hanya berisi kode kategori aman.
 
 ## Adapter HTTP dan expiry reservasi — 19 Oktober 2026
+
+Tambahan T26–T30: OUTBOX_BUSINESS dan endpoint
+`/api/internal/jobs/business-notifications` mengikuti
+[kontrak email bisnis](business-notifications.md), dengan businessPolicy
+eksplisit dan execute HTTP maksimal 10. Sender tetap OUTBOX_DELIVERY.
+Kegagalan terminal/job email masuk riwayat Admin yang sama; monitoring tidak
+menjadwalkan retry unknown atau mengaktifkan provider. Rincian T24 berada pada
+[reconciliation pembayaran](payment-reconciliation.md).
 
 Endpoint internal `/api/internal/jobs/outbox` dan
 `/api/internal/jobs/inventory-reservations` memakai bearer `CRON_SECRET`.
