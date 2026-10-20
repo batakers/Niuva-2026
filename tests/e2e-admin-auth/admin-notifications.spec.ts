@@ -35,6 +35,10 @@ test("bell history, focus, live attention, read persistence and no replay", asyn
   await expect(page.getByTestId("notification-toasts").getByText("Permintaan Custom Print diterima")).toBeVisible({ timeout: 30_000 });
   await bell.click();
   const row = panel.locator("li").filter({ has: page.locator(`a[href="/admin/custom-print/${request.id}"]`) });
+  await page.route("**/api/admin/notifications/read", async route => {
+    await new Promise(resolve => setTimeout(resolve, 6000));
+    await route.continue();
+  }, { times: 1 });
   await confirmRead(page, row.getByRole("button", { name: "Tandai dibaca" }));
   await expect.poll(async () => Boolean((await prisma.adminNotificationReceipt.findUnique({ where: { profileId_auditLogId: { profileId: profile.id, auditLogId: attention.id } } }))?.readAt)).toBe(true);
   const routine = await prisma.auditLog.create({ data: { actorType: "SYSTEM", entityType: "CustomPrintRequest", entityId: request.id, action: "custom-print.request.status.transition" } });

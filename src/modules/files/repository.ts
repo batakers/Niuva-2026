@@ -186,6 +186,7 @@ export class StoredFileRepository {
     next: FileUploadStatus,
     now: Date = new Date(),
   ) {
+    if (next === "DELETE_PENDING") throw appError("FORBIDDEN");
     return this.prisma.$transaction(async (transaction) => {
       const current = await transaction.storedFile.findUnique({
         where: { id: fileId },
@@ -199,7 +200,7 @@ export class StoredFileRepository {
         throw appError("NOT_FOUND");
       }
 
-      if (current.purpose === "FINANCIAL_EVIDENCE") throw appError("FORBIDDEN");
+      if (current.purpose === "FINANCIAL_EVIDENCE" || current.uploadStatus === "DELETE_PENDING") throw appError("FORBIDDEN");
       assertFileTransition(current.uploadStatus, next);
 
       if (next === "VERIFIED") {

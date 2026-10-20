@@ -108,6 +108,41 @@ Pending attempts with missing provider results or elapsed deadlines conflict
 until reconciliation; automatic duplicate provider creation is prohibited.
 Retail orders are rejected by this path.
 
+### Customer binary retention — 19 October 2026
+
+The approved 14/60/90-day binary policy is implemented by
+`files/retention-core.ts` and the canonical `CUSTOMER_FILE_RETENTION` job.
+Unattached uploads use their latest upload/verification activity; terminal or
+expired-unpaid requests use the latest known terminal/expiry activity for the
+60-day clock. Completed orders use `completedAt` for the 90-day clock; later
+request metadata edits do not restart it. Active orders, unresolved PENDING
+payments, unsettled cancellation cases and holds prevent deletion. Financial
+evidence, public media and historical B2B links are excluded.
+
+Execute commits an irreversible `DELETE_PENDING` claim before external I/O.
+Upload confirmation, reuse, private download and new quote/order creation must
+not reactivate the claimed file. Hold/order state and the operational lease are
+rechecked under lifecycle/request/order/file locks before removal. A confirmed
+storage delete is followed by a final lease check, a `DELETED` tombstone and
+completion audit in one DB transaction. Unknown storage results or a rollback
+after an external effect retain the pending claim; retry uses the same key.
+Record retention is unchanged. File-specific holds require Owner, remain until
+explicit release, and signal overdue review without expiring automatically.
+
+Privacy case hold IDs are snapshotted on the file before permanent account
+erasure removes the Customer foreign keys. Owner case actions propagate/release
+only the matching hold ID; receipt cleanup cannot silently release a binary
+hold. Multiple holds, detached accounts and missing receipts remain protected
+without reconnecting Customer history. An orphaned hold requires explicit Owner
+review/release and is visible in monitoring. Existing detached history is not
+reconstructed by email matching; any imported legacy data requires review before
+hosted execution.
+
+See the [operational runbook](batch-2-operations.md#retensi-binary-customer--t08-19-oktober-2026)
+for HTTP/CLI batch limits, scan cursor, safe monitoring, resource grants and
+rollback boundaries. Local database/storage-fixture proof does not activate R2
+or a hosted scheduler.
+
 ## Closure decisions
 
 `OPEN-PRICE-001` and `OPEN-PRICE-002` below are historical Phase 2 IDs, not

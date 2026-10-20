@@ -75,6 +75,16 @@ sebelum assertion heading existing; regression request tertunda 6 detik dan
 seluruh journey search/activity/account/deactivation lulus lokal (55 detik).
 CI SHA berikutnya tetap memerlukan verifikasi sendiri.
 
+### Rekonsiliasi PR #61 terhadap main PR #60 — 20 Oktober 2026
+
+PR #61 telah direkonsiliasi ke `main` `d956c186cae40d76624c4fb4c0f297ed66954f82`;
+diff gabungan hanya menyisakan T26–T30 (41 file). Review independen tidak
+menemukan defect actionable. Lint, typecheck, Prisma validation, unit
+127/1.466, backend 102/747, integration 53/441, Chromium default 112 pass/5
+skip, Admin 28/28 dan build 93/93 lulus lokal. Dua database test baru menerima
+37 migration; histori migration lama tidak berubah. CI pada SHA final PR, merge
+PR dan acceptance eksternal masih harus diverifikasi terpisah.
+
 ### Reconciliation T24 — 19 Oktober 2026
 
 Branch `codex/v1-payment-reconciliation` bergantung eksplisit pada `28f9037`
@@ -111,6 +121,10 @@ native POST/error recovery tanpa JavaScript serta capture 1440/390/320px.
 Kode `7903870` dikirim pada [draft PR #59](https://github.com/batakers/Niuva-2026/pull/59).
 [Quality head `28f9037`](https://github.com/batakers/Niuva-2026/actions/runs/39240507304)
 telah sukses. Ini CI T21/T22; hasil provider/staging tetap belum dibuktikan.
+Pemulihan integrasi 20 Oktober mempertahankan T08 dan menutup dua temuan review
+retensi refund/waktu intake. [Quality head `85f63c5`](https://github.com/batakers/Niuva-2026/actions/runs/39308159415)
+sukses; PR #59 terverifikasi merged pada `bcd04d9`. Bukti lokal gabungan dan
+cakupannya dicatat di TASKS; provider/staging tetap belum dibuktikan.
 
 Approval tidak mengirim uang. T23/T25, merchant/window/fallback manual,
 reconciliation/sandbox dan REL-05 tetap terbuka; penerimaan visual Owner,
@@ -181,6 +195,43 @@ backend 670, integration 338, E2E 112 dengan 5 expected skip dan build
 90 static pages. Angka historis ini tidak menjadi hasil gabungan branch v1.
 Runbook sekarang merujuk TASKS/ROADMAP sebagai backlog aktif.
 
+### T08 — retensi binary Customer, 2026-10-19
+
+PR #57 sudah squash merge ke main sebagai `54a97bb`;
+[Quality pada commit main](https://github.com/batakers/Niuva-2026/actions/runs/39185705585)
+success. Pekerjaan T08 berikutnya berada pada diff lokal
+`codex/v1-customer-file-retention` berdasarkan commit tersebut dan belum
+di-commit/push; bukti CI main tidak dipromosikan ke diff T08.
+
+Job canonical `CUSTOMER_FILE_RETENTION` memakai binding/role/lease/cooldown
+existing, cursor scan bounded, HTTP bearer dan CLI, serta monitoring safe.
+Kelas 14/60/90 mempertahankan order aktif, hold dan batas financial evidence.
+Klaim `DELETE_PENDING` disimpan sebelum storage I/O; timeout/error setelah
+panggilan storage tetap unknown. Konfirmasi delete dan final lease diperlukan
+sebelum tombstone/audit selesai; retry memakai key sama tanpa membuka ulang
+file atau quote/order baru. Media publik dan histori B2B dikecualikan.
+
+Regresi awal menunjukkan hold privacy dapat hilang saat FK Customer dilepas
+oleh account erasure. Snapshot ID hold kini tetap pada file, termasuk setelah
+receipt dipurge; release Owner menghapus hanya hold kasus terkait. Tidak ada
+pemulihan akun/history otomatis atau perubahan tenggat cleanup privacy.
+Kontrol kasus memakai UI Owner existing. Hold file khusus/orphan tersedia
+sebagai layanan domain; interface/SOP perlu dibuktikan pada UAT T36/T39.
+
+Pada diff ini: **127/1.457** unit/component, **95/706** backend, **50/382**
+integration serial, lint **0 error/4 warning existing**, strict TypeScript,
+Prisma validation, dan build **93 static pages** lulus. **34/34** migration
+diterapkan pada database test baru `niuva_file_retention_test_20261019_v4`;
+database aplikasi dan migration lama tidak diubah. Build memakai satu worker,
+tier production/mock dan origin loopback; HTTPS hosted tidak dibuktikan.
+E2E browser tidak diulang untuk diff backend ini. Storage memakai fixture
+sintetis; ini bukan bukti R2/cron/provider, staging, device/AT atau production.
+
+T08 berstatus **BLOCKED_EXTERNAL** sampai resource, grants, cadence, alarm dan
+delete R2 hosted dibuktikan. Syarat/Privasi tetap draf. Kontrak dan rollback
+berada pada [runbook](../backend/batch-2-operations.md#retensi-binary-customer--t08-19-oktober-2026)
+dan [service contract](../backend/phase-2-service-contract.md#customer-binary-retention--19-october-2026).
+
 ### Peta penghambat rilis
 
 Status berikut menggabungkan pencocokan source/dokumen, bukti diff lokal 18
@@ -195,11 +246,11 @@ belum ditetapkan tetap terbuka. Rincian gate dimiliki [paket kesiapan publik](..
 | REL-01 — akun dan consent publik | BLOCKED_INPUT; policy final terbuka | Owner (pengesah), fungsi review; engineering belum bernama | [Resolver](../../src/modules/customer-auth/legal.ts) hanya internal/test; [akun Google baru](../../src/modules/customer-auth/repository.ts) membutuhkan proof internal. Kontrol 18+ ada; Owner mengonfirmasi Syarat dan Privasi masih draf serta belum disahkan; public consent belum tersedia | Owner mengesahkan dokumen/versi/tanggal; Google dan verified email/password membuat akun dengan proof/consent/deklarasi server yang benar. Internal/test tetap terpisah; tidak menghidupkan riwayat tertutup. PUB-POLICY, PUB-AGE; formal register tetap terpisah. |
 | REL-02 — capability hosted | BLOCKED_EXTERNAL; aktivasi tertutup | Engineering belum bernama; Owner untuk resource/izin | [Tier/mode/grants](../../src/lib/env/deployment.ts), [matrix/resolver](../../src/modules/capabilities/matrix.ts) dan origin ada; [guard lama](../../src/modules/providers/non-production.ts) menolak production/live, grants kosong. Owner mengonfirmasi staging resource belum tersedia; shared PostgreSQL limiter hanya diuji lokal dan binding hosted belum dibuktikan | Sediakan staging sandbox terpisah dan putuskan origin/cookie/CSP/capability yang konsisten. Production tetap tertutup sampai instruksi aktivasi tersendiri; tidak sekadar melepas guard. PUB-HOSTED. |
 | REL-03 — email persisten dan inbox | PARTIAL_LOCAL; hosted delivery belum tersedia | Engineering belum bernama; Rheza untuk kanal/operasi; Owner untuk sender | [Outbox](../../src/modules/outbox/service.ts) menyimpan pesan terenkripsi/dedup/revalidation/expiry. [Worker](../../src/modules/outbox/worker.ts) memakai lease/retry/fencing dan [sender Customer](../../src/modules/outbox/customer-sender.ts). Producer auth/privacy enqueue atomik; [launcher](../../src/app/api/internal/jobs/outbox/route.ts) mencatat hasil safe ke job state, termasuk outcome unknown. Queue accepted belum membuktikan inbox; provider hosted/bounce dan email bisnis belum tersedia | Pesan persisten, retry terbatas/idempoten, proof expired/revoked/closed tidak terkirim ulang, kegagalan terlihat dan inbox/bounce diuji. PUB-EMAIL. |
-| REL-04 — job operasional | PARTIAL_LOCAL; scheduler/hosted belum tersedia | Engineering belum bernama; Rheza/privasi; Owner untuk cadence/lag/coverage | [Outbox job](../../src/app/api/internal/jobs/outbox/route.ts) dan [inventory expiry job](../../src/app/api/internal/jobs/inventory-reservations/route.ts) memakai bearer auth dan database binding; CLI dan HTTP berbagi JobRunner/OperationalJobState serta role guard; runner expiry mengunci payment attempt → variant → order, membatalkan order unpaid saat attempt due, melepas reservation idempoten, dan melindungi settlement. Backend 93/695 dan integration 49/368 serial lulus lokal. `vercel.json` tetap hanya menjadwalkan analytics; Owner cadence dan staging belum tersedia. Retensi Customer, alarm dan payment reconciliation masih terbuka | Job resource-bound, aman diulang/overlap, deadline tetap, lag/last-success/alarm dan petugas terbukti. Owner menetapkan cadence; staging memverifikasi launcher/scheduler. Cron analytics tidak menutup PUB-JOBS. |
+| REL-04 — job operasional | PARTIAL_LOCAL; scheduler/hosted belum tersedia | Engineering belum bernama; Rheza/privasi; Owner untuk cadence/lag/coverage | [Outbox](../../src/app/api/internal/jobs/outbox/route.ts), [inventory expiry](../../src/app/api/internal/jobs/inventory-reservations/route.ts) dan [retensi file](../../src/app/api/internal/jobs/customer-file-retention/route.ts) berbagi JobRunner/OperationalJobState, bearer auth, binding dan role guard. Inventory melindungi settlement; retensi memakai klaim pending, final lease dan hold persisten setelah closure/receipt purge. Backend 95/706 dan integration 50/382 serial lulus lokal pada diff T08. `vercel.json` hanya menjadwalkan analytics; R2/scheduler hosted, cadence, alarm eksternal dan payment reconciliation belum terbukti | Job resource-bound, aman diulang/overlap, deadline tetap, lag/last-success/alarm dan petugas terbukti. Owner menetapkan cadence; staging memverifikasi launcher/scheduler. Cron analytics tidak menutup PUB-JOBS. |
 | REL-05 — refund lengkap | MISSING_WORKFLOW | Owner (approval); engineering belum bernama; Rheza/operasi pembayaran | Notifikasi/status/exception refund ada; [order berbayar](../../src/modules/order/status-service.ts) membutuhkan workflow refund. Case/approval/submit/reconciliation lengkap belum tersedia | Refund penuh sesuai arah produk; nominal server/Decimal, approval Owner, stable key/lock, hasil tak pasti/manual tidak menggandakan pembayaran. Detail kasus/cakupan merchant dibuktikan tanpa meminta ulang pilihan refund penuh. PUB-REFUND, PUB-REFUND-PROVIDER, PUB-REFUND-RECON. |
 | REL-06 — provider dan data pemenuhan | BLOCKED_EXTERNAL | Owner untuk akun/resource/data; engineering belum bernama; Rheza/operator | Adapter/test Google, email, payment/shipping dan R2 ada. Smoke development bertanggal tetap hanya evidence fase tersebut. Owner mengonfirmasi resource staging/provider sandbox belum tersedia; tidak ada secret/env yang diperiksa | OAuth/inbox, Midtrans sandbox/webhook, Biteship dan private R2 terbukti pada staging; stok/berat/dimensi paket sesuai produk dan paket MAKE diukur setelah selesai. PUB-PROVIDER, PUB-STAGING. |
 | REL-07 — privasi, operasi dan recovery | PARTIAL_LOCAL; review/resource terbuka | Owner; Rheza/privasi; fungsi akuntansi/review; engineering belum bernama | [Availability privasi](../../src/modules/customer-privacy/core.ts) masih internal/test. Identitas/alamat retur/Rheza terkonfirmasi; coverage/kalender, retensi arsip, provider delete dan restore belum terbukti | Hak Customer hosted, kontak pasca-closure, retensi per kategori, prosedur insiden dan latihan restore terbukti tanpa memulihkan akun/riwayat atau mengulang refund/email. PUB-DATA, PUB-RECORDS, PUB-SERVICE, PUB-INCIDENT, PUB-BACKUP. |
-| REL-08 — bukti alur terpadu dan rilis | BLOCKED_EXTERNAL; release belum diizinkan | Engineering belum bernama; Owner untuk penerimaan/izin; Rheza/operator | Lint/typecheck/unit/backend/integration/default E2E/authenticated Admin E2E/build lulus lokal pada diff; Next/Playwright memakai worker terbatas karena batas memori lokal. [Quality pada `4eb8471`](https://github.com/batakers/Niuva-2026/actions/runs/39155145353) success setelah regresi landing MFA dibuktikan RED→GREEN; seluruh gate termasuk Owner/Admin dan build lulus. Pembaruan penutup hanya dokumentasi. Owner mengonfirmasi staging belum tersedia. B2B WhatsApp dan layanan BUY/MAKE memiliki source | Uji hosted BUY lalu MAKE termasuk failure/fulfillment/refund yang relevan; B2B membuka tujuan WhatsApp yang benar. Catat scope visual/device/AT, monitoring/rollback, hasil operasi dan keputusan rilis. Deployment/provider/production memerlukan instruksi tersendiri. PUB-STAGING, PUB-RELEASE. |
+| REL-08 — bukti alur terpadu dan rilis | BLOCKED_EXTERNAL; release belum diizinkan | Engineering belum bernama; Owner untuk penerimaan/izin; Rheza/operator | [Quality pada squash merge main `54a97bb`](https://github.com/batakers/Niuva-2026/actions/runs/39185705585) success. Diff T08 sesudahnya lulus lint/typecheck/unit/backend/integration/build lokal; browser E2E tidak diulang dan CI T08 belum tersedia karena diff belum di-commit/push. Evidence browser/Owner/Admin pada main tetap terpisah dari diff T08. Staging belum tersedia. B2B WhatsApp dan layanan BUY/MAKE memiliki source | Uji hosted BUY lalu MAKE termasuk failure/fulfillment/refund yang relevan; B2B membuka tujuan WhatsApp yang benar. Catat scope visual/device/AT, monitoring/rollback, hasil operasi dan keputusan rilis. Deployment/provider/production memerlukan instruksi tersendiri. PUB-STAGING, PUB-RELEASE. |
 
 ### Urutan rekomendasi setelah Batch 1 — snapshot 2026-10-13
 

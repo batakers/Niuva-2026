@@ -104,10 +104,12 @@ export class RefundRepository {
     return this.create({ kind: "CUSTOMER", id: customerId }, input);
   }
   async intake(access: AdminAccess, input: RefundIntakeInput): Promise<RefundCaseView> {
-    return this.create({ kind: "ADMIN", access, write: true }, input, input.contactVerificationReference);
+    return this.create({ kind: "ADMIN", access, write: true }, input, input);
   }
-  private async create(actor: Actor, input: RefundRequestInput, contactVerificationReference?: string): Promise<RefundCaseView> {
-    return this.withOrder(actor, input.orderId, async (tx, order) => {
+  private async create(actor: Actor, input: RefundRequestInput, intake?: Pick<RefundIntakeInput, "contactVerificationReference" | "receivedAt">): Promise<RefundCaseView> {
+    return this.withOrder(actor, input.orderId, async (tx, order, now) => {
+      const receivedAt = intake ? new Date(intake.receivedAt) : now;
+      if (receivedAt > now) throw appError("VALIDATION_ERROR", { message: "Waktu penerimaan tidak boleh berada di masa depan." });
       const hash = refundHash({ input, actor: actor.kind, actorId: actorId(actor) });
       const existing = await this.readCase(tx, order.id);
       if (existing) {
@@ -117,10 +119,10 @@ export class RefundRepository {
       const snapshot = snapshotFor(order);
       const row = await tx.refundCase.create({ data: { orderId: order.id, category: input.category, reason: input.reason,
         requesterType: actor.kind, requestedByCustomerId: actor.kind === "CUSTOMER" ? actor.id : null,
-        requestedByAdminId: actor.kind === "ADMIN" ? actor.access.profile.id : null, contactVerificationReference,
+        requestedByAdminId: actor.kind === "ADMIN" ? actor.access.profile.id : null, contactVerificationReference: intake?.contactVerificationReference, receivedAt,
         submissionKey: input.submissionKey, requestHash: hash, amountRp: snapshot.totalRp, snapshotHash: snapshot.hash,
         allocations: { create: snapshot.allocations.map(allocation => ({ ...allocation })) } }, include: caseInclude });
-      await audit(tx, actor, row.id, "refund.requested", { orderId: order.id, amountRp: snapshot.totalRp, allocations: snapshot.allocations.length });
+      await audit(tx, actor, row.id, "refund.requested", { orderId: order.id, amountRp: snapshot.totalRp, allocations: snapshot.allocations.length, receivedAt: receivedAt.toISOString() });
       return caseView(row);
     });
   }
