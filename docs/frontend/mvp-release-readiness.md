@@ -35,6 +35,23 @@ dan langkah berikutnya. Snapshot bertanggal di bawah dan
 [Bagian 2](#bagian-2--arsip-evidence-bertanggal-historis) dipertahankan sebagai
 histori. Angka gate dan penerimaan lama tidak digabung menjadi hasil baru.
 
+### Reconciliation T24 — 19 Oktober 2026
+
+Branch `codex/v1-payment-reconciliation` bergantung eksplisit pada `28f9037`
+PR #59. Status tetap BLOCKED_EXTERNAL: fixture bukan bukti Get Status sandbox,
+merchant, cadence atau role/resource hosted. Launcher tidak mengaktifkan
+provider/scheduler. [Kontrak](../backend/payment-reconciliation.md) mencatat
+identity/amount/signature, lease, receipt, refund hold, migrasi dan rollback.
+
+Lokal: lint 0 error/4 warning existing, typecheck/schema, unit 127/1.466, backend
+97/724, integration penuh 51/404, build 93/93 dan dua browser refund lulus.
+Ada 14 skenario integration reconciliation; database file terpisah mencegah
+polling fixture file lain. Regresi penuh terakhir memakai resource baru dengan
+35 migration dan tidak mereset database lama. Tidak ada klaim CI T24 sebelum
+run pada head PR tersedia; Quality PR #59 di bawah tetap bukti dependensi.
+Kode T24 `e3941f6` dikirim pada [draft PR #60](https://github.com/batakers/Niuva-2026/pull/60),
+menarget main untuk Quality dan mencatat dependency #59. CI diff T24 masih menunggu.
+
 ### Refund T21–T22 — 19 Oktober 2026
 
 Branch `codex/v1-refund-cases` berawal dari main `54a97bb`, terpisah dari T08.
@@ -48,7 +65,12 @@ termasuk boundary Customer tanpa proxy Admin. Browser mencakup Customer,
 Owner dengan TOTP, penolakan Admin,
 native POST/error recovery tanpa JavaScript serta capture 1440/390/320px.
 Kode `7903870` dikirim pada [draft PR #59](https://github.com/batakers/Niuva-2026/pull/59).
-CI head PR masih menunggu pada checkpoint delivery; hasil di atas bukti lokal.
+[Quality head `28f9037`](https://github.com/batakers/Niuva-2026/actions/runs/39240507304)
+telah sukses. Ini CI T21/T22; hasil provider/staging tetap belum dibuktikan.
+Pemulihan integrasi 20 Oktober mempertahankan T08 dan menutup dua temuan review
+retensi refund/waktu intake. [Quality head `85f63c5`](https://github.com/batakers/Niuva-2026/actions/runs/39308159415)
+sukses; PR #59 terverifikasi merged pada `bcd04d9`. Bukti lokal gabungan dan
+cakupannya dicatat di TASKS; provider/staging tetap belum dibuktikan.
 
 Approval tidak mengirim uang. T23/T25, merchant/window/fallback manual,
 reconciliation/sandbox dan REL-05 tetap terbuka; penerimaan visual Owner,

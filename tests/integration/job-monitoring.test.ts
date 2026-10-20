@@ -13,7 +13,8 @@ describe("operational inspection", () => {
   it("reports never-run jobs without creating state or requiring cipher keys", async () => {
     const source = { ...f.source, NIUVA_OUTBOX_ENCRYPTION_KEY: undefined, RESEND_API_KEY: undefined, EMAIL_FROM: undefined };
     const result = await createOperationalJobRuntime({ prisma: f.client, source }).inspect({ maxLagMs: 1000 });
-    expect(result.jobs).toHaveLength(6); expect(result.alarms.filter(a => a.code === "JOB_NEVER_RUN")).toHaveLength(6); expect(await f.admin.operationalJobState.count()).toBe(0);
+    expect(result.jobs).toHaveLength(7); expect(result.alarms.filter(a => a.code === "JOB_NEVER_RUN")).toHaveLength(7); expect(await f.admin.operationalJobState.count()).toBe(0);
+    expect(result.jobs.map(job => job.name)).toEqual(expect.arrayContaining(["CUSTOMER_FILE_RETENTION", "PAYMENT_RECONCILIATION"]));
   });
   it("reports stale leases, old success and unknown provider outcomes without exposing content", async () => {
     const old = new Date(Date.now() - 60000);

@@ -31,11 +31,11 @@ export function buildRefundSnapshot(orderId: string, currency: string, payments:
     const results = payment.events.map(event => event.processingResult);
     let verificationIssue = false;
     for (const result of results) {
-      if (result === "SETTLED" || result === "STALE_SETTLED") verificationIssue = false;
+      if (result === "SETTLED" || result === "STALE_SETTLED" || result === "LATE_SETTLEMENT_REFUND_REQUIRED") verificationIssue = false;
       else if (result === "AMOUNT_MISMATCH" || result === "PROVIDER_TRANSACTION_CONFLICT" || result === "SETTLEMENT_STATUS_CODE_INVALID") verificationIssue = true;
     }
     if (verificationIssue) throw appError("CONFLICT", { message: "Exception pembayaran perlu diperiksa sebelum refund." });
-    if (payment.status === "REFUNDED" || results.includes("REFUNDED_AFTER_LATE_SETTLEMENT") || results.includes("PARTIAL_REFUND_REQUIRES_EXCEPTION")) {
+    if (payment.status === "REFUNDED" || results.includes("REFUNDED_AFTER_LATE_SETTLEMENT") || results.includes("PARTIAL_REFUND_REQUIRES_EXCEPTION") || results.includes("REFUND_REQUIRES_RECONCILIATION")) {
       throw appError("CONFLICT", { message: "Hasil refund pembayaran perlu direkonsiliasi sebelum membuat atau menyetujui pengembalian lain." });
     }
     const late = results.includes("LATE_SETTLEMENT_REFUND_REQUIRED");

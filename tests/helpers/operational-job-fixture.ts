@@ -5,9 +5,9 @@ import { getPrismaClient } from "@/lib/db/prisma";
 import { getSafeTestDatabaseUrl } from "@/lib/db/test-safety";
 import { createOutboxBinding } from "@/modules/outbox/runtime";
 
-export async function operationalJobFixture() {
-  const admin = getPrismaClient(), bindingId = randomUUID(), role = `niuva_job_${randomUUID().replaceAll("-", "")}`;
-  const url = new URL(getSafeTestDatabaseUrl({ TEST_DATABASE_URL: process.env.TEST_DATABASE_URL }));
+export async function operationalJobFixture(database?: { prisma: PrismaClient; url: string }) {
+  const admin = database?.prisma ?? getPrismaClient(), bindingId = randomUUID(), role = `niuva_job_${randomUUID().replaceAll("-", "")}`;
+  const url = new URL(getSafeTestDatabaseUrl({ TEST_DATABASE_URL: database?.url ?? process.env.TEST_DATABASE_URL }));
   if (await admin.deploymentDatabaseBinding.findUnique({ where: { id: 1 } })) throw new Error("Foreign test marker");
   await admin.deploymentDatabaseBinding.create({ data: { id: 1, bindingId, tier: "local-test" } });
   if (!/^niuva_job_[a-f0-9]{32}$/.test(role)) throw new Error("Invalid fixture role");

@@ -7,8 +7,8 @@ export class PrismaActivityTargetReader implements ActivityTargetReader {
 
   async lookup(event: ActivityTargetInput): Promise<ActivityDestination | null> {
     const id = event.entityId;
-    // The historical webhook audit contract stores orderId as PaymentEvent.entityId.
-    if (["Order", "RetailOrder", "CustomOrder"].includes(event.entityType) || (event.entityType === "PaymentEvent" && event.action === "payment.webhook.processed")) {
+    // Payment webhook and reconciliation audits store orderId as PaymentEvent.entityId.
+    if (["Order", "RetailOrder", "CustomOrder"].includes(event.entityType) || (event.entityType === "PaymentEvent" && ["payment.webhook.processed", "payment.reconciliation.processed"].includes(event.action))) {
       const row = await this.prisma.order.findFirst({ where: { id, accountClosedAt: null }, select: { id: true } });
       return row ? { kind: "order", id: row.id } : null;
     }

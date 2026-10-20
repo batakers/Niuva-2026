@@ -2499,3 +2499,11 @@ yang didefinisikan pada [refund workflow](backend/refund-workflow.md).
 Submission provider dan hasil dana tetap T23/T25; approved/ready tidak
 menyelesaikan kasus, menambah stock, atau membuka akun/order tertutup.
 Bukti lokal/delivery berada di TASKS dan ledger readiness; bukan aktivasi hosted.
+
+### Reconciliation pembayaran — 19 Oktober 2026
+
+T24 mengikuti [kontrak reconciliation](backend/payment-reconciliation.md): Get
+Status terverifikasi, receipt per run/attempt dan transaksi settlement canonical
+di bawah lease job. Refund yang belum terbukti hasil dananya menahan proses
+lanjutan; poll tidak mengulang uang/stock atau menghidupkan order batal.
+Sandbox, cadence/role hosted dan deployment tetap memerlukan bukti/izin terpisah.

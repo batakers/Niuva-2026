@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { randomUUID } from "node:crypto";
 
 import {
   Prisma,
@@ -69,32 +70,29 @@ export class PaymentWebhookRepository {
   async processMidtransWebhook(
     input: ProcessMidtransWebhookInput,
   ): Promise<MidtransWebhookResult> {
-    return this.prisma.$transaction(async (transaction) => {
-      let eventId: string;
+    return this.prisma.$transaction(transaction => this.processMidtransWebhookIn(transaction, input));
+  }
 
-      try {
-        const event = await transaction.paymentEvent.create({
-          data: {
+  async processMidtransWebhookIn(transaction: Prisma.TransactionClient, input: ProcessMidtransWebhookInput): Promise<MidtransWebhookResult> {
+      const eventId = randomUUID();
+      const inserted = await transaction.paymentEvent.createMany({
+          data: [{
+            id: eventId,
             eventFingerprint: input.eventFingerprint,
             payloadJson: minimizePaymentEventPayload(toEventPayload(input.notification)),
             provider: "MIDTRANS",
             providerOrderId: input.notification.orderId,
             providerTransactionId: input.notification.transactionId,
             processingResult: "RECEIVED",
-          },
-          select: { id: true },
+          }],
+          skipDuplicates: true,
         });
-        eventId = event.id;
-      } catch (error) {
-        if (isUniqueViolation(error)) {
+        if (inserted.count === 0) {
           return {
             kind: "DUPLICATE",
             processingResult: "DUPLICATE",
           };
         }
-
-        throw error;
-      }
 
       const lockedAttempts = await transaction.$queryRaw<LockedPaymentAttempt[]>(
         Prisma.sql`
@@ -190,7 +188,6 @@ export class PaymentWebhookRepository {
         targetStatus,
         transaction,
       });
-    });
   }
 }
 
@@ -627,13 +624,4 @@ function toEventPayload(
     transactionId: notification.transactionId ?? null,
     transactionStatus: notification.transactionStatus,
   };
-}
-
-function isUniqueViolation(error: unknown): boolean {
-  return (
-    error !== null &&
-    typeof error === "object" &&
-    "code" in error &&
-    error.code === "P2002"
-  );
 }

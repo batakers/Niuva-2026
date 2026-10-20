@@ -15,6 +15,16 @@ real PostgreSQL with non-production provider adapters, including order
 snapshots, stock reservations, payment attempts, and idempotent replay. Those
 adapters are test doubles; this result is not a Biteship or Midtrans sandbox
 transaction.
+
+The payment reconciliation fixture creates a new database named
+`niuva_status_test_<uuid>` from the guarded test connection and applies the
+reviewed migrations with the installed Prisma CLI. Its role cannot read
+Customers/sessions, write refund cases, or delete payment/stock evidence.
+This file must not poll another integration file's payment fixtures: the real
+batch query intentionally scans all eligible payments. The test identity needs
+CREATEDB/CREATEROLE on the isolated test cluster; it must never be a production
+identity. Each generated database is retained after disconnecting for evidence;
+do not reset an older database to make a repeated run pass.
 The same suite checks database-owned `AdminProfile` resolution for an exact
 Clerk test identity; the protected `/admin` page is also rendered against the
 database-backed Action Queue for an active profile and kept hidden for an

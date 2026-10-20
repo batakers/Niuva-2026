@@ -45,7 +45,7 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 | T21 | M4 | DONE | Pengajuan kasus refund | T02; kontrak aktif | Kasus/alokasi persisten, nominal Decimal server dan ownership/closure diuji integration lokal; UI/API dan native form tersedia. Provider/hasil dana tetap T23/T25. |
 | T22 | M4 | DONE | Persetujuan refund Owner | T21 | Owner aktif saja; alasan/retur/audit, version/snapshot immutable, overlap dan approval/receipt ulang diuji integration lokal. Persetujuan belum mengeksekusi uang. |
 | T23 | M4 | TODO | Submission refund | T22; merchant | Stable key/attempt; timeout perlu reconciliation; fallback manual berizin punya bukti. Adapter/integration/sandbox. |
-| T24 | M4 | TODO | Reconciliation pembayaran | T03 | Status tak pasti/terlambat diperiksa ke provider; order/settlement/stock movement tidak ganda. Integration/sandbox. |
+| T24 | M4 | BLOCKED_EXTERNAL | Reconciliation pembayaran | T03; guard refund T21/T22 | Get Status/receipt/lease canonical, late/unknown/refund hold dan balapan webhook diuji fixture lokal. Sandbox/merchant serta cadence/role/resource hosted belum terbukti. |
 | T25 | M4 | TODO | Reconciliation refund | T23 | Accepted belum selesai; hasil provider/manual direkonsiliasi; tidak ada refund ganda. Integration/sandbox. |
 | T26 | M4 | TODO | Email order received | T06 | Pesan persisten/dedup; email gagal tidak membatalkan order. Integration. |
 | T27 | M4 | TODO | Email payment confirmed | T06 | Hanya settlement otoritatif; webhook duplikat tidak menduplikasi pesan. Integration. |
@@ -108,6 +108,82 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
   input/evidence eksternal yang tidak dapat diganti fixture.
 
 ## Log pelaksanaan
+
+### Pemulihan sinkronisasi E2E PR #60 — 2026-10-20
+
+- Quality run `39329168932` pada head integrasi `ce8b6ab` gagal pada satu test notifikasi Admin (26 passed, 1 failed): poll persistence `readAt` selama 5 detik dimulai setelah klik tanpa menunggu POST selesai. Review ulang tidak menemukan regresi runtime T24 pada jalur Custom Print tersebut; log CI konsisten dengan kegagalan sinkronisasi, tanpa bukti bahwa respons HTTP akhirnya sukses.
+- Respons POST yang sengaja ditunda 6 detik mereproduksi kegagalan assertion database yang sama (RED: 1 failed). Helper `confirmRead` yang sudah ada pada branch #61 diambil hanya untuk test existing ini: waiter dipasang sebelum klik, respons wajib `200` dan `Cache-Control: no-store`, lalu assertion database semula tetap dijalankan tanpa mengubah timeout. Penundaan satu request dipertahankan sebagai regresi. Tidak ada fitur email #61 atau kode runtime yang diambil.
+- GREEN: test notifikasi tersebut lulus dengan respons lambat dan seluruh assertion persistence, no replay, navigasi/focus serta mobile tetap aktif. Review independen tidak menemukan pelemahan test. Lint ulang (0 error; 4 warning existing) dan strict typecheck ulang lulus.
+- Bukti RED `C:/Users/FAIZ/.codex/tmp/niuva-integration-20261020/pr60-1792446751263/`; GREEN `pr60-1792446830798/`; static ulang `pr60-1792446880776/`. Seluruh gate lokal pada produk T24 sebelumnya telah lulus seperti log berikut. Commit perbaikan test harus memperoleh Quality baru yang sukses sebelum Ready/merge; run gagal tidak dipakai sebagai bukti kelulusan.
+
+### Integrasi PR #60 setelah PR #59 — 2026-10-20
+
+- PR #59 terverifikasi MERGED dengan squash `bcd04d9ee6f806524a37b243ff27921897f5c0d8`; Quality pada head `85f63c5` dan hasil squash main keduanya SUCCESS. T24 kemudian diintegrasikan pada worktree terpisah tanpa menyentuh worktree T23/T25.
+- Konflik merge mempertahankan T08, refund hold pada retensi model serta waktu penerimaan pertama intake staf dari #59. Runner/monitoring canonical kini memuat tujuh job, termasuk `CUSTOMER_FILE_RETENTION` dan `PAYMENT_RECONCILIATION`. Review independen atas diff final terhadap main tidak menemukan defect actionable.
+- Gate lokal pada database baru `niuva_pr60_gate_test_20261020` dan `niuva_pr60_browser_test_20261020`: lint (0 error; 4 warning existing), strict typecheck, Prisma validate, unit/component 127 file/1.466 test, backend 99 file/735 test, integration 52 file/422 test, Chromium 112 passed/5 existing skips, Owner/Admin 27 passed, serta production build 93/93 halaman — seluruhnya lulus.
+- Perintah: `corepack pnpm lint`, `typecheck`, `db:validate`, `test --reporter=dot --maxWorkers=1`, `test:backend --reporter=dot --maxWorkers=1`, `exec prisma migrate deploy` ke masing-masing database baru, `exec vitest run --config vitest.integration.config.mts --reporter=dot --maxWorkers=1`, `test:e2e --config .local/integration-recovery.playwright.config.mts --workers=1`, `test:e2e:admin-auth --workers=1`, dan `build`. Adapter browser sementara/ignored mewarisi suite canonical dan menggunakan server baru pada cluster test yang identitasnya diverifikasi; assertion produk dan workflow CI tidak diubah.
+- Seluruh 36 migration berhasil diterapkan. Semua migration existing identik dengan main; hanya migration reconciliation baru yang ditambahkan. Bukti lokal disimpan di `C:/Users/FAIZ/.codex/tmp/niuva-integration-20261020/pr60-1792444624928/`.
+- Checkpoint ini mendahului commit/push dan Quality pada head integrasi baru; merge hanya dilakukan setelah Quality tersebut SUCCESS. T24 tetap `BLOCKED_EXTERNAL` untuk sandbox/merchant, cadence, resource serta binding/role hosted. Tidak ada aktivasi provider/scheduler, produksi, pengiriman email nyata, refund dana, atau klaim v1.0 RELEASED.
+
+### T24 — reconciliation pembayaran, 2026-10-19
+
+- Audit ulang: working tree T21/T22 bersih, main masih `54a97bb`, PR #58/#59
+  draft/open. Branch `codex/v1-payment-reconciliation` memakai baseline
+  `28f9037` dari PR #59 sebagai dependensi teknis eksplisit. Get Status dapat
+  melaporkan refund tanpa bukti dana final; receipt-nya harus menahan kasus
+  T21, sehingga guard domain refund disertakan pada slice T24. PR menarget main
+  agar Quality existing (pull_request main saja) menjalankan SHA T24. Dependency
+  PR #59 dan diff khusus sejak `28f9037` dicatat eksplisit; ini satu rantai
+  kasus/approval/reconciliation. Tidak membawa kode T08 atau mengubah main.
+- Adapter mengikuti Get Status API resmi, signature dan identity server.
+  Response fixture tidak menjadi sandbox/merchant proof. Scheduler/cadence,
+  role/resource hosted serta pengembalian dana final tetap gate eksternal.
+- Quality PR #59 telah diverifikasi sukses pada head
+  `28f9037a1460c70fd8c5cb827dc05088709da7dd`,
+  [run 39240507304](https://github.com/batakers/Niuva-2026/actions/runs/39240507304).
+  Ini bukti CI T21/T22, bukan CI diff T24. Kedua PR tetap tanpa merge.
+- Whitelist job migration T24 mempertahankan nama T08 untuk baseline gabungan.
+  Urutan deployment kandidat wajib menyertakan migration T08 sebelum T24;
+  kode/scheduler T08 tidak menjadi bagian diff ini. Belum ada deployment.
+- Adapter/provider boundary: **14 gateway** dan **4 HTTP** test; job memakai
+  Zod/body limit, signature/currency/identity server, no-store/no-redirect dan
+  timeout 8 detik. 404/network/invalid tidak mengubah pembayaran menjadi gagal.
+  Refund report tanpa bukti dana menghasilkan hold persisten, bukan REFUNDED.
+- **14 integration reconciliation** membuktikan stock/settlement tidak ganda
+  saat query/webhook beradu, late settlement tidak membuka order batal, amount/
+  signature/status code salah dan capture challenge ditolak, receipt per
+  run/attempt dedup, overlap/cooldown, rotasi batch dan lease fencing. Kehilangan
+  lease di tengah apply me-rollback event, order/payment, stock, receipt dan
+  audit. Audit hanya berubah saat outcome/kategori berubah. Link notifikasi ke
+  order ditolak sesudah closure; kasus/refund baru ditahan pada hasil tak pasti.
+- Role fixture tidak memiliki akses Customer/sesi/kasus refund atau DELETE
+  payment/event/check/stock. Request provider semuanya response fixture; tidak
+  ada credential production, provider activation, scheduler atau perubahan env.
+- Tiga fixture expiry awal ditolak constraint existing; waktu fixture diperbaiki,
+  constraint tidak diubah. Pengulangan setelah suite penuh mendeteksi batch
+  membaca fixture file lain. Test kini memakai database baru
+  `niuva_status_test_<uuid>` dengan migrate deploy resmi; query produksi tidak
+  diberi filter test. Resource lama tidak di-reset/dihapus.
+- Gate akhir 19 Oktober: lint **0 error/4 warning existing**, typecheck dan schema
+  valid; unit/component **127/1.466**, backend **97/724**, integration penuh
+  **51/404**, build **93/93 static pages**, browser refund authenticated **2/2**.
+  Perbaikan target notifikasi/helper diverifikasi ulang dengan 14 integration
+  khusus dan seluruh 51/404 pada resource regresi baru; lint/typecheck akhir juga
+  diulang. Perintah resmi melalui corepack: pnpm lint/typecheck/db:validate,
+  test --reporter=dot --maxWorkers=2, test:backend --reporter=dot --maxWorkers=2,
+  test:integration, build, dan
+  test:e2e:admin-auth tests/e2e-admin-auth/admin-refund.spec.ts.
+- PostgreSQL loopback 55432, cluster `.local/postgres-test/data`; 35 migration
+  diterapkan ke `niuva_payment_reconcile_test_20261019` dan resource regresi baru
+  `niuva_payment_reconcile_regression_test_20261019`. File job memiliki database
+  fixture sendiri melalui helper terjaga. Build saja memakai tier production /
+  mode mock / satu worker; override build tidak masuk unit/backend/integration.
+- Diff check dan scan pola credential lulus; migration historis/env/workflow
+  tidak diubah. Commit kode `e3941f6fb33ba3f175a88c3928433fa21ed44eb9`, branch
+  `codex/v1-payment-reconciliation`, [draft PR #60](https://github.com/batakers/Niuva-2026/pull/60)
+  sudah di-push. PR #59 adalah dependensi eksplisit; belum ada merge. CI T24
+  masih menunggu pada checkpoint delivery. Kontrak/risiko/rollback pada
+  [reconciliation pembayaran](docs/backend/payment-reconciliation.md).
 
 ### Pemulihan integrasi PR #59 — 2026-10-20
 
