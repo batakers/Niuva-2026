@@ -4,6 +4,8 @@ import { InternalAuthCleanupRepository } from "../customer-auth/internal-cleanup
 import { CustomerPrivacyCleanupRepository } from "../customer-privacy/cleanup";
 import { createCustomerAuthMailer } from "../customer-auth/email-mailer";
 import { createPrivacyMailer } from "../customer-privacy/mailer";
+import { createBusinessMailer } from "../outbox/business-mailer";
+import { createBusinessOutboxHandler } from "../outbox/business-job";
 import { OutboxPayloadCipher, readOutboxCipherConfig } from "../outbox/cipher";
 import { CustomerOutboxSender } from "../outbox/customer-sender";
 import { DurableOutboxService } from "../outbox/service";
@@ -20,14 +22,15 @@ import { createMidtransStatusGateway, type PaymentStatusGateway } from "../payme
 import { createR2PrivateObjectStorageFromEnvironment, type PrivateObjectStorage } from "../files/r2";
 import { CustomerFileRetentionJob } from "./file-retention";
 
-export function createJobHandlers(options: { prisma: PrismaClient; bound: Pick<BoundDatabaseService, "run">; source: Readonly<Record<string, string | undefined>>; workerPolicy?: unknown; senderFactory?: () => OutboxSender; paymentStatusFactory?: () => PaymentStatusGateway; fileStorageFactory?: () => Pick<PrivateObjectStorage, "deleteObject"> }): Readonly<Record<JobName, JobHandler>> {
+export function createJobHandlers(options: { prisma: PrismaClient; bound: Pick<BoundDatabaseService, "run">; source: Readonly<Record<string, string | undefined>>; workerPolicy?: unknown; businessPolicy?: unknown; senderFactory?: () => OutboxSender; paymentStatusFactory?: () => PaymentStatusGateway; fileStorageFactory?: () => Pick<PrivateObjectStorage, "deleteObject"> }): Readonly<Record<JobName, JobHandler>> {
   const source = Object.freeze({ ...options.source }), bound = options.bound;
   const workerPolicy = options.workerPolicy === undefined ? undefined : parseWorkerPolicy(options.workerPolicy);
   const cipherFactory = () => new OutboxPayloadCipher(readOutboxCipherConfig(source));
-  const senderFactory = options.senderFactory ?? (() => new CustomerOutboxSender({ auth: createCustomerAuthMailer(source), privacy: createPrivacyMailer(source) }));
+  const senderFactory = options.senderFactory ?? (() => new CustomerOutboxSender({ auth: createCustomerAuthMailer(source), privacy: createPrivacyMailer(source), business: createBusinessMailer(source) }));
   const outbox = new DurableOutboxService({ bound, repository: new PrismaOutboxRepository(), cipherFactory });
   const authCleanup = new InternalAuthCleanupRepository(options.prisma), privacyCleanup = new CustomerPrivacyCleanupRepository(options.prisma);
   return Object.freeze({
+    OUTBOX_BUSINESS: createBusinessOutboxHandler(outbox, options.businessPolicy),
     PAYMENT_RECONCILIATION: createPaymentReconciliationHandler(options.paymentStatusFactory ?? (() => createMidtransStatusGateway(source)), new PaymentReconciliationRepository(options.prisma)),
     CUSTOMER_FILE_RETENTION: context => new CustomerFileRetentionJob(options.fileStorageFactory ?? (() => createR2PrivateObjectStorageFromEnvironment(source))).run(context),
     INVENTORY_RESERVATIONS: context => context.withLease(async (tx, now) => {

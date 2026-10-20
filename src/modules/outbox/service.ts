@@ -4,7 +4,7 @@ import type { Prisma, DurableOutboxMessage } from "../../generated/prisma/client
 import { hashOpaqueToken, secureTokenEqual } from "../customer-auth/core";
 import type { BoundDatabaseService } from "../database-binding/service";
 import { appError } from "../shared/errors";
-import { outboxIdentity, outboxMetadataSchema, parseOutboxInput, type OutboxInput } from "./core";
+import { isBusinessProof, outboxIdentity, outboxMetadataSchema, parseOutboxInput, type OutboxInput, type OutboxPayload } from "./core";
 import type { OutboxPayloadCipher } from "./cipher";
 import type { PrismaOutboxRepository } from "./repository";
 export type OutboxReceipt = { id: string; messageKey: string; state: string; expiresAt: Date; duplicate: boolean };
@@ -41,10 +41,18 @@ export class DurableOutboxService {
   private async enqueueIn(tx: Prisma.TransactionClient, input: OutboxInput): Promise<OutboxReceipt> {
     const now = await this.repository.now(tx);
     const proof = await this.repository.proof(tx, input, now);
-    if (!proof || !secureTokenEqual(hashOpaqueToken(input.token), proof.tokenHash)) throw appError("PROVIDER_UNAVAILABLE");
+    if (!proof || proof.expiresAt <= now) throw appError("PROVIDER_UNAVAILABLE");
+    let payload: OutboxPayload;
+    if (isBusinessProof(proof)) {
+      if ("token" in input) throw appError("PROVIDER_UNAVAILABLE");
+      payload = { business: true, to: proof.to, content: proof.content };
+    } else {
+      if (!("token" in input) || !secureTokenEqual(hashOpaqueToken(input.token), proof.tokenHash)) throw appError("PROVIDER_UNAVAILABLE");
+      payload = { to: proof.to, token: input.token, returnTo: proof.returnTo };
+    }
     const metadata = { id: randomUUID(), ...outboxIdentity(proof), proofKind: proof.kind, proofId: proof.proofId, purpose: proof.purpose, templateVersion: "v1" as const, expiresAt: proof.expiresAt };
-    const sealedPayload = this.cipherFactory().seal({ to: proof.to, token: input.token, returnTo: proof.returnTo }, metadata);
-    const result = await this.repository.insert(tx, { ...metadata, sealedPayload, createdAt: now, dueAt: now });
+    const sealedPayload = this.cipherFactory().seal(payload, metadata);
+    const result = await this.repository.insert(tx, { ...metadata, sealedPayload, createdAt: isBusinessProof(proof) ? proof.sourceAt : now, dueAt: now });
     return receipt(result.row, result.duplicate);
   }
   async revalidate(id: string): Promise<OutboxReceipt | null> {
@@ -60,7 +68,7 @@ export class DurableOutboxService {
         return expired ? receipt(expired) : null;
       }
       const metadata = outboxMetadataSchema.parse({ id: row.id, messageKey: row.messageKey, proofKind: row.proofKind, proofId: row.proofId, purpose: row.purpose, templateVersion: row.templateVersion, fingerprint: row.fingerprint, expiresAt: row.expiresAt });
-      const proof = await this.repository.proof(tx, { kind: metadata.proofKind, proofId: metadata.proofId }, now);
+      const proof = await this.repository.proof(tx, { kind: metadata.proofKind, proofId: metadata.proofId, deliveryDeadline: row.expiresAt }, now);
       if (!proof || outboxIdentity(proof).fingerprint !== row.fingerprint) {
         const cancelled = await this.repository.finish(tx, id, "CANCELLED", now);
         return cancelled ? receipt(cancelled) : null;

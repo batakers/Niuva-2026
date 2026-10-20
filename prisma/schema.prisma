@@ -606,6 +606,7 @@ model CustomerSession {
 }
 
 model Order {
+  shippedAt DateTime? @map("shipped_at") @db.Timestamptz(6)
   accountClosedAt DateTime? @map("account_closed_at") @db.Timestamptz(6)
   id              String                  @id @default(uuid()) @db.Uuid
   orderNumber     String                  @unique @map("order_number")

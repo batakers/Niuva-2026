@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CustomerOutboxSender } from "@/modules/outbox/customer-sender";
 import type { OutboxDispatch } from "@/modules/outbox/worker-core";
-import type { OutboxPurpose } from "@/modules/outbox/core";
+import type { LegacyOutboxPurpose, LegacyOutboxPayload } from "@/modules/outbox/core";
 import { ResendEmailGateway } from "@/modules/notifications/resend";
 import { createCustomerAuthMailer } from "@/modules/customer-auth/email-mailer";
 import { createPrivacyMailer } from "@/modules/customer-privacy/mailer";
@@ -10,7 +10,7 @@ import { BoundDatabaseService } from "@/modules/database-binding/service";
 import { PrismaOutboxWorkerRepository } from "@/modules/outbox/worker-repository";
 import { DurableOutboxWorker } from "@/modules/outbox/worker";
 
-function message(purpose: OutboxPurpose = "AUTH_VERIFY"): OutboxDispatch {
+function message(purpose: LegacyOutboxPurpose = "AUTH_VERIFY"): OutboxDispatch & { payload: LegacyOutboxPayload } {
   const proofId = randomUUID(), kind = purpose.startsWith("AUTH") ? "AUTH" : "PRIVACY";
   return { metadata: { id: randomUUID(), proofId, proofKind: kind, purpose, templateVersion: "v1", messageKey: `${kind.toLowerCase()}:${purpose.toLowerCase()}:v1:${proofId}`, fingerprint: "a".repeat(64), expiresAt: new Date(Date.now() + 60_000) }, payload: { to: "buyer@example.test", token: "t".repeat(43), returnTo: kind === "AUTH" ? "/account" : null } };
 }

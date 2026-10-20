@@ -4,19 +4,43 @@ import { outboxMetadataSchema, outboxPayloadSchema, type OutboxPurpose } from ".
 import type { OutboxSender, OutboxDispatch, DeliveryOutcome, PreparedOutboxDelivery } from "./worker-core";
 import { appError } from "../shared/errors";
 import { EmailDeliveryError, emailEnvelopeSchema } from "../notifications/email-delivery";
+import { businessPurposeSchema, isBusinessKind } from "./business-core";
+import type { BusinessMailer } from "./business-mailer";
 export class CustomerOutboxSender implements OutboxSender {
   private readonly auth: CustomerAuthMailer | null;
   private readonly privacy: PrivacyMailer | null;
-  constructor(options: { auth: CustomerAuthMailer | null; privacy: PrivacyMailer | null }) { this.auth = options.auth; this.privacy = options.privacy; }
+  private readonly business: BusinessMailer | null;
+  constructor(options: { auth: CustomerAuthMailer | null; privacy: PrivacyMailer | null; business?: BusinessMailer | null }) { this.auth = options.auth; this.privacy = options.privacy; this.business = options.business ?? null; }
   assertReady(purpose: OutboxPurpose): void {
     if (purpose === "AUTH_VERIFY" || purpose === "AUTH_RESET") { if (this.auth) return; }
     if (purpose === "PRIVACY_EXPORT" || purpose === "PRIVACY_CLOSE") { if (this.privacy) return; }
+    if (businessPurposeSchema.safeParse(purpose).success && this.business) return;
     throw appError("PROVIDER_UNAVAILABLE");
   }
   prepare(message: OutboxDispatch): PreparedOutboxDelivery {
     const meta = outboxMetadataSchema.parse(message.metadata), payload = outboxPayloadSchema.parse(message.payload);
     const { purpose, messageKey } = meta, auth = purpose === "AUTH_VERIFY" || purpose === "AUTH_RESET";
     this.assertReady(purpose);
+    if (isBusinessKind(meta.proofKind)) {
+      if (!("business" in payload) || !this.business) throw appError("PROVIDER_UNAVAILABLE");
+      const ready = this.business.prepare({ to: payload.to, purpose: businessPurposeSchema.parse(purpose), content: payload.content, idempotencyKey: messageKey });
+      const envelope = Object.freeze(emailEnvelopeSchema.parse(ready.envelope));
+      if (envelope.to !== payload.to) throw appError("PROVIDER_UNAVAILABLE");
+      return { envelope, async send(saved, signal) {
+        if (signal.aborted) return { kind: "unknown" };
+        try {
+          const result = await ready.send(saved, messageKey, signal);
+          return result === undefined ? { kind: "accepted", providerReference: null } : typeof result.id === "string" && /^[A-Za-z0-9_-]{1,200}$/.test(result.id) ? { kind: "accepted", providerReference: result.id } : { kind: "unknown" };
+        } catch (error) {
+          if (error instanceof EmailDeliveryError) {
+            if (error.kind === "RETRYABLE") return { kind: "retryable", retryAfterMs: error.retryAfterMs };
+            if (error.kind === "PERMANENT") return { kind: "permanent" };
+          }
+          return { kind: "unknown" };
+        }
+      } };
+    }
+    if ("business" in payload) throw appError("PROVIDER_UNAVAILABLE");
     if (auth ? payload.returnTo === null : payload.returnTo !== null) throw appError("PROVIDER_UNAVAILABLE");
     const ready = auth
       ? this.auth?.prepare?.({ to: payload.to, token: payload.token, purpose: purpose === "AUTH_VERIFY" ? "verify" : "reset", returnTo: payload.returnTo!, idempotencyKey: messageKey })
@@ -44,6 +68,11 @@ export class CustomerOutboxSender implements OutboxSender {
     if (!meta.success || !content.success) return { kind: "permanent" };
     if (signal.aborted) return { kind: "unknown" };
     const { purpose, messageKey } = meta.data, payload = content.data;
+    if (isBusinessKind(meta.data.proofKind)) {
+      try { const ready = this.prepare({ metadata: meta.data, payload }); return await ready.send(ready.envelope, signal); }
+      catch { return { kind: "unknown" }; }
+    }
+    if ("business" in payload) return { kind: "permanent" };
     const auth = purpose === "AUTH_VERIFY" || purpose === "AUTH_RESET";
     if (auth ? payload.returnTo === null : payload.returnTo !== null) return { kind: "permanent" };
     try {

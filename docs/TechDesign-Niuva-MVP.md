@@ -2507,3 +2507,13 @@ Status terverifikasi, receipt per run/attempt dan transaksi settlement canonical
 di bawah lease job. Refund yang belum terbukti hasil dananya menahan proses
 lanjutan; poll tidak mengulang uang/stock atau menghidupkan order batal.
 Sandbox, cadence/role hosted dan deployment tetap memerlukan bukti/izin terpisah.
+
+### Email bisnis minimum — 19 Oktober 2026
+
+T26–T30 mengikuti [kontrak email bisnis](backend/business-notifications.md).
+Job OUTBOX_BUSINESS memproyeksikan fakta bisnis sesudah commit, memakai proof
+Customer aktif/owned, versi quote dan settlement otoritatif ke outbox yang sama.
+Deadline eksplisit, key stabil, envelope immutable dan unknown terminal tetap
+dipertahankan. First-shipped timestamp bersifat nullable tanpa backfill.
+Kegagalan tercatat pada feed Admin persisten; tidak ada WhatsApp otomatis atau
+aktivasi provider/scheduler. Bukti lokal tidak menutup inbox/hosted/release.

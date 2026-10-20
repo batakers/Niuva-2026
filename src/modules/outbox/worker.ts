@@ -6,7 +6,7 @@ import { hashOpaqueToken, secureTokenEqual } from "../customer-auth/core";
 import { appError } from "../shared/errors";
 import type { OutboxPayloadCipher } from "./cipher";
 import type { PrismaOutboxWorkerRepository } from "./worker-repository";
-import { outboxIdentity, outboxMetadataSchema } from "./core";
+import { isBusinessProof, outboxIdentity, outboxMetadataSchema } from "./core";
 import { parseDeliveryOutcome, parseWorkerPolicy, parseWorkerRequest, type AttemptAction, type DeliveryOutcome, type PreparedOutboxDelivery, type OutboxSender, type WorkerPolicy, type WorkerSummary } from "./worker-core";
 import type { EmailEnvelope } from "../notifications/email-delivery";
 export type OutboxWorkerCoordination = Readonly<{ beforeClaim(tx: Prisma.TransactionClient, now: Date): Promise<Date | null>; recordCooldown(tx: Prisma.TransactionClient, until: Date): Promise<void> }>;
@@ -69,11 +69,14 @@ export class DurableOutboxWorker {
       if (row.expiresAt <= now) return stop("EXPIRED", "EXPIRED", "expired");
       // An abandoned lease does not reveal whether its provider accepted a request.
       if (row.state === "LEASED") return stop("FAILED", "OUTCOME_UNKNOWN", "failed", true);
-      const meta = metadata(row), proof = await this.repository.proof(tx, { kind: meta.proofKind, proofId: meta.proofId }, now);
+      const meta = metadata(row), proof = await this.repository.proof(tx, { kind: meta.proofKind, proofId: meta.proofId, deliveryDeadline: row.expiresAt }, now);
       if (!proof || outboxIdentity(proof).fingerprint !== row.fingerprint) return stop("CANCELLED", "PROOF_INVALID", "cancelled");
       if (row.attempts >= this.policy.retryDelaysMs.length + 1) return stop("FAILED", "RETRY_EXHAUSTED", "failed");
       const payload = cipher().open(row.sealedPayload!, meta);
-      if (payload.to !== proof.to || payload.returnTo !== proof.returnTo || !secureTokenEqual(hashOpaqueToken(payload.token), proof.tokenHash)) return stop("CANCELLED", "PAYLOAD_MISMATCH", "cancelled");
+      const payloadMatches = isBusinessProof(proof)
+        ? "business" in payload && payload.to === proof.to && JSON.stringify(payload.content) === JSON.stringify(proof.content)
+        : !("business" in payload) && payload.to === proof.to && payload.returnTo === proof.returnTo && secureTokenEqual(hashOpaqueToken(payload.token), proof.tokenHash);
+      if (!payloadMatches) return stop("CANCELLED", "PAYLOAD_MISMATCH", "cancelled");
       const prepared = sender().prepare({ metadata: meta, payload });
       if (!row.sealedEnvelope && row.attempts > 0) throw appError("PROVIDER_UNAVAILABLE");
       const envelope = row.sealedEnvelope ? cipher().openEnvelope(row.sealedEnvelope, meta) : prepared.envelope;
@@ -108,7 +111,7 @@ export class DurableOutboxWorker {
       if (!row || row.state !== "LEASED" || row.leaseId !== leased.leaseId || !row.leaseExpiresAt || row.leaseExpiresAt <= now) return "lostLease";
       if (JSON.stringify(metadata(row)) !== JSON.stringify(metadata(leased))) return "lostLease";
       const meta = metadata(row);
-      const proof = outcome.kind === "accepted" || outcome.kind === "retryable" ? await this.repository.proof(tx, { kind: meta.proofKind, proofId: meta.proofId }, now) : null;
+      const proof = outcome.kind === "accepted" || outcome.kind === "retryable" ? await this.repository.proof(tx, { kind: meta.proofKind, proofId: meta.proofId, deliveryDeadline: row.expiresAt }, now) : null;
       now = await this.repository.now(tx);
       if (row.leaseExpiresAt <= now) return "lostLease";
       const valid = proof && proof.expiresAt > now && outboxIdentity(proof).fingerprint === row.fingerprint;

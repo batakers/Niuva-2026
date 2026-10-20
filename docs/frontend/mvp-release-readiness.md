@@ -35,6 +35,56 @@ dan langkah berikutnya. Snapshot bertanggal di bawah dan
 [Bagian 2](#bagian-2--arsip-evidence-bertanggal-historis) dipertahankan sebagai
 histori. Angka gate dan penerimaan lama tidak digabung menjadi hasil baru.
 
+### Email bisnis T26–T30 — 19 Oktober 2026
+
+Branch `codex/v1-business-notifications` berawal dari `adc28f0` PR #60,
+dengan dependensi eksplisit pada guard pembayaran/refund T24 dan T21/T22.
+AC teknis lokal minimum T26–T30 selesai: source facts/proof, encrypted outbox,
+dedup/expiry/retry, current quote/recipient/closure, first-shipped timestamp dan
+feed Admin persisten. [Kontrak](../backend/business-notifications.md) menjelaskan
+deadline teknis 24 jam/key provider, tanpa default SLA/kalender atau activation.
+Kode T08 tetap terpisah; kandidat gabungan harus menguji urutan migration.
+
+Gate lokal: lint 0 error/4 warning existing, typecheck/schema; unit 127/1.466,
+backend 100/736 (empat worker, coverage tetap aktif), integration penuh 52/423
+pada resource baru dengan 36 migration. Ada 19 skenario bisnis. Chromium Admin
+27/27, default 112 passed/5 production-tier-specific skipped pada local-test
+port 3118. Build 93/93 halaman statis lulus. Import utility snapshot dipisahkan
+dari modul auth/Next setelah loader browser menemukan dependensi transitif;
+RPC timeout bukan hasil tes dan diganti run native yang terpantau.
+
+Inbox/bounce, scheduler/cadence/role hosted, policy publik, visual Owner,
+perangkat/AT dan release tetap terbuka. Semua provider fixture, tanpa email,
+refund, deployment atau activation sungguhan. CI diff notifikasi belum diklaim
+sebelum head PR tersedia. Detail bukti dan checkpoint delivery ada di TASKS.
+Kode `ae36ad68eb0462320eb45f2aae47c96224c0644c` telah di-push dan dikirim pada
+[draft PR #61](https://github.com/batakers/Niuva-2026/pull/61), dengan #60/#59
+sebagai dependensi eksplisit. CI PR notifikasi masih menunggu; hasil CI
+dependensi tidak digunakan sebagai penggantinya. Tidak ada merge/deployment.
+
+Quality head `2e6cc708` PR #61 gagal pada poll receipt read notifikasi 5 detik,
+dengan 25 journey lulus. Tes diperkuat untuk menunggu POST read 200/no-store
+sebelum poll DB, tanpa mengubah batas poll atau persistence/reload assertion.
+Skenario request tertunda 6 detik dan baris fixture berdasarkan UUID order
+lulus dalam dua journey notifikasi lokal pada DB retained; lint/typecheck
+lulus (empat warning existing). Runtime dan workflow tidak berubah; CI pada
+SHA perbaikan harus diperiksa sebelum menyebut diff ini lulus CI.
+Head `4f77b3c` kemudian melewati tes notifikasi, namun gagal pada heading
+linimasa Admin dengan 26 journey lulus. Tes navigasi menunggu URL terkomit
+sebelum assertion heading existing; regression request tertunda 6 detik dan
+seluruh journey search/activity/account/deactivation lulus lokal (55 detik).
+CI SHA berikutnya tetap memerlukan verifikasi sendiri.
+
+### Rekonsiliasi PR #61 terhadap main PR #60 — 20 Oktober 2026
+
+PR #61 telah direkonsiliasi ke `main` `d956c186cae40d76624c4fb4c0f297ed66954f82`;
+diff gabungan hanya menyisakan T26–T30 (41 file). Review independen tidak
+menemukan defect actionable. Lint, typecheck, Prisma validation, unit
+127/1.466, backend 102/747, integration 53/441, Chromium default 112 pass/5
+skip, Admin 28/28 dan build 93/93 lulus lokal. Dua database test baru menerima
+37 migration; histori migration lama tidak berubah. CI pada SHA final PR, merge
+PR dan acceptance eksternal masih harus diverifikasi terpisah.
+
 ### Reconciliation T24 — 19 Oktober 2026
 
 Branch `codex/v1-payment-reconciliation` bergantung eksplisit pada `28f9037`
@@ -50,7 +100,11 @@ polling fixture file lain. Regresi penuh terakhir memakai resource baru dengan
 35 migration dan tidak mereset database lama. Tidak ada klaim CI T24 sebelum
 run pada head PR tersedia; Quality PR #59 di bawah tetap bukti dependensi.
 Kode T24 `e3941f6` dikirim pada [draft PR #60](https://github.com/batakers/Niuva-2026/pull/60),
-menarget main untuk Quality dan mencatat dependency #59. CI diff T24 masih menunggu.
+menarget main untuk Quality dan mencatat dependency #59.
+[Quality head adc28f01774646dc9ca40a4cf14edc7ae5af60fe](https://github.com/batakers/Niuva-2026/actions/runs/39246997823/job/118053840138)
+SUCCESS, selesai 19 Oktober 12:33 UTC setelah satu rerun pada SHA yang sama.
+Run pertama gagal di satu navigasi linimasa Admin, 25 journey lain lulus;
+tidak ada perubahan/pelemahan test atau workflow untuk rerun tersebut.
 
 ### Refund T21–T22 — 19 Oktober 2026
 

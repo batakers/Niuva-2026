@@ -25,6 +25,13 @@ batch query intentionally scans all eligible payments. The test identity needs
 CREATEDB/CREATEROLE on the isolated test cluster; it must never be a production
 identity. Each generated database is retained after disconnecting for evidence;
 do not reset an older database to make a repeated run pass.
+The business notification suite uses the same isolated database helper because
+its real publisher scans all eligible committed facts. It checks encrypted
+order/payment/quote/shipment intents, current-version/closure revalidation,
+terminal unknown, stable retry envelopes and persistent per-account Admin
+attention with injected sender fixtures. These tests do not send real email or
+prove provider/inbox/scheduler readiness. File fixture ownership and deletion
+are committed atomically so existing verified-file constraints remain active.
 The same suite checks database-owned `AdminProfile` resolution for an exact
 Clerk test identity; the protected `/admin` page is also rendered against the
 database-backed Action Queue for an active profile and kept hidden for an

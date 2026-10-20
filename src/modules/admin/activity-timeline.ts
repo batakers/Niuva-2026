@@ -12,6 +12,9 @@ export type AdminActivityItem = Readonly<{ id: string; title: string; group: str
 export type AdminActivityPage = Readonly<{ items: readonly AdminActivityItem[]; page: number; hasNext: boolean }>;
 
 const labels: Readonly<Record<string, string>> = {
+  "outbox.business.failed": "Email Customer perlu diperiksa",
+  "outbox.job.failed": "Pengiriman email perlu diperiksa",
+  "outbox.job.recovered": "Job email kembali berjalan",
   "finance.invoice.draft-created": "Draft invoice disiapkan",
   "finance.invoice.issued": "Invoice diterbitkan",
   "finance.invoice.corrected": "Invoice pengganti diterbitkan",

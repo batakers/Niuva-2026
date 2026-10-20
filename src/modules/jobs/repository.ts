@@ -5,6 +5,11 @@ import { appError } from "../shared/errors";
 import type { JobLease, JobName, JobPolicy, JobResult } from "./core";
 
 export class PrismaJobRepository {
+  private async recordEmailFailure(tx: Prisma.TransactionClient, name: JobName, id: string, previous: string | null, failure: string | null, now: Date) {
+    if (!["OUTBOX_DELIVERY", "OUTBOX_BUSINESS"].includes(name) || previous === failure || !failure && !previous) return;
+    await tx.auditLog.create({ data: { entityType: "OutboxJob", entityId: id, actorType: "SYSTEM", action: failure ? "outbox.job.failed" : "outbox.job.recovered", createdAt: now,
+      afterJson: { job: name, failureCategory: failure } } });
+  }
   private readonly clock = new PrismaOutboxRepository();
   now(tx: Prisma.TransactionClient) { return this.clock.now(tx); }
   async assertRole(tx: Prisma.TransactionClient, expectedRole: string): Promise<void> {
@@ -31,6 +36,7 @@ export class PrismaJobRepository {
       if (row.leaseExpiresAt > now) return { state: "busy", cooldownMs: row.leaseExpiresAt.getTime() - now.getTime() };
       const until = new Date(Math.max(row.cooldownUntil?.getTime() ?? 0, now.getTime() + policy.failureCooldownMs));
       await tx.operationalJobState.update({ where: { name }, data: { leaseId: null, leaseExpiresAt: null, cooldownUntil: until, lastFinishedAt: now, lastFailureCategory: "LEASE_EXPIRED", counters: {} } });
+      await this.recordEmailFailure(tx, name, row.leaseId, row.lastFailureCategory, "LEASE_EXPIRED", now);
       return { state: "cooldown", cooldownMs: until.getTime() - now.getTime() };
     }
     if (row.cooldownUntil && row.cooldownUntil > now) return { state: "cooldown", cooldownMs: row.cooldownUntil.getTime() - now.getTime() };
@@ -54,6 +60,7 @@ export class PrismaJobRepository {
     if (!row || row.leaseId !== lease.id || !row.leaseExpiresAt || row.leaseExpiresAt <= now) return false;
     const cooldownUntil = new Date(Math.max(row.cooldownUntil?.getTime() ?? 0, now.getTime() + Math.max(result.cooldownMs ?? 0, result.failure ? policy.failureCooldownMs : policy.minIntervalMs)));
     await tx.operationalJobState.update({ where: { name: lease.job }, data: { leaseId: null, leaseExpiresAt: null, lastFinishedAt: now, ...(result.failure ? {} : { lastSuccessAt: now }), lastFailureCategory: result.failure ?? null, counters: result.counts, cooldownUntil } });
+    await this.recordEmailFailure(tx, lease.job, lease.id, row.lastFailureCategory, result.failure ?? null, now);
     return true;
   }
 }
