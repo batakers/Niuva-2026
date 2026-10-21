@@ -13,6 +13,10 @@ export class PrismaActivityTargetReader implements ActivityTargetReader {
       return row ? { kind: "order", id: row.id } : null;
     }
     switch (event.entityType) {
+      case "RefundCase": {
+        const row = await this.prisma.refundCase.findFirst({ where: { id, order: { accountClosedAt: null } }, select: { orderId: true } });
+        return row ? { kind: "refund", id: row.orderId } : null;
+      }
       case "Invoice": {
         const row = await this.prisma.invoice.findFirst({ where: { id, billingCase: { accountClosedAt: null } }, select: { id: true } });
         return row ? { kind: "invoice", id: row.id } : null;

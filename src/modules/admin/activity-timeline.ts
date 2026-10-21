@@ -15,6 +15,14 @@ const labels: Readonly<Record<string, string>> = {
   "outbox.business.failed": "Email Customer perlu diperiksa",
   "outbox.job.failed": "Pengiriman email perlu diperiksa",
   "outbox.job.recovered": "Job email kembali berjalan",
+  "refund.execution-started": "Pemrosesan refund dimulai",
+  "refund.execution-held": "Pengajuan refund perlu diperiksa",
+  "refund.submission-observed": "Hasil pengajuan refund dicatat",
+  "refund.reconciliation-held": "Hasil refund perlu diperiksa",
+  "refund.provider-confirmed": "Pengembalian provider terkonfirmasi",
+  "refund.manual-authorized": "Pengembalian manual disetujui Owner",
+  "refund.manual-confirmed": "Bukti transfer refund dicatat",
+  "refund.completed": "Seluruh alokasi refund terkonfirmasi",
   "finance.invoice.draft-created": "Draft invoice disiapkan",
   "finance.invoice.issued": "Invoice diterbitkan",
   "finance.invoice.corrected": "Invoice pengganti diterbitkan",
@@ -78,6 +86,7 @@ const labels: Readonly<Record<string, string>> = {
 };
 
 export function activityGroup(entityType: string, action: string): string {
+  if (action.startsWith("refund.")) return "Refund";
   if (entityType === "AdminProfile" || entityType === "AdminInvitation" || action.startsWith("admin.")) return "Akses tim";
   if (entityType.includes("PRIVACY") || action.startsWith("PRIVACY_")) return "Privasi Customer";
   if (action.startsWith("inquiry.") || action.startsWith("b2b")) return "B2B Inquiries";

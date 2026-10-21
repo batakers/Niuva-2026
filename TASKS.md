@@ -44,9 +44,9 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 | T20 | M3 | DONE | Hero mengikuti published state | T17 | Unpublish/missing/card-only tidak menaut ke detail invalid. Regression unit lulus. |
 | T21 | M4 | DONE | Pengajuan kasus refund | T02; kontrak aktif | Kasus/alokasi persisten, nominal Decimal server dan ownership/closure diuji integration lokal; UI/API dan native form tersedia. Provider/hasil dana tetap T23/T25. |
 | T22 | M4 | DONE | Persetujuan refund Owner | T21 | Owner aktif saja; alasan/retur/audit, version/snapshot immutable, overlap dan approval/receipt ulang diuji integration lokal. Persetujuan belum mengeksekusi uang. |
-| T23 | M4 | TODO | Submission refund | T22; merchant | Stable key/attempt; timeout perlu reconciliation; fallback manual berizin punya bukti. Adapter/integration/sandbox. |
+| T23 | M4 | BLOCKED_EXTERNAL | Submission refund | T22; merchant | Key/attempt/clock durable, gate merchant/window/retry dan manual Owner termasuk revoke diuji lokal 21 Oktober. Bukti metode/channel/saldo/window sandbox serta jalur manual hosted belum tersedia. |
 | T24 | M4 | BLOCKED_EXTERNAL | Reconciliation pembayaran | T03; guard refund T21/T22 | Get Status/receipt/lease canonical, late/unknown/refund hold dan balapan webhook diuji fixture lokal. Sandbox/merchant serta cadence/role/resource hosted belum terbukti. |
-| T25 | M4 | TODO | Reconciliation refund | T23 | Accepted belum selesai; hasil provider/manual direkonsiliasi; tidak ada refund ganda. Integration/sandbox. |
+| T25 | M4 | BLOCKED_EXTERNAL | Reconciliation refund | T23 | Receipt bank/manual immutable, finality seluruh alokasi, hold partial/external dan GET-only lease diuji lokal 21 Oktober. Hasil bank sandbox dan role/resource/cadence hosted belum terbukti; exception tetap ditahan sampai resolusi berbukti. |
 | T26 | M4 | DONE | Email order received | T06; rantai T24 | Pesan persisten/dedup; email gagal tidak membatalkan order. Integration lokal lulus; inbox/hosted tetap T03/T33–T34. |
 | T27 | M4 | DONE | Email payment confirmed | T06/T24 | Hanya settlement otoritatif; webhook duplikat tidak menduplikasi pesan. Integration lokal lulus; provider/hosted terpisah. |
 | T28 | M4 | DONE | Email quote available | T06; rantai T26 | Quote/version/access benar; quote superseded/invalid tidak dikirim sebagai aktif. Integration lokal lulus. |
@@ -83,6 +83,31 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 
 ## Bukti awal dan keputusan pelaksanaan
 
+### T23/T25 — submission dan hasil refund, 19 Oktober 2026
+
+- Audit: main tetap `54a97bb`; PR #58–#61 draft/open. Worktree terpisah
+  `C:\Users\FAIZ\.codex\worktrees\v1-refund-execution\NIUVA 2026`, branch
+  `codex/v1-refund-execution`, berasal dari `adc28f0` (#60), dengan dependensi
+  eksplisit pada kasus/approval T21/T22 dan status/hold T24. Kode notifikasi
+  #61 tidak menjadi dependensi. Checkout primary #61 dibiarkan bersih.
+- Sinkronisasi ledger lintas branch: T26–T30 telah dikirim pada
+  [draft PR #61](https://github.com/batakers/Niuva-2026/pull/61), kode `ae36ad6`,
+  checkpoint `2e6cc70`. DONE mengikuti AC teknis lokal; unit 127/1.466, backend
+  100/736, integration 52/423, Admin Chromium 27/27, default 112 passed/5
+  production-tier skipped, build 93/93, lint/type/schema lulus. Bukti/kode
+  lengkap ada pada branch/PR itu, bukan pada baseline runtime worktree ini.
+- Baseline worktree diverifikasi sebelum kode: install frozen lockfile tanpa
+  upgrade/dependency baru; Prisma generate/validate dan typecheck; backend
+  97/724 (empat worker, coverage aktif), kasus refund integration 18/18.
+  Database baru `niuva_refund_execution_test_20261019` memakai 35 migration;
+  cluster test primary diverifikasi, database lama tidak di-reset.
+- Scope fixture mengikuti SOP: satu key per operasi, request pertama tidak
+  direset, reattempt key yang sama maksimal tujuh hari, accepted belum hasil
+  bank, unknown menahan fallback manual/key baru. Bukti manual memerlukan
+  Owner, verifikasi tidak ada refund pending/berhasil dan penerima/bukti hasil.
+  Readiness merchant/metode/channel/window/saldo/ETA/receiver tetap input
+  eksternal PUB-REFUND-PROVIDER; tidak diisi dengan default atau aktivasi.
+
 - 2026-10-18: audit pada baseline di atas menemukan 73 page, 42 route API,
   31 modul, 62 model schema, 28 migration SQL, 289 file test. Ini inventaris
   source, bukan kondisi database/provider.
@@ -108,6 +133,86 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
   input/evidence eksternal yang tidak dapat diganti fixture.
 
 ## Log pelaksanaan
+
+### T23 lalu T25 — kelanjutan dan integrasi aman, 2026-10-21
+
+- Baseline kerja `origin/main`/HEAD
+  `a183c81d96defd3f410987efe65be763a0de5b44`, terverifikasi mencakup squash
+  PR #59 `bcd04d9`, #60 `d956c18` dan #61 `a183c81`. Ini baseline dependensi,
+  bukan CI diff T23/T25 baru.
+- Audit patch asal: worktree `v1-refund-execution`, branch
+  `codex/v1-refund-execution`, HEAD `adc28f0`; 25 tracked modified dan 17 file
+  baru, index kosong. Snapshot 42 path disimpan sebagai tree
+  `cd9d6c41c5fd15f1d82a41e2124363634cc7c8c2` dan patch di
+  `C:/Users/FAIZ/.codex/tmp/niuva-refund-completion-20261021/`.
+  Patch existing diterapkan tiga-arah di worktree managed
+  `C:/Users/FAIZ/.codex/worktrees/v1-refund-completion/NIUVA 2026`, branch
+  `codex/v1-refund-completion`, dari main terbaru. Worktree asal dan dua file
+  untracked checkout primary tidak diubah; snapshot asal diverifikasi ulang.
+- Konflik integrasi mempertahankan waktu intake staf dari #59, retensi model
+  T08, reconciliation pembayaran T24 dan notifikasi bisnis #61. Satu runner
+  canonical berisi sembilan job; tidak dibuat runner atau scheduler kedua.
+  Hanya migration additive existing-patch `20261019060000_refund_execution`
+  ditambahkan; migration historis identik dengan main.
+- T23: stable key per alokasi dan attempt/clock durable sebelum POST; merchant
+  rule/channel/window/max-attempt/cooldown serta approval/retur/snapshot
+  diperiksa ulang. Timeout/hasil tak pasti tidak memberi izin POST/key baru.
+  Fallback manual Owner memakai verifikasi provider/penerima dan bukti transfer;
+  jalur pencabutan persetujuan yang belum dibayar disambungkan ke API, action,
+  form native dan riwayat. Pencabutan mempertahankan bukti dan menolak payout
+  atas authorization lama. Regresi T23 dan adapter/backend terarah lulus.
+- T25: accepted bukan bank final; receipt matching tepercaya immutable dan
+  dedup, total MAKE meliputi order + ongkir final, dan seluruh alokasi harus
+  mempunyai receipt serta state CONFIRMED sebelum kasus COMPLETED. Job GET-only
+  memakai role/binding/lease canonical; kehilangan lease membatalkan apply.
+  Closure, ekspor privacy, retensi file, payment hold dan perhatian Admin tetap
+  memakai batas kewenangan masing-masing.
+- Defect yang dibuktikan lalu diperbaiki: receipt yang sama tidak memulihkan
+  status setelah exception; polling receipt alokasi lain menutup kasus yang
+  masih mempunyai exception; retry preflight macet CHECKING; dan manual nilai
+  penuh dapat menimpa bukti partial/external refund. RED terakhir enam gagal /
+  66 passed. GREEN typecheck, 4 file / 73 integration dan 6 journey browser
+  refund lulus. Histori partial/external/reference-conflict menahan manual
+  meskipun observation berikutnya settled/unavailable atau authorization
+  dicabut. Tidak ada perkiraan nominal sisa atau fitur partial refund umum.
+- Review independen source/diff menemukan tiga defect terakhir di atas;
+  review ulang versi GREEN tidak menemukan defect material tambahan. Reviewer
+  tidak mengubah file, menjalankan provider, atau menggantikan hasil gate.
+- Gate penuh diff lokal lulus: lint 0 error/4 warning existing; typecheck dan
+  Prisma validation; unit/component 127 file/1.469 tes; backend dengan coverage
+  aktif 105/770; integration 54/473; Chromium Owner/Admin 31 passed; Chromium
+  default 112 passed/5 existing production-tier skips; production build lokal
+  93/93 halaman. Browser refund mencakup JavaScript/no-JS, keyboard pencabutan,
+  reduced motion, serta capture route aktual 1440/390/320px tanpa overflow.
+  Visual Owner, zoom 200%, perangkat fisik/AT tetap belum dibuktikan.
+  Perintah: `corepack pnpm lint`, `typecheck`, `db:validate`, `test
+  --reporter=dot --maxWorkers=1`, `test:backend --reporter=dot --maxWorkers=1`,
+  `exec vitest run --config vitest.integration.config.mts --reporter=dot
+  --maxWorkers=1`, `test:e2e:admin-auth --workers=1`, `test:e2e --config
+  .local/refund-completion.playwright.config.mts --workers=1`, dan `build`.
+  Adapter browser ignored mewarisi suite canonical dan tidak memakai server
+  existing. Bukti final di
+  `C:/Users/FAIZ/.codex/tmp/niuva-refund-completion-20261021/`; full run
+  `lint,unit,backend,integration,browser-admin,browser-default,build-1792519820969`
+  berstatus PASSED. T23/T25 tetap BLOCKED_EXTERNAL untuk bukti di bawah,
+  bukan DONE global atau CI untuk diff baru.
+- Database test baru `niuva_refund_completion_test_20261021` dan
+  `niuva_refund_completion_browser_test_20261021` berada pada cluster loopback
+  test yang identitasnya diverifikasi. Masing-masing menerima 38 migration;
+  fixture job membuat database UUID terisolasi tambahan. Tidak ada database
+  lama yang di-reset/drop dan tidak ada resource production yang dipakai.
+- Bukti sandbox merchant/metode/channel/window/saldo/ETA, hasil bank sandbox,
+  penerima/jalur manual dan scheduler/role/resource hosted masih dibutuhkan
+  PUB-REFUND-PROVIDER/PUB-REFUND-RECON/T35. Partial/external exception tetap
+  membutuhkan rekonsiliasi bukti dan resolusi eksplisit sebelum kewajiban sisa
+  dapat diselesaikan. T35, Owner visual/UAT, perangkat/AT dan production tidak
+  ditutup oleh fixture atau browser lokal.
+- Kontrak diperbarui di [refund workflow](docs/backend/refund-workflow.md).
+  Rollback menghentikan submission baru sambil mempertahankan key/clock,
+  attempts, receipt, audit dan penanganan kewajiban; jangan drop/reset tabel
+  atau replay accepted/unknown. Tidak ada commit/push/PR/merge baru,
+  deployment/activation, pengiriman email atau refund dana nyata pada kelanjutan
+  ini. Checkout primary dan worktree asal tetap dipertahankan.
 
 ### Rekonsiliasi PR #61 terhadap main PR #60 — 2026-10-20
 

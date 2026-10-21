@@ -35,6 +35,44 @@ dan langkah berikutnya. Snapshot bertanggal di bawah dan
 [Bagian 2](#bagian-2--arsip-evidence-bertanggal-historis) dipertahankan sebagai
 histori. Angka gate dan penerimaan lama tidak digabung menjadi hasil baru.
 
+### T23/T25 — kelanjutan refund, 21 Oktober 2026
+
+Patch existing T23/T25 diterapkan tiga-arah pada worktree terpisah dari
+`origin/main` `a183c81d96defd3f410987efe65be763a0de5b44`, yang sudah mencakup
+PR #59–#61. Worktree asal `v1-refund-execution` dan checkout primary tetap
+dipertahankan; snapshot patch asal diverifikasi cocok. Implementasi tidak
+diulang dari awal. Ledger pelaksanaan dan bukti final ada di [TASKS](../../TASKS.md).
+
+T23 mempunyai key/attempt/clock durable, preflight/rule merchant serta fallback
+manual Owner dengan persetujuan, bukti transfer dan pencabutan persetujuan
+yang belum dibayar. T25 memakai receipt bank matching/immutable, status
+accepted/unknown terpisah dari finality, GET-only reconciliation pada lease
+canonical, dan seluruh alokasi MAKE harus confirmed sebelum kasus selesai.
+Histori partial/external/reference-conflict menahan pembayaran manual nilai
+penuh; polling atau revoke tidak menghapus hold. Lihat
+[kontrak refund](../backend/refund-workflow.md).
+
+Gate final lokal lulus: lint 0 error/4 warning existing, strict typecheck,
+Prisma validation, unit/component 127 file/1.469 tes, backend dengan coverage
+aktif 105/770, integration 54/473, Chromium Owner/Admin 31 passed, default
+112 passed/5 existing production-tier skips, dan production build 93/93.
+Ada 73 integration dan enam journey Chromium refund terarah yang lulus;
+review independen ulang tidak menemukan defect material tambahan setelah
+perbaikan. Capture route aktual 1440/390/320px tanpa overflow, native/no-JS,
+keyboard pencabutan dan reduced motion tersedia; zoom 200% belum dibuktikan.
+Database loopback baru menerima 38 migration, termasuk satu migration refund
+execution additive; migration historis tidak diubah. Provider fixture dan
+browser lokal tidak merupakan bukti sandbox merchant atau dana nyata.
+
+T23/T25 tetap BLOCKED_EXTERNAL dan REL-05 belum menutup
+PUB-REFUND-PROVIDER/PUB-REFUND-RECON/T35:
+kemampuan metode/channel/window/saldo/ETA, hasil bank sandbox, penanganan
+manual, role/resource/cadence hosted dan petugas belum dibuktikan. Resolusi
+nominal sisa partial/external tetap memerlukan bukti dan irisan eksplisit.
+Owner visual/UAT, perangkat/AT, staging dan production tetap terpisah.
+Tidak ada CI untuk diff lokal baru, commit/push/PR/merge baru, deployment,
+aktivasi provider/scheduler, email atau refund dana nyata dalam kelanjutan ini.
+
 ### Email bisnis T26–T30 — 19 Oktober 2026
 
 Branch `codex/v1-business-notifications` berawal dari `adc28f0` PR #60,
@@ -247,7 +285,7 @@ belum ditetapkan tetap terbuka. Rincian gate dimiliki [paket kesiapan publik](..
 | REL-02 — capability hosted | BLOCKED_EXTERNAL; aktivasi tertutup | Engineering belum bernama; Owner untuk resource/izin | [Tier/mode/grants](../../src/lib/env/deployment.ts), [matrix/resolver](../../src/modules/capabilities/matrix.ts) dan origin ada; [guard lama](../../src/modules/providers/non-production.ts) menolak production/live, grants kosong. Owner mengonfirmasi staging resource belum tersedia; shared PostgreSQL limiter hanya diuji lokal dan binding hosted belum dibuktikan | Sediakan staging sandbox terpisah dan putuskan origin/cookie/CSP/capability yang konsisten. Production tetap tertutup sampai instruksi aktivasi tersendiri; tidak sekadar melepas guard. PUB-HOSTED. |
 | REL-03 — email persisten dan inbox | PARTIAL_LOCAL; hosted delivery belum tersedia | Engineering belum bernama; Rheza untuk kanal/operasi; Owner untuk sender | [Outbox](../../src/modules/outbox/service.ts) menyimpan pesan terenkripsi/dedup/revalidation/expiry. [Worker](../../src/modules/outbox/worker.ts) memakai lease/retry/fencing dan [sender Customer](../../src/modules/outbox/customer-sender.ts). Producer auth/privacy enqueue atomik; [launcher](../../src/app/api/internal/jobs/outbox/route.ts) mencatat hasil safe ke job state, termasuk outcome unknown. Queue accepted belum membuktikan inbox; provider hosted/bounce dan email bisnis belum tersedia | Pesan persisten, retry terbatas/idempoten, proof expired/revoked/closed tidak terkirim ulang, kegagalan terlihat dan inbox/bounce diuji. PUB-EMAIL. |
 | REL-04 — job operasional | PARTIAL_LOCAL; scheduler/hosted belum tersedia | Engineering belum bernama; Rheza/privasi; Owner untuk cadence/lag/coverage | [Outbox](../../src/app/api/internal/jobs/outbox/route.ts), [inventory expiry](../../src/app/api/internal/jobs/inventory-reservations/route.ts) dan [retensi file](../../src/app/api/internal/jobs/customer-file-retention/route.ts) berbagi JobRunner/OperationalJobState, bearer auth, binding dan role guard. Inventory melindungi settlement; retensi memakai klaim pending, final lease dan hold persisten setelah closure/receipt purge. Backend 95/706 dan integration 50/382 serial lulus lokal pada diff T08. `vercel.json` hanya menjadwalkan analytics; R2/scheduler hosted, cadence, alarm eksternal dan payment reconciliation belum terbukti | Job resource-bound, aman diulang/overlap, deadline tetap, lag/last-success/alarm dan petugas terbukti. Owner menetapkan cadence; staging memverifikasi launcher/scheduler. Cron analytics tidak menutup PUB-JOBS. |
-| REL-05 — refund lengkap | MISSING_WORKFLOW | Owner (approval); engineering belum bernama; Rheza/operasi pembayaran | Notifikasi/status/exception refund ada; [order berbayar](../../src/modules/order/status-service.ts) membutuhkan workflow refund. Case/approval/submit/reconciliation lengkap belum tersedia | Refund penuh sesuai arah produk; nominal server/Decimal, approval Owner, stable key/lock, hasil tak pasti/manual tidak menggandakan pembayaran. Detail kasus/cakupan merchant dibuktikan tanpa meminta ulang pilihan refund penuh. PUB-REFUND, PUB-REFUND-PROVIDER, PUB-REFUND-RECON. |
+| REL-05 — refund lengkap | BLOCKED_EXTERNAL | Owner (approval); engineering belum bernama; Rheza/operasi pembayaran | T21/T22 telah terintegrasi; kelanjutan T23/T25 mempunyai submission/reconciliation dan manual berizin pada diff lokal 21 Oktober. Key/clock, receipt, lease dan hold partial/external diuji fixture; hasil bank dan cakupan merchant sandbox/hosted belum terbukti. [Kontrak refund](../backend/refund-workflow.md). | Bukti sandbox metode/channel/window/saldo/ETA, hasil bank, fallback manual, role/resource/cadence dan petugas; partial/external exception membutuhkan rekonsiliasi bukti sebelum sisa kewajiban dibayar. PUB-REFUND-PROVIDER, PUB-REFUND-RECON, T35. |
 | REL-06 — provider dan data pemenuhan | BLOCKED_EXTERNAL | Owner untuk akun/resource/data; engineering belum bernama; Rheza/operator | Adapter/test Google, email, payment/shipping dan R2 ada. Smoke development bertanggal tetap hanya evidence fase tersebut. Owner mengonfirmasi resource staging/provider sandbox belum tersedia; tidak ada secret/env yang diperiksa | OAuth/inbox, Midtrans sandbox/webhook, Biteship dan private R2 terbukti pada staging; stok/berat/dimensi paket sesuai produk dan paket MAKE diukur setelah selesai. PUB-PROVIDER, PUB-STAGING. |
 | REL-07 — privasi, operasi dan recovery | PARTIAL_LOCAL; review/resource terbuka | Owner; Rheza/privasi; fungsi akuntansi/review; engineering belum bernama | [Availability privasi](../../src/modules/customer-privacy/core.ts) masih internal/test. Identitas/alamat retur/Rheza terkonfirmasi; coverage/kalender, retensi arsip, provider delete dan restore belum terbukti | Hak Customer hosted, kontak pasca-closure, retensi per kategori, prosedur insiden dan latihan restore terbukti tanpa memulihkan akun/riwayat atau mengulang refund/email. PUB-DATA, PUB-RECORDS, PUB-SERVICE, PUB-INCIDENT, PUB-BACKUP. |
 | REL-08 — bukti alur terpadu dan rilis | BLOCKED_EXTERNAL; release belum diizinkan | Engineering belum bernama; Owner untuk penerimaan/izin; Rheza/operator | [Quality pada squash merge main `54a97bb`](https://github.com/batakers/Niuva-2026/actions/runs/39185705585) success. Diff T08 sesudahnya lulus lint/typecheck/unit/backend/integration/build lokal; browser E2E tidak diulang dan CI T08 belum tersedia karena diff belum di-commit/push. Evidence browser/Owner/Admin pada main tetap terpisah dari diff T08. Staging belum tersedia. B2B WhatsApp dan layanan BUY/MAKE memiliki source | Uji hosted BUY lalu MAKE termasuk failure/fulfillment/refund yang relevan; B2B membuka tujuan WhatsApp yang benar. Catat scope visual/device/AT, monitoring/rollback, hasil operasi dan keputusan rilis. Deployment/provider/production memerlukan instruksi tersendiri. PUB-STAGING, PUB-RELEASE. |

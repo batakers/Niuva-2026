@@ -35,7 +35,7 @@ export function buildRefundSnapshot(orderId: string, currency: string, payments:
       else if (result === "AMOUNT_MISMATCH" || result === "PROVIDER_TRANSACTION_CONFLICT" || result === "SETTLEMENT_STATUS_CODE_INVALID") verificationIssue = true;
     }
     if (verificationIssue) throw appError("CONFLICT", { message: "Exception pembayaran perlu diperiksa sebelum refund." });
-    if (payment.status === "REFUNDED" || results.includes("REFUNDED_AFTER_LATE_SETTLEMENT") || results.includes("PARTIAL_REFUND_REQUIRES_EXCEPTION") || results.includes("REFUND_REQUIRES_RECONCILIATION")) {
+    if (payment.status === "REFUNDED" || results.includes("REFUNDED_AFTER_LATE_SETTLEMENT") || results.includes("PARTIAL_REFUND_REQUIRES_EXCEPTION") || results.includes("REFUND_REQUIRES_RECONCILIATION") || results.includes("REFUND_OPERATION_STARTED")) {
       throw appError("CONFLICT", { message: "Hasil refund pembayaran perlu direkonsiliasi sebelum membuat atau menyetujui pengembalian lain." });
     }
     const late = results.includes("LATE_SETTLEMENT_REFUND_REQUIRED");
@@ -50,4 +50,11 @@ export function buildRefundSnapshot(orderId: string, currency: string, payments:
   const totalRp = allocations.reduce((total, allocation) => total.plus(allocation.amountRp), new MoneyDecimal(0)).toFixed(0);
   if (totalRp.length > 18) throw appError("CONFLICT", { message: "Total pembayaran memerlukan pemeriksaan keuangan." });
   return { totalRp, allocations, hash: refundHash({ orderId, currency, allocations }) };
+}
+export function buildTrackedRefundSnapshot(orderId: string, currency: string, payments: readonly RefundPaymentFacts[], completed: readonly { paymentAttemptId: string; source: string }[]): RefundSnapshot {
+  return buildRefundSnapshot(orderId, currency, payments.map(payment => {
+    const receipt = completed.find(value => value.paymentAttemptId === payment.id);
+    return { ...payment, ...(receipt ? { status: receipt.source === "SETTLED" ? "SETTLED" : "EXPIRED" } : {}),
+      events: payment.events.filter(event => event.processingResult !== "REFUND_OPERATION_STARTED" && !(receipt && ["REFUND_REQUIRES_RECONCILIATION", "REFUNDED_AFTER_LATE_SETTLEMENT"].includes(event.processingResult ?? ""))) };
+  }));
 }

@@ -19,10 +19,13 @@ import { expireRetailReservationsIn } from "../inventory/expiry-service";
 import { createPaymentReconciliationHandler } from "../payment/reconciliation-job";
 import { PaymentReconciliationRepository } from "../payment/reconciliation-repository";
 import { createMidtransStatusGateway, type PaymentStatusGateway } from "../payment/status-gateway";
+import { createRefundReconciliationHandler } from "../refund/reconciliation-job";
+import { RefundExecutionRepository } from "../refund/execution-repository";
+import { createMidtransRefundGateway, type RefundGateway } from "../refund/gateway";
 import { createR2PrivateObjectStorageFromEnvironment, type PrivateObjectStorage } from "../files/r2";
 import { CustomerFileRetentionJob } from "./file-retention";
 
-export function createJobHandlers(options: { prisma: PrismaClient; bound: Pick<BoundDatabaseService, "run">; source: Readonly<Record<string, string | undefined>>; workerPolicy?: unknown; businessPolicy?: unknown; senderFactory?: () => OutboxSender; paymentStatusFactory?: () => PaymentStatusGateway; fileStorageFactory?: () => Pick<PrivateObjectStorage, "deleteObject"> }): Readonly<Record<JobName, JobHandler>> {
+export function createJobHandlers(options: { prisma: PrismaClient; bound: Pick<BoundDatabaseService, "run">; source: Readonly<Record<string, string | undefined>>; workerPolicy?: unknown; businessPolicy?: unknown; senderFactory?: () => OutboxSender; paymentStatusFactory?: () => PaymentStatusGateway; refundGatewayFactory?: () => RefundGateway; fileStorageFactory?: () => Pick<PrivateObjectStorage, "deleteObject"> }): Readonly<Record<JobName, JobHandler>> {
   const source = Object.freeze({ ...options.source }), bound = options.bound;
   const workerPolicy = options.workerPolicy === undefined ? undefined : parseWorkerPolicy(options.workerPolicy);
   const cipherFactory = () => new OutboxPayloadCipher(readOutboxCipherConfig(source));
@@ -31,6 +34,7 @@ export function createJobHandlers(options: { prisma: PrismaClient; bound: Pick<B
   const authCleanup = new InternalAuthCleanupRepository(options.prisma), privacyCleanup = new CustomerPrivacyCleanupRepository(options.prisma);
   return Object.freeze({
     OUTBOX_BUSINESS: createBusinessOutboxHandler(outbox, options.businessPolicy),
+    REFUND_RECONCILIATION: createRefundReconciliationHandler(options.refundGatewayFactory ?? (() => createMidtransRefundGateway(source)), new RefundExecutionRepository(options.prisma)),
     PAYMENT_RECONCILIATION: createPaymentReconciliationHandler(options.paymentStatusFactory ?? (() => createMidtransStatusGateway(source)), new PaymentReconciliationRepository(options.prisma)),
     CUSTOMER_FILE_RETENTION: context => new CustomerFileRetentionJob(options.fileStorageFactory ?? (() => createR2PrivateObjectStorageFromEnvironment(source))).run(context),
     INVENTORY_RESERVATIONS: context => context.withLease(async (tx, now) => {
