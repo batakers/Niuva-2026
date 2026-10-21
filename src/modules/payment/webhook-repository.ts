@@ -346,6 +346,13 @@ async function processPaymentState(input: Readonly<{
   }
 
   if (targetStatus === "REFUNDED") {
+    const execution = await transaction.refundExecution.findFirst({ where: { allocation: { paymentAttemptId: attempt.id } }, select: { id: true } });
+    if (execution) {
+      return finalizeEvent(transaction, eventId, {
+        kind: "STALE", orderId: attempt.order.id, paymentAttemptId: attempt.id,
+        processingResult: "REFUND_REQUIRES_RECONCILIATION",
+      }, attempt.id);
+    }
     if (notification.transactionStatus === "partial_refund") {
       return finalizeEvent(transaction, eventId, {
         kind: "PARTIAL_REFUND_REQUIRES_EXCEPTION",

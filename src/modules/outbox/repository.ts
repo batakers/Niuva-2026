@@ -1,4 +1,5 @@
 import type { Prisma, DurableOutboxMessage } from "../../generated/prisma/client";
+import { databaseNow } from "@/lib/db/clock";
 import { normalizeCustomerEmail, safeCustomerReturnTo } from "../customer-auth/core";
 import { assertRecordedAgeDeclaration } from "../customer-auth/age-declaration";
 import { closureIdentityHash } from "../customer-privacy/core";
@@ -19,10 +20,7 @@ function recipient(owner: { email: string; normalizedEmail: string }): string | 
 export class PrismaOutboxRepository {
   async lock(tx: Prisma.TransactionClient): Promise<void> { await lockCustomerLifecycle(tx); }
   async now(tx: Prisma.TransactionClient): Promise<Date> {
-    const rows = await tx.$queryRaw<{ milliseconds: number }[]>`SELECT floor(extract(epoch FROM clock_timestamp()) * 1000)::double precision AS "milliseconds"`;
-    const milliseconds = rows[0]?.milliseconds;
-    if (typeof milliseconds !== "number" || !Number.isSafeInteger(milliseconds) || !Number.isFinite(new Date(milliseconds).getTime())) throw appError("PROVIDER_UNAVAILABLE");
-    return new Date(milliseconds);
+    return databaseNow(tx);
   }
   async proof(tx: Prisma.TransactionClient, input: Pick<OutboxInput, "kind" | "proofId"> & { deliveryDeadline?: Date }, now: Date): Promise<ProofProjection | null> {
     if (isBusinessKind(input.kind)) return readBusinessProof(tx, { kind: input.kind, proofId: input.proofId, deliveryDeadline: input.deliveryDeadline }, now);

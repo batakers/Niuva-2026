@@ -2,23 +2,14 @@ import "server-only";
 import { Prisma, type PrismaClient } from "@/generated/prisma/client";
 import type { AdminAccess } from "@/lib/auth/admin";
 import { getPrismaClient } from "@/lib/db/prisma";
-import { requireAdminPermission } from "../admin/permissions";
-import { assertInternalAccountActive } from "../customer-auth/internal-testing";
-import { lockCustomerLifecycle } from "../customer-privacy/lifecycle";
-import { lockPaymentOrder } from "../payment/operational-repository";
 import { appError, isAppError } from "../shared/errors";
-import { assertPendingRefundReturn, assertRefundSnapshot, assertRefundVersion, buildRefundSnapshot, refundHash, type RefundSnapshot } from "./core";
+import { assertPendingRefundReturn, assertRefundSnapshot, assertRefundVersion, buildRefundSnapshot, buildTrackedRefundSnapshot, refundHash, type RefundSnapshot } from "./core";
 import type { RefundIntakeInput, RefundRefreshInput, RefundRequestInput, RefundReturnInput, RefundReviewInput } from "./schema";
 import type { AdminRefundOrderView, RefundCaseView, RefundOrderView } from "./types";
+import { withRefundOrder, type RefundActor as Actor, type RefundOrderRow as OrderRow } from "./order-context";
 
-type Actor = Readonly<{ kind: "CUSTOMER"; id: string }> | Readonly<{ kind: "ADMIN"; access: AdminAccess; ownerOnly?: boolean; write?: boolean }>;
-const orderSelect = {
-  id: true, orderNumber: true, status: true, customerId: true, accountClosedAt: true, currency: true,
-  paymentAttempts: { orderBy: { id: "asc" }, select: { id: true, purpose: true, provider: true, providerOrderId: true,
-    providerTransactionId: true, amountRp: true, status: true, settledAt: true, events: { orderBy: [{ receivedAt: "asc" }, { id: "asc" }], select: { processingResult: true } } } },
-} satisfies Prisma.OrderSelect;
-const caseInclude = { allocations: { orderBy: { paymentAttemptId: "asc" } }, approvals: { orderBy: { caseVersion: "desc" }, include: { returnReceipt: true } } } satisfies Prisma.RefundCaseInclude;
-type OrderRow = Prisma.OrderGetPayload<{ select: typeof orderSelect }>;
+const caseInclude = { allocations: { orderBy: { paymentAttemptId: "asc" }, include: { execution: { include: { completion: true, attempts: { orderBy: { createdAt: "desc" }, take: 20 } } } } },
+  approvals: { orderBy: { caseVersion: "desc" }, include: { returnReceipt: true } }, manualAuthorizations: { orderBy: { authorizedAt: "desc" }, take: 10, include: { payout: true } } } satisfies Prisma.RefundCaseInclude;
 type CaseRow = Prisma.RefundCaseGetPayload<{ include: typeof caseInclude }>;
 function snapshotFor(order: OrderRow): RefundSnapshot {
   return buildRefundSnapshot(order.id, order.currency, order.paymentAttempts.map(payment => ({ ...payment, amountRp: payment.amountRp.toFixed(0) })));
@@ -31,12 +22,17 @@ function caseView(row: CaseRow): RefundCaseView {
   const approval = row.approvals.find(value => value.caseVersion === row.approvedVersion);
   return { id: row.id, status: row.status, version: row.version, category: row.category, reason: row.reason,
     amountRp: row.amountRp.toFixed(0), currency: row.currency, receivedAt: row.receivedAt.toISOString(), readyAt: row.readyAt?.toISOString() ?? null,
-    returnState: approval ? approval.returnReceipt ? "RECEIVED" : approval.returnState : null,
-    allocations: row.allocations.map(allocation => ({ paymentAttemptId: allocation.paymentAttemptId, purpose: allocation.purpose, amountRp: allocation.amountRp.toFixed(0) })) };
+    returnState: approval ? approval.returnReceipt ? "RECEIVED" : approval.returnState : null, completedAt: row.completedAt?.toISOString() ?? null,
+    allocations: row.allocations.map(allocation => ({ id: allocation.id, paymentAttemptId: allocation.paymentAttemptId, purpose: allocation.purpose, amountRp: allocation.amountRp.toFixed(0),
+      ...(allocation.execution ? { outcome: { state: allocation.execution.state, source: allocation.execution.completion?.source ?? null, confirmedAt: allocation.execution.completion?.confirmedAt.toISOString() ?? null } } : {}) })) };
 }
 function orderView(order: OrderRow, row: CaseRow | null): RefundOrderView {
   let snapshot: RefundSnapshot | null = null, eligibilityIssue: string | null = null;
-  try { snapshot = snapshotFor(order); } catch (error) { if (!isAppError(error)) throw error; eligibilityIssue = error.message; }
+  try {
+    snapshot = row && ["RECONCILING", "COMPLETED"].includes(row.status)
+      ? buildTrackedRefundSnapshot(order.id, order.currency, order.paymentAttempts.map(payment => ({ ...payment, amountRp: payment.amountRp.toFixed(0) })), row.allocations.filter(item => item.execution?.completion).map(item => ({ paymentAttemptId: item.paymentAttemptId, source: item.source })))
+      : snapshotFor(order);
+  } catch (error) { if (!isAppError(error)) throw error; eligibilityIssue = error.message; }
   return { orderId: order.id, orderNumber: order.orderNumber, orderStatus: order.status, accountClosed: order.accountClosedAt !== null,
     eligibleAmountRp: snapshot?.totalRp ?? null, eligibilityIssue, snapshotChanged: row !== null && snapshot?.hash !== row.snapshotHash, refund: row ? caseView(row) : null };
 }
@@ -51,33 +47,7 @@ export class RefundRepository {
   constructor(private readonly prisma: PrismaClient = getPrismaClient()) {}
 
   private async withOrder<T>(actor: Actor, orderId: string, run: (tx: Prisma.TransactionClient, order: OrderRow, now: Date) => Promise<T>): Promise<T> {
-    if (actor.kind === "ADMIN") {
-      requireAdminPermission(actor.access, actor.ownerOnly ? "PAYMENT_REFUND_FULL" : actor.write ? "FINANCE_WRITE" : "FINANCE_READ");
-      if (actor.ownerOnly && actor.access.profile.role !== "OWNER") throw appError("FORBIDDEN");
-    }
-    try {
-      return await this.prisma.$transaction(async tx => {
-        await lockCustomerLifecycle(tx);
-        if (actor.kind === "ADMIN") {
-          await tx.$queryRaw`SELECT id FROM admin_profiles WHERE id = ${actor.access.profile.id}::uuid FOR UPDATE`;
-          const profile = await tx.adminProfile.findFirst({ where: { id: actor.access.profile.id, isActive: true, role: actor.access.profile.role }, select: { authUserId: true } });
-          if (!profile || profile.authUserId !== null && profile.authUserId !== actor.access.authUserId) throw appError("FORBIDDEN");
-        }
-        await lockPaymentOrder(tx, orderId);
-        const [clock] = await tx.$queryRaw<{ now: Date }[]>`SELECT clock_timestamp() AS now`;
-        if (actor.kind === "CUSTOMER") {
-          const customer = await tx.customer.findUnique({ where: { id: actor.id }, select: { internalTestExpiresAt: true } });
-          if (!customer) throw appError("UNAUTHORIZED");
-          assertInternalAccountActive(customer.internalTestExpiresAt, clock.now);
-        }
-        const order = await tx.order.findUnique({ where: { id: orderId }, select: orderSelect });
-        if (!order || actor.kind === "CUSTOMER" && (order.customerId !== actor.id || order.accountClosedAt !== null)) throw appError("NOT_FOUND");
-        return run(tx, order, clock.now);
-      }, { timeout: 15_000 });
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") throw appError("CONFLICT", { message: "Pengajuan sudah tercatat atau kunci dipakai untuk permintaan lain." });
-      throw error;
-    }
+    return withRefundOrder(this.prisma, actor, orderId, run);
   }
   private async readCase(tx: Prisma.TransactionClient, orderId: string): Promise<CaseRow | null> {
     return tx.refundCase.findUnique({ where: { orderId }, include: caseInclude });
@@ -94,6 +64,12 @@ export class RefundRepository {
     return this.withOrder({ kind: "ADMIN", access }, orderId, async (tx, order) => {
       const row = await this.readCase(tx, orderId);
       return { ...orderView(order, row), contactVerificationReference: row?.contactVerificationReference ?? null,
+        executions: row?.allocations.flatMap(allocation => allocation.execution ? [{ id: allocation.execution.id, allocationId: allocation.id, state: allocation.execution.state,
+          refundKey: allocation.execution.refundKey, publicReason: allocation.execution.publicReason, attemptCount: allocation.execution.attemptCount,
+          firstAttemptAt: allocation.execution.firstAttemptAt?.toISOString() ?? null, nextAttemptAt: allocation.execution.nextAttemptAt?.toISOString() ?? null, lastCheckedAt: allocation.execution.lastCheckedAt?.toISOString() ?? null,
+          attempts: allocation.execution.attempts.map(attempt => ({ state: attempt.state, startedAt: attempt.startedAt?.toISOString() ?? null, finishedAt: attempt.finishedAt?.toISOString() ?? null })) }] : []) ?? [],
+        manualAuthorizations: row?.manualAuthorizations.map(value => ({ id: value.id, active: value.caseVersion === row.version && !value.payout, amountRp: value.amountRp.toFixed(0), reason: value.reason, providerResolutionReference: value.providerResolutionReference,
+          recipientVerificationReference: value.recipientVerificationReference, authorizedAt: value.authorizedAt.toISOString(), paidAt: value.payout?.paidAt.toISOString() ?? null, transferReference: value.payout?.transferReference ?? null })) ?? [],
         approvals: row?.approvals.map(approval => ({ version: approval.caseVersion, amountRp: approval.amountRp.toFixed(0), ownerId: approval.ownerId,
           reason: approval.reason, approvedAt: approval.approvedAt.toISOString(), returnState: approval.returnState,
           returnEvidenceReference: approval.returnReceipt?.evidenceReference ?? approval.returnEvidenceReference,

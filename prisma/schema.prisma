@@ -282,6 +282,10 @@ model AdminProfile {
   refundApprovals RefundApproval[]
   refundReturnReceipts RefundReturnReceipt[]
   refundCaseRevisions RefundCaseRevision[]
+  refundMerchantRules RefundMerchantRule[]
+  refundExecutionAttempts RefundExecutionAttempt[]
+  refundManualAuthorizations RefundManualAuthorization[]
+  refundManualPayouts RefundManualPayout[]
 
   @@index([isActive, role])
   @@map("admin_profiles")
@@ -743,6 +747,126 @@ model ShipmentRateSnapshot {
   @@map("shipment_rate_snapshots")
 }
 
+model RefundMerchantRule {
+  id String @id @default(uuid()) @db.Uuid
+  merchantBinding String @map("merchant_binding")
+  paymentType String @map("payment_type")
+  providerChannel String? @map("provider_channel")
+  route String
+  maxAgeSeconds Int @map("max_age_seconds")
+  maxAttempts Int @map("max_attempts")
+  validFrom DateTime @map("valid_from") @db.Timestamptz(6)
+  validUntil DateTime @map("valid_until") @db.Timestamptz(6)
+  evidenceReference String @map("evidence_reference")
+  ownerId String @map("owner_id") @db.Uuid
+  owner AdminProfile @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  executions RefundExecution[]
+  @@index([merchantBinding, paymentType, validUntil])
+  @@map("refund_merchant_rules")
+}
+
+model RefundExecution {
+  id String @id @default(uuid()) @db.Uuid
+  allocationId String @unique @map("allocation_id") @db.Uuid
+  allocation RefundAllocation @relation(fields: [allocationId], references: [id], onDelete: Restrict)
+  approvalId String @map("approval_id") @db.Uuid
+  approval RefundApproval @relation(fields: [approvalId], references: [id], onDelete: Restrict)
+  refundKey String @unique @map("refund_key")
+  publicReason String @map("public_reason")
+  state String @default("READY")
+  merchantRuleId String? @map("merchant_rule_id") @db.Uuid
+  merchantRule RefundMerchantRule? @relation(fields: [merchantRuleId], references: [id], onDelete: Restrict)
+  firstAttemptAt DateTime? @map("first_attempt_at") @db.Timestamptz(6)
+  attemptCount Int @default(0) @map("attempt_count")
+  nextAttemptAt DateTime? @map("next_attempt_at") @db.Timestamptz(6)
+  lastCheckedAt DateTime? @map("last_checked_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  attempts RefundExecutionAttempt[]
+  observations RefundObservation[]
+  completion RefundCompletion?
+  @@index([state, lastCheckedAt])
+  @@map("refund_executions")
+}
+
+model RefundExecutionAttempt {
+  id String @id @default(uuid()) @db.Uuid
+  executionId String @map("execution_id") @db.Uuid
+  execution RefundExecution @relation(fields: [executionId], references: [id], onDelete: Restrict)
+  ownerId String @map("owner_id") @db.Uuid
+  owner AdminProfile @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  submissionKey String @unique @map("submission_key") @db.Uuid
+  requestHash String @map("request_hash") @db.Char(64)
+  eligibilityEvidence String @map("eligibility_evidence")
+  state String @default("CHECKING")
+  attemptNumber Int? @map("attempt_number")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  startedAt DateTime? @map("started_at") @db.Timestamptz(6)
+  finishedAt DateTime? @map("finished_at") @db.Timestamptz(6)
+  @@unique([executionId, attemptNumber])
+  @@map("refund_execution_attempts")
+}
+
+model RefundObservation {
+  id String @id @default(uuid()) @db.Uuid
+  executionId String @map("execution_id") @db.Uuid
+  execution RefundExecution @relation(fields: [executionId], references: [id], onDelete: Restrict)
+  runId String @map("run_id") @db.Uuid
+  outcome String
+  proofHash String? @map("proof_hash") @db.Char(64)
+  checkedAt DateTime @map("checked_at") @db.Timestamptz(6)
+  @@unique([executionId, runId])
+  @@map("refund_observations")
+}
+
+model RefundManualAuthorization {
+  id String @id @default(uuid()) @db.Uuid
+  caseId String @map("case_id") @db.Uuid
+  refundCase RefundCase @relation(fields: [caseId], references: [id], onDelete: Restrict)
+  ownerId String @map("owner_id") @db.Uuid
+  owner AdminProfile @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  submissionKey String @unique @map("submission_key") @db.Uuid
+  requestHash String @map("request_hash") @db.Char(64)
+  caseVersion Int @map("case_version")
+  amountRp Decimal @map("amount_rp") @db.Decimal(18, 0)
+  executionIdsJson Json @map("execution_ids_json")
+  reason String
+  providerResolutionReference String @map("provider_resolution_reference")
+  recipientVerificationReference String @map("recipient_verification_reference")
+  authorizedAt DateTime @default(now()) @map("authorized_at") @db.Timestamptz(6)
+  payout RefundManualPayout?
+  @@map("refund_manual_authorizations")
+}
+
+model RefundManualPayout {
+  id String @id @default(uuid()) @db.Uuid
+  authorizationId String @unique @map("authorization_id") @db.Uuid
+  authorization RefundManualAuthorization @relation(fields: [authorizationId], references: [id], onDelete: Restrict)
+  ownerId String @map("owner_id") @db.Uuid
+  owner AdminProfile @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  submissionKey String @unique @map("submission_key") @db.Uuid
+  requestHash String @map("request_hash") @db.Char(64)
+  transferReference String @unique @map("transfer_reference")
+  evidenceReference String @map("evidence_reference")
+  paidAt DateTime @map("paid_at") @db.Timestamptz(6)
+  recordedAt DateTime @default(now()) @map("recorded_at") @db.Timestamptz(6)
+  completions RefundCompletion[]
+  @@map("refund_manual_payouts")
+}
+
+model RefundCompletion {
+  id String @id @default(uuid()) @db.Uuid
+  executionId String @unique @map("execution_id") @db.Uuid
+  execution RefundExecution @relation(fields: [executionId], references: [id], onDelete: Restrict)
+  source String
+  amountRp Decimal @map("amount_rp") @db.Decimal(18, 0)
+  providerReference String? @unique @map("provider_reference")
+  manualPayoutId String? @map("manual_payout_id") @db.Uuid
+  manualPayout RefundManualPayout? @relation(fields: [manualPayoutId], references: [id], onDelete: Restrict)
+  confirmedAt DateTime @map("confirmed_at") @db.Timestamptz(6)
+  recordedAt DateTime @default(now()) @map("recorded_at") @db.Timestamptz(6)
+  @@map("refund_completions")
+}
+
 model Shipment {
   id                String         @id @default(uuid()) @db.Uuid
   orderId           String         @map("order_id") @db.Uuid
@@ -854,6 +978,8 @@ model RefundCase {
   allocations RefundAllocation[]
   approvals RefundApproval[]
   revisions RefundCaseRevision[]
+  manualAuthorizations RefundManualAuthorization[]
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(6)
 
   @@index([status, receivedAt])
   @@map("refund_cases")
@@ -871,6 +997,7 @@ model RefundAllocation {
   providerTransactionId String? @map("provider_transaction_id")
   amountRp Decimal @map("amount_rp") @db.Decimal(18, 0)
   source String
+  execution RefundExecution?
 
   @@index([caseId])
   @@map("refund_allocations")
@@ -894,6 +1021,7 @@ model RefundApproval {
   returnSatisfiedAt DateTime? @map("return_satisfied_at") @db.Timestamptz(6)
   approvedAt DateTime @default(now()) @map("approved_at") @db.Timestamptz(6)
   returnReceipt RefundReturnReceipt?
+  executions RefundExecution[]
 
   @@unique([caseId, caseVersion])
   @@map("refund_approvals")

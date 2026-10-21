@@ -8,6 +8,7 @@ export const PAYMENT_EXCEPTION_RESULTS = [
   "PROVIDER_TRANSACTION_CONFLICT",
   "SETTLEMENT_STATUS_CODE_INVALID",
   "REFUND_REQUIRES_RECONCILIATION",
+  "REFUND_OPERATION_STARTED",
 ] as const;
 
 export type PaymentIssue = Readonly<{
@@ -50,7 +51,7 @@ export function getPaymentIssues(
       const result = event.processingResult;
       if (result === "SETTLED" || result === "STALE_SETTLED") {
         pending.delete("PAYMENT_VERIFICATION");
-      } else if (result === "REFUND_REQUIRES_RECONCILIATION") {
+      } else if (result === "REFUND_REQUIRES_RECONCILIATION" || result === "REFUND_OPERATION_STARTED") {
         if (!pending.has("REFUND_RECONCILIATION")) pending.set("REFUND_RECONCILIATION", event.receivedAt);
       } else if (result === "PARTIAL_REFUND_REQUIRES_EXCEPTION") {
         if (!pending.has("PARTIAL_REFUND")) pending.set("PARTIAL_REFUND", event.receivedAt);

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { PrismaActivityTargetReader } from "./target-repository";
 
 export type ActivityTargetInput = Readonly<{ id: string; entityType: string; entityId: string; action: string }>;
-export type ActivityDestination = Readonly<{ kind: "order" | "inquiry" | "proposal" | "custom-print" | "review" | "product" | "portfolio" | "privacy" | "admins" | "pricing" | "invoice" | "expense" | "site-information" | "payment" | "billing" | "billing-settings"; id: string }>;
+export type ActivityDestination = Readonly<{ kind: "order" | "refund" | "inquiry" | "proposal" | "custom-print" | "review" | "product" | "portfolio" | "privacy" | "admins" | "pricing" | "invoice" | "expense" | "site-information" | "payment" | "billing" | "billing-settings"; id: string }>;
 export interface ActivityTargetReader { lookup(event: ActivityTargetInput): Promise<ActivityDestination | null> }
 
 export async function resolveActivityTarget(event: ActivityTargetInput, reader: ActivityTargetReader = new PrismaActivityTargetReader()): Promise<string | null> {
@@ -12,6 +12,7 @@ export async function resolveActivityTarget(event: ActivityTargetInput, reader: 
   if (target === null || !z.uuid().safeParse(target.id).success) return null;
   if (["inquiry", "proposal", "billing"].includes(target.kind)) return null;
   const routes: Record<ActivityDestination["kind"], string | null> = {
+    refund: `/admin/orders/${target.id}/refund`,
     order: `/admin/orders/${target.id}`, inquiry: null,
     proposal: null, "custom-print": `/admin/custom-print/${target.id}`,
     review: `/admin/custom-print/${target.id}/review`, product: `/admin/products/${target.id}`,

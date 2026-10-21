@@ -1,6 +1,7 @@
-# Kasus dan persetujuan refund v1
+# Kasus, submission dan reconciliation refund v1
 
-Implementasi T21–T22, 19 Oktober 2026. Authority produk tetap
+Implementasi T21–T22, 19 Oktober 2026; kelanjutan T23/T25, 21 Oktober 2026.
+Authority produk tetap
 [PRD/addenda](../PRD-Niuva-MVP.md), [kontrak publik](../legal/customer-public-runtime-contract.md)
 dan [SOP refund](../legal/customer-service-refund-sop.md). Status pelaksanaan
 dan bukti berada di [TASKS](../../TASKS.md). Ini tidak mengesahkan policy publik,
@@ -68,7 +69,78 @@ Retur setelah approval PENDING membutuhkan receipt Owner eksplisit.
 `readyAt` mengambil pemicu terakhir antara approval dan pemenuhan retur.
 Approval dan receipt berulang dengan key sama tidak menulis audit/record
 ganda. Key yang dipakai untuk parameter berbeda, stale version dan overlap
-keputusan berbeda ditolak. Tidak ada provider submission di tahap ini.
+keputusan berbeda ditolak. Approval sendiri tidak mengirim refund.
+
+## Submission dan hasil dana T23/T25
+
+`RefundExecutionService` memvalidasi input dan Owner aktif; repository memakai
+lock lifecycle/payment/case yang sama. JSON API berada di
+`/api/admin/orders/[id]/refund/execution`; Server Actions dan form native
+menggunakan service yang sama. Admin biasa dan Customer tidak dapat mengirim,
+mengotorisasi, mencabut persetujuan manual atau mencatat transfer.
+
+Setiap alokasi mempunyai satu `RefundExecution` dengan `refund_key` tetap.
+`RefundExecutionAttempt` disimpan sebelum pemeriksaan provider; request POST,
+clock pertama dan nomor percobaan disimpan sebelum akses jaringan. Submission
+key yang sama dengan input sama tidak mengirim ulang; input berbeda ditolak.
+Amount tetap berasal dari alokasi Decimal server dan alasan provider berupa
+teks umum yang aman. `receivedAt` asli tidak diubah.
+
+Sebelum POST, Get Status harus membuktikan transaksi/nominal dan status settled.
+`RefundMerchantRule` harus cocok dengan binding merchant, metode/channel,
+jalur, masa berlaku, usia pembayaran dan batas percobaan yang dibuktikan.
+Tidak ada rule/cakupan universal yang di-seed. Verifikasi saldo dan kesiapan
+merchant tetap membutuhkan bukti operasi. Tanpa rule yang sah, POST ditahan.
+
+| State execution | Arti dan tindak lanjut |
+| --- | --- |
+| READY / CHECKING | Belum ada POST, atau preflight sedang memeriksa. Preflight yang tertahan sebelum POST kembali READY. |
+| SUBMITTING | Intent dan clock POST sudah durable; belum ada hasil pasti. |
+| ACCEPTED | Provider menerima request; bukan bukti dana diterima bank. |
+| RETRYABLE | Penolakan sementara yang pasti; key/body dan clock pertama tetap, cooldown/max-attempt/rule dan batas tujuh hari berlaku. |
+| UNKNOWN | Timeout, hasil tak pasti, atau retry preflight yang tertahan setelah POST sebelumnya. Tidak memberi izin POST baru; query/bukti provider dan review Owner diperlukan. |
+| EXCEPTION | Partial, transaksi tidak eligible, konflik reference, refund eksternal atau respons accepted terlambat setelah persetujuan manual. Kasus tetap RECONCILING. |
+| MANUAL_AUTHORIZED | Owner telah memeriksa tidak ada hasil provider pending/berhasil serta nominal/penerima; belum ada transfer yang dicatat. |
+| CONFIRMED | Receipt provider atau bukti transfer manual telah direkonsiliasi; kasus selesai hanya bila setiap alokasi mempunyai receipt dan state ini. |
+
+Receipt provider memerlukan Get Status tepercaya dengan transaksi/amount,
+refund key, reference unik dan waktu `bank_confirmed_at` yang cocok setelah
+request pertama. Notification refund hanya memicu hold/reconciliation dan
+tidak menyelesaikan dana. Receipt immutable tidak ditulis ulang. Pemeriksaan
+receipt yang sama boleh memulihkan state setelah observation yang bertentangan,
+tetapi tidak menutup exception pada alokasi lain atau menggandakan receipt.
+
+Fallback manual mempunyai dua langkah Owner: persetujuan dengan reference
+resolusi provider dan verifikasi penerima, lalu pencatatan transfer dengan
+reference unik, bukti dan waktu sesudah persetujuan. UI tidak mentransfer uang.
+Satu transfer dapat menutup beberapa alokasi MAKE dengan total tepat. Owner
+dapat mencabut persetujuan yang belum dibayar, dengan alasan dan revision;
+bukti lama tetap ada, tidak dapat dipakai membayar, dan tidak membatalkan
+transfer yang sudah tercatat. Operasi provider yang sebelumnya tak pasti
+kembali UNKNOWN saat persetujuan dicabut.
+
+Observation PARTIAL, EXTERNAL_REFUND_REQUIRES_REVIEW atau REFERENCE_CONFLICT
+pada alokasi yang belum selesai menahan persetujuan manual nilai penuh.
+Observation settled/unavailable berikutnya atau pencabutan persetujuan tidak
+menghapus hold tersebut. Penyelesaian sisa kewajiban setelah partial/external
+refund memerlukan rekonsiliasi bukti dan irisan resolusi eksplisit; runtime
+ini tidak menebak nominal tersisa atau menyediakan fitur refund parsial umum.
+
+Job `REFUND_RECONCILIATION` adalah GET-only melalui runner/lease/binding/role
+canonical di `src/modules/jobs/`, batch execute maksimum 10. Lease diverifikasi
+kembali setelah apply; kehilangan lease membatalkan receipt, status payment
+dan audit dalam transaksi tersebut. Dry-run tidak memanggil provider. Monitoring
+memuat remainingDue/lag dan alarm refund; adapter CLI/internal HTTP tidak
+mengaktifkan scheduler. T08 file retention, T24 payment reconciliation dan
+outbox bisnis tetap berada pada registry canonical yang sama.
+
+Adapter saat ini membatasi endpoint ke sandbox dan menolak konfigurasi live/
+production. Fixture lokal memeriksa kontrak adapter tanpa request provider;
+ini belum membuktikan sandbox merchant. Sebelum perluasan provider diperlukan
+PUB-REFUND-PROVIDER/PUB-REFUND-RECON dan T35: metode/channel/window/saldo/ETA,
+reference hasil bank, jalur manual, role/resource/cadence hosted dan petugas.
+Rujukan provider: [Refund Transaction](https://docs.midtrans.com/reference/refund-transaction)
+dan [Get Transaction Status](https://docs.midtrans.com/reference/get-transaction-status).
 
 ## Privacy, operasi dan batas bukti
 
@@ -90,9 +162,11 @@ transaction reference dan referensi bukti internal tidak diekspor otomatis.
 Retensi arsip/keuangan dan kalender SLA tetap memerlukan input Owner.
 Tidak ada penghapusan bukti finansial atau penetapan tenggat bisnis baru.
 
-T23/T25 masih memiliki submission key provider/attempt, capability merchant,
-window, timeout/unknown, fallback manual berizin, hasil bank dan reconciliation.
-Sebelum submission, versi/approval/retur/nominal/overlap wajib divalidasi ulang.
+T23/T25 mengimplementasikan submission key provider/attempt, gate capability
+merchant, window, timeout/unknown, fallback manual berizin dan reconciliation
+pada batas fixture lokal di atas. Sandbox/merchant dan lingkungan hosted
+masih terbuka. Sebelum submission, versi/approval/retur/nominal/overlap wajib
+divalidasi ulang.
 Approved dan readyAt tidak menyatakan dana sudah kembali. Expense retur di luar
 charge memerlukan ledger serta approval terpisah dan tidak ditambahkan ke
 nominal provider asal. Refund tidak menambah stock atau membalik lifecycle
@@ -100,7 +174,10 @@ produksi/pengiriman. T30 menangani notifikasi operasional persisten; WhatsApp
 otomatis tidak ditambahkan.
 
 Rollback sebelum aktivasi: tutup entry point baru bila diperlukan, pertahankan
-kasus, alokasi, history, receipt dan audit. Jangan drop/reset tabel untuk
-mengembalikan UI lama. Tidak ada provider atau uang yang dieksekusi oleh slice
-ini. Resource staging/production, physical-device/AT dan penerimaan visual
+kasus, alokasi, key/clock, attempt, history, receipt dan audit. Hentikan entry
+point submission baru tanpa mengulang intent yang accepted/unknown atau
+menghapus bukti; reconciliation dan penanganan kewajiban tetap diperlukan.
+Jangan drop/reset tabel untuk mengembalikan UI lama. Verifikasi slice ini
+tidak mengeksekusi provider atau uang nyata. Resource staging/production,
+physical-device/AT dan penerimaan visual
 Owner tetap memerlukan bukti masing-masing.

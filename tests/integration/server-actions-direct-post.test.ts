@@ -56,6 +56,7 @@ vi.mock("@/lib/observability/report", async (importOriginal) => {
 
 import * as adminActions from "@/app/admin/actions";
 import { requestRefundAction } from "@/app/account/orders/[id]/refund/actions";
+import { executeRefundAction } from "@/app/admin/orders/[id]/refund/actions";
 import { createOpaqueToken, hashOpaqueToken } from "@/modules/customer-auth/core";
 import { randomUUID } from "node:crypto";
 import { getPrismaClient } from "@/lib/db/prisma";
@@ -83,6 +84,9 @@ async function snapshot(): Promise<unknown> {
     variants: await prisma.productVariant.findMany({ orderBy: { id: "asc" } }),
     refundCases: await prisma.refundCase.count(),
     refundApprovals: await prisma.refundApproval.count(),
+    refundAttempts: await prisma.refundExecutionAttempt.count(),
+    refundCompletions: await prisma.refundCompletion.count(),
+    refundManualPayouts: await prisma.refundManualPayout.count(),
     orders: await prisma.order.count(),
     payments: await prisma.paymentAttempt.count(),
     movements: await prisma.stockMovement.count(),
@@ -140,6 +144,7 @@ function attempts(): ReadonlyArray<readonly [string, () => Promise<{ status: str
   const run = (fn: unknown, fields: Record<string, string>) => () =>
     (fn as ActionFn)({ status: "idle" }, form(fields));
   return [
+    ["executeRefundAction", run(executeRefundAction.bind(null, productId, "submit"), { submissionKey: randomUUID(), expectedVersion: "1", allocationId: randomUUID(), publicReason: "Synthetic refund reason.", eligibilityEvidence: "TEST-ELIGIBILITY-EVIDENCE" })],
     ["adjustStockAction", run(adminActions.adjustStockAction, {
       productId, variantId, expectedStockOnHand: "5", reason: "Penyesuaian stok hasil hitung fisik", stockOnHand: "99",
     })],
