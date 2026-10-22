@@ -8,6 +8,18 @@ import {
 } from "@/lib/env/server";
 
 describe("server environment contract", () => {
+  it("recognizes provider-neutral S3 configuration without Cloudflare metadata", () => {
+    const capabilities = getServerCapabilities({
+      S3_ENDPOINT: "https://objects.example.test",
+      S3_REGION: "test-region-1",
+      S3_ACCESS_KEY_ID: "TEST-ONLY",
+      S3_SECRET_ACCESS_KEY: "TEST-ONLY",
+      S3_PRIVATE_BUCKET: "fixture-private",
+      S3_PUBLIC_BUCKET: "fixture-public",
+    });
+    expect(capabilities.objectStorage).toBe(true);
+  });
+
   it("keeps every provider capability disabled when no values are configured", () => {
     expect(getServerCapabilities({})).toEqual({
       biteship: false,

@@ -22,7 +22,8 @@ import { createMidtransStatusGateway, type PaymentStatusGateway } from "../payme
 import { createRefundReconciliationHandler } from "../refund/reconciliation-job";
 import { RefundExecutionRepository } from "../refund/execution-repository";
 import { createMidtransRefundGateway, type RefundGateway } from "../refund/gateway";
-import { createR2PrivateObjectStorageFromEnvironment, type PrivateObjectStorage } from "../files/r2";
+import type { PrivateObjectStorage } from "../files/object-storage";
+import { createS3PrivateObjectStorageFromEnvironment } from "../files/s3";
 import { CustomerFileRetentionJob } from "./file-retention";
 
 export function createJobHandlers(options: { prisma: PrismaClient; bound: Pick<BoundDatabaseService, "run">; source: Readonly<Record<string, string | undefined>>; workerPolicy?: unknown; businessPolicy?: unknown; senderFactory?: () => OutboxSender; paymentStatusFactory?: () => PaymentStatusGateway; refundGatewayFactory?: () => RefundGateway; fileStorageFactory?: () => Pick<PrivateObjectStorage, "deleteObject"> }): Readonly<Record<JobName, JobHandler>> {
@@ -36,7 +37,7 @@ export function createJobHandlers(options: { prisma: PrismaClient; bound: Pick<B
     OUTBOX_BUSINESS: createBusinessOutboxHandler(outbox, options.businessPolicy),
     REFUND_RECONCILIATION: createRefundReconciliationHandler(options.refundGatewayFactory ?? (() => createMidtransRefundGateway(source)), new RefundExecutionRepository(options.prisma)),
     PAYMENT_RECONCILIATION: createPaymentReconciliationHandler(options.paymentStatusFactory ?? (() => createMidtransStatusGateway(source)), new PaymentReconciliationRepository(options.prisma)),
-    CUSTOMER_FILE_RETENTION: context => new CustomerFileRetentionJob(options.fileStorageFactory ?? (() => createR2PrivateObjectStorageFromEnvironment(source))).run(context),
+    CUSTOMER_FILE_RETENTION: context => new CustomerFileRetentionJob(options.fileStorageFactory ?? (() => createS3PrivateObjectStorageFromEnvironment(source))).run(context),
     INVENTORY_RESERVATIONS: context => context.withLease(async (tx, now) => {
       const before = await expiredReservationBacklog(tx, now);
       const released = context.request.mode === "dry-run" ? 0 : await expireRetailReservationsIn(tx, now, context.request.limit);

@@ -13,6 +13,7 @@ export const PROVIDER_CAPABILITY: Readonly<Record<string, CapabilityName>> = Obj
   Biteship: "shipping",
   Midtrans: "payment",
   R2: "objectStorage",
+  "S3 object storage": "objectStorage",
   Resend: "emailDelivery",
   "Resend Customer auth": "emailSender",
 });

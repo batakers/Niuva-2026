@@ -10,7 +10,7 @@ Paket Batch 2 menghubungkan producer Customer dengan durable outbox, worker, exp
 - Proses launcher membaca konfigurasi dari environment proses. Ia tidak memuat `.env.local`, `.env.test.local`, atau file konfigurasi lain.
 - `NIUVA_DATABASE_BINDING_ID` harus cocok dengan marker database; `NIUVA_DEPLOYMENT_TIER` harus menyatakan tier proses; `NIUVA_JOB_DATABASE_ROLE` harus sama dengan role koneksi DB. Role harus terpisah dari pemilik marker. Pada tabel marker, hak yang diperlukan terbatas pada `SELECT` dan `UPDATE(id)`; hak untuk tabel status job dan data yang dikelola tiap handler harus ditinjau berdasarkan job yang dijalankan. Rincian marker ada di [desain binding](../superpowers/specs/2026-10-13-batch-2-database-binding-design.md); cek handler yang dijalankan pada source code dan roadmap aktif sebelum meninjau grants hosted.
 - Untuk `OUTBOX_DELIVERY`, runtime juga membutuhkan konfigurasi cipher outbox dan konfigurasi mailer Customer yang lolos guard capability/origin. Itu tidak membuka provider live. Tidak ada contoh atau nilai key pada runbook.
-- `OUTBOX_EXPIRY`, cleanup dan `inspect` tidak memerlukan cipher atau sender. Retensi file hanya membangun adapter R2 ketika ada penghapusan execute yang sah; dry-run/inspect tidak memerlukan R2. `dry-run` tidak menulis status job, cursor atau data bisnis dan tidak membuat cipher/sender/storage.
+- `OUTBOX_EXPIRY`, cleanup dan `inspect` tidak memerlukan cipher atau sender. Retensi file hanya membangun adapter S3-compatible ketika ada penghapusan execute yang sah; dry-run/inspect tidak memerlukan storage. `dry-run` tidak menulis status job, cursor atau data bisnis dan tidak membuat cipher/sender/storage.
 
 `NIUVA_JOB_DATABASE_ROLE` dikonsumsi launcher CLI dan endpoint HTTP job internal; producer Customer biasa tidak memerlukan variabel role job. Endpoint HTTP tetap menolak koneksi yang tidak memenuhi pembatasan role/marker yang sama. Pengisian variabel atau konfigurasi dari contoh tidak membuktikan role nyata mempunyai grant yang tepat.
 
@@ -131,9 +131,10 @@ Delete storage dibatasi dua detik per file, memakai
 [AbortSignal pada AWS SDK](https://github.com/aws/aws-sdk-js-v3#abortcontroller-example).
 Timeout atau error setelah pemanggilan storage adalah outcome unknown. Klaim
 pending tetap ada sehingga retry idempoten menghapus key yang sama, termasuk
-ketika objek sudah hilang tetapi respons sebelumnya tidak diterima. R2
-mendokumentasikan [konsistensi kuat setelah delete berhasil](https://developers.cloudflare.com/r2/reference/consistency/);
-itu tidak menggantikan pembuktian adapter pada resource hosted.
+ketika objek sudah hilang tetapi respons sebelumnya tidak diterima. Adapter
+S3-compatible meneruskan AbortSignal ini ke SDK. Semantik delete, versioning
+dan object lock provider target tetap harus dibuktikan pada resource hosted
+sesuai [kontrak object storage](object-storage-contract.md).
 
 Hanya konfirmasi delete dan pemeriksaan lease terakhir yang mengizinkan
 tombstone `DELETED`, `deletedAt`, dan audit selesai dalam transaksi yang sama.

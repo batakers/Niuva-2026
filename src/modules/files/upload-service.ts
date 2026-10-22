@@ -19,9 +19,9 @@ import {
   type PendingFileForConfirmation,
 } from "./repository";
 import {
-  createR2PrivateObjectStorageFromEnvironment,
+  createS3PrivateObjectStorageFromEnvironment,
   type PrivateObjectStorage,
-} from "./r2";
+} from "./s3";
 import { isCadFileExtension, matchesCadContent } from "./content-inspection";
 
 const UPLOAD_INTENT_TTL_MS = 10 * 60 * 1_000;
@@ -114,7 +114,7 @@ export class UploadService {
     this.repositoryFactory = () =>
       dependencies.repository ?? new StoredFileRepository();
     this.storageFactory = () =>
-      dependencies.storage ?? createR2PrivateObjectStorageFromEnvironment();
+      dependencies.storage ?? createS3PrivateObjectStorageFromEnvironment();
   }
 
   /** Customer-only intent. Authorization happens before any file row or URL exists. */

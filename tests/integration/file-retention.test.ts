@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { createServer } from "node:http";
+import type { AddressInfo } from "node:net";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 import type { AdminAccess } from "@/lib/auth/admin";
@@ -101,6 +103,35 @@ async function refundDispute(orderId: string, access: AdminAccess, status: "REQU
 }
 
 describe("lease-bound Customer file retention", () => {
+  it("uses canonical S3 configuration and confirms a persisted claim before completing deletion", async () => {
+    const file = await upload();
+    const observed: { method: string; path: string; status: string | undefined }[] = [];
+    const server = createServer(async (request, response) => {
+      const current = await f.admin.storedFile.findUnique({ where: { id: file.id } });
+      observed.push({ method: request.method ?? "", path: new URL(request.url ?? "/", "http://fixture.invalid").pathname, status: current?.uploadStatus });
+      response.writeHead(204).end();
+    });
+    await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
+    try {
+      const source = {
+        ...f.source, NIUVA_PROVIDER_MODE: "sandbox",
+        S3_ENDPOINT: `http://127.0.0.1:${(server.address() as AddressInfo).port}`,
+        S3_REGION: "retention-fixture-1", S3_ACCESS_KEY_ID: "TEST-ONLY", S3_SECRET_ACCESS_KEY: "TEST-ONLY",
+        S3_PRIVATE_BUCKET: "retention-private", S3_PUBLIC_BUCKET: "retention-public",
+        S3_FORCE_PATH_STYLE: "true", CUSTOM_FILE_MAX_BYTES: "104857600",
+      };
+      const runtime = new JobRunner({ bound: f.bound, expectedRole: f.role, repository: new PrismaJobRepository(), policy,
+        handlers: createJobHandlers({ prisma: f.client, bound: f.bound, source }) });
+
+      expect(await runtime.run(run())).toMatchObject({ state: "completed", counts: { claimed: 1, deleted: 1, failed: 0 } });
+      expect(observed).toEqual([{ method: "DELETE", path: `/retention-private/${file.storageKey}`, status: "DELETE_PENDING" }]);
+      expect(await f.admin.storedFile.findUnique({ where: { id: file.id } })).toMatchObject({ uploadStatus: "DELETED", deletedAt: expect.any(Date) });
+    } finally {
+      server.closeAllConnections();
+      await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+    }
+  });
+
   it("dry-runs due files without storage, audit, cursor or business writes", async () => {
     await upload(); await upload({ createdAt: ago(1), uploadedAt: ago(1) });
     const access = await owner();

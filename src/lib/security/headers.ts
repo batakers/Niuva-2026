@@ -1,4 +1,6 @@
 import { decide } from "../../modules/capabilities/resolver";
+import { getObjectStorageConfiguration, getObjectStorageUploadOrigin } from "../env/object-storage";
+import { parseServerEnvironment } from "../env/server";
 
 export type SecurityHeader = {
   key: string;
@@ -7,10 +9,10 @@ export type SecurityHeader = {
 
 type SecurityEnvironment = Readonly<Record<string, string | undefined>>;
 
-// R2 connect-src is granted only when the capability resolver allows
+// Storage connect-src is granted only when the capability resolver allows
 // `objectStorage`. The env is passed in (no implicit process.env) and NODE_ENV
 // is pinned to the caller's value so tier resolution matches the header mode.
-// A half-filled R2 group is rejected at start by src/instrumentation.ts
+// A half-filled storage group is rejected at start by src/instrumentation.ts
 // (see lib/env/object-storage-startup.ts), so a denial here never hides one.
 function isObjectStorageAllowed(
   environment: SecurityEnvironment,
@@ -43,17 +45,18 @@ function getSafeHttpsOrigin(endpoint: string | undefined): string | undefined {
   }
 }
 
-// The one place that decides whether the R2 origin is part of connect-src.
+// The one place that decides whether the signed upload origin is part of connect-src.
 // Shared by the static policy below and the per-request nonce policy written by
 // src/proxy.ts, so the two cannot drift. Never in production NODE_ENV.
 export function getObjectStorageConnectOrigin(
-  nodeEnvironment = process.env.NODE_ENV,
+  nodeEnvironment: string | undefined = process.env.NODE_ENV,
   environment: SecurityEnvironment = process.env,
 ): string | undefined {
-  return nodeEnvironment === "production" ||
-    !isObjectStorageAllowed(environment, nodeEnvironment)
-    ? undefined
-    : getSafeHttpsOrigin(environment.R2_ENDPOINT);
+  if (nodeEnvironment === "production" || !isObjectStorageAllowed(environment, nodeEnvironment)) return undefined;
+  const storage = getObjectStorageConfiguration(parseServerEnvironment({ ...environment, NODE_ENV: nodeEnvironment }));
+  return storage && getSafeHttpsOrigin(storage.endpoint) !== undefined
+    ? getObjectStorageUploadOrigin(storage)
+    : undefined;
 }
 
 // `source` for the static CSP rule in next.config.ts headers(). It matches every
@@ -70,10 +73,10 @@ export function getContentSecurityPolicy(
   environment: SecurityEnvironment = process.env,
 ): string {
   const isProduction = nodeEnvironment === "production";
-  const r2Origin = getObjectStorageConnectOrigin(nodeEnvironment, environment);
+  const storageOrigin = getObjectStorageConnectOrigin(nodeEnvironment, environment);
   const connectSources = [
     "'self'",
-    ...(r2Origin === undefined ? [] : [r2Origin]),
+    ...(storageOrigin === undefined ? [] : [storageOrigin]),
     ...(isProduction ? [] : ["ws:", "wss:"]),
   ];
   const directives = [

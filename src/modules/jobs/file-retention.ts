@@ -1,6 +1,6 @@
 import { decideFileRetention } from "../files/retention-core";
 import { FileRetentionRepository } from "../files/retention-repository";
-import type { PrivateObjectStorage } from "../files/r2";
+import type { PrivateObjectStorage } from "../files/object-storage";
 import type { JobContext, JobResult } from "./core";
 
 type RetentionStorage = Pick<PrivateObjectStorage, "deleteObject">;

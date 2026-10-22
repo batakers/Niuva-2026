@@ -24,12 +24,12 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 | --- | --- | --- | --- | --- | --- |
 | T01 | M0 | DONE | Rekonsiliasi dokumen v1 | — | Empat dokumen punya fungsi jelas; keputusan lama tidak menjadi backlog aktif; setiap blocker punya ID/pemilik. Link/authority review. |
 | T02 | M0 | DONE | Sinkronkan baseline lokal | T01 | Generate resmi sesuai schema; lint/typecheck resmi lulus; migration/database lama tidak berubah. |
-| T03 | M1 | BLOCKED_EXTERNAL | Kontrak hosted sandbox | T02 | Binding/origin/cookie/CSP konsisten; resource salah ditolak; production tetap tertutup. Integration. |
+| T03 | M1 | BLOCKED_EXTERNAL | Kontrak hosted sandbox | T02 | Binding/origin/cookie/CSP konsisten; resource salah ditolak; production tetap tertutup. Konfigurasi dan adapter S3-compatible mengikuti kontrak object storage; resource/provider/grant hosted tetap menunggu Owner. Integration. |
 | T04 | M1 | DONE | Producer auth ke outbox | T03 | Proof dan enqueue atomik; proof invalid tidak dikirim; retry tidak memberikan akun/sesi prematur. Integration lokal lulus; hosted delivery tetap menunggu T03. |
 | T05 | M1 | DONE | Producer privacy ke outbox | T04 | Proof sekali pakai/closure aman; revoked/expired dibatalkan. Integration lokal lulus; hosted delivery tetap menunggu T03. |
 | T06 | M1 | DONE | Launcher worker dan status | T04–T05 | CLI dan endpoint bearer-protected memakai JobRunner/OperationalJobState yang sama dengan resource binding, role terbatas, policy eksplisit, lease/cooldown lintas run, monitor dan safe counters; unknown tidak memicu resend otomatis. Unit/backend/integration lokal lulus; scheduler/provider hosted belum diaktifkan. |
 | T07 | M1 | BLOCKED_EXTERNAL | Job expiry reservasi retail | T03 | Reservation due mengikuti policy existing; pending payment yang masih berlaku menahan pembatalan; attempt kedaluwarsa menjadi EXPIRED, order unpaid menjadi CANCELLED, dan stok dilepas atomik/idempoten; settled/refunded tidak pernah dilepas. Runner/backend/integration lokal lulus. Cadence dan scheduler hosted menunggu Owner/T03. |
-| T08 | M1 | BLOCKED_EXTERNAL | Job retensi file Customer | T03 | 14/60/90 sesuai kelas; hold Owner/privasi tetap setelah closure/purge receipt; order aktif dan bukti keuangan/histori B2B/media publik dilindungi. Klaim DELETE_PENDING, retry key sama, final lease, cursor bounded, HTTP/CLI canonical dan monitoring lulus lokal. PR #58 merged ke main pada `87d47fa`; resource/scheduler/R2 hosted menunggu T03. |
+| T08 | M1 | BLOCKED_EXTERNAL | Job retensi file Customer | T03 | 14/60/90 sesuai kelas; hold Owner/privasi tetap setelah closure/purge receipt; order aktif dan bukti keuangan/histori B2B/media publik dilindungi. Klaim DELETE_PENDING, retry key sama, final lease, cursor bounded, HTTP/CLI canonical dan monitoring lulus lokal. PR #58 merged ke main pada `87d47fa`; adapter S3-compatible mempertahankan pembatalan I/O. Resource/scheduler/provider hosted menunggu T03. |
 | T09 | M1 | BLOCKED_EXTERNAL | Cleanup auth/privacy hosted | T03 | Handler auth/privacy berbatas dari PR #56 memakai runner/lease/role/monitor canonical. Tenggat dan hold tetap; bukti lokal diwarisi lalu diuji ulang saat rekonsiliasi. Scheduler/role/resource hosted belum tersedia. |
 | T10 | M1 | IN_PROGRESS | Rate limit lintas instance | T03 | PostgreSQL bersama, HMAC IP stabil dengan secret bersama, dan pembersihan row kedaluwarsa diuji lokal; binding/topologi hosted belum dibuktikan. Integration. |
 | T11 | M2 | BLOCKED_INPUT | Pengesahan policy publik | T01; Owner | Isi/versi/tanggal disahkan; tidak menjanjikan kemampuan belum terbukti. Review Owner/fungsi review. |
@@ -82,6 +82,44 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
   dan data historis tidak diubah untuk membuat pengujian lulus.
 
 ## Bukti awal dan keputusan pelaksanaan
+
+### T03 → T08 / T18–T19 — migrasi S3-compatible, 22–23 Oktober 2026
+
+- Instruksi Owner mengizinkan migrasi provider-neutral dan rekonsiliasi lokal,
+  kemudian pengiriman melalui PR/CI. Provider final, resource hosted, cutover,
+  deployment dan aktivasi production tetap menunggu keputusan/izin terpisah.
+  Tidak ada ID task baru; 40 task existing dan status gate eksternal dipertahankan.
+- Kandidat memakai `main` `48eacd4`, termasuk T08 PR #58, refund, reconciliation
+  dan notifikasi existing. Patch lokal awal dari `49c0a73` direkonsiliasi pada
+  worktree terpisah; checkout asal dan dua dokumen untracked lainnya dipertahankan.
+  Catatan lama tentang T08 yang belum ada hanya berlaku pada branch awal.
+- Kontrak ada di [object storage](docs/backend/object-storage-contract.md):
+  endpoint/region/addressing dan credential S3 eksplisit, satu namespace lengkap,
+  CSP sesuai origin signed PUT, private/public terpisah, serta fallback R2 utuh.
+  AWS SDK existing dipakai tanpa dependency/schema/migration baru.
+- Upload/download Customer, bukti privat keuangan dan quarantine/publish media
+  memakai adapter yang sama tanpa mengubah service/repository, ownership,
+  content/size/SHA-256, intent/confirm, public renderer atau state bisnis.
+- Handler T08 memakai factory S3 dan mempertahankan AbortSignal/deadline dua detik,
+  DELETE_PENDING, retry key yang sama, hold dan final lease. Tes regresi sempat
+  gagal karena adapter mengabaikan abort, lalu lulus setelah signal diteruskan
+  ke SDK. Integration nyata pada DB/HTTP loopback membuktikan klaim pending
+  tersimpan sebelum I/O dan tombstone hanya sesudah konfirmasi delete.
+- Verifikasi lokal: lint 0 error/4 warning existing; typecheck lulus; unit
+  127 file/1.469 tes; backend 107 file/803 tes; integration 54 file/474 tes;
+  browser umum 112 lulus/5 skip existing/0 gagal; Owner/Admin 31 lulus/0 gagal;
+  Prisma validate lulus. Production build lokal terakhir pada 23 Oktober
+  menghasilkan 93/93 halaman, memakai database test terisolasi dan provider
+  tetap off/mock. Tidak ada assertion, timeout, atau skip baru untuk membuat
+  gate lulus.
+- Database baru terisolasi di loopback menerapkan 38 migration existing tanpa
+  reset atau perubahan migration. Runner browser sementara hanya mengatur cwd
+  dan URL database uji; konfigurasi/asersi suite existing tetap dipakai.
+- T03/T08 tetap BLOCKED_EXTERNAL; T19 tetap IN_PROGRESS. TLS/at-rest, CORS,
+  credential/grant/binding, semantik DELETE/versioning/object lock, scheduler,
+  upload/render hosted dan smoke BUY/MAKE belum dibuktikan. Policy provider T11,
+  inventaris/copy/recovery T38 dan rilis T40 tetap mengikuti dependensi/izin existing.
+  Tidak ada objek sumber atau data production yang dipindahkan/dihapus.
 
 ### T23/T25 — submission dan hasil refund, 19 Oktober 2026
 

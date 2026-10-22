@@ -12,9 +12,9 @@ import {
   type VerifiedPrivateFileForOwner,
 } from "./repository";
 import {
-  createR2PrivateObjectStorageFromEnvironment,
+  createS3PrivateObjectStorageFromEnvironment,
   type PrivateObjectStorage,
-} from "./r2";
+} from "./s3";
 
 const PRIVATE_DOWNLOAD_TTL_SECONDS = 5 * 60;
 
@@ -63,7 +63,7 @@ export class PrivateFileDownloadService {
     this.repositoryFactory = () =>
       dependencies.repository ?? new StoredFileRepository();
     this.storageFactory = () =>
-      dependencies.storage ?? createR2PrivateObjectStorageFromEnvironment();
+      dependencies.storage ?? createS3PrivateObjectStorageFromEnvironment();
   }
 
   async createDownload(input: unknown): Promise<PrivateFileDownloadResult> {

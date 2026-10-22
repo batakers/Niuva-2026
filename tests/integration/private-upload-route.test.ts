@@ -16,8 +16,8 @@ vi.mock("@/lib/auth/customer", () => ({
   getCurrentCustomer: async () => ({ id: customerAuthMock.id, email: "upload@example.test" }),
 }));
 
-vi.mock("@/modules/files/r2", () => ({
-  createR2PrivateObjectStorageFromEnvironment: () => ({
+vi.mock("@/modules/files/s3", () => ({
+  createS3PrivateObjectStorageFromEnvironment: () => ({
     createDownloadUrl: storageMock.createDownloadUrl,
     createUploadUrl: storageMock.createUploadUrl,
     deleteObject: storageMock.deleteObject,
