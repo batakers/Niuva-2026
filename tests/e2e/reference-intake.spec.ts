@@ -37,7 +37,11 @@ test("MAKE reference intake works without private storage when database is avail
   await expect(page.locator('input[name="customerEmail"]')).toHaveValue("demo-customer@example.test");
   await page.getByLabel("Nomor WhatsApp").fill("+628000000000");
   await page.locator('input[name="rightsAck"]').check();
-  await page.getByRole("button", { name: "Ajukan referensi untuk review" }).click();
+  const [savedResponse] = await Promise.all([
+    page.waitForResponse(response => new URL(response.url()).pathname === "/api/custom-print/requests" && response.request().method() === "POST"),
+    page.getByRole("button", { name: "Ajukan referensi untuk review" }).click(),
+  ]);
+  expect(savedResponse.status()).toBe(201);
   await expect(page.getByText("Referensi masuk ke Niuva")).toBeVisible();
   const statusLink = page.getByRole("link", { name: "Lihat status dan tambah model di akun" });
   const href = await statusLink.getAttribute("href");

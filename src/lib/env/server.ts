@@ -11,6 +11,7 @@ import {
   type ProviderMode,
 } from "./deployment";
 import { internalAuthEnvironmentShape } from "./internal-auth";
+import { getObjectStorageConfiguration, ObjectStorageConfigurationError } from "./object-storage";
 
 type EnvironmentSource = Readonly<Record<string, string | undefined>>;
 
@@ -167,6 +168,14 @@ const serverEnvironmentSchema = z.object({
   R2_PRIVATE_BUCKET: optionalNonEmptyString,
   R2_PUBLIC_BUCKET: optionalNonEmptyString,
   R2_SECRET_ACCESS_KEY: optionalNonEmptyString,
+  S3_ACCESS_KEY_ID: optionalNonEmptyString,
+  S3_SECRET_ACCESS_KEY: optionalNonEmptyString,
+  S3_SESSION_TOKEN: optionalNonEmptyString,
+  S3_ENDPOINT: optionalHttpUrl,
+  S3_REGION: optionalNonEmptyString,
+  S3_FORCE_PATH_STYLE: optionalBoolean,
+  S3_PRIVATE_BUCKET: optionalNonEmptyString,
+  S3_PUBLIC_BUCKET: optionalNonEmptyString,
   RESEND_API_KEY: optionalNonEmptyString,
   SENTRY_AUTH_TOKEN: optionalNonEmptyString,
   SENTRY_ORG: optionalNonEmptyString,
@@ -278,14 +287,14 @@ const CAPABILITY_GROUPS: readonly CapabilityGroup[] = [
   },
   {
     fields: [
-      "R2_ACCOUNT_ID",
-      "R2_ACCESS_KEY_ID",
-      "R2_SECRET_ACCESS_KEY",
-      "R2_PRIVATE_BUCKET",
-      "R2_PUBLIC_BUCKET",
-      "R2_ENDPOINT",
+      "S3_ACCESS_KEY_ID",
+      "S3_SECRET_ACCESS_KEY",
+      "S3_PRIVATE_BUCKET",
+      "S3_PUBLIC_BUCKET",
+      "S3_ENDPOINT",
+      "S3_REGION",
     ],
-    name: "R2 storage",
+    name: "S3-compatible storage",
   },
   {
     fields: [
@@ -318,7 +327,8 @@ function isConfigured(value: unknown): boolean {
 }
 
 function assertCompleteCapabilityGroups(environment: ServerEnvironment): void {
-  const incompleteFields = CAPABILITY_GROUPS.flatMap((group) => {
+  const incompleteFields: string[] = CAPABILITY_GROUPS.flatMap((group) => {
+    if (group.name === "S3-compatible storage") return [];
     const configuredFields = group.fields.filter((field) =>
       isConfigured(environment[field]),
     );
@@ -333,12 +343,11 @@ function assertCompleteCapabilityGroups(environment: ServerEnvironment): void {
     return group.fields.filter((field) => !isConfigured(environment[field]));
   });
 
-  const hasR2Storage = CAPABILITY_GROUPS[1].fields.every((field) =>
-    isConfigured(environment[field]),
-  );
-
-  if (environment.CUSTOM_FILE_MAX_BYTES !== undefined && !hasR2Storage) {
-    incompleteFields.push(...CAPABILITY_GROUPS[1].fields);
+  try {
+    getObjectStorageConfiguration(environment);
+  } catch (error) {
+    if (!(error instanceof ObjectStorageConfigurationError)) throw error;
+    incompleteFields.push(...error.fields);
   }
 
   if (incompleteFields.length > 0) {
@@ -372,7 +381,7 @@ export function getServerCapabilities(
   const environment = validateStartupEnvironment(source);
   const hasAll = (fields: readonly EnvironmentKey[]): boolean =>
     fields.every((field) => isConfigured(environment[field]));
-  const objectStorage = hasAll(CAPABILITY_GROUPS[1].fields);
+  const objectStorage = getObjectStorageConfiguration(environment) !== undefined;
 
   return {
     biteship: hasAll(CAPABILITY_GROUPS[3].fields),

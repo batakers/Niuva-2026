@@ -93,6 +93,7 @@ describe("legacy guard vs resolver", () => {
       Biteship: "shipping",
       Midtrans: "payment",
       R2: "objectStorage",
+      "S3 object storage": "objectStorage",
       Resend: "emailDelivery",
       "Resend Customer auth": "emailSender",
     });

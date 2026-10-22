@@ -132,10 +132,11 @@ user request and the authority order above.
   owner-approved `docs/backend/phase-3-pricing-biteship-contract.md` addendum.
   Quantity semantics, active-rule seeding, and provider activation remain
   separate gates; never pick a new value silently.
-- Customer 3D/CAD files stay in private R2 storage with short-lived signed
+- Customer 3D/CAD files stay in private S3-compatible storage with short-lived signed
   access. The approved binary limit/lifecycle is 100 MiB with 14/60/90-day
   handling per `docs/backend/phase-2-closure-decisions.md`; legal/accounting
-  record retention remains TBD.
+  record retention remains TBD. `docs/backend/object-storage-contract.md` owns
+  the provider-neutral configuration and legacy R2 transition; never mix namespaces.
 - Custom-print shipping is priced only after final package measurement.
 - The approved logo system locks logo colors. `DESIGN.md` explains the visual
   rules, `src/app/globals.css` holds runtime tokens, and

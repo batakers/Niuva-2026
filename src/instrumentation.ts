@@ -4,7 +4,7 @@ export async function register() {
   );
   const { validateStartupEnvironment } = await import("./lib/env/server");
 
-  // Half-filled R2 config would silently drop the R2 connect-src origin.
+  // Half-filled storage config would silently drop the upload connect-src origin.
   assertObjectStorageStartup();
   validateStartupEnvironment();
 }

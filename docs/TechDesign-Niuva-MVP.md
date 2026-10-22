@@ -1,5 +1,16 @@
 # Technical Design Document: Niuva MVP
 
+## Object storage S3-compatible — 22 Oktober 2026
+
+Atas instruksi Owner, kontrak aktif storage menjadi S3-compatible dengan provider
+final belum ditentukan. [Kontrak storage](backend/object-storage-contract.md)
+menetapkan konfigurasi, adapter, kompatibilitas R2, keamanan dan batas migrasi
+data. Pilihan Cloudflare R2 pada bagian historis di bawah tidak lagi mengunci
+provider. Private/public bucket, permission, signed URL, validasi binary dan
+lifecycle tetap dipertahankan. Pekerjaan dipetakan pada T03, T08, T18–T19 serta
+bukti staging/recovery existing; tidak menambah task backlog atau membuka
+deployment, resource eksternal maupun production.
+
 ## Kontrak implementasi v1 — 18 Oktober 2026
 
 Mengikuti [persetujuan v1 pada PRD](PRD-Niuva-MVP.md#kontrak-penyelesaian-v1--18-oktober-2026),

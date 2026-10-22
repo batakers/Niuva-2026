@@ -3,7 +3,7 @@ import { randomBytes, randomUUID, createHash } from "node:crypto";
 import { z } from "zod";
 import type { AdminAccess } from "@/lib/auth/admin";
 import { requireAdminPermission } from "@/modules/admin/permissions";
-import { createR2PrivateObjectStorageFromEnvironment, type PrivateObjectStorage } from "@/modules/files/r2";
+import { createS3PrivateObjectStorageFromEnvironment, type PrivateObjectStorage } from "@/modules/files/s3";
 import { appError } from "@/modules/shared/errors";
 import { parseWithValidation } from "@/modules/shared/validation";
 import { financeAudit, withFinanceTransaction } from "./repository";
@@ -16,7 +16,7 @@ export class FinancialEvidenceService {
   private storage(): PrivateObjectStorage {
     if (process.env.NODE_ENV === "test" && this.dependencies.syntheticTestAdapter && this.dependencies.storage) return this.dependencies.storage;
     if (!financialEvidenceRuntimeEnabled()) throw appError("PROVIDER_UNAVAILABLE", { message: "Penyimpanan bukti belum tersedia. Pengeluaran tetap bisa disimpan tanpa lampiran." });
-    return createR2PrivateObjectStorageFromEnvironment();
+    return createS3PrivateObjectStorageFromEnvironment();
   }
   async prepare(access: AdminAccess, input: unknown) {
     requireAdminPermission(access, "FINANCE_WRITE");

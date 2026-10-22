@@ -30,7 +30,7 @@ selesai atau memberi izin production.
 | D05 | Uang dan stok aman | Duplicate, amount mismatch, expiry, late settlement, timeout, refund dan manual exception diuji tanpa tindakan ganda atau exception tersembunyi. |
 | D06 | Owner/Admin mandiri | Operasi utama serta pembuatan produk/varian/project dan media berhasil lewat Dashboard tanpa database/source. |
 | D07 | Email/job andal | Pesan/job persisten, dedup/expiry/retry/overlap aman; scheduler, lag, alarm, last-success dan petugas terbukti. |
-| D08 | Provider dan data siap | Resource staging terpisah, OAuth/inbox, payment/webhook/refund, shipping, private R2 dan public media, katalog/rule sesuai lingkungan. |
+| D08 | Provider dan data siap | Resource staging terpisah, OAuth/inbox, payment/webhook/refund, shipping, private S3-compatible storage dan public media, katalog/rule sesuai lingkungan. |
 | D09 | Kualitas kandidat terbukti | lint, typecheck, unit/component, backend, schema, integration, E2E default dan Admin, serta build lulus pada kandidat yang sama; tidak ada blocker kritis. |
 | D10 | UX pada route aktual | Viewport relevan, keyboard/fokus, label/error/recovery, zoom 200%, reduced motion; bukti visual, perangkat fisik dan AT memiliki cakupan masing-masing. |
 | D11 | Operasi/recovery diterima | Policy disahkan, retensi ditetapkan, coverage dan SOP disimulasikan, restore memenuhi sasaran Owner tanpa memulihkan akses tertutup/mengulang uang atau email. |
