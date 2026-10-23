@@ -4,59 +4,60 @@ Update this after major decisions, completed phases, or bugs that future agents 
 
 ## Current State
 
-- Current phase: Development/local. Core data model, both auth systems, and the three funnels are implemented and verified only on local/loopback/non-production. No production readiness is claimed.
-- Current work: spec `.kiro/specs/niuva-audit-remediation/` (Tahap 1 in progress). Task order and status live in its `tasks.md`.
-- Data model: 41 Prisma models (`^model ` in `prisma/schema.prisma`) and 16 migrations (folders in `prisma/migrations/`).
+- Source refresh: 2026-10-23, `origin/main` at `5ebfdff634d96740874803c92c8ac6cc83552159`; source inspection and lint only. Runtime/environment acceptance: belum diverifikasi.
+- Current work: v1.0 closure. Scope: `PRODUCT.md`; dependencies: `ROADMAP.md`; sole active backlog: `TASKS.md`; completion: `docs/v1-definition-of-done.md`. `.kiro/specs/` is historical evidence.
+- Backlog table: 40 tasks — 18 DONE, 2 IN_PROGRESS (T10, T19), 8 BLOCKED_INPUT, 12 BLOCKED_EXTERNAL, 0 TODO; recounted from status cells in `TASKS.md`.
+- Data model: 79 Prisma models (`grep -c '^model ' prisma/schema.prisma`) and 38 migration folders (`ls -d prisma/migrations/*/ | wc -l`). Counts describe files, not an applied database state.
 - Auth, two separate systems:
-  - Owner/Admin: Clerk, `src/lib/auth/clerk.ts` (`requireAdmin`).
-  - Customer: opaque DB session, `src/lib/auth/customer.ts` and `src/modules/customer-auth/` (Google or verified email/password).
-- Funnels (route/API evidence):
-  - B2B brief: `src/app/project-brief/page.tsx` → `src/app/api/project-brief/route.ts` → `src/modules/inquiry/service.ts`; admin in `src/app/admin/inquiries/`.
-  - Retail checkout: `src/app/checkout/page.tsx` → `src/app/api/checkout/route.ts` → `src/modules/checkout/service.ts`; Midtrans notifications at `src/app/api/webhooks/midtrans/route.ts`; order status at `src/app/orders/[token]/page.tsx`.
-  - Custom print: `src/app/custom-print/request/page.tsx` → `src/app/api/custom-print/requests/route.ts`; operator quote via `sendQuoteAction` in `src/app/admin/actions.ts`; customer accept at `src/app/api/quote/[token]/accept/route.ts` → `src/modules/quote/service.ts`; payable order in `acceptAndCreatePayableOrder` (`src/modules/custom-print/repository.ts`).
-  - Browser coverage: `tests/e2e/` (`checkout`, `custom-request`, `quote-review`, `order-status`, `customer-auth`, `admin-*` specs).
-- Gate baseline (Tahap 0): lint 0 warning; `test:integration` 15 files / 83 tests; `test:e2e` 22 specs / 103 tests; all PASS on 2026-10-04 on the local working tree. Details in `.kiro/specs/niuva-audit-remediation/baseline-gate.md`.
-- Next step: continue `tasks.md` in order; stop at each `[APPROVAL_GATE]` and `[BLOCKED_ON_OWNER]` item.
+  - Owner/Admin: Better Auth + TOTP (`src/lib/auth/admin-engine.ts`); `src/lib/auth/admin.ts` requires `mfaVerified`, `twoFactorEnabled`, and an active AdminProfile. Clerk SDK is absent; `src/lib/auth/clerk.ts` only re-exports `./admin` (deprecated).
+  - Customer: opaque DB session, `src/lib/auth/customer.ts` and `src/modules/customer-auth/` (Google or verified email/password); checkout calls `requireCustomer`.
+- Funnels (source evidence only):
+  - B2B: WhatsApp via `src/app/services/` and `src/components/niuva/b2b-contact-link.tsx`. `POST /api/project-brief` returns 410 `B2B_RETIRED`; `/project-brief` redirects to `/services` or a recognized `/services/[slug]`. Historical inquiries remain retired.
+  - Retail: `src/app/api/checkout/route.ts` → `src/modules/checkout/service.ts`; notifications: `src/app/api/webhooks/midtrans/route.ts`; status: `src/app/orders/[token]/page.tsx`.
+  - MAKE: `src/app/api/custom-print/requests/route.ts`; operator `sendQuoteAction` in `src/app/admin/actions.ts`; accept: `src/app/api/quote/[token]/accept/route.ts`; payable order: `acceptAndCreatePayableOrder` in `src/modules/custom-print/repository.ts`.
+- Providers: `src/modules/providers/` contains `s3.ts`, `runtime.ts`, `non-production.ts`, `local-demo.ts`; domain adapters use these helpers. `S3_*` is primary, `R2_*` legacy; mixed namespaces are rejected (`src/lib/env/object-storage.ts`). Private files/public media share the S3 client.
+- Refresh verification: `corepack pnpm lint` exits 0, with 0 errors and 4 existing unused-variable warnings in `src/modules/jobs/handlers.ts`. Typecheck/tests/build/browser were not run: belum diverifikasi.
+- Next work follows dependencies and acceptance criteria in `TASKS.md`; missing Owner/provider inputs remain blocked.
 
 ## Decisions
 
-- 2026-08-21 — `docs/PRD-Niuva-MVP.md` is product scope authority and `docs/TechDesign-Niuva-MVP.md` is technical authority for this fresh workspace.
+- 2026-08-21 — Product authority: `docs/PRD-Niuva-MVP.md` and addenda; technical authority: `docs/TechDesign-Niuva-MVP.md` and addenda; visual authority: `DESIGN.md`.
 - 2026-08-21 — User guidance level is C (somewhere in between), overriding the older Level A metadata for explanation style only.
 - 2026-08-21 — Use a Next.js/TypeScript modular monolith with managed services; no product AI, microservices, or automatic slicer. (The "no customer account" part was superseded: current PRD addenda require Customer login before checkout; see `AGENTS.md`.)
-- 2026-08-21 — Agent files were instantiated from vibe-coding-prompt-template commit `254bae5682d11fb27012f407d619bf55828ae639`.
-- 2026-08-23 — Baseline Next.js 16.3.2 scaffold with TypeScript, App Router, `src/`, Tailwind, ESLint, and the `@/*` alias. Node 24.14.0 and Corepack pnpm 11.22.0; the Next.js agent-rules block generated by `next dev` is retained in `AGENTS.md`.
-- 2026-08-23 — Verification harness: Vitest, jsdom, React Testing Library, Playwright. Scripts cover lint, typecheck, unit/component tests, browser smoke tests, and build; `.env.example` contains names only.
+- 2026-08-21 — Recorded template: vibe-coding-prompt-template `254bae5682d11fb27012f407d619bf55828ae639`; object unavailable locally, provenance belum diverifikasi.
+- 2026-08-23 — Next.js/TypeScript App Router scaffold: `src/`, Tailwind, ESLint, `@/*`. Commit `c701fc9`: Next.js 16.3.2; current `package.json`: 16.3.6, pnpm 11.22.0. Historical Node 24.14.0: belum diverifikasi. Next.js agent-rules remain in `AGENTS.md`.
+- 2026-08-23 — Verification harness: Vitest, jsdom, React Testing Library, Playwright; scripts remain in `package.json` for lint, typecheck, tests, browser checks, and build.
 - 2026-08-24 — Approved logo-system assets were added. Logo colors are canonical.
 - 2026-10-03 — Owner readiness pack for public Customer launch is under `docs/legal/` (`customer-public-launch-readiness.md` and related files). It records open gates; it does not authorize public registration.
-- 2026-10-03 — Spec `niuva-audit-remediation` created (`.kiro/specs/niuva-audit-remediation/`): findings are sequenced in stages, Owner decisions are tracked in `register-keputusan.md`, and code must not resolve them with defaults.
-- 2026-10-04 — Tahap 0 baseline recorded in `baseline-gate.md` (figures under Current State). Lint noise from `.agents/**` is now ignored in `eslint.config.mjs`.
+- 2026-10-03 — Audit-remediation spec/registers remain historical evidence in `.kiro/specs/niuva-audit-remediation/`; their execution order is superseded by `ROADMAP.md` / `TASKS.md` (18 October). Unresolved Owner inputs must not become code defaults.
+- 2026-10-04 — Tahap 0 results in `.kiro/specs/niuva-audit-remediation/baseline-gate.md` are historical, not current gate results. `.agents/**` remains ignored by `eslint.config.mjs`.
 
 ## AI / Tooling Decisions
 
-- 2026-08-21 — Primary development tool is Codex. `AGENTS.md` and `agent_docs/` are the source of truth; no model is pinned in project config.
-- 2026-08-21 — No optional project skills or subagents were generated because they were not selected.
+- 2026-08-21 — Codex is primary. `AGENTS.md` owns workflow/safety; `agent_docs/` is orientation. No model is pinned in `.codex/config.toml`.
+- 2026-08-21 — Optional skill/subagent generation was declined (historical record; belum diverifikasi). Skills snapshot superseded: `.agents/skills/` contains `impeccable`, `niuva-design`, `niuva-editorial`. Delegation requires explicit authorization (`AGENTS.md`).
 - 2026-08-21 — AI is development assistance only; generated code still requires tests, browser checks, and human review.
 
 ## Known Issues
 
-Each item is an open gate from the audit (`register-dependency.md`, `register-keputusan.md`). None is resolved by code defaults.
+Carried findings retain their IDs; source fixes do not close hosted or release gates.
 
-- A1 — Providers are blocked when `NODE_ENV=production`: `assertNonProductionProvider` (`src/modules/providers/non-production.ts`) is called by Midtrans, R2, Resend, and Biteship paths. Live provider use is not possible until the capability resolver and explicit activation approval exist.
-- A2/F1 — Public Customer registration has no official legal documents. `getCustomerAuthLegalDocuments()` (`src/modules/customer-auth/legal.ts`) returns only internal-testing or test-fixture documents, and `registration` in `email-capabilities.ts` needs both those documents and non-production email delivery (`NODE_ENV !== "production"`). Official public Terms/Privacy with effective dates (RK-01 in `register-keputusan.md`) are not approved.
-- PUB-AGE / PUB-GUARDIAN — Age and guardian verification are undecided (RK-02, RK-03; `docs/legal/customer-public-launch-readiness.md`). Google or verified-email login proves identity control only.
-- B5 — Server failures are not logged yet. `src/lib/observability/` (logger, classifier) is new and untracked (task 3.1); nothing outside `tests/unit/observability.test.ts` imports it. `apiError()` and `toAppError()` are not wired to it (tasks 3.3, 3.5). Correlation ids already exist in `src/lib/http/response.ts`.
-- B2 — Rate limiting uses one bucket per origin: `assertPublicMutationRequest` (`src/lib/http/public-mutation.ts`) keys on `new URL(request.url).origin`, so one actor can exhaust the limit for everyone. The limiter is in-memory per instance.
-- Evidence scope — Public, catalog, authenticated-admin, and quote evidence in `docs/frontend/mvp-release-readiness.md` is local/loopback/non-production only. Visual acceptance, physical-device/AT, provider, and production readiness are unreviewed.
-- Open Owner items — SLA working calendar (RK-06), legal/accounting retention (RK-05), refund scope (RK-04, RK-07), and the rest of `register-keputusan.md`. Provider onboarding, credentials, DNS, and deployment need explicit authorization.
-- The repository folder name contains spaces and uppercase characters, so the generator used a temporary lowercase staging folder; generated files live at the intended root.
+- A1 — Resolver is consumed by adapters (`src/modules/capabilities/resolver.ts`); provider guards remain. Production/live are denied and grants empty (`src/modules/capabilities/matrix.ts`, `src/lib/env/deployment.ts`). T03: BLOCKED_EXTERNAL; hosted/provider operation belum diverifikasi.
+- A2/F1 — `src/modules/customer-auth/legal.ts` returns internal/test documents or null. Registration needs legal documents and proof delivery (`src/modules/customer-auth/email-capabilities.ts`); T11–T14 remain BLOCKED_INPUT. Public registration is not authorized.
+- PUB-AGE / PUB-GUARDIAN — 18+ declaration is implemented, not actual-age verification (`src/modules/customer-auth/age-declaration.ts`). Child/guardian accounts are out of scope; formal/hosted review remains separate (`docs/legal/customer-public-launch-readiness.md`).
+- B2 (carried; original defect resolved in source) — Customer ID or HMAC IP candidate + endpoint keys (`src/lib/http/public-mutation.ts`, `src/lib/security/actor-key.ts`); memory only for local-test, Prisma/PostgreSQL otherwise (`src/lib/security/shared-rate-limit.ts`). T10 IN_PROGRESS; hosted topology/proxy handling belum diverifikasi.
+- B5 (carried; original defect resolved in source) — Tracked observability is wired into `apiError()` with correlation IDs (`src/lib/http/response.ts`) and Admin actions through `toAppErrorLogged` (`src/lib/observability/report.ts`, `src/app/admin/actions.ts`). Plain `toAppError` stays pure; deployed collection/alerting belum diverifikasi.
+- Open inputs — Policy/version/date, working calendar/coverage, accounting retention, merchant refund capability, launch dataset, recovery targets: `TASKS.md` / `ROADMAP.md`. Full-refund direction remains; hosted submission/reconciliation is blocked (T23–T25). Activation/deployment need explicit instructions.
+- Evidence scope — `docs/frontend/mvp-release-readiness.md` retains its recorded scope. Browser, visual/device/AT, provider, staging, production acceptance: belum diverifikasi in this refresh.
 
 ## Completed
 
 - [x] Step 4 agent-documentation scaffold
 - [x] Application scaffold baseline
 - [x] Verification harness
-- [x] Core data model (Development/local; 41 models, 16 migrations)
-- [x] Auth (Clerk for Owner/Admin; DB session for Customer; public registration still closed)
-- [x] Core MVP flow (B2B brief, retail checkout, custom print/quote/order; local evidence only)
-- [ ] UI Foundation: authorized by DS-DEC-019; visual acceptance not reviewed
-- [ ] Launch checks: not done; open gates are under Known Issues
+- [x] Core schema: 79 models, 38 migration folders; applied database state belum diverifikasi
+- [x] Auth: Better Auth/TOTP for Owner/Admin; Customer DB sessions; public gates remain
+- [x] Active B2B WhatsApp path and retired Project Brief boundaries present
+- [x] Retail/MAKE checkout/quote/order source paths present; runtime belum diverifikasi
+- [ ] UI Foundation: DS-DEC-019 authorization remains; visual/device/AT acceptance belum diverifikasi
+- [ ] v1.0 closure/launch: open gates remain in `TASKS.md`
