@@ -95,6 +95,17 @@ user request and the authority order above.
 - There are currently no child `AGENTS.md` files in this checkout. Create and
   index them only through a scoped, authority-checked change.
 
+## Memory upkeep
+
+- As an explicit exception to the rule that ordinary implementation edits do not
+  require documentation churn, update `MEMORY.md` in the same PR for changes to:
+  decisions in its Decisions section; `TASKS.md` statuses to/from DONE,
+  BLOCKED_INPUT or BLOCKED_EXTERNAL; Prisma model or migration folder counts;
+  auth, provider, checkout or custom print paths.
+- Write only facts verified in code; otherwise write "belum diverifikasi".
+- Do not copy backlog statuses into `MEMORY.md`; point to `TASKS.md`.
+- Keep `MEMORY.md` under about 150 lines. Run `corepack pnpm check:memory`.
+
 ## Gotchas
 
 - B2B fase aktif mengikuti addendum PRD/Tech Design 11 Oktober 2026: kontak

@@ -9,6 +9,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "check:memory": "node scripts/check-memory.mjs",
     "pretypecheck": "prisma generate && next typegen",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
