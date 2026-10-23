@@ -1,0 +1,1 @@
+- [ ] MEMORY.md sudah diperbarui jika perubahan ini memengaruhi keputusan, status, jumlah model/migrasi, atau jalur auth/provider/checkout/custom print.

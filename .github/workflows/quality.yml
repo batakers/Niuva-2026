@@ -44,6 +44,9 @@ jobs:
       - name: Install dependencies
         run: corepack pnpm install --frozen-lockfile
 
+      - name: Check memory drift
+        run: corepack pnpm check:memory
+
       - name: Lint
         run: corepack pnpm lint
 
