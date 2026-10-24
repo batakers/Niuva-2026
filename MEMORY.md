@@ -4,9 +4,9 @@ Update this after major decisions, completed phases, or bugs that future agents 
 
 ## Current State
 
-- Source refresh: 2026-10-23, `origin/main` at `5ebfdff634d96740874803c92c8ac6cc83552159`; source inspection and lint only. Runtime/environment acceptance: belum diverifikasi.
+- Local shipping patch: 24–25 Oktober 2026, clean AO baseline/live main `13bdeb954de819b3959ee41e6cb36a1860687aeb`. Verification is local/mock; provider/staging/production acceptance: belum diverifikasi.
 - Current work: v1.0 closure. Scope: `PRODUCT.md`; dependencies: `ROADMAP.md`; sole active backlog: `TASKS.md`; completion: `docs/v1-definition-of-done.md`. `.kiro/specs/` is historical evidence.
-- Backlog table: 40 tasks — 18 DONE, 2 IN_PROGRESS (T10, T19), 8 BLOCKED_INPUT, 12 BLOCKED_EXTERNAL, 0 TODO; recounted from status cells in `TASKS.md`.
+- Current task statuses and dated execution evidence belong to `TASKS.md`; this memory does not duplicate its backlog table.
 - Data model: 79 Prisma models (`grep -c '^model ' prisma/schema.prisma`) and 38 migration folders (`ls -d prisma/migrations/*/ | wc -l`). Counts describe files, not an applied database state.
 - Auth, two separate systems:
   - Owner/Admin: Better Auth + TOTP (`src/lib/auth/admin-engine.ts`); `src/lib/auth/admin.ts` requires `mfaVerified`, `twoFactorEnabled`, and an active AdminProfile. Clerk SDK is absent; `src/lib/auth/clerk.ts` only re-exports `./admin` (deprecated).
@@ -16,7 +16,8 @@ Update this after major decisions, completed phases, or bugs that future agents 
   - Retail: `src/app/api/checkout/route.ts` → `src/modules/checkout/service.ts`; notifications: `src/app/api/webhooks/midtrans/route.ts`; status: `src/app/orders/[token]/page.tsx`.
   - MAKE: `src/app/api/custom-print/requests/route.ts`; operator `sendQuoteAction` in `src/app/admin/actions.ts`; accept: `src/app/api/quote/[token]/accept/route.ts`; payable order: `acceptAndCreatePayableOrder` in `src/modules/custom-print/repository.ts`.
 - Providers: `src/modules/providers/` contains `s3.ts`, `runtime.ts`, `non-production.ts`, `local-demo.ts`; domain adapters use these helpers. `S3_*` is primary, `R2_*` legacy; mixed namespaces are rejected (`src/lib/env/object-storage.ts`). Private files/public media share the S3 client.
-- Refresh verification: `corepack pnpm lint` exits 0, with 0 errors and 4 existing unused-variable warnings in `src/modules/jobs/handlers.ts`. Typecheck/tests/build/browser were not run: belum diverifikasi.
+- Shipping diagnostics: `src/modules/shipping/biteship.ts` bounds non-2xx diagnostics to 4 KiB and eight-digit numeric codes; only status/code enter safe logs. Error-body reads observe the request AbortSignal and cancel without awaiting cancellation; public failure remains generic 503. Rates payload/normalization, capability/non-production guards and checkout are unchanged.
+- Shipping verification: targeted/backend/unit, lint, strict typecheck, Prisma validate and default Turbopack build pass locally; additional Webpack build fails TS2344 on unchanged sign-in/analytics route types. Commands, counts and limits: `TASKS.md`. Browser/integration DB/hosted acceptance: belum diverifikasi.
 - Next work follows dependencies and acceptance criteria in `TASKS.md`; missing Owner/provider inputs remain blocked.
 
 ## Decisions
@@ -43,7 +44,7 @@ Update this after major decisions, completed phases, or bugs that future agents 
 Carried findings retain their IDs; source fixes do not close hosted or release gates.
 
 - A1 — Resolver is consumed by adapters (`src/modules/capabilities/resolver.ts`); provider guards remain. Production/live are denied and grants empty (`src/modules/capabilities/matrix.ts`, `src/lib/env/deployment.ts`). T03: BLOCKED_EXTERNAL; hosted/provider operation belum diverifikasi.
-- A2/F1 — `src/modules/customer-auth/legal.ts` returns internal/test documents or null. Registration needs legal documents and proof delivery (`src/modules/customer-auth/email-capabilities.ts`); T11–T14 remain BLOCKED_INPUT. Public registration is not authorized.
+- A2/F1 — `src/modules/customer-auth/legal.ts` returns internal/test documents or null. Registration needs legal documents and proof delivery (`src/modules/customer-auth/email-capabilities.ts`); Policy approval and activation statuses follow `TASKS.md`. Public registration activation remains separate.
 - PUB-AGE / PUB-GUARDIAN — 18+ declaration is implemented, not actual-age verification (`src/modules/customer-auth/age-declaration.ts`). Child/guardian accounts are out of scope; formal/hosted review remains separate (`docs/legal/customer-public-launch-readiness.md`).
 - B2 (carried; original defect resolved in source) — Customer ID or HMAC IP candidate + endpoint keys (`src/lib/http/public-mutation.ts`, `src/lib/security/actor-key.ts`); memory only for local-test, Prisma/PostgreSQL otherwise (`src/lib/security/shared-rate-limit.ts`). T10 IN_PROGRESS; hosted topology/proxy handling belum diverifikasi.
 - B5 (carried; original defect resolved in source) — Tracked observability is wired into `apiError()` with correlation IDs (`src/lib/http/response.ts`) and Admin actions through `toAppErrorLogged` (`src/lib/observability/report.ts`, `src/app/admin/actions.ts`). Plain `toAppError` stays pure; deployed collection/alerting belum diverifikasi.
