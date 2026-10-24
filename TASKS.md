@@ -32,10 +32,10 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 | T08 | M1 | BLOCKED_EXTERNAL | Job retensi file Customer | T03 | 14/60/90 sesuai kelas; hold Owner/privasi tetap setelah closure/purge receipt; order aktif dan bukti keuangan/histori B2B/media publik dilindungi. Klaim DELETE_PENDING, retry key sama, final lease, cursor bounded, HTTP/CLI canonical dan monitoring lulus lokal. PR #58 merged ke main pada `87d47fa`; adapter S3-compatible mempertahankan pembatalan I/O. Resource/scheduler/provider hosted menunggu T03. |
 | T09 | M1 | BLOCKED_EXTERNAL | Cleanup auth/privacy hosted | T03 | Handler auth/privacy berbatas dari PR #56 memakai runner/lease/role/monitor canonical. Tenggat dan hold tetap; bukti lokal diwarisi lalu diuji ulang saat rekonsiliasi. Scheduler/role/resource hosted belum tersedia. |
 | T10 | M1 | IN_PROGRESS | Rate limit lintas instance | T03 | PostgreSQL bersama, HMAC IP stabil dengan secret bersama, dan pembersihan row kedaluwarsa diuji lokal; binding/topologi hosted belum dibuktikan. Integration. |
-| T11 | M2 | BLOCKED_INPUT | Pengesahan policy publik | T01; Owner | Isi/versi/tanggal disahkan; tidak menjanjikan kemampuan belum terbukti. Review Owner/fungsi review. |
-| T12 | M2 | BLOCKED_INPUT | Consent Google publik | T04/T11 | Consent/deklarasi terikat identitas server; tanpa proof ditolak; riwayat tertutup tidak tertaut ulang. Integration/E2E. |
-| T13 | M2 | BLOCKED_INPUT | Signup email publik | T04/T11 | Consent resmi, verified-email boundary, expiry/resend/reset/revocation benar. Integration/E2E. |
-| T14 | M2 | BLOCKED_INPUT | Privacy hosted | T05/T11 | Export sendiri, hak data/closure dan kontak kasus aktif tanpa restore akun/riwayat. Integration/E2E/hosted. |
+| T11 | M2 | DONE | Pengesahan policy publik | T01; Owner | Owner menyetujui isi dan identifier `NIUVA-TERMS-v1.0`/`NIUVA-PRIVACY-v1.0`; tanggal berlaku ditetapkan saat publikasi aktual. Fakta provider, transfer data dan gerbang rilis dicatat terpisah pada readiness yang sudah ada; tidak menghambat T11 atau development lokal. Tidak menjanjikan kemampuan yang belum dibuktikan. |
+| T12 | M2 | TODO | Consent Google publik | T04/T11 | Consent/deklarasi terikat identitas server; tanpa proof ditolak; riwayat tertutup tidak tertaut ulang. Integration/E2E lokal; aktivasi tetap terpisah. |
+| T13 | M2 | TODO | Signup email publik | T04/T11 | Consent resmi, verified-email boundary, expiry/resend/reset/revocation benar. Integration/E2E lokal; aktivasi tetap terpisah. |
+| T14 | M2 | BLOCKED_EXTERNAL | Privacy hosted | T05/T11; T03 | Export sendiri, hak data/closure dan kontak kasus aktif tanpa restore akun/riwayat. Integration/E2E/hosted; resource hosted belum tersedia. |
 | T15 | M3 | DONE | Draft produk dari Dashboard | T02 | Owner/Admin membuat draft; kategori dapat dipilih tanpa UUID manual; draft tidak tampil publik. Unit, integration, authenticated E2E lokal lulus. |
 | T16 | M3 | DONE | Varian dari Dashboard | T15 | SKU unik, harga/berat/dimensi valid, stok awal mengikuti inventory/ledger. Unit, integration, authenticated E2E lokal lulus. |
 | T17 | M3 | DONE | Draft portfolio dari Dashboard | T02 | Draft baru tersedia; bukti dan data publikasi diperiksa sebelum publish. Unit, integration, authenticated E2E lokal lulus. |
@@ -83,6 +83,240 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 
 ## Bukti awal dan keputusan pelaksanaan
 
+### T11 — pengesahan selesai; kesiapan rilis terpisah, 24 Oktober 2026
+
+- Seluruh bagian policy disatukan dalam [paket review dan input tersisa](docs/legal/customer-public-input-evidence.md#paket-review-menyeluruh-t11--24-oktober-2026).
+- Status `BLOCKED_INPUT` pada catatan T11 terdahulu di bawah adalah snapshot
+  sebelum pengesahan Owner menyeluruh; status aktif mengikuti tabel dan catatan
+  final ini.
+- Syarat v6 dan Privasi v7 (24 Oktober) adalah draf review; rekomendasi isinya
+  dan identifier resmi v1.0 disetujui Owner. Preview internal mengikuti
+  identifier draf masing-masing; persetujuan ini belum mengaktifkan consent.
+  Tanggal berlaku ditetapkan pada publikasi aktual, bukan pada tanggal persetujuan.
+  Rekomendasi melengkapi cakupan katalog/quote, masa berlaku dan batas pembayaran
+  existing serta metode sesuai checkout. Privasi/SOP memperjelas dasar per
+  tujuan, penanganan hak dan inventaris minimum arsip transaksi tanpa membuat
+  retensi baru di runtime. Matriks/kontrak memperbaiki klaim refund/outbox/job
+  yang tertinggal dari baseline serta target lama 1/2/1 menjadi 1/1/1.
+- SKU/stok/tarif rinci tetap T31; simulasi/coverage tetap T39; consent/hosted,
+  storage, recovery dan rilis tetap pada task existing masing-masing. Tidak ada
+  fakta provider yang menjadi prasyarat pengesahan T11 atau development lokal.
+- Owner mengklarifikasi belum ada unit, petugas, atau lokasi arsip khusus.
+  Paket tidak mensyaratkan fasilitas, tahun buku atau petugas baru; dokumen
+  wajib pembukuan tetap disimpan 10 tahun di Indonesia pada tempat kedudukan
+  badan. PP 80/2019 juga menetapkan retensi minimum data PMSE terkait transaksi
+  keuangan 10 tahun dan data PMSE non-keuangan 5 tahun; kategori dan penempatan
+  yang benar-benar berlaku dicatat pada PUB-RECORDS, bukan digeneralisasi ke
+  semua profil/chat/token. Owner menyetujui rekomendasi dan identifier resmi
+  v1.0 pada 24 Oktober; T11 `DONE`.
+- Lokasi di luar Indonesia tidak otomatis melarang PSE privat; akses pengawasan
+  dan perlindungan transfer lintas negara tetap dipenuhi. Fakta penerima,
+  region, dan safeguard dicatat sebelum jenis data terkait diproses; notice
+  mencerminkan alur aktual sebelum pendaftaran/rilis pada PUB-PROVIDER/PUB-POLICY.
+  PUB-RECORDS juga memisahkan dokumen pembukuan
+  tertentu yang wajib disimpan di Indonesia. Ini readiness rilis, bukan blocker
+  T11/AWS untuk development. S3/AWS tetap ditunda; tidak ada publikasi,
+  aktivasi consent atau deployment.
+- Verifikasi koreksi ini: `corepack pnpm test:backend
+  tests/backend/customer-privacy-pages.test.ts
+  tests/backend/cad-upload-confirmation.test.ts
+  tests/backend/file-retention-core.test.ts
+  tests/backend/phase2-quote-order.test.ts` **4 file / 28 test lulus**;
+  206 target tautan lokal pada 10 dokumen Markdown berubah terverifikasi ada;
+  40 task tetap tanpa penambahan task (T11 DONE, T12/T13 TODO, T14 external);
+  dan `git diff --check` lulus. Lint/typecheck sebelumnya lulus pada baseline
+  runtime yang sama (0 error, 4 warning existing); tidak diulang karena koreksi
+  ini hanya mengubah dokumentasi.
+  Build, full E2E, full database integration dan provider tidak dijalankan.
+  Tidak ada perubahan runtime/schema/env/workflow atau aktivasi eksternal.
+
+### T11 — berkas dan hak konten Custom Print, 24 Oktober 2026
+
+- Atas instruksi Owner, Syarat bagian 7 dan SOP layanan merinci hak atas berkas,
+  izin terbatas untuk layanan serta klarifikasi keberatan tanpa membuka berkas
+  privat atau membuat pembayaran hangus otomatis. Lihat
+  [catatan input T11](docs/legal/customer-public-input-evidence.md#penyelarasan-berkas-dan-hak-konten--24-oktober-2026).
+- Draft dicocokkan dengan format/ukuran unggahan, batas inspeksi CAD, akses
+  operator, quote, refund dan retensi 14/60/90 existing serta sumber resmi hak
+  cipta/desain industri. Cakupan produk/penggunaan khusus dan jasa desain belum
+  diputuskan; tidak menambah kapabilitas, task atau identifier policy resmi.
+- T11 tetap `BLOCKED_INPUT`; pengesahan isi/versi/tanggal dan input lain masih
+  terbuka, dengan kesiapan operasional T39 serta akses AWS/S3 tetap terpisah.
+- Verifikasi: `corepack pnpm test:backend
+  tests/backend/customer-privacy-pages.test.ts
+  tests/backend/cad-upload-confirmation.test.ts
+  tests/backend/file-retention-core.test.ts` **3 file / 19 test lulus**;
+  60 tautan/anchor lokal pada empat dokumen valid, 40 baris task/dependensi
+  tetap sama, dan `git diff --check` lulus. Runtime tidak berubah; build, E2E,
+  database integration dan provider tidak dijalankan untuk perubahan dokumen.
+
+### T11 — penyelarasan klausul sengketa, 24 Oktober 2026
+
+- Atas instruksi Owner, klausul kontak Niuva dan jalur sengketa konsumen
+  diselaraskan pada Syarat bagian 6, SOP layanan dan
+  [catatan input T11](docs/legal/customer-public-input-evidence.md#penyelarasan-klausul-sengketa--24-oktober-2026).
+- Rujukan UU Perlindungan Konsumen Pasal 45/49/52 diperiksa; tidak menetapkan
+  forum eksklusif atau kewajiban menuntaskan pengaduan internal. SOP menjaga
+  nomor kasus, tenggat, bukti penyelesaian nyata, privasi dan kewenangan refund.
+- T11 tetap `BLOCKED_INPUT` sampai pengesahan isi/versi/tanggal dan input lain
+  lengkap. Kontak lembaga yang relevan dan kesiapan operasional T39 tetap
+  memerlukan bukti. Tidak menambah task/fitur/status kasus atau mengubah runtime.
+- Verifikasi: `corepack pnpm test:backend
+  tests/backend/customer-privacy-pages.test.ts` **1 file / 3 test lulus**;
+  55 tautan/anchor lokal pada empat dokumen valid, 40 baris task/dependensi
+  tetap sama, dan `git diff --check` lulus. Build, E2E, database integration
+  dan provider tidak dijalankan untuk perubahan dokumen ini.
+
+### T11 — konfirmasi bukan PKP, 24 Oktober 2026
+
+- Owner menjawab **“Bukan PKP, sudah diperiksa”** untuk status badan Niuva.
+  [Input status PKP](docs/legal/customer-public-input-evidence.md#konfirmasi-status-bukan-pkp--24-oktober-2026)
+  kini terkonfirmasi berdasarkan pemeriksaan Owner; tidak meminta credential,
+  NPWP atau salinan dokumen pajak dan tidak mengakses akun DJP.
+- PRD dan draf Syarat bagian 2 memakai rumusan tanpa pemungutan PPN penjualan
+  oleh Niuva; harga mengikuti katalog/quote, ongkir terpisah, dan dokumen
+  transaksi bukan Faktur Pajak. Keputusan biaya sebelumnya tetap berlaku.
+- Catatan penyiapan dua kandidat di bawah bersifat kronologis; bukan blocker
+  status PKP yang masih berjalan. T11 tetap `BLOCKED_INPUT` untuk pengesahan
+  keseluruhan isi/versi/tanggal dan input lain, tanpa task baru atau perubahan
+  perhitungan harga/pajak maupun resource eksternal.
+- Verifikasi: `corepack pnpm test:backend
+  tests/backend/customer-privacy-pages.test.ts` **1 file / 3 test lulus**;
+  67 tautan/anchor lokal valid, 40 baris task/dependensi tetap sama, dan
+  `git diff --check` lulus. Draf Syarat tidak lagi menyatakan status pajak
+  belum dikonfirmasi. Build, E2E, database integration dan provider tidak
+  dijalankan untuk perubahan dokumen ini.
+
+### T11 — penyiapan klausul pajak, 24 Oktober 2026
+
+- Instruksi Owner untuk melanjutkan bagian pajak ditindaklanjuti dengan
+  [panduan pemeriksaan status dan dua kandidat klausul](docs/legal/customer-public-input-evidence.md#penyiapan-klausul-pajak--24-oktober-2026).
+  Sumber DJP/Coretax diperiksa; hasil status badan Niuva tetap menunggu input.
+- Kandidat bukan PKP dan PKP disiapkan untuk review. Tidak menetapkan status,
+  tarif, harga termasuk PPN atau tanggal mulai kewajiban sebagai fakta Owner.
+- Total checkout retail dan batas dokumen invoice dicocokkan dengan source;
+  tidak ada perubahan kalkulasi harga, source, konfigurasi atau akun DJP.
+  Input harga launch tetap T31 existing, tanpa task baru.
+- T11 tetap `BLOCKED_INPUT`; status PKP tidak dapat ditentukan dari ketiadaan
+  dokumen dalam repo, omzet yang belum dikonfirmasi atau status NPWP aktif.
+
+### T11 — persetujuan biaya Customer, 24 Oktober 2026
+
+- Owner menyetujui tanpa biaya admin/layanan tambahan dari Niuva, biaya gateway
+  merchant ditanggung Niuva, ongkir pengiriman pesanan dibayar Customer dan
+  pekerjaan tambahan Custom Print dirinci dalam quote sebelum disetujui.
+- Keputusan diselaraskan pada PRD, draf Syarat bagian 2 dan
+  [input/bukti T11](docs/legal/customer-public-input-evidence.md#persetujuan-biaya-customer--24-oktober-2026).
+  Kewajiban biaya retur/pengganti Niuva mengikuti ketentuan yang sudah ada.
+- Poin biaya tambahan kini disetujui; catatan review awal di bawah bersifat
+  kronologis. T11 tetap `BLOCKED_INPUT` untuk isi lengkap, versi/tanggal resmi
+  dan input lain yang masih terbuka. Tidak mengubah status/dependensi task,
+  perhitungan harga/pajak, source pembayaran, atau resource eksternal.
+- Verifikasi: `corepack pnpm test:backend
+  tests/backend/customer-privacy-pages.test.ts` **1 file / 3 test lulus**;
+  58 tautan/anchor lokal pada empat dokumen valid, 40 baris task sama dengan
+  ledger sebelum pembahasan, dan `git diff --check` lulus. Build, E2E,
+  database integration dan provider tidak dijalankan untuk perubahan dokumen.
+
+### T11 — review usulan perdagangan, 24 Oktober 2026
+
+- Tujuh saran Owner dicocokkan dengan kontrak dan source lokal pada
+  `codex/v1-owner-policy`; hasil dan kandidat klausul berada di
+  [catatan input T11](docs/legal/customer-public-input-evidence.md#tinjauan-usulan-perdagangan--24-oktober-2026).
+- Status PKP/perlakuan pajak, katalog T31 dan metode pembayaran produksi belum
+  dikonfirmasi. Saran tidak dipromosikan menjadi fakta atau pengesahan policy.
+- Quote 7 hari kalender sejak dikirim sudah merupakan keputusan Phase 2 dan
+  diterapkan di runtime; pembayaran Custom Print memiliki tenggat 24 jam
+  tersendiri. Tidak mengubah durasi atau menambah task implementasi.
+- Usulan tanpa biaya admin/layanan dipisahkan dari ongkir dan rincian pekerjaan
+  Custom Print dalam quote. Kandidat sengketa mempertahankan hak hukum Customer;
+  keputusan biaya dan pengesahan isi lengkap masih terbuka.
+- T11 tetap `BLOCKED_INPUT`. Perubahan hanya catatan input/ledger; tidak mengubah
+  policy runtime, pajak, pembayaran, atau status/dependensi 40 task existing.
+- Verifikasi lokal: `corepack pnpm test:backend
+  tests/backend/customer-privacy-pages.test.ts
+  tests/backend/phase2-closure-policy.test.ts` **2 file / 8 test lulus**;
+  22 tautan/anchor lokal pada dua dokumen valid; `git diff --check` lulus.
+  Enam file policy/test yang sudah berubah sebelumnya tetap identik dengan
+  snapshot sebelum review ini. Build, E2E, database integration dan provider
+  tidak dijalankan pada perubahan catatan ini; tidak ada publikasi/deployment.
+
+### T11 — pembahasan policy Owner, 23 Oktober 2026
+
+- Owner menginstruksikan pembahasan T11 sambil seluruh akses AWS/S3 ditunda.
+  Worktree `codex/v1-owner-policy` dibuat dari baseline lokal terverifikasi
+  `5ebfdff`; ledger lokal terbaru termasuk bukti diagnosis shipping dibawa
+  dari worktree shipping tanpa menyalin patch aplikasinya. Tidak membuat
+  task baru atau mengubah 40 baris task/status/dependensi.
+- Owner menetapkan wilayah awal Shop/MAKE **Indonesia**, hanya alamat yang
+  dapat dilayani dengan ongkir tervalidasi. Shop diterima setelah pembayaran
+  terverifikasi server dan konfirmasi berdasarkan hasil tersebut diterbitkan;
+  order pending/redirect/notifikasi order dibuat bukan bukti pembayaran.
+  Quote MAKE tetap mengikuti kontrak sebelumnya.
+- [Syarat v4](docs/legal/customer-terms-draft.md) dan
+  [Privasi v4](docs/legal/customer-privacy-draft.md) tetap draf, tanpa tanggal
+  berlaku atau consent resmi. Klaim lama refund belum diimplementasikan
+  direkonsiliasi dengan T21–T25 lokal; provider/hasil dana tidak diklaim lulus.
+  Register SOP privasi v2 mengikuti S3-compatible, provider final OPEN,
+  tanpa mengubah retensi 14/60/90, menyalin credential atau memigrasi objek.
+- [Bahan pembahasan](docs/legal/customer-public-input-evidence.md#review-owner-t11-23-oktober-2026)
+  mencatat jawaban Owner tentang formalitas sebagai pertanyaan, bukan
+  approval SLA 1/2/1, jam layanan atau pengganti. Usulan memakai kontak/Rheza
+  yang ada, eskalasi Owner dan detail retur per kasus belum disahkan;
+  detail operasional tetap dalam T39 existing. Review UU PDP/PP 80/KUP
+  memakai sumber resmi, tanpa menyatakan kepatuhan hosted sudah terpenuhi.
+- Verifikasi: backend preview Owner/penolakan Admin dan boundary consent
+  internal **2 file / 9 tes lulus**; halaman auth **1 file / 14 tes lulus**;
+  **40 link/anchor dokumen resolve**; `pnpm lint` lulus dengan 0 error dan
+  4 warning existing pada handler job; `git diff --check` lulus. Hanya expectation identifier draf pada
+  tes existing yang diperbarui; source aplikasi dan resolver legal publik
+  tidak berubah. Build, DB integration, browser E2E dan provider/hosted tidak
+  dijalankan untuk revisi dokumen ini; hasil render server bukan bukti browser.
+- T11 tetap `BLOCKED_INPUT`: pengesahan isi lengkap, versi resmi/tanggal
+  berlaku dan input yang dirinci dalam bahan pembahasan belum tersedia.
+  T12–T14 tidak diaktifkan. Worktree shipping/AWS dan perubahan lama
+  dipertahankan; tidak ada commit, push, PR, publikasi atau resource eksternal.
+
+#### Keputusan lanjutan T11 — target 1/1/1, 23 Oktober 2026
+
+- Owner menetapkan tanggapan awal, pemeriksaan dan mulai refund masing-masing
+  maksimal **1 hari kerja**, total maksimal **3 hari kerja penanganan Niuva**.
+  Owner juga memilih waktu menunggu bukti Customer/perjalanan retur di luar
+  hitungan; waktu dana masuk bank/provider tetap terpisah. Ini menggantikan
+  target 1/2/1 yang masih terbuka pada awal pembahasan di atas.
+- Keputusan diselaraskan ke PRD, Syarat draf v4, SOP layanan/refund v2 dan
+  catatan input. Pergantian status/petugas tidak mereset tenggat; penundaan
+  internal termasuk approval Owner tetap dihitung. Kalender/jam, bukti
+  monitoring/operasi hosted dan pengesahan seluruh policy masih terbuka.
+  Tidak membuat default kalender atau mengubah kode refund/auth/jobs.
+- Verifikasi ulang `pnpm test:backend tests/backend/customer-privacy-pages.test.ts`:
+  **3 tes lulus**; **55 link/anchor lokal** pada enam dokumen resolve;
+  `git diff --check` lulus. 40 baris task/status/dependensi tetap sama.
+  Build/E2E/provider tidak diulang untuk perubahan dokumentasi ini.
+  T11 tetap `BLOCKED_INPUT`; tidak ada commit, publikasi atau aktivasi eksternal.
+
+#### Keputusan lanjutan T11 — laporan dan bukti awal, 23 Oktober 2026
+
+- Owner mengoreksi alur: laporan awal sudah disertai bukti yang tersedia,
+  bukan menambahkan masa tunggu bukti dalam target penanganan. Setelah
+  review ulang sumber primer PP 80/2019 Pasal 69, Owner memilih **minimal
+  2 hari kerja sejak barang diterima** sebagai ketentuan utama pengajuan
+  pada kondisi yang diatur, menggantikan anjuran 1×24 jam. Hak atas cacat
+  tersembunyi dan bukti selain video unboxing tetap dijaga.
+- PRD, Syarat v4, SOP layanan/refund v2 dan catatan input diselaraskan.
+  Target 1/1/1 dan total 3 hari kerja tetap sejak laporan diterima; hanya
+  perjalanan retur yang diperlukan dikecualikan. Koreksi ini menggantikan
+  pengecualian menunggu bukti pada keputusan sebelumnya. Bukti tambahan
+  tidak menghentikan/mereset tenggat; approval dan kontrol keamanan tetap.
+- Schema pengajuan refund belum memiliki field lampiran foto/video.
+  Bukti pada prosedur ini disampaikan melalui kanal layanan yang sudah
+  dikonfirmasi; tidak mengklaim uploader/validasi lampiran otomatis atau
+  retensi komunikasi eksternal sudah tersedia, dan tidak membuat fitur/task baru.
+- Verifikasi ulang preview Owner **3 tes lulus**; **55 link/anchor lokal**
+  resolve; `git diff --check` lulus. 40 baris task/status/dependensi dan
+  source aplikasi/schema/dependency tetap. Build/E2E/provider tidak diulang
+  untuk perubahan dokumen; T11 tetap `BLOCKED_INPUT` menunggu pengesahan lengkap.
+
 ### T03 → T08 / T18–T19 — migrasi S3-compatible, 22–23 Oktober 2026
 
 - Instruksi Owner mengizinkan migrasi provider-neutral dan rekonsiliasi lokal,
@@ -120,6 +354,66 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
   upload/render hosted dan smoke BUY/MAKE belum dibuktikan. Policy provider T11,
   inventaris/copy/recovery T38 dan rilis T40 tetap mengikuti dependensi/izin existing.
   Tidak ada objek sumber atau data production yang dipindahkan/dihapus.
+
+### T03 / T33–T34 — worktree dan diagnosis Rates lokal, 23 Oktober 2026
+
+- Owner menunda seluruh akses AWS/S3 sampai verifikasi akun selesai, lalu
+  mengizinkan kelanjutan lokal berdasarkan backlog existing. Tidak ada ID task
+  baru, deployment, aktivasi, resource atau request provider pada pekerjaan ini.
+- Inventaris mencakup sembilan worktree Git Niuva yang terdaftar; tidak ditemukan
+  checkout Git Niuva tambahan di direktori managed worktree. Ref lokal `main`
+  masih `54a97bb`; ref lokal `origin/main` sudah `5ebfdff`. Tree `5ebfdff`
+  identik dengan kandidat S3 `881a6fe`. Tidak ada fetch atau verifikasi remote
+  baru. `TASKS.md` pada baseline ini menjadi ledger; salinan lama dan
+  `TASKS (1).md` tidak dipakai untuk mengulang task yang sudah dikirim.
+
+| Worktree saat pemeriksaan | HEAD | Kondisi dan kelanjutan |
+| --- | --- | --- |
+| Checkout primary / `codex/v1-business-notifications` | `49c0a73` | 22 tracked berubah + 9 untracked: patch awal S3 dan dokumen existing. Dipertahankan; bukan baseline untuk mengulang notifikasi/storage yang sudah dikirim. |
+| `batch-2-durable-outbox` | `20cc5e3` | Tree sama dengan merge #56 `7b3a09d`; dua artefak `.superpowers` untracked. Tidak ada kode aktif yang perlu diimplementasikan ulang. |
+| `midtrans-local-sandbox` | `48eacd4` detached | Lima tracked berubah + 218 untracked, termasuk 217 artefak build dan satu runbook. Patch diagnosis Biteship dua file belum ada di baseline; ledger/readiness dan seluruh artefak dipertahankan. |
+| `s3-storage-reconcile` | `881a6fe` | Bersih; tree sama dengan #63 `5ebfdff`. Diparkir utuh selama verifikasi AWS. |
+| `v1-pr59-recovery` | `85f63c5` | Bersih; tree sama dengan #59 `bcd04d9`. Gate refund provider tetap mengikuti T23/T25. |
+| `v1-pr60-integration` | `5b98b2b` | Bersih; tree sama dengan #60 `d956c18`. Implementasi T24 tidak diulang. |
+| `v1-pr61-integration` | `eb99f7a` | Bersih; tree sama dengan #61 `a183c81`. Implementasi T26–T30 tidak diulang. |
+| `v1-refund-completion` | `032774b` | Bersih; tree sama dengan #62 `48eacd4`. Implementasi lokal T23/T25 sudah dikirim. |
+| `v1-refund-execution` | `adc28f0` | 25 tracked berubah + 17 untracked: patch refund historis sebelum kandidat completion. Dipertahankan; tidak diterapkan ulang di atas hasil #62. |
+
+- Tidak ada task TODO independen pada ledger terbaru. T10 dan T19 sudah
+  mempunyai implementasi/bukti lokal; sisa AC memerlukan topologi atau storage
+  hosted. Task terbuka lain memerlukan resource/provider atau input Owner.
+  Bagian lokal yang dapat dituntaskan adalah patch diagnosis Rates existing
+  untuk T03/T33–T34, tanpa menutup gate transaksi atau hosted.
+- Worktree baru `v1-shipping-diagnostics`, branch
+  `codex/v1-shipping-diagnostics`, dibuat dari SHA lokal `5ebfdff` yang bersih.
+  Hanya `src/modules/shipping/biteship.ts` dan regression test-nya diambil dari
+  sandbox; environment, credential, data, migration dan artefak lama tidak disalin.
+- Diagnosis non-2xx membaca paling banyak 4 KiB, menerima hanya kode numerik
+  delapan digit, dan mencatat status/kode aman melalui logger existing.
+  Pesan/body/header provider tidak dicatat atau dikirim ke browser; respons
+  publik tetap `SHIPPING_PROVIDER_UNAVAILABLE`/503. Kegagalan logger tidak
+  mengubah respons. Penyebab HTTP 400 historis tidak disimpulkan dari fixture.
+- Regresi body error yang macet direproduksi: respons belum selesai setelah
+  deadline pada patch awal (RED). Pembacaan diagnosis sekarang mengikuti sisa
+  timeout request; stream dibatalkan dan pembatalan diagnostic tidak menahan
+  respons (GREEN). Default lima detik, guard testing key/production, payload
+  Rates, normalisasi harga dan kontrak checkout dipertahankan.
+- Verifikasi pada diff lokal: baseline terarah 5/5; regresi terarah sesudah
+  perbaikan 8/8; lint 0 error/4 warning existing; backend 107 file/812 tes lulus,
+  termasuk 14 kasus gateway Biteship; unit/component 127 file/1.469 tes lulus;
+  strict typecheck dan Prisma validate lulus. Production build exit 0,
+  93/93 halaman, memakai cache lokal baseline yang sama, proxy HTTP/HTTPS
+  loopback dan tanpa respons font tiruan. Tidak ada credential/provider/DB
+  nyata pada pengujian gateway. Browser/E2E dan integration DB tidak diulang
+  untuk perubahan diagnosis adapter tanpa perubahan UI, route, schema atau DB.
+- Pemeriksaan penutup membandingkan HEAD, branch, jumlah perubahan dan SHA-256
+  gabungan path/isi seluruh perubahan tracked/untracked pada sembilan worktree
+  awal: semuanya identik dengan sebelum pekerjaan. Worktree baru hanya memuat
+  tiga file berubah (adapter, regression test, ledger); 40 baris task beserta
+  status/dependensinya tetap sama. `git diff --check` lulus.
+- T03/T33–T34 tetap BLOCKED_EXTERNAL; T10/T19 dan seluruh status gate existing
+  dipertahankan. Penyelesaian patch lokal tidak membuktikan provider, hosted,
+  perangkat/AT atau production. Belum ada commit, push atau PR.
 
 ### T23/T25 — submission dan hasil refund, 19 Oktober 2026
 

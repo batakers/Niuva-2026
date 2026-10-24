@@ -2,6 +2,27 @@
 
 **Tanggal:** 3 Oktober 2026. **Paket:** PUBLIC-PREPARATION-2026-10-03-v1, Syarat/Privasi v3. Baseline tree kode sama dengan PR #38 / `origin/main` `6c12a5f`. Status: pemeriksaan dokumen dan regresi preview yang relevan; bukan hasil legal approval, uji provider, atau penerimaan production.
 
+## Review menyeluruh T11 — 24 Oktober 2026
+
+Baseline kode lokal `5ebfdff`, draf Syarat v6/Privasi v7 dan persetujuan Owner 24 Oktober diperiksa sebagai satu paket. T11 selesai karena Owner mengesahkan isi dan identifier; fakta provider, perlindungan transfer, PUB-RECORDS dan publikasi tetap gerbang readiness terpisah. Hasil pada bagian 3/13 Oktober di bawah tetap historis. Scope sekarang adalah T11 pada [backlog aktif](../../TASKS.md), tanpa aktivasi policy publik, provider atau deployment.
+
+| Pokok review | Hasil / batas |
+| --- | --- |
+| Kriteria T11 | Owner menyetujui semua rekomendasi isi serta identifier resmi `NIUVA-TERMS-v1.0`/`NIUVA-PRIVACY-v1.0`; tanggal berlaku mengikuti tanggal publikasi aktual. Ini belum menerbitkan policy atau mengaktifkan consent. |
+| Perdagangan | Keputusan Indonesia, penerimaan Shop, bukan PKP dan biaya dipertahankan. Masa quote 7 hari/batas pembayaran mengikuti kontrak existing; katalog rinci milik T31, metode yang ditawarkan mengikuti checkout yang benar-benar tersedia. |
+| Keluhan dan hak data | Target 1/1/1 dengan total 3 hari kerja serta pengecualian perjalanan retur konsisten. Tenggat hak data 3×24 jam tetap kalender; pengalihan kasus, bukti tambahan dan job tidak memulai ulang tenggat. |
+| Hak berkas dan closure | Akses privat, izin penggunaan terbatas, quote/operator, holds dan 14/60/90 tidak diubah. Penutupan akun tidak memulihkan riwayat atau menghapus kewajiban transaksi/kasus aktif. |
+| Pemetaan data dan arsip | PP 80/2019 menetapkan retensi minimum data PMSE terkait transaksi keuangan 10 tahun dan non-keuangan 5 tahun. UU KUP menetapkan 10 tahun di Indonesia untuk buku/catatan/dokumen dasar pembukuan pada tempat kedudukan badan. Kategori, field, dan placement yang tepat tetap PUB-RECORDS; bukan seluruh profil/chat/token atau kewajiban lokasi untuk seluruh provider. Tidak perlu arsip khusus atau aturan purge baru di runtime. |
+| Klaim kemampuan | Matriks/runtime contract diperbarui untuk refund, outbox dan runner lokal yang sudah ada; dukungan provider, inbox, scheduler, recovery serta simulasi operasi tetap membutuhkan bukti masing-masing. |
+| Pengesahan dan rilis | T11 `DONE`: isi dan identifier resmi disetujui Owner. Resolver tetap internal/test; tanggal efektif dicatat saat publikasi aktual setelah informasi provider/transfer yang benar-benar digunakan dan gerbang rilis terkait siap. Tidak ada publikasi atau aktivasi dalam batch ini. |
+
+Verifikasi lokal revisi ini:
+
+- `corepack pnpm test:backend tests/backend/customer-privacy-pages.test.ts tests/backend/cad-upload-confirmation.test.ts tests/backend/file-retention-core.test.ts tests/backend/phase2-quote-order.test.ts`: **4 file / 28 test lulus** setelah koreksi dokumen. Scope: preview/permission policy, pemeriksaan CAD, retensi/hold dan quote/order; bukan bukti provider atau UAT browser.
+- `corepack pnpm lint` dan `corepack pnpm typecheck` sebelumnya lulus pada baseline runtime yang sama: 0 error dan 4 warning existing di `src/modules/jobs/handlers.ts`. Tidak diulang karena perubahan ini hanya dokumentasi.
+- **206 target tautan lokal pada 10 dokumen Markdown berubah terverifikasi ada**, **40 task tetap tanpa task baru** (T11 DONE, T12/T13 TODO, T14 BLOCKED_EXTERNAL), dan `git diff --check` lulus. Tidak ada perubahan runtime, schema/migration, dependency/lockfile, environment atau workflow.
+- Build, E2E, database integration penuh dan provider tidak dijalankan untuk koreksi dokumentasi ini. Tidak ada publikasi/aktivasi atau bukti hosted.
+
 ## Rekonsiliasi dokumentasi — 13 Oktober 2026
 
 Metadata, simulasi SIM-01–21 dan hasil command 3 Oktober di bawah adalah **histori**, bukan hasil pengujian revisi ini. Arah aktif mengikuti [PRD terkini](../PRD-Niuva-MVP.md#rekonsiliasi-kontrak-rilis--13-oktober-2026): akun 18+ dengan deklarasi Owner 5 Oktober, Better Auth khusus Admin dan B2B WhatsApp 11 Oktober. Pengesahan policy final/versi/tanggal berlaku, provider/staging/recovery dan izin rilis tetap terbuka. Sumber hukum/provider yang disebut di bagian historis tidak dinyatakan diperiksa ulang pada batch dokumentasi ini.
