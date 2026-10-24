@@ -107,15 +107,16 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 - T11 tetap `BLOCKED_EXTERNAL`: database/provider/lokasi hosted dan syarat
   rilis belum terbukti; AWS/S3 tetap ditunda. Persetujuan ini bukan publikasi,
   aktivasi consent atau izin deployment.
-- Verifikasi: `corepack pnpm test:backend
+- Verifikasi akhir setelah rebase: `corepack pnpm test:backend
   tests/backend/customer-privacy-pages.test.ts
   tests/backend/cad-upload-confirmation.test.ts
   tests/backend/file-retention-core.test.ts
   tests/backend/phase2-quote-order.test.ts` **4 file / 28 test lulus**;
-  139 tautan/anchor lokal pada 9 dokumen valid, 40 baris task/dependensi tetap
-  sama, dan `git diff --check` lulus. Tidak ada perubahan runtime/schema/env/
-  workflow. Build, lint/typecheck, E2E, database integration dan provider tidak
-  dijalankan ulang untuk perubahan dokumen ini.
+  `corepack pnpm lint` lulus dengan 0 error dan 4 warning pada file jobs yang
+  tidak diubah; `corepack pnpm typecheck` lulus; 151 tautan/anchor lokal pada
+  9 dokumen valid; 40 baris task tetap sama; dan `git diff --check` lulus.
+  Build, full E2E, full database integration dan provider tidak dijalankan.
+  Tidak ada perubahan runtime/schema/env/workflow atau aktivasi eksternal.
 
 ### T11 — berkas dan hak konten Custom Print, 24 Oktober 2026
 
