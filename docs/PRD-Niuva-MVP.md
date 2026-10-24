@@ -1,5 +1,98 @@
 # Product Requirements Document: Niuva MVP
 
+## Persetujuan rekomendasi policy Customer — 24 Oktober 2026
+
+Owner menyetujui seluruh rekomendasi isi T11 pada [paket input Customer](legal/customer-public-input-evidence.md#persetujuan-rekomendasi-owner-t11--24-oktober-2026). Versi resmi yang disetujui untuk dipakai adalah `NIUVA-TERMS-v1.0` dan `NIUVA-PRIVACY-v1.0`. Tanggal berlaku adalah tanggal policy benar-benar dipublikasikan setelah fakta provider/lokasi dan gerbang rilis lengkap; persetujuan ini tidak mengaktifkan policy, consent atau pendaftaran publik.
+
+Niuva tidak membentuk ruang atau unit arsip khusus. Catatan yang wajib menjadi dasar pembukuan tetap disimpan 10 tahun di Indonesia pada tempat kedudukan badan sesuai aturan. Database/provider hosted yang dipakai harus dibuktikan memenuhi ketentuan lokasi dan dicantumkan sebelum menerima data; AWS/S3 tetap ditunda sampai verifikasi akun.
+
+## Konfirmasi status pajak Customer — 24 Oktober 2026
+
+Owner mengonfirmasi **PT. NIUVA INOVASI UTAMA bukan PKP, sudah diperiksa**
+dalam pembahasan T11. Sumber fakta adalah konfirmasi Owner atas pemeriksaannya;
+tidak ada akses akun DJP, pengumpulan NPWP atau salinan dokumen pajak oleh agen.
+
+Policy harga memakai status tersebut: Niuva **tidak memungut PPN atas
+penjualan produk dan jasa dalam layanan ini**. Harga mengikuti katalog atau
+quote yang disetujui; ongkir diinformasikan terpisah sebelum pembayaran.
+Dokumen tagihan/bukti transaksi Niuva bukan Faktur Pajak. Keputusan tanpa
+biaya admin/layanan dan biaya gateway merchant ditanggung Niuva tetap berlaku.
+
+Konfirmasi ini menutup input status PKP pada T11. Tidak menyatakan semua
+kewajiban pajak perusahaan nihil, menetapkan omzet, atau mengesahkan seluruh
+policy publik. Rincian sumber dan batas konfirmasi ada pada [input Owner](legal/customer-public-input-evidence.md#konfirmasi-status-bukan-pkp--24-oktober-2026).
+
+## Keputusan biaya Customer — 24 Oktober 2026
+
+Dalam pembahasan T11, Owner menyetujui kebijakan biaya untuk Shop dan Custom
+Print pada rilis awal:
+
+- Niuva **tidak menambahkan biaya admin atau layanan** di luar harga yang
+  disepakati dan ongkir.
+- **Biaya gateway yang dikenakan kepada merchant ditanggung Niuva**, tidak
+  diteruskan sebagai biaya tambahan kepada Customer.
+- Ongkir pengiriman pesanan tetap dibayar Customer sesuai nilai yang
+  diinformasikan sebelum pembayaran. Ketentuan biaya retur/pengganti yang
+  menjadi tanggung jawab Niuva tetap mengikuti policy ketidaksesuaian/refund.
+- Pekerjaan tambahan Custom Print yang dipilih harus **dirinci dalam quote
+  sebelum Customer menyetujuinya**; bukan tambahan tagihan sepihak setelah
+  kesepakatan.
+
+Keputusan ini tidak menetapkan status PKP, perlakuan pajak atau metode
+pembayaran aktif. Biaya langsung dari bank/aplikasi Customer di luar kendali
+Niuva tidak dijanjikan nol. Rincian tercatat pada [input Owner T11](legal/customer-public-input-evidence.md#persetujuan-biaya-customer--24-oktober-2026)
+dan [draf syarat layanan](legal/customer-terms-draft.md#2-layanan-dan-pembentukan-kesepakatan).
+Pengesahan seluruh policy, versi resmi, tanggal berlaku dan bukti provider
+tetap terpisah; tidak ada perubahan perhitungan atau aktivasi pembayaran.
+
+## Keputusan policy Customer — 23 Oktober 2026
+
+Dalam pembahasan T11, Owner menetapkan keputusan berikut sebagai isi policy.
+Bagian ini menggantikan target layanan 1/2/1 hari kerja dalam addendum/snapshot
+sebelumnya. Owner menyetujui seluruh rekomendasi isi dan identifier resmi pada
+24 Oktober; tanggal berlaku mengikuti publikasi aktual setelah prasyarat rilis
+terbukti.
+
+- Shop dan Custom Print pada rilis awal melayani alamat pengiriman di
+  **Indonesia**, hanya yang dapat dilayani dengan ongkir tervalidasi.
+- Pesanan Shop diterima setelah **pembayaran terverifikasi server dan
+  konfirmasi pesanan berdasarkan hasil tersebut diterbitkan**. Order pending,
+  notifikasi order dibuat dan redirect bukan bukti penerimaan pembayaran.
+  MAKE tetap memakai quote yang diterima dan divalidasi.
+- Ketentuan utama pengajuan penukaran/pembatalan untuk kondisi yang diatur
+  adalah **paling sedikit 2 hari kerja sejak barang diterima**, dengan tetap
+  menjaga hak atas cacat tersembunyi dan hak lain yang berlaku. Owner memilih
+  ketentuan ini menggantikan anjuran pelaporan 1×24 jam pada draf sebelumnya.
+  Laporan awal menyertakan nomor pesanan, uraian masalah dan bukti relevan
+  yang sudah tersedia. Bukti transaksi yang sudah dimiliki Niuva dipakai
+  tanpa meminta Customer mengirim ulang; video unboxing bukan satu-satunya
+  bukti yang diterima.
+- Target keluhan adalah **1 hari kerja untuk tanggapan awal, 1 hari kerja
+  untuk pemeriksaan setelah bukti lengkap/retur yang diperlukan diterima,
+  dan 1 hari kerja untuk mulai memproses refund setelah approval dan syarat
+  retur terpenuhi**. Total target ketiga tahap maksimal **3 hari kerja
+  penanganan Niuva**, dihitung sejak keluhan diterima dengan mengecualikan
+  hanya perjalanan barang retur yang memang diperlukan. Koreksi Owner
+  berikutnya mencabut pengecualian waktu menunggu bukti: bukti yang tersedia
+  disertakan sejak laporan awal; permintaan tambahan tidak otomatis
+  menghentikan atau memulai ulang tenggat.
+- Waktu mulai/akhir perjalanan retur beserta alasannya dicatat dan disampaikan
+  kepada Customer. Ganti status/petugas/kanal tidak mengulang tenggat;
+  antrean dan penundaan internal, termasuk approval Owner, tetap bagian
+  waktu penanganan Niuva. Bukti tambahan hanya diminta bila relevan dengan
+  alasan yang jelas; laporan tidak otomatis ditolak hanya karena suatu
+  jenis bukti tidak tersedia. Target waktu tidak melewati pemeriksaan
+  kepemilikan, syarat retur, approval, atau rekonsiliasi refund yang aman.
+- Waktu dana masuk bank/provider dan penyelesaian nyata kasus tetap
+  dibedakan dari target mulai memproses refund. Hari kerja mengikuti
+  Senin–Jumat selain libur nasional, WIB; hak privasi 3×24 jam kalender
+  tidak berubah. Kalender/jam dan bukti operasi hosted tetap terbuka.
+
+Rincian tahap dan batasnya ada di [SOP layanan/refund](legal/customer-service-refund-sop.md)
+serta [catatan input Owner](legal/customer-public-input-evidence.md#review-owner-t11-23-oktober-2026).
+Tidak ada aktivasi provider, pengesahan kemampuan hosted atau perubahan
+status task lain melalui keputusan isi policy ini.
+
 ## Kontrak penyelesaian v1 — 18 Oktober 2026
 
 Owner menyetujui [scope v1](../PRODUCT.md#kontrak-v10--18-oktober-2026),

@@ -2,6 +2,27 @@
 
 **Tanggal:** 3 Oktober 2026. **Paket:** PUBLIC-PREPARATION-2026-10-03-v1, Syarat/Privasi v3. Baseline tree kode sama dengan PR #38 / `origin/main` `6c12a5f`. Status: pemeriksaan dokumen dan regresi preview yang relevan; bukan hasil legal approval, uji provider, atau penerimaan production.
 
+## Review menyeluruh T11 — 24 Oktober 2026
+
+Baseline kode lokal `5ebfdff`, draf Syarat v6/Privasi v7 dan persetujuan Owner 24 Oktober diperiksa sebagai satu paket. Hasil pada bagian 3/13 Oktober di bawah tetap historis. Scope sekarang adalah T11 pada [backlog aktif](../../TASKS.md), tanpa aktivasi policy publik, provider atau deployment.
+
+| Pokok review | Hasil / batas |
+| --- | --- |
+| Kriteria T11 | Owner menyetujui semua rekomendasi isi serta identifier resmi `NIUVA-TERMS-v1.0`/`NIUVA-PRIVACY-v1.0`; tanggal berlaku mengikuti tanggal publikasi aktual. Ini belum menerbitkan policy atau mengaktifkan consent. |
+| Perdagangan | Keputusan Indonesia, penerimaan Shop, bukan PKP dan biaya dipertahankan. Masa quote 7 hari/batas pembayaran mengikuti kontrak existing; katalog rinci milik T31, metode yang ditawarkan mengikuti checkout yang benar-benar tersedia. |
+| Keluhan dan hak data | Target 1/1/1 dengan total 3 hari kerja serta pengecualian perjalanan retur konsisten. Tenggat hak data 3×24 jam tetap kalender; pengalihan kasus, bukti tambahan dan job tidak memulai ulang tenggat. |
+| Hak berkas dan closure | Akses privat, izin penggunaan terbatas, quote/operator, holds dan 14/60/90 tidak diubah. Penutupan akun tidak memulihkan riwayat atau menghapus kewajiban transaksi/kasus aktif. |
+| Pemetaan data dan arsip | Inventaris minimum bersumber schema/invoice, dasar pemrosesan dipisahkan per tujuan. Dokumen dasar pembukuan disimpan 10 tahun di Indonesia pada tempat kedudukan badan; kategori data dan bukti lokasi database/provider masih harus dicocokkan. Tidak perlu arsip khusus atau aturan purge baru di runtime. |
+| Klaim kemampuan | Matriks/runtime contract diperbarui untuk refund, outbox dan runner lokal yang sudah ada; dukungan provider, inbox, scheduler, recovery serta simulasi operasi tetap membutuhkan bukti masing-masing. |
+| Pengesahan dan rilis | Isi dan identifier resmi disetujui Owner. Resolver tetap internal/test; tanggal efektif dicatat saat publikasi aktual setelah provider/lokasi dan gerbang rilis terbukti. Tidak ada publikasi atau aktivasi dalam batch ini. |
+
+Verifikasi lokal revisi ini:
+
+- `corepack pnpm test:backend tests/backend/customer-privacy-pages.test.ts tests/backend/cad-upload-confirmation.test.ts tests/backend/file-retention-core.test.ts tests/backend/phase2-quote-order.test.ts`: **4 file / 28 test lulus**, exit 0. Scope: preview/permission policy, pemeriksaan CAD, retensi/hold dan quote/order; bukan bukti provider atau UAT browser.
+- `corepack pnpm lint`: exit 0, **0 error dan 4 warning lama** di `src/modules/jobs/handlers.ts` (parameter yang tidak dipakai). `corepack pnpm typecheck`: exit 0.
+- **151 tautan/anchor lokal pada 9 dokumen valid**, **40 baris task tetap sama**, dan `git diff --check` lulus. Tidak ada perubahan runtime, schema/migration, dependency/lockfile, environment atau workflow.
+- Build, E2E, database integration penuh dan provider tidak dijalankan untuk irisan dokumen ini. Tidak ada publikasi/aktivasi atau bukti hosted.
+
 ## Rekonsiliasi dokumentasi — 13 Oktober 2026
 
 Metadata, simulasi SIM-01–21 dan hasil command 3 Oktober di bawah adalah **histori**, bukan hasil pengujian revisi ini. Arah aktif mengikuti [PRD terkini](../PRD-Niuva-MVP.md#rekonsiliasi-kontrak-rilis--13-oktober-2026): akun 18+ dengan deklarasi Owner 5 Oktober, Better Auth khusus Admin dan B2B WhatsApp 11 Oktober. Pengesahan policy final/versi/tanggal berlaku, provider/staging/recovery dan izin rilis tetap terbuka. Sumber hukum/provider yang disebut di bagian historis tidak dinyatakan diperiksa ulang pada batch dokumentasi ini.
