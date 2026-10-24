@@ -2,7 +2,7 @@
 
 ## Persetujuan rekomendasi policy Customer — 24 Oktober 2026
 
-Owner menyetujui seluruh rekomendasi isi T11 pada [paket input Customer](legal/customer-public-input-evidence.md#persetujuan-rekomendasi-owner-t11--24-oktober-2026). Versi resmi yang disetujui untuk dipakai adalah `NIUVA-TERMS-v1.0` dan `NIUVA-PRIVACY-v1.0`. Tanggal berlaku adalah tanggal policy benar-benar dipublikasikan setelah fakta provider/lokasi dan gerbang rilis lengkap; persetujuan ini tidak mengaktifkan policy, consent atau pendaftaran publik.
+Owner menyetujui seluruh rekomendasi isi T11 pada [paket input Customer](legal/customer-public-input-evidence.md#persetujuan-rekomendasi-owner-t11--24-oktober-2026); T11 selesai. Versi resmi yang disetujui untuk dipakai adalah `NIUVA-TERMS-v1.0` dan `NIUVA-PRIVACY-v1.0`. Tanggal berlaku ditetapkan saat publikasi aktual. Informasi penerima/region dan safeguard harus akurat sebelum pemrosesan atau pendaftaran publik yang terkait; pemilihan provider/lokasi tidak menghambat policy approval atau development lokal. Persetujuan ini tidak mengaktifkan policy, consent atau pendaftaran publik.
 
 Niuva tidak membentuk ruang atau unit arsip khusus. Catatan yang wajib menjadi dasar pembukuan tetap disimpan 10 tahun di Indonesia pada tempat kedudukan badan sesuai aturan. Database/provider hosted yang dipakai harus dibuktikan memenuhi ketentuan lokasi dan dicantumkan sebelum menerima data; AWS/S3 tetap ditunda sampai verifikasi akun.
 

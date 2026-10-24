@@ -32,10 +32,10 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 | T08 | M1 | BLOCKED_EXTERNAL | Job retensi file Customer | T03 | 14/60/90 sesuai kelas; hold Owner/privasi tetap setelah closure/purge receipt; order aktif dan bukti keuangan/histori B2B/media publik dilindungi. Klaim DELETE_PENDING, retry key sama, final lease, cursor bounded, HTTP/CLI canonical dan monitoring lulus lokal. PR #58 merged ke main pada `87d47fa`; adapter S3-compatible mempertahankan pembatalan I/O. Resource/scheduler/provider hosted menunggu T03. |
 | T09 | M1 | BLOCKED_EXTERNAL | Cleanup auth/privacy hosted | T03 | Handler auth/privacy berbatas dari PR #56 memakai runner/lease/role/monitor canonical. Tenggat dan hold tetap; bukti lokal diwarisi lalu diuji ulang saat rekonsiliasi. Scheduler/role/resource hosted belum tersedia. |
 | T10 | M1 | IN_PROGRESS | Rate limit lintas instance | T03 | PostgreSQL bersama, HMAC IP stabil dengan secret bersama, dan pembersihan row kedaluwarsa diuji lokal; binding/topologi hosted belum dibuktikan. Integration. |
-| T11 | M2 | BLOCKED_EXTERNAL | Pengesahan policy publik | T01; Owner | Owner menyetujui isi dan identifier `NIUVA-TERMS-v1.0`/`NIUVA-PRIVACY-v1.0`; tanggal berlaku mengikuti publikasi aktual setelah fakta provider/lokasi dan gerbang rilis terbukti. Tidak menjanjikan kemampuan yang belum dibuktikan. |
-| T12 | M2 | BLOCKED_INPUT | Consent Google publik | T04/T11 | Consent/deklarasi terikat identitas server; tanpa proof ditolak; riwayat tertutup tidak tertaut ulang. Integration/E2E. |
-| T13 | M2 | BLOCKED_INPUT | Signup email publik | T04/T11 | Consent resmi, verified-email boundary, expiry/resend/reset/revocation benar. Integration/E2E. |
-| T14 | M2 | BLOCKED_INPUT | Privacy hosted | T05/T11 | Export sendiri, hak data/closure dan kontak kasus aktif tanpa restore akun/riwayat. Integration/E2E/hosted. |
+| T11 | M2 | DONE | Pengesahan policy publik | T01; Owner | Owner menyetujui isi dan identifier `NIUVA-TERMS-v1.0`/`NIUVA-PRIVACY-v1.0`; tanggal berlaku ditetapkan saat publikasi aktual. Fakta provider, transfer data dan gerbang rilis dicatat terpisah pada readiness yang sudah ada; tidak menghambat T11 atau development lokal. Tidak menjanjikan kemampuan yang belum dibuktikan. |
+| T12 | M2 | TODO | Consent Google publik | T04/T11 | Consent/deklarasi terikat identitas server; tanpa proof ditolak; riwayat tertutup tidak tertaut ulang. Integration/E2E lokal; aktivasi tetap terpisah. |
+| T13 | M2 | TODO | Signup email publik | T04/T11 | Consent resmi, verified-email boundary, expiry/resend/reset/revocation benar. Integration/E2E lokal; aktivasi tetap terpisah. |
+| T14 | M2 | BLOCKED_EXTERNAL | Privacy hosted | T05/T11; T03 | Export sendiri, hak data/closure dan kontak kasus aktif tanpa restore akun/riwayat. Integration/E2E/hosted; resource hosted belum tersedia. |
 | T15 | M3 | DONE | Draft produk dari Dashboard | T02 | Owner/Admin membuat draft; kategori dapat dipilih tanpa UUID manual; draft tidak tampil publik. Unit, integration, authenticated E2E lokal lulus. |
 | T16 | M3 | DONE | Varian dari Dashboard | T15 | SKU unik, harga/berat/dimensi valid, stok awal mengikuti inventory/ledger. Unit, integration, authenticated E2E lokal lulus. |
 | T17 | M3 | DONE | Draft portfolio dari Dashboard | T02 | Draft baru tersedia; bukti dan data publikasi diperiksa sebelum publish. Unit, integration, authenticated E2E lokal lulus. |
@@ -83,9 +83,12 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 
 ## Bukti awal dan keputusan pelaksanaan
 
-### T11 — review paket menyeluruh dan sisa pengesahan, 24 Oktober 2026
+### T11 — pengesahan selesai; kesiapan rilis terpisah, 24 Oktober 2026
 
 - Seluruh bagian policy disatukan dalam [paket review dan input tersisa](docs/legal/customer-public-input-evidence.md#paket-review-menyeluruh-t11--24-oktober-2026).
+- Status `BLOCKED_INPUT` pada catatan T11 terdahulu di bawah adalah snapshot
+  sebelum pengesahan Owner menyeluruh; status aktif mengikuti tabel dan catatan
+  final ini.
 - Syarat v6 dan Privasi v7 (24 Oktober) adalah draf review; rekomendasi isinya
   dan identifier resmi v1.0 disetujui Owner. Preview internal mengikuti
   identifier draf masing-masing; persetujuan ini belum mengaktifkan consent.
@@ -96,25 +99,34 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
   retensi baru di runtime. Matriks/kontrak memperbaiki klaim refund/outbox/job
   yang tertinggal dari baseline serta target lama 1/2/1 menjadi 1/1/1.
 - SKU/stok/tarif rinci tetap T31; simulasi/coverage tetap T39; consent/hosted,
-  storage, recovery dan rilis tetap pada task existing masing-masing. Fakta
-  provider dan retensi yang memengaruhi isi policy tetap harus dilengkapi.
+  storage, recovery dan rilis tetap pada task existing masing-masing. Tidak ada
+  fakta provider yang menjadi prasyarat pengesahan T11 atau development lokal.
 - Owner mengklarifikasi belum ada unit, petugas, atau lokasi arsip khusus.
   Paket tidak mensyaratkan fasilitas, tahun buku atau petugas baru; dokumen
   wajib pembukuan tetap disimpan 10 tahun di Indonesia pada tempat kedudukan
-  badan. Owner menyetujui semua rekomendasi T11 pada 24 Oktober: identifier
-  resmi v1.0 dipakai, tanggal berlaku adalah tanggal publikasi aktual, dan
-  provider/lokasi yang benar-benar dipakai harus dibuktikan sebelum itu.
-- T11 tetap `BLOCKED_EXTERNAL`: database/provider/lokasi hosted dan syarat
-  rilis belum terbukti; AWS/S3 tetap ditunda. Persetujuan ini bukan publikasi,
-  aktivasi consent atau izin deployment.
-- Verifikasi akhir setelah rebase: `corepack pnpm test:backend
+  badan. PP 80/2019 juga menetapkan retensi minimum data PMSE terkait transaksi
+  keuangan 10 tahun dan data PMSE non-keuangan 5 tahun; kategori dan penempatan
+  yang benar-benar berlaku dicatat pada PUB-RECORDS, bukan digeneralisasi ke
+  semua profil/chat/token. Owner menyetujui rekomendasi dan identifier resmi
+  v1.0 pada 24 Oktober; T11 `DONE`.
+- Lokasi di luar Indonesia tidak otomatis melarang PSE privat; akses pengawasan
+  dan perlindungan transfer lintas negara tetap dipenuhi. Fakta penerima,
+  region, dan safeguard dicatat sebelum jenis data terkait diproses; notice
+  mencerminkan alur aktual sebelum pendaftaran/rilis pada PUB-PROVIDER/PUB-POLICY.
+  PUB-RECORDS juga memisahkan dokumen pembukuan
+  tertentu yang wajib disimpan di Indonesia. Ini readiness rilis, bukan blocker
+  T11/AWS untuk development. S3/AWS tetap ditunda; tidak ada publikasi,
+  aktivasi consent atau deployment.
+- Verifikasi koreksi ini: `corepack pnpm test:backend
   tests/backend/customer-privacy-pages.test.ts
   tests/backend/cad-upload-confirmation.test.ts
   tests/backend/file-retention-core.test.ts
   tests/backend/phase2-quote-order.test.ts` **4 file / 28 test lulus**;
-  `corepack pnpm lint` lulus dengan 0 error dan 4 warning pada file jobs yang
-  tidak diubah; `corepack pnpm typecheck` lulus; 151 tautan/anchor lokal pada
-  9 dokumen valid; 40 baris task tetap sama; dan `git diff --check` lulus.
+  206 target tautan lokal pada 10 dokumen Markdown berubah terverifikasi ada;
+  40 task tetap tanpa penambahan task (T11 DONE, T12/T13 TODO, T14 external);
+  dan `git diff --check` lulus. Lint/typecheck sebelumnya lulus pada baseline
+  runtime yang sama (0 error, 4 warning existing); tidak diulang karena koreksi
+  ini hanya mengubah dokumentasi.
   Build, full E2E, full database integration dan provider tidak dijalankan.
   Tidak ada perubahan runtime/schema/env/workflow atau aktivasi eksternal.
 
