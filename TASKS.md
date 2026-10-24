@@ -83,6 +83,58 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 
 ## Bukti awal dan keputusan pelaksanaan
 
+### T03 / T33–T34 — verifikasi patch Rates LOCAL ONLY, 24–25 Oktober 2026
+
+- Preflight sesi AO `niuva-2026-3`: worktree baru
+  `C:/Users/FAIZ/.ao/data/worktrees/niuva-2026/niuva-2026-3`, branch
+  `ao/shipping-hardening/root` bersih, tanpa commit sesi. HEAD dan `main` live
+  melalui `git ls-remote` cocok pada
+  `13bdeb954de819b3959ee41e6cb36a1860687aeb`; tidak ada fetch/repoint ref lama.
+- Adapter/tes persis dari diagnostics yang disetujui, tanpa penyesuaian isi:
+  SHA-256 source `0c1ce0dece3800972c9e419472d43ac3a4cfacac6a3481be110a0c54ff485e22`;
+  tes `e7ad8793b0754979f7f9f36974a30f007701bf92354147ec96ec4d718313f68c`.
+  Source sandbox hanya dipakai sementara pada worktree AO untuk reproduksi;
+  environment, data, helper dan artefak worktree lama tidak disalin.
+- RED: `corepack pnpm test:backend tests/backend/biteship-retail-rates.test.ts`
+  dengan source sandbox exit 1: 14 kasus aktual, 12 lulus/2 gagal
+  (cancellation oversized macet; body error melewati sisa timeout).
+  Source diagnostics menghasilkan GREEN pada perintah sama, exit 0, 14/14;
+  seluruh tes sandbox tetap tercakup. Kegagalan tooling awal bukan bukti RED.
+- Error diagnosis tetap 4 KiB/kode numerik delapan digit, safe log status/kode,
+  publik 503 `SHIPPING_PROVIDER_UNAVAILABLE`. Timer mengikuti pembacaan error
+  dan cancellation tidak ditunggu. Payload/harga, capability/non-production
+  guards, auth dan checkout tidak diperluas. `40001002` adalah fixture,
+  bukan bukti penyebab HTTP 400 provider historis.
+- Gate aktual: `corepack pnpm lint` exit 0 (0 error/4 warning existing pada
+  `src/modules/jobs/handlers.ts`); `corepack pnpm typecheck` exit 0;
+  `corepack pnpm test:backend --maxWorkers=1` exit 0, 107 file/812 tes;
+  `corepack pnpm test --maxWorkers=1` exit 0, 127 file/1.469 tes.
+  Prehook Prisma dan coverage tetap aktif. `corepack pnpm db:validate` exit 0
+  memakai URL sintetis process-only tanpa koneksi database.
+- `corepack pnpm build` default Turbopack exit 0, 93/93 halaman. Font asli
+  melalui allowlist loopback foreground `fonts.googleapis.com` dan
+  `fonts.gstatic.com`, TLS aktif; listener ditutup saat build selesai.
+  Tidak memakai font/CSS tiruan, cache lama atau perubahan config/runtime.
+- Build tambahan `corepack pnpm build --webpack` exit 1 setelah compile:
+  TS2344 pada generated types untuk
+  `src/app/admin/sign-in/[[...sign-in]]/page.tsx` (props opsional) dan
+  `src/app/api/analytics/page-view/route.ts` (export `handlePageView`).
+  Kedua route tidak diubah; baseline Webpack tidak dijalankan.
+  Hasil tambahan ini tidak menggantikan hasil build default.
+- Dependency frozen/offline dengan package copy: 698 paket/0 unduhan paket,
+  tanpa writable link worktree lama. Engine Prisma 7.10.0
+  `0edf323efd1d98336f3f0a68684b56f689b900d3` tidak ada di cache awal;
+  coordinator mengizinkan artifact tooling existing dari `binaries.prisma.sh`,
+  dengan TLS/checksum tetap aktif. `corepack pnpm db:generate` exit 0.
+- Bukti lokal/mock dan build inputs yang diizinkan; tidak ada database/
+  provider bisnis nyata atau request Biteship/Midtrans/Maps/email/AWS/S3.
+  Integration DB, browser/E2E, staging dan production tidak dijalankan.
+  T03/T33–T34 tetap BLOCKED_EXTERNAL, T11 DONE dan T12/T13 TODO; seluruh tabel
+  status main dipertahankan. Blok diagnosis 23 Oktober tidak diduplikasi.
+- Hanya empat file yang disetujui berubah, belum commit/push/PR; tidak ada
+  merge, deployment atau aktivasi provider. Seluruh DoD/gerbang hosted tetap
+  memerlukan bukti dan izin masing-masing.
+
 ### T11 — pengesahan selesai; kesiapan rilis terpisah, 24 Oktober 2026
 
 - Seluruh bagian policy disatukan dalam [paket review dan input tersisa](docs/legal/customer-public-input-evidence.md#paket-review-menyeluruh-t11--24-oktober-2026).

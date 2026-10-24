@@ -3,6 +3,10 @@ import { z } from "zod";
 
 import { validateStartupEnvironment } from "@/lib/env/server";
 import {
+  createConsoleFailureLogger,
+  type FailureLogger,
+} from "@/lib/observability/logger";
+import {
   requireAllowed,
   type CapabilityContext,
 } from "@/modules/capabilities/resolver";
@@ -11,6 +15,7 @@ import { appError, isAppError } from "@/modules/shared/errors";
 
 const BITESHIP_RATES_ENDPOINT = "https://api.biteship.com/v1/rates/couriers";
 const PROVIDER_RESPONSE_MAX_BYTES = 64 * 1_024;
+const PROVIDER_ERROR_DIAGNOSTIC_MAX_BYTES = 4 * 1_024;
 const PROVIDER_TIMEOUT_MS = 5_000;
 
 const providerCodeSchema = z
@@ -93,6 +98,7 @@ export type BiteshipRateGatewayConfig = Readonly<{
   databaseBound?: boolean;
   endpoint?: string;
   fetch?: typeof fetch;
+  providerFailureLogger?: FailureLogger;
   gates?: CapabilityContext["gates"];
   hasActivationGrant?: CapabilityContext["hasActivationGrant"];
   nodeEnv?: "development" | "production" | "test";
@@ -103,11 +109,14 @@ export type BiteshipRateGatewayConfig = Readonly<{
 export class BiteshipRateGateway implements BiteshipRateProvider {
   private readonly endpoint: string;
   private readonly fetchImplementation: typeof fetch;
+  private readonly providerFailureLogger: FailureLogger;
   private readonly timeoutMs: number;
 
   constructor(private readonly config: BiteshipRateGatewayConfig) {
     this.endpoint = config.endpoint ?? BITESHIP_RATES_ENDPOINT;
     this.fetchImplementation = config.fetch ?? fetch;
+    this.providerFailureLogger =
+      config.providerFailureLogger ?? createConsoleFailureLogger();
     this.timeoutMs = config.timeoutMs ?? PROVIDER_TIMEOUT_MS;
 
     if (!Number.isSafeInteger(this.timeoutMs) || this.timeoutMs < 1) {
@@ -132,14 +141,35 @@ export class BiteshipRateGateway implements BiteshipRateProvider {
         method: "POST",
         signal: controller.signal,
       });
+
+      if (!response.ok) {
+        const providerCode = await readBiteshipRateErrorCode(
+          response,
+          controller.signal,
+        );
+
+        try {
+          this.providerFailureLogger.record({
+            boundary: "provider:POST /v1/rates/couriers",
+            correlationId: crypto.randomUUID(),
+            errorCode: "SHIPPING_PROVIDER_UNAVAILABLE",
+            kind: "PROVIDER_REJECTED",
+            occurredAt: new Date(),
+            safeContext: {
+              ...(providerCode === undefined ? {} : { providerCode }),
+              status: String(response.status),
+            },
+          });
+        } catch {
+          // Logging provider diagnostics must never change the public failure.
+        }
+
+        throw appError("SHIPPING_PROVIDER_UNAVAILABLE");
+      }
     } catch {
       throw appError("SHIPPING_PROVIDER_UNAVAILABLE");
     } finally {
       clearTimeout(timeout);
-    }
-
-    if (!response.ok) {
-      throw appError("SHIPPING_PROVIDER_UNAVAILABLE");
     }
 
     const body = await readBoundedProviderJson(response);
@@ -361,6 +391,97 @@ function parseCourierAllowlist(value: string): readonly string[] {
   }
 
   return uniqueCouriers;
+}
+
+async function readBiteshipRateErrorCode(
+  response: Response,
+  signal: AbortSignal,
+): Promise<string | undefined> {
+  const body = response.body;
+
+  if (body === null) {
+    return undefined;
+  }
+
+  if (signal.aborted) {
+    void body.cancel().catch(() => {});
+    return undefined;
+  }
+
+  const declaredSize = response.headers.get("content-length");
+
+  if (
+    declaredSize !== null &&
+    /^\d+$/.test(declaredSize) &&
+    Number(declaredSize) > PROVIDER_ERROR_DIAGNOSTIC_MAX_BYTES
+  ) {
+    void body.cancel().catch(() => {});
+    return undefined;
+  }
+
+  const reader = body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  const cancelReader = () => {
+    void reader.cancel().catch(() => {});
+  };
+  signal.addEventListener("abort", cancelReader, { once: true });
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (signal.aborted) {
+        return undefined;
+      }
+
+      if (done) {
+        break;
+      }
+
+      totalBytes += value.byteLength;
+
+      if (totalBytes > PROVIDER_ERROR_DIAGNOSTIC_MAX_BYTES) {
+        cancelReader();
+        return undefined;
+      }
+
+      chunks.push(value);
+    }
+
+    const bytes = new Uint8Array(totalBytes);
+    let offset = 0;
+
+    for (const chunk of chunks) {
+      bytes.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+
+    const bodyValue: unknown = JSON.parse(new TextDecoder().decode(bytes));
+
+    if (
+      typeof bodyValue !== "object" ||
+      bodyValue === null ||
+      Array.isArray(bodyValue)
+    ) {
+      return undefined;
+    }
+
+    const rawCode: unknown = Reflect.get(bodyValue, "code");
+    const code =
+      typeof rawCode === "number" && Number.isSafeInteger(rawCode)
+        ? String(rawCode)
+        : typeof rawCode === "string"
+          ? rawCode.trim()
+          : undefined;
+
+    return code !== undefined && /^\d{8}$/.test(code) ? code : undefined;
+  } catch {
+    return undefined;
+  } finally {
+    signal.removeEventListener("abort", cancelReader);
+    reader.releaseLock();
+  }
 }
 
 async function readBoundedProviderJson(response: Response): Promise<unknown> {
