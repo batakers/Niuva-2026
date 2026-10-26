@@ -4,10 +4,11 @@ Update this after major decisions, completed phases, or bugs that future agents 
 
 ## Current State
 
-- Local shipping patch: 24–25 Oktober 2026, clean AO baseline/live main `13bdeb954de819b3959ee41e6cb36a1860687aeb`. Verification is local/mock; provider/staging/production acceptance: belum diverifikasi.
+- Working baseline: `main` `a3d995a904f6fde7e7e248e8a9c8421de734d521` after PR #68. T03 continuation uses the existing task checkout; local preparation does not establish current hosted/provider/production acceptance.
 - Current work: v1.0 closure. Scope: `PRODUCT.md`; dependencies: `ROADMAP.md`; sole active backlog: `TASKS.md`; completion: `docs/v1-definition-of-done.md`. `.kiro/specs/` is historical evidence.
 - Current task statuses and dated execution evidence belong to `TASKS.md`; this memory does not duplicate its backlog table.
 - Data model: 80 Prisma models (`grep -c '^model ' prisma/schema.prisma`) and 39 migration folders (`ls -d prisma/migrations/*/ | wc -l`). Counts describe files, not an applied database state.
+- Hosted preflight: `corepack pnpm staging:preflight` uses process environment and the canonical origin, capability and database-binding helpers. It inspects runtime privileges/migration history without provisioning, migration or provider calls; safe output omits credentials and resource identifiers. `docs/backend/t03-hosted-sandbox-runbook.md` separates the local checks from the dated Neon/Render evidence.
 - Auth, two separate systems:
   - Owner/Admin: Better Auth + TOTP (`src/lib/auth/admin-engine.ts`); `src/lib/auth/admin.ts` requires `mfaVerified`, `twoFactorEnabled`, and an active AdminProfile. Clerk SDK is absent; `src/lib/auth/clerk.ts` only re-exports `./admin` (deprecated).
   - Customer: opaque DB session, `src/lib/auth/customer.ts` and `src/modules/customer-auth/` (Google consent or verified email/password). T12/T13 signup flows are available only in local-test/mock; checkout calls `requireCustomer`.
@@ -22,6 +23,7 @@ Update this after major decisions, completed phases, or bugs that future agents 
 
 ## Decisions
 
+- 2026-10-27 — Temporary T03 staging target: Netlify Free/OpenNext with the existing Neon staging database. Owner authorized PR/review/CI/merge and one deployment, without card/upgrade or provider activation; conditional migration and stop boundaries are in `docs/backend/t03-hosted-sandbox-runbook.md`. Authorization does not establish hosted acceptance.
 - 2026-08-21 — Product authority: `docs/PRD-Niuva-MVP.md` and addenda; technical authority: `docs/TechDesign-Niuva-MVP.md` and addenda; visual authority: `DESIGN.md`.
 - 2026-08-21 — User guidance level is C (somewhere in between), overriding the older Level A metadata for explanation style only.
 - 2026-08-21 — Use a Next.js/TypeScript modular monolith with managed services; no product AI, microservices, or automatic slicer. (The "no customer account" part was superseded: current PRD addenda require Customer login before checkout; see `AGENTS.md`.)
@@ -43,7 +45,7 @@ Update this after major decisions, completed phases, or bugs that future agents 
 
 Carried findings retain their IDs; source fixes do not close hosted or release gates.
 
-- A1 — Resolver is consumed by adapters (`src/modules/capabilities/resolver.ts`); provider guards remain. Production/live are denied and grants empty (`src/modules/capabilities/matrix.ts`, `src/lib/env/deployment.ts`). T03: BLOCKED_EXTERNAL; hosted/provider operation belum diverifikasi.
+- A1 — Resolver is consumed by adapters (`src/modules/capabilities/resolver.ts`); provider guards remain. Production/live are denied and grants empty (`src/modules/capabilities/matrix.ts`, `src/lib/env/deployment.ts`). Untuk T03, lihat status di `TASKS.md` dan observasi hosted bertanggal di `docs/backend/t03-hosted-sandbox-runbook.md`; bukti lokal belum memverifikasi operasi provider hosted saat ini.
 - A2/F1 — Owner-approved policy v1.0 content is checksum-addressed, but `publishedAt`/`effectiveAt` remain null. `src/modules/customer-auth/legal.ts` supplies it only in the local-test public-auth fixture; hosted email delivery/provider capability and publication gates follow `TASKS.md`. Public activation remains separate.
 - PUB-AGE / PUB-GUARDIAN — 18+ declaration is implemented, not actual-age verification (`src/modules/customer-auth/age-declaration.ts`). Child/guardian accounts are out of scope; formal/hosted review remains separate (`docs/legal/customer-public-launch-readiness.md`).
 - B2 (carried; original defect resolved in source) — Customer ID or HMAC IP candidate + endpoint keys (`src/lib/http/public-mutation.ts`, `src/lib/security/actor-key.ts`); memory only for local-test, Prisma/PostgreSQL otherwise (`src/lib/security/shared-rate-limit.ts`). T10 IN_PROGRESS; hosted topology/proxy handling belum diverifikasi.

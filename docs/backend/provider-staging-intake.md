@@ -56,8 +56,8 @@ environment non-production; jangan ditempelkan ke tabel.
 | R2 | Development account/bucket names, endpoint, exact `APP_URL` CORS origin, cleanup owner | `PARTIAL`; resource presence ada, re-verification diperlukan |
 | Resend | Verified sender domain/from address, test recipient, send-limit policy, dan cleanup owner | `OPEN` |
 | WhatsApp | Provider, sender, template, opt-in/consent policy, recipient test, retry/idempotency policy | `BLOCKED_DECISION` |
-| Staging app | HTTPS URL, deployment owner, environment variable store, preview-to-staging promotion rule | `OPEN` |
-| Staging database | Isolated non-production database URL owner, migration window, seed/fixture policy | `OPEN` |
+| Staging app | HTTPS URL, deployment owner, environment variable store, preview-to-staging promotion rule | `PARTIAL`: Owner menyetujui satu staging Netlify Free + Neon existing pada 27 Okt. Akun Free/300 credits/tanpa kartu terverifikasi; URL/build/runtime masih terbuka. Percobaan Render 22 Okt tetap historis. Lihat [runbook T03](t03-hosted-sandbox-runbook.md) |
+| Staging database | Isolated non-production database URL owner, migration window, seed/fixture policy | `PARTIAL`: Neon `niuva_staging`, role runtime dan marker tercatat diverifikasi 22 Okt dengan 38 migration. Source sekarang 39; Owner mengizinkan migration tambahan secara kondisional. Gunakan resource existing dan verifikasi identitas, backup serta data kosong lebih dahulu. Lihat [runbook T03](t03-hosted-sandbox-runbook.md) |
 | Observability | Error tracking destination, alert recipients, 5xx/payment/shipping/upload/DB signals, retention | `OPEN` |
 | Backup/rollback | Backup owner, retention, restore proof, deployment rollback procedure, incident contact | `OPEN` |
 
