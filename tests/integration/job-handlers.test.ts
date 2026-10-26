@@ -16,14 +16,15 @@ import type { OutboxSender } from "@/modules/outbox/worker-core";
 import type { JobName } from "@/modules/jobs/core";
 
 let f: Awaited<ReturnType<typeof operationalJobFixture>>;
-const customers: string[] = [], proofs: string[] = [], cases: string[] = [];
+const customers: string[] = [], proofs: string[] = [], cases: string[] = [], googleConsents: string[] = [];
 beforeAll(async () => { f = await operationalJobFixture(); });
 afterEach(async () => {
   await f.admin.durableOutboxMessage.deleteMany({ where: { proofId: { in: proofs } } });
+  await f.admin.customerGoogleConsent.deleteMany({ where: { tokenHash: { in: googleConsents } } });
   await f.admin.customerPrivacyRequest.deleteMany({ where: { id: { in: cases } } });
   await f.admin.customer.deleteMany({ where: { id: { in: customers } } });
   await f.admin.operationalJobState.deleteMany();
-  customers.length = 0; proofs.length = 0; cases.length = 0;
+  customers.length = 0; proofs.length = 0; cases.length = 0; googleConsents.length = 0;
 });
 afterAll(async () => { await f?.dispose(); });
 function handlers(senderFactory?: () => OutboxSender) { return createJobHandlers({ prisma: f.client, bound: f.bound, source: f.source, workerPolicy: { leaseMs: 60000, sendTimeoutMs: 1000, retryDelaysMs: [1000] }, ...(senderFactory ? { senderFactory } : {}) }); }
@@ -67,6 +68,12 @@ describe("bound job handlers", () => {
     expect(await runner().run(run("CUSTOMER_PRIVACY_CLEANUP"))).toMatchObject({ counts: { caseContents: 1 } });
     expect(await f.admin.customerPrivacyRequest.count({ where: { id: { in: cases }, contentPurgedAt: null } })).toBe(2);
     const held = await f.admin.customerPrivacyRequest.findUniqueOrThrow({ where: { id: cases[2] } }); expect(held.details).toBe("fixture"); expect(held.contentDeleteAt).toEqual(deadline);
+  });
+  it("exposes bounded public Google consent cleanup through the canonical privacy job counters", async () => {
+    const tokenHash = randomUUID(); googleConsents.push(tokenHash);
+    await f.admin.customerGoogleConsent.create({ data: { tokenHash, returnTo: "/account", termsVersion: "NIUVA-TERMS-v1.0", privacyVersion: "NIUVA-PRIVACY-v1.0", acceptedAt: new Date(), ageDeclarationVersion: "AGE-18-SELF-DECLARATION-2026-10-05-v1", ageDeclaredAt: new Date(), expiresAt: new Date(Date.now() - 7 * 86400000) } });
+    expect(await runner().run(run("CUSTOMER_PRIVACY_CLEANUP"))).toMatchObject({ counts: { googleConsents: 1 } });
+    expect(await f.admin.customerGoogleConsent.findUnique({ where: { tokenHash } })).toBeNull();
   });
   it("dry-runs outbox without constructing a cipher/sender or writing state", async () => {
     await enqueue(); const map = handlers(() => { throw new Error("sender must not be built"); });

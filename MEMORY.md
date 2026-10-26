@@ -7,10 +7,10 @@ Update this after major decisions, completed phases, or bugs that future agents 
 - Local shipping patch: 24–25 Oktober 2026, clean AO baseline/live main `13bdeb954de819b3959ee41e6cb36a1860687aeb`. Verification is local/mock; provider/staging/production acceptance: belum diverifikasi.
 - Current work: v1.0 closure. Scope: `PRODUCT.md`; dependencies: `ROADMAP.md`; sole active backlog: `TASKS.md`; completion: `docs/v1-definition-of-done.md`. `.kiro/specs/` is historical evidence.
 - Current task statuses and dated execution evidence belong to `TASKS.md`; this memory does not duplicate its backlog table.
-- Data model: 79 Prisma models (`grep -c '^model ' prisma/schema.prisma`) and 38 migration folders (`ls -d prisma/migrations/*/ | wc -l`). Counts describe files, not an applied database state.
+- Data model: 80 Prisma models (`grep -c '^model ' prisma/schema.prisma`) and 39 migration folders (`ls -d prisma/migrations/*/ | wc -l`). Counts describe files, not an applied database state.
 - Auth, two separate systems:
   - Owner/Admin: Better Auth + TOTP (`src/lib/auth/admin-engine.ts`); `src/lib/auth/admin.ts` requires `mfaVerified`, `twoFactorEnabled`, and an active AdminProfile. Clerk SDK is absent; `src/lib/auth/clerk.ts` only re-exports `./admin` (deprecated).
-  - Customer: opaque DB session, `src/lib/auth/customer.ts` and `src/modules/customer-auth/` (Google or verified email/password); checkout calls `requireCustomer`.
+  - Customer: opaque DB session, `src/lib/auth/customer.ts` and `src/modules/customer-auth/` (Google consent or verified email/password). T12/T13 signup flows are available only in local-test/mock; checkout calls `requireCustomer`.
 - Funnels (source evidence only):
   - B2B: WhatsApp via `src/app/services/` and `src/components/niuva/b2b-contact-link.tsx`. `POST /api/project-brief` returns 410 `B2B_RETIRED`; `/project-brief` redirects to `/services` or a recognized `/services/[slug]`. Historical inquiries remain retired.
   - Retail: `src/app/api/checkout/route.ts` → `src/modules/checkout/service.ts`; notifications: `src/app/api/webhooks/midtrans/route.ts`; status: `src/app/orders/[token]/page.tsx`.
@@ -44,7 +44,7 @@ Update this after major decisions, completed phases, or bugs that future agents 
 Carried findings retain their IDs; source fixes do not close hosted or release gates.
 
 - A1 — Resolver is consumed by adapters (`src/modules/capabilities/resolver.ts`); provider guards remain. Production/live are denied and grants empty (`src/modules/capabilities/matrix.ts`, `src/lib/env/deployment.ts`). T03: BLOCKED_EXTERNAL; hosted/provider operation belum diverifikasi.
-- A2/F1 — `src/modules/customer-auth/legal.ts` returns internal/test documents or null. Registration needs legal documents and proof delivery (`src/modules/customer-auth/email-capabilities.ts`); Policy approval and activation statuses follow `TASKS.md`. Public registration activation remains separate.
+- A2/F1 — Owner-approved policy v1.0 content is checksum-addressed, but `publishedAt`/`effectiveAt` remain null. `src/modules/customer-auth/legal.ts` supplies it only in the local-test public-auth fixture; hosted email delivery/provider capability and publication gates follow `TASKS.md`. Public activation remains separate.
 - PUB-AGE / PUB-GUARDIAN — 18+ declaration is implemented, not actual-age verification (`src/modules/customer-auth/age-declaration.ts`). Child/guardian accounts are out of scope; formal/hosted review remains separate (`docs/legal/customer-public-launch-readiness.md`).
 - B2 (carried; original defect resolved in source) — Customer ID or HMAC IP candidate + endpoint keys (`src/lib/http/public-mutation.ts`, `src/lib/security/actor-key.ts`); memory only for local-test, Prisma/PostgreSQL otherwise (`src/lib/security/shared-rate-limit.ts`). T10 IN_PROGRESS; hosted topology/proxy handling belum diverifikasi.
 - B5 (carried; original defect resolved in source) — Tracked observability is wired into `apiError()` with correlation IDs (`src/lib/http/response.ts`) and Admin actions through `toAppErrorLogged` (`src/lib/observability/report.ts`, `src/app/admin/actions.ts`). Plain `toAppError` stays pure; deployed collection/alerting belum diverifikasi.
@@ -56,8 +56,8 @@ Carried findings retain their IDs; source fixes do not close hosted or release g
 - [x] Step 4 agent-documentation scaffold
 - [x] Application scaffold baseline
 - [x] Verification harness
-- [x] Core schema: 79 models, 38 migration folders; applied database state belum diverifikasi
-- [x] Auth: Better Auth/TOTP for Owner/Admin; Customer DB sessions; public gates remain
+- [x] Core schema: 80 models, 39 migration folders; T12/T13 migration applied only to a new isolated local test database
+- [x] Auth: Better Auth/TOTP for Owner/Admin; Customer DB sessions; T12/T13 public signup tested locally, hosted gates remain
 - [x] Active B2B WhatsApp path and retired Project Brief boundaries present
 - [x] Retail/MAKE checkout/quote/order source paths present; runtime belum diverifikasi
 - [ ] UI Foundation: DS-DEC-019 authorization remains; visual/device/AT acceptance belum diverifikasi

@@ -83,6 +83,7 @@ export function CustomerEmailForm({ mode, returnTo, available = true, token, leg
   const labels: Record<AuthFormMode, string> = { login: "Masuk", register: "Buat akun", "forgot-password": "Kirim tautan pemulihan", "reset-password": "Simpan password baru", verify: "Verifikasi email", resend: "Kirim ulang email verifikasi" };
   return <form ref={formRef} method="post" action={`/api/auth/email/${path}`} onSubmit={submit} data-enhanced={hydrated} aria-busy={pending} className="space-y-5">
     <input type="hidden" name="returnTo" value={returnTo} />
+    {mode === "register" && legal ? <><input type="hidden" name="termsVersion" value={legal.terms.version} /><input type="hidden" name="privacyVersion" value={legal.privacy.version} /></> : null}
     {token ? <input type="hidden" name="token" value={token} /> : null}
     {mode === "register" ? field("name", "Nama lengkap", "text", "name") : null}
     {["login", "register", "forgot-password"].includes(mode) ? field("email", "Email", "email", "email") : null}

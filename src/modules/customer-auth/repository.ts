@@ -13,6 +13,8 @@ import type { CustomerGoogleIdentity } from "./core";
 import { hashOpaqueToken } from "./core";
 import { assertRecordedAgeDeclaration, type RecordedAgeDeclaration } from "./age-declaration";
 import { assertInternalAccountActive, assertInternalEmail, internalExpiry, type InternalAuthConfig, INTERNAL_TERMS_VERSION, INTERNAL_PRIVACY_VERSION } from "./internal-testing";
+import { assertPublicGoogleConsent, type PublicGoogleRegistration } from "./google-consent";
+import { getPublicCustomerAuthLegalDocuments } from "./legal";
 
 export type InternalGoogleRegistration = Readonly<{ config: InternalAuthConfig; consentToken?: string }>;
 
@@ -60,6 +62,7 @@ export interface CustomerAuthRepositoryPort {
     allowCreate?: boolean,
     internal?: InternalGoogleRegistration,
     startedAt?: Date,
+    registration?: PublicGoogleRegistration,
   ): Promise<CustomerProfile>;
 }
 
@@ -86,6 +89,7 @@ export class CustomerAuthRepository implements CustomerAuthRepositoryPort {
     allowCreate = true,
     internal?: InternalGoogleRegistration,
     startedAt = now,
+    registration?: PublicGoogleRegistration,
   ): Promise<CustomerProfile> {
     return this.prisma.$transaction(async (transaction) => {
       await lockCustomerLifecycle(transaction);
@@ -106,6 +110,21 @@ export class CustomerAuthRepository implements CustomerAuthRepositoryPort {
         customerBySubject.id !== customerByEmail.id
       ) {
         throw appError("CONFLICT");
+      }
+
+      let consent: ({ acceptedAt: Date; termsVersion: string; privacyVersion: string } & RecordedAgeDeclaration) | undefined;
+      if (registration) {
+        if (internal || !allowCreate || !getPublicCustomerAuthLegalDocuments()) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
+        const tokenHash = hashOpaqueToken(registration.consentToken);
+        const proof = await transaction.customerGoogleConsent.findUnique({ where: { tokenHash } });
+        assertPublicGoogleConsent(proof, now, registration);
+        await assertFreshAccountIntent(transaction, identity.normalizedEmail, proof.acceptedAt, identity.googleSubject);
+        const claimed = await transaction.customerGoogleConsent.updateMany({
+          where: { tokenHash, oauthStateHash: proof.oauthStateHash, consumedAt: null, expiresAt: { gt: now } },
+          data: { consumedAt: now },
+        });
+        if (claimed.count !== 1) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
+        consent = proof;
       }
 
       if (
@@ -147,8 +166,7 @@ export class CustomerAuthRepository implements CustomerAuthRepositoryPort {
         throw appError("CONFLICT");
       }
 
-      if (!allowCreate || !internal) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
-      let consent: ({ acceptedAt: Date; termsVersion: string; privacyVersion: string } & RecordedAgeDeclaration) | undefined;
+      if (!allowCreate || !internal && !registration) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
       if (internal) {
         assertInternalEmail(identity.normalizedEmail, "google", internal.config);
         if (!internal.consentToken) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
@@ -169,7 +187,7 @@ export class CustomerAuthRepository implements CustomerAuthRepositoryPort {
           lastLoginAt: now,
           normalizedEmail: identity.normalizedEmail,
           ...(internal ? { internalTestExpiresAt: internalExpiry(now), createdAt: now } : {}),
-          ...(consent ? { consents: { create: { acceptedAt: consent.acceptedAt, termsVersion: consent.termsVersion, privacyVersion: consent.privacyVersion,
+          ...(consent ? { consents: { create: { method: "google", acceptedAt: consent.acceptedAt, termsVersion: consent.termsVersion, privacyVersion: consent.privacyVersion,
             ageDeclarationVersion: consent.ageDeclarationVersion, ageDeclaredAt: consent.ageDeclaredAt } } } : {}),
         },
       });

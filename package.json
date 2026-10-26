@@ -16,6 +16,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:admin-auth": "playwright test --config playwright.admin-auth.config.ts",
+    "test:e2e:public-auth": "playwright test --config tests/e2e-public-auth/playwright.config.ts",
     "test:e2e:demo": "playwright test --config=playwright.demo.config.ts",
     "pretest:backend": "prisma generate",
     "test:backend": "vitest run --config vitest.backend.config.mts",

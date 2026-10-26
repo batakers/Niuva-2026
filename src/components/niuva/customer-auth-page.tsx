@@ -15,6 +15,7 @@ import { safeCustomerReturnTo } from "@/modules/customer-auth/core";
 import { customerEmailCapabilities } from "@/modules/customer-auth/email-capabilities";
 import { getCustomerAuthLegalDocuments } from "@/modules/customer-auth/legal";
 import { getInternalAuthConfig } from "@/modules/customer-auth/internal-testing";
+import { PUBLIC_CUSTOMER_POLICY } from "@/modules/customer-auth/public-policy";
 import { CustomerEmailRepository } from "@/modules/customer-auth/email-repository";
 import { PENDING_REGISTRATION_COOKIE } from "@/modules/customer-auth/email-handler";
 import { tokenSchema } from "@/modules/customer-auth/password-validation";
@@ -93,7 +94,7 @@ export async function CustomerAuthPage({ mode, searchParams }: { mode: CustomerA
             {(mode === "register" && !capabilities.registration) || (mode === "login" && !capabilities.password) ? <StatusNotice className="mb-6" size="compact" tone="warning" title={mode === "register" ? "Pendaftaran baru belum tersedia." : "Login email belum tersedia."} description={mode === "register" ? "Pendaftaran dibuka setelah Syarat Layanan, Kebijakan Privasi, dan layanan email tersedia. Jika sudah punya akun, silakan masuk." : "Silakan coba lagi nanti."} /> : null}
             <CustomerEmailForm mode={mode} returnTo={returnTo} available={mode === "register" ? capabilities.registration : capabilities.password} legal={legal} />
             <div className="my-6 flex items-center gap-4" aria-hidden="true"><span className="h-px flex-1 bg-border" /><span className="text-xs text-muted-foreground">atau</span><span className="h-px flex-1 bg-border" /></div>
-            <CustomerGoogleLink available={capabilities.google && (mode === "login" || legal !== null)} fontClassName={googleSans.className} href={`${internal && mode === "register" ? "/internal-testing/google-consent" : "/api/auth/google/start"}?returnTo=${encodeURIComponent(returnTo)}`} />
+            <CustomerGoogleLink available={capabilities.google && (mode === "login" || legal !== null)} fontClassName={googleSans.className} href={`${mode === "register" && internal ? "/internal-testing/google-consent" : mode === "register" && legal?.terms.version === PUBLIC_CUSTOMER_POLICY.terms.version ? "/register/google" : "/api/auth/google/start"}?returnTo=${encodeURIComponent(returnTo)}`} />
             <p id="customer-auth-helper" className="text-sm leading-5 text-muted-foreground">{!capabilities.google ? "Masuk dengan Google sedang tidak tersedia." : mode === "register" && !legal ? "Pendaftaran dengan Google dibuka setelah dokumen kebijakan tersedia." : "Gunakan metode yang Anda pakai saat mendaftar di Niuva."}</p>
             <p className="mt-6 flex flex-wrap items-center justify-center gap-x-1 text-sm text-muted-foreground">{mode === "register" ? "Sudah punya akun?" : "Belum punya akun?"}<Link href={`${mode === "register" ? "/login" : "/register"}?returnTo=${encodeURIComponent(returnTo)}`} className={cn(linkClass, "min-w-11 px-1")}>{mode === "register" ? "Masuk" : "Daftar"}</Link></p>
           </> : mode === "verify-email" ? <>

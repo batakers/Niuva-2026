@@ -26,6 +26,7 @@ export class CustomerPrivacyCleanupRepository {
         sessions: await tx.customerSession.findMany({ where: sessions, select: { id: true }, orderBy: { id: "asc" }, take: limit }),
         emailTokens: await tx.customerEmailToken.findMany({ where: proofs, select: { id: true }, orderBy: { id: "asc" }, take: limit }),
         consents: await tx.customerInternalGoogleConsent.findMany({ where: proofs, select: { tokenHash: true }, orderBy: { tokenHash: "asc" }, take: limit }),
+        googleConsents: await tx.customerGoogleConsent.findMany({ where: proofs, select: { tokenHash: true }, orderBy: { tokenHash: "asc" }, take: limit }),
         rateLimits: await tx.customerAuthRateLimit.findMany({ where: { resetAt: { lte: now } }, select: { key: true }, orderBy: { key: "asc" }, take: limit }),
         pending: await tx.customerPendingRegistration.findMany({ where: pending, select: { id: true }, orderBy: { id: "asc" }, take: limit }),
         fences: await tx.customerClosureFence.findMany({ where: { expiresAt: { lte: now } }, select: { identityHash: true }, orderBy: { identityHash: "asc" }, take: limit }),
@@ -40,6 +41,7 @@ export class CustomerPrivacyCleanupRepository {
         sessions: selected.sessions.length,
         emailTokens: selected.emailTokens.length,
         internalGoogleConsents: selected.consents.length,
+        googleConsents: selected.googleConsents.length,
         authRateLimits: selected.rateLimits.length,
         pendingRegistrations: selected.pending.length,
         closureFences: selected.fences.length,
@@ -53,6 +55,7 @@ export class CustomerPrivacyCleanupRepository {
         await tx.customerEmailToken.deleteMany({ where: { id: { in: selected.emailTokens.map(row => row.id) } } });
         await tx.customerPendingRegistration.deleteMany({ where: { id: { in: selected.pending.map(row => row.id) } } });
         await tx.customerInternalGoogleConsent.deleteMany({ where: { tokenHash: { in: selected.consents.map(row => row.tokenHash) } } });
+        await tx.customerGoogleConsent.deleteMany({ where: { tokenHash: { in: selected.googleConsents.map(row => row.tokenHash) } } });
         await tx.customerClosureFence.deleteMany({ where: { identityHash: { in: selected.fences.map(row => row.identityHash) } } });
         await tx.customerAuthRateLimit.deleteMany({ where: { key: { in: selected.rateLimits.map(row => row.key) } } });
         await tx.auditLog.deleteMany({ where: { id: { in: selected.audits.map(row => row.id) } } });

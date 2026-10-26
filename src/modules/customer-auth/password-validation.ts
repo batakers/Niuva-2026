@@ -10,6 +10,8 @@ export const registrationSchema = z.object({
   confirmPassword: z.string(),
   consent: z.literal("on", { error: "Setujui Syarat Layanan dan Kebijakan Privasi." }),
   ageDeclaration: ageDeclarationSchema,
+  termsVersion: z.string().max(100).optional(),
+  privacyVersion: z.string().max(100).optional(),
   returnTo: z.string().max(2048).optional(),
 }).refine(value => value.password === value.confirmPassword, { path: ["confirmPassword"], message: "Konfirmasi password belum cocok." });
 export const loginSchema = z.object({ email: emailSchema, password: z.string().min(1, "Masukkan password Anda.").max(128), remember: z.enum(["on", "off"]).optional(), returnTo: z.string().max(2048).optional() });

@@ -3,6 +3,8 @@ import { getPrismaClient } from "@/lib/db/prisma";
 import { appError } from "@/modules/shared/errors";
 import { hashOpaqueToken } from "./core";
 import { assertRecordedAgeDeclaration } from "./age-declaration";
+import { assertCustomerPolicyAcceptance, getCustomerAuthLegalDocuments, type CustomerAuthLegalDocuments } from "./legal";
+import { PUBLIC_CUSTOMER_POLICY } from "./public-policy";
 import { lockCustomerLifecycle, assertFreshAccountIntent } from "@/modules/customer-privacy/lifecycle";
 import { assertInternalAccountActive, assertInternalEmail, internalExpiry, capInternalExpiry, INTERNAL_TERMS_VERSION, INTERNAL_PRIVACY_VERSION } from "./internal-testing";
 
@@ -86,7 +88,7 @@ export class CustomerEmailRepository {
       { OR: [{ pendingId: null }, { pending: { OR: [{ internalTestExpiresAt: null }, { internalTestExpiresAt: { gt: now } }] } }] },
     ] }, include: { customer: { select: { normalizedEmail: true } } } });
   }
-  async consumeVerification(token: string, now: Date) {
+  async consumeVerification(token: string, now: Date, legal?: CustomerAuthLegalDocuments | null) {
     return this.prisma.$transaction(async tx => {
       await lockCustomerLifecycle(tx);
       const record = await tx.customerEmailToken.findUnique({ where: { tokenHash: hashOpaqueToken(token) } });
@@ -97,6 +99,13 @@ export class CustomerEmailRepository {
       if (!claimed.count || !pending || pending.completedAt || pending.expiresAt <= now) throw appError("VALIDATION_ERROR");
       await assertFreshAccountIntent(tx, pending.normalizedEmail, pending.consentAt);
       assertRecordedAgeDeclaration(pending, now);
+      const publicAcceptance = pending.termsVersion.startsWith("NIUVA-") || pending.privacyVersion.startsWith("NIUVA-")
+        || legal?.terms.version === PUBLIC_CUSTOMER_POLICY.terms.version || legal?.privacy.version === PUBLIC_CUSTOMER_POLICY.privacy.version;
+      if (publicAcceptance || legal !== undefined) {
+        // Public eligibility is re-read inside the transaction; an explicit null from the service always denies consumption.
+        const currentLegal = publicAcceptance ? getCustomerAuthLegalDocuments() : legal;
+        assertCustomerPolicyAcceptance({ ...pending, acceptedAt: pending.consentAt }, now, Boolean(pending.internalTestExpiresAt), currentLegal);
+      }
       assertInternalAccountActive(pending.internalTestExpiresAt, now);
       if (pending.internalTestExpiresAt) {
         assertInternalEmail(pending.email, "password");
@@ -106,7 +115,7 @@ export class CustomerEmailRepository {
       const customer = await tx.customer.create({ data: { email: pending.email, normalizedEmail: pending.normalizedEmail, displayName: pending.displayName, emailVerifiedAt: now,
         ...(pending.internalTestExpiresAt ? { internalTestExpiresAt: internalExpiry(now), createdAt: now } : {}),
         passwordCredential: { create: { passwordHash: pending.passwordHash } },
-        consents: { create: { termsVersion: pending.termsVersion, privacyVersion: pending.privacyVersion, acceptedAt: pending.consentAt,
+        consents: { create: { method: "password", termsVersion: pending.termsVersion, privacyVersion: pending.privacyVersion, acceptedAt: pending.consentAt,
           ageDeclarationVersion: pending.ageDeclarationVersion, ageDeclaredAt: pending.ageDeclaredAt } } } });
       await tx.customerPendingRegistration.update({ where: { id: pending.id }, data: { completedAt: now } });
       await tx.$executeRaw`UPDATE orders SET customer_id = ${customer.id} WHERE customer_id IS NULL AND account_closed_at IS NULL AND lower(btrim(customer_email)) = ${pending.normalizedEmail}`;

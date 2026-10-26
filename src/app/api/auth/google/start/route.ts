@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { GOOGLE_CONSENT_COOKIE, GoogleConsentService } from "@/modules/customer-auth/google-consent";
 
 import { getCurrentCustomer, isCustomerGoogleAuthAvailable } from "@/lib/auth/customer";
 import {
@@ -64,6 +66,8 @@ export async function GET(request: Request): Promise<Response> {
     const config = getCustomerGoogleOAuthConfig();
     const state = createCustomerOAuthState();
     const pkce = createPkcePair();
+    const proof = (await cookies()).get(GOOGLE_CONSENT_COOKIE)?.value;
+    if (proof) await new GoogleConsentService().bind(proof, state, returnTo);
     const authorizationUrl = createGoogleOAuthAdapter(config).createAuthorizationUrl({
       codeChallenge: pkce.challenge,
       state,

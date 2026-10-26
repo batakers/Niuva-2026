@@ -4,6 +4,7 @@ import { isLocalDemoMode, parseServerEnvironment } from "@/lib/env/server";
 import { appError, isAppError } from "@/modules/shared/errors";
 
 import { isGoogleRedirectUriAllowed } from "./app-origin";
+import { isCustomerPublicAuthTestRuntime } from "./email-test-runtime";
 import {
   parseGoogleIdentity,
   type CustomerGoogleIdentity,
@@ -42,6 +43,12 @@ export function getCustomerGoogleOAuthConfig(
       environment.GOOGLE_CLIENT_SECRET === undefined ||
       environment.GOOGLE_REDIRECT_URI === undefined
     ) {
+      throw appError("CUSTOMER_AUTH_UNAVAILABLE");
+    }
+
+    if (source.NIUVA_CUSTOMER_PUBLIC_AUTH_TEST === "true"
+      && (!isCustomerPublicAuthTestRuntime(source)
+        || environment.GOOGLE_REDIRECT_URI !== new URL("/api/auth/google/callback", source.APP_URL).href)) {
       throw appError("CUSTOMER_AUTH_UNAVAILABLE");
     }
 

@@ -3,7 +3,7 @@ import { hashPassword, verifyPassword, DUMMY_PASSWORD_HASH, registrationSchema, 
 import { CustomerEmailRepository } from "./email-repository";
 import { createCustomerAuthProofDelivery } from "../outbox/runtime";
 import type { CustomerAuthProofDelivery } from "../outbox/producer";
-import { getCustomerAuthLegalDocuments, type CustomerAuthLegalDocuments } from "./legal";
+import { assertCustomerPolicyAcceptance, assertPresentedPolicyVersions, getCustomerAuthLegalDocuments, type CustomerAuthLegalDocuments } from "./legal";
 import { appError } from "@/modules/shared/errors";
 import { AGE_DECLARATION_VERSION } from "./age-declaration";
 import { assertInternalEmail, getInternalAuthConfig, internalExpiry, capInternalExpiry, assertInternalAccountActive, INTERNAL_TERMS_VERSION } from "./internal-testing";
@@ -15,6 +15,10 @@ export class CustomerEmailService {
     readonly legal: CustomerAuthLegalDocuments | null = getCustomerAuthLegalDocuments(),
     readonly clock: () => Date = () => new Date(),
   ) {}
+  private currentLegal(): CustomerAuthLegalDocuments | null {
+    return this.legal?.terms.version.startsWith("NIUVA-") || this.legal?.privacy.version.startsWith("NIUVA-")
+      ? getCustomerAuthLegalDocuments() : this.legal;
+  }
   async throttle(action: "login" | "register" | "resend" | "forgot-password" | "reset-password" | "verify", email: string, ip: string) {
     const login = action === "login";
     const windowMs = login || action === "verify" ? 900000 : 3600000;
@@ -23,19 +27,21 @@ export class CustomerEmailService {
     await this.repository.limit(`email:${action}:${hashOpaqueToken(email)}`, login ? 5 : action === "verify" ? 10 : 3, windowMs, now);
   }
   async register(raw: unknown, ip: string): Promise<{ handle: string | null; sent: boolean; queued?: boolean }> {
-    if (!this.legal || !this.delivery) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
+    const legal = this.currentLegal();
+    if (!legal || !this.delivery) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
     const input = registrationSchema.parse(raw);
+    assertPresentedPolicyVersions(input, legal);
     const normalizedEmail = normalizeCustomerEmail(input.email);
     const now = this.clock();
     const internal = getInternalAuthConfig();
-    if (internal || this.legal.terms.version === INTERNAL_TERMS_VERSION) assertInternalEmail(normalizedEmail, "password", internal);
+    if (internal || legal.terms.version === INTERNAL_TERMS_VERSION) assertInternalEmail(normalizedEmail, "password", internal);
     await this.throttle("register", normalizedEmail, ip);
     const passwordHash = await hashPassword(input.password);
     // Never mutate credentials of an existing account through registration.
     if (await this.repository.findCredential(normalizedEmail)) return { handle: null, sent: false };
     const handle = createOpaqueToken();
     const pending = await this.repository.createPending({ handleHash: hashOpaqueToken(handle), email: input.email, normalizedEmail, displayName: input.name, passwordHash,
-      termsVersion: this.legal.terms.version, privacyVersion: this.legal.privacy.version, consentAt: now,
+      termsVersion: legal.terms.version, privacyVersion: legal.privacy.version, consentAt: now,
       ageDeclarationVersion: AGE_DECLARATION_VERSION, ageDeclaredAt: now,
       expiresAt: new Date(now.getTime() + 86400000), internalTestExpiresAt: internal ? internalExpiry(now) : null });
     try {
@@ -70,16 +76,19 @@ export class CustomerEmailService {
     return { token, remember: input.remember === "on", maxAge, returnTo: safeCustomerReturnTo(input.returnTo) };
   }
   async resend(handle: string, returnTo: string, ip: string) {
-    const pending = await this.repository.findPending(tokenSchema.parse(handle), this.clock());
+    const now = this.clock();
+    const pending = await this.repository.findPending(tokenSchema.parse(handle), now);
     if (!pending) throw appError("VALIDATION_ERROR");
+    assertCustomerPolicyAcceptance({ ...pending, acceptedAt: pending.consentAt }, now, Boolean(pending.internalTestExpiresAt), this.currentLegal());
     if (pending.internalTestExpiresAt) assertInternalEmail(pending.email, "password");
     await this.throttle("resend", pending.normalizedEmail, ip);
+    if (pending.sentAt && now.getTime() - pending.sentAt.getTime() < 60_000) throw appError("RATE_LIMITED");
     return this.send("verify", pending.email, returnTo, { pendingId: pending.id });
   }
   async verify(token: string, ip: string) {
     tokenSchema.parse(token);
     await this.throttle("verify", hashOpaqueToken(token), ip);
-    return this.repository.consumeVerification(token, this.clock());
+    return this.repository.consumeVerification(token, this.clock(), this.legal);
   }
   async forgot(emailInput: unknown, returnTo: string, ip: string) {
     if (!this.delivery) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
