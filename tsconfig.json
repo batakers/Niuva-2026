@@ -40,7 +40,9 @@
     ".next-demo-e2e/types/**/*.ts",
     ".next-demo-e2e/dev/types/**/*.ts",
     ".next-admin-auth-e2e/dev/types/**/*.ts",
-    ".next-admin-auth-e2e/dev/dev/types/**/*.ts"
+    ".next-admin-auth-e2e/dev/dev/types/**/*.ts",
+    ".next-e2e-public-auth/dev/types/**/*.ts",
+    ".next-e2e-public-auth/dev/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

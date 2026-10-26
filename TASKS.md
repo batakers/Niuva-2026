@@ -4,6 +4,7 @@
 `f4799c77fedb86f185db29d6f9b9cbfd63828047`. Branch kerja:
 `codex/niuva-v1-closure`. Scope [PRODUCT.md](PRODUCT.md), dependensi
 [ROADMAP.md](ROADMAP.md), selesai menurut [DoD](docs/v1-definition-of-done.md).
+Branch kerja irisan auth publik: `codex/v1-public-customer-closure`.
 Status awal di bawah tidak mengklaim hasil provider/staging/production.
 
 ## Cara bekerja
@@ -33,8 +34,8 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 | T09 | M1 | BLOCKED_EXTERNAL | Cleanup auth/privacy hosted | T03 | Handler auth/privacy berbatas dari PR #56 memakai runner/lease/role/monitor canonical. Tenggat dan hold tetap; bukti lokal diwarisi lalu diuji ulang saat rekonsiliasi. Scheduler/role/resource hosted belum tersedia. |
 | T10 | M1 | IN_PROGRESS | Rate limit lintas instance | T03 | PostgreSQL bersama, HMAC IP stabil dengan secret bersama, dan pembersihan row kedaluwarsa diuji lokal; binding/topologi hosted belum dibuktikan. Integration. |
 | T11 | M2 | DONE | Pengesahan policy publik | T01; Owner | Owner menyetujui isi dan identifier `NIUVA-TERMS-v1.0`/`NIUVA-PRIVACY-v1.0`; tanggal berlaku ditetapkan saat publikasi aktual. Fakta provider, transfer data dan gerbang rilis dicatat terpisah pada readiness yang sudah ada; tidak menghambat T11 atau development lokal. Tidak menjanjikan kemampuan yang belum dibuktikan. |
-| T12 | M2 | TODO | Consent Google publik | T04/T11 | Consent/deklarasi terikat identitas server; tanpa proof ditolak; riwayat tertutup tidak tertaut ulang. Integration/E2E lokal; aktivasi tetap terpisah. |
-| T13 | M2 | TODO | Signup email publik | T04/T11 | Consent resmi, verified-email boundary, expiry/resend/reset/revocation benar. Integration/E2E lokal; aktivasi tetap terpisah. |
+| T12 | M2 | DONE | Consent Google publik | T04/T11 | Consent/deklarasi 18+ server terikat state/browser/tujuan dan identitas provider terverifikasi; konsumsi atomik. Proof hilang/expired/replay/race/provider-denied, state/versi berubah, email akun sama, dan closure ditolak. Unit/backend/integration/E2E lokal lulus; aktivasi hosted tetap terpisah. |
+| T13 | M2 | DONE | Signup email publik | T04/T11 | Persetujuan policy dan deklarasi 18+ terpisah; pending sampai email verified; tanpa sesi otomatis; expiry/cooldown/resend/reset/revoke dan pencegahan reattachment setelah closure diuji. Integration/E2E lokal lulus; tanggal publikasi/berlaku dan aktivasi hosted tetap terpisah. |
 | T14 | M2 | BLOCKED_EXTERNAL | Privacy hosted | T05/T11; T03 | Export sendiri, hak data/closure dan kontak kasus aktif tanpa restore akun/riwayat. Integration/E2E/hosted; resource hosted belum tersedia. |
 | T15 | M3 | DONE | Draft produk dari Dashboard | T02 | Owner/Admin membuat draft; kategori dapat dipilih tanpa UUID manual; draft tidak tampil publik. Unit, integration, authenticated E2E lokal lulus. |
 | T16 | M3 | DONE | Varian dari Dashboard | T15 | SKU unik, harga/berat/dimensi valid, stok awal mengikuti inventory/ledger. Unit, integration, authenticated E2E lokal lulus. |
@@ -1046,3 +1047,21 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
   Uji menu mobile diperkuat agar menunggu tombol Sheet pascahidrasi. Full suite
   24/24 lulus lokal pada resource test terisolasi; status tetap IN_PROGRESS
   sampai CI menjalankan diff ini.
+- T12/T13 — 2026-10-25: pekerjaan diintegrasikan pada worktree baru
+  `codex/v1-public-customer-closure` dari `b31b83d`; worktree sumber AO dan
+  checkout utama tidak disentuh. Migration tambahan `20261025120000_customer_public_consent`
+  diterapkan ke PostgreSQL baru/loopback pada port 55432 (80 model/39 migration
+  folders); tidak ada reset database lama atau dependency baru. Proof Google
+  dibersihkan lewat canonical privacy cleanup (expired/consumed +7 hari,
+  bounded dry-run dan counter job).
+  Gate final lokal: check:memory, lint (0 error; 4 warning existing di
+  `jobs/handlers.ts`), typecheck, unit 129/1.475, backend 110/850,
+  `db:validate`, integration PostgreSQL 56/512, default E2E 112 lulus/5 skip
+  conditional, Admin E2E 31/31, public-auth E2E 18/18 dan production build
+  lulus. Build final tidak lagi memberi warning tracing seluruh project dari
+  loader policy. E2E publik mencakup Google/email, desktop/mobile, JavaScript
+  aktif/nonaktif, keyboard/fokus. Satu run ulang E2E publik sempat gagal saat
+  Turbopack tak menemukan modul font internal; run lengkap berikutnya pada
+  mode CI-style dan harness lokal keduanya lulus 18/18, error tidak terulang.
+  CI pada diff dan seluruh gate hosted/provider/staging/production belum
+  dijalankan; tanggal policy publik tetap belum ditetapkan.

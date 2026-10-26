@@ -1595,6 +1595,7 @@ model CustomerEmailToken {
 }
 
 model CustomerConsent {
+  method String?
   ageDeclarationVersion String? @map("age_declaration_version")
   ageDeclaredAt DateTime? @map("age_declared_at") @db.Timestamptz(6)
   id String @id @default(uuid()) @db.Uuid
@@ -1625,6 +1626,21 @@ model CustomerInternalGoogleConsent {
   consumedAt DateTime? @map("consumed_at") @db.Timestamptz(6)
   @@index([expiresAt])
   @@map("customer_internal_google_consents")
+}
+
+model CustomerGoogleConsent {
+  tokenHash String @id @map("token_hash")
+  oauthStateHash String? @unique @map("oauth_state_hash")
+  returnTo String @map("return_to")
+  termsVersion String @map("terms_version")
+  privacyVersion String @map("privacy_version")
+  acceptedAt DateTime @map("accepted_at") @db.Timestamptz(6)
+  ageDeclarationVersion String @map("age_declaration_version")
+  ageDeclaredAt DateTime @map("age_declared_at") @db.Timestamptz(6)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  consumedAt DateTime? @map("consumed_at") @db.Timestamptz(6)
+  @@index([expiresAt])
+  @@map("customer_google_consents")
 }
 
 // No credentials or provider payloads belong in these records.

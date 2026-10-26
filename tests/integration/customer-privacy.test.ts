@@ -17,6 +17,7 @@ const repository = new CustomerPrivacyRepository(prisma);
 const now = new Date("2026-10-02T05:00:00Z");
 const emails: string[] = [];
 const ownerReadFixtureIds: string[] = [];
+const publicGoogleConsentHashes: string[] = [];
 async function fixture(google = false) {
   const email = `privacy-${randomUUID()}@example.test`; emails.push(email);
   const session = createOpaqueToken();
@@ -30,6 +31,8 @@ const request = () => privacyRequestSchema.parse({ submissionKey: randomUUID(), 
 const ownerId = randomUUID();
 const handle = (id: string, overrides: Record<string, unknown> = {}) => privacyOwnerSchema.parse({ id, status: "RESOLVED", response: "Data sudah diperiksa dan hasil telah disampaikan.", outcome: "FULFILLED", fulfilled: "on", ...overrides });
 afterEach(async () => {
+  await prisma.customerGoogleConsent.deleteMany({ where: { tokenHash: { in: publicGoogleConsentHashes } } });
+  publicGoogleConsentHashes.length = 0;
   await prisma.customerPrivacyRequest.deleteMany({ where: { id: { in: ownerReadFixtureIds } } });
   ownerReadFixtureIds.length = 0;
   await prisma.customerPrivacyRequest.deleteMany({ where: { referenceNumber: { startsWith: "PRV-" }, OR: [{ contactEmail: { in: emails } }, { customer: { normalizedEmail: { in: emails } } }] } });
@@ -75,13 +78,29 @@ describe("Customer privacy PostgreSQL lifecycle (isolated fixtures)", () => {
     const staleProof = await prisma.customerPrivacyConfirmation.create({ data: { customerId: customer.id, sessionHash: actor.sessionHash, tokenHash: randomUUID(), purpose: "EXPORT", expiresAt: expiredAt } });
     const freshToken = await prisma.customerEmailToken.create({ data: { customerId: customer.id, tokenHash: randomUUID(), purpose: "reset", expiresAt: new Date(now.getTime() + DAY_MS), returnTo: "/account" } });
     const staleToken = await prisma.customerEmailToken.create({ data: { customerId: customer.id, tokenHash: randomUUID(), purpose: "reset", expiresAt: expiredAt, returnTo: "/account" } });
+    const staleHash = randomUUID(); publicGoogleConsentHashes.push(staleHash);
+    const stalePublicConsent = await prisma.customerGoogleConsent.create({ data: { tokenHash: staleHash, returnTo: "/account", termsVersion: "NIUVA-TERMS-v1.0", privacyVersion: "NIUVA-PRIVACY-v1.0", acceptedAt: now, ageDeclarationVersion: "AGE-18-SELF-DECLARATION-2026-10-05-v1", ageDeclaredAt: now, expiresAt: expiredAt } });
+    const consumedHash = randomUUID(); publicGoogleConsentHashes.push(consumedHash);
+    const consumedPublicConsent = await prisma.customerGoogleConsent.create({ data: { tokenHash: consumedHash, returnTo: "/account", termsVersion: "NIUVA-TERMS-v1.0", privacyVersion: "NIUVA-PRIVACY-v1.0", acceptedAt: now, ageDeclarationVersion: "AGE-18-SELF-DECLARATION-2026-10-05-v1", ageDeclaredAt: now, expiresAt: new Date(now.getTime() + DAY_MS), consumedAt: expiredAt } });
+    const freshHash = randomUUID(); publicGoogleConsentHashes.push(freshHash);
+    const freshPublicConsent = await prisma.customerGoogleConsent.create({ data: { tokenHash: freshHash, returnTo: "/account", termsVersion: "NIUVA-TERMS-v1.0", privacyVersion: "NIUVA-PRIVACY-v1.0", acceptedAt: now, ageDeclarationVersion: "AGE-18-SELF-DECLARATION-2026-10-05-v1", ageDeclaredAt: now, expiresAt: new Date(now.getTime() + DAY_MS) } });
+    expect(await prisma.customerGoogleConsent.count({ where: { tokenHash: { in: publicGoogleConsentHashes }, OR: [{ expiresAt: { lte: expiredAt } }, { consumedAt: { lte: expiredAt } }] } })).toBe(2);
     const cleanup = new CustomerPrivacyCleanupRepository(prisma);
-    await cleanup.cleanup(now, true); expect(await prisma.customerSession.findUnique({ where: { id: staleSession.id } })).not.toBeNull();
+    const dryRun = await cleanup.cleanup(now, true);
+    expect(dryRun).toMatchObject({ dryRun: true, googleConsents: 2 });
+    expect(await prisma.customerSession.findUnique({ where: { id: staleSession.id } })).not.toBeNull();
+    expect(await prisma.customerGoogleConsent.count()).toBe(3);
+    const bounded = await prisma.$transaction(tx => cleanup.cleanupIn(tx, now, false, 1));
+    expect(bounded.googleConsents).toBe(1);
+    expect(await prisma.customerGoogleConsent.count()).toBe(2);
     await cleanup.cleanup(now, false);
     expect(await prisma.customerSession.findUnique({ where: { id: staleSession.id } })).toBeNull();
     expect(await prisma.customerPrivacyConfirmation.findUnique({ where: { id: staleProof.id } })).toBeNull();
     expect(await prisma.customerEmailToken.findUnique({ where: { id: staleToken.id } })).toBeNull();
     expect(await prisma.customerEmailToken.findUnique({ where: { id: freshToken.id } })).not.toBeNull();
+    expect(await prisma.customerGoogleConsent.findUnique({ where: { tokenHash: stalePublicConsent.tokenHash } })).toBeNull();
+    expect(await prisma.customerGoogleConsent.findUnique({ where: { tokenHash: consumedPublicConsent.tokenHash } })).toBeNull();
+    expect(await prisma.customerGoogleConsent.findUnique({ where: { tokenHash: freshPublicConsent.tokenHash } })).not.toBeNull();
     expect(await prisma.customerSession.findUnique({ where: { tokenHash: actor.sessionHash } })).not.toBeNull();
   });
   it("exports explicit own-data projections without credentials, capabilities or another Customer", async () => {

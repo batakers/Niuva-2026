@@ -44,7 +44,9 @@ try {
   $env:GOOGLE_CLIENT_SECRET = "local-e2e-google-secret"
   $env:GOOGLE_REDIRECT_URI = "http://localhost:$e2ePort/api/auth/google/callback"
   $env:NIUVA_CUSTOMER_AUTH_MOCK = "true"
-  $env:NIUVA_NEXT_DIST_DIR = ".next-e2e"
+  if ([string]::IsNullOrWhiteSpace($env:NIUVA_NEXT_DIST_DIR)) {
+    $env:NIUVA_NEXT_DIST_DIR = ".next-e2e"
+  }
 
   & corepack pnpm exec next dev -p $e2ePort
   if ($LASTEXITCODE -ne 0) {

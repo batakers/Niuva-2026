@@ -40,6 +40,7 @@ const manifest: Record<string, ManifestEntry> = {
   "demo/action-queue/page.tsx": { status: "excluded", reason: "X4-non-product" },
   "internal-testing/policy/page.tsx": { status: "excluded", reason: "X4-non-product" },
   "internal-testing/google-consent/page.tsx": { status: "excluded", reason: "X4-non-product" },
+  "register/google/page.tsx": { status: "excluded", reason: "X1-404-contract" },
 };
 
 const exclusionReasons: readonly ExclusionReason[] = [
@@ -82,8 +83,8 @@ const nonAdminLoadingFiles = allFiles
   .sort();
 
 describe("loading coverage manifest (Property 11)", () => {
-  it("lists all 16 non-admin connection() pages found by the scan, and nothing stale", () => {
-    expect(scannedConnectionPages).toHaveLength(16);
+  it("lists all 17 non-admin connection() pages found by the scan, and nothing stale", () => {
+    expect(scannedConnectionPages).toHaveLength(17);
     expect(scannedConnectionPages).toEqual(Object.keys(manifest).sort());
   });
 

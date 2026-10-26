@@ -83,5 +83,10 @@ jobs:
         env:
           TEST_DATABASE_URL: postgresql://niuva_test@127.0.0.1:5432/niuva_test?schema=public
 
+      - name: Public Customer authentication browser journeys
+        run: corepack pnpm test:e2e:public-auth
+        env:
+          TEST_DATABASE_URL: postgresql://niuva_test@127.0.0.1:5432/niuva_test?schema=public
+
       - name: Production build
         run: corepack pnpm build
