@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import { operationalJobFixture } from "../helpers/operational-job-fixture";
+import { isolatedOperationalJobFixture } from "../helpers/isolated-operational-job-fixture";
 import { preparedOutboxSender } from "../helpers/prepared-outbox-sender";
 import { CustomerEmailRepository } from "@/modules/customer-auth/email-repository";
 import { CustomerPrivacyRepository } from "@/modules/customer-privacy/repository";
@@ -15,9 +15,9 @@ import { PrismaJobRepository } from "@/modules/jobs/repository";
 import type { OutboxSender } from "@/modules/outbox/worker-core";
 import type { JobName } from "@/modules/jobs/core";
 
-let f: Awaited<ReturnType<typeof operationalJobFixture>>;
+let f: Awaited<ReturnType<typeof isolatedOperationalJobFixture>>;
 const customers: string[] = [], proofs: string[] = [], cases: string[] = [], googleConsents: string[] = [];
-beforeAll(async () => { f = await operationalJobFixture(); });
+beforeAll(async () => { f = await isolatedOperationalJobFixture(); }, 90000);
 afterEach(async () => {
   await f.admin.durableOutboxMessage.deleteMany({ where: { proofId: { in: proofs } } });
   await f.admin.customerGoogleConsent.deleteMany({ where: { tokenHash: { in: googleConsents } } });

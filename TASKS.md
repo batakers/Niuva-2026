@@ -25,7 +25,7 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 | --- | --- | --- | --- | --- | --- |
 | T01 | M0 | DONE | Rekonsiliasi dokumen v1 | — | Empat dokumen punya fungsi jelas; keputusan lama tidak menjadi backlog aktif; setiap blocker punya ID/pemilik. Link/authority review. |
 | T02 | M0 | DONE | Sinkronkan baseline lokal | T01 | Generate resmi sesuai schema; lint/typecheck resmi lulus; migration/database lama tidak berubah. |
-| T03 | M1 | BLOCKED_EXTERNAL | Kontrak hosted sandbox | T02 | Binding/origin/cookie/CSP konsisten; resource salah ditolak; production tetap tertutup. Konfigurasi dan adapter S3-compatible mengikuti kontrak object storage; resource/provider/grant hosted tetap menunggu Owner. Integration. |
+| T03 | M1 | BLOCKED_EXTERNAL | Kontrak hosted sandbox | T02 | Binding/origin/cookie/CSP konsisten; resource salah ditolak; production tetap tertutup. Konfigurasi dan adapter S3-compatible mengikuti kontrak object storage; resource/provider/grant hosted tetap menunggu Owner. Integration. Catatan 22 Okt (Neon staging disiapkan; Render tertahan di card gate) ada di [runbook](docs/backend/t03-hosted-sandbox-runbook.md); tinjau bukti bertanggal itu sebelum aksi hosted. |
 | T04 | M1 | DONE | Producer auth ke outbox | T03 | Proof dan enqueue atomik; proof invalid tidak dikirim; retry tidak memberikan akun/sesi prematur. Integration lokal lulus; hosted delivery tetap menunggu T03. |
 | T05 | M1 | DONE | Producer privacy ke outbox | T04 | Proof sekali pakai/closure aman; revoked/expired dibatalkan. Integration lokal lulus; hosted delivery tetap menunggu T03. |
 | T06 | M1 | DONE | Launcher worker dan status | T04–T05 | CLI dan endpoint bearer-protected memakai JobRunner/OperationalJobState yang sama dengan resource binding, role terbatas, policy eksplisit, lease/cooldown lintas run, monitor dan safe counters; unknown tidak memicu resend otomatis. Unit/backend/integration lokal lulus; scheduler/provider hosted belum diaktifkan. |
@@ -1063,5 +1063,74 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
   aktif/nonaktif, keyboard/fokus. Satu run ulang E2E publik sempat gagal saat
   Turbopack tak menemukan modul font internal; run lengkap berikutnya pada
   mode CI-style dan harness lokal keduanya lulus 18/18, error tidak terulang.
-  CI pada diff dan seluruh gate hosted/provider/staging/production belum
-  dijalankan; tanggal policy publik tetap belum ditetapkan.
+  [PR #68](https://github.com/batakers/Niuva-2026/pull/68) pada head
+  `28358749959b9240e2483cc877da47f84bcbb13c` lulus Quality
+  ([run](https://github.com/batakers/Niuva-2026/actions/runs/40391849176),
+  18m31s), lalu merge via squash ke `main` pada
+  `a3d995a904f6fde7e7e248e8a9c8421de734d521`. Quality CI `main` pada merge
+  SHA yang sama lulus ([run](https://github.com/batakers/Niuva-2026/actions/runs/40394664887),
+  22 langkah, 0 failure). Gate provider/staging/production belum dijalankan;
+  tanggal publikasi/berlaku policy tetap belum ditetapkan.
+- T03 — 2026-10-27: kelanjutan pada checkout existing
+  `codex/t03-hosted-sandbox` dari `a3d995a` menambah
+  `corepack pnpm staging:preflight`, memakai Jiti dan helper canonical existing.
+  Command menolak profile production/live, provider/fixture config, origin salah,
+  binding salah, role owner/membership/grant marker luas (termasuk credential
+  owner yang disamarkan lewat SET ROLE), migration tertinggal,
+  koneksi tanpa TLS dan Customer/order nonzero. Probe mismatch tidak mengganti
+  marker; output hanya boolean/counter/reason aman, tanpa credential/URL/UUID.
+  Tidak ada schema, dependency, API, activation grant atau runtime aplikasi
+  yang diubah. [Runbook existing](docs/backend/t03-hosted-sandbox-runbook.md)
+  menggantikan helper Base64 sementara untuk persiapan berikutnya dan menandai
+  draft/provisioning 22 Oktober sebagai historis.
+  Database baru `niuva_t03_preflight_test_20261027_dca3c610`
+  dibuat pada cluster loopback test yang identitasnya diverifikasi; 39 migration
+  diterapkan tanpa reset/drop database lama. Setelah cleanup fixture, pemeriksaan
+  read-only mencatat 39 migration, marker/Customer/order/role fixture masing-masing
+  0; cluster yang dimulai untuk run ini dihentikan dan database dipertahankan.
+  Focused backend **38/38** dan
+  integration preflight/job/binding **22/22** lulus. Regresi SET ROLE terbukti gagal
+  sebelum pemeriksaan session_user ditambahkan, lalu lulus; fixture positif
+  login langsung sebagai role runtime. Mutation check pada guard privilege
+  membuat 11 tes gagal dan source dipulihkan dengan SHA-256 yang sama.
+  Full backend **112 file/888 tes**,
+  typecheck serta lint **0 error/4 warning existing** lulus lokal. CLI diuji lewat
+  subprocess nyata untuk missing/unreachable DB; exit 1, JSON aman, tanpa
+  password fixture di stderr/stdout. TLS loopback negatif tetap bukan bukti TLS
+  atau wiring aplikasi hosted. Build/E2E aplikasi tidak diulang karena patch
+  hanya menambah command operasional dan tes, tanpa perubahan route/runtime UI.
+  Full integration default dengan coverage akhirnya lulus **57 file/518 tes**
+  pada database baru `niuva_t03_verified_test_20261027_d8e1c4b2` (232,45 detik).
+  Run pertama terpotong batas tool 180 detik; runner native dengan log persisten
+  kemudian menunjukkan satu kegagalan cleanup existing dan fixture T03 yang
+  memerlukan DB kosong. Database induk suite memang menyimpan data sintetis
+  lintas file. Primitive DB terisolasi diekstrak dari helper existing, kemudian
+  dipakai preflight dan job-handlers; seluruh assertion dipertahankan. Fixture
+  preflight setelah full suite memiliki 39 migration dan marker/Customer/order/
+  role fixture 0. Semua database test dipertahankan dan cluster run ini dihentikan.
+  Neon 38 migration tetap merupakan observasi 22 Oktober; keadaan resource
+  terbaru dan penerapan migration ke-39 belum diperiksa/dijalankan hosted.
+  Intake menunjuk resource existing agar tidak dibuat ulang. Owner menyetujui
+  PR sampai review/CI/merge dan satu staging Netlify Free + Neon existing pada
+  27 Oktober, dengan migration tambahan hanya setelah resource/backup/data
+  kosong diverifikasi. Dashboard Netlify menunjukkan Free, 300/300 credits dan
+  tidak ada kartu. Adapter, deployment, cookie/CSP dan transaksi provider belum
+  dibuktikan. T03 tetap **BLOCKED_EXTERNAL**;
+  T10/T19 dan gate operasional/provider lain tidak ditutup oleh preflight lokal.
+  Pemeriksaan read-only Neon pada 27 Oktober kemudian memastikan sertifikat TLS
+  client, database/marker yang dimaksud, dan Customer/order 0. Role runtime
+  tidak memiliki SELECT pada `_prisma_migrations`; `pg_stat_ssl` backend juga
+  melaporkan false meski socket client tervalidasi. Jumlah migration terbaru
+  belum dibaca. Perbaikan preflight memakai credential migration terpisah yang
+  diverifikasi terhadap marker sama serta memeriksa TLS dari socket client;
+  credential migration hanya untuk proses lokal. Tes backend terarah **45/45**
+  dan integration **7/7** lulus, termasuk penolakan marker migration salah dan
+  server loopback tanpa TLS. Sebelum perbaikan, uji role tanpa SELECT migration
+  menghasilkan error 42501. CLI sebenarnya juga lulus pada database test baru
+  dengan TLS tervalidasi, dua role terpisah, 39 migration dan data kosong;
+  fixture marker/role dibersihkan, database dipertahankan. Full backend setelah
+  koreksi lulus; typecheck, lint (0 error/4 warning existing) dan check:memory
+  lulus. Review meminta penanganan error koneksi pada negative probe, guard
+  loopback sebelum pembuatan DB test dan rujukan keputusan di MEMORY. Setelah
+  koreksi, backend terarah **49/49** dan integration **6 file/88 tes** lulus.
+  Database test baru dipakai tanpa reset database lama.

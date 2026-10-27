@@ -10,6 +10,7 @@
     "start": "next start",
     "lint": "eslint",
     "check:memory": "node scripts/check-memory.mjs",
+    "staging:preflight": "jiti scripts/staging-preflight.ts",
     "pretypecheck": "prisma generate && next typegen",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
