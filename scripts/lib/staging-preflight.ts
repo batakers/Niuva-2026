@@ -22,6 +22,8 @@ class StagingPreflightError extends Error {
   }
 }
 
+export class DatabaseTlsError extends Error {}
+
 export type StagingDatabaseInspection = Readonly<{
   runtimeRoleRestricted: boolean;
   markerPrivilegesRestricted: boolean;
@@ -56,7 +58,20 @@ function configuration(source: EnvironmentSource): DatabaseBindingExpectation {
     if (environment.NODE_ENV !== "production" || deployment.tier !== "staging" || deployment.providerMode !== "sandbox") {
       throw new StagingPreflightError("PROFILE_INVALID");
     }
-    getDatabaseEnvironment(source);
+    const runtimeUrl = new URL(getDatabaseEnvironment(source).DATABASE_URL);
+    const migrationUrl = new URL(source.NIUVA_STAGING_MIGRATION_DATABASE_URL ?? "");
+    if (!(["postgres:", "postgresql:"].includes(migrationUrl.protocol)) ||
+      runtimeUrl.hostname !== migrationUrl.hostname ||
+      (runtimeUrl.port || "5432") !== (migrationUrl.port || "5432") ||
+      runtimeUrl.pathname !== migrationUrl.pathname ||
+      !runtimeUrl.username || !migrationUrl.username ||
+      decodeURIComponent(runtimeUrl.username) === decodeURIComponent(migrationUrl.username)) {
+      throw new StagingPreflightError("CONFIG_INVALID");
+    }
+    if ([runtimeUrl, migrationUrl].some((url) => {
+      const modes = url.searchParams.getAll("sslmode");
+      return modes.length !== 1 || modes[0] !== "verify-full";
+    })) throw new StagingPreflightError("DATABASE_TLS_REQUIRED");
     expected = readDatabaseBindingExpectation(source, "staging");
   } catch (error) {
     if (error instanceof StagingPreflightError) throw error;
@@ -95,7 +110,7 @@ export async function runStagingPreflight(
   try {
     database = await inspect(expected);
   } catch (error) {
-    throw new StagingPreflightError(error instanceof DatabaseBindingError ? "DATABASE_BINDING_REJECTED" : "DATABASE_UNAVAILABLE");
+    throw new StagingPreflightError(error instanceof DatabaseTlsError ? "DATABASE_TLS_REQUIRED" : error instanceof DatabaseBindingError ? "DATABASE_BINDING_REJECTED" : "DATABASE_UNAVAILABLE");
   }
   if (!database.runtimeRoleRestricted || !database.markerPrivilegesRestricted) throw new StagingPreflightError("DATABASE_PRIVILEGES_INVALID");
   if (!database.tls) throw new StagingPreflightError("DATABASE_TLS_REQUIRED");

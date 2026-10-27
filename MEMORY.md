@@ -8,7 +8,7 @@ Update this after major decisions, completed phases, or bugs that future agents 
 - Current work: v1.0 closure. Scope: `PRODUCT.md`; dependencies: `ROADMAP.md`; sole active backlog: `TASKS.md`; completion: `docs/v1-definition-of-done.md`. `.kiro/specs/` is historical evidence.
 - Current task statuses and dated execution evidence belong to `TASKS.md`; this memory does not duplicate its backlog table.
 - Data model: 80 Prisma models (`grep -c '^model ' prisma/schema.prisma`) and 39 migration folders (`ls -d prisma/migrations/*/ | wc -l`). Counts describe files, not an applied database state.
-- Hosted preflight: `corepack pnpm staging:preflight` uses process environment and the canonical origin, capability and database-binding helpers. It inspects runtime privileges/migration history without provisioning, migration or provider calls; safe output omits credentials and resource identifiers. `docs/backend/t03-hosted-sandbox-runbook.md` separates the local checks from the dated Neon/Render evidence.
+- Hosted preflight: `corepack pnpm staging:preflight` uses process environment and the canonical origin, capability and database-binding helpers. Runtime privileges and migration history use separate, binding-checked credentials; both client connections require verified TLS. It does not provision, migrate or call transaction providers; safe output omits credentials and resource identifiers. See `docs/backend/t03-hosted-sandbox-runbook.md` for evidence boundaries.
 - Auth, two separate systems:
   - Owner/Admin: Better Auth + TOTP (`src/lib/auth/admin-engine.ts`); `src/lib/auth/admin.ts` requires `mfaVerified`, `twoFactorEnabled`, and an active AdminProfile. Clerk SDK is absent; `src/lib/auth/clerk.ts` only re-exports `./admin` (deprecated).
   - Customer: opaque DB session, `src/lib/auth/customer.ts` and `src/modules/customer-auth/` (Google consent or verified email/password). T12/T13 signup flows are available only in local-test/mock; checkout calls `requireCustomer`.
@@ -23,7 +23,7 @@ Update this after major decisions, completed phases, or bugs that future agents 
 
 ## Decisions
 
-- 2026-10-27 — Temporary T03 staging target: Netlify Free/OpenNext with the existing Neon staging database. Owner authorized PR/review/CI/merge and one deployment, without card/upgrade or provider activation; conditional migration and stop boundaries are in `docs/backend/t03-hosted-sandbox-runbook.md`. Authorization does not establish hosted acceptance.
+- 2026-10-27 — T03 staging decisions, authorization and evidence boundaries: see `docs/backend/t03-hosted-sandbox-runbook.md` and `TASKS.md`; current hosted acceptance belum diverifikasi.
 - 2026-08-21 — Product authority: `docs/PRD-Niuva-MVP.md` and addenda; technical authority: `docs/TechDesign-Niuva-MVP.md` and addenda; visual authority: `DESIGN.md`.
 - 2026-08-21 — User guidance level is C (somewhere in between), overriding the older Level A metadata for explanation style only.
 - 2026-08-21 — Use a Next.js/TypeScript modular monolith with managed services; no product AI, microservices, or automatic slicer. (The "no customer account" part was superseded: current PRD addenda require Customer login before checkout; see `AGENTS.md`.)

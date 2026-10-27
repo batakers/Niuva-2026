@@ -1117,3 +1117,20 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
   tidak ada kartu. Adapter, deployment, cookie/CSP dan transaksi provider belum
   dibuktikan. T03 tetap **BLOCKED_EXTERNAL**;
   T10/T19 dan gate operasional/provider lain tidak ditutup oleh preflight lokal.
+  Pemeriksaan read-only Neon pada 27 Oktober kemudian memastikan sertifikat TLS
+  client, database/marker yang dimaksud, dan Customer/order 0. Role runtime
+  tidak memiliki SELECT pada `_prisma_migrations`; `pg_stat_ssl` backend juga
+  melaporkan false meski socket client tervalidasi. Jumlah migration terbaru
+  belum dibaca. Perbaikan preflight memakai credential migration terpisah yang
+  diverifikasi terhadap marker sama serta memeriksa TLS dari socket client;
+  credential migration hanya untuk proses lokal. Tes backend terarah **45/45**
+  dan integration **7/7** lulus, termasuk penolakan marker migration salah dan
+  server loopback tanpa TLS. Sebelum perbaikan, uji role tanpa SELECT migration
+  menghasilkan error 42501. CLI sebenarnya juga lulus pada database test baru
+  dengan TLS tervalidasi, dua role terpisah, 39 migration dan data kosong;
+  fixture marker/role dibersihkan, database dipertahankan. Full backend setelah
+  koreksi lulus; typecheck, lint (0 error/4 warning existing) dan check:memory
+  lulus. Review meminta penanganan error koneksi pada negative probe, guard
+  loopback sebelum pembuatan DB test dan rujukan keputusan di MEMORY. Setelah
+  koreksi, backend terarah **49/49** dan integration **6 file/88 tes** lulus.
+  Database test baru dipakai tanpa reset database lama.

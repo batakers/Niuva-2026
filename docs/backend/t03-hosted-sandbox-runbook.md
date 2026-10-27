@@ -215,6 +215,10 @@ Sediakan melalui environment manager privat:
   `NIUVA_PROVIDER_MODE=sandbox` dan canonical `APP_URL` HTTPS aplikasi.
 - `DATABASE_URL` role runtime terbatas dan `NIUVA_DATABASE_BINDING_ID` dari
   resource staging existing; keduanya tidak ditulis di dokumen/log/chat.
+- `NIUVA_STAGING_MIGRATION_DATABASE_URL` adalah credential migration terpisah
+  untuk proses preflight lokal saja, dengan host, port dan database yang sama.
+  Jangan memasangnya pada environment aplikasi atau deployment Netlify. Kedua
+  URL harus memakai `sslmode=verify-full` tepat sekali.
 - Semua group provider/Admin/mail/storage dan `CRON_SECRET` absent, termasuk
   `MIDTRANS_IS_PRODUCTION` bila bernilai false. Analytics dan fixture/mock
   auth tidak diaktifkan.
@@ -223,8 +227,10 @@ Preflight memeriksa origin dan allowlist Server Actions canonical, policy helper
 cookie Secure/HttpOnly/SameSite, serta 15 capability default yang harus ditolak.
 Repository canonical mengambil marker dengan `FOR SHARE`; probe mismatch
 menggunakan UUID lain tanpa mengubah marker dan harus menolak callback.
-Query selanjutnya hanya membaca hak role/marker, riwayat migration dan jumlah
-Customer/order. Identitas login (`session_user`) harus sama dengan role efektif
+Query selanjutnya hanya membaca hak role/marker dan jumlah Customer/order memakai
+role runtime. Riwayat migration dibaca dengan credential migration terpisah,
+setelah marker pada koneksi tersebut juga diverifikasi. Identitas login
+(`session_user`) harus sama dengan role efektif
 (`current_user`), sehingga credential owner yang memakai `SET ROLE` tetap ditolak.
 Role owner, membership/flag administratif atau grant marker
 selain SELECT dan UPDATE(id) membuat preflight gagal.
@@ -239,12 +245,20 @@ Batas bukti yang harus dipertahankan:
 - `migrationsCurrent` membandingkan nama migration yang selesai dan status
   failure/rollback dengan folder source; bukan pemeriksaan drift schema atau
   checksum SQL. Source migration tetap harus direview sebelum deployment.
-- `databaseTls` mengamati TLS connection dari PostgreSQL; konfigurasi trust
-  sertifikat client tetap diperiksa terpisah. Fixture loopback tanpa TLS ditolak.
+- `databaseTls` memeriksa konfigurasi `verify-full` dan socket TLS client yang
+  tervalidasi pada kedua koneksi. Ini membuktikan koneksi preflight lokal ke
+  endpoint, bukan koneksi Functions hosted atau seluruh jaringan internal provider.
+  Fixture loopback tanpa TLS ditolak. Pada Neon yang diperiksa 27 Oktober,
+  sertifikat client valid meski `pg_stat_ssl` pada backend melaporkan false;
+  observasi itu tidak membuktikan penyebab atau kondisi jaringan internal.
 - Policy helper cookie dan origin bukan bukti response/cookie yang diterbitkan
   aplikasi hosted. HTTP/CSP, JS/native POST, callback dan proses Functions/Node
   aktual tetap mengikuti tabel penerimaan hosted di atas.
-- Catatan Neon 38 migration tetap bertanggal 22 Oktober. Bila resource existing
+- Pada 27 Oktober, pemeriksaan read-only memakai role runtime menemukan database
+  dan marker sesuai, Customer/order 0, serta role runtime tidak memiliki SELECT
+  pada `_prisma_migrations`. Jumlah migration terbaru belum diperiksa dengan
+  credential migration. Catatan Neon 38 migration tetap bertanggal 22 Oktober.
+  Bila resource existing
   masih pada 38, command harus gagal `MIGRATIONS_NOT_CURRENT`; jangan
   menerapkan migration otomatis. Migration tambahan
   `20261025120000_customer_public_consent` hanya menambah kolom nullable

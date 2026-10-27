@@ -10,7 +10,7 @@ const script = fileURLToPath(new URL("../../scripts/staging-preflight.ts", impor
 describe("T03 preflight CLI", () => {
   it.each([
     { database: undefined, reason: "CONFIG_INVALID" },
-    { database: "postgresql://runtime:private-cli-fixture-sentinel@127.0.0.1:1/niuva_cli_fixture_test", reason: "DATABASE_UNAVAILABLE" },
+    { database: "postgresql://runtime:private-cli-fixture-sentinel@127.0.0.1:1/niuva_cli_fixture_test?sslmode=verify-full", reason: "DATABASE_UNAVAILABLE" },
   ])("exits safely for $reason through the real TypeScript entrypoint", ({ database, reason }) => {
     const systemKeys = new Set(["systemroot", "windir", "path", "pathext", "comspec", "temp", "tmp", "userprofile", "appdata", "localappdata"]);
     const env: NodeJS.ProcessEnv = {
@@ -23,7 +23,10 @@ describe("T03 preflight CLI", () => {
       APP_URL: "https://staging.niuva.example.test",
       NIUVA_DATABASE_BINDING_ID: "07000000-0000-4000-8000-000000000003",
     });
-    if (database) env.DATABASE_URL = database;
+    if (database) {
+      env.DATABASE_URL = database;
+      env.NIUVA_STAGING_MIGRATION_DATABASE_URL = "postgresql://migration:private-cli-fixture-sentinel@127.0.0.1:1/niuva_cli_fixture_test?sslmode=verify-full";
+    }
     const result = spawnSync(process.execPath, [jitiCli, script], { cwd: root, env, encoding: "utf8", timeout: 15_000 });
 
     expect(result.error).toBeUndefined();

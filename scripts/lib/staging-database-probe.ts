@@ -6,13 +6,32 @@ import { PrismaDatabaseBindingRepository } from "../../src/modules/database-bind
 
 import type { StagingDatabaseInspection } from "./staging-preflight";
 
-export async function inspectStagingDatabase(client: PrismaClient, expected: DatabaseBindingExpectation): Promise<StagingDatabaseInspection> {
+export async function verifyMismatchedBinding(
+  repository: Pick<PrismaDatabaseBindingRepository, "withVerifiedBinding">,
+  expected: DatabaseBindingExpectation,
+): Promise<boolean> {
+  let callbackEntered = false;
+  try {
+    await repository.withVerifiedBinding({ ...expected, bindingId: randomUUID() }, async () => {
+      callbackEntered = true;
+    });
+  } catch (error) {
+    if (!(error instanceof DatabaseBindingError)) throw error;
+    return error.reason === "MARKER_MISMATCH" && !callbackEntered;
+  }
+  return false;
+}
+
+export async function inspectStagingDatabase(
+  client: PrismaClient,
+  expected: DatabaseBindingExpectation,
+  options: Readonly<{ migrationClient: PrismaClient; tlsVerified: boolean }>,
+): Promise<StagingDatabaseInspection> {
   const repository = new PrismaDatabaseBindingRepository(client);
   const inspection = await repository.withVerifiedBinding(expected, async (tx) => {
     const rows = await tx.$queryRaw<{
       runtimeRoleRestricted: boolean;
       markerPrivilegesRestricted: boolean;
-      tls: boolean;
     }[]>(Prisma.sql`
       SELECT
         current_user = session_user
@@ -32,32 +51,25 @@ export async function inspectStagingDatabase(client: PrismaClient, expected: Dat
               AND a.attnum > 0 AND NOT a.attisdropped AND a.attname <> 'id'
               AND has_column_privilege(current_user, a.attrelid, a.attnum, 'UPDATE')
           )
-          AS "markerPrivilegesRestricted",
-        COALESCE((SELECT ssl FROM pg_stat_ssl WHERE pid = pg_backend_pid()), false) AS "tls"
+          AS "markerPrivilegesRestricted"
       FROM pg_roles r WHERE r.rolname = current_user
-    `);
-    const migrations = await tx.$queryRaw<StagingDatabaseInspection["migrations"]>(Prisma.sql`
-      SELECT migration_name AS "name", finished_at IS NOT NULL AS "finished", rolled_back_at IS NOT NULL AS "rolledBack"
-      FROM "_prisma_migrations" ORDER BY migration_name
     `);
     return {
       runtimeRoleRestricted: rows[0]?.runtimeRoleRestricted === true,
       markerPrivilegesRestricted: rows[0]?.markerPrivilegesRestricted === true,
-      tls: rows[0]?.tls === true,
-      migrations,
       customerCount: await tx.customer.count(),
       orderCount: await tx.order.count(),
     };
   });
 
-  let callbackEntered = false;
-  let mismatchedBindingRejected = false;
-  try {
-    await repository.withVerifiedBinding({ ...expected, bindingId: randomUUID() }, async () => {
-      callbackEntered = true;
-    });
-  } catch (error) {
-    mismatchedBindingRejected = error instanceof DatabaseBindingError && error.reason === "MARKER_MISMATCH";
-  }
-  return { ...inspection, mismatchedBindingRejected: mismatchedBindingRejected && !callbackEntered };
+  const migrationRepository = new PrismaDatabaseBindingRepository(options.migrationClient);
+  const migrations = await migrationRepository.withVerifiedBinding(expected, async (tx) =>
+    tx.$queryRaw<StagingDatabaseInspection["migrations"]>(Prisma.sql`
+      SELECT migration_name AS "name", finished_at IS NOT NULL AS "finished", rolled_back_at IS NOT NULL AS "rolledBack"
+      FROM "_prisma_migrations" ORDER BY migration_name
+    `),
+  );
+
+  const mismatchedBindingRejected = await verifyMismatchedBinding(repository, expected);
+  return { ...inspection, migrations, tls: options.tlsVerified, mismatchedBindingRejected };
 }

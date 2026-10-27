@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
+  DatabaseTlsError,
   runStagingPreflight,
   stagingPreflightFailure,
   type StagingDatabaseInspection,
@@ -14,7 +15,8 @@ const source = {
   NIUVA_PROVIDER_MODE: "sandbox",
   NIUVA_ANALYTICS_ENABLED: "false",
   APP_URL: "https://staging.niuva.example.test",
-  DATABASE_URL: "postgresql://runtime:private-fixture-password@db.example.test/niuva_staging",
+  DATABASE_URL: "postgresql://runtime:private-fixture-password@db.example.test/niuva_staging?sslmode=verify-full",
+  NIUVA_STAGING_MIGRATION_DATABASE_URL: "postgresql://migration:private-migration-password@db.example.test/niuva_staging?sslmode=verify-full",
   NIUVA_DATABASE_BINDING_ID: bindingId,
 };
 
@@ -112,12 +114,27 @@ describe("T03 staging preflight", () => {
 
   it.each([
     { DATABASE_URL: undefined },
+    { NIUVA_STAGING_MIGRATION_DATABASE_URL: undefined },
+    { NIUVA_STAGING_MIGRATION_DATABASE_URL: "postgresql://migration:password@other.example.test/niuva_staging?sslmode=verify-full" },
+    { NIUVA_STAGING_MIGRATION_DATABASE_URL: "postgresql://migration:password@db.example.test/other?sslmode=verify-full" },
+    { NIUVA_STAGING_MIGRATION_DATABASE_URL: "postgresql://runtime:password@db.example.test/niuva_staging?sslmode=verify-full" },
     { NIUVA_DATABASE_BINDING_ID: undefined },
     { NIUVA_DATABASE_BINDING_ID: "not-a-binding" },
   ])("rejects incomplete database configuration before connecting: %j", async (overrides) => {
     const inspect = vi.fn();
     await expect(runStagingPreflight({ ...source, ...overrides }, migrationNames, inspect))
       .rejects.toMatchObject({ reason: "CONFIG_INVALID" });
+    expect(inspect).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { DATABASE_URL: "postgresql://runtime:password@db.example.test/niuva_staging?sslmode=disable" },
+    { DATABASE_URL: "postgresql://runtime:password@db.example.test/niuva_staging?sslmode=verify-full&sslmode=no-verify" },
+    { NIUVA_STAGING_MIGRATION_DATABASE_URL: "postgresql://migration:password@db.example.test/niuva_staging?sslmode=require" },
+  ])("rejects weak or ambiguous TLS configuration before connecting: %j", async (overrides) => {
+    const inspect = vi.fn();
+    await expect(runStagingPreflight({ ...source, ...overrides }, migrationNames, inspect))
+      .rejects.toMatchObject({ reason: "DATABASE_TLS_REQUIRED" });
     expect(inspect).not.toHaveBeenCalled();
   });
 
@@ -156,5 +173,12 @@ describe("T03 staging preflight", () => {
     expect(stagingPreflightFailure(error)).toEqual({ status: "FAILED", reason: "DATABASE_UNAVAILABLE" });
     expect(JSON.stringify(stagingPreflightFailure(error))).not.toContain("private-");
     expect(stagingPreflightFailure(new Error("private-error"))).toEqual({ status: "FAILED", reason: "PREFLIGHT_FAILED" });
+  });
+
+  it("reports a failed TLS verification without exposing connection details", async () => {
+    const error = await runStagingPreflight(source, migrationNames, async () => {
+      throw new DatabaseTlsError("private fixture detail");
+    }).catch((cause: unknown) => cause);
+    expect(stagingPreflightFailure(error)).toEqual({ status: "FAILED", reason: "DATABASE_TLS_REQUIRED" });
   });
 });
