@@ -1134,3 +1134,43 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
   loopback sebelum pembuatan DB test dan rujukan keputusan di MEMORY. Setelah
   koreksi, backend terarah **49/49** dan integration **6 file/88 tes** lulus.
   Database test baru dipakai tanpa reset database lama.
+
+### T03 — proxy tanpa database untuk build Netlify, 2026-10-28
+
+- Diagnosis: `src/proxy.ts` mengimpor engine Better Auth dan repository Admin,
+  sehingga graf impornya mencapai `@prisma/adapter-pg`/`pg`. Dokumentasi
+  Netlify Next.js menyatakan Middleware/Proxy dijalankan sebagai Edge Function;
+  ini konsisten dengan kegagalan build 27 Oktober, tetapi penyebab pada
+  Netlify baru terbukti setelah build hosted berikutnya.
+- Perubahan lokal (belum commit/PR): proxy hanya memeriksa keberadaan cookie
+  sesi Admin (`src/lib/auth/admin-session-cookie.ts`, prefix sama dengan engine);
+  sesi, TOTP dan profil aktif tetap diverifikasi `requireAdmin()`. Respons proxy
+  tanpa cookie tetap 307/401 `UNAUTHORIZED`; proxy tidak lagi menghasilkan 403
+  atau 503 saat database gagal. Pengecekan ini pindah ke halaman/API.
+- Tes: `tests/unit/proxy-edge-imports.test.ts` (graf impor proxy bebas
+  `pg`/Prisma/Better Auth/nodemailer) dan `tests/unit/admin-route-guards.test.ts`
+  (setiap page/API Admin non-publik memanggil `requireAdmin`/`loadAdminPageAccess`).
+  Tes proxy lama untuk password-only/profil nonaktif/DB down dipindahkan
+  cakupannya ke `tests/backend/admin-auth.test.ts` (requireAdmin), bukan dihapus
+  tanpa pengganti.
+- `node_modules/@prisma/client` ditemukan kosong (mtime 04:58) sebelum gate;
+  atas izin user `node_modules` dihapus lalu `corepack pnpm install
+  --frozen-lockfile --offline` (lockfile tidak berubah).
+- Gate lokal serial: lint exit 0 (0 error/4 warning existing
+  `jobs/handlers.ts`); typecheck exit 0; `pnpm test --maxWorkers=1` 131 file/
+  1.480 tes; `pnpm test:backend --maxWorkers=1` 114 file/899 tes; `pnpm build`
+  default exit 0. `.next/server/middleware.js.nft.json` 98 file, 0 terkait
+  pg/Prisma/Better Auth/nodemailer.
+- DB test lama `niuva_test` (port 55432) menolak `migrate deploy` karena P3009
+  (`20261007090000_admin_invitations` gagal sejak 7 Oktober); tidak di-reset
+  atau di-resolve. Database baru `niuva_d1_proxy_test_20261028` pada cluster
+  loopback yang sama menerima 39 migration lewat `migrate deploy`.
+- `test:e2e:admin-auth` run pertama 30/31: `admin-auth.spec.ts` memakai
+  `/api/admin/orders`, route yang tidak ada; dengan cookie sesi password-only
+  responsnya kini 404 dari Next, bukan 401 dari proxy. Asersi dipindah ke
+  `/api/admin/account` (GET nyata dengan `requireAdmin()`) plus asersi 200
+  setelah TOTP. Run ulang **31/31**. `test:integration` **57 file/519 tes**
+  (serial menurut config; argumen `--maxWorkers` ditolak script PowerShell).
+- Belum diverifikasi: E2E default/public-auth, build Netlify/OpenNext hosted,
+  cookie/CSP hosted. T03 tetap **BLOCKED_EXTERNAL**; deploy ulang memerlukan
+  izin Owner baru.

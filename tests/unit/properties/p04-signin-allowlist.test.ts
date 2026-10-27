@@ -5,8 +5,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { forEachCase, pathnameCorpus } from "../helpers/corpus";
 
-const mocks = vi.hoisted(() => ({ session: vi.fn().mockResolvedValue(null) }));
-vi.mock("@/lib/auth/admin-engine", () => ({ getAdminAuth: () => ({ api: { getSession: mocks.session } }) }));
 import proxy from "@/proxy";
 import { isAdminSignInPath } from "@/lib/auth/admin-proxy-response";
 
@@ -42,7 +40,6 @@ async function runProxy(pathname: string) {
   return { response: await proxy(request), pathname: request.nextUrl.pathname };
 }
 beforeEach(() => {
-  mocks.session.mockClear();
   vi.stubEnv("BETTER_AUTH_SECRET", "test-only-admin-secret-at-least-32-characters");
   vi.stubEnv("BETTER_AUTH_URL", "http://localhost:3000");
   vi.stubEnv("DATABASE_URL", "postgresql://localhost/niuva_test");

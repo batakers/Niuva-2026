@@ -3,6 +3,7 @@ import { APIError, createAuthMiddleware } from "better-auth/api";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { twoFactor } from "better-auth/plugins";
 import type { PrismaClient } from "@/generated/prisma/client";
+import { ADMIN_AUTH_COOKIE_PREFIX } from "@/lib/auth/admin-session-cookie";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { parseServerEnvironment } from "@/lib/env/server";
 import { sendAdminAuthMail, type AdminAuthMail } from "@/modules/admin-auth/mail";
@@ -64,7 +65,7 @@ export function createAdminAuthEngine(prisma: PrismaClient, options: AdminAuthEn
     plugins: [twoFactor({ issuer: "NIUVA Admin", twoFactorTable: "AdminAuthTwoFactor", skipVerificationOnEnable: false, accountLockout: { enabled: true, maxFailedAttempts: 5, durationSeconds: 900 } })],
     rateLimit: { enabled: true, storage: "database", modelName: "AdminAuthRateLimit", window: 60, max: 20, customRules: { "/sign-in/email": { window: 60, max: 5 }, "/request-password-reset": { window: 60, max: 3 }, "/send-verification-email": { window: 60, max: 3 } } },
     advanced: {
-      cookiePrefix: "niuva_admin",
+      cookiePrefix: ADMIN_AUTH_COOKIE_PREFIX,
       useSecureCookies: options.production,
       defaultCookieAttributes: { httpOnly: true, sameSite: "lax", secure: options.production },
     },
