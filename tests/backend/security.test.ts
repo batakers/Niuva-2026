@@ -1,11 +1,13 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import nextConfig from "../../next.config";
 import { readJsonBody } from "@/lib/http/body";
 import { getContentSecurityPolicy, getSecurityHeaders } from "@/lib/security/headers";
 import {
+  hostedCanonicalOrigin,
   isLoopbackRequest,
   isSameOriginRequest,
 } from "@/lib/security/origin";
+import { customerAuthOrigin } from "@/modules/customer-auth/origin";
 import { createInMemoryRateLimiter } from "@/lib/security/rate-limit";
 import { AppError } from "@/modules/shared/errors";
 
@@ -105,6 +107,37 @@ describe("origin boundary", () => {
       ),
     ).toBe(true);
     expect(isSameOriginRequest(new Request(url, { method: "POST" }))).toBe(false);
+  });
+
+  describe("hosted canonical origin", () => {
+    // A hosted function can see an internal request URL (scheme or host) that
+    // differs from the browser origin; only the configured APP_URL origin of an
+    // explicit hosted tier is accepted in addition, never a forwarded header.
+    const internal = "http://internal.invalid/api/auth/email/register";
+    const post = (origin: string) => new Request(internal, { headers: { origin, "x-forwarded-host": "evil.test" }, method: "POST" });
+    afterEach(() => vi.unstubAllEnvs());
+
+    it("accepts the configured origin on staging and production, and redirects there", () => {
+      for (const tier of ["staging", "production"]) {
+        vi.stubEnv("NIUVA_DEPLOYMENT_TIER", tier);
+        vi.stubEnv("APP_URL", "https://staging.example.test");
+        expect(hostedCanonicalOrigin(), tier).toBe("https://staging.example.test");
+        expect(isSameOriginRequest(post("https://staging.example.test")), tier).toBe(true);
+        expect(customerAuthOrigin(post("https://staging.example.test")), tier).toBe("https://staging.example.test");
+      }
+    });
+
+    it("rejects other origins, and adds nothing on local tiers or without a valid APP_URL", () => {
+      vi.stubEnv("NIUVA_DEPLOYMENT_TIER", "staging");
+      vi.stubEnv("APP_URL", "https://staging.example.test");
+      for (const origin of ["https://evil.test", "http://staging.example.test", "null"]) expect(isSameOriginRequest(post(origin)), origin).toBe(false);
+      for (const [tier, appUrl] of [["local-test", "https://staging.example.test"], ["", "https://staging.example.test"], ["staging", "http://staging.example.test"], ["staging", ""]]) {
+        vi.stubEnv("NIUVA_DEPLOYMENT_TIER", tier);
+        vi.stubEnv("APP_URL", appUrl);
+        expect(hostedCanonicalOrigin(), `${tier} ${appUrl}`).toBeUndefined();
+        expect(isSameOriginRequest(post("https://staging.example.test")), `${tier} ${appUrl}`).toBe(false);
+      }
+    });
   });
 });
 

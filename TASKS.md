@@ -1478,6 +1478,31 @@ walaupun grant E6 sudah ada. Owner memilih cakupan semua provider.
   `check:memory` lulus. Hosted belum diverifikasi: perlu deploy, isi env daftar
   penguji di Netlify, lalu uji daftar/verifikasi/login. Email verifikasi masuk
   outbox dan terkirim setelah job outbox staging dipicu manual (E9).
+- Hosted 2026-10-29: PR #77 di-squash ke `main@2a4f5fd`. Owner mengisi
+  `NIUVA_STAGING_CUSTOMER_EMAILS` di Netlify (nama dicek, nilai tidak dibaca).
+  Deploy `6ae261a88dfd70019071df2a` ready, tetapi `/register` masih "belum
+  tersedia": `NIUVA_OUTBOX_ENCRYPTION_KEY_ID`/`NIUVA_OUTBOX_ENCRYPTION_KEY`
+  belum ada, sehingga produsen outbox gagal. KEY_ID (`staging-2026-10`, bukan
+  secret) ditambahkan; KEY (32 byte acak) dibuat Owner lewat script lokal tanpa
+  echo dan disimpan sebagai secret Production. Deploy
+  `6ae265df76187b2b2e7d26e8` ready dan `/register` terbuka. Nilai `CRON_SECRET`
+  lama tidak tersimpan Owner, jadi Owner merotasinya lewat script lokal yang
+  menyimpan salinan terenkripsi DPAPI di komputer Owner; deploy
+  `6ae2688cf86177688ff78736` ready. Setiap deploy menyalakan build sementara
+  lalu mengembalikannya ke Stopped. Uji daftar/verifikasi/login penguji belum
+  dijalankan.
+- Uji daftar pertama gagal 403 `ORIGIN_NOT_ALLOWED`. Log Netlify: semua
+  `POST /api/auth/email/register` 403; `POST /api/admin/notifications` juga
+  403 `ORIGIN_NOT_ALLOWED` sejak 28 Okt. Penyebab: di fungsi Netlify,
+  `request.url` tidak sama dengan origin browser, sedangkan
+  `isSameOriginRequest` hanya membandingkan keduanya. Perbaikan (branch
+  `claude/hosted-canonical-origin`): pada tier eksplisit `staging`/`production`
+  dengan `APP_URL` valid, origin kanonik itu juga diterima (tidak pernah dari
+  Host/forwarded header), dan redirect auth Customer memakai origin kanonik.
+  Lokal: lint 0 error/4 warning lama, typecheck, unit 133/1.493, backend
+  117/927, integration 58/522 (DB terisolasi), build lulus (percobaan build
+  pertama gagal kehabisan memori karena sempat berjalan bersamaan dengan
+  integration; diulang sendirian). Hosted belum diverifikasi.
 
 ### Grant aktivasi staging E6, 2026-10-28
 
