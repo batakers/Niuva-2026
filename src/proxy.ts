@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getAdminAuth } from "@/lib/auth/admin-engine";
+import { hasAdminSessionCookie } from "@/lib/auth/admin-session-cookie";
 import { getServerCapabilities } from "@/lib/env/server";
-import { PrismaAdminProfileRepository } from "@/modules/admin/repository";
 
 import {
   classifyAdminProxyRequest,
@@ -100,17 +99,14 @@ export default async function proxy(request: NextRequest, _event?: unknown) {
 
   const pathname = request.nextUrl.pathname;
   if (isAdminSignInPath(pathname) || pathname.startsWith("/api/admin/auth/")) return createHeaderOnlyResponse(request);
-  try {
-    const session = await getAdminAuth().api.getSession({ headers: request.headers });
-    const profile = session ? await new PrismaAdminProfileRepository().findByAuthUserId(session.user.id) : null;
-    if (!session || !session.session.mfaVerified || !session.user.twoFactorEnabled || !profile?.isActive) {
-      const kind = classifyAdminProxyRequest({ pathname, accept: request.headers.get("accept") });
-      return kind === "browser-navigation" ? NextResponse.redirect(new URL("/admin/sign-in", request.url)) : NextResponse.json({ error: { code: session && !profile?.isActive ? "FORBIDDEN" : "UNAUTHORIZED" } }, { status: session && !profile?.isActive ? 403 : 401, headers: { "Cache-Control": "no-store" } });
-    }
-    return createHeaderOnlyResponse(request);
-  } catch {
-    return createAdminAuthUnavailableResponse();
+  // Optimistic cookie check only. The proxy stays free of the auth engine and
+  // database client because Netlify bundles it as an edge function where `pg`
+  // cannot load. requireAdmin() verifies session, second factor and profile.
+  if (!hasAdminSessionCookie(request.cookies)) {
+    const kind = classifyAdminProxyRequest({ pathname, accept: request.headers.get("accept") });
+    return kind === "browser-navigation" ? NextResponse.redirect(new URL("/admin/sign-in", request.url)) : NextResponse.json({ error: { code: "UNAUTHORIZED" } }, { status: 401, headers: { "Cache-Control": "no-store" } });
   }
+  return createHeaderOnlyResponse(request);
 }
 
 // The first two entries are the Admin surface and must never shrink. The

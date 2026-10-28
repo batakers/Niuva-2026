@@ -18,8 +18,6 @@ import {
   type Rng,
 } from "../helpers/corpus";
 
-const authMocks = vi.hoisted(() => ({ session: vi.fn().mockResolvedValue(null) }));
-vi.mock("@/lib/auth/admin-engine", () => ({ getAdminAuth: () => ({ api: { getSession: authMocks.session } }) }));
 import proxy, { config } from "@/proxy";
 import { isAdminSignInPath, classifyAdminProxyRequest } from "@/lib/auth/admin-proxy-response";
 import { resolveAppOrigin } from "@/lib/env/origin";
@@ -139,8 +137,6 @@ const scriptSrcOf = (policy: string): string =>
   policy.split("; ").find((part) => part.startsWith("script-src ")) ?? "";
 
 beforeEach(() => {
-  authMocks.session.mockClear();
-  authMocks.session.mockClear();
   vi.stubEnv("BETTER_AUTH_SECRET", "test-only-admin-secret-at-least-32-characters");
   vi.stubEnv("BETTER_AUTH_URL", "http://localhost:3000");
   vi.stubEnv("DATABASE_URL", "postgresql://localhost/niuva_test");
@@ -170,15 +166,11 @@ describe("Property 16 (1): admin surface always takes the native Admin auth path
 
       for (const headers of HEADER_VARIANTS) {
         admin += 1;
-        authMocks.session.mockClear();
-        authMocks.session.mockClear();
-
         const label = `path=${JSON.stringify(path)} headers=${JSON.stringify(headers)}`;
         const result = await run(path, headers);
         const pathname = new NextRequest(`http://localhost:3000${path}`).nextUrl.pathname;
 
         expect(result?.status, label).toBe(isAdminSignInPath(pathname) ? 200 : (classifyAdminProxyRequest({ pathname, accept: headers.accept ?? null }) === "browser-navigation" ? 307 : 401));
-        expect(authMocks.session, label).toHaveBeenCalledTimes(isAdminSignInPath(pathname) ? 0 : 1);
         // The header-only path would return a Response carrying a nonce CSP.
         if (isAdminSignInPath(pathname)) expect(result?.headers?.get("content-security-policy"), label).toContain("\'nonce-");
       }
@@ -197,8 +189,6 @@ describe("Property 16 (1): admin surface always takes the native Admin auth path
 
       expect(response?.status, path).toBe(503);
     }
-
-    expect(authMocks.session).not.toHaveBeenCalled();
   });
 
   it("the matcher covers every admin path once URL-normalised, including _next/data forms", () => {
@@ -249,7 +239,6 @@ describe("Property 16 (2): checkout and account get exactly one nonce CSP writer
 
         if (isMatched && underProtected) {
           total += 1;
-          authMocks.session.mockClear();
 
           const response = await run(path, headers);
           const policy = response?.headers?.get("content-security-policy") ?? null;
@@ -258,7 +247,6 @@ describe("Property 16 (2): checkout and account get exactly one nonce CSP writer
           expect(policy, label).not.toBeNull();
           expect((policy ?? "").match(/'nonce-/g), label).toHaveLength(1);
           expect(response?.headers.get("x-middleware-request-content-security-policy"), label).toBe(policy);
-          expect(authMocks.session, label).not.toHaveBeenCalled();
           // No static CSP on the same path.
           expect(staticRegex.test(pathname), label).toBe(false);
           // Production tier: no inline/eval scripts.

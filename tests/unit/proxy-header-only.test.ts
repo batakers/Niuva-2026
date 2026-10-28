@@ -2,9 +2,6 @@ import { NextRequest, type NextFetchEvent } from "next/server";
 import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const authMocks = vi.hoisted(() => ({ session: vi.fn() }));
-vi.mock("@/lib/auth/admin-engine", () => ({ getAdminAuth: () => ({ api: { getSession: authMocks.session } }) }));
-
 import proxy, { config } from "@/proxy";
 import { buildContentSecurityPolicy } from "@/lib/security/csp";
 
@@ -32,12 +29,9 @@ function matches(url: string, headers?: Record<string, string>): boolean {
 }
 
 beforeEach(() => {
-  authMocks.session.mockClear();
-  authMocks.session.mockClear();
   vi.stubEnv("BETTER_AUTH_SECRET", "test-only-admin-secret-at-least-32-characters");
   vi.stubEnv("BETTER_AUTH_URL", "http://localhost:3000");
   vi.stubEnv("DATABASE_URL", "postgresql://localhost/niuva_test");
-  authMocks.session.mockResolvedValue(null);
 });
 
 afterEach(() => {
@@ -45,7 +39,7 @@ afterEach(() => {
 });
 
 describe("proxy header-only path", () => {
-  it("writes nonce + CSP and never calls Admin auth for /checkout and /account", async () => {
+  it("writes nonce + CSP and never applies the Admin gate to /checkout and /account", async () => {
     for (const pathname of HEADER_ONLY_PATHS) {
       const response = await run(pathname, { accept: "text/html" });
       const policy = response.headers.get("content-security-policy");
@@ -53,9 +47,6 @@ describe("proxy header-only path", () => {
       expect(policy, pathname).toContain("'nonce-");
       expect(response.status, pathname).toBe(200);
     }
-
-    expect(authMocks.session).not.toHaveBeenCalled();
-    expect(authMocks.session).not.toHaveBeenCalled();
   });
 
   it("does not need Admin auth credentials (no 503)", async () => {
@@ -118,12 +109,9 @@ describe("proxy header-only path", () => {
 });
 
 describe("proxy Admin auth path is unchanged for admin", () => {
-  it("still goes through the Admin auth handler for /admin and /api/admin", async () => {
-    await run("/admin/orders", { accept: "text/html" });
-    await run("/api/admin/orders", { accept: "application/json" });
-
-    expect(authMocks.session).toHaveBeenCalledTimes(2);
-    expect(authMocks.session).toHaveBeenCalledTimes(2);
+  it("still goes through the Admin gate for /admin and /api/admin", async () => {
+    expect((await run("/admin/orders", { accept: "text/html" })).status).toBe(307);
+    expect((await run("/api/admin/orders", { accept: "application/json" })).status).toBe(401);
   });
 
   it("keeps the 503 for admin without credentials but not for header-only paths", async () => {
@@ -133,12 +121,11 @@ describe("proxy Admin auth path is unchanged for admin", () => {
     expect((await run("/checkout")).status).toBe(200);
   });
 
-  it("sends anything that is not explicitly header-only to Admin auth", async () => {
+  it("sends anything that is not explicitly header-only to the Admin gate", async () => {
     for (const pathname of ["/Admin/orders", "/ADMIN", "/api/admin", "/services", "/checkoutx"]) {
-      authMocks.session.mockClear();
-      await run(pathname, { accept: "text/html" });
+      const response = await run(pathname, { accept: "text/html" });
 
-      expect(authMocks.session, pathname).toHaveBeenCalledTimes(1);
+      expect(response.status, pathname).toBe(pathname.startsWith("/api/") ? 401 : 307);
     }
   });
 });
