@@ -94,7 +94,8 @@ describe("public Google consent service", () => {
   });
   it.each(["terms", "privacy"] as const)("keeps the approved %s content addressable independently of future draft revisions", async document => {
     const snapshot = await readApprovedCustomerPolicy(document);
-    const approvedChecksums = { terms: "bcda22e9fb86b2eaf2964db748b334f051707848733fd11979266ae8f95cef67", privacy: "5caff9ae97deed9a6fb427c18b36a6cec704ab4563ac74b9921c6f7eebafbb87" };
+    // Owner-approved public text, 28 October 2026 (TASKS.md).
+    const approvedChecksums = { terms: "33bfd51aca55983c70bcfa1975700f35366761be898c1ecbb19f69f7a2f12635", privacy: "ffba93ca18a34af1f4aefd3021f9f8c157571133bbfab704da36677ab355f68c" };
     expect(createHash("sha256").update(snapshot).digest("hex")).toBe(approvedChecksums[document]);
   });
 });

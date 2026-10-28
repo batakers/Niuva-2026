@@ -6,6 +6,7 @@ import { PublicSiteContact, PublicSiteDescription } from "./public-site-informat
 import { isLocalDemoMode } from "@/lib/env/server";
 import { PublicNavigation, type PublicHeaderAction } from "./public-navigation";
 import { B2BContactLink } from "./b2b-contact-link";
+import { isPolicyPublished } from "@/modules/customer-auth/public-policy";
 
 const typography = {
   "--font-body": "var(--font-public-sans)", "--font-body-token": "var(--font-public-sans)",
@@ -108,6 +109,11 @@ export function PublicShell({
             <address className="max-w-sm text-sm not-italic leading-6 text-muted-foreground">
               <PublicSiteContact />
             </address>
+            {isPolicyPublished() ? <nav aria-label="Dokumen legal" className="flex flex-wrap gap-x-5 gap-y-1">
+              {[["/terms", "Syarat Layanan"], ["/privacy", "Kebijakan Privasi"]].map(([href, label]) => (
+                <Link key={href} href={href} className="inline-flex min-h-11 items-center rounded-lg text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">{label}</Link>
+              ))}
+            </nav> : null}
           </div>
         </div>
       </footer>

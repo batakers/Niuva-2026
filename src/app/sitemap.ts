@@ -3,6 +3,7 @@ import type { MetadataRoute } from "next";
 import { publicServices } from "@/features/public/company-content";
 import { getLiveShopProducts, getProjectPreview } from "@/features/frontend-preview/server";
 import { resolveCustomerAppOrigin } from "@/modules/customer-auth/app-origin";
+import { isPolicyPublished } from "@/modules/customer-auth/public-policy";
 
 // Time-based revalidation (Req 16.3, render-strategy.md). The sitemap is a
 // cached Route Handler and reads published portfolio projects, so it refreshes
@@ -35,6 +36,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const entries: MetadataRoute.Sitemap = [
     ...STATIC_PATHS.map((path) => ({ url: absolute(path) })),
+    // Official policies exist only after their recorded publication.
+    ...(isPolicyPublished() ? ["/terms", "/privacy"] : []).map((path) => ({ url: absolute(path) })),
     ...publicServices.map((service) => ({ url: absolute(`/services/${service.slug}`) })),
   ];
 

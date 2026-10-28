@@ -55,8 +55,8 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 | T30 | M4 | DONE | Notifikasi Admin persisten | T06/T26–T29 | Failure terlihat; request/order tetap tersimpan; tanpa WhatsApp otomatis. Integration dan browser lokal lulus; visual Owner/perangkat/AT belum diterima. |
 | T31 | M4 | BLOCKED_INPUT | Dataset dan tarif launch | T15–T19; Owner | SKU/stok fisik/media/berat/dimensi/rule disetujui untuk target; seed lokal bukan aktivasi launch. Review/import verification. |
 | T32 | M5 | DONE | E2E Admin di CI | T02 | Quality pada `4eb8471` sukses, termasuk seluruh 24 journey Owner/Admin/anonim. Regresi landing MFA 6s mencakup respons TOTP 200, navigasi, status ready dan guard 401; sumber auth tidak diubah. [Bukti CI](https://github.com/batakers/Niuva-2026/actions/runs/39155145353). |
-| T33 | M5 | BLOCKED_EXTERNAL | Dua BUY staging | T03–T14/T21–T31 | Dua variasi transaksi sukses; order/stock/payment/email/status konsisten. Hosted records. |
-| T34 | M5 | BLOCKED_EXTERNAL | Satu MAKE staging | T03–T14/T21–T31 | Model→review→estimasi→quote→bayar→produksi/QC→ongkir final→kirim pada request/order benar. Hosted records/operator. |
+| T33 | M5 | BLOCKED_EXTERNAL | Dua BUY staging | T03, akun staging, provider sandbox, T31 (Owner 28 Okt; T14/T19 diuji terpisah) | Dua variasi transaksi sukses; order/stock/payment/email/status konsisten. Hosted records. |
+| T34 | M5 | BLOCKED_EXTERNAL | Satu MAKE staging | T03, akun staging, provider sandbox, T31 (Owner 28 Okt; T14/T19 diuji terpisah) | Model→review→estimasi→quote→bayar→produksi/QC→ongkir final→kirim pada request/order benar. Hosted records/operator. |
 | T35 | M5 | BLOCKED_EXTERNAL | Failure/refund staging | T21–T25 | Duplicate/nominal salah/late/timeout/full refund/manual exception benar dan teraudit. Sandbox. |
 | T36 | M5 | BLOCKED_INPUT | UAT operasi Admin | T15–T20/T32 | Owner/Admin menambah konten, stock, quote, fulfillment dan keuangan dasar tanpa database/source. UAT record Owner masih diperlukan. |
 | T37 | M5 | BLOCKED_EXTERNAL | UI/perangkat/AT | T33–T36 | Route aktual: viewport, keyboard/fokus/error, zoom/reduced motion; fisik/AT dibuktikan terpisah. |
@@ -1197,3 +1197,127 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
   `niuva_d1_proxy_test_20261028` 57 file/519 tes; build default exit 0.
 - Belum diverifikasi: perilaku hosted. Grant per capability dan tanggal
   publikasi tetap keputusan Owner (pertanyaan E1/E6 audit 28 Oktober).
+
+### Keputusan Owner untuk staging, 2026-10-28
+
+Jawaban Owner di sesi kerja atas pertanyaan audit 28 Oktober (E1–E13):
+
+- **E3:** boleh satu deploy ulang Netlify `niuva-t03-staging` dari `main` yang
+  memuat perbaikan proxy (PR #70), tetap Free tanpa kartu; berhenti bila gagal.
+  Deploy belum dijalankan.
+- **E4:** boleh menambah hak role runtime staging setelah daftar dikirim ke
+  Owner dan disetujui. Daftar diajukan: `SELECT, INSERT, UPDATE` pada
+  `public.customer_google_consents` untuk role runtime web; `DELETE` hanya untuk
+  role job pembersihan privasi saat job diaktifkan. **Disetujui Owner** pada
+  hari yang sama. **Dijalankan 28 Oktober** di Neon SQL Editor (database
+  `niuva_staging`, sesi Owner di browser bawaan): sebelum grant, role runtime
+  hanya punya `SELECT, INSERT, UPDATE, DELETE` pada `customer_consents` dan
+  tidak punya hak pada `customer_google_consents`. `GRANT SELECT, INSERT,
+  UPDATE` berhasil; `information_schema.role_table_grants` kini menampilkan
+  ketiga hak itu pada `customer_google_consents`, tanpa `DELETE`. Hak kolom
+  `customer_consents.method` tercakup oleh hak tingkat tabel. Perilaku
+  aplikasi hosted belum diverifikasi.
+- **E13:** label cabang Neon `production` yang dipakai staging diganti menjadi
+  `staging`. **Dijalankan 28 Oktober** lewat Rename di Neon Console; ID cabang,
+  endpoint dan connection string tidak berubah, binding aplikasi memakai
+  marker `deployment_database_bindings`, bukan nama cabang.
+- **E1:** akun Customer staging memakai **daftar email penguji** (opsi a), bukan
+  pendaftaran publik; policy publik tidak diterbitkan untuk staging. Owner
+  memberikan dua email penguji Customer. Karena repository publik, alamat tidak
+  ditulis di Git dan hanya dipasang melalui environment staging. Jalur
+  allowlist staging belum ada di kode (D3).
+- **E2:** satu akun Owner dan satu akun Admin uji coba (Faiz, karena Rheza
+  berhalangan) dengan dua email berbeda yang diberikan Owner; alamat tidak
+  ditulis di Git. Satu email Owner sama dengan salah satu email penguji
+  Customer; sistem Admin dan Customer memakai tabel auth terpisah.
+- **E8:** T33/T34 boleh dimulai setelah T03, akun staging, provider sandbox dan
+  dataset T31 siap; T14/T19 tetap diuji terpisah. Kolom dependensi tabel
+  diperbarui sesuai keputusan ini.
+- **E5:** Owner menyatakan akun sandbox Midtrans, Biteship, Resend dan Google
+  OAuth tersedia; object storage staging memakai **Cloudflare R2** (bukan AWS)
+  melalui variabel `S3_*` sesuai `docs/backend/object-storage-contract.md`.
+  Pada 28 Oktober dibuat bucket `niuva-staging-private` dan
+  `niuva-staging-public` (akses publik nonaktif; bucket dev tidak disentuh) dan
+  CORS bucket privat: hanya origin staging, metode `PUT`, header
+  `content-type`, max-age 3600. Form token R2 Object Read & Write yang dibatasi
+  pada dua bucket itu disiapkan. Di Netlify `niuva-t03-staging` diisi
+  `S3_ENDPOINT`, `S3_REGION=auto`, `S3_PRIVATE_BUCKET`, `S3_PUBLIC_BUCKET` dan
+  `CUSTOM_FILE_MAX_BYTES=104857600`. `S3_ACCESS_KEY_ID` dan
+  `S3_SECRET_ACCESS_KEY` diisi Owner; sebelum keduanya ada, konfigurasi S3
+  parsial akan menghentikan startup, jadi jangan deploy dulu. Credential tidak dilihat dan tidak ditulis di Git.
+- **E6:** capability staging yang diizinkan Owner: `payment`, `shipping`,
+  `emailSender`/`emailDelivery`, `objectStorage`, `scheduledJobs`. `refund`
+  ditunda; `googleAuth`, `signup` dan `analytics` tidak disebut sehingga tetap
+  tertutup. Grant belum ditulis ke `ACTIVATION_GRANTS`. Catatan: matriks
+  mewajibkan PUB-POLICY untuk `payment` (dan `passwordAuth`) di staging,
+  sedangkan E1 menetapkan policy tidak diterbitkan untuk staging. Owner
+  memutuskan (28 Oktober) untuk **menerbitkan Syarat & Privasi v1.0 secara
+  resmi untuk publik** sehingga PUB-POLICY dapat tertutup; keputusan E1
+  tentang penerbitan policy diganti oleh keputusan ini. Owner menegaskan
+  pilihan ini setelah diberi tahu bahwa teks v1.0 masih memuat catatan review
+  internal dan klaim provider usang: versi publik bersih akan disusun, diberi
+  checksum baru dan disetujui ulang Owner sebelum tanggal ditetapkan. Jawaban
+  Owner 28 Oktober untuk draf publik: bukti persetujuan disimpan **30 hari**
+  setelah akun ditutup (kode saat ini menghapusnya langsung lewat cascade,
+  jadi perlu perubahan kode dan job); hosting production akan berbeda dari
+  staging, sehingga policy menyebut provider saat ini dan pergantian menjadi
+  versi baru; pemberitahuan insiden 3×24 jam menjadi tanggung jawab Owner;
+  Owner menerbitkan **tanpa review konsultan hukum** dan menjadi pengesah.
+  Draf: `docs/legal/public-terms-v1.0-review.md` dan
+  `docs/legal/public-privacy-v1.0-review.md`; wilayah akun Resend belum
+  diverifikasi. Belum ada halaman publik Syarat/Privasi (hanya
+  `/auth-test-policy`), dan file policy dibaca dari disk saat runtime
+  sehingga bundling Netlify perlu diperiksa. Tanggal
+  `publishedAt` dan `effectiveAt` belum diberikan, jadi
+  `PUBLIC_CUSTOMER_POLICY` belum diubah. Penerbitan tidak membuka `signup` (tetap butuh grant dan PUB-AGE).
+- **E7:** sumber dataset ditunjuk Owner: Shop =
+  `docs/source/Dataset Shop Niuva/` (manifest `catalog-seed.json`, 8 produk,
+  32 varian, approval publish 2026-09-18: 3 ready-made, 5 draft custom); jasa
+  MAKE = `docs/source/Pricelist 3D Print Niuva.xlsx`. Owner memutuskan
+  (28 Oktober) bahwa **kedelapan produk dan 32 varian siap jual** (tidak ada
+  draft lagi; menggantikan approval 2026-09-18 di
+  `catalog-publish-decisions.json`, yang belum diperbarui). Produk custom yang
+  sudah ada di Shop tetap dijual sebagai produk Shop; MAKE hanya untuk desain
+  yang dikirim Customer. Harga dan berat tidak
+  boleh 0 (seed saat ini: harga ≥ Rp20.000, berat 50–200 g, tidak ada nol).
+  Dataset hanya mencatat ukuran produk satu dimensi (8/12/15 cm), bukan
+  dimensi paket. Owner menginstruksikan (28 Oktober) pengisian **dimensi paket
+  perkiraan** yang dapat diubah Owner di Admin (form varian sudah memuat
+  panjang/lebar/tinggi): kelas 8 cm → 12 × 10 × 6 cm; kelas 12 cm →
+  16 × 12 × 10 cm; kelas 15 cm → 20 × 15 × 12 cm. Nilai ini estimasi, bukan
+  hasil ukur; berat volume (P×L×T/6000) semuanya di bawah 1 kg.
+  Rule pricing custom boleh diaktifkan di DB staging. Belum siap: dimensi
+  perkiraan belum dimasukkan ke manifest, dan `scripts/seed-catalog.ts` hanya
+  menerima database loopback sehingga impor ke staging butuh jalur terpisah.
+- **E9:** di staging, job dipicu manual; jadwal production diputuskan nanti.
+- E10–E12 belum dijawab.
+
+### Policy publik v1.0 dan bukti persetujuan 30 hari, 2026-10-28
+
+Atas persetujuan Owner atas draf publik ("Setuju, lanjutkan"), branch
+`claude/public-policy-v1`:
+
+- Teks publik dipasang di `src/content/customer-policy/{terms,privacy}-v1.0.md`
+  (versi dan tanggal dirender dari metadata, bukan bagian teks) dengan
+  checksum baru di `PUBLIC_CUSTOMER_POLICY`; metadata approval kini 28
+  Oktober. `publishedAt`/`effectiveAt` tetap `null`.
+- Route `/terms` dan `/privacy` (komponen `PublicPolicyPage`) mengembalikan 404
+  sampai `isPolicyPublished()`; tautan footer dan entri sitemap juga hanya
+  muncul setelah terbit. `outputFileTracingIncludes` memasukkan kedua file teks
+  ke bundle route.
+- Model/migration baru `CustomerClosedConsentProof`
+  (`20261028120000_customer_closed_consent_proofs`, tabel baru, non-destruktif):
+  penutupan akun menyalin persetujuan ke digest email tanpa profil, kedaluwarsa
+  30 hari; cleanup privasi menghapusnya (counter `closedConsentProofs`).
+- Bukti lokal: lint 0 error/4 warning lama; typecheck lulus; unit 132/1.489;
+  backend 115/908 (termasuk `tests/backend/public-policy-pages.test.ts`);
+  integration 57/520 pada database test terisolasi baru
+  `niuva_d1_proxy_test_20261028` setelah migration diterapkan; build lulus dan
+  nft route memuat kedua file teks. Browser lokal: `/terms` dan `/privacy`
+  dirender dengan tanggal sementara yang lalu dikembalikan ke `null`; 375 px
+  tanpa overflow halaman, tabel menggulir di wadahnya.
+- Belum: wilayah akun Resend (penanda `[PERLU DICEK]` masih di teks privasi,
+  dijaga tes agar tidak terbit); tanggal terbit dari Owner; migration dan hak
+  role runtime (`INSERT` saat penutupan, `SELECT`/`DELETE` untuk cleanup) di
+  Neon staging; jalur akun Customer staging (D3). Tampilan belum direview
+  Owner; hosted belum diverifikasi.

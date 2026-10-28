@@ -22,7 +22,7 @@ Netlify, Cloudflare Workers, Neon Auth, atau runtime khusus hosting.
 | --- | --- | --- |
 | Sumber deployment | GitHub `batakers/Niuva-2026`, `main`, SHA `48eacd4efb50c50b62c1fa12145b3392902ed6fa`; `git ls-remote` cocok pada pemeriksaan ini | Periksa lagi sebelum deployment; jangan mengirim diff lokal yang belum committed |
 | Aplikasi | Render `niuva-staging-free`, Node, Singapore, Free 0.1 CPU / 512 MB, Auto-Deploy **Off**, health check `/`; satu submit dicoba | Ditahan dialog Add Card sebelum service/build dibuat; form dibatalkan, dashboard mengonfirmasi belum ada service. Tidak ada origin aplikasi publik |
-| Database | Neon project `NIUVA`, Free, Singapore, PostgreSQL 18; Owner menetapkannya khusus staging. Database baru `niuva_staging`, 38 migration, satu role runtime dan marker staging telah diverifikasi | Branch default tetap berlabel `production`; resource ini khusus staging sesuai izin Owner. Tidak memakai database default untuk aplikasi atau mengimpor data Customer |
+| Database | Neon project `NIUVA`, Free, Singapore, PostgreSQL 18; Owner menetapkannya khusus staging. Database baru `niuva_staging`, 38 migration, satu role runtime dan marker staging telah diverifikasi | Branch default berlabel `staging` sejak 28 Oktober (sebelumnya `production`; diganti atas keputusan Owner E13); resource ini khusus staging sesuai izin Owner. Tidak memakai database default untuk aplikasi atau mengimpor data Customer |
 | Database existing | `niuva_test` lokal serta database Customer/`niuva_dev` dipertahankan | Tidak disalin ke staging; tidak reset/drop |
 | Provider | Seluruh group Biteship/Midtrans/Google/Resend/R2/Admin mail tidak diisi pada tahap ini | Request provider transaksi 0; grants dan policy publik tetap tertutup |
 
