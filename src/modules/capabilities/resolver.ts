@@ -7,6 +7,7 @@ import {
 import { hasActivationGrant as defaultHasActivationGrant } from "../../lib/env/deployment";
 import { appError } from "../shared/errors";
 import { getAgeGateStatus } from "../customer-auth/age-declaration";
+import { isPolicyPublished } from "../customer-auth/public-policy";
 
 import { CAPABILITY_MATRIX } from "./matrix";
 import {
@@ -43,9 +44,15 @@ export type PolicyGateReader = Readonly<{
   getStatus: (gate: PolicyGate) => PolicyGateStatus;
 }>;
 
-/** Only the implemented self-declaration closes PUB-AGE; policy remains fail-closed. */
+/**
+ * PUB-AGE closes through the implemented self-declaration; PUB-POLICY only
+ * after the official policy records an actual publication. PUB-GUARDIAN stays
+ * open (child accounts are out of scope).
+ */
 export const DEFAULT_POLICY_GATE_READER: PolicyGateReader = Object.freeze({
-  getStatus: (gate: PolicyGate): PolicyGateStatus => ({ closed: gate === "PUB-AGE" && getAgeGateStatus().closed }),
+  getStatus: (gate: PolicyGate): PolicyGateStatus => ({
+    closed: gate === "PUB-AGE" ? getAgeGateStatus().closed : gate === "PUB-POLICY" && isPolicyPublished(),
+  }),
 });
 
 export type CapabilityContext = Readonly<{

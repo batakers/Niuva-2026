@@ -1,3 +1,5 @@
+export type PolicyPublication = Readonly<{ publishedAt: string | null; effectiveAt: string | null }>;
+
 // Owner approved the content and identifiers on 24 October; publication is a separate gate.
 export const PUBLIC_CUSTOMER_POLICY = Object.freeze({
   ownerApprovedAt: "2026-10-24",
@@ -17,3 +19,16 @@ export const PUBLIC_CUSTOMER_POLICY = Object.freeze({
     sha256: "5caff9ae97deed9a6fb427c18b36a6cec704ab4563ac74b9921c6f7eebafbb87",
   }),
 });
+
+/**
+ * PUB-POLICY closes only after the Owner records an actual publication: both
+ * ISO timestamps set, publication not after the effective time, and the
+ * effective time reached. Setting the dates is the publication act itself.
+ */
+export function isPolicyPublished(policy: PolicyPublication = PUBLIC_CUSTOMER_POLICY, now: number = Date.now()): boolean {
+  if (policy.publishedAt === null || policy.effectiveAt === null) return false;
+  const published = Date.parse(policy.publishedAt);
+  const effective = Date.parse(policy.effectiveAt);
+
+  return Number.isFinite(published) && Number.isFinite(effective) && published <= effective && effective <= now;
+}
