@@ -1320,7 +1320,15 @@ Atas persetujuan Owner atas draf publik ("Setuju, lanjutkan"), branch
   dokumentasi "Choosing a Region": data akun Resend disimpan di Amerika Serikat
   apa pun region kirimnya; teks privasi diperbarui dan checksum dihitung ulang.
   Tanpa domain terverifikasi, Resend tidak dapat mengirim ke email penguji lain.
-- Belum: tanggal terbit dari Owner; domain pengirim Resend; migration dan hak
+- Owner menetapkan (28 Oktober, "Hari ini saja") `publishedAt` dan
+  `effectiveAt` = `2026-10-28T00:00:00+07:00`. PUB-POLICY kini tertutup;
+  `ACTIVATION_GRANTS` tetap kosong sehingga capability staging tetap ditolak
+  sampai grant tercatat. Tes resolver/Midtrans memakai pembaca gate
+  "belum terbit" eksplisit untuk menjaga jalur `POLICY_NOT_PUBLISHED`. Setelah
+  perubahan: lint 0 error/4 warning lama, typecheck lulus, unit 132/1.490,
+  backend 115/909, integration 57/520, build lulus. Halaman tayang hanya di
+  deployment yang menjalankan commit ini; hosted belum diverifikasi.
+- Belum: domain pengirim Resend; migration dan hak
   role runtime (`INSERT` saat penutupan, `SELECT`/`DELETE` untuk cleanup) di
   Neon staging; jalur akun Customer staging (D3). Tampilan belum direview
   Owner; hosted belum diverifikasi.

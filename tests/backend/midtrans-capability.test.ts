@@ -98,8 +98,19 @@ describe("Midtrans gateway capability resolution", () => {
 
   it("denies POLICY_NOT_PUBLISHED in staging while the policy gate is open", async () => {
     await expectDenied(
-      { ...baseConfig, capabilityEnv: { NIUVA_DEPLOYMENT_TIER: "staging" } },
+      {
+        ...baseConfig,
+        capabilityEnv: { NIUVA_DEPLOYMENT_TIER: "staging" },
+        gates: { getStatus: (gate) => ({ closed: gate !== "PUB-POLICY" }) },
+      },
       "POLICY_NOT_PUBLISHED",
+    );
+  });
+
+  it("denies staging payment without a recorded grant after the policy is published", async () => {
+    await expectDenied(
+      { ...baseConfig, capabilityEnv: { NIUVA_DEPLOYMENT_TIER: "staging" } },
+      "ACTIVATION_NOT_GRANTED",
     );
   });
 
