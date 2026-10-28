@@ -68,19 +68,45 @@ export function resolveProviderMode(mode: ProviderMode | undefined): ProviderMod
 }
 
 /**
+ * One recorded Owner activation instruction for a capability. A grant is a
+ * reviewed source change, never an env flag, so every entry names where the
+ * explicit instruction is recorded and the date it was given.
+ */
+export type ActivationGrant = Readonly<{
+  capability: string;
+  /** Repository path#anchor of the dated Owner instruction, e.g. in TASKS.md. */
+  instruction: string;
+  /** ISO date (YYYY-MM-DD) of the instruction. */
+  grantedOn: string;
+}>;
+
+/**
  * Activation grants per tier. Intentionally empty: no task grants activation,
  * so `live` (and any provider activation) stays denied. A grant needs a
- * separate explicit instruction (Req 13.5).
+ * separate explicit instruction (Req 13.5). Production entries are ignored
+ * until a production activation path is designed and approved separately.
  */
-const ACTIVATION_GRANTS: Readonly<Record<DeploymentTier, readonly string[]>> = {
-  "local-test": [],
-  production: [],
-  staging: [],
-};
+export const ACTIVATION_GRANTS: Readonly<Record<DeploymentTier, readonly ActivationGrant[]>> = Object.freeze({
+  "local-test": Object.freeze([]),
+  production: Object.freeze([]),
+  staging: Object.freeze([]),
+});
+
+const GRANT_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** True for an entry with a non-empty instruction reference and a valid date. */
+export function isRecordedActivationGrant(grant: ActivationGrant): boolean {
+  return grant.instruction.trim().length > 0
+    && GRANT_DATE.test(grant.grantedOn)
+    && !Number.isNaN(Date.parse(`${grant.grantedOn}T00:00:00Z`));
+}
 
 export function hasActivationGrant(
   tier: DeploymentTier,
   capability: string,
+  grants: Readonly<Record<DeploymentTier, readonly ActivationGrant[]>> = ACTIVATION_GRANTS,
 ): boolean {
-  return ACTIVATION_GRANTS[tier].includes(capability);
+  if (tier === "production") return false;
+
+  return grants[tier].some((grant) => grant.capability === capability && isRecordedActivationGrant(grant));
 }

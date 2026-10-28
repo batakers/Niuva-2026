@@ -1174,3 +1174,26 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 - Belum diverifikasi: E2E default/public-auth, build Netlify/OpenNext hosted,
   cookie/CSP hosted. T03 tetap **BLOCKED_EXTERNAL**; deploy ulang memerlukan
   izin Owner baru.
+
+### T03 — mekanisme grant staging dan gate PUB-POLICY, 2026-10-28
+
+- Kontrak hosted melarang satu flag yang melewati guard lain
+  (`docs/legal/customer-public-runtime-contract.md`, bagian Hosted). Karena itu
+  grant aktivasi tetap berupa perubahan source yang direview, bukan env:
+  `ACTIVATION_GRANTS` (`src/lib/env/deployment.ts`) kini berisi entri
+  `{ capability, instruction, grantedOn }`. Entri tanpa rujukan instruksi atau
+  tanggal valid ditolak. Tier production selalu ditolak meski ada entri.
+  Seluruh tier tetap **kosong**; tidak ada grant yang diisi.
+- Gate PUB-POLICY pada default reader (`src/modules/capabilities/resolver.ts`)
+  tertutup hanya bila `PUBLIC_CUSTOMER_POLICY.publishedAt` dan `effectiveAt`
+  tercatat, berurutan, dan sudah berlaku (`isPolicyPublished`). Keduanya masih
+  `null`, sehingga payment/refund/Google/password/privacy/analytics staging
+  tetap `POLICY_NOT_PUBLISHED`. Mengisi tanggal adalah tindakan publikasi Owner.
+- Tes baru `tests/unit/activation-grants.test.ts` mengunci grant kosong per
+  tier, validasi entri, penolakan production, pemisahan tier, dan aturan
+  publikasi policy.
+- Gate lokal serial: lint 0 error (4 warning existing); typecheck exit 0;
+  unit 132 file/1.489 tes; backend 114 file/899 tes; integration
+  `niuva_d1_proxy_test_20261028` 57 file/519 tes; build default exit 0.
+- Belum diverifikasi: perilaku hosted. Grant per capability dan tanggal
+  publikasi tetap keputusan Owner (pertanyaan E1/E6 audit 28 Oktober).
