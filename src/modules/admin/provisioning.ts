@@ -72,7 +72,7 @@ export function requiresAdminProfileUpdate(
     isActive: boolean;
     role: "OWNER" | "ADMIN";
   }> | null,
-  desired: AdminProvisioningInput,
+  desired: Pick<AdminProvisioningInput, "displayName" | "role">,
 ): boolean {
   return existing !== null && (
     existing.displayName !== desired.displayName ||
