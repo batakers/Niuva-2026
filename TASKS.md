@@ -1243,8 +1243,11 @@ Jawaban Owner di sesi kerja atas pertanyaan audit 28 Oktober (E1–E13):
   pada dua bucket itu disiapkan. Di Netlify `niuva-t03-staging` diisi
   `S3_ENDPOINT`, `S3_REGION=auto`, `S3_PRIVATE_BUCKET`, `S3_PUBLIC_BUCKET` dan
   `CUSTOM_FILE_MAX_BYTES=104857600`. `S3_ACCESS_KEY_ID` dan
-  `S3_SECRET_ACCESS_KEY` diisi Owner; sebelum keduanya ada, konfigurasi S3
-  parsial akan menghentikan startup, jadi jangan deploy dulu. Credential tidak dilihat dan tidak ditulis di Git.
+  `S3_SECRET_ACCESS_KEY` diisi Owner dari token R2 Object Read & Write yang
+  dibatasi pada dua bucket staging, ditandai secret. Pemeriksaan nama
+  variabel 28 Oktober: keenam `S3_*` ada dan tidak ada `R2_*`; nilai tidak
+  dibuka. Validitas kredensial dan akses bucket belum diverifikasi sampai
+  deploy/smoke hosted. Credential tidak dilihat dan tidak ditulis di Git.
 - **E6:** capability staging yang diizinkan Owner: `payment`, `shipping`,
   `emailSender`/`emailDelivery`, `objectStorage`, `scheduledJobs`. `refund`
   ditunda; `googleAuth`, `signup` dan `analytics` tidak disebut sehingga tetap
