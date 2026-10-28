@@ -123,7 +123,8 @@ describe("capability resolver: tier x mode x capability", () => {
 
         expect(decision.allowed).toBe(expected);
         expect(tier === "production" && decision.allowed).toBe(false);
-        expect(capability === "signup" && decision.allowed).toBe(false);
+        // Signup opens only through the staging E1 grant.
+        expect(capability === "signup" && tier !== "staging" && decision.allowed).toBe(false);
       }
     }
   });
@@ -234,10 +235,10 @@ describe("capability resolver: denial reasons and precedence", () => {
     ).toBe("RESOURCE_NOT_BOUND");
   });
 
-  it("signup is denied in every tier and mode with default gates and grants", () => {
+  it("signup is allowed only for staging sandbox/mock with default gates and grants", () => {
     for (const tier of DEPLOYMENT_TIERS) {
       for (const mode of PROVIDER_MODES) {
-        expect(decide("signup", { env: env(tier, mode) }).allowed).toBe(false);
+        expect(decide("signup", { env: env(tier, mode) }).allowed, `${tier}/${mode}`).toBe(tier === "staging" && mode !== "live");
       }
     }
 
@@ -260,7 +261,9 @@ describe("capability resolver: denial reasons and precedence", () => {
       "POLICY_NOT_PUBLISHED",
     );
     expect(reasonOf("signup", { ...base, gates: policyOnly })).toBe("AGE_GATE_NOT_CLOSED");
-    expect(reasonOf("signup", { env: base.env })).not.toBe("ALLOWED");
+    // Published policy, implemented age control and the E1 grant open it.
+    expect(reasonOf("signup", { env: base.env })).toBe("ALLOWED");
+    expect(reasonOf("signup", { env: base.env, hasActivationGrant: () => false })).toBe("ACTIVATION_NOT_GRANTED");
   });
 
   it("ACTIVATION_NOT_GRANTED is last: all else satisfied but no grant", () => {

@@ -1,6 +1,7 @@
 import { isCustomerEmailTestRuntime, isCustomerPublicAuthTestRuntime } from "./email-test-runtime";
 import { getInternalAuthConfig, INTERNAL_TERMS_VERSION, INTERNAL_PRIVACY_VERSION } from "./internal-testing";
-import { PUBLIC_CUSTOMER_POLICY } from "./public-policy";
+import { isPolicyPublished, PUBLIC_CUSTOMER_POLICY } from "./public-policy";
+import { getStagingCustomerTesters } from "./staging-testers";
 import { appError } from "../shared/errors";
 import { assertRecordedAgeDeclaration, type RecordedAgeDeclaration } from "./age-declaration";
 // Owner-provided documents are required. Never replace these with invented policy.
@@ -15,6 +16,8 @@ export function getCustomerAuthLegalDocuments(): CustomerAuthLegalDocuments | nu
   };
   const publicDocuments = getPublicCustomerAuthLegalDocuments();
   if (publicDocuments) return publicDocuments;
+  const stagingDocuments = getStagingCustomerAuthLegalDocuments();
+  if (stagingDocuments) return stagingDocuments;
   // A misconfigured public fixture must not fall back to another consent scope.
   if (process.env.NIUVA_CUSTOMER_PUBLIC_AUTH_TEST === "true") return null;
   if (isCustomerEmailTestRuntime()) return {
@@ -29,6 +32,17 @@ export function getPublicCustomerAuthLegalDocuments(): CustomerAuthLegalDocument
   return {
     terms: { href: "/auth-test-policy?document=terms", version: PUBLIC_CUSTOMER_POLICY.terms.version },
     privacy: { href: "/auth-test-policy?document=privacy", version: PUBLIC_CUSTOMER_POLICY.privacy.version },
+  };
+}
+
+/** Staging testers (E1) consent to the published v1.0 policy; nothing before publication. */
+export function getStagingCustomerAuthLegalDocuments(
+  source: Readonly<Record<string, string | undefined>> = process.env,
+): CustomerAuthLegalDocuments | null {
+  if (!getStagingCustomerTesters(source) || !isPolicyPublished()) return null;
+  return {
+    terms: { href: "/terms", version: PUBLIC_CUSTOMER_POLICY.terms.version },
+    privacy: { href: "/privacy", version: PUBLIC_CUSTOMER_POLICY.privacy.version },
   };
 }
 

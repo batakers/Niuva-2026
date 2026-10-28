@@ -89,6 +89,10 @@ bukan keberhasilan login, transaksi, upload, atau delivery.
    dengan kode sekarang adalah server development. Jangan mengubah NODE_ENV
    production build untuk melewati guard; dukungan staging membutuhkan perubahan
    kontrak runtime tersendiri. Callback lokal membutuhkan akses yang disepakati.
+   **Pembaruan 29 Oktober 2026 (D3):** kontrak itu kini ada. Guard meloloskan
+   `NODE_ENV=production` hanya bila env pemanggil menyatakan tier `staging`
+   secara eksplisit; production, tier kosong dan provider live tetap ditolak,
+   lalu resolver tetap menuntut grant, mode, config dan policy.
 3. **Browser integration masih membutuhkan pekerjaan.** CSP sekarang membatasi
    script dan koneksi ke origin sendiri. Clerk browser SDK, Snap embed, dan
    direct PUT R2 memerlukan origin provider yang ditentukan setelah konfigurasi

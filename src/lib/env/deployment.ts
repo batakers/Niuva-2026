@@ -68,9 +68,16 @@ export function resolveDeploymentTier(
  * never indexed even when the tier variable is missing from the build.
  */
 export function isSearchIndexingAllowed(source: Readonly<Record<string, string | undefined>>): boolean {
-  const tier = deploymentEnvironmentShape.NIUVA_DEPLOYMENT_TIER.safeParse(source.NIUVA_DEPLOYMENT_TIER);
+  return readExplicitDeploymentTier(source) === "production";
+}
 
-  return tier.success && tier.data === "production";
+/** The tier the caller's env states explicitly; unset or unrecognized gives undefined. */
+export function readExplicitDeploymentTier(
+  source: Readonly<Record<string, string | undefined>> | undefined,
+): DeploymentTier | undefined {
+  const tier = deploymentEnvironmentShape.NIUVA_DEPLOYMENT_TIER.safeParse(source?.NIUVA_DEPLOYMENT_TIER);
+
+  return tier.success ? tier.data : undefined;
 }
 
 /** Unset mode is `mock`, the least-privileged mode. */
@@ -95,16 +102,17 @@ const OWNER_STAGING_DECISION = "TASKS.md#keputusan-owner-untuk-staging-2026-10-2
 
 /**
  * Activation grants per tier. Each grant needs a separate explicit instruction
- * (Req 13.5). Staging holds the Owner's E6 decision of 28 October 2026;
- * refund, Google login, signup, analytics and privacy capabilities stay
- * ungranted. `live` is still in no tier's matrix modes. Production entries are
- * ignored until a production activation path is designed and approved.
+ * (Req 13.5). Staging holds the Owner's E6 decision of 28 October 2026 and
+ * the E1 tester accounts (signup and password login, limited to the listed
+ * tester addresses); refund, Google login, analytics and privacy capabilities
+ * stay ungranted. `live` is still in no tier's matrix modes. Production entries
+ * are ignored until a production activation path is designed and approved.
  */
 export const ACTIVATION_GRANTS: Readonly<Record<DeploymentTier, readonly ActivationGrant[]>> = Object.freeze({
   "local-test": Object.freeze([]),
   production: Object.freeze([]),
   staging: Object.freeze(
-    ["payment", "shipping", "emailSender", "emailDelivery", "objectStorage", "scheduledJobs"].map(capability =>
+    ["payment", "shipping", "emailSender", "emailDelivery", "objectStorage", "scheduledJobs", "signup", "passwordAuth"].map(capability =>
       Object.freeze({ capability, instruction: OWNER_STAGING_DECISION, grantedOn: "2026-10-28" })),
   ),
 });

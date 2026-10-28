@@ -10,6 +10,7 @@ import {
   requireAllowed,
   type CapabilityContext,
 } from "@/modules/capabilities/resolver";
+import { readExplicitDeploymentTier } from "@/lib/env/deployment";
 import { assertNonProductionProvider } from "@/modules/providers/non-production";
 import { appError, isAppError } from "@/modules/shared/errors";
 
@@ -280,6 +281,7 @@ function assertBiteshipTestConfiguration(
 ): void {
   // Legacy guard first, exactly as before: the resolver can only tighten it.
   assertNonProductionProvider({
+    deploymentTier: readExplicitDeploymentTier(config.capabilityEnv),
     isLiveProvider: config.apiKey.startsWith("biteship_live."),
     nodeEnv:
       config.nodeEnv === "production" ||

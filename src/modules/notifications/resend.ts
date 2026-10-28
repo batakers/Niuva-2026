@@ -5,6 +5,7 @@ import {
 } from "@/modules/capabilities/resolver";
 import type { CustomPrintNotificationScheduler } from "@/modules/custom-print/service";
 import type { InquiryNotificationScheduler } from "@/modules/inquiry/service";
+import { readExplicitDeploymentTier } from "@/lib/env/deployment";
 import { assertNonProductionProvider } from "@/modules/providers/non-production";
 import { EmailDeliveryError } from "./email-delivery";
 
@@ -159,6 +160,7 @@ export function assertResendDeliveryAllowed(
   config: ResendDeliveryCapabilityConfig,
 ): void {
   assertNonProductionProvider({
+    deploymentTier: readExplicitDeploymentTier(config.capabilityEnv),
     nodeEnv:
       config.nodeEnv === "production" ||
       config.capabilityEnv?.NODE_ENV === "production"

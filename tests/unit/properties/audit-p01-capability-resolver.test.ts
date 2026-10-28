@@ -276,16 +276,17 @@ describe("Property 1: capability resolution is total and fail-closed", () => {
     }
   });
 
-  it("signup is never allowed with the recorded (default) grants, in any tier, mode or env", () => {
+  it("signup opens only through the staging E1 grant, never without a grant, in any tier, mode or env", () => {
+    const gates = { getStatus: () => ({ closed: true }) };
+
     for (const sample of samples) {
       for (const tier of DEPLOYMENT_TIERS) {
         for (const mode of PROVIDER_MODES) {
           const env = { ...sample.env, NIUVA_DEPLOYMENT_TIER: tier, NIUVA_PROVIDER_MODE: mode };
+          const label = `#${sample.seed} ${tier}/${mode}`;
 
-          expect(
-            decide("signup", { env, gates: { getStatus: () => ({ closed: true }) } }).allowed,
-            `#${sample.seed} ${tier}/${mode}`,
-          ).toBe(false);
+          if (tier !== "staging" || mode === "live") expect(decide("signup", { env, gates }).allowed, label).toBe(false);
+          expect(decide("signup", { env, gates, hasActivationGrant: () => false }).allowed, label).toBe(false);
         }
       }
     }

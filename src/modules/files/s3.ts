@@ -5,6 +5,7 @@ import { getObjectStorageConfiguration } from "@/lib/env/object-storage";
 import { validateStartupEnvironment } from "@/lib/env/server";
 import { requireAllowed, type CapabilityContext } from "@/modules/capabilities/resolver";
 import { CUSTOM_FILE_MAX_BYTES } from "@/modules/policy/privacy";
+import { readExplicitDeploymentTier } from "@/lib/env/deployment";
 import { assertNonProductionProvider } from "@/modules/providers/non-production";
 import { createS3ObjectStorageClient } from "@/modules/providers/s3";
 import { appError } from "@/modules/shared/errors";
@@ -57,6 +58,7 @@ export function buildS3CapabilityContext(config: S3PrivateStorageConfig): Capabi
 
 export function assertS3PrivateStorageAllowed(config: S3PrivateStorageConfig): void {
   assertNonProductionProvider({
+    deploymentTier: readExplicitDeploymentTier(config.capabilityEnv),
     provider: "S3 object storage",
     nodeEnv: config.nodeEnv === "production" || config.capabilityEnv?.NODE_ENV === "production" ? "production" : config.nodeEnv,
   });

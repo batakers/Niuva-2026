@@ -117,6 +117,21 @@ describe("Midtrans gateway capability resolution", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it("allows a hosted staging build (NODE_ENV=production) through the explicit tier and the E6 grant", async () => {
+    const hosted = { NIUVA_DEPLOYMENT_TIER: "staging", NIUVA_PROVIDER_MODE: "sandbox", NODE_ENV: "production" };
+    const { fetchMock, result } = run({ ...baseConfig, nodeEnv: "production", capabilityEnv: hosted });
+
+    await expect(result).resolves.toEqual({ token: "snap-token" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps refusing NODE_ENV=production without an explicit staging tier, and production keys anywhere", async () => {
+    for (const tier of [undefined, "production", "local-test"]) {
+      await expectDenied({ ...baseConfig, nodeEnv: "production", capabilityEnv: { NIUVA_DEPLOYMENT_TIER: tier, NIUVA_PROVIDER_MODE: "sandbox", NODE_ENV: "production" } });
+    }
+    await expectDenied({ ...baseConfig, isProduction: true, nodeEnv: "production", capabilityEnv: { NIUVA_DEPLOYMENT_TIER: "staging", NIUVA_PROVIDER_MODE: "sandbox", NODE_ENV: "production" } });
+  });
+
   it("denies ACTIVATION_NOT_GRANTED in staging without a recorded grant", async () => {
     await expectDenied(
       {

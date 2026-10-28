@@ -1,3 +1,4 @@
+import type { DeploymentTier } from "@/lib/env/deployment";
 import type { CapabilityName } from "@/modules/capabilities/types";
 import { appError } from "@/modules/shared/errors";
 
@@ -18,12 +19,22 @@ export const PROVIDER_CAPABILITY: Readonly<Record<string, CapabilityName>> = Obj
   "Resend Customer auth": "emailSender",
 });
 
+/**
+ * Legacy guard, run before the capability resolver. A hosted build always runs
+ * with NODE_ENV=production, so that runtime is refused unless the caller's env
+ * states the `staging` tier explicitly; the resolver then still requires the
+ * grant, sandbox/mock mode, config and policy. Production and an unset or
+ * unknown tier stay refused, and a live provider is refused everywhere.
+ */
 export function assertNonProductionProvider(input: Readonly<{
+  deploymentTier?: DeploymentTier;
   isLiveProvider?: boolean;
   nodeEnv?: RuntimeEnvironment;
   provider: string;
 }>): void {
-  if (input.nodeEnv === "production" || input.isLiveProvider === true) {
+  const productionRuntime = input.nodeEnv === "production" && input.deploymentTier !== "staging";
+
+  if (productionRuntime || input.isLiveProvider === true) {
     throw appError("PROVIDER_UNAVAILABLE", {
       message: `${input.provider} belum diaktifkan untuk production.`,
     });

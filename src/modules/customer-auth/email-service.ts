@@ -7,6 +7,21 @@ import { assertCustomerPolicyAcceptance, assertPresentedPolicyVersions, getCusto
 import { appError } from "@/modules/shared/errors";
 import { AGE_DECLARATION_VERSION } from "./age-declaration";
 import { assertInternalEmail, getInternalAuthConfig, internalExpiry, capInternalExpiry, assertInternalAccountActive, INTERNAL_TERMS_VERSION } from "./internal-testing";
+import { customerAuthTier } from "./app-origin";
+import { assertStagingCustomerTester } from "./staging-testers";
+import { requireAllowed } from "@/modules/capabilities/resolver";
+
+/**
+ * Hosted tiers need the recorded capability grant (production has none) and,
+ * on staging, a listed tester address (Owner decision E1). Local and test
+ * runs keep their own internal/fixture rules.
+ */
+function assertHostedCustomerAccess(email: string, capability: "signup" | "passwordAuth"): void {
+  const tier = customerAuthTier(process.env);
+  if (tier === "local-test") return;
+  requireAllowed(capability);
+  if (tier === "staging") assertStagingCustomerTester(email);
+}
 
 export class CustomerEmailService {
   constructor(
@@ -36,6 +51,7 @@ export class CustomerEmailService {
     const internal = getInternalAuthConfig();
     if (internal || legal.terms.version === INTERNAL_TERMS_VERSION) assertInternalEmail(normalizedEmail, "password", internal);
     await this.throttle("register", normalizedEmail, ip);
+    assertHostedCustomerAccess(normalizedEmail, "signup");
     const passwordHash = await hashPassword(input.password);
     // Never mutate credentials of an existing account through registration.
     if (await this.repository.findCredential(normalizedEmail)) return { handle: null, sent: false };
@@ -59,6 +75,7 @@ export class CustomerEmailService {
     const input = loginSchema.parse(raw);
     const email = normalizeCustomerEmail(input.email);
     await this.throttle("login", email, ip);
+    assertHostedCustomerAccess(email, "passwordAuth");
     const customer = await this.repository.findCredential(email);
     const valid = await verifyPassword(input.password, customer?.passwordCredential?.passwordHash ?? DUMMY_PASSWORD_HASH);
     if (!valid || !customer?.passwordCredential || !customer.emailVerifiedAt) throw appError("UNAUTHORIZED", { message: "Email atau password belum cocok." });
