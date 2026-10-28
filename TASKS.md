@@ -1353,6 +1353,10 @@ Jawaban Owner di sesi kerja atas pertanyaan audit 28 Oktober (E1–E13):
   diimpor). Belum diverifikasi: cookie/sesi, login Admin/Customer, operasi
   provider, migration `customer_closed_consent_proofs` di Neon (belum
   diterapkan). Build hosted pertama yang lulus setelah perbaikan proxy PR #70.
+  Deploy kedua atas izin Owner ("Ya, deploy"): `main` `d6b810b` (PR #74)
+  **Published**, build status dikembalikan ke **Stopped** (dicek). Smoke:
+  `/`, `/terms`, `/privacy`, `/admin/sign-in` 200; `/api/admin/account` 401.
+  Variabel `ADMIN_SMTP_*` kini termuat; pengiriman email Admin belum diuji.
 
 ### D4 — bootstrap Owner staging, 2026-10-28
 
@@ -1365,9 +1369,45 @@ dan ditolak bila sudah ada Owner. Akun dibuat `emailVerified=false`; Owner
 memverifikasi email saat masuk lalu memasang TOTP. Admin Faiz diundang Owner
 lewat `/admin/admins/new` (alur undangan existing). `provisionAdminIdentity`
 dipecah agar logika yang sama berjalan di transaksi binding. Email Admin
-(verifikasi, undangan, reset) memakai grup `ADMIN_SMTP_*` + `ADMIN_EMAIL_FROM`
-yang belum terisi di Netlify; rencana: SMTP Resend `mail.niuva.id`. Belum
-dijalankan terhadap Neon staging.
+(verifikasi, undangan, reset) memakai grup `ADMIN_SMTP_*` + `ADMIN_EMAIL_FROM`.
+Pada 28 Oktober grup ini diisi di Netlify memakai SMTP Resend: host
+`smtp.resend.com`, port 465, user `resend`, pengirim `no-reply@mail.niuva.id`,
+dan `ADMIN_SMTP_PASSWORD` (API key Resend terpisah "Niuva Staging Admin SMTP",
+Sending access, hanya `mail.niuva.id`) diisi Owner sebagai secret (nama
+dicek). Nilai ini baru aktif setelah deploy berikutnya; pengiriman belum
+diuji. Script belum dijalankan terhadap Neon staging.
+
+Migration `20261028120000_customer_closed_consent_proofs` diterapkan ke Neon
+`niuva_staging` pada 28 Oktober lewat Neon MCP (role `neondb_owner`; tanpa
+kredensial melewati agent): satu transaksi berisi DDL migration persis dan
+baris `_prisma_migrations` dengan checksum versi Git (`fa1f23d4…`, konvensi LF
+yang sama dengan 39 migration sebelumnya). Sebelum: 39 selesai, 0 menggantung,
+marker `staging`, 0 Admin/Customer/order. Sesudah: 40 selesai, 0 menggantung,
+tabel dan 3 index ada, 0 baris. Atas persetujuan Owner atas daftar yang
+diajukan (aturan E4), role runtime diberi `SELECT, INSERT, DELETE` pada tabel
+itu (INSERT saat penutupan akun, DELETE untuk cleanup 30 hari); diverifikasi
+lewat `information_schema.role_table_grants`.
+
+Bootstrap Owner staging dijalankan Owner pada 28 Oktober di terminalnya
+(connection string `neondb_owner` dan password diketik tanpa echo; binding ID
+dibaca dari marker staging): keluaran "Owner staging dibuat … role=OWNER".
+Pemeriksaan lewat Neon MCP: tepat satu `admin_profiles` OWNER aktif,
+`emailVerified=false`. Login pertama di `/admin/sign-in` staging mengirim email
+verifikasi yang diterima Owner (bukti pertama pengiriman email Admin hosted
+lewat SMTP Resend `mail.niuva.id`). Owner lalu memverifikasi email, memasang
+TOTP dan masuk Dashboard. Pemeriksaan Neon MCP: `emailVerified=true`,
+`twoFactorEnabled=true`, satu record TOTP, satu sesi aktif `mfaVerified`.
+Undangan Admin belum diuji.
+
+Setelah login, semua halaman daftar Admin staging menampilkan "belum dapat
+dimuat" (`failure_events`: `INTERNAL_ERROR` untuk `/admin`, orders, products,
+customers, custom-print, reports). Penyebab yang terbukti lewat Neon MCP:
+"too many connections for role niuva_staging_runtime"; role dibatasi
+`CONNECTION LIMIT 5` dan lima koneksi idle dipegang instance fungsi Netlify,
+sementara `src/lib/db/prisma.ts` membuka hingga 5 koneksi per instance. Atas
+persetujuan Owner, batas dinaikkan ke 20 (`max_connections` Neon 901); keenam
+halaman kemudian termuat. Kode: pool per instance diturunkan ke 4 (belum
+di-commit/deploy).
 
 ### Grant aktivasi staging E6, 2026-10-28
 
