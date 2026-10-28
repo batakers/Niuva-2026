@@ -80,16 +80,22 @@ export type ActivationGrant = Readonly<{
   grantedOn: string;
 }>;
 
+const OWNER_STAGING_DECISION = "TASKS.md#keputusan-owner-untuk-staging-2026-10-28";
+
 /**
- * Activation grants per tier. Intentionally empty: no task grants activation,
- * so `live` (and any provider activation) stays denied. A grant needs a
- * separate explicit instruction (Req 13.5). Production entries are ignored
- * until a production activation path is designed and approved separately.
+ * Activation grants per tier. Each grant needs a separate explicit instruction
+ * (Req 13.5). Staging holds the Owner's E6 decision of 28 October 2026;
+ * refund, Google login, signup, analytics and privacy capabilities stay
+ * ungranted. `live` is still in no tier's matrix modes. Production entries are
+ * ignored until a production activation path is designed and approved.
  */
 export const ACTIVATION_GRANTS: Readonly<Record<DeploymentTier, readonly ActivationGrant[]>> = Object.freeze({
   "local-test": Object.freeze([]),
   production: Object.freeze([]),
-  staging: Object.freeze([]),
+  staging: Object.freeze(
+    ["payment", "shipping", "emailSender", "emailDelivery", "objectStorage", "scheduledJobs"].map(capability =>
+      Object.freeze({ capability, instruction: OWNER_STAGING_DECISION, grantedOn: "2026-10-28" })),
+  ),
 });
 
 const GRANT_DATE = /^\d{4}-\d{2}-\d{2}$/;

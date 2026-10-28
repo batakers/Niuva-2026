@@ -6,6 +6,7 @@
 // repeat, capability-matrix / capability-resolver / provider-guard-tightening.
 import { describe, expect, it } from "vitest";
 
+import { hasActivationGrant } from "@/lib/env/deployment";
 import { resolveDeployment, getServerCapabilities } from "@/lib/env/server";
 import { CAPABILITY_MATRIX } from "@/modules/capabilities/matrix";
 import {
@@ -290,15 +291,17 @@ describe("Property 1: capability resolution is total and fail-closed", () => {
     }
   });
 
-  it("with default gates and grants, staging/production capabilities needing a grant or gate are denied", () => {
+  it("with default gates and grants, staging/production capabilities open only through a recorded staging grant", () => {
     for (const sample of samples) {
       for (const tier of ["staging", "production"] as const) {
         const env = { ...sample.env, NIUVA_DEPLOYMENT_TIER: tier };
 
         for (const capability of CAPABILITY_NAMES) {
-          // Every staging/production rule requires a grant, which is empty by default.
+          // Every staging/production rule requires a grant; only staging records any.
           expect(CAPABILITY_MATRIX[tier][capability].requiresActivationGrant).toBe(true);
-          expect(decide(capability, { env }).allowed, `#${sample.seed} ${tier}/${capability}`).toBe(false);
+          if (decide(capability, { env }).allowed) {
+            expect(tier === "staging" && hasActivationGrant("staging", capability), `#${sample.seed} ${tier}/${capability}`).toBe(true);
+          }
         }
       }
     }

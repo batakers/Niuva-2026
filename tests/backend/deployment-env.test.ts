@@ -105,7 +105,8 @@ describe("deployment tier and provider mode env", () => {
       }
     }
 
-    for (const tier of DEPLOYMENT_TIERS) {
+    // Staging holds the Owner's recorded E6 grants; other tiers grant nothing.
+    for (const tier of DEPLOYMENT_TIERS.filter(tier => tier !== "staging")) {
       expect(hasActivationGrant(tier, "payment")).toBe(false);
       expect(hasActivationGrant(tier, "emailDelivery")).toBe(false);
     }

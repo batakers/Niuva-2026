@@ -88,12 +88,18 @@ describe("provider-neutral object storage configuration", () => {
     { NODE_ENV: "production", NIUVA_DEPLOYMENT_TIER: "local-test" },
     { NIUVA_DEPLOYMENT_TIER: "production" },
     { NIUVA_PROVIDER_MODE: "live" },
-    { NIUVA_DEPLOYMENT_TIER: "staging" },
-  ])("preserves production, live, and activation gates %#", override => {
+  ])("preserves production and live gates %#", override => {
     const source = { ...storageEnv, ...override };
     expect(() => createS3PrivateObjectStorageFromEnvironment(source)).toThrow();
     expect(() => createPublicMediaStorage(source)).toThrow();
     expect(getObjectStorageConnectOrigin(source.NODE_ENV, source)).toBeUndefined();
+  });
+
+  it("opens staging sandbox only through the recorded E6 objectStorage grant", () => {
+    const source = { ...storageEnv, NIUVA_DEPLOYMENT_TIER: "staging" };
+    expect(() => createS3PrivateObjectStorageFromEnvironment(source)).not.toThrow();
+    expect(() => createPublicMediaStorage(source)).not.toThrow();
+    expect(getObjectStorageConnectOrigin(source.NODE_ENV, source)).toBeDefined();
   });
 
   it("still requires the approved upload limit for private storage", () => {

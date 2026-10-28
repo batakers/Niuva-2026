@@ -98,9 +98,23 @@ describe("Midtrans gateway capability resolution", () => {
 
   it("denies POLICY_NOT_PUBLISHED in staging while the policy gate is open", async () => {
     await expectDenied(
-      { ...baseConfig, capabilityEnv: { NIUVA_DEPLOYMENT_TIER: "staging" } },
+      {
+        ...baseConfig,
+        capabilityEnv: { NIUVA_DEPLOYMENT_TIER: "staging" },
+        gates: { getStatus: (gate) => ({ closed: gate !== "PUB-POLICY" }) },
+      },
       "POLICY_NOT_PUBLISHED",
     );
+  });
+
+  it("allows staging sandbox payment through the published policy and the recorded E6 grant", async () => {
+    const { fetchMock, result } = run({
+      ...baseConfig,
+      capabilityEnv: { NIUVA_DEPLOYMENT_TIER: "staging", NIUVA_PROVIDER_MODE: "sandbox" },
+    });
+
+    await expect(result).resolves.toEqual({ token: "snap-token" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("denies ACTIVATION_NOT_GRANTED in staging without a recorded grant", async () => {
@@ -109,6 +123,7 @@ describe("Midtrans gateway capability resolution", () => {
         ...baseConfig,
         capabilityEnv: { NIUVA_DEPLOYMENT_TIER: "staging" },
         gates: CLOSED_GATES,
+        hasActivationGrant: () => false,
       },
       "ACTIVATION_NOT_GRANTED",
     );

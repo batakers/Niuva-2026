@@ -26,7 +26,7 @@ describe("public Customer consent contract", () => {
     const legal = getCustomerAuthLegalDocuments();
     expect(legal?.terms.version).toBe("NIUVA-TERMS-v1.0");
     expect(legal?.privacy.version).toBe("NIUVA-PRIVACY-v1.0");
-    expect(PUBLIC_CUSTOMER_POLICY.publishedAt).toBeNull();
+    expect(PUBLIC_CUSTOMER_POLICY.publishedAt).toBe("2026-10-28T00:00:00+07:00");
     vi.stubEnv("NIUVA_CUSTOMER_PUBLIC_AUTH_TEST", "false");
     expect(getCustomerAuthLegalDocuments()?.terms.version).toBe("TEST-FIXTURE-TERMS-1");
     vi.stubEnv("NODE_ENV", "production");

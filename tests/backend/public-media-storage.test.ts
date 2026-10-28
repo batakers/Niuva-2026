@@ -22,9 +22,12 @@ describe("public media storage boundaries", () => {
     await storage.publish({ key: "media/products/fixture.png", bytes: new Uint8Array([1,2,3]), contentType: "image/png" });
     expect(mocks.send.mock.calls[0][0].input).toMatchObject({ Bucket: "fixture-public", ContentType: "image/png", IfNoneMatch: "*" });
   });
-  it.each([{ ...env, R2_PUBLIC_BUCKET: env.R2_PRIVATE_BUCKET }, { ...env, NODE_ENV: "production", NIUVA_DEPLOYMENT_TIER: "production" }, { ...env, NIUVA_PROVIDER_MODE: "live" }, { ...env, NIUVA_DEPLOYMENT_TIER: "staging" }])("keeps wrong buckets, production, live and ungranted staging closed %#", source => {
+  it.each([{ ...env, R2_PUBLIC_BUCKET: env.R2_PRIVATE_BUCKET }, { ...env, NODE_ENV: "production", NIUVA_DEPLOYMENT_TIER: "production" }, { ...env, NIUVA_PROVIDER_MODE: "live" }])("keeps wrong buckets, production and live closed %#", source => {
     expect(() => createPublicMediaStorage(source)).toThrow();
     expect(mocks.send).not.toHaveBeenCalled(); expect(mocks.sign).not.toHaveBeenCalled();
+  });
+  it("opens staging sandbox through the recorded E6 objectStorage grant", () => {
+    expect(() => createPublicMediaStorage({ ...env, NIUVA_DEPLOYMENT_TIER: "staging" })).not.toThrow();
   });
   it("does not accept SVG/HTML by their claimed image extension", () => {
     const html = new TextEncoder().encode("<svg xmlns='http://www.w3.org/2000/svg'><script>alert(1)</script></svg>");

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { hasActivationGrant } from "@/lib/env/deployment";
 import { decide } from "@/modules/capabilities/resolver";
 import {
   CAPABILITY_NAMES,
@@ -68,12 +69,12 @@ describe("legacy guard vs resolver", () => {
           NODE_ENV: nodeEnv,
         },
         gates: { getStatus: () => ({ closed: true }) },
-        // Default (empty) recorded grants: no task grants activation. A future
-        // explicit staging grant is the only intended way to lift NODE_ENV=production.
+        // Default recorded grants. An explicit staging grant (Owner E6, 28 October
+        // 2026) is the only intended way to lift NODE_ENV=production.
       });
 
-      if (legacyRejects) {
-        expect(decision.allowed, `${nodeEnv}/${tier}/${mode}/${capability}`).toBe(false);
+      if (legacyRejects && decision.allowed) {
+        expect(tier === "staging" && mode !== "live" && hasActivationGrant("staging", capability), `${nodeEnv}/${tier}/${mode}/${capability}`).toBe(true);
       }
     }
   });

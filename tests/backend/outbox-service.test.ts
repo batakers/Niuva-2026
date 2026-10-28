@@ -10,7 +10,7 @@ const input = { kind: "AUTH", proofId, token };
 const cipher = new OutboxPayloadCipher({ activeKeyId: "backend-v1", keys: { "backend-v1": Buffer.alloc(32, 12).toString("base64") } });
 function denied() {
   let allocated = false;
-  const bound = new BoundDatabaseService({ context: { env: { NODE_ENV: "production", NIUVA_DEPLOYMENT_TIER: "staging", NIUVA_PROVIDER_MODE: "sandbox", APP_URL: "https://staging.example.test", DATABASE_URL: "postgresql://fixture@localhost/niuva_test", NIUVA_DATABASE_BINDING_ID: proofId, RESEND_API_KEY: "synthetic-config", EMAIL_FROM: "fixture@example.test" } }, repositoryFactory: () => { allocated = true; throw new Error("factory must remain lazy"); } });
+  const bound = new BoundDatabaseService({ context: { env: { NODE_ENV: "production", NIUVA_DEPLOYMENT_TIER: "staging", NIUVA_PROVIDER_MODE: "sandbox", APP_URL: "https://staging.example.test", DATABASE_URL: "postgresql://fixture@localhost/niuva_test", NIUVA_DATABASE_BINDING_ID: proofId, RESEND_API_KEY: "synthetic-config", EMAIL_FROM: "fixture@example.test" }, hasActivationGrant: () => false }, repositoryFactory: () => { allocated = true; throw new Error("factory must remain lazy"); } });
   return { service: new DurableOutboxService({ bound, repository: new PrismaOutboxRepository(), cipherFactory: () => cipher }), allocated: () => allocated };
 }
 describe("outbox service authority boundary", () => {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { hasActivationGrant } from "@/lib/env/deployment";
 import { CAPABILITY_MATRIX } from "@/modules/capabilities/matrix";
 import {
   DEFAULT_POLICY_GATE_READER,
@@ -110,15 +111,15 @@ describe("capability resolver: tier x mode x capability", () => {
     }
   });
 
-  it("with default gates and recorded grants, only gate-free, grant-free local-test capabilities pass", () => {
+  it("with default gates and recorded grants, only closed-gate and granted capabilities pass", () => {
     for (const tier of DEPLOYMENT_TIERS) {
       for (const capability of CAPABILITY_NAMES) {
         const rule = CAPABILITY_MATRIX[tier][capability];
         const decision = decide(capability, { env: env(tier, "mock") });
         const expected =
           rule.allowedModes.includes("mock") &&
-          rule.requiredPolicyGates.length === 0 &&
-          !rule.requiresActivationGrant;
+          rule.requiredPolicyGates.every(gate => DEFAULT_POLICY_GATE_READER.getStatus(gate).closed) &&
+          (!rule.requiresActivationGrant || hasActivationGrant(tier, capability));
 
         expect(decision.allowed).toBe(expected);
         expect(tier === "production" && decision.allowed).toBe(false);
@@ -127,12 +128,15 @@ describe("capability resolver: tier x mode x capability", () => {
     }
   });
 
-  it("closes only the implemented age control while retaining policy and guardian denials", () => {
-    expect(DEFAULT_POLICY_GATE_READER.getStatus("PUB-POLICY")).toEqual({ closed: false });
+  it("closes the published policy and implemented age control while retaining the guardian denial", () => {
+    expect(DEFAULT_POLICY_GATE_READER.getStatus("PUB-POLICY")).toEqual({ closed: true });
     expect(DEFAULT_POLICY_GATE_READER.getStatus("PUB-AGE")).toEqual({ closed: true });
     expect(DEFAULT_POLICY_GATE_READER.getStatus("PUB-GUARDIAN")).toEqual({ closed: false });
   });
 });
+
+// Policy gate as it stood before the 28 October 2026 publication.
+const UNPUBLISHED_POLICY: PolicyGateReader = { getStatus: (gate) => ({ closed: gate === "PUB-AGE" }) };
 
 describe("capability resolver: denial reasons and precedence", () => {
   const reasonOf = (capability: CapabilityName, context: CapabilityContext): string => {
@@ -252,7 +256,7 @@ describe("capability resolver: denial reasons and precedence", () => {
       getStatus: (gate) => ({ closed: gate === "PUB-POLICY" }),
     };
 
-    expect(reasonOf("signup", { ...base, gates: DEFAULT_POLICY_GATE_READER })).toBe(
+    expect(reasonOf("signup", { ...base, gates: UNPUBLISHED_POLICY })).toBe(
       "POLICY_NOT_PUBLISHED",
     );
     expect(reasonOf("signup", { ...base, gates: policyOnly })).toBe("AGE_GATE_NOT_CLOSED");
@@ -271,7 +275,7 @@ describe("capability resolver: denial reasons and precedence", () => {
   it("precedence is stable when several conditions fail at once", () => {
     const multi: CapabilityContext = {
       env: env("staging", "mock", { DATABASE_URL: undefined }),
-      gates: DEFAULT_POLICY_GATE_READER,
+      gates: UNPUBLISHED_POLICY,
       hasActivationGrant: () => false,
     };
 
@@ -289,7 +293,7 @@ describe("capability resolver: denial reasons and precedence", () => {
 
     expect(reasonOf("shipping", configOnly)).toBe("CONFIG_INCOMPLETE");
     // policy outranks age outranks activation.
-    const noGrant: CapabilityContext = { ...open("staging", "mock"), hasActivationGrant: () => false, gates: DEFAULT_POLICY_GATE_READER };
+    const noGrant: CapabilityContext = { ...open("staging", "mock"), hasActivationGrant: () => false, gates: UNPUBLISHED_POLICY };
 
     expect(reasonOf("signup", noGrant)).toBe("POLICY_NOT_PUBLISHED");
     expect(reasonOf("signup", noGrant)).toBe(reasonOf("signup", noGrant));

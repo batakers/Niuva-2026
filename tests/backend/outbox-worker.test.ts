@@ -53,7 +53,7 @@ describe("outbox job authority boundary", () => {
   it.each(["dry-run", "execute"] as const)("denies %s before repository, cipher or sender allocation", async mode => {
     let allocated = false;
     const factory = () => { allocated = true; throw new Error("private-configuration-fixture"); };
-    const authority = new BoundDatabaseService({ context: { env: { ...source, NODE_ENV: "production", NIUVA_DEPLOYMENT_TIER: "staging", NIUVA_DATABASE_BINDING_ID: randomUUID() } }, repositoryFactory: factory });
+    const authority = new BoundDatabaseService({ context: { env: { ...source, NODE_ENV: "production", NIUVA_DEPLOYMENT_TIER: "staging", NIUVA_DATABASE_BINDING_ID: randomUUID() }, hasActivationGrant: () => false }, repositoryFactory: factory });
     const worker = new DurableOutboxWorker({ bound: authority, repository: new PrismaOutboxWorkerRepository(), cipherFactory: factory, senderFactory: factory, policy: { leaseMs: 1000, sendTimeoutMs: 500, retryDelaysMs: [] } });
     await expect(worker.run({ mode, limit: 1 })).rejects.toMatchObject({ code: "PROVIDER_UNAVAILABLE", status: 503 }); expect(allocated).toBe(false);
   });
