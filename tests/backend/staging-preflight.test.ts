@@ -51,9 +51,9 @@ describe("T03 staging preflight", () => {
       databaseTls: true,
       migrationsCurrent: true,
       migrationCount: 2,
-      // Only the recorded E6 grant that needs no provider config is open.
-      capabilitiesDenied: 14,
-      capabilitiesOpen: ["scheduledJobs"],
+      // Only recorded staging grants that need no provider config are open (E1 signup/password, E6 jobs).
+      capabilitiesDenied: 12,
+      capabilitiesOpen: ["signup", "passwordAuth", "scheduledJobs"],
       customerCount: 0,
       orderCount: 0,
     });

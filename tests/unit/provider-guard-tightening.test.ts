@@ -89,6 +89,18 @@ describe("legacy guard vs resolver", () => {
     expect(() => assertNonProductionProvider({ nodeEnv: "test", provider: "R2" })).not.toThrow();
   });
 
+  it("lets NODE_ENV=production through only for an explicit staging tier, never for a live provider", () => {
+    expect(() => assertNonProductionProvider({ deploymentTier: "staging", nodeEnv: "production", provider: "R2" })).not.toThrow();
+    for (const deploymentTier of [undefined, "production", "local-test"] as const) {
+      expect(() => assertNonProductionProvider({ deploymentTier, nodeEnv: "production", provider: "R2" }), String(deploymentTier)).toThrow(
+        expect.objectContaining({ code: "PROVIDER_UNAVAILABLE" }),
+      );
+    }
+    expect(() =>
+      assertNonProductionProvider({ deploymentTier: "staging", isLiveProvider: true, nodeEnv: "production", provider: "Midtrans" }),
+    ).toThrow(expect.objectContaining({ code: "PROVIDER_UNAVAILABLE" }));
+  });
+
   it("maps every guarded provider label to a registered capability", () => {
     expect(PROVIDER_CAPABILITY).toEqual({
       Biteship: "shipping",

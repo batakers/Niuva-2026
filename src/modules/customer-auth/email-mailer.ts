@@ -8,6 +8,8 @@ import { ResendEmailGateway, type ResendEmailResult } from "@/modules/notificati
 import { assertNonProductionProvider } from "@/modules/providers/non-production";
 import { appError } from "@/modules/shared/errors";
 import { assertInternalEmail, getInternalAuthConfig, isInternalAuthDatabase } from "./internal-testing";
+import { assertStagingCustomerTester, getStagingCustomerTesters } from "./staging-testers";
+import { readExplicitDeploymentTier } from "@/lib/env/deployment";
 import { emailEnvelopeSchema, type PreparedCustomerEmail } from "../notifications/email-delivery";
 export type CustomerAuthMail = { to: string; token: string; purpose: "verify" | "reset"; returnTo: string; idempotencyKey: string; signal?: AbortSignal };
 export type CustomerAuthMailer = { prepare?(input: CustomerAuthMail): PreparedCustomerEmail; send(input: CustomerAuthMail): Promise<ResendEmailResult | void> };
@@ -38,6 +40,7 @@ export function buildCustomerAuthMailerCapabilityContext(config: CustomerAuthMai
 /** Legacy production rejection first (resolver can only tighten), then the resolver. */
 export function assertCustomerAuthMailerAllowed(config: CustomerAuthMailerCapabilityConfig): void {
   assertNonProductionProvider({
+    deploymentTier: readExplicitDeploymentTier(config.capabilityEnv),
     nodeEnv: config.nodeEnv === "production" || config.capabilityEnv?.NODE_ENV === "production" ? "production" : config.nodeEnv,
     provider: "Resend Customer auth",
   });
@@ -56,10 +59,14 @@ export function createCustomerAuthMailer(source: Readonly<Record<string, string 
     return { prepare, async send(input) { const ready = prepare(input); return ready.send(ready.envelope, input.idempotencyKey, input.signal); } };
   }
   const env = parseServerEnvironment(source);
-  if (!env.RESEND_API_KEY || !env.EMAIL_FROM || !env.APP_URL || env.NODE_ENV === "production") return null;
+  const staging = readExplicitDeploymentTier(source) === "staging";
+  if (!env.RESEND_API_KEY || !env.EMAIL_FROM || !env.APP_URL || env.NODE_ENV === "production" && !staging) return null;
   // Local Customer mail may only reach the configured participant. Missing or
   // invalid internal config cannot accidentally activate an unrestricted sender.
   if (isInternalAuthDatabase(source) && !getInternalAuthConfig(source)) return null;
+  // Staging mail may only reach the listed testers (E1); no list, no sender.
+  const testers = getStagingCustomerTesters(source);
+  if (staging && !testers) return null;
 
   const apiKey = env.RESEND_API_KEY;
   const from = env.EMAIL_FROM;
@@ -67,6 +74,7 @@ export function createCustomerAuthMailer(source: Readonly<Record<string, string 
     const check = () => {
       assertCustomerAuthMailerAllowed({ apiKey, capabilityEnv: source, from, nodeEnv: env.NODE_ENV });
       if (getInternalAuthConfig(source) || isInternalAuthDatabase(source)) assertInternalEmail(input.to, "password", getInternalAuthConfig(source));
+      if (staging) assertStagingCustomerTester(input.to, testers);
       const url = buildCustomerAuthLink(source, input.purpose, input.token);
       if (url === null) throw appError("CUSTOMER_AUTH_UNAVAILABLE");
       return url;

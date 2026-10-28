@@ -8,6 +8,7 @@ import {
   type CapabilityContext,
 } from "@/modules/capabilities/resolver";
 import type { CheckoutPaymentProvider } from "@/modules/checkout/service";
+import { readExplicitDeploymentTier } from "@/lib/env/deployment";
 import { assertNonProductionProvider } from "@/modules/providers/non-production";
 import { appError } from "@/modules/shared/errors";
 import { parseWithValidation } from "@/modules/shared/validation";
@@ -252,6 +253,7 @@ export function buildMidtransCapabilityContext(
 export function assertMidtransPaymentAllowed(config: MidtransSnapGatewayConfig): void {
   // Legacy guard first, exactly as before: the resolver can only tighten it.
   assertNonProductionProvider({
+    deploymentTier: readExplicitDeploymentTier(config.capabilityEnv),
     isLiveProvider: config.isProduction,
     nodeEnv:
       config.nodeEnv === "production" ||

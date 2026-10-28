@@ -1427,6 +1427,58 @@ indeks pada tier `production` eksplisit, dan `next.config.ts` mengirim
 dilindungi password + TOTP; provider tetap sandbox. Kunci dibuka hanya setelah
 header terbukti ada di staging.
 
+Pelaksanaan 2026-10-29 (atas instruksi Owner): PR #76 di-squash ke
+`main@c1b5cc3`; build dinyalakan sementara, deploy
+`6ae24c6df4684aa6e06b5d5b` berstatus `ready` (secret scan 0 temuan), lalu
+build kembali Stopped (diverifikasi setelah reload). Dengan sesi Owner, `/`,
+`/shop`, `/projects`, `/services`, `/terms`, `/privacy`, `/login`,
+`/admin/sign-in`, `/robots.txt`, `/sitemap.xml` dan halaman 404 mengirim
+`X-Robots-Tag: noindex, nofollow`. Visibilitas Netlify lalu diubah ke
+"Previews only" (production publik, Deploy Preview tetap privat). Uji anonim
+dengan `curl`: `/`, `/shop`, `/terms`, `/admin/sign-in` 200 dengan header
+noindex; `/admin/orders` 401 JSON `UNAUTHORIZED` dari proxy aplikasi, dan
+navigasi browser ke halaman itu 307 ke `/admin/sign-in`.
+
+Undangan Admin staging, 2026-10-29: Owner mengirim dua undangan lewat
+`/admin/admins/new`. Satu diterima. Pemeriksaan Neon MCP: `admin_profiles`
+berisi satu OWNER dan satu ADMIN, keduanya aktif; dua `admin_auth_users`
+dengan email terverifikasi dan TOTP aktif; dua record TOTP. Undangan kedua
+berstatus `SENT` dan kedaluwarsa (batas 30 menit) sebelum diterima, sehingga
+perlu dikirim ulang. Alur undangan Admin hosted (kirim email, terima, pasang
+TOTP) terbukti untuk satu akun.
+
+### D3: runtime staging sadar tier dan akun Customer penguji, 2026-10-29
+
+Temuan: guard lama `assertNonProductionProvider` menolak `NODE_ENV=production`,
+dan Netlify selalu memakai nilai itu. Akibatnya Midtrans, Biteship, S3/R2,
+Resend, mailer auth Customer dan mailer bisnis tertolak di staging hosted
+walaupun grant E6 sudah ada. Owner memilih cakupan semua provider.
+
+- Guard kini menerima tier eksplisit. `NODE_ENV=production` lolos hanya untuk
+  `staging`; production, tier kosong/tak dikenal, dan provider live tetap
+  ditolak. Resolver tetap menuntut grant, mode sandbox/mock, config dan policy.
+  Diterapkan di Midtrans, Biteship, S3, Resend, mailer auth Customer dan mailer
+  bisnis. Aktivasi pricing rule (E7) tetap khusus lokal, menjadi blocker T34
+  terpisah.
+- E1: env `NIUVA_STAGING_CUSTOMER_EMAILS` (1–10 alamat, dipisah koma, tidak di
+  Git) dibaca hanya pada tier `staging`. Registrasi dan login email/password,
+  serta email auth dan bisnis, hanya untuk alamat itu. Tanpa daftar valid,
+  jalur Customer staging tertutup. Registrasi staging memakai policy v1.0 yang
+  sudah terbit (`/terms`, `/privacy`). Grant staging bertambah `signup` dan
+  `passwordAuth` (rujukan bagian ini, E1); `googleAuth`, refund, privacy dan
+  analytics tetap tanpa grant. Di tier hosted, register/login memanggil
+  resolver; production tetap tertutup.
+- Variabel tidak dimasukkan ke skema startup supaya salah ketik tidak
+  menjatuhkan seluruh staging; nilai tidak valid sama dengan tertutup.
+- Verifikasi lokal: lint 0 error/4 warning lama; typecheck lulus; unit 133
+  file/1.493 tes; backend 117/925 (termasuk
+  `tests/backend/staging-customer-access.test.ts` baru); integration 58/522 di
+  DB terisolasi `niuva_d1_proxy_test_20261028` (`niuva_test` bawaan memuat
+  migration lama gagal P3009 dan tidak di-reset); build lulus;
+  `check:memory` lulus. Hosted belum diverifikasi: perlu deploy, isi env daftar
+  penguji di Netlify, lalu uji daftar/verifikasi/login. Email verifikasi masuk
+  outbox dan terkirim setelah job outbox staging dipicu manual (E9).
+
 ### Grant aktivasi staging E6, 2026-10-28
 
 Branch `claude/staging-grants`: `ACTIVATION_GRANTS.staging` memuat enam
