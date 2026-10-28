@@ -15,7 +15,9 @@ function createPrismaClient(): PrismaClient {
     connectionString: DATABASE_URL,
     connectionTimeoutMillis: 5_000,
     idleTimeoutMillis: 10_000,
-    max: 5,
+    // Each serverless instance keeps its pool while frozen; a small pool keeps
+    // several warm instances inside the runtime role's connection limit.
+    max: 4,
   });
 
   return new PrismaClient({ adapter });
