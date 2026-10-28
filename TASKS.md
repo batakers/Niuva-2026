@@ -1316,8 +1316,11 @@ Atas persetujuan Owner atas draf publik ("Setuju, lanjutkan"), branch
   nft route memuat kedua file teks. Browser lokal: `/terms` dan `/privacy`
   dirender dengan tanggal sementara yang lalu dikembalikan ke `null`; 375 px
   tanpa overflow halaman, tabel menggulir di wadahnya.
-- Belum: wilayah akun Resend (penanda `[PERLU DICEK]` masih di teks privasi,
-  dijaga tes agar tidak terbit); tanggal terbit dari Owner; migration dan hak
+- Resend dicek 28 Oktober di dashboard (belum ada domain terverifikasi) dan
+  dokumentasi "Choosing a Region": data akun Resend disimpan di Amerika Serikat
+  apa pun region kirimnya; teks privasi diperbarui dan checksum dihitung ulang.
+  Tanpa domain terverifikasi, Resend tidak dapat mengirim ke email penguji lain.
+- Belum: tanggal terbit dari Owner; domain pengirim Resend; migration dan hak
   role runtime (`INSERT` saat penutupan, `SELECT`/`DELETE` untuk cleanup) di
   Neon staging; jalur akun Customer staging (D3). Tampilan belum direview
   Owner; hosted belum diverifikasi.

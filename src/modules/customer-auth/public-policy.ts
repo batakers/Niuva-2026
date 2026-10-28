@@ -18,7 +18,7 @@ export const PUBLIC_CUSTOMER_POLICY = Object.freeze({
   privacy: Object.freeze({
     version: "NIUVA-PRIVACY-v1.0",
     contentReference: "src/content/customer-policy/privacy-v1.0.md",
-    sha256: "ffba93ca18a34af1f4aefd3021f9f8c157571133bbfab704da36677ab355f68c",
+    sha256: "2e26d01be3b177565b65ea07a2cb9b539f56e31f3c8a7ee023bb4c0f07432ac5",
   }),
 });
 

@@ -52,7 +52,7 @@ Niuva memakai penyedia berikut untuk menjalankan layanan:
 | Netlify | Hosting website dan server aplikasi | Seluruh data yang melewati website | Amerika Serikat (Ohio) |
 | Neon | Database aplikasi | Seluruh data akun, transaksi dan layanan | Singapura |
 | Cloudflare R2 | Penyimpanan berkas desain dan media | Berkas Custom Print, foto produk | Asia Pasifik |
-| Resend | Pengiriman email verifikasi, reset password dan konfirmasi | Nama, email, isi email layanan | [PERLU DICEK — wilayah akun Resend] |
+| Resend | Pengiriman email verifikasi, reset password dan konfirmasi | Nama, email, isi email layanan | Amerika Serikat |
 | Midtrans | Pembayaran | Nomor pesanan dan nominal. Data pembayaran yang Anda isi di halaman Midtrans diproses langsung oleh Midtrans | Indonesia |
 | Biteship | Perhitungan ongkos kirim | Kode pos atau area tujuan, nama dan nilai barang, berat dan ukuran paket | Indonesia |
 | Kurir pengiriman | Mengantar paket | Nama, telepon dan alamat penerima pada label paket | Indonesia |
