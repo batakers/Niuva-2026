@@ -38,10 +38,10 @@ function fixture(overrides: Record<string, string | undefined> = {}, grant = tru
   const service = new BoundDatabaseService({
     context: {
       env,
-      ...(grant ? { hasActivationGrant: (tier, capability) => {
+      hasActivationGrant: grant ? (tier, capability) => {
         grantedCapabilities.push(capability);
         return tier === "staging" && ["emailDelivery", "scheduledJobs"].includes(capability);
-      } } : {}),
+      } : () => false,
     },
     repositoryFactory,
   });
@@ -53,7 +53,7 @@ async function expectUnavailable(work: Promise<unknown>) {
 }
 
 describe("bound database capability service", () => {
-  it.each(["outbox", "job"] as const)("does not invent an activation grant for %s", async (operation) => {
+  it.each(["outbox", "job"] as const)("denies %s without a recorded activation grant", async (operation) => {
     const { service, repositoryFactory } = fixture({}, false);
     let worked = false;
     await expectUnavailable(service.run(operation, async () => { worked = true; }));

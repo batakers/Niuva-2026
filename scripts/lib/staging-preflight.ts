@@ -1,5 +1,6 @@
 import { resolveAppOrigin } from "../../src/lib/env/origin";
 import { getServerActionsAllowedOrigins } from "../../src/lib/env/server-actions-origins";
+import { hasActivationGrant } from "../../src/lib/env/deployment";
 import { getDatabaseEnvironment, resolveDeployment, validateStartupEnvironment } from "../../src/lib/env/server";
 import { decide } from "../../src/modules/capabilities/resolver";
 import { CAPABILITY_NAMES } from "../../src/modules/capabilities/types";
@@ -87,7 +88,8 @@ function configuration(source: EnvironmentSource): DatabaseBindingExpectation {
   if (cookies.some((cookie) => !cookie.secure || !cookie.httpOnly || cookie.sameSite !== "lax" || cookie.maxAge <= 0)) {
     throw new StagingPreflightError("COOKIE_POLICY_INVALID");
   }
-  if (CAPABILITY_NAMES.some((name) => decide(name, { env: source }).allowed)) {
+  // Only capabilities with a recorded staging grant may open; all others stay denied.
+  if (CAPABILITY_NAMES.some((name) => decide(name, { env: source }).allowed && !hasActivationGrant("staging", name))) {
     throw new StagingPreflightError("CAPABILITY_OPEN");
   }
   return expected;
@@ -129,7 +131,8 @@ export async function runStagingPreflight(
     databaseTls: true,
     migrationsCurrent: true,
     migrationCount: expectedMigrationNames.length,
-    capabilitiesDenied: CAPABILITY_NAMES.length,
+    capabilitiesDenied: CAPABILITY_NAMES.filter((name) => !decide(name, { env: source }).allowed).length,
+    capabilitiesOpen: CAPABILITY_NAMES.filter((name) => decide(name, { env: source }).allowed),
     customerCount: 0,
     orderCount: 0,
   };

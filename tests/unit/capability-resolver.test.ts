@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { hasActivationGrant } from "@/lib/env/deployment";
 import { CAPABILITY_MATRIX } from "@/modules/capabilities/matrix";
 import {
   DEFAULT_POLICY_GATE_READER,
@@ -110,15 +111,15 @@ describe("capability resolver: tier x mode x capability", () => {
     }
   });
 
-  it("with default gates and recorded grants, only gate-free, grant-free local-test capabilities pass", () => {
+  it("with default gates and recorded grants, only closed-gate and granted capabilities pass", () => {
     for (const tier of DEPLOYMENT_TIERS) {
       for (const capability of CAPABILITY_NAMES) {
         const rule = CAPABILITY_MATRIX[tier][capability];
         const decision = decide(capability, { env: env(tier, "mock") });
         const expected =
           rule.allowedModes.includes("mock") &&
-          rule.requiredPolicyGates.length === 0 &&
-          !rule.requiresActivationGrant;
+          rule.requiredPolicyGates.every(gate => DEFAULT_POLICY_GATE_READER.getStatus(gate).closed) &&
+          (!rule.requiresActivationGrant || hasActivationGrant(tier, capability));
 
         expect(decision.allowed).toBe(expected);
         expect(tier === "production" && decision.allowed).toBe(false);

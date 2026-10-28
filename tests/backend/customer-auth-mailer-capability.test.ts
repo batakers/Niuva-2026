@@ -85,6 +85,7 @@ describe("Customer auth emailSender capability resolution", () => {
         ...baseConfig,
         capabilityEnv: { NIUVA_DEPLOYMENT_TIER: "staging" },
         gates: CLOSED_GATES,
+        hasActivationGrant: () => false,
       },
       "ACTIVATION_NOT_GRANTED",
     );

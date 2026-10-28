@@ -1204,7 +1204,10 @@ Jawaban Owner di sesi kerja atas pertanyaan audit 28 Oktober (E1–E13):
 
 - **E3:** boleh satu deploy ulang Netlify `niuva-t03-staging` dari `main` yang
   memuat perbaikan proxy (PR #70), tetap Free tanpa kartu; berhenti bila gagal.
-  Deploy belum dijalankan.
+  Deploy belum dijalankan. Pada 28 Oktober, setelah PR #72 di-merge
+  (`main` `8c131c0`), site masih "Builds are stopped" sehingga Trigger deploy
+  memerlukan Activate builds (deploy otomatis aktif sementara); Owner memilih
+  belum mengaktifkannya.
 - **E4:** boleh menambah hak role runtime staging setelah daftar dikirim ke
   Owner dan disetujui. Daftar diajukan: `SELECT, INSERT, UPDATE` pada
   `public.customer_google_consents` untuk role runtime web; `DELETE` hanya untuk
@@ -1293,7 +1296,68 @@ Jawaban Owner di sesi kerja atas pertanyaan audit 28 Oktober (E1–E13):
   perkiraan belum dimasukkan ke manifest, dan `scripts/seed-catalog.ts` hanya
   menerima database loopback sehingga impor ke staging butuh jalur terpisah.
 - **E9:** di staging, job dipicu manual; jadwal production diputuskan nanti.
+- **Setup sandbox, 28 Oktober (Owner: semua akun sandbox tersedia):** Netlify
+  `NIUVA_PROVIDER_MODE=sandbox` (dicek), ditambah `MIDTRANS_IS_PRODUCTION=false`
+  dan `BETTER_AUTH_URL` origin staging. Dashboard Midtrans sandbox: Notification
+  URL `https://niuva-t03-staging.netlify.app/api/webhooks/midtrans` dan Finish
+  Redirect `/account` tersimpan (dicek setelah muat ulang); redirect bukan sumber
+  status. `NEXT_PUBLIC_MIDTRANS_CLIENT_KEY` sengaja tidak ditandai secret di
+  Netlify karena nilainya ikut bundle browser (secret scanning Netlify akan
+  menggagalkan build); server key tetap secret. Belum: kunci rahasia `MIDTRANS_SERVER_KEY`,
+  `NEXT_PUBLIC_MIDTRANS_CLIENT_KEY`, `BITESHIP_API_KEY`, `RESEND_API_KEY`,
+  `BETTER_AUTH_SECRET`, `CRON_SECRET` (diisi Owner). Owner memilih kurir
+  staging JNE, SiCepat dan J&T; `BITESHIP_COURIERS=jne,sicepat,jnt` dipasang.
+  Owner mengonfirmasi asal pengiriman = alamat Jl. Telekomunikasi No.1, kode
+  pos 40257. Biteship Maps API (kunci testing Owner, dibaca tanpa echo di
+  terminal Owner) tidak punya area untuk "40257" atau "Sukapura Dayeuhkolot";
+  "Dayeuhkolot Bandung" mengembalikan satu area
+  `IDNP9IDNC22IDND2044IDZ40353` (kecamatan sama, kode pos perwakilan Biteship
+  40353). Nilai itu dipasang sebagai `BITESHIP_ORIGIN_AREA_ID`; grup Biteship
+  di Netlify kini lengkap. Kunci API dicek namanya saja.
+- **Resend, 28 Oktober:** Owner memilih domain `niuva.id` (dikelola di
+  Rumahweb) dan mengizinkan aktivasi Manajemen DNS Rumahweb (nameserver sudah
+  Rumahweb; tidak ada hosting Rumahweb; zona sebelumnya kosong). Domain kirim
+  `mail.niuva.id` dibuat di Resend, region Tokyo (`ap-northeast-1`), click/open
+  tracking mati. Tiga record kirim dipasang di Rumahweb (TXT
+  `resend._domainkey.mail`, CNAME `rsend.mail` dan `send.mail`); DMARC dan MX
+  terima tidak dipasang. Verifikasi Resend berstatus `pending` menunggu
+  propagasi; dicek ulang hari yang sama: domain dan ketiga record `verified`.
+  `EMAIL_FROM` = `Niuva <no-reply@mail.niuva.id>` di Netlify. Owner membuat
+  API key "Niuva Staging" (Sending access, hanya `mail.niuva.id`) dan
+  menyimpannya sebagai `RESEND_API_KEY` secret di Netlify (nama dicek). Grup
+  Resend lengkap; pengiriman email Customer hosted tetap tertutup oleh guard
+  `NODE_ENV=production` sampai D3.
+- **Secret Admin/job, 28 Oktober:** `BETTER_AUTH_SECRET` dan `CRON_SECRET` dibuat
+  acak di komputer Owner, disalin ke clipboard tanpa dicetak, lalu disimpan
+  Owner di Netlify sebagai secret (nama dicek). Satu nilai percobaan sempat
+  tertempel di terminal dan terlihat; nilai itu tidak dipakai. Better Auth adalah
+  library di aplikasi, tanpa project/dashboard Better Auth. Grup env parsial menghentikan startup, jadi deploy menunggu grup
+  lengkap. Temuan kode: `src/modules/customer-auth/email-mailer.ts` menolak
+  `NODE_ENV=production`, sehingga email Customer hosted tertutup sampai jalur
+  staging dibuat (bagian D3).
 - E10–E12 belum dijawab.
+
+### Grant aktivasi staging E6, 2026-10-28
+
+Branch `claude/staging-grants`: `ACTIVATION_GRANTS.staging` memuat enam
+capability keputusan Owner E6 (`payment`, `shipping`, `emailSender`,
+`emailDelivery`, `objectStorage`, `scheduledJobs`) dengan rujukan
+`TASKS.md#keputusan-owner-untuk-staging-2026-10-28` dan tanggal 2026-10-28.
+`local-test`/`production` tetap kosong; refund, Google login, signup,
+password login, analytics dan privacy tetap tanpa grant. Tes adapter
+"tanpa grant" kini menginjeksi lookup kosong; tes storage, resolver dan
+properti kini membuktikan staging terbuka hanya lewat grant tercatat.
+`staging:preflight` (`scripts/lib/staging-preflight.ts`) tidak lagi
+menganggap capability bergrant sebagai kegagalan dan melaporkan
+`capabilitiesOpen`; pada profil tanpa provider hanya `scheduledJobs` terbuka.
+Preflight tetap menolak env provider (`PROVIDERS_PRESENT`), sehingga perlu
+disesuaikan terpisah sebelum dipakai pada staging yang kini berprovider.
+Bukti lokal: lint 0 error/4 warning lama, typecheck, unit 132/1.490,
+backend 115/909, integration 57/520, build lulus. Branch ini juga membawa tiga
+commit yang tertinggal setelah PR #72 di-merge (lokasi Resend, tanggal terbit
+policy, catatan S3), karena merge terjadi sebelum commit itu masuk. Grant
+tidak mengaktifkan provider di hosted sebelum config lengkap dan deploy;
+email Customer hosted masih ditutup guard `NODE_ENV=production` (D3).
 
 ### Policy publik v1.0 dan bukti persetujuan 30 hari, 2026-10-28
 

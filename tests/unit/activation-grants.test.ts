@@ -11,9 +11,16 @@ const grants = (tier: DeploymentTier, entries: readonly ActivationGrant[]) =>
   ({ "local-test": [], staging: [], production: [], [tier]: entries }) as Record<DeploymentTier, readonly ActivationGrant[]>;
 
 describe("recorded activation grants", () => {
-  it("records no grant in any tier until an explicit Owner instruction is added in review", () => {
-    // Adding a grant must update this expectation in the same reviewed change.
-    for (const tier of DEPLOYMENT_TIERS) expect(ACTIVATION_GRANTS[tier], tier).toEqual([]);
+  it("records exactly the Owner's E6 staging grants and none elsewhere", () => {
+    // Adding or removing a grant must update this expectation in the same reviewed change.
+    expect(ACTIVATION_GRANTS["local-test"]).toEqual([]);
+    expect(ACTIVATION_GRANTS.production).toEqual([]);
+    expect(ACTIVATION_GRANTS.staging.map(grant => grant.capability)).toEqual(["payment", "shipping", "emailSender", "emailDelivery", "objectStorage", "scheduledJobs"]);
+    for (const grant of ACTIVATION_GRANTS.staging) {
+      expect(grant).toMatchObject({ instruction: "TASKS.md#keputusan-owner-untuk-staging-2026-10-28", grantedOn: "2026-10-28" });
+      expect(hasActivationGrant("staging", grant.capability), grant.capability).toBe(true);
+      expect(hasActivationGrant("production", grant.capability), grant.capability).toBe(false);
+    }
   });
 
   it("names only known capabilities", () => {
@@ -51,8 +58,10 @@ describe("PUB-POLICY publication", () => {
     expect(DEFAULT_POLICY_GATE_READER.getStatus("PUB-POLICY")).toEqual({ closed: true });
   });
 
-  it("publication alone grants no staging capability", () => {
-    for (const capability of CAPABILITY_NAMES) expect(hasActivationGrant("staging", capability), capability).toBe(false);
+  it("leaves capabilities outside the Owner's E6 decision ungranted in staging", () => {
+    for (const capability of ["refund", "googleAuth", "signup", "passwordAuth", "analytics", "privacyRights", "privacyProof", "publicPreviewScenario", "localContentReference"]) {
+      expect(hasActivationGrant("staging", capability), capability).toBe(false);
+    }
   });
 
   it("closes only when both times are recorded, ordered and already effective", () => {
