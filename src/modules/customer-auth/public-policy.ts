@@ -1,22 +1,24 @@
 export type PolicyPublication = Readonly<{ publishedAt: string | null; effectiveAt: string | null }>;
 
-// Owner approved the content and identifiers on 24 October; publication is a separate gate.
+// Owner approved the public text on 28 October (content of 24 October without
+// internal review notes, current providers and 28 October decisions), without
+// legal-counsel review. Publication dates are a separate Owner act.
 export const PUBLIC_CUSTOMER_POLICY = Object.freeze({
-  ownerApprovedAt: "2026-10-24",
-  ownerApprovalReference: "docs/legal/customer-public-input-evidence.md#persetujuan-rekomendasi-owner-t11--24-oktober-2026",
-  approvedSourceRevision: "b31b83d67d1b864f61e22657287d564197f833fb",
+  ownerApprovedAt: "2026-10-28",
+  ownerApprovalReference: "TASKS.md#keputusan-owner-untuk-staging-2026-10-28",
+  approvedSourceRevision: "d7dd2d663f427246dfbbb630c1f54e635af40531",
   language: "id",
   publishedAt: null,
   effectiveAt: null,
   terms: Object.freeze({
     version: "NIUVA-TERMS-v1.0",
     contentReference: "src/content/customer-policy/terms-v1.0.md",
-    sha256: "bcda22e9fb86b2eaf2964db748b334f051707848733fd11979266ae8f95cef67",
+    sha256: "33bfd51aca55983c70bcfa1975700f35366761be898c1ecbb19f69f7a2f12635",
   }),
   privacy: Object.freeze({
     version: "NIUVA-PRIVACY-v1.0",
     contentReference: "src/content/customer-policy/privacy-v1.0.md",
-    sha256: "5caff9ae97deed9a6fb427c18b36a6cec704ab4563ac74b9921c6f7eebafbb87",
+    sha256: "ffba93ca18a34af1f4aefd3021f9f8c157571133bbfab704da36677ab355f68c",
   }),
 });
 

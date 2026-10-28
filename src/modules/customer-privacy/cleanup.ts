@@ -30,6 +30,7 @@ export class CustomerPrivacyCleanupRepository {
         rateLimits: await tx.customerAuthRateLimit.findMany({ where: { resetAt: { lte: now } }, select: { key: true }, orderBy: { key: "asc" }, take: limit }),
         pending: await tx.customerPendingRegistration.findMany({ where: pending, select: { id: true }, orderBy: { id: "asc" }, take: limit }),
         fences: await tx.customerClosureFence.findMany({ where: { expiresAt: { lte: now } }, select: { identityHash: true }, orderBy: { identityHash: "asc" }, take: limit }),
+        closedConsentProofs: await tx.customerClosedConsentProof.findMany({ where: { expiresAt: { lte: now } }, select: { id: true }, orderBy: { id: "asc" }, take: limit }),
         audits: await tx.auditLog.findMany({ where: { entityType: "CUSTOMER_PRIVACY_REQUEST", createdAt: { lte: thirtyDaysAgo } }, select: { id: true }, orderBy: { id: "asc" }, take: limit }),
       };
       const counts = {
@@ -45,6 +46,7 @@ export class CustomerPrivacyCleanupRepository {
         authRateLimits: selected.rateLimits.length,
         pendingRegistrations: selected.pending.length,
         closureFences: selected.fences.length,
+        closedConsentProofs: selected.closedConsentProofs.length,
         privacyAuditEvents: selected.audits.length,
       };
       if (!dryRun) {
@@ -57,6 +59,7 @@ export class CustomerPrivacyCleanupRepository {
         await tx.customerInternalGoogleConsent.deleteMany({ where: { tokenHash: { in: selected.consents.map(row => row.tokenHash) } } });
         await tx.customerGoogleConsent.deleteMany({ where: { tokenHash: { in: selected.googleConsents.map(row => row.tokenHash) } } });
         await tx.customerClosureFence.deleteMany({ where: { identityHash: { in: selected.fences.map(row => row.identityHash) } } });
+        await tx.customerClosedConsentProof.deleteMany({ where: { id: { in: selected.closedConsentProofs.map(row => row.id) } } });
         await tx.customerAuthRateLimit.deleteMany({ where: { key: { in: selected.rateLimits.map(row => row.key) } } });
         await tx.auditLog.deleteMany({ where: { id: { in: selected.audits.map(row => row.id) } } });
       }

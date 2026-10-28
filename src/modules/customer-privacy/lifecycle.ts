@@ -38,6 +38,9 @@ export async function eraseCustomerAccount(tx: Prisma.TransactionClient, id: str
   await tx.customerPendingRegistration.deleteMany({ where: { normalizedEmail: customer.normalizedEmail } });
   await tx.customerInternalGoogleConsent.deleteMany({ where: { normalizedEmail: customer.normalizedEmail } });
   await tx.customerPrivacyConfirmation.updateMany({ where: { customerId: id, consumedAt: null }, data: { consumedAt: now } });
+  // Policy acceptance outlives the profile for 30 days under the email digest.
+  const consents = await tx.customerConsent.findMany({ where: { customerId: id }, select: { method: true, termsVersion: true, privacyVersion: true, acceptedAt: true, ageDeclarationVersion: true, ageDeclaredAt: true } });
+  if (consents.length > 0) await tx.customerClosedConsentProof.createMany({ data: consents.map(consent => ({ ...consent, identityHash: closureIdentityHash(customer.normalizedEmail), closedAt: now, expiresAt })) });
   // Cascade removes password, sessions, email tokens and account consents.
   // Business FKs and open privacy cases are SET NULL, never cascaded away.
   await tx.customer.delete({ where: { id } });

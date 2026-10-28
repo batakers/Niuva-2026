@@ -1699,6 +1699,24 @@ model CustomerClosureFence {
   @@map("customer_closure_fences")
 }
 
+// Policy acceptance kept 30 days after account closure (Owner decision
+// 2026-10-28), keyed by the pseudonymous email digest with no profile data.
+model CustomerClosedConsentProof {
+  id String @id @default(uuid()) @db.Uuid
+  identityHash String @map("identity_hash")
+  method String?
+  termsVersion String @map("terms_version")
+  privacyVersion String @map("privacy_version")
+  acceptedAt DateTime @map("accepted_at") @db.Timestamptz(6)
+  ageDeclarationVersion String? @map("age_declaration_version")
+  ageDeclaredAt DateTime? @map("age_declared_at") @db.Timestamptz(6)
+  closedAt DateTime @map("closed_at") @db.Timestamptz(6)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  @@index([identityHash])
+  @@index([expiresAt])
+  @@map("customer_closed_consent_proofs")
+}
+
 // Durable failure record so staff can find a failure from the correlation id a
 // user reads out. Allowlisted ids/enums only: no payload, header, body, token,
 // or PII. Deliberately has no foreign keys and no automatic cleanup; retention

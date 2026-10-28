@@ -1,122 +1,214 @@
-# Draf Syarat Layanan Customer Niuva
+# Syarat Layanan Niuva
 
-**Versi:** DRAFT-TERMS-2026-10-24-v6. **Status:** isi dan identifier versi resmi disetujui Owner pada 24 Oktober, tetapi draf ini belum berlaku, belum diterbitkan sebagai policy resmi, dan bukan persetujuan pendaftaran publik. Tanggal berlaku adalah tanggal publikasi aktual setelah prasyarat terbukti.
-
-**Penyelarasan berkas dan hak konten T11 — 24 Oktober 2026:** bagian 7 merinci hak atas berkas, izin pemrosesan terbatas, batas pemeriksaan unggahan, penanganan keberatan hak dan retensi yang sudah disetujui. Ini bahan review, dengan cakupan produk/bahan serta kesepakatan desain khusus tetap perlu dilengkapi. Lihat [catatan review berkas dan hak konten](customer-public-input-evidence.md#penyelarasan-berkas-dan-hak-konten--24-oktober-2026).
-
-**Penyelarasan sengketa T11 — 24 Oktober 2026:** atas instruksi Owner untuk melanjutkan klausul sengketa, bagian 6 dan SOP layanan diselaraskan dengan jalur kontak Niuva serta hak penyelesaian konsumen melalui lembaga/pengadilan yang berwenang. Klausul menjadi bagian draf untuk review; pengesahan keseluruhan policy dan pembuktian operasional T39 tetap terpisah. Lihat [catatan review sengketa](customer-public-input-evidence.md#penyelarasan-klausul-sengketa--24-oktober-2026).
-
-**Konfirmasi pajak T11 — 24 Oktober 2026:** Owner mengonfirmasi Niuva **bukan PKP, sudah diperiksa**. Bagian 2 memakai rumusan tanpa pemungutan PPN penjualan oleh Niuva; lihat [catatan konfirmasi](customer-public-input-evidence.md#konfirmasi-status-bukan-pkp--24-oktober-2026). Identifier policy resmi telah disetujui; dokumen belum diterbitkan dan tanggal berlaku mengikuti publikasi aktual.
-
-**Keputusan biaya T11 — 24 Oktober 2026:** Owner menyetujui kebijakan tanpa biaya admin/layanan tambahan dari Niuva, biaya gateway merchant ditanggung Niuva, ongkir pengiriman pesanan dibayar Customer dan pekerjaan tambahan Custom Print dirinci dalam quote sebelum disetujui. Ketentuan ini dimasukkan pada bagian 2; lihat [persetujuan biaya](customer-public-input-evidence.md#persetujuan-biaya-customer--24-oktober-2026). Seluruh rekomendasi isi dan identifier resmi disetujui; T11 selesai. Publikasi/aktivasi tetap mengikuti kesiapan rilis existing, dan notice privasi harus menggambarkan pemrosesan nyata sebelum akun publik/data terkait diaktifkan.
-
-**Review T11 — 23 Oktober 2026:** Owner menetapkan layanan awal Indonesia dan titik penerimaan pesanan Shop pada bagian 2, ketentuan utama pelaporan paling sedikit 2 hari kerja pada bagian 5, serta target penanganan 1/1/1 hari kerja dengan total 3 hari kerja pada bagian 6. Laporan awal menyertakan bukti yang tersedia; hanya perjalanan retur yang diperlukan berada di luar hitungan penanganan. Seluruh rekomendasi dan identifier resmi disetujui pada 24 Oktober; provider, coverage dan bukti hasil dana tetap terpisah sebelum publikasi. Lihat [bahan pembahasan Owner](customer-public-input-evidence.md#review-owner-t11-23-oktober-2026).
-
-**Rekonsiliasi draf — 13 Oktober 2026:** keputusan Owner 5 Oktober menetapkan akun **18+ melalui pernyataan usia** dan Owner sebagai pengesah dokumen; keputusan B2B 11 Oktober menetapkan kontak WhatsApp langsung. Refund penuh dengan approval Owner dan eksekusi/rekonsiliasi aplikasi tetap target. Identifier di atas tetap identifier draf, bukan versi resmi immutable atau bukti persetujuan Customer. Versi resmi dan tanggal berlaku belum ditetapkan. Pendaftaran yang tersedia masih internal Development/test; lihat [kontrak produk aktif](../PRD-Niuva-MVP.md#rekonsiliasi-kontrak-rilis--13-oktober-2026) dan [paket kesiapan publik](customer-public-launch-readiness.md).
+Syarat Layanan ini mengatur penggunaan website Niuva untuk pembelian produk
+Shop dan permintaan Custom Print. Dengan membuat akun dan menyetujui dokumen
+ini, Anda menyetujui ketentuan di bawah. Pemrosesan data pribadi dijelaskan
+dalam Kebijakan Privasi Niuva.
 
 ## 1. Identitas dan kontak
 
-Penyedia layanan adalah **PT. NIUVA INOVASI UTAMA**, beralamat di **Jl. Telekomunikasi No.1, Sukapura, Kec. Dayeuhkolot, Kabupaten Bandung, Jawa Barat**. Kontak Customer dan privasi: **niuvamakerspace@gmail.com**, **085117678901**. Identitas dan kontak ini telah dikonfirmasi Owner. Owner juga mengonfirmasi alamat tersebut sebagai **alamat penerimaan retur** pada 3 Oktober 2026. Petugas utama layanan, privasi dan tindak lanjut pembayaran/refund adalah **Rheza**. Sebelum mengirim retur, Customer memperoleh nomor kasus, detail penerima, jam penerimaan dan instruksi metode/biaya; detail penerima serta jam masih akan dilengkapi Owner.
+Layanan ini diselenggarakan oleh **PT. NIUVA INOVASI UTAMA**, Jl.
+Telekomunikasi No.1, Sukapura, Kec. Dayeuhkolot, Kabupaten Bandung, Jawa
+Barat. Alamat ini juga merupakan alamat penerimaan retur.
 
-## 2. Layanan dan pembentukan kesepakatan
+Kontak layanan dan privasi: **niuvamakerspace@gmail.com** dan
+**085117678901**.
 
-Niuva menyediakan informasi usaha dan kontak WhatsApp B2B, Shop, serta permintaan Custom Print. Website tidak menerima Project Brief atau membuat proposal/penagihan B2B baru. Pengajuan Custom Print belum merupakan penerimaan pekerjaan. Estimasi awal Custom Print belum menjadi harga final: operator memeriksa kebutuhan, berkas, berat dan durasi slicer sebelum menerbitkan quote. Produksi dan pembayaran mengikuti quote yang diterima serta divalidasi ulang oleh sistem. Pengiriman Custom Print dihitung setelah paket akhir diukur.
+## 2. Layanan
 
-**Cakupan penawaran:** produk Shop mengikuti katalog yang benar-benar ditawarkan, dengan spesifikasi, harga dan ketersediaan yang diperiksa kembali sebelum pembayaran. Bahan, ukuran, jumlah dan pekerjaan Custom Print mengikuti hasil review serta rincian quote; pilihan di formulir atau estimasi tidak menjamin stok bahan maupun penerimaan produksi. Pekerjaan desain, revisi atau penggunaan yang memerlukan standar keselamatan khusus hanya dapat ditawarkan bila lingkup, kemampuan dan ketentuannya telah dinyatakan serta disepakati. Tidak ada klaim sertifikasi atau kesesuaian penggunaan khusus hanya karena suatu model dapat dicetak.
+Niuva menyediakan:
 
-**Masa berlaku quote dan pembayaran:** quote Custom Print berlaku **7 hari kalender sejak dikirim**, dengan waktu kedaluwarsa pada quote. Penerimaan setelah kedaluwarsa memerlukan quote yang masih berlaku; Customer tidak dapat menggunakan harga dari quote lama yang sudah diganti. Pesanan Shop yang menunggu pembayaran mempunyai batas **30 menit**, sedangkan pesanan Custom Print dari quote yang diterima mempunyai batas **24 jam**; ikuti waktu kedaluwarsa yang ditampilkan pada pesanan. Masa berlaku quote berbeda dari batas pembayaran. Pembayaran dan status akhir tetap ditentukan hasil verifikasi server.
+- **Shop:** produk cetak 3D siap pesan sesuai katalog, termasuk produk yang
+  dapat dipersonalisasi sesuai pilihan pada halaman produk.
+- **Custom Print:** jasa cetak 3D berdasarkan desain atau berkas yang Anda
+  kirim.
+- **Kerja sama B2B:** dibahas langsung melalui WhatsApp Niuva. Website tidak
+  menerima pengajuan proyek B2B.
 
-Untuk B2B, pembahasan kebutuhan, lingkup, hasil kerja, harga, tahapan pembayaran, jadwal, revisi, penerimaan hasil dan pencatatan berlangsung melalui WhatsApp serta alat di luar website sesuai keputusan 11 Oktober. Data B2B historis tetap mengikuti privasi/retensi yang berlaku. Kesepakatan khusus tidak menghapus hak yang diwajibkan hukum.
+Layanan Shop dan Custom Print melayani alamat pengiriman di **Indonesia** yang
+dapat dijangkau kurir dan memiliki ongkos kirim yang tervalidasi.
 
-Layanan awal Shop dan Custom Print melayani alamat pengiriman di **Indonesia**, terbatas pada alamat yang dapat dilayani dan memiliki ongkir tervalidasi. **Pesanan Shop dianggap diterima Niuva setelah pembayaran dinyatakan berhasil melalui verifikasi server dan konfirmasi pesanan berdasarkan hasil tersebut diterbitkan.** Order yang masih menunggu pembayaran belum memenuhi titik penerimaan ini. Pemberitahuan bahwa order telah dibuat, tampilan harga/stok, redirect pembayaran dan simulasi browser bukan bukti pembayaran. Pengajuan dan penerimaan quote Custom Print tetap mengikuti proses pada bagian sebelumnya.
+### Pesanan Shop
 
-**Harga dan biaya:** Niuva tidak menambahkan biaya admin atau layanan di luar harga yang disepakati dan ongkir. Biaya gateway pembayaran yang dikenakan kepada Niuva sebagai merchant ditanggung Niuva dan tidak ditambahkan pada tagihan Customer. Ongkir pengiriman pesanan dibayar Customer sesuai nilai yang diinformasikan sebelum pembayaran; ongkir Custom Print mengikuti pengukuran paket akhir. Biaya retur/pengganti yang menjadi tanggung jawab Niuva tetap mengikuti bagian 5 dan 6.
+Spesifikasi, harga, stok dan ongkos kirim diperiksa ulang oleh sistem sebelum
+pembayaran. Pesanan yang menunggu pembayaran berlaku **30 menit**. Pesanan Shop
+dianggap diterima Niuva setelah pembayaran dinyatakan berhasil oleh verifikasi
+server dan konfirmasi pesanan diterbitkan. Tampilan harga, pemberitahuan
+pesanan dibuat, atau halaman pembayaran belum merupakan bukti pembayaran.
 
-Pekerjaan tambahan Custom Print yang dipilih dirinci dalam quote sebelum Customer menyetujuinya. Niuva tidak menambahkan tagihan pekerjaan tersebut secara sepihak setelah kesepakatan. Ketentuan tanpa biaya admin/layanan Niuva tidak menjanjikan ketiadaan biaya yang dikenakan langsung oleh bank/aplikasi pembayaran Customer di luar kendali Niuva.
+### Custom Print
 
-**PPN dan dokumen transaksi:** Niuva bukan Pengusaha Kena Pajak (PKP) dan tidak memungut PPN atas penjualan produk dan jasa dalam layanan ini. Harga produk atau jasa mengikuti harga yang ditampilkan atau quote yang disetujui. Ongkir diinformasikan terpisah sebelum pembayaran. Dokumen tagihan atau bukti transaksi yang diterbitkan Niuva bukan Faktur Pajak.
+Pengajuan Custom Print belum merupakan penerimaan pekerjaan. Estimasi awal
+bukan harga final. Operator memeriksa berkas, kebutuhan, berat dan durasi
+cetak, lalu menerbitkan quote.
 
-**Metode pembayaran:** gunakan pilihan yang benar-benar tersedia pada checkout untuk pesanan tersebut. Metode dan nominal yang harus dibayar ditampilkan sebelum Customer melanjutkan; penyebutan nama gateway tidak menjamin seluruh metode aktif. Harga dan pencatatan transaksi mengikuti status bukan PKP yang dikonfirmasi Owner.
+- Quote berlaku **7 hari kalender** sejak dikirim, sesuai waktu kedaluwarsa
+  yang tertera. Quote yang sudah diganti atau kedaluwarsa tidak dapat
+  digunakan.
+- Setelah quote diterima, pesanan menunggu pembayaran selama **24 jam**.
+- Ongkos kirim Custom Print dihitung setelah paket akhir diukur.
+- Pekerjaan tambahan dirinci dalam quote sebelum Anda menyetujuinya. Niuva
+  tidak menambah tagihan secara sepihak setelah kesepakatan.
 
-Sebelum penawaran dipublikasikan, data produk/bahan dan metode pembayaran harus cocok dengan konfigurasi serta bukti layanan nyata (PUB-BIZ; T31 dan gate provider terkait). Daftar SKU/stok/tarif rinci bukan bagian tetap policy. Keputusan wilayah layanan tidak membuktikan seluruh alamat Indonesia terjangkau atau provider pengiriman sudah aktif.
+Bahan, ukuran, jumlah dan pekerjaan mengikuti hasil review dan rincian quote.
+Pilihan di formulir tidak menjamin ketersediaan bahan atau penerimaan
+produksi. Niuva tidak memberikan klaim sertifikasi atau kesesuaian untuk
+penggunaan khusus hanya karena suatu model dapat dicetak. Pekerjaan yang
+memerlukan standar keselamatan khusus hanya dikerjakan bila lingkup dan
+ketentuannya disepakati tertulis.
 
-## 3. Akun Customer
+### Harga, biaya dan pajak
 
-Target pendaftaran akun Customer aktif adalah **usia 18 tahun ke atas**, melalui pernyataan usia yang terpisah dari persetujuan dokumen. Kontrol deklarasi telah diterapkan pada alur internal/test; public consent dan pendaftaran hosted belum tersedia. Pengguna menyatakan usianya, sedangkan sistem tidak memverifikasi usia sebenarnya. Tidak ada pengumpulan tanggal lahir, identitas resmi, KYC atau biometrik melalui kontrol ini.
+- Niuva tidak menambahkan biaya admin atau biaya layanan di luar harga yang
+  disepakati dan ongkos kirim.
+- Biaya gateway pembayaran yang dikenakan kepada Niuva ditanggung Niuva.
+- Ongkos kirim dibayar Anda sesuai nilai yang ditampilkan sebelum pembayaran.
+- Niuva **bukan Pengusaha Kena Pajak (PKP)** dan tidak memungut PPN. Bukti
+  transaksi dari Niuva bukan Faktur Pajak.
+- Biaya yang dikenakan langsung oleh bank atau aplikasi pembayaran Anda berada
+  di luar kendali Niuva.
 
-Akun anak, akun wali dan transaksi atas akun anak berada di luar scope rilis ini. Pernyataan dari orang yang mengaku wali atau kesamaan email tidak memberikan akses ke akun, riwayat atau refund pihak lain. Perluasan usia/metode membutuhkan keputusan dan kontrak tersendiri; requirement semua usia pada snapshot 3 Oktober tidak menjadi backlog aktif.
+Metode pembayaran yang dapat digunakan adalah metode yang tampil pada halaman
+checkout untuk pesanan tersebut.
 
-Risiko pernyataan usia yang tidak benar dan penanganan temuan data/pengguna di bawah umur tetap perlu review kepatuhan dan prosedur insiden yang sesuai. Keputusan produk 18+ tidak menjadi kesimpulan pemenuhan kewajiban hukum. Pengesahan policy final, bukti hosted dan izin aktivasi publik tetap terpisah dari kontrol teknis PUB-AGE.
+## 3. Akun
 
-Pendaftaran memakai metode yang tersedia: Google atau email/password terverifikasi. Akun tidak digabungkan hanya karena alamat email sama. Customer menjaga akses akun dan memberi data yang benar.
+Akun hanya untuk pengguna berusia **18 tahun ke atas**. Anda menyatakan usia
+Anda saat mendaftar; Niuva tidak meminta tanggal lahir, identitas resmi atau
+data biometrik dan tidak memverifikasi usia sebenarnya. Akun anak dan akun
+wali tidak tersedia.
 
-Customer dapat meminta salinan data, koreksi, data tambahan, dan penutupan melalui Pusat privasi. Unduhan dan penutupan memerlukan konfirmasi email sekali pakai dalam 15 menit, pada sesi/browser pemohon. Penutupan permanen tidak memiliki masa pemulihan; akun baru tidak otomatis memperoleh riwayat akun lama.
+Pendaftaran menggunakan metode yang tersedia di website, yaitu akun Google
+atau email dan password yang diverifikasi. Akun tidak digabungkan hanya
+karena alamat email sama. Anda bertanggung jawab menjaga akses akun dan
+memberikan data yang benar. Pembelian memerlukan login.
 
-Penutupan tetap diterima bila pesanan, keluhan, atau refund aktif. Penutupan tidak membatalkan kewajiban tersebut; penyelesaiannya dilanjutkan melalui kontak terverifikasi yang diperlukan. Penutupan Niuva tidak menghapus akun Google atau salinan data provider.
+Anda dapat meminta salinan data, koreksi, data tambahan dan penutupan akun
+melalui Pusat Privasi di akun Anda. Unduhan data dan penutupan akun memerlukan
+konfirmasi melalui email sekali pakai yang berlaku **15 menit**. Penutupan
+akun bersifat permanen dan tidak dapat dipulihkan; akun baru tidak otomatis
+memperoleh riwayat akun lama. Penutupan tidak membatalkan pesanan, keluhan
+atau refund yang sedang berjalan; penyelesaiannya dilanjutkan melalui kontak
+Anda yang terverifikasi.
 
 ## 4. Jadwal dan pengiriman
 
-Konfirmasi pesanan/quote menyebut **batas kirim yang disepakati** dan **estimasi waktu tiba** secara terpisah. Batas kirim adalah batas penyerahan barang kepada pengangkut, bukan janji tanggal kedatangan. Perubahan jadwal harus dikomunikasikan dan disepakati, bukan diperpanjang sepihak.
+Konfirmasi pesanan atau quote mencantumkan **batas kirim** dan **estimasi
+waktu tiba** secara terpisah. Batas kirim adalah batas penyerahan barang
+kepada kurir, bukan janji tanggal tiba. Perubahan jadwal dikomunikasikan dan
+disepakati, tidak diperpanjang sepihak.
 
-Jika batas kirim terlewati dan barang belum dikirim, setelah status dikonfirmasi Customer memilih **refund penuh** atau **jadwal baru yang disepakati**. Jika barang sudah dikirim, masalah keterlambatan, kerusakan, atau ketidaksesuaian ditinjau berdasarkan fakta dan hak yang berlaku; estimasi kurir tidak menggantikan hak Customer.
+Jika batas kirim terlewati dan barang belum dikirim, Anda dapat memilih
+**refund penuh** atau **jadwal baru yang disepakati**. Jika barang sudah
+dikirim, keterlambatan, kerusakan atau ketidaksesuaian ditinjau berdasarkan
+fakta dan hak Anda yang berlaku.
 
-## 5. Pembatalan, ketidaksesuaian, retur, dan refund
+## 5. Pembatalan, retur dan refund
 
-Pembatalan ketika jadwal yang disepakati masih dipenuhi ditinjau berdasarkan kondisi pesanan, pekerjaan yang sudah dilakukan, dan kesepakatan terkait. Draf ini tidak menjanjikan pembatalan otomatis atau menentukan potongan biaya sepihak. Tidak ada penawaran retur sukarela hanya karena berubah pikiran.
+Pembatalan saat jadwal masih dapat dipenuhi ditinjau berdasarkan kondisi
+pesanan dan pekerjaan yang sudah dilakukan. Niuva tidak menerima retur
+karena berubah pikiran.
 
-Jika cacat atau ketidaksesuaian akibat Niuva terkonfirmasi, Customer memilih **penggantian/pengerjaan ulang** atau **retur dan refund penuh**. Ongkos penanganan yang diperlukan, termasuk retur dan pengiriman pengganti, ditanggung Niuva. Instruksi, alamat, metode retur, dan bukti serah terima dikonfirmasi sebelum pengiriman. Kondisi retur tidak boleh meniadakan hak wajib Customer.
+Jika terdapat cacat atau ketidaksesuaian yang disebabkan Niuva, Anda dapat
+memilih **penggantian/pengerjaan ulang** atau **retur dan refund penuh**.
+Ongkos penanganan yang diperlukan, termasuk ongkos retur dan pengiriman
+pengganti, ditanggung Niuva. Sebelum mengirim retur, Anda akan menerima nomor
+kasus, detail penerima, jam penerimaan serta instruksi metode dan biaya.
 
-Untuk penukaran atau pembatalan pada kondisi yang diatur PP 80/2019 Pasal 69, Customer mendapat waktu pengajuan **paling sedikit 2 hari kerja sejak barang diterima**. Ketentuan ini tetap menjaga hak atas cacat tersembunyi dan hak lain yang berlaku.
+Untuk penukaran atau pembatalan sebagaimana diatur PP 80/2019 Pasal 69, Anda
+memiliki waktu pengajuan **paling sedikit 2 hari kerja sejak barang
+diterima**, tanpa mengurangi hak atas cacat tersembunyi dan hak lain yang
+berlaku.
 
-Saat melapor, sertakan **nomor pesanan, uraian masalah dan bukti relevan yang sudah tersedia**, misalnya foto kondisi barang/kemasan atau video bila tersedia. Niuva memakai bukti transaksi yang sudah dimilikinya tanpa meminta salinan ulang. Bukti yang diminta harus relevan dan proporsional; video pembukaan paket bukan satu-satunya bukti yang diterima. Bukti tambahan hanya diminta bila diperlukan dengan alasan yang jelas; laporan tidak otomatis ditolak hanya karena suatu jenis bukti tidak tersedia.
+Saat melapor, sertakan nomor pesanan, uraian masalah dan bukti yang tersedia,
+misalnya foto barang atau kemasan. Video pembukaan paket bukan satu-satunya
+bukti yang diterima. Bukti tambahan hanya diminta bila diperlukan, dengan
+alasan yang jelas.
+
+Refund penuh dihitung dari pembayaran yang benar-benar diterima untuk pesanan
+terkait, termasuk ongkos kirim awal. Versi ini tidak menyediakan refund
+sebagian. Waktu dana masuk bergantung pada metode pembayaran, bank atau
+penyedia pembayaran. Bila suatu metode tidak mendukung refund otomatis, Niuva
+menyelesaikannya melalui prosedur manual tanpa membebankan biaya tambahan
+kepada Anda.
 
 ## 6. Penanganan keluhan
 
-Hari kerja: **Senin–Jumat, kecuali libur nasional, WIB**. Tanggapan awal maksimal **1 hari kerja**. Pemeriksaan maksimal **1 hari kerja** setelah bukti lengkap, atau setelah retur diterima bila pemeriksaan fisik memang diperlukan. Customer diberi tahu bukti tambahan yang relevan beserta alasannya.
+Hari kerja Niuva adalah **Senin–Jumat, kecuali libur nasional, WIB**.
 
-Refund mulai diproses maksimal **1 hari kerja** setelah disetujui dan syarat retur yang relevan terpenuhi. Alurnya adalah pemeriksaan dan persetujuan Owner, kemudian pengiriman refund penuh serta pemantauan hasil oleh aplikasi. Pengajuan kasus dan approval Owner sudah diimplementasikan; submission serta rekonsiliasi refund sudah diuji lokal. Kemampuan merchant/metode pembayaran, hasil provider/bank dan jalur pengecualian manual hosted masih memerlukan bukti sebelum layanan diaktifkan (T21–T25; PUB-REFUND). Approval atau pengujian lokal tidak menyatakan dana telah diterima Customer.
+- Tanggapan awal: paling lambat **1 hari kerja** sejak keluhan diterima.
+- Pemeriksaan: paling lambat **1 hari kerja** setelah bukti lengkap, atau
+  setelah barang retur diterima bila pemeriksaan fisik diperlukan.
+- Refund mulai diproses: paling lambat **1 hari kerja** setelah disetujui.
 
-Total target tanggapan, pemeriksaan dan mulai memproses refund adalah maksimal **3 hari kerja penanganan Niuva**, dihitung sejak keluhan diterima. **Hanya perjalanan barang retur yang memang diperlukan tidak masuk hitungan tersebut.** Awal/akhir perjalanan dan alasannya dicatat serta disampaikan kepada Customer. Laporan awal sudah disertai bukti yang tersedia; permintaan bukti tambahan tidak otomatis menghentikan atau memulai ulang tenggat. Pergantian petugas, status atau kanal tidak mereset hitungan. Antrean dan penundaan internal, termasuk persetujuan Owner, tetap dihitung. Target ini tidak menjanjikan dana sudah masuk atau seluruh kasus sudah selesai dalam tiga hari; hasil dana dan penyelesaian nyata mengikuti bagian berikut. Pemeriksaan, approval dan rekonsiliasi yang aman tetap wajib; jika target terlewati, Customer diberi penjelasan serta tindak lanjut.
+Total target penanganan Niuva adalah **3 hari kerja**, tidak termasuk waktu
+perjalanan barang retur. Target ini bukan janji bahwa dana sudah masuk dalam
+tiga hari. Bila target terlewati, Anda akan menerima penjelasan dan tindak
+lanjut. Kasus dinyatakan selesai setelah penyelesaian benar-benar tercapai,
+misalnya refund diterima atau barang pengganti diserahkan.
 
-Metode pembayaran tetap dapat beragam. Bila metode atau transaksi tidak mendukung refund API, melewati batas refund provider, atau membutuhkan penanganan lain, Owner menyelesaikannya melalui prosedur pengecualian yang tercatat. Hasil yang belum pasti harus direkonsiliasi sebelum refund diulang atau dilakukan manual. Biaya yang menjadi tanggung jawab Niuva tidak dialihkan kepada Customer karena keterbatasan provider.
+**Penyelesaian sengketa.** Anda dapat menghubungi Niuva untuk mencari
+penyelesaian. Hal ini tidak membatasi hak Anda untuk menempuh Badan
+Penyelesaian Sengketa Konsumen (BPSK) atau pengadilan yang berwenang sesuai
+hukum Indonesia. Penyelesaian di luar pengadilan dipilih secara sukarela oleh
+para pihak.
 
-Refund penuh dihitung dari pembayaran yang benar-benar diterima untuk pesanan terkait, termasuk ongkir awal yang termasuk pembayaran tersebut. Ongkir retur/pengganti dan biaya lain yang menjadi tanggung jawab Niuva ditangani terpisah bila berada di luar pembayaran awal. Tidak ada refund sebagian dalam versi pertama.
+## 7. Berkas dan hak atas desain
 
-Waktu dana masuk berbeda menurut metode pembayaran/bank/provider dan harus disampaikan terpisah dari waktu Niuva mulai memproses. Kasus baru dinyatakan selesai setelah penyelesaian benar-benar tercapai, misalnya refund diterima atau penggantian diserahkan; persetujuan Owner, penerimaan permintaan API, atau status administratif saja belum cukup. Rincian penanganan dalam [SOP layanan dan refund](customer-service-refund-sop.md).
+**Hak atas berkas.** Mengunggah model, gambar atau berkas lain tidak
+memindahkan hak atas karya kepada Niuva. Anda perlu memiliki hak atau izin
+untuk mengirim, mencetak dan menggunakan hasilnya, termasuk penggunaan
+komersial bila relevan. Berkas yang dapat diunduh gratis belum tentu boleh
+dicetak melalui jasa berbayar atau dijual kembali.
 
-**Penyelesaian sengketa konsumen:** Customer dapat menghubungi Niuva melalui kontak layanan untuk mencari penyelesaian. Penanganan keluhan oleh Niuva tidak membatasi hak Customer untuk menggunakan Badan Penyelesaian Sengketa Konsumen (BPSK) yang berwenang atau pengadilan sesuai kewenangan dan prosedur hukum Indonesia. Penyelesaian di luar pengadilan dipilih secara sukarela oleh para pihak. Jika jalur tersebut telah dipilih, proses selanjutnya melalui pengadilan mengikuti ketentuan yang berlaku, termasuk syarat upaya di luar pengadilan dinyatakan tidak berhasil.
+**Izin untuk mengerjakan pesanan.** Anda memberi Niuva izin terbatas untuk
+mengakses, menyimpan dan membuat salinan kerja yang diperlukan untuk review,
+quote, produksi dan penyelesaian layanan. Izin ini tidak mencakup publikasi
+portofolio, promosi, penjualan ulang desain atau pemberian berkas kepada
+pihak lain. Penggunaan untuk promosi memerlukan persetujuan terpisah dan
+tidak menjadi syarat pemesanan.
 
-Tindak lanjut internal mengikuti [SOP layanan dan refund](customer-service-refund-sop.md#akun-ditutup-anak-dan-eskalasi). Kontak lembaga, pihak yang berwenang menangani dan cakupan operasi yang nyata masih perlu diverifikasi sebelum publikasi (PUB-SERVICE, PUB-BIZ; T39). Draf ini tidak menetapkan forum tertentu secara eksklusif, kewajiban menempuh pengaduan internal terlebih dahulu, atau janji bahwa BPSK berwenang atas setiap perkara.
+**Format dan ukuran berkas.** Model 3D: STL, OBJ, 3MF, STEP/STP, paling besar
+**100 MiB** per berkas. Foto referensi: JPG/JPEG/PNG, paling besar **10 MiB**
+per berkas. Pemeriksaan format tidak memastikan kepemilikan hak, keamanan
+penggunaan hasil atau kelayakan produksi. Perubahan bentuk, ukuran, bahan,
+fungsi atau biaya dikonfirmasi kepada Anda sebelum dikerjakan. Pembuatan
+desain baru, penyerahan berkas sumber, revisi dan pengalihan hak memerlukan
+kesepakatan khusus; pembayaran jasa cetak tidak otomatis membeli hak desain.
 
-## 7. Berkas Customer dan hak konten
+**Permintaan bermasalah.** Niuva tidak memproses permintaan yang melanggar
+hukum atau hak pihak lain, atau berkas yang dipakai untuk mengganggu keamanan
+sistem. Niuva dapat menunda pekerjaan untuk meminta klarifikasi atau bukti hak
+dan akan menyampaikan alasannya. Penundaan bukan penetapan bahwa Anda
+melanggar, dan pesanan yang sudah dibayar tetap ditangani sesuai aturan
+pembatalan dan refund.
 
-**Hak atas berkas.** Mengunggah model, gambar atau berkas lain tidak memindahkan hak atas karya kepada Niuva. Hak tetap pada Customer atau pemegang hak yang sah. Customer perlu memiliki hak atau izin yang mencakup pengiriman berkas, pencetakan dan penggunaan hasil yang diminta, termasuk penggunaan komersial bila relevan. Berkas yang dapat diunduh gratis belum tentu boleh dicetak melalui jasa berbayar atau dijual kembali; ketentuan izin/lisensinya tetap perlu diperiksa. Karya pihak lain dapat diajukan apabila hak atau izin yang diperlukan tersedia.
+**Keberatan pemegang hak.** Pemegang hak atau wakilnya dapat menghubungi
+kontak Niuva dengan identitas yang dapat diverifikasi, karya atau pesanan yang
+dimaksud, alasan keberatan dan bukti kewenangan. Laporan tidak otomatis
+memberi pelapor akses ke berkas pribadi Anda.
 
-**Izin untuk mengerjakan pesanan.** Customer memberi Niuva izin terbatas untuk mengakses, menyimpan dan membuat salinan kerja yang diperlukan untuk review, penawaran, produksi yang disepakati serta penyelesaian layanan. Pemrosesan oleh penyedia layanan mengikuti Kebijakan Privasi. Izin ini tidak mencakup publikasi portofolio, promosi, penjualan ulang desain atau pemberian berkas kepada pihak lain di luar tujuan layanan dan kewajiban hukum. Penggunaan promosi memerlukan persetujuan terpisah dari pihak yang berwenang; tidak menjadi syarat pemesanan.
+**Penyimpanan berkas.** Berkas disimpan secara privat dan dihapus menurut
+jadwal berikut:
 
-**Berkas dan review produksi.** Unggahan model mendukung STL, OBJ, 3MF, STEP/STP dengan batas **100 MiB per berkas**; foto referensi JPG/JPEG/PNG memiliki batas **10 MiB per berkas**. Berkas diperiksa sebelum digunakan dalam pengajuan, tetapi pemeriksaan format tidak memastikan kepemilikan hak, seluruh isi arsip, keamanan penggunaan hasil atau kelayakan produksi. Unggahan dan preview tetap diikuti review operator serta quote yang diterima dan divalidasi. Perubahan bentuk, ukuran, bahan, fungsi yang disepakati atau biaya perlu dikonfirmasikan kepada Customer sebelum dikerjakan. Pembuatan desain baru, penyerahan berkas sumber, cakupan revisi dan lisensi/pengalihan hak harus ditentukan dalam kesepakatan khusus; pembayaran jasa cetak tidak otomatis membeli seluruh hak desain. Layanan B2B tetap dibahas melalui kontak WhatsApp Niuva.
+- **14 hari** untuk unggahan yang tidak dilanjutkan, ditolak atau tidak
+  terhubung ke pengajuan;
+- **60 hari** untuk pengajuan atau quote yang dibatalkan, ditolak atau tidak
+  dibayar;
+- **90 hari sejak pesanan selesai** untuk berkas pesanan Custom Print.
 
-**Permintaan yang bermasalah.** Niuva tidak memproses permintaan yang melanggar hukum atau hak pihak lain, maupun berkas yang digunakan untuk mengganggu keamanan sistem. Bila ada alasan yang perlu diperiksa, Niuva dapat menunda pekerjaan terkait untuk meminta klarifikasi atau bukti hak yang relevan dan menyampaikan alasan serta tindak lanjut kepada Customer. Penundaan bukan penetapan otomatis bahwa Customer melanggar. Pesanan yang sudah dibayar ditangani melalui aturan pembatalan/refund dan kewajiban yang berlaku; dugaan pelanggaran tidak otomatis membuat pembayaran hangus atau menghapus tanggung jawab Niuva atas layanannya.
+Pesanan aktif, sengketa aktif atau kewajiban hukum dapat menunda penghapusan.
 
-**Keberatan atas hak konten.** Pemegang hak atau wakil yang berwenang dapat menghubungi kontak layanan Niuva dengan identitas/kontak yang dapat diverifikasi, karya atau pesanan yang dapat diidentifikasi, alasan keberatan dan bukti kewenangan yang relevan. Niuva meninjau informasi, meminta tanggapan yang diperlukan dan menjelaskan tindak lanjut sesuai keadaan perkara. Pelaporan tidak otomatis memberi pelapor akses ke berkas privat atau membuktikan kepemilikan. Penanganan ini tidak menggantikan jalur hukum yang berwenang; sengketa konsumen mengikuti bagian 6, sedangkan sengketa hak konten mengikuti jalur yang sesuai dengan perkaranya.
+## 8. Perubahan Syarat Layanan
 
-**Privasi dan retensi.** Berkas disimpan privat dengan akses terbatas bagi pihak yang berwenang. Kelas retensi 3D/CAD tetap **14 hari** untuk unggahan terbengkalai/ditolak/tidak terhubung ke pengajuan, **60 hari** untuk pengajuan/quote yang dibatalkan, ditolak atau tidak dibayar, dan **90 hari sejak penyelesaian** untuk berkas pesanan Custom Print yang selesai. Perhitungan dan pengecualian mengikuti [keputusan retensi berkas](../backend/phase-2-closure-decisions.md#private-customer-files); pesanan aktif, sengketa aktif atau kewajiban penyimpanan bukti dapat menunda penghapusan. Unggahan yang gagal pemeriksaan dapat ditolak dan dihapus saat konfirmasi. Jadwal ini terpisah dari arsip transaksi dan tidak menyatakan salinan provider/backup sudah terhapus sebelum diverifikasi.
+Perubahan material diterbitkan sebagai versi baru dengan tanggal berlaku dan
+pemberitahuan yang jelas sebelum berlaku. Niuva tidak mengirim promosi atau
+pemasaran kepada Anda dalam layanan ini.
 
-**Catatan sebelum publikasi:** cakupan produk/bahan yang benar-benar dilayani, pembatasan penggunaan yang memerlukan keselamatan/sertifikasi khusus, serta rincian hak/revisi untuk layanan desain khusus masih perlu ditetapkan sesuai operasi nyata (PUB-BIZ). Draf ini tidak menjanjikan sertifikasi, pemeriksaan otomatis hak kekayaan intelektual atau pemindaian antivirus menyeluruh. Prosedur petugas mengikuti [SOP berkas dan hak konten](customer-service-refund-sop.md#berkas-dan-keberatan-hak-konten-custom-print); kesiapan operasional dan pengesahan akhir tetap terpisah.
+## Dasar hukum yang dirujuk
 
-## 8. Data, perubahan, dan prasyarat publikasi
-
-Pemrosesan data dijelaskan dalam draf Kebijakan Privasi dengan versi terkait. Tidak ada promosi/pemasaran Customer dalam lingkup saat ini. Perubahan material memerlukan versi, tanggal berlaku, dan pemberitahuan yang jelas; persetujuan internal tidak dianggap persetujuan policy komersial.
-
-Sebelum publikasi: tinjauan kewajiban dan tanggal berlaku aktual; kontrol akun 18+ beserta batas self-declaration; kanal keluhan dan instruksi retur per kasus; simulasi coverage SLA pada T39 tanpa menetapkan jam buka atau petugas pengganti di policy; kemampuan refund penuh termasuk ongkir; kalender libur/WIB; metode pembayaran/pengiriman produksi; pencatatan status dana diterima; inventaris dan retensi transaksi; bukti keamanan, backup, provider, dan penghapusan. Input yang sudah dikonfirmasi dan kebutuhan tersisa dicatat dalam [catatan input/bukti](customer-public-input-evidence.md) serta matriks kesiapan. Persetujuan Owner atas isi tidak menerbitkan policy atau mengaktifkan pendaftaran. Pembatalan otomatis, refund sebagian, atau pusat sengketa marketplace tidak ditambahkan oleh batch dokumen ini.
-
-## Rujukan tinjauan
-
-- PP 80/2019 Pasal 69: https://peraturan.go.id/files/pp80-2019bt.pdf
-- UU Perlindungan Konsumen: https://jdih.kemenkeu.go.id/api/download/fulltext/1999/8TAHUN~1999UU.htm
-- UU Hak Cipta 28/2014 Pasal 9, 16 dan 17: https://www.peraturan.go.id/files/uu28-2014bt.pdf
-- UU Desain Industri 31/2000 Pasal 9: https://peraturan.go.id/files/uu31-2000.pdf
-- UU PDP: https://jdih.komdigi.go.id/produk_hukum/view/id/832/t/undangundang%2Bnomor%2B27%2Btahun%2B2022
-- PP TUNAS dan Permen Komdigi 9/2026: [penilaian akun anak dan sumber primer](customer-public-launch-readiness.md#penilaian-akun-anak).
-
-Rujukan bukan penerimaan legal atas draf. Pendaftaran publik tetap ditahan oleh gerbang legal yang ada.
+- Undang-Undang No. 8 Tahun 1999 tentang Perlindungan Konsumen
+- Peraturan Pemerintah No. 80 Tahun 2019, Pasal 69
+- Undang-Undang No. 28 Tahun 2014 tentang Hak Cipta
+- Undang-Undang No. 31 Tahun 2000 tentang Desain Industri
+- Undang-Undang No. 27 Tahun 2022 tentang Pelindungan Data Pribadi

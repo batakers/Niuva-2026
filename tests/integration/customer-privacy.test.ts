@@ -42,6 +42,7 @@ afterEach(async () => {
   await prisma.storedFile.deleteMany({ where: { storageKey: { startsWith: "privacy-test/" } } });
   await prisma.customer.deleteMany({ where: { normalizedEmail: { in: emails } } });
   await prisma.customerClosureFence.deleteMany({ where: { identityHash: { in: emails.map(closureIdentityHash) } } });
+  await prisma.customerClosedConsentProof.deleteMany({ where: { identityHash: { in: emails.map(closureIdentityHash) } } });
   emails.length = 0;
 });
 describe("Customer privacy PostgreSQL lifecycle (isolated fixtures)", () => {
@@ -165,6 +166,22 @@ describe("Customer privacy PostgreSQL lifecycle (isolated fixtures)", () => {
     expect(fresh.id).not.toBe(customer.id); expect((await auth.getAccount(fresh.id))!.orders).toHaveLength(0);
     await expect(new CustomerWorkRepository(prisma).claim({ customerId: fresh.id, kind: "B2B_INQUIRY", token: `${inquiry.id}.wrong` })).rejects.toMatchObject({ code: "UNAUTHORIZED" });
     await repository.handle(handle(privacy.id), ownerId, new Date(now.getTime() + 2000));
+  });
+  it("keeps policy acceptance under the email digest for exactly 30 days after closure, without profile data", async () => {
+    const { customer, actor } = await fixture();
+    await repository.complete(actor, await proof(actor, "CLOSE"), "CLOSE", now);
+    expect(await prisma.customerConsent.count({ where: { customerId: customer.id } })).toBe(0);
+    const proofs = await prisma.customerClosedConsentProof.findMany({ where: { identityHash: closureIdentityHash(customer.email) } });
+    expect(proofs).toHaveLength(1);
+    expect(proofs[0]).toMatchObject({ termsVersion: "TEST", privacyVersion: "TEST", acceptedAt: now, closedAt: now, expiresAt: new Date(now.getTime() + 30 * DAY_MS) });
+    expect(JSON.stringify(proofs[0])).not.toContain(customer.email);
+    const cleanup = new CustomerPrivacyCleanupRepository(prisma);
+    await cleanup.cleanup(new Date(now.getTime() + 30 * DAY_MS - 1), false);
+    expect(await prisma.customerClosedConsentProof.count({ where: { identityHash: closureIdentityHash(customer.email) } })).toBe(1);
+    expect((await cleanup.cleanup(new Date(now.getTime() + 30 * DAY_MS), true)).closedConsentProofs).toBeGreaterThanOrEqual(1);
+    expect(await prisma.customerClosedConsentProof.count({ where: { identityHash: closureIdentityHash(customer.email) } })).toBe(1);
+    await cleanup.cleanup(new Date(now.getTime() + 30 * DAY_MS), false);
+    expect(await prisma.customerClosedConsentProof.count({ where: { identityHash: closureIdentityHash(customer.email) } })).toBe(0);
   });
   it("serializes session issuance against closure; reset replay cannot recreate erased Customer", async () => {
     const { customer, actor } = await fixture(); const email = new CustomerEmailRepository(prisma); const auth = new CustomerAuthRepository(prisma);

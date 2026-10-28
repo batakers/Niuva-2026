@@ -7,7 +7,7 @@ Update this after major decisions, completed phases, or bugs that future agents 
 - Working baseline: `main` `a3d995a904f6fde7e7e248e8a9c8421de734d521` after PR #68. T03 continuation uses the existing task checkout; local preparation does not establish current hosted/provider/production acceptance.
 - Current work: v1.0 closure. Scope: `PRODUCT.md`; dependencies: `ROADMAP.md`; sole active backlog: `TASKS.md`; completion: `docs/v1-definition-of-done.md`. `.kiro/specs/` is historical evidence.
 - Current task statuses and dated execution evidence belong to `TASKS.md`; this memory does not duplicate its backlog table.
-- Data model: 80 Prisma models (`grep -c '^model ' prisma/schema.prisma`) and 39 migration folders (`ls -d prisma/migrations/*/ | wc -l`). Counts describe files, not an applied database state.
+- Data model: 81 Prisma models (`grep -c '^model ' prisma/schema.prisma`) and 40 migration folders (`ls -d prisma/migrations/*/ | wc -l`). Counts describe files, not an applied database state.
 - Hosted preflight: `corepack pnpm staging:preflight` uses process environment and the canonical origin, capability and database-binding helpers. Runtime privileges and migration history use separate, binding-checked credentials; both client connections require verified TLS. It does not provision, migrate or call transaction providers; safe output omits credentials and resource identifiers. See `docs/backend/t03-hosted-sandbox-runbook.md` for evidence boundaries.
 - Auth, two separate systems:
   - Owner/Admin: Better Auth + TOTP (`src/lib/auth/admin-engine.ts`); `src/lib/auth/admin.ts` requires `mfaVerified`, `twoFactorEnabled`, and an active AdminProfile. `src/proxy.ts` checks only Admin session-cookie presence and must not import the engine or database (edge bundle; enforced by `tests/unit/proxy-edge-imports.test.ts`). Clerk SDK is absent; `src/lib/auth/clerk.ts` only re-exports `./admin` (deprecated).
@@ -46,7 +46,7 @@ Update this after major decisions, completed phases, or bugs that future agents 
 Carried findings retain their IDs; source fixes do not close hosted or release gates.
 
 - A1 — Resolver is consumed by adapters (`src/modules/capabilities/resolver.ts`); provider guards remain. Production/live are denied and grants empty (`src/modules/capabilities/matrix.ts`, `src/lib/env/deployment.ts`). A grant is a reviewed source entry with an Owner instruction reference and date, never an env flag; production entries are ignored. PUB-POLICY closes only when `PUBLIC_CUSTOMER_POLICY.publishedAt`/`effectiveAt` are recorded and reached (`isPolicyPublished`). Untuk T03, lihat status di `TASKS.md` dan observasi hosted bertanggal di `docs/backend/t03-hosted-sandbox-runbook.md`; bukti lokal belum memverifikasi operasi provider hosted saat ini.
-- A2/F1 — Owner-approved policy v1.0 content is checksum-addressed, but `publishedAt`/`effectiveAt` remain null. `src/modules/customer-auth/legal.ts` supplies it only in the local-test public-auth fixture; hosted email delivery/provider capability and publication gates follow `TASKS.md`. Public activation remains separate.
+- A2/F1 — Owner approved the public policy v1.0 text on 2026-10-28 (checksum-addressed in `src/modules/customer-auth/public-policy.ts`); `publishedAt`/`effectiveAt` remain null, so `/terms` and `/privacy` return 404. Closure copies consents to `CustomerClosedConsentProof` (email digest, 30 days). `src/modules/customer-auth/legal.ts` supplies it only in the local-test public-auth fixture; hosted email delivery/provider capability and publication gates follow `TASKS.md`. Public activation remains separate.
 - PUB-AGE / PUB-GUARDIAN — 18+ declaration is implemented, not actual-age verification (`src/modules/customer-auth/age-declaration.ts`). Child/guardian accounts are out of scope; formal/hosted review remains separate (`docs/legal/customer-public-launch-readiness.md`).
 - B2 (carried; original defect resolved in source) — Customer ID or HMAC IP candidate + endpoint keys (`src/lib/http/public-mutation.ts`, `src/lib/security/actor-key.ts`); memory only for local-test, Prisma/PostgreSQL otherwise (`src/lib/security/shared-rate-limit.ts`). T10 IN_PROGRESS; hosted topology/proxy handling belum diverifikasi.
 - B5 (carried; original defect resolved in source) — Tracked observability is wired into `apiError()` with correlation IDs (`src/lib/http/response.ts`) and Admin actions through `toAppErrorLogged` (`src/lib/observability/report.ts`, `src/app/admin/actions.ts`). Plain `toAppError` stays pure; deployed collection/alerting belum diverifikasi.
@@ -58,7 +58,7 @@ Carried findings retain their IDs; source fixes do not close hosted or release g
 - [x] Step 4 agent-documentation scaffold
 - [x] Application scaffold baseline
 - [x] Verification harness
-- [x] Core schema: 80 models, 39 migration folders; T12/T13 migration applied only to a new isolated local test database
+- [x] Core schema: 81 models, 40 migration folders; T12/T13 migration applied only to a new isolated local test database
 - [x] Auth: Better Auth/TOTP for Owner/Admin; Customer DB sessions; T12/T13 public signup tested locally, hosted gates remain
 - [x] Active B2B WhatsApp path and retired Project Brief boundaries present
 - [x] Retail/MAKE checkout/quote/order source paths present; runtime belum diverifikasi
