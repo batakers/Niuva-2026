@@ -62,6 +62,17 @@ export function resolveDeploymentTier(
     : "production";
 }
 
+/**
+ * Search engines may index only an explicit production tier. Staging, local
+ * runs and an unset or unknown tier get `noindex`, so a public staging URL is
+ * never indexed even when the tier variable is missing from the build.
+ */
+export function isSearchIndexingAllowed(source: Readonly<Record<string, string | undefined>>): boolean {
+  const tier = deploymentEnvironmentShape.NIUVA_DEPLOYMENT_TIER.safeParse(source.NIUVA_DEPLOYMENT_TIER);
+
+  return tier.success && tier.data === "production";
+}
+
 /** Unset mode is `mock`, the least-privileged mode. */
 export function resolveProviderMode(mode: ProviderMode | undefined): ProviderMode {
   return mode ?? "mock";

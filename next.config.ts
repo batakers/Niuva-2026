@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { isSearchIndexingAllowed } from "./src/lib/env/deployment";
 import { getDevAllowedOrigins } from "./src/lib/env/dev-origins";
 import {
   getServerActionsAllowedOrigins,
@@ -103,6 +104,10 @@ const nextConfig: NextConfig = {
         ],
         source: "/account/:path*",
       },
+      // Staging is publicly reachable; only an explicit production tier may be indexed.
+      ...(isSearchIndexingAllowed(process.env)
+        ? []
+        : [{ headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }], source: "/:path*" }]),
     ];
   },
 };

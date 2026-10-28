@@ -1406,8 +1406,26 @@ customers, custom-print, reports). Penyebab yang terbukti lewat Neon MCP:
 `CONNECTION LIMIT 5` dan lima koneksi idle dipegang instance fungsi Netlify,
 sementara `src/lib/db/prisma.ts` membuka hingga 5 koneksi per instance. Atas
 persetujuan Owner, batas dinaikkan ke 20 (`max_connections` Neon 901); keenam
-halaman kemudian termuat. Kode: pool per instance diturunkan ke 4 (belum
-di-commit/deploy).
+halaman kemudian termuat. Kode: pool per instance diturunkan ke 4 (PR #75,
+squash `5c05467`).
+
+Deploy staging 2026-10-29 (atas instruksi Owner): build Netlify dinyalakan
+sementara, deploy `6ae23a749093bf849be8e541` dari `main@5c05467` berstatus
+`ready` (secret scan 0 temuan), lalu build dikembalikan ke Stopped
+(diverifikasi setelah reload). Ke-14 tautan menu Admin staging menjawab 200
+tanpa teks error dengan sesi Owner; `/terms`, `/privacy`, `/shop` 200.
+Neon MCP: `niuva_staging_runtime` memegang 4 koneksi idle setelah pemeriksaan
+itu.
+
+Akses orang kedua ke staging, 2026-10-29: tim Netlify memakai paket Free
+(satu anggota). Undangan Reviewer ditolak server dengan HTTP 422 "Reviewer
+invitations are disabled on the Free plan temporarily", jadi tidak ada email
+terkirim. Keputusan Owner: buka kunci Netlify (staging publik). Prasyaratnya:
+`isSearchIndexingAllowed` (`src/lib/env/deployment.ts`) hanya mengizinkan
+indeks pada tier `production` eksplisit, dan `next.config.ts` mengirim
+`X-Robots-Tag: noindex, nofollow` di semua route untuk tier lain. Admin tetap
+dilindungi password + TOTP; provider tetap sandbox. Kunci dibuka hanya setelah
+header terbukti ada di staging.
 
 ### Grant aktivasi staging E6, 2026-10-28
 
