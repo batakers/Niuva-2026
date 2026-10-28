@@ -1303,7 +1303,10 @@ Jawaban Owner di sesi kerja atas pertanyaan audit 28 Oktober (E1–E13):
   Redirect `/account` tersimpan (dicek setelah muat ulang); redirect bukan sumber
   status. `NEXT_PUBLIC_MIDTRANS_CLIENT_KEY` sengaja tidak ditandai secret di
   Netlify karena nilainya ikut bundle browser (secret scanning Netlify akan
-  menggagalkan build); server key tetap secret. Belum: kunci rahasia `MIDTRANS_SERVER_KEY`,
+  menggagalkan build); server key tetap secret. Owner mengisi kedua kunci
+  (pemeriksaan nama 28 Oktober: `MIDTRANS_SERVER_KEY` secret,
+  `NEXT_PUBLIC_MIDTRANS_CLIENT_KEY` tidak secret; nama salah
+  `MIDTRANS_CLIENT_KEY` sudah dihapus). Grup Midtrans lengkap. Belum: kunci rahasia `MIDTRANS_SERVER_KEY`,
   `NEXT_PUBLIC_MIDTRANS_CLIENT_KEY`, `BITESHIP_API_KEY`, `RESEND_API_KEY`,
   `BETTER_AUTH_SECRET`, `CRON_SECRET` (diisi Owner). Owner memilih kurir
   staging JNE, SiCepat dan J&T; `BITESHIP_COURIERS=jne,sicepat,jnt` dipasang.
@@ -1336,6 +1339,35 @@ Jawaban Owner di sesi kerja atas pertanyaan audit 28 Oktober (E1–E13):
   `NODE_ENV=production`, sehingga email Customer hosted tertutup sampai jalur
   staging dibuat (bagian D3).
 - E10–E12 belum dijawab.
+- **Deploy staging E3, 28 Oktober 2026 (izin Owner "deploy dulu aja"):**
+  builds Netlify diaktifkan sementara, satu deploy tanpa cache dari `main`
+  `7063395` berstatus **Published**, lalu build status dikembalikan ke
+  **Stopped** (dicek setelah muat ulang; log tetap privat). Situs dilindungi
+  Netlify visitor access (anonim mendapat 401 "Login Redirect" dari Netlify,
+  bukan aplikasi). Melalui sesi Owner di browser bawaan: `/`, `/shop`,
+  `/services`, `/custom-print`, `/login`, `/register`, `/admin/sign-in`
+  200; `/terms` dan `/privacy` 200 dengan versi v1.0 dan tanggal 28 Oktober
+  2026; `/api/admin/account` dan fetch `/admin` tanpa sesi 401. Header
+  aplikasi terpasang (CSP, HSTS preload, `X-Frame-Options: DENY`, nosniff,
+  `Referrer-Policy`, `Permissions-Policy`). Shop masih kosong (katalog belum
+  diimpor). Belum diverifikasi: cookie/sesi, login Admin/Customer, operasi
+  provider, migration `customer_closed_consent_proofs` di Neon (belum
+  diterapkan). Build hosted pertama yang lulus setelah perbaikan proxy PR #70.
+
+### D4 — bootstrap Owner staging, 2026-10-28
+
+Signup Admin tetap mati (`disableSignUp`) dan `db:provision:admin` hanya untuk
+loopback dev. `corepack pnpm staging:bootstrap-owner` (wrapper PowerShell yang
+membaca DATABASE_URL, binding ID dan password tanpa echo) menjalankan
+`scripts/bootstrap-staging-owner.ts`: tier `staging` eksplisit, `sslmode=verify-full`,
+marker binding staging diverifikasi dalam transaksi yang sama, kunci advisory,
+dan ditolak bila sudah ada Owner. Akun dibuat `emailVerified=false`; Owner
+memverifikasi email saat masuk lalu memasang TOTP. Admin Faiz diundang Owner
+lewat `/admin/admins/new` (alur undangan existing). `provisionAdminIdentity`
+dipecah agar logika yang sama berjalan di transaksi binding. Email Admin
+(verifikasi, undangan, reset) memakai grup `ADMIN_SMTP_*` + `ADMIN_EMAIL_FROM`
+yang belum terisi di Netlify; rencana: SMTP Resend `mail.niuva.id`. Belum
+dijalankan terhadap Neon staging.
 
 ### Grant aktivasi staging E6, 2026-10-28
 
