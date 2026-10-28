@@ -43,11 +43,16 @@ describe("recorded activation grants", () => {
 });
 
 describe("PUB-POLICY publication", () => {
-  it("stays open for the current Owner-approved but unpublished policy", () => {
-    expect(PUBLIC_CUSTOMER_POLICY.publishedAt).toBeNull();
-    expect(PUBLIC_CUSTOMER_POLICY.effectiveAt).toBeNull();
-    expect(isPolicyPublished(PUBLIC_CUSTOMER_POLICY, NOW)).toBe(false);
-    expect(DEFAULT_POLICY_GATE_READER.getStatus("PUB-POLICY")).toEqual({ closed: false });
+  it("closes for the policy the Owner published effective 28 October 2026", () => {
+    expect(PUBLIC_CUSTOMER_POLICY.publishedAt).toBe("2026-10-28T00:00:00+07:00");
+    expect(PUBLIC_CUSTOMER_POLICY.effectiveAt).toBe("2026-10-28T00:00:00+07:00");
+    expect(isPolicyPublished(PUBLIC_CUSTOMER_POLICY, Date.parse("2026-10-27T16:59:59Z"))).toBe(false);
+    expect(isPolicyPublished(PUBLIC_CUSTOMER_POLICY, NOW)).toBe(true);
+    expect(DEFAULT_POLICY_GATE_READER.getStatus("PUB-POLICY")).toEqual({ closed: true });
+  });
+
+  it("publication alone grants no staging capability", () => {
+    for (const capability of CAPABILITY_NAMES) expect(hasActivationGrant("staging", capability), capability).toBe(false);
   });
 
   it("closes only when both times are recorded, ordered and already effective", () => {

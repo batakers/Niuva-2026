@@ -2,14 +2,14 @@ export type PolicyPublication = Readonly<{ publishedAt: string | null; effective
 
 // Owner approved the public text on 28 October (content of 24 October without
 // internal review notes, current providers and 28 October decisions), without
-// legal-counsel review. Publication dates are a separate Owner act.
+// legal-counsel review. Owner set publication and effect to 28 October.
 export const PUBLIC_CUSTOMER_POLICY = Object.freeze({
   ownerApprovedAt: "2026-10-28",
   ownerApprovalReference: "TASKS.md#keputusan-owner-untuk-staging-2026-10-28",
   approvedSourceRevision: "d7dd2d663f427246dfbbb630c1f54e635af40531",
   language: "id",
-  publishedAt: null,
-  effectiveAt: null,
+  publishedAt: "2026-10-28T00:00:00+07:00",
+  effectiveAt: "2026-10-28T00:00:00+07:00",
   terms: Object.freeze({
     version: "NIUVA-TERMS-v1.0",
     contentReference: "src/content/customer-policy/terms-v1.0.md",
