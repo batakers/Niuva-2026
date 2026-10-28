@@ -1,4 +1,4 @@
-import { assertSameOriginRequest } from "@/lib/security/origin";
+import { assertSameOriginRequest, hostedCanonicalOrigin } from "@/lib/security/origin";
 import { appError } from "@/modules/shared/errors";
 import { getInternalAuthConfig } from "./internal-testing";
 import { isCustomerPublicAuthTestRuntime } from "./email-test-runtime";
@@ -7,8 +7,9 @@ function configuredAuthOrigin(): string | undefined {
   return getInternalAuthConfig()?.origin ?? (isCustomerPublicAuthTestRuntime() ? new URL(process.env.APP_URL!).origin : undefined);
 }
 
+// Redirect targets use the canonical hosted origin, never an internal request URL.
 export function customerAuthOrigin(request: Request): string {
-  return configuredAuthOrigin() ?? new URL(request.url).origin;
+  return configuredAuthOrigin() ?? hostedCanonicalOrigin() ?? new URL(request.url).origin;
 }
 export function assertCustomerAuthOrigin(request: Request): void {
   const origin = configuredAuthOrigin();
