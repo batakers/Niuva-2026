@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { appError } from "@/modules/shared/errors";
+import { appError } from "../shared/errors";
 
 export const CUSTOM_PRINT_V1_RULE_CODE = "CUSTOM_PRINT_V1";
 export const CUSTOM_PRINT_V1_RULE_VERSION = 1;
