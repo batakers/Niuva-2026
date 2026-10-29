@@ -27,11 +27,13 @@ gelombang berikutnya menunggu penghambatnya.
 
 | Gelombang | Task | Pelaksana | Langkah berikutnya | Penghambat |
 | --- | --- | --- | --- | --- |
-| 1 — bukti hosted cepat | T07, T24, T09 (auth) | A | Picu manual (E9) `INVENTORY_RESERVATIONS`, `PAYMENT_RECONCILIATION`, `CUSTOMER_AUTH_CLEANUP`, lalu periksa DB | — |
-| 1 | T10, D02 | A | Rate limit staging lewat request terkontrol; tujuan WhatsApp B2B | — |
+| 1 — bukti hosted cepat | T07, T24, T10, D02 | A | Selesai 29 Okt (log "Gelombang 1"); T24 menemukan B5 | — |
+| 1 | T09 (auth) | O | `CUSTOMER_AUTH_CLEANUP` hanya lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
 | 1 | T03, T19 | A + O | Smoke R2 privat/publik lewat unggah media Admin | Sesi Admin Owner |
-| 2 — rekayasa | T31/T34 (B1) | A | Jalur impor pricing rule ke staging dari nilai Pricing v1 yang disetujui | Deploy atas izin Owner |
+| 2 — rekayasa | T10 (B4) | A | Kunci rate limit memakai IP klien dari header yang tidak dapat dipalsukan di Netlify | Deploy atas izin Owner |
+| 2 | T31/T34 (B1) | A | Jalur impor pricing rule ke staging dari nilai Pricing v1 yang disetujui | Deploy atas izin Owner |
 | 2 | T06/D07 (B2) | A | Time budget batch `OUTBOX_DELIVERY`/`OUTBOX_BUSINESS` | Deploy atas izin Owner |
+| 2 | T24 (B5) | A | Batas pemeriksaan attempt tanpa transaksi Midtrans | Q10 |
 | 3 — transaksi | T33 | O + A | BUY #2: dua produk, QRIS/GoPay simulator, fulfillment/resi manual sampai email shipped | — |
 | 3 | T34, T36, T19 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim | B1 |
 | 4 — setelah keputusan | T23, T25, T35 | O + A | Failure/refund sandbox: satu otomatis, satu manual | Q1, Q2 |
@@ -52,6 +54,9 @@ Keputusan Owner yang ditunggu, dijawab sekaligus:
 - **Q7:** tempat salinan arsip pembukuan di Indonesia (PUB-RECORDS).
 - **Q8:** build staging Active hanya untuk `main`, tanpa toggle manual.
 - **Q9:** perangkat fisik/AT dan pengujinya.
+- **Q10:** berapa lama attempt kedaluwarsa yang tidak pernah punya transaksi
+  di Midtrans (checkout ditinggalkan) tetap diperiksa sebelum dianggap selesai
+  (B5).
 
 Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 
@@ -1743,6 +1748,46 @@ Dua penghambat teknis baru dicatat:
 
 Lokasi hosting production (Q5) memengaruhi latensi, backup T38 dan
 PUB-RECORDS. Belum diputuskan.
+
+### Gelombang 1: bukti hosted cepat, 2026-10-29
+
+Staging `main@3d997ca`. Job dipicu manual (E9) lewat script lokal di luar Git
+yang membaca salinan DPAPI `CRON_SECRET` tanpa mencetaknya. Policy
+`jobPolicy` 30000/0/1000; execute limit 1. Pemeriksaan DB lewat Neon MCP.
+
+- **T07 `INVENTORY_RESERVATIONS`:**
+  - dry-run: scanned 1;
+  - execute: released 1, `remainingDue` 0, completed (14:51:08–14:51:16 UTC, request 12,2 s);
+  - hasil DB untuk `ORD-20261029-Q9XZKMBA`:
+    - order CANCELLED;
+    - attempt EXPIRED;
+    - reservasi RELEASED;
+    - SKU `103343689816` `stock_on_hand` 5, reservasi aktif 0;
+  - `ORD-20261029-3A6HAD6P` tetap PAID/CONSUMED;
+  - lease kosong;
+  - execute ulang: scanned 0 (aman diulang);
+  - sisa: cadence dan scheduler production (E9, Q5).
+- **T24 `PAYMENT_RECONCILIATION`:**
+  - dry-run: scanned 1;
+  - execute: state `failed`, `OUTCOME_UNKNOWN`, unknown 1, request 17,7 s;
+  - receipt `payment_reconciliation_checks`: outcome `NOT_FOUND` untuk attempt EXPIRED `ORD-20261029-Q9XZKMBA` yang tidak pernah punya transaksi Midtrans (Snap ditinggalkan, `provider_transaction_id` kosong);
+  - artinya panggilan Get Status hosted sampai ke Midtrans sandbox, dan lease kosong;
+  - sesuai kontrak (`docs/backend/payment-reconciliation.md`), 404 = belum diketahui dan tidak ada batas umur, sehingga attempt seperti ini tetap kandidat;
+  - **B5:** setiap checkout yang ditinggalkan membuat job `failed` di setiap run dan menambah backlog serta alarm `PAYMENT_RECONCILIATION_LAG` tanpa akhir;
+  - perlu batas waktu dari Owner (Q10) sebelum dijadwalkan;
+  - jalur `found` (PENDING/SETTLED) belum diuji hosted; rencananya saat BUY #2 dengan VA.
+- **T10 rate limit:**
+  - tujuh POST anonim ke `/api/account/claim` (limit 5/menit) dengan Origin staging: 1–5 → 401, 6–7 → 429 `RATE_LIMITED`;
+  - bucket di `request_rate_limits` bersama: count 6, kunci HMAC 64 karakter, bukan IP mentah;
+  - **B4 (keamanan):** dengan bucket IP asli sudah 429, request yang membawa `X-Forwarded-For` atau `X-Real-IP` palsu kembali 401, artinya lolos limiter;
+  - penyebab: `extractIpCandidate` (`src/lib/security/actor-key.ts`) memercayai kedua header itu, padahal klien dapat mengisinya di Netlify;
+  - semua rate limit publik (auth, checkout, MAKE) dapat diakali sampai B4 diperbaiki.
+- **D02:**
+  - tanpa JavaScript (HTML server lewat `curl`), `/services` memuat 9 dan `/` memuat 5 tautan `wa.me` ke nomor yang sama dengan `company-content.ts`;
+  - `/project-brief` 307 ke `/services`;
+  - `POST /api/project-brief` 410;
+  - kebenaran nomor bisnis tetap pengetahuan Owner.
+- **T09 (auth):** `CUSTOMER_AUTH_CLEANUP` tidak punya endpoint HTTP, hanya CLI `scripts/cleanup-internal-auth.ts` dengan kredensial DB. Belum dijalankan.
 
 ### Grant aktivasi staging E6, 2026-10-28
 
