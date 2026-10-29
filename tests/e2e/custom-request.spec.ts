@@ -63,7 +63,9 @@ test("MAKE guidance explains both intakes, manual CAD review, and the three pric
   await expect(page.getByText("Saya baru punya referensi")).toBeVisible();
   await expect(page.getByText(/STEP.*STP/).first()).toBeVisible();
   await expect(page.getByText("Estimasi awal, bukan harga final.", { exact: false }).first()).toBeVisible();
-  await expect(page.getByRole("link", { name: /Ajukan untuk Review/ }).first()).toBeVisible();
+  // The per-product "Ajukan untuk Review" cards are gone (Owner, 28 October 2026);
+  // the intake entry points still lead to review.
+  await expect(page.getByRole("link", { name: /untuk review/i }).first()).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
