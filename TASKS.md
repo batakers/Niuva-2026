@@ -30,9 +30,9 @@ gelombang berikutnya menunggu penghambatnya.
 | 1 — bukti hosted cepat | T07, T24, T10, D02 | A | Selesai 29 Okt (log "Gelombang 1"); T24 menemukan B5 | — |
 | 1 | T09 (auth) | O | `CUSTOMER_AUTH_CLEANUP` hanya lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
 | 1 | T03, T19 | A + O | Smoke R2 privat/publik lewat unggah media Admin | Sesi Admin Owner |
-| 2 — rekayasa | T10 (B4) | A | Kunci rate limit memakai IP klien dari header yang tidak dapat dipalsukan di Netlify | Deploy atas izin Owner |
-| 2 | T31/T34 (B1) | A | Jalur impor pricing rule ke staging dari nilai Pricing v1 yang disetujui | Deploy atas izin Owner |
-| 2 | T06/D07 (B2) | A | Time budget batch `OUTBOX_DELIVERY`/`OUTBOX_BUSINESS` | Deploy atas izin Owner |
+| 2 — rekayasa | T10 (B4) | A | PR #84: kunci rate limit dari `x-nf-client-connection-ip`; uji pemalsuan ulang setelah deploy | Merge dan deploy atas izin Owner |
+| 2 | T31/T34 (B1) | A + O | PR #86: Owner menjalankan `staging:activate-pricing` setelah merge (tanpa deploy) | Merge atas izin Owner |
+| 2 | T06/D07 (B2) | A | PR #85: `runBudgetMs` dan hitungan `deferred`; script staging ikut mengirim budget setelah deploy | Merge dan deploy atas izin Owner |
 | 2 | T24 (B5) | A | Batas pemeriksaan attempt tanpa transaksi Midtrans | Q10 |
 | 3 — transaksi | T33 | O + A | BUY #2: dua produk, QRIS/GoPay simulator, fulfillment/resi manual sampai email shipped | — |
 | 3 | T34, T36, T19 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim | B1 |
