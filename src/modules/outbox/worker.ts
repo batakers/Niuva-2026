@@ -9,9 +9,12 @@ import type { PrismaOutboxWorkerRepository } from "./worker-repository";
 import { isBusinessProof, outboxIdentity, outboxMetadataSchema } from "./core";
 import { parseDeliveryOutcome, parseWorkerPolicy, parseWorkerRequest, type AttemptAction, type DeliveryOutcome, type PreparedOutboxDelivery, type OutboxSender, type WorkerPolicy, type WorkerSummary } from "./worker-core";
 import type { EmailEnvelope } from "../notifications/email-delivery";
-export type OutboxWorkerCoordination = Readonly<{ beforeClaim(tx: Prisma.TransactionClient, now: Date): Promise<Date | null>; recordCooldown(tx: Prisma.TransactionClient, until: Date): Promise<void> }>;
-export type OutboxWorkerOptions = { bound: Pick<BoundDatabaseService, "run">; repository: PrismaOutboxWorkerRepository; cipherFactory: () => OutboxPayloadCipher; senderFactory: () => OutboxSender; policy: unknown; coordination?: OutboxWorkerCoordination };
+import { RunBudget } from "../jobs/budget";
+export type OutboxWorkerCoordination = Readonly<{ beforeClaim(tx: Prisma.TransactionClient, now: Date): Promise<Date | null>; recordCooldown(tx: Prisma.TransactionClient, until: Date): Promise<void>; elapsedMs(): number }>;
+/** `clock` is monotonic milliseconds; the run budget uses the coordinating job's elapsed time when there is one. */
+export type OutboxWorkerOptions = { bound: Pick<BoundDatabaseService, "run">; repository: PrismaOutboxWorkerRepository; cipherFactory: () => OutboxPayloadCipher; senderFactory: () => OutboxSender; policy: unknown; coordination?: OutboxWorkerCoordination; clock?: () => number };
 type Stopped = { kind: "stopped"; counter: "expired" | "cancelled" | "failed"; unknown?: boolean };
+type Deferred = { kind: "deferred"; due: number };
 type Claimed = { kind: "claimed"; row: DurableOutboxMessage; prepared: PreparedOutboxDelivery; envelope: EmailEnvelope; measuredAt: number; validForMs: number };
 type AttemptOutcome = DeliveryOutcome | { kind: "not-started" };
 function metadata(row: DurableOutboxMessage) {
@@ -24,24 +27,28 @@ export class DurableOutboxWorker {
   private readonly senderFactory: OutboxWorkerOptions["senderFactory"];
   private readonly policy: WorkerPolicy;
   private readonly coordination: OutboxWorkerCoordination | undefined;
+  private readonly clock: () => number;
   constructor(options: OutboxWorkerOptions) {
     this.policy = parseWorkerPolicy(options.policy); this.bound = options.bound; this.repository = options.repository;
     this.cipherFactory = options.cipherFactory; this.senderFactory = options.senderFactory;
     this.coordination = options.coordination ? Object.freeze({ ...options.coordination }) : undefined;
+    this.clock = options.clock ?? (() => performance.now());
   }
   private async guarded<T>(operation: "job" | "outbox", work: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
     try { return await this.bound.run(operation, work); } catch { throw appError("PROVIDER_UNAVAILABLE"); }
   }
   async run(raw: unknown): Promise<WorkerSummary> {
-    const request = parseWorkerRequest(raw);
-    const summary: WorkerSummary = { ...request, scanned: 0, claimed: 0, accepted: 0, retried: 0, failed: 0, unknown: 0, cancelled: 0, expired: 0, lostLease: 0, cooldownMs: 0 };
+    const request = parseWorkerRequest(raw), startedAt = this.clock(), coordination = this.coordination;
+    const summary: WorkerSummary = { ...request, scanned: 0, claimed: 0, accepted: 0, retried: 0, failed: 0, unknown: 0, cancelled: 0, expired: 0, lostLease: 0, deferred: 0, cooldownMs: 0 };
     const count = await this.guarded("job", async tx => request.mode === "dry-run" ? (await this.repository.candidates(tx, await this.repository.now(tx), request.limit, false)).length : 0);
     if (request.mode === "dry-run") return { ...summary, scanned: count };
     let sender: OutboxSender | undefined, cipher: OutboxPayloadCipher | undefined;
     const getSender = () => sender ??= this.senderFactory(), getCipher = () => cipher ??= this.cipherFactory();
+    const budget = new RunBudget(this.policy.runBudgetMs, coordination ? () => coordination.elapsedMs() : () => this.clock() - startedAt, this.policy.sendTimeoutMs);
     while (summary.scanned < request.limit) {
-      const result = await this.claimOne(getSender, getCipher);
+      const result = await this.claimOne(getSender, getCipher, budget, request.limit - summary.scanned);
       if (!result) break;
+      if (result.kind === "deferred") { summary.deferred = result.due; break; }
       summary.scanned++;
       if (result.kind === "stopped") { summary[result.counter]++; if (result.unknown) summary.unknown++; continue; }
       summary.claimed++;
@@ -54,7 +61,7 @@ export class DurableOutboxWorker {
     }
     return summary;
   }
-  private async claimOne(sender: () => OutboxSender, cipher: () => OutboxPayloadCipher): Promise<Claimed | Stopped | null> {
+  private async claimOne(sender: () => OutboxSender, cipher: () => OutboxPayloadCipher, budget: RunBudget, remainingLimit: number): Promise<Claimed | Stopped | Deferred | null> {
     return this.guarded("outbox", async tx => {
       await this.repository.lock(tx);
       let now = await this.repository.now(tx);
@@ -62,6 +69,8 @@ export class DurableOutboxWorker {
       if (jobDeadline === null) return null;
       const row = (await this.repository.candidates(tx, now, 1, true))[0];
       if (!row) return null;
+      // Once the run budget cannot fit another message, nothing more is touched, abandoned leases included; due rows wait for the next run.
+      if (!budget.allowsNext()) return { kind: "deferred", due: await this.repository.dueCount(tx, now, remainingLimit) };
       const stop = async (state: "FAILED" | "CANCELLED" | "EXPIRED", category: string, counter: Stopped["counter"], unknown = false): Promise<Stopped> => {
         if (!await this.repository.discard(tx, row, now, state, category)) throw appError("RESOURCE_BUSY");
         return { kind: "stopped", counter, unknown };
@@ -82,7 +91,7 @@ export class DurableOutboxWorker {
       const envelope = row.sealedEnvelope ? cipher().openEnvelope(row.sealedEnvelope, meta) : prepared.envelope;
       if (envelope.to !== proof.to) throw appError("PROVIDER_UNAVAILABLE");
       const sealedEnvelope = row.sealedEnvelope ?? cipher().sealEnvelope(envelope, meta);
-      const measuredAt = performance.now();
+      const measuredAt = this.clock();
       now = await this.repository.now(tx);
       if (row.expiresAt <= now) return stop("EXPIRED", "EXPIRED", "expired");
       if (proof.expiresAt <= now) return stop("CANCELLED", "PROOF_INVALID", "cancelled");
@@ -93,7 +102,7 @@ export class DurableOutboxWorker {
     });
   }
   private async deliver(claim: Claimed): Promise<AttemptOutcome> {
-    const remaining = () => claim.validForMs - (performance.now() - claim.measuredAt);
+    const remaining = () => claim.validForMs - (this.clock() - claim.measuredAt);
     if (remaining() <= 0) return { kind: "not-started" };
     const controller = new AbortController(); let timer: ReturnType<typeof setTimeout> | undefined;
     const timeout = new Promise<DeliveryOutcome>(resolve => { timer = setTimeout(() => { controller.abort(); resolve({ kind: "unknown" }); }, Math.min(this.policy.sendTimeoutMs, remaining())); });

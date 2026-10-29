@@ -1,18 +1,23 @@
 import { createHash, randomUUID } from "node:crypto";
 import type { JobHandler } from "../jobs/core";
+import { RunBudget } from "../jobs/budget";
 import { businessPurposes, parseBusinessPolicy } from "./business-core";
 import { businessBacklog, businessCandidates, readBusinessProof } from "./business-repository";
 import type { DurableOutboxService } from "./service";
 import { recordBusinessDeliveryFailure } from "./business-attention";
 
-export function createBusinessOutboxHandler(outbox: DurableOutboxService, rawPolicy: unknown): JobHandler {
+export function createBusinessOutboxHandler(outbox: Pick<DurableOutboxService, "withTransaction">, rawPolicy: unknown): JobHandler {
   return async context => {
     const policy = parseBusinessPolicy(rawPolicy);
     return outbox.withTransaction(async ({ tx, now, enqueue }) => {
       if (context.lease) await context.verifyLease(tx);
       const candidates = await businessCandidates(tx, now, context.request.limit);
-      let enqueued = 0, cancelled = 0, expired = 0;
+      const budget = new RunBudget(policy.runBudgetMs, () => context.elapsedMs());
+      let scanned = context.request.mode === "execute" ? 0 : candidates.length, enqueued = 0, cancelled = 0, expired = 0;
       if (context.request.mode === "execute") for (const candidate of candidates) {
+        // A candidate left here has no outbox row yet, so the next run finds it due again.
+        if (!budget.allowsNext()) break;
+        scanned++;
         const deliveryDeadline = new Date(candidate.sourceAt.getTime() + policy.maxAgeMs);
         const input = { kind: candidate.kind, proofId: candidate.proofId, deliveryDeadline };
         const proof = await readBusinessProof(tx, input, now);
@@ -35,7 +40,7 @@ export function createBusinessOutboxHandler(outbox: DurableOutboxService, rawPol
         }
       }
       if (context.lease) await context.verifyLease(tx);
-      return { counts: { scanned: candidates.length, enqueued, cancelled, expired, ...await businessBacklog(tx, now) } };
+      return { counts: { scanned, enqueued, cancelled, expired, deferred: candidates.length - scanned, ...await businessBacklog(tx, now) } };
     });
   };
 }

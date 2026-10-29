@@ -22,8 +22,8 @@ import { EmailDeliveryError, type PreparedCustomerEmail } from "@/modules/notifi
 vi.mock("server-only", () => ({}));
 
 let f: Awaited<ReturnType<typeof isolatedOperationalJobFixture>>, owner: AdminAccess;
-const policy = { leaseMs: 60000, minIntervalMs: 0, failureCooldownMs: 1 }, businessPolicy = { maxAgeMs: 3600000 };
-const workerPolicy = { leaseMs: 30000, sendTimeoutMs: 10000, retryDelaysMs: [1] };
+const policy = { leaseMs: 60000, minIntervalMs: 0, failureCooldownMs: 1 }, businessPolicy = { maxAgeMs: 3600000, runBudgetMs: 15000 };
+const workerPolicy = { leaseMs: 30000, sendTimeoutMs: 10000, retryDelaysMs: [1], runBudgetMs: 60000 };
 const publishRequest = { job: "OUTBOX_BUSINESS", mode: "execute", limit: 100 } as const;
 const deliveryRequest = { job: "OUTBOX_DELIVERY", mode: "execute", limit: 100 } as const;
 const customers: string[] = [], orders: string[] = [], requests: string[] = [], files: string[] = [], rules: string[] = [];
@@ -138,6 +138,22 @@ describe("business outbox from committed facts", () => {
     expect(await message("PAYMENT", invalid.attempt.id)).toMatchObject({ state: "CANCELLED", sealedPayload: null });
     expect((await message("ORDER", fresh.order.id)).state).toBe("PENDING");
     expect(await runner().run(publishRequest)).toMatchObject({ counts: { scanned: 0, remainingDue: 0 } });
+  });
+  it("stops projecting before the run budget and leaves later facts due for the next run", async () => {
+    const facts = [await order(), await order(), await order()], at = Date.now();
+    for (const [i, p] of facts.entries()) await f.admin.order.update({ where: { id: p.order.id }, data: { createdAt: new Date(at - 60000 + i * 1000) } });
+    // Another transaction holds the first order for 1.5 s; after projecting it the 2 s budget cannot fit a fact that slow.
+    let locked!: () => void, release!: () => void;
+    const held = new Promise<void>(resolve => { locked = resolve; }), hold = new Promise<void>(resolve => { release = resolve; });
+    const holder = f.admin.$transaction(async tx => { await tx.$queryRaw`SELECT id FROM orders WHERE id = ${facts[0].order.id}::uuid FOR UPDATE`; locked(); await hold; }, { timeout: 10000 });
+    await held; const timer = setTimeout(release, 1500);
+    try {
+      expect(await runner(undefined, f.source, { ...businessPolicy, runBudgetMs: 2000 }).run(publishRequest)).toMatchObject({ state: "completed", counts: { scanned: 1, enqueued: 1, deferred: 2, remainingDue: 2 } });
+    } finally { clearTimeout(timer); release(); await holder; }
+    expect((await f.admin.operationalJobState.findUniqueOrThrow({ where: { name: "OUTBOX_BUSINESS" } })).counters).toMatchObject({ enqueued: 1, deferred: 2, remainingDue: 2 });
+    expect((await message("ORDER", facts[0].order.id)).state).toBe("PENDING");
+    expect(await f.admin.durableOutboxMessage.count({ where: { proofId: { in: facts.slice(1).map(p => p.order.id) } } })).toBe(0);
+    expect(await runner().run(publishRequest)).toMatchObject({ state: "completed", counts: { scanned: 2, enqueued: 2, deferred: 0, remainingDue: 0 } });
   });
   it("emits one settlement intent despite duplicate verified webhook and includes final shipping separately", async () => {
     const p = await payment(), key = "synthetic-mail-server";

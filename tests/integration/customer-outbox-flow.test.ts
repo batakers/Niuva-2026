@@ -59,7 +59,7 @@ describe("Customer producer to durable worker", () => {
     const row = await record(); expect(row).toMatchObject({ state: "PENDING", attempts: 0, sealedEnvelope: null });
     expect(row.sealedPayload).not.toContain(token); expect(proof.returnTo).toBe("/account");
     if (purpose === "verify") expect((await prisma.customerPendingRegistration.findUniqueOrThrow({ where: { id: owner.id } })).deliveryConfirmed).toBe(false);
-    const worker = new DurableOutboxWorker({ bound: bound(), repository: new PrismaOutboxWorkerRepository(), cipherFactory: () => cipher, policy: { leaseMs: 60000, sendTimeoutMs: 1000, retryDelaysMs: [] }, senderFactory: () => preparedOutboxSender(message => { expect(message.payload).toMatchObject({ to: owner.email, token }); return { envelope: { from: "fixture@example.test", to: owner.email, subject: "fixture", text: "fixture" }, async send() { return { kind: "accepted", providerReference: "synthetic-receipt" }; } }; }) });
+    const worker = new DurableOutboxWorker({ bound: bound(), repository: new PrismaOutboxWorkerRepository(), cipherFactory: () => cipher, policy: { leaseMs: 60000, sendTimeoutMs: 1000, retryDelaysMs: [], runBudgetMs: 60000 }, senderFactory: () => preparedOutboxSender(message => { expect(message.payload).toMatchObject({ to: owner.email, token }); return { envelope: { from: "fixture@example.test", to: owner.email, subject: "fixture", text: "fixture" }, async send() { return { kind: "accepted", providerReference: "synthetic-receipt" }; } }; }) });
     expect(await worker.run({ mode: "execute", limit: 10 })).toMatchObject({ accepted: 1 });
     expect((await record()).state).toBe("ACCEPTED");
   });

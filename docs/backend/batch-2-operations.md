@@ -25,10 +25,10 @@ corepack pnpm exec jiti scripts/run-operational-job.ts run '{"job":"OUTBOX_EXPIR
 Untuk `OUTBOX_DELIVERY`, argumen worker ketiga wajib. Gunakan hanya pada fixture lokal sintetis yang disiapkan oleh tes terisolasi; jangan memakai alamat atau provider nyata:
 
 ```powershell
-corepack pnpm exec jiti scripts/run-operational-job.ts run '{"job":"OUTBOX_DELIVERY","mode":"dry-run","limit":10}' '{"leaseMs":30000,"minIntervalMs":0,"failureCooldownMs":1000}' '{"leaseMs":10000,"sendTimeoutMs":5000,"retryDelaysMs":[]}'
+corepack pnpm exec jiti scripts/run-operational-job.ts run '{"job":"OUTBOX_DELIVERY","mode":"dry-run","limit":10}' '{"leaseMs":30000,"minIntervalMs":0,"failureCooldownMs":1000}' '{"leaseMs":10000,"sendTimeoutMs":5000,"retryDelaysMs":[],"runBudgetMs":20000}'
 ```
 
-Pilih dan tinjau `leaseMs`, `minIntervalMs`, `failureCooldownMs`, `sendTimeoutMs`, dan `retryDelaysMs` bersama kebijakan operasi sebelum pemakaian terjadwal. Tidak ada scheduler atau nilai kebijakan default yang dipasang oleh pekerjaan Batch 2.
+Pilih dan tinjau `leaseMs`, `minIntervalMs`, `failureCooldownMs`, `sendTimeoutMs`, `retryDelaysMs`, dan `runBudgetMs` bersama kebijakan operasi sebelum pemakaian terjadwal. Tidak ada scheduler atau nilai kebijakan default yang dipasang oleh pekerjaan Batch 2.
 
 Mode `execute` hanya untuk lingkungan yang sudah mendapat otorisasi tersendiri. Satu pemanggilan memproses paling banyak `limit` item per kategori. Jika hasil provider tidak pasti, job berhenti dengan kategori aman dan pesan tidak dikirim ulang otomatis; operator perlu memeriksa hasilnya sebelum tindakan lain. Penerimaan provider tidak membuktikan penerimaan inbox.
 
@@ -59,7 +59,8 @@ Endpoint internal `/api/internal/jobs/outbox` dan
 POST JSON menerima `mode`, `limit`, dan `jobPolicy` dengan field
 `leaseMs`, `minIntervalMs`, `failureCooldownMs` eksplisit.
 Outbox juga wajib menerima `workerPolicy` dengan `leaseMs`,
-`sendTimeoutMs`, `retryDelaysMs`; field itu ditolak untuk inventory.
+`sendTimeoutMs`, `retryDelaysMs`, `runBudgetMs`; field itu ditolak untuk
+inventory. Semantik `runBudgetMs` ada pada bagian anggaran waktu run di bawah.
 Batas execute outbox HTTP adalah 10; batas lainnya 100.
 GET membutuhkan query `maxLagMs` positif dan mengembalikan inspeksi yang sama
 dengan CLI. Input divalidasi sebelum runtime dibangun.
@@ -85,6 +86,41 @@ nama operational job; tidak menghapus data atau mengubah migration lama.
 Adapter ini tidak memasang scheduler, cadence, ambang alarm atau sender
 hosted. Nilai policy/lag harus disetujui dan resource harus dibuktikan sebelum
 pemakaian hosted.
+
+## Anggaran waktu run outbox — 29 Oktober 2026
+
+Function hosted dapat diputus sebelum `limit` tercapai (staging: function di
+Ohio, database di Singapura, satu kirim 7–8,5 s, function diputus sekitar
+30 s). Karena itu `OUTBOX_DELIVERY` (`workerPolicy.runBudgetMs`) dan
+`OUTBOX_BUSINESS` (`businessPolicy.runBudgetMs`) wajib membawa anggaran waktu
+eksplisit; tidak ada default. Anggaran dihitung dengan jam monotonic sejak
+runner mulai, termasuk klaim lease job. Sebelum setiap item baru, run hanya
+lanjut bila sisa anggaran masih menampung interval terlama antara dua
+pemeriksaan sebelumnya pada run yang sama; untuk delivery sisa itu juga harus
+setidaknya `sendTimeoutMs`, sehingga `runBudgetMs` wajib lebih besar dari
+`sendTimeoutMs`. Item pertama delivery hanya dijamin muat waktu kirimnya,
+belum overhead klaim/finalisasi, jadi pilih anggaran dengan sisa untuk
+overhead itu, finalisasi runner, cold start dan respons HTTP. Anggaran bisnis
+maksimal 20.000 ms karena seluruh proyeksi berjalan dalam satu transaksi
+bound dengan timeout itu.
+
+Bila anggaran tidak cukup, delivery berhenti sebelum menyentuh baris lagi,
+termasuk lease yang ditinggalkan: tidak ada claim, attempt, discard atau
+kirim. Pesan tetap `PENDING`/due (lease lama tetap menunggu run berikutnya,
+yang menandainya unknown tanpa kirim ulang). Pesan yang sudah diklaim tetap
+selesai dengan lease, timeout kirim dan fencing yang sama; anggaran tidak
+memotong kiriman. Proyeksi bisnis berhenti sebelum fakta berikutnya dan commit
+intent yang sudah dibuat; fakta yang ditinggal belum punya baris outbox
+sehingga tetap due.
+
+Counter `deferred` mencatat item due yang ditinggal karena anggaran, dihitung
+sampai sisa `limit` run itu (delivery memakai satu hitungan baca-saja tanpa
+lock; bisnis memakai kandidat yang sudah diambil). `scanned` hanya menghitung
+item yang benar-benar diperiksa. Run yang berhenti karena anggaran tetap
+`completed`, bukan kegagalan; backlog berikutnya terlihat dari `deferred`,
+`remainingDue`, inspeksi outbox dan alarm lag. Nilai anggaran hosted harus
+dipilih dan disetujui untuk lingkungan dan cadence terkait; contoh perintah di
+atas hanya sintaks.
 
 ## Retensi binary Customer — T08, 19 Oktober 2026
 

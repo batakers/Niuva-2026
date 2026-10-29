@@ -47,7 +47,7 @@ export function createJobHandlers(options: { prisma: PrismaClient; bound: Pick<B
     }),
     OUTBOX_DELIVERY: async context => {
       const worker = new DurableOutboxWorker({ bound, repository: new PrismaOutboxWorkerRepository(), cipherFactory, senderFactory, policy: workerPolicy,
-        coordination: { beforeClaim: tx => context.verifyLease(tx), recordCooldown: (tx, until) => context.recordCooldown(tx, until) } });
+        coordination: { beforeClaim: tx => context.verifyLease(tx), recordCooldown: (tx, until) => context.recordCooldown(tx, until), elapsedMs: () => context.elapsedMs() } });
       const result = await worker.run({ mode: context.request.mode, limit: context.request.limit });
       const { mode: _mode, limit: _limit, cooldownMs, ...counts } = result;
       return { counts, cooldownMs, ...(result.unknown > 0 ? { failure: "OUTCOME_UNKNOWN" as const } : result.failed > 0 || result.lostLease > 0 ? { failure: "DELIVERY_FAILED" as const } : {}) };
