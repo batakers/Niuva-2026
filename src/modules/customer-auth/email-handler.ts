@@ -1,4 +1,5 @@
 import { readBoundedText } from "@/lib/http/body";
+import { clientIpCandidate } from "@/lib/security/client-ip";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { ZodError } from "zod";
@@ -23,7 +24,7 @@ export function emailPostHandler(action: EmailAction, factory: () => CustomerEma
       const input = Object.fromEntries(form);
       returnTo = safeCustomerReturnTo(input.returnTo);
       token = input.token;
-      const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "loopback";
+      const ip = clientIpCandidate(request.headers) || "loopback";
       const service = factory();
       let destination = pages[action];
       const cookieStore = await cookies();

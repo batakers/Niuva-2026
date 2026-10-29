@@ -7,6 +7,7 @@ import {
 import { apiError, createCorrelationId } from "@/lib/http/response";
 import { assertSameOriginRequest } from "@/lib/security/origin";
 import { CUSTOMER_SESSION_COOKIE } from "@/modules/customer-auth/core";
+import { clientIpCandidate } from "@/lib/security/client-ip";
 import { createRuntimeRateLimiter } from "@/lib/security/shared-rate-limit";
 import { appError } from "@/modules/shared/errors";
 
@@ -28,8 +29,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   try {
-    const forwarded = request.headers.get("x-forwarded-for")?.split(",", 1)[0]?.trim();
-    const key = forwarded || new URL(request.url).origin;
+    const key = clientIpCandidate(request.headers) || new URL(request.url).origin;
     if (!(await logoutRateLimiter.check(key)).allowed) {
       return apiError(appError("RATE_LIMITED"), correlationId);
     }

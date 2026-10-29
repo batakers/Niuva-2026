@@ -1,6 +1,7 @@
 import { createHmac, randomBytes } from "node:crypto";
 
-const MAX_IP_LENGTH = 64;
+import { clientIpCandidate } from "./client-ip";
+
 const defaultProcessSalt = randomBytes(16).toString("hex");
 
 export type ActorKeyInput = Readonly<{
@@ -12,15 +13,6 @@ export type ActorKeyInput = Readonly<{
   /** Stable across hosted instances; defaults to the existing Admin auth secret. */
   sharedSecret?: string | null;
 }>;
-
-function extractIpCandidate(headers: Headers): string {
-  const realIp = headers.get("x-real-ip")?.trim() ?? "";
-  const forwardedFirst =
-    headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
-  const candidate = realIp.length > 0 ? realIp : forwardedFirst;
-
-  return candidate.length > 0 ? candidate.slice(0, MAX_IP_LENGTH) : "unknown";
-}
 
 /**
  * Derives a per-actor rate-limit key. The endpoint id is always part of the
@@ -45,7 +37,7 @@ export function deriveActorKey({
     throw new Error("Shared rate-limit hashing secret is required for hosted runtimes.");
   }
   const digest = createHmac("sha256", key || processSalt)
-    .update(extractIpCandidate(headers))
+    .update(clientIpCandidate(headers) ?? "unknown")
     .digest("hex");
 
   return `i:${endpointId}:${digest}`;

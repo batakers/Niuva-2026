@@ -21,6 +21,7 @@ import { getPublicCustomerAuthLegalDocuments } from "@/modules/customer-auth/leg
 import { INTERNAL_GOOGLE_CONSENT_COOKIE, getInternalAuthConfig } from "@/modules/customer-auth/internal-testing";
 import { createGoogleOAuthAdapter, getCustomerGoogleOAuthConfig } from "@/modules/customer-auth/google";
 import { customerCookieSecure } from "@/modules/customer-auth/app-origin";
+import { clientIpCandidate } from "@/lib/security/client-ip";
 import { createRuntimeRateLimiter } from "@/lib/security/shared-rate-limit";
 
 export const runtime = "nodejs";
@@ -32,8 +33,7 @@ const googleCallbackRateLimiter = createRuntimeRateLimiter({ namespace: "src/app
 });
 
 function rateLimitKey(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for")?.split(",", 1)[0]?.trim();
-  return forwarded || new URL(request.url).origin;
+  return clientIpCandidate(request.headers) || new URL(request.url).origin;
 }
 
 function loginRedirect(
