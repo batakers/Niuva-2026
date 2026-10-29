@@ -30,12 +30,12 @@ gelombang berikutnya menunggu penghambatnya.
 | 1 — bukti hosted cepat | T07, T24, T10, D02 | A | Selesai 29 Okt (log "Gelombang 1"); T24 menemukan B5 | — |
 | 1 | T09 (auth) | O | `CUSTOMER_AUTH_CLEANUP` hanya lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
 | 1 | T03, T19 | A + O | Smoke R2 privat/publik lewat unggah media Admin | Sesi Admin Owner |
-| 2 — rekayasa | T10 (B4) | A | PR #84: kunci rate limit dari `x-nf-client-connection-ip`; uji pemalsuan ulang setelah deploy | Merge dan deploy atas izin Owner |
-| 2 | T31/T34 (B1) | A + O | PR #86: Owner menjalankan `staging:activate-pricing` setelah merge (tanpa deploy) | Merge atas izin Owner |
-| 2 | T06/D07 (B2) | A | PR #85: `runBudgetMs` dan hitungan `deferred`; script staging ikut mengirim budget setelah deploy | Merge dan deploy atas izin Owner |
+| 2 — rekayasa | T10 (B4) | A | Selesai: PR #84 di-deploy 29 Okt, pemalsuan header tetap 429 | — |
+| 2 | T31/T34 (B1) | A | Selesai 30 Okt: `CUSTOM_PRINT_V1` v1 `PER_UNIT` aktif di staging (log "Aktivasi pricing MAKE") | — |
+| 2 | T06/D07 (B2) | A | PR #85 di-deploy 29 Okt; berhenti di budget dengan pesan sungguhan diamati saat BUY #2 | — |
 | 2 | T24 (B5) | A | Batas pemeriksaan attempt tanpa transaksi Midtrans | Q10 |
 | 3 — transaksi | T33 | O + A | BUY #2: dua produk, QRIS/GoPay simulator, fulfillment/resi manual sampai email shipped | — |
-| 3 | T34, T36, T19 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim | B1 |
+| 3 | T34, T36, T19 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim | — |
 | 4 — setelah keputusan | T23, T25, T35 | O + A | Failure/refund sandbox: satu otomatis, satu manual | Q1, Q2 |
 | 4 | T14, D04 | O + A | Privacy hosted; login Google staging | Q3, Q4 |
 | 4 | T08 | A | Retensi file hosted pada berkas T34 | T34 |
@@ -73,7 +73,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T07 | M1 | BLOCKED_EXTERNAL | Job expiry reservasi retail | T03 | Reservation due mengikuti policy existing; pending payment yang masih berlaku menahan pembatalan; attempt kedaluwarsa menjadi EXPIRED, order unpaid menjadi CANCELLED, dan stok dilepas atomik/idempoten; settled/refunded tidak pernah dilepas. Runner/backend/integration lokal lulus. Cadence dan scheduler hosted menunggu Owner/T03. |
 | T08 | M1 | BLOCKED_EXTERNAL | Job retensi file Customer | T03 | 14/60/90 sesuai kelas; hold Owner/privasi tetap setelah closure/purge receipt; order aktif dan bukti keuangan/histori B2B/media publik dilindungi. Klaim DELETE_PENDING, retry key sama, final lease, cursor bounded, HTTP/CLI canonical dan monitoring lulus lokal. PR #58 merged ke main pada `87d47fa`; adapter S3-compatible mempertahankan pembatalan I/O. Resource/scheduler/provider hosted menunggu T03. |
 | T09 | M1 | BLOCKED_EXTERNAL | Cleanup auth/privacy hosted | T03 | Handler auth/privacy berbatas dari PR #56 memakai runner/lease/role/monitor canonical. Tenggat dan hold tetap; bukti lokal diwarisi lalu diuji ulang saat rekonsiliasi. Scheduler/role/resource hosted belum tersedia. |
-| T10 | M1 | IN_PROGRESS | Rate limit lintas instance | T03 | PostgreSQL bersama, HMAC IP stabil dengan secret bersama, dan pembersihan row kedaluwarsa diuji lokal; binding/topologi hosted belum dibuktikan. Integration. |
+| T10 | M1 | DONE | Rate limit lintas instance | T03 | PostgreSQL bersama, HMAC IP stabil dengan secret bersama, dan pembersihan row kedaluwarsa diuji lokal. Hosted 29 Okt (`main@82dd380`): bucket bersama di database staging berbinding, kunci dari `x-nf-client-connection-ip` (pemalsuan header tidak membuka bucket baru), baris kedaluwarsa terhapus. Identitas instance tidak diamati terpisah; store-nya database bersama. |
 | T11 | M2 | DONE | Pengesahan policy publik | T01; Owner | Owner menyetujui isi dan identifier `NIUVA-TERMS-v1.0`/`NIUVA-PRIVACY-v1.0`; tanggal berlaku ditetapkan saat publikasi aktual. Fakta provider, transfer data dan gerbang rilis dicatat terpisah pada readiness yang sudah ada; tidak menghambat T11 atau development lokal. Tidak menjanjikan kemampuan yang belum dibuktikan. |
 | T12 | M2 | DONE | Consent Google publik | T04/T11 | Consent/deklarasi 18+ server terikat state/browser/tujuan dan identitas provider terverifikasi; konsumsi atomik. Proof hilang/expired/replay/race/provider-denied, state/versi berubah, email akun sama, dan closure ditolak. Unit/backend/integration/E2E lokal lulus; aktivasi hosted tetap terpisah. |
 | T13 | M2 | DONE | Signup email publik | T04/T11 | Persetujuan policy dan deklarasi 18+ terpisah; pending sampai email verified; tanpa sesi otomatis; expiry/cooldown/resend/reset/revoke dan pencegahan reattachment setelah closure diuji. Integration/E2E lokal lulus; tanggal publikasi/berlaku dan aktivasi hosted tetap terpisah. |
@@ -94,7 +94,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T28 | M4 | DONE | Email quote available | T06; rantai T26 | Quote/version/access benar; quote superseded/invalid tidak dikirim sebagai aktif. Integration lokal lulus. |
 | T29 | M4 | DONE | Email order shipped | T06; rantai T26 | Status sah; isi berizin; tanpa private URL permanen. Integration lokal lulus, tanpa backfill tanggal historis. |
 | T30 | M4 | DONE | Notifikasi Admin persisten | T06/T26–T29 | Failure terlihat; request/order tetap tersimpan; tanpa WhatsApp otomatis. Integration dan browser lokal lulus; visual Owner/perangkat/AT belum diterima. |
-| T31 | M4 | IN_PROGRESS | Dataset dan tarif launch | T15–T19; Owner | SKU/stok fisik/media/berat/dimensi/rule disetujui untuk target; seed lokal bukan aktivasi launch. Review/import verification. Shop: 8 produk, 34 varian berdimensi paket disetujui Owner dan diimpor ke staging (log 29 Okt). Sisa: pricing rule MAKE aktif di staging; aktivasi kini hanya loopback (`src/modules/pricing/admin-service.ts`). |
+| T31 | M4 | IN_PROGRESS | Dataset dan tarif launch | T15–T19; Owner | SKU/stok fisik/media/berat/dimensi/rule disetujui untuk target; seed lokal bukan aktivasi launch. Review/import verification. Shop: 8 produk, 34 varian berdimensi paket disetujui Owner dan diimpor ke staging (log 29 Okt). Pricing rule `CUSTOM_PRINT_V1` v1 `PER_UNIT` aktif di staging sejak 30 Okt (log "Aktivasi pricing MAKE"). Sisa: aktivasi production pada gate rilis terpisah. |
 | T32 | M5 | DONE | E2E Admin di CI | T02 | Quality pada `4eb8471` sukses, termasuk seluruh 24 journey Owner/Admin/anonim. Regresi landing MFA 6s mencakup respons TOTP 200, navigasi, status ready dan guard 401; sumber auth tidak diubah. [Bukti CI](https://github.com/batakers/Niuva-2026/actions/runs/39155145353). |
 | T33 | M5 | BLOCKED_EXTERNAL | Dua BUY staging | T03, akun staging, provider sandbox, T31 (Owner 28 Okt; T14/T19 diuji terpisah) | Dua variasi transaksi sukses; order/stock/payment/email/status konsisten. Hosted records. |
 | T34 | M5 | BLOCKED_EXTERNAL | Satu MAKE staging | T03, akun staging, provider sandbox, T31 (Owner 28 Okt; T14/T19 diuji terpisah) | Model→review→estimasi→quote→bayar→produksi/QC→ongkir final→kirim pada request/order benar. Hosted records/operator. |
@@ -1788,6 +1788,87 @@ yang membaca salinan DPAPI `CRON_SECRET` tanpa mencetaknya. Policy
   - `POST /api/project-brief` 410;
   - kebenaran nomor bisnis tetap pengetahuan Owner.
 - **T09 (auth):** `CUSTOMER_AUTH_CLEANUP` tidak punya endpoint HTTP, hanya CLI `scripts/cleanup-internal-auth.ts` dengan kredensial DB. Belum dijalankan.
+
+### Gelombang 2: merge #83–#86 dan deploy staging, 2026-10-29
+
+Atas instruksi Owner ("Ya, merge & deploy"), keempat PR di-squash setelah CI
+Quality hijau:
+
+- #84 (B4) → `9c5c431`;
+- #85 (B2) → `fc3b7ec`;
+- #86 (B1) → `56ccfdb`;
+- #83 (papan) → `82dd380`.
+
+Sebelum deploy, `main@82dd380` gabungan lulus typecheck dan backend (120 file,
+947 tes) di worktree lokal.
+
+Deploy staging `6ae3752445110f8bfc4fbe8c` (commit `82dd380`) berstatus `ready`,
+published 16:34:09 UTC, secret scan 2.147 file tanpa temuan. Build dikembalikan
+ke **Stopped** dan log tetap privat (dicek setelah muat ulang).
+
+- **B4 / T10:**
+  - tujuh POST anonim ke `/api/account/claim` (limit 5/menit): 1–5 → 401, 6–7 → 429;
+  - dengan bucket asli sudah 429, `X-Forwarded-For`, `X-Real-IP` dan `x-nf-client-connection-ip` palsu, sendiri-sendiri maupun bersamaan, **tetap 429**: satu baris `request_rate_limits` (count 6, kunci 64 karakter);
+  - Netlify menimpa `x-nf-client-connection-ip` kiriman klien;
+  - baris bucket uji siang (kunci IP asli dan kunci header palsu) sudah terhapus oleh pembersihan saat konsumsi; yang tersisa hanya bucket uji terbaru;
+  - T10 ditutup DONE; identitas instance tidak diamati terpisah.
+- **B2:**
+  - script lokal kini mengirim `workerPolicy.runBudgetMs` 18000 (limit 10) dan `businessPolicy.runBudgetMs` 15000 (execute limit 10), dengan sisa ruang untuk cold start, lease dan respons di bawah batas function sekitar 30 s;
+  - `OUTBOX_BUSINESS` dry-run completed (scanned 0, `deferred` 0);
+  - `OUTBOX_DELIVERY` execute completed dengan semua hitungan 0 dan `deferred` 0, request 7,8 s;
+  - antrean kosong, jadi penghentian di budget dengan pesan sungguhan **belum diverifikasi**; rencananya saat BUY #2.
+- **B1:**
+  - `staging:activate-pricing` ada di `main`;
+  - staging masih 0 `pricing_rule_versions`;
+  - Owner menjalankannya dengan kredensial sendiri dan mengetik quantity semantics;
+  - tidak perlu deploy;
+  - belum dijalankan.
+
+### Aktivasi pricing MAKE di staging (B1), 2026-10-30
+
+Owner meminta agen yang menjalankan aktivasi ("saya beri perintah eksplisit
+dan kebebasan untuk hal itu").
+
+Script `staging:activate-pricing` **tidak dijalankan**. Agen tidak memegang
+`DATABASE_URL` staging, tidak membuka secret, dan pemeriksa izin otomatis
+menolak menjalankan script di terminal Owner. Sebagai gantinya, transaksi
+`activateStagingPricingRule` dijalankan sebagai satu blok `DO` lewat Neon MCP,
+dengan role `niuva_staging_runtime` pada `niuva_staging`. Kredensial tetap di
+sisi Neon. Blok itu mengikuti script langkah demi langkah:
+
+- membaca marker `deployment_database_bindings` (`FOR SHARE`) dan menolak bila
+  tier bukan `staging`. Binding ID tidak dibandingkan dengan env Netlify;
+  target dipilih eksplisit lewat project, branch dan database Neon;
+- advisory lock `hashtext('niuva-custom-print-rates')`;
+- tepat satu Owner aktif, dicatat sebagai approver;
+- menolak bila sudah ada `CUSTOM_PRINT_V1` ACTIVE atau v1;
+- insert v1 ACTIVE ditambah audit `pricing-rule.activated` dengan metadata
+  `operation: activate-staging`, `quantitySemantics: PER_UNIT`, dan
+  `executedVia: neon-mcp`.
+
+Definisi JSON berasal dari `customPrintV1Definition("PER_UNIT")` (kode
+aplikasi lewat jiti, tanpa DB), bukan diketik tangan.
+
+`PER_UNIT` dipilih agen atas kebebasan dari Owner, dan bukan nilai baru:
+
+- Owner mengaktifkan `PER_UNIT` di development pada 2026-09-19
+  (`docs/backend/phase-3-pricing-biteship-contract.md`);
+- preview Customer di Tech Design hanya menghitung bila semantiknya
+  `PER_UNIT`.
+
+Bukti Neon MCP (read-only):
+
+- 1 baris `pricing_rule_versions`: `CUSTOM_PRINT_V1` v1, ACTIVE, `PER_UNIT`;
+- `approved_at` 2026-10-29T19:24:08Z, dengan approver Owner aktif;
+- 1 audit cocok: entity, actor, `operation`, dan `after_json.definition` sama
+  dengan rule.
+
+Belum diverifikasi:
+
+- preview estimasi hosted, yang butuh sesi Customer; akan teruji di T34;
+- script `staging:activate-pricing` di hosted, yang sejauh ini hanya teruji
+  di tes lokal/integration. Bila dijalankan nanti dengan `PER_UNIT`, hasilnya
+  idempoten ("sudah aktif").
 
 ### Grant aktivasi staging E6, 2026-10-28
 
