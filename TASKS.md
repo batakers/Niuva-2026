@@ -1660,6 +1660,25 @@ Admin.
   Midtrans juga butuh 3,5 s. Dengan timeout 20 s, execute hosted sebaiknya
   tetap limit 1–2 selama function dan database berbeda region. Email
   bisnis, BUY kedua dan perbaikan di hosted **belum diverifikasi**.
+- **Deploy #81 dan email bisnis T33, 2026-10-29:** PR #81 di-merge
+  (`3d997ca`); deploy staging `6ae3459371776d9eb3e09ae1` (commit `3d997ca`)
+  `ready`, published 13:11:07 UTC, secret scan 0 temuan; build status kembali
+  **Stopped**, log privat (dicek setelah muat ulang). `/`, `/shop`, `/login`
+  200; `/account` 307; endpoint job tanpa token 401. `OUTBOX_BUSINESS`
+  (maxAge 24 jam) dry-run scanned 3, lalu tiga execute limit 1 **completed**
+  (11,1/13,2/12,5 s; enqueued 1 per run, `remainingDue` 3→0). Satu run
+  `OUTBOX_DELIVERY` limit 10: di DB job sukses 13:17:36–13:18:02 (claimed 3,
+  accepted 3, failed 0, lease kosong, tanpa sesi menggantung), tetapi request
+  hosted berakhir **502** setelah 30,7 s (log Netlify) karena function
+  diputus sekitar 30 s; satu kirim butuh 7–8,5 s. Resend: tiga email
+  `delivered` ke akun penguji (order received untuk `ORD-20261029-Q9XZKMBA`
+  dan `ORD-20261029-3A6HAD6P`, payment confirmed untuk
+  `ORD-20261029-3A6HAD6P`). Run ulang dengan antrean kosong completed dengan
+  semua hitungan 0. Script lokal pengirim kini default limit 2 (maksimum 2).
+  Status order/stok/payment BUY pertama sudah tercatat di atas; BUY kedua
+  dan pembacaan inbox oleh Owner **belum diverifikasi**. Batas waktu function
+  dibanding jumlah kiriman per run adalah risiko hosting terbuka selama
+  function dan database berbeda region.
 
 ### Grant aktivasi staging E6, 2026-10-28
 
