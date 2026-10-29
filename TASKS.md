@@ -33,7 +33,7 @@ gelombang berikutnya menunggu penghambatnya.
 | 2 — rekayasa | T10 (B4) | A | Selesai: PR #84 di-deploy 29 Okt, pemalsuan header tetap 429 | — |
 | 2 | T31/T34 (B1) | A | Selesai 30 Okt: `CUSTOM_PRINT_V1` v1 `PER_UNIT` aktif di staging (log "Aktivasi pricing MAKE") | — |
 | 2 | T06/D07 (B2) | A | PR #85 di-deploy 29 Okt; berhenti di budget dengan pesan sungguhan diamati saat BUY #2 | — |
-| 2 | T24 (B5) | A | Kode batas 7 hari (Q10) siap di branch `claude/b5-grants-q-decisions`; hosted belum diverifikasi | Merge + deploy |
+| 2 | T24 (B5) | A | Batas 7 hari ter-deploy 30 Okt (PR #89); pengecualian attempt >7 hari baru teramati setelah 5 Nov | Waktu |
 | 3 — transaksi | T33 | O + A | BUY #2: dua produk, QRIS/GoPay simulator, fulfillment/resi manual sampai email shipped | — |
 | 3 | T34, T36, T19 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim | — |
 | 4 — setelah keputusan | T23, T25, T35 | O + A | Failure/refund sandbox (QRIS + GoPay): satu otomatis, satu manual; grant `refund` | Cek dashboard Midtrans (Q1) |
@@ -1904,6 +1904,35 @@ Atas keputusan Owner Q2–Q4 dan Q10 ("Ya, kerjakan"), branch
     `customer-outbox-flow` 10/10 di database test terisolasi;
   - build lulus.
 - Hosted belum diverifikasi sampai merge dan deploy.
+
+### Deploy PR #89, build otomatis Q8 dan cek Helipod, 2026-10-30
+
+- **Q8:** pengaturan Netlify staging diubah dan dicek ulang setelah muat
+  ulang: Build status **Active**, log privat, Branch deploys "Deploy only the
+  production branch", Deploy Previews "Don't deploy pull requests".
+- **PR #89** di-squash ke `main@b7d1de6` (merge dari akun Owner setelah CI
+  Quality hijau). Merge itu otomatis memicu deploy `6ae3cbfc5cb2636cd21101f7`
+  (context production, branch `main`), `ready` 22:44:38 UTC, secret scan 2.166
+  file tanpa temuan. Build otomatis dari merge (Q8) terbukti.
+- **B5 hosted:** dry-run `PAYMENT_RECONCILIATION` completed, scanned 1,
+  `remainingDue` 1: attempt EXPIRED `ORD-20261029-Q9XZKMBA` masih di bawah
+  7 hari sehingga tetap kandidat, sesuai aturan. Pengecualian setelah 7 hari
+  baru bisa diamati setelah 5 November 2026; belum diverifikasi.
+- **Grant Q2–Q4 hosted:** belum diverifikasi lewat alur pengguna; login Google
+  tetap butuh env OAuth dan redirect URI dari Owner.
+- **Q5 (hosting production), riset belum diputuskan:**
+  - Helipod (PT Samudra Inovasi Terpadu, Jakarta) dicek lewat jawaban support
+    (berlabel AI), halaman harga, docs, dan MCP Helipod baca-saja di akun
+    Owner (tanpa membuat resource). Database Helipod adalah Neon lewat agen;
+    region tidak bisa dikonfirmasi; API database tidak punya endpoint
+    restore/PITR; retensi riwayat tidak tertulis; kredit compute prabayar
+    habis berarti database di-suspend; paket Starter 50 CU-jam, Growth
+    100 CU-jam.
+  - Rekomendasi agen: aplikasi di Helipod Apps, database di akun Neon Launch
+    milik Niuva (PITR sampai 7 hari, scale-to-zero bisa dimatikan), plus
+    backup harian ke S3 Jakarta. Perkiraan Rp235–615 ribu/bulan; belum
+    diverifikasi. Menunggu keputusan Owner.
+  - MCP Helipod didaftarkan scope lokal proyek ini (bukan Git).
 
 ### Grant aktivasi staging E6, 2026-10-28
 
