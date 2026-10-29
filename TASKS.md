@@ -1338,7 +1338,47 @@ Jawaban Owner di sesi kerja atas pertanyaan audit 28 Oktober (E1–E13):
   lengkap. Temuan kode: `src/modules/customer-auth/email-mailer.ts` menolak
   `NODE_ENV=production`, sehingga email Customer hosted tertutup sampai jalur
   staging dibuat (bagian D3).
-- E10–E12 belum dijawab.
+- **E10–E12, 29 Oktober 2026:** Owner menerima rekomendasi agen ("Ya, catat").
+  Belum mengubah runtime, policy publik atau resource hosted.
+  - **E10 (refund uji coba):** refund otomatis hanya untuk metode yang
+    didukung Midtrans. Riset dokumentasi publik Midtrans (29 Okt): halaman
+    Refund Transaction menyebut kartu kredit, GoPay, ShopeePay, DANA, OVO,
+    QRIS, Kredivo dan Akulaku; halaman Refund API/Direct Refund yang lebih lama
+    tidak memuat DANA/OVO (atau Kredivo). VA/transfer bank, Mandiri Bill dan
+    gerai tidak ada di daftar mana pun, jadi diperlakukan manual. Batas waktu
+    per metode berbeda (mis. Kredivo 14 hari, OVO 7 hari, QRIS off-us 7 hari);
+    ShopeePay dan OVO tanpa refund parsial; refund kartu hanya lewat bank
+    acquiring tertentu. Snap Niuva tidak mengirim `enabled_payments`, sehingga
+    metode yang tampil = yang aktif di dashboard merchant. Metode aktif dan
+    aktivasi fitur refund di akun Niuva **belum diverifikasi** (dashboard/CS
+    Midtrans). Metode lain memakai refund manual:
+    Owner menyetujui dan mencatat di Admin, transfer boleh dikerjakan Rheza dari
+    rekening usaha setelah nama pemilik rekening tujuan dicocokkan dengan
+    pembeli. Bukti sah: bukti transfer internet/mobile banking atau mutasi
+    rekening usaha (tanggal, nominal, rekening tujuan, nomor referensi); untuk
+    refund otomatis, status dan ID refund di dashboard Midtrans. Screenshot chat
+    bukan bukti. Staging cukup satu refund otomatis dan satu manual.
+  - **E11 (pemulihan dan retensi):** RPO 24 jam; RTO 1 hari kerja. Neon
+    staging saat dicek berpaket Free, `history_retention_seconds` 21600
+    (6 jam), region `aws-ap-southeast-1`; backup harian tambahan dan satu
+    latihan restore terisolasi dibutuhkan sebelum peluncuran. Retensi (riset
+    sumber sekunder 29 Okt, teks resmi belum dicocokkan): PP 80/2019 Pasal 25
+    ayat (1) — data PMSE terkait transaksi keuangan minimal 10 tahun, lainnya
+    minimal 5 tahun, tanpa syarat lokasi; penjelasannya merujuk UU KUP Pasal 28
+    ayat (11), yang mewajibkan dasar pembukuan (termasuk data elektronik)
+    disimpan 10 tahun **di Indonesia** pada tempat kedudukan badan. PP 71/2019
+    Pasal 21 membolehkan PSE privat menyimpan data di luar negeri, tetapi tidak
+    ditemukan sumber yang menyatakan cloud luar negeri memenuhi syarat "di
+    Indonesia" UU KUP. Arah aman: database operasional tetap di Neon Singapura;
+    salinan arsip pembukuan (ekspor transaksi, settlement Midtrans, invoice)
+    disimpan berkala di Indonesia. Format, frekuensi dan tempat salinan serta
+    konfirmasi konsultan pajak **belum diverifikasi** (PUB-RECORDS).
+  - **E12 (operasional):** hari kerja mengikuti Syarat v1.0 (Senin–Jumat,
+    kecuali libur nasional, WIB), jam 09.00–17.00 WIB. Pengganti Rheza:
+    Owner atau Admin lain. Kontak Customer: nomor WhatsApp bisnis di website;
+    masalah teknis ke Owner. Peringatan sistem ke Owner lewat email. Quote
+    MAKE: tanggapan awal 1 hari kerja, quote final paling lambat 2 hari kerja
+    setelah berkas dan kebutuhan lengkap.
 - **Deploy staging E3, 28 Oktober 2026 (izin Owner "deploy dulu aja"):**
   builds Netlify diaktifkan sementara, satu deploy tanpa cache dari `main`
   `7063395` berstatus **Published**, lalu build status dikembalikan ke
@@ -1569,7 +1609,17 @@ Admin.
   `/custom-print` tanpa bagian inspirasi dan tanpa tombol "Ajukan untuk
   Review" per produk, desktop dan 375 px tanpa overflow horizontal. Form
   pengajuan (butuh login Customer) tidak dibuka di browser. Tampilan belum
-  direview Owner. Impor hosted belum dijalankan.
+  direview Owner.
+- PR #79 di-squash ke `main@60f0249` (CI sempat gagal di dua E2E Custom Print
+  yang masih mengharapkan kartu produk; diperbarui dan 7 E2E lokal lulus).
+  Impor hosted 2026-10-29: Owner menjalankan script lokal (connection string
+  runtime tanpa echo, `sslmode` dinaikkan ke `verify-full`, binding dari
+  marker, konfirmasi literal diketik Owner). Neon MCP: 4 kategori, 8 produk
+  published, 34 varian aktif berdimensi, 50 media, 34 `OPENING_BALANCE`,
+  total stok 172. `/shop` staging menampilkan 8 tautan produk setelah ISR
+  memperbarui cache; satu halaman detail dan satu gambar produk 200. Kuotasi
+  ongkir Biteship dengan dimensi ini belum diuji (bagian T33). Perubahan
+  `/custom-print` baru tayang setelah deploy berikutnya.
 
 ### Grant aktivasi staging E6, 2026-10-28
 
