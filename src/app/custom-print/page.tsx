@@ -236,7 +236,7 @@ export default async function CustomPrintPage() {
           </div>
         </section>
 
-        <section className="border-b border-border bg-background" aria-labelledby="custom-products-title">
+        {CUSTOM_FLOW_PRODUCT_OPTIONS.length > 0 ? <section className="border-b border-border bg-background" aria-labelledby="custom-products-title">
           <div className="mx-auto max-w-public px-5 py-16 sm:px-8 sm:py-20">
             <div className="max-w-3xl">
               <p className="text-sm font-medium text-brand-700">Inspirasi produk custom</p>
@@ -244,7 +244,7 @@ export default async function CustomPrintPage() {
                 Pilih referensi, lalu biarkan operator mengunci detailnya.
               </h2>
               <p className="mt-5 text-base leading-7 text-muted-foreground">
-                Lima produk berikut memiliki foto referensi, tetapi tetap draft karena membutuhkan konteks custom, review, dan quote. Harga pada katalog bukan checkout otomatis untuk alur ini.
+                Produk berikut memiliki foto referensi, tetapi tetap draft karena membutuhkan konteks custom, review, dan quote. Harga pada katalog bukan checkout otomatis untuk alur ini.
               </p>
             </div>
             <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -266,7 +266,7 @@ export default async function CustomPrintPage() {
               ))}
             </div>
           </div>
-        </section>
+        </section> : null}
 
         <section className="border-b border-border bg-card" aria-labelledby="boundaries-title">
           <div className="mx-auto grid max-w-public gap-10 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-2 lg:items-start">

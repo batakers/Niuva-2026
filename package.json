@@ -12,6 +12,7 @@
     "check:memory": "node scripts/check-memory.mjs",
     "staging:preflight": "jiti scripts/staging-preflight.ts",
     "staging:bootstrap-owner": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap-staging-owner.ps1",
+    "staging:import-catalog": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/import-staging-catalog.ps1",
     "pretypecheck": "prisma generate && next typegen",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

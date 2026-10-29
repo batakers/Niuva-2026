@@ -128,7 +128,7 @@ describe("Customer login availability copy (R11)", () => {
       state.capabilities = { database: true, customerGoogle: false, customUploads: true };
     }
 
-    it("uses neutral 'login Customer' copy in all three affected locations when login is unavailable", async () => {
+    it("uses neutral 'login Customer' copy in the affected locations when login is unavailable", async () => {
       gateCustomerAuth();
       render(await CustomPrintPage());
 
@@ -137,10 +137,10 @@ describe("Customer login availability copy (R11)", () => {
       expectNeutralLoginCopy(CUSTOM_PRINT_TITLE);
       expect(notice.textContent?.toLowerCase()).not.toContain("google");
 
-      // (b) call-to-action text, one per product option
-      const ctas = screen.getAllByText(CUSTOM_PRINT_CTA);
-      expect(ctas.length).toBeGreaterThan(0);
-      for (const cta of ctas) expectNeutralLoginCopy(cta.textContent ?? "");
+      // (b) the per-product call-to-action is gone: Custom Print offers no
+      // catalog products since the Owner's 28 October 2026 decision.
+      expectNeutralLoginCopy(CUSTOM_PRINT_CTA);
+      expect(screen.queryAllByText(CUSTOM_PRINT_CTA)).toHaveLength(0);
 
       // (c) delivery status title
       const status = screen.getByText(CUSTOM_PRINT_STATUS_TITLE);

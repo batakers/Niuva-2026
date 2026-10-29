@@ -29,17 +29,18 @@ test("custom print landing explains the operator-reviewed path without instant-p
   await expect(page.getByRole("link", { name: "Hubungi Kami" }).first()).toHaveAttribute("href", /^https:\/\/wa\.me\//);
 });
 
-test("custom draft cards route to a preselected intake without checkout", async ({ page }) => {
+test("Custom Print offers no catalog references; intake takes the customer's own design", async ({ page }) => {
+  // Owner decision 28 October 2026: the former custom-flow listings are sold
+  // in the Shop, so Custom Print shows no product cards or product picker.
   await loginCustomer(page);
   await page.goto("/custom-print");
 
-  await expect(page.getByRole("heading", { name: "Pilih referensi, lalu biarkan operator mengunci detailnya." })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Ajukan untuk Review" })).toHaveCount(5);
+  await expect(page.getByRole("heading", { name: "Pilih referensi, lalu biarkan operator mengunci detailnya." })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Ajukan untuk Review" })).toHaveCount(0);
 
-  await page.getByRole("link", { name: "Ajukan untuk Review" }).first().click();
-  await expect(page).toHaveURL(/\/custom-print\/request\?product=103726333343$/);
-  await expect(page.getByLabel("Produk yang diminati")).toHaveValue("103726333343");
-  await expect(page.getByText("tidak ada checkout langsung", { exact: false })).toBeVisible();
+  await page.goto("/custom-print/request?product=103726333343");
+  await expect(page.getByLabel("Produk yang diminati")).toHaveCount(0);
+  await expect(page.locator('input[type="hidden"][name="productInterest"]')).toHaveValue("CUSTOM_UNSPECIFIED");
 });
 
 test("custom print landing stays usable without horizontal overflow", async ({ page }) => {

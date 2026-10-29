@@ -1,6 +1,6 @@
-import type { PrismaClient } from "@/generated/prisma/client";
+import type { Prisma, PrismaClient } from "../../generated/prisma/client";
 import { z } from "zod";
-import { recordStockMovement, setStockWithinTransaction } from "@/modules/inventory/movement";
+import { recordStockMovement, setStockWithinTransaction } from "../inventory/movement";
 
 const slug = z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 const text = z.string().trim().min(1);
@@ -97,105 +97,111 @@ export async function seedCatalog(
   prisma: PrismaClient,
   input: CatalogSeedInput,
 ): Promise<CatalogSeedResult> {
-  return prisma.$transaction(async (tx) => {
-    const categoryIds = new Map<string, string>();
-    for (const category of input.categories) {
-      const persisted = await tx.category.upsert({
-        where: { slug: category.slug },
-        create: { name: category.name, slug: category.slug, sortOrder: category.sortOrder },
-        update: { name: category.name, sortOrder: category.sortOrder },
-        select: { id: true },
-      });
-      categoryIds.set(category.slug, persisted.id);
+  return prisma.$transaction((tx) => seedCatalogInTransaction(tx, input));
+}
+
+/** Upserts the catalog inside the caller's transaction; never deletes other rows. */
+export async function seedCatalogInTransaction(
+  tx: Prisma.TransactionClient,
+  input: CatalogSeedInput,
+): Promise<CatalogSeedResult> {
+  const categoryIds = new Map<string, string>();
+  for (const category of input.categories) {
+    const persisted = await tx.category.upsert({
+      where: { slug: category.slug },
+      create: { name: category.name, slug: category.slug, sortOrder: category.sortOrder },
+      update: { name: category.name, sortOrder: category.sortOrder },
+      select: { id: true },
+    });
+    categoryIds.set(category.slug, persisted.id);
+  }
+
+  let mediaCount = 0;
+  let variantCount = 0;
+  for (const product of input.products) {
+    const categoryId = product.categorySlug === undefined
+      ? undefined
+      : categoryIds.get(product.categorySlug);
+    if (product.categorySlug !== undefined && categoryId === undefined) {
+      throw new Error(`Kategori ${product.categorySlug} belum didefinisikan.`);
     }
 
-    let mediaCount = 0;
-    let variantCount = 0;
-    for (const product of input.products) {
-      const categoryId = product.categorySlug === undefined
-        ? undefined
-        : categoryIds.get(product.categorySlug);
-      if (product.categorySlug !== undefined && categoryId === undefined) {
-        throw new Error(`Kategori ${product.categorySlug} belum didefinisikan.`);
+    const persisted = await tx.product.upsert({
+      where: { slug: product.slug },
+      create: {
+        categoryId,
+        description: product.description,
+        isPublished: product.isPublished,
+        name: product.name,
+        slug: product.slug,
+      },
+      update: {
+        ...(categoryId === undefined ? {} : { categoryId }),
+        description: product.description,
+        isPublished: product.isPublished,
+        name: product.name,
+      },
+      select: { id: true },
+    });
+
+    for (const variant of product.variants) {
+      const existing = await tx.productVariant.findUnique({ where: { sku: variant.sku }, select: { id: true, productId: true } });
+      if (existing !== null && existing.productId !== persisted.id) {
+        throw new Error(`SKU ${variant.sku} sudah terikat ke produk lain.`);
       }
-
-      const persisted = await tx.product.upsert({
-        where: { slug: product.slug },
-        create: {
-          categoryId,
-          description: product.description,
-          isPublished: product.isPublished,
-          name: product.name,
-          slug: product.slug,
-        },
-        update: {
-          ...(categoryId === undefined ? {} : { categoryId }),
-          description: product.description,
-          isPublished: product.isPublished,
-          name: product.name,
-        },
-        select: { id: true },
-      });
-
-      for (const variant of product.variants) {
-        const existing = await tx.productVariant.findUnique({ where: { sku: variant.sku }, select: { id: true, productId: true } });
-        if (existing !== null && existing.productId !== persisted.id) {
-          throw new Error(`SKU ${variant.sku} sudah terikat ke produk lain.`);
-        }
-        if (existing === null) {
-          const created = await tx.productVariant.create({
-            data: {
-              heightCm: variant.heightCm,
-              isActive: variant.isActive,
-              lengthCm: variant.lengthCm,
-              name: variant.name,
-              priceRp: variant.priceRp,
-              productId: persisted.id,
-              sku: variant.sku,
-              stockOnHand: variant.stockOnHand,
-              weightGrams: variant.weightGrams,
-              widthCm: variant.widthCm,
-            },
-            select: { id: true },
-          });
-          await recordStockMovement(tx, {
-            balanceBefore: 0,
-            balanceAfter: variant.stockOnHand,
-            kind: "OPENING_BALANCE",
-            variantId: created.id,
-          });
-        } else {
-          await tx.productVariant.update({
-            where: { id: existing.id },
-            data: {
-              heightCm: variant.heightCm,
-              isActive: variant.isActive,
-              lengthCm: variant.lengthCm,
-              name: variant.name,
-              priceRp: variant.priceRp,
-              weightGrams: variant.weightGrams,
-              widthCm: variant.widthCm,
-            },
-          });
-          await setStockWithinTransaction(tx, {
-            kind: "CATALOG_IMPORT",
+      if (existing === null) {
+        const created = await tx.productVariant.create({
+          data: {
+            heightCm: variant.heightCm,
+            isActive: variant.isActive,
+            lengthCm: variant.lengthCm,
+            name: variant.name,
+            priceRp: variant.priceRp,
+            productId: persisted.id,
+            sku: variant.sku,
             stockOnHand: variant.stockOnHand,
-            variantId: existing.id,
-          });
-        }
-        variantCount += 1;
-      }
-
-      for (const media of product.media) {
-        await tx.productMedia.upsert({
-          where: { productId_sortOrder: { productId: persisted.id, sortOrder: media.sortOrder } },
-          create: { altText: media.altText, productId: persisted.id, sortOrder: media.sortOrder, storageKey: media.storageKey },
-          update: { altText: media.altText, storageKey: media.storageKey },
+            weightGrams: variant.weightGrams,
+            widthCm: variant.widthCm,
+          },
+          select: { id: true },
         });
-        mediaCount += 1;
+        await recordStockMovement(tx, {
+          balanceBefore: 0,
+          balanceAfter: variant.stockOnHand,
+          kind: "OPENING_BALANCE",
+          variantId: created.id,
+        });
+      } else {
+        await tx.productVariant.update({
+          where: { id: existing.id },
+          data: {
+            heightCm: variant.heightCm,
+            isActive: variant.isActive,
+            lengthCm: variant.lengthCm,
+            name: variant.name,
+            priceRp: variant.priceRp,
+            weightGrams: variant.weightGrams,
+            widthCm: variant.widthCm,
+          },
+        });
+        await setStockWithinTransaction(tx, {
+          kind: "CATALOG_IMPORT",
+          stockOnHand: variant.stockOnHand,
+          variantId: existing.id,
+        });
       }
+      variantCount += 1;
     }
 
-    return { categories: input.categories.length, media: mediaCount, products: input.products.length, variants: variantCount };
-  });
+    for (const media of product.media) {
+      await tx.productMedia.upsert({
+        where: { productId_sortOrder: { productId: persisted.id, sortOrder: media.sortOrder } },
+        create: { altText: media.altText, productId: persisted.id, sortOrder: media.sortOrder, storageKey: media.storageKey },
+        update: { altText: media.altText, storageKey: media.storageKey },
+      });
+      mediaCount += 1;
+    }
+  }
+
+  return { categories: input.categories.length, media: mediaCount, products: input.products.length, variants: variantCount };
 }

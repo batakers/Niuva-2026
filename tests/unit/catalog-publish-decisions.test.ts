@@ -96,7 +96,7 @@ describe("catalog publish approval", () => {
     }
   });
 
-  it("records the approved 3/5 split while retaining media for every draft", () => {
+  it("records the Owner's 28 October 2026 decision to publish all eight products with media", () => {
     const datasetRoot = resolve(
       process.cwd(),
       "docs/source/Dataset Shop Niuva",
@@ -129,15 +129,12 @@ describe("catalog publish approval", () => {
       .map(([sourceProductId]) => sourceProductId)
       .sort();
 
-    expect(publishedSourceIds).toEqual([
-      "103342790916",
-      "103343689816",
-      "103726663896",
-    ]);
+    expect(publishedSourceIds).toEqual(source.products.map((product) => product.product_id).sort());
+    expect(resolved.approvedAt).toBe("2026-10-28");
     expect([...resolved.decisions.values()].filter(
       (decision) => decision === "HOLD_CUSTOM_FLOW",
-    )).toHaveLength(5);
-    expect(manifest.products.filter((product) => product.isPublished)).toHaveLength(3);
+    )).toHaveLength(0);
+    expect(manifest.products.filter((product) => product.isPublished)).toHaveLength(8);
     expect(manifest.products.every((product) => product.media.length > 0)).toBe(true);
   });
 });

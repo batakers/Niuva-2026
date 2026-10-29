@@ -1,5 +1,5 @@
-import { Prisma } from "@/generated/prisma/client";
-import { appError } from "@/modules/shared/errors";
+import { Prisma } from "../../generated/prisma/client";
+import { appError } from "../shared/errors";
 
 export type LockedVariant = Readonly<{ id: string; stockOnHand: number }>;
 

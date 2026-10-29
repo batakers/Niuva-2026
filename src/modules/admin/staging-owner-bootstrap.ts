@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { hashPassword } from "better-auth/crypto";
-import { resolveDeployment } from "../../lib/env/server";
-import { readDatabaseBindingExpectation, type DatabaseBindingExpectation } from "../database-binding/core";
+import type { DatabaseBindingExpectation } from "../database-binding/core";
 import type { DatabaseBindingRepository } from "../database-binding/repository";
+import { checkStagingOperatorEnvironment } from "../database-binding/staging-operator";
 import { adminNewPasswordSchema } from "../admin-auth/password-policy";
 import { provisionAdminIdentityInTransaction } from "../admin-auth/provision";
 
@@ -41,25 +41,9 @@ export function parseStagingOwnerBootstrapInput(source: Readonly<Record<string, 
 
 /** Explicit staging tier, verify-full TLS and a binding ID; never production or local. */
 export function assertStagingOwnerBootstrapEnvironment(source: Readonly<Record<string, string | undefined>>): DatabaseBindingExpectation {
-  let tier: string;
-  try {
-    tier = resolveDeployment({ NODE_ENV: source.NODE_ENV, NIUVA_DEPLOYMENT_TIER: source.NIUVA_DEPLOYMENT_TIER, NIUVA_PROVIDER_MODE: source.NIUVA_PROVIDER_MODE }).tier;
-  } catch {
-    throw new StagingOwnerBootstrapError("NOT_STAGING");
-  }
-  if (source.NIUVA_DEPLOYMENT_TIER?.trim().toLowerCase() !== "staging" || tier !== "staging") throw new StagingOwnerBootstrapError("NOT_STAGING");
-  let modes: string[] = [];
-  try {
-    modes = new URL(source.DATABASE_URL ?? "").searchParams.getAll("sslmode");
-  } catch {
-    throw new StagingOwnerBootstrapError("DATABASE_TLS_REQUIRED");
-  }
-  if (modes.length !== 1 || modes[0] !== "verify-full") throw new StagingOwnerBootstrapError("DATABASE_TLS_REQUIRED");
-  try {
-    return readDatabaseBindingExpectation(source, "staging");
-  } catch {
-    throw new StagingOwnerBootstrapError("BINDING_CONFIG_INVALID");
-  }
+  const checked = checkStagingOperatorEnvironment(source);
+  if (!checked.ok) throw new StagingOwnerBootstrapError(checked.reason);
+  return checked.expected;
 }
 
 export async function bootstrapStagingOwner(bindings: DatabaseBindingRepository, expected: DatabaseBindingExpectation, input: StagingOwnerBootstrapInput) {

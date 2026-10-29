@@ -15,14 +15,19 @@ turunan yang sudah divalidasi oleh `catalogSeedSchema`.
 - 2 produk single-SKU tidak memiliki baris varian; ID produk sumber dipakai
   sebagai SKU deterministik agar data tetap dapat diedit di admin.
 - Berat sumber dalam kilogram dikonversi ke gram (50, 100, 150, atau 200 g).
-- Biaya packaging dianggap termasuk dalam harga produk. Dimensi paket tidak
-  diperlukan untuk katalog loopback, preview, atau ongkir manual/flat-rate;
-  field dimensi menjadi wajib bila provider-calculated shipping diaktifkan.
+- Biaya packaging dianggap termasuk dalam harga produk. Sumber tidak memuat
+  dimensi paket, sedangkan ongkir Biteship mewajibkannya.
+  `catalog-package-estimates.json` memuat perkiraan per SKU atas instruksi
+  Owner 2026-10-28 (kelas 8/12/15 cm dari ukuran produk); Owner dapat
+  mengubahnya per varian di Admin.
 - 55 file JPG sumber valid (700×700); 50 mapping unik dipilih sesuai batas
   maksimal 12 media per produk pada kontrak katalog.
-- `catalog-publish-decisions.json` mencatat approval Owner 2026-09-18:
-  3 produk ready-made `isPublished: true`, 5 produk yang membutuhkan alur
-  custom tetap draft, dan ID sumber dipakai sebagai SKU internal v1.
+- `catalog-publish-decisions.json` mencatat keputusan Owner 2026-10-28:
+  kedelapan produk `isPublished: true` (sebelumnya 2026-09-18: 3 publish,
+  5 draft). Listing custom figure dijual di Shop; Custom Print/MAKE hanya
+  untuk desain dari customer. ID sumber tetap dipakai sebagai SKU internal v1.
+- Impor ke DB staging: `corepack pnpm staging:import-catalog` (Owner, binding
+  staging terverifikasi, idempoten, tanpa provider).
 
 Media varian dipetakan sebagai media galeri produk karena model `ProductMedia`
 saat ini berscope produk, bukan relasi varian. Sidecar

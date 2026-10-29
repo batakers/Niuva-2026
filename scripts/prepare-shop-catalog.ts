@@ -7,6 +7,7 @@ import {
   resolveCatalogPublishApproval,
   type CatalogPublishDecision,
 } from "../src/modules/catalog/publish-decisions";
+import { applyPackageEstimates } from "../src/modules/catalog/package-estimates";
 import { catalogSeedSchema, type CatalogSeedInput } from "../src/modules/catalog/seed";
 
 type SourceRecord = Record<string, unknown>;
@@ -30,6 +31,7 @@ const datasetRoot = resolve(
 );
 const sourceJsonPath = resolve(datasetRoot, "Niuva_Tokopedia_Products.json");
 const publishApprovalPath = resolve(datasetRoot, "catalog-publish-decisions.json");
+const packageEstimatesPath = resolve(datasetRoot, "catalog-package-estimates.json");
 const seedOutputPath = resolve(datasetRoot, "catalog-seed.json");
 const variantMediaMapOutputPath = resolve(datasetRoot, "variant-media-map.json");
 const publicRoot = resolve("public");
@@ -303,7 +305,7 @@ for (const product of dataset.products) {
   });
 }
 
-const seedInput = catalogSeedSchema.parse({
+const seedInput = catalogSeedSchema.parse(applyPackageEstimates(catalogSeedSchema.parse({
   categories: [...categoryNames.entries()]
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([slug, name], sortOrder) => ({ name, slug, sortOrder })),
@@ -316,7 +318,7 @@ const seedInput = catalogSeedSchema.parse({
     }),
   })),
   version: 1,
-}) as CatalogSeedInput;
+}), JSON.parse(await readFile(packageEstimatesPath, "utf8")) as unknown)) as CatalogSeedInput;
 
 await Promise.all(preparedProducts.map((product) => copyPreparedMedia(product.media)));
 await writeFile(seedOutputPath, `${JSON.stringify(seedInput, null, 2)}\n`, "utf8");
