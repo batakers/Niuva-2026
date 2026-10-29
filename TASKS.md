@@ -1632,6 +1632,14 @@ Admin.
   memuat 8 tautan produk; `/custom-print/request` tanpa sesi 307 ke
   `/login?returnTo=...`. Form intake dengan sesi Customer penguji belum
   diperiksa di hosted.
+- **Policy email bisnis staging, 2026-10-29 (Owner "Ya, 24 jam"):**
+  `businessPolicy.maxAgeMs` = 86.400.000 (24 jam, batas teknis
+  `docs/backend/business-notifications.md`) untuk pemicu manual
+  `OUTBOX_BUSINESS` di staging; dry-run dulu sebelum execute. Bukan nilai
+  production atau jadwal. Script lokal Owner `run-business-job.ps1` (di luar
+  Git) mewajibkan nilai ini diisi eksplisit. Belum dijalankan; baseline DB
+  sebelum T33: 0 order, 0 payment attempt, 0 reservasi, 34 stock movement,
+  2 pesan outbox.
 
 ### Grant aktivasi staging E6, 2026-10-28
 
