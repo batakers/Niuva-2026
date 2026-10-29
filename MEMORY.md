@@ -25,7 +25,7 @@ Update this after major decisions, completed phases, or bugs that future agents 
 
 ## Decisions
 
-- 2026-10-30 — Owner answered Q1–Q10 (focus board in `TASKS.md`): staging grants `refund`/`privacy`/`googleAuth`; QRIS + GoPay for v1; production on an Indonesian hosting provider (not chosen); daily backup plus bookkeeping copy in one Jakarta-region store (provider/cost belum diverifikasi); staging builds may stay Active for `main`; abandoned attempts stop reconciling after 7 days.
+- 2026-10-30 — Owner answered Q1–Q10 (focus board in `TASKS.md`): staging grants `refund`/`privacy`/`googleAuth`; QRIS + GoPay for v1; production on an Indonesian hosting provider (not chosen); daily backup plus bookkeeping copy in one Jakarta-region store (provider/cost belum diverifikasi); staging builds may stay Active for `main`; abandoned attempts stop reconciling after 7 days (`ABANDONED_ATTEMPT_RECONCILIATION_WINDOW_MS`); Q2–Q4 grants live in `ACTIVATION_GRANTS` (`src/lib/env/deployment.ts`).
 - 2026-10-27 — T03 staging decisions, authorization and evidence boundaries: see `docs/backend/t03-hosted-sandbox-runbook.md` and `TASKS.md`; current hosted acceptance belum diverifikasi.
 - 2026-08-21 — Product authority: `docs/PRD-Niuva-MVP.md` and addenda; technical authority: `docs/TechDesign-Niuva-MVP.md` and addenda; visual authority: `DESIGN.md`.
 - 2026-08-21 — User guidance level is C (somewhere in between), overriding the older Level A metadata for explanation style only.

@@ -184,6 +184,23 @@ describe("persistent payment reconciliation", () => {
     expect(await first).toMatchObject({ state: "failed", cooldownMs: 60000 });
     expect(await job.run(request)).toMatchObject({ state: "cooldown" });
   });
+  it("stops polling expired attempts without a Midtrans transaction after 7 days (Owner Q10)", async () => {
+    const day = 24 * 60 * 60 * 1000;
+    const age = async (p: Fixture, days: number, transactionId: string | null = null) => {
+      await f.admin.paymentAttempt.update({ where: { id: p.payment.id }, data: { createdAt: new Date(Date.now() - days * day), providerTransactionId: transactionId } });
+      return p.payment.id;
+    };
+    const abandoned = await age(await fixture("EXPIRED"), 8);
+    const recent = await age(await fixture("EXPIRED"), 6);
+    const withTransaction = await age(await fixture("EXPIRED"), 8, `txn-${randomUUID()}`);
+    const oldCancelled = await age(await fixture("CANCELLED"), 8);
+    const ids = await f.client.$transaction(tx => new PaymentReconciliationRepository(f.client).candidates(tx, new Date(), 100)).then(rows => rows.map(row => row.id));
+    expect(ids).not.toContain(abandoned);
+    expect(ids).toEqual(expect.arrayContaining([recent, withTransaction, oldCancelled]));
+    const fetcher = vi.fn<typeof fetch>();
+    expect(await runner(fetcher).run({ ...request, mode: "dry-run" })).toMatchObject({ counts: { scanned: 3, remainingDue: 3 } });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
   it("rotates bounded polls and exposes lag without private provider payloads", async () => {
     const a = await fixture(), b = await fixture(), refs: string[] = [];
     const job = runner(async url => { refs.push(String(url)); return Response.json({ status_code: "404", status_message: "private response must not be persisted" }); });
