@@ -30,9 +30,9 @@ gelombang berikutnya menunggu penghambatnya.
 | 1 — bukti hosted cepat | T07, T24, T10, D02 | A | Selesai 29 Okt (log "Gelombang 1"); T24 menemukan B5 | — |
 | 1 | T09 (auth) | O | `CUSTOMER_AUTH_CLEANUP` hanya lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
 | 1 | T03, T19 | A + O | Smoke R2 privat/publik lewat unggah media Admin | Sesi Admin Owner |
-| 2 — rekayasa | T10 (B4) | A | PR #84: kunci rate limit dari `x-nf-client-connection-ip`; uji pemalsuan ulang setelah deploy | Merge dan deploy atas izin Owner |
-| 2 | T31/T34 (B1) | A + O | PR #86: Owner menjalankan `staging:activate-pricing` setelah merge (tanpa deploy) | Merge atas izin Owner |
-| 2 | T06/D07 (B2) | A | PR #85: `runBudgetMs` dan hitungan `deferred`; script staging ikut mengirim budget setelah deploy | Merge dan deploy atas izin Owner |
+| 2 — rekayasa | T10 (B4) | A | Selesai: PR #84 di-deploy 29 Okt, pemalsuan header tetap 429 | — |
+| 2 | T31/T34 (B1) | O | Jalankan `corepack pnpm staging:activate-pricing` dari `main` (PR #86 sudah merge; tanpa deploy) | Sesi Owner |
+| 2 | T06/D07 (B2) | A | PR #85 di-deploy 29 Okt; berhenti di budget dengan pesan sungguhan diamati saat BUY #2 | — |
 | 2 | T24 (B5) | A | Batas pemeriksaan attempt tanpa transaksi Midtrans | Q10 |
 | 3 — transaksi | T33 | O + A | BUY #2: dua produk, QRIS/GoPay simulator, fulfillment/resi manual sampai email shipped | — |
 | 3 | T34, T36, T19 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim | B1 |
@@ -73,7 +73,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T07 | M1 | BLOCKED_EXTERNAL | Job expiry reservasi retail | T03 | Reservation due mengikuti policy existing; pending payment yang masih berlaku menahan pembatalan; attempt kedaluwarsa menjadi EXPIRED, order unpaid menjadi CANCELLED, dan stok dilepas atomik/idempoten; settled/refunded tidak pernah dilepas. Runner/backend/integration lokal lulus. Cadence dan scheduler hosted menunggu Owner/T03. |
 | T08 | M1 | BLOCKED_EXTERNAL | Job retensi file Customer | T03 | 14/60/90 sesuai kelas; hold Owner/privasi tetap setelah closure/purge receipt; order aktif dan bukti keuangan/histori B2B/media publik dilindungi. Klaim DELETE_PENDING, retry key sama, final lease, cursor bounded, HTTP/CLI canonical dan monitoring lulus lokal. PR #58 merged ke main pada `87d47fa`; adapter S3-compatible mempertahankan pembatalan I/O. Resource/scheduler/provider hosted menunggu T03. |
 | T09 | M1 | BLOCKED_EXTERNAL | Cleanup auth/privacy hosted | T03 | Handler auth/privacy berbatas dari PR #56 memakai runner/lease/role/monitor canonical. Tenggat dan hold tetap; bukti lokal diwarisi lalu diuji ulang saat rekonsiliasi. Scheduler/role/resource hosted belum tersedia. |
-| T10 | M1 | IN_PROGRESS | Rate limit lintas instance | T03 | PostgreSQL bersama, HMAC IP stabil dengan secret bersama, dan pembersihan row kedaluwarsa diuji lokal; binding/topologi hosted belum dibuktikan. Integration. |
+| T10 | M1 | DONE | Rate limit lintas instance | T03 | PostgreSQL bersama, HMAC IP stabil dengan secret bersama, dan pembersihan row kedaluwarsa diuji lokal. Hosted 29 Okt (`main@82dd380`): bucket bersama di database staging berbinding, kunci dari `x-nf-client-connection-ip` (pemalsuan header tidak membuka bucket baru), baris kedaluwarsa terhapus. Identitas instance tidak diamati terpisah; store-nya database bersama. |
 | T11 | M2 | DONE | Pengesahan policy publik | T01; Owner | Owner menyetujui isi dan identifier `NIUVA-TERMS-v1.0`/`NIUVA-PRIVACY-v1.0`; tanggal berlaku ditetapkan saat publikasi aktual. Fakta provider, transfer data dan gerbang rilis dicatat terpisah pada readiness yang sudah ada; tidak menghambat T11 atau development lokal. Tidak menjanjikan kemampuan yang belum dibuktikan. |
 | T12 | M2 | DONE | Consent Google publik | T04/T11 | Consent/deklarasi 18+ server terikat state/browser/tujuan dan identitas provider terverifikasi; konsumsi atomik. Proof hilang/expired/replay/race/provider-denied, state/versi berubah, email akun sama, dan closure ditolak. Unit/backend/integration/E2E lokal lulus; aktivasi hosted tetap terpisah. |
 | T13 | M2 | DONE | Signup email publik | T04/T11 | Persetujuan policy dan deklarasi 18+ terpisah; pending sampai email verified; tanpa sesi otomatis; expiry/cooldown/resend/reset/revoke dan pencegahan reattachment setelah closure diuji. Integration/E2E lokal lulus; tanggal publikasi/berlaku dan aktivasi hosted tetap terpisah. |
@@ -1788,6 +1788,41 @@ yang membaca salinan DPAPI `CRON_SECRET` tanpa mencetaknya. Policy
   - `POST /api/project-brief` 410;
   - kebenaran nomor bisnis tetap pengetahuan Owner.
 - **T09 (auth):** `CUSTOMER_AUTH_CLEANUP` tidak punya endpoint HTTP, hanya CLI `scripts/cleanup-internal-auth.ts` dengan kredensial DB. Belum dijalankan.
+
+### Gelombang 2: merge #83–#86 dan deploy staging, 2026-10-29
+
+Atas instruksi Owner ("Ya, merge & deploy"), keempat PR di-squash setelah CI
+Quality hijau:
+
+- #84 (B4) → `9c5c431`;
+- #85 (B2) → `fc3b7ec`;
+- #86 (B1) → `56ccfdb`;
+- #83 (papan) → `82dd380`.
+
+Sebelum deploy, `main@82dd380` gabungan lulus typecheck dan backend (120 file,
+947 tes) di worktree lokal.
+
+Deploy staging `6ae3752445110f8bfc4fbe8c` (commit `82dd380`) berstatus `ready`,
+published 16:34:09 UTC, secret scan 2.147 file tanpa temuan. Build dikembalikan
+ke **Stopped** dan log tetap privat (dicek setelah muat ulang).
+
+- **B4 / T10:**
+  - tujuh POST anonim ke `/api/account/claim` (limit 5/menit): 1–5 → 401, 6–7 → 429;
+  - dengan bucket asli sudah 429, `X-Forwarded-For`, `X-Real-IP` dan `x-nf-client-connection-ip` palsu, sendiri-sendiri maupun bersamaan, **tetap 429**: satu baris `request_rate_limits` (count 6, kunci 64 karakter);
+  - Netlify menimpa `x-nf-client-connection-ip` kiriman klien;
+  - baris bucket uji siang (kunci IP asli dan kunci header palsu) sudah terhapus oleh pembersihan saat konsumsi; yang tersisa hanya bucket uji terbaru;
+  - T10 ditutup DONE; identitas instance tidak diamati terpisah.
+- **B2:**
+  - script lokal kini mengirim `workerPolicy.runBudgetMs` 18000 (limit 10) dan `businessPolicy.runBudgetMs` 15000 (execute limit 10), dengan sisa ruang untuk cold start, lease dan respons di bawah batas function sekitar 30 s;
+  - `OUTBOX_BUSINESS` dry-run completed (scanned 0, `deferred` 0);
+  - `OUTBOX_DELIVERY` execute completed dengan semua hitungan 0 dan `deferred` 0, request 7,8 s;
+  - antrean kosong, jadi penghentian di budget dengan pesan sungguhan **belum diverifikasi**; rencananya saat BUY #2.
+- **B1:**
+  - `staging:activate-pricing` ada di `main`;
+  - staging masih 0 `pricing_rule_versions`;
+  - Owner menjalankannya dengan kredensial sendiri dan mengetik quantity semantics;
+  - tidak perlu deploy;
+  - belum dijalankan.
 
 ### Grant aktivasi staging E6, 2026-10-28
 
