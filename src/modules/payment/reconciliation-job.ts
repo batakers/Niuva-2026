@@ -5,7 +5,7 @@ import type { PaymentStatusGateway } from "./status-gateway";
 
 export function createPaymentReconciliationHandler(gatewayFactory: () => PaymentStatusGateway, repository: PaymentReconciliationRepository): JobHandler {
   return async context => {
-    const candidates = await context.withLease(tx => repository.candidates(tx, context.request.limit));
+    const candidates = await context.withLease((tx, now) => repository.candidates(tx, now, context.request.limit));
     const counts: JobResult["counts"] = { scanned: 0, accepted: 0, pending: 0, expired: 0, cancelled: 0, unknown: 0 };
     if (context.request.mode === "dry-run") return { counts: { ...counts, scanned: candidates.length, ...await context.withLease((tx, now) => paymentReconciliationBacklog(tx, now)) } };
     if (!context.lease) throw appError("PROVIDER_UNAVAILABLE");

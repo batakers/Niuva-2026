@@ -33,7 +33,7 @@ gelombang berikutnya menunggu penghambatnya.
 | 2 — rekayasa | T10 (B4) | A | Selesai: PR #84 di-deploy 29 Okt, pemalsuan header tetap 429 | — |
 | 2 | T31/T34 (B1) | A | Selesai 30 Okt: `CUSTOM_PRINT_V1` v1 `PER_UNIT` aktif di staging (log "Aktivasi pricing MAKE") | — |
 | 2 | T06/D07 (B2) | A | PR #85 di-deploy 29 Okt; berhenti di budget dengan pesan sungguhan diamati saat BUY #2 | — |
-| 2 | T24 (B5) | A | Berhenti memeriksa attempt tanpa transaksi Midtrans setelah 7 hari (Q10) | — |
+| 2 | T24 (B5) | A | Kode batas 7 hari (Q10) siap di branch `claude/b5-grants-q-decisions`; hosted belum diverifikasi | Merge + deploy |
 | 3 — transaksi | T33 | O + A | BUY #2: dua produk, QRIS/GoPay simulator, fulfillment/resi manual sampai email shipped | — |
 | 3 | T34, T36, T19 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim | — |
 | 4 — setelah keputusan | T23, T25, T35 | O + A | Failure/refund sandbox (QRIS + GoPay): satu otomatis, satu manual; grant `refund` | Cek dashboard Midtrans (Q1) |
@@ -82,7 +82,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T11 | M2 | DONE | Pengesahan policy publik | T01; Owner | Owner menyetujui isi dan identifier `NIUVA-TERMS-v1.0`/`NIUVA-PRIVACY-v1.0`; tanggal berlaku ditetapkan saat publikasi aktual. Fakta provider, transfer data dan gerbang rilis dicatat terpisah pada readiness yang sudah ada; tidak menghambat T11 atau development lokal. Tidak menjanjikan kemampuan yang belum dibuktikan. |
 | T12 | M2 | DONE | Consent Google publik | T04/T11 | Consent/deklarasi 18+ server terikat state/browser/tujuan dan identitas provider terverifikasi; konsumsi atomik. Proof hilang/expired/replay/race/provider-denied, state/versi berubah, email akun sama, dan closure ditolak. Unit/backend/integration/E2E lokal lulus; aktivasi hosted tetap terpisah. |
 | T13 | M2 | DONE | Signup email publik | T04/T11 | Persetujuan policy dan deklarasi 18+ terpisah; pending sampai email verified; tanpa sesi otomatis; expiry/cooldown/resend/reset/revoke dan pencegahan reattachment setelah closure diuji. Integration/E2E lokal lulus; tanggal publikasi/berlaku dan aktivasi hosted tetap terpisah. |
-| T14 | M2 | BLOCKED_INPUT | Privacy hosted | T05/T11; T03 | Export sendiri, hak data/closure dan kontak kasus aktif tanpa restore akun/riwayat. Integration/E2E/hosted. Resource staging sudah ada; grant `privacy` staging belum diberikan Owner (E6). |
+| T14 | M2 | TODO | Privacy hosted | T05/T11; T03 | Export sendiri, hak data/closure dan kontak kasus aktif tanpa restore akun/riwayat. Integration/E2E/hosted. Resource staging sudah ada; grant `privacyRights`/`privacyProof` staging diberikan Owner 30 Okt (Q3), dicatat di `ACTIVATION_GRANTS`. |
 | T15 | M3 | DONE | Draft produk dari Dashboard | T02 | Owner/Admin membuat draft; kategori dapat dipilih tanpa UUID manual; draft tidak tampil publik. Unit, integration, authenticated E2E lokal lulus. |
 | T16 | M3 | DONE | Varian dari Dashboard | T15 | SKU unik, harga/berat/dimensi valid, stok awal mengikuti inventory/ledger. Unit, integration, authenticated E2E lokal lulus. |
 | T17 | M3 | DONE | Draft portfolio dari Dashboard | T02 | Draft baru tersedia; bukti dan data publikasi diperiksa sebelum publish. Unit, integration, authenticated E2E lokal lulus. |
@@ -1874,6 +1874,36 @@ Belum diverifikasi:
 - script `staging:activate-pricing` di hosted, yang sejauh ini hanya teruji
   di tes lokal/integration. Bila dijalankan nanti dengan `PER_UNIT`, hasilnya
   idempoten ("sudah aktif").
+
+### B5 dan grant staging Q2–Q4, 2026-10-30
+
+Atas keputusan Owner Q2–Q4 dan Q10 ("Ya, kerjakan"), branch
+`claude/b5-grants-q-decisions`:
+
+- **B5 / T24:** `PAYMENT_RECONCILIATION` tidak lagi memilih attempt `EXPIRED`
+  tanpa `provider_transaction_id` yang dibuat lebih dari 7 hari lalu
+  (`ABANDONED_ATTEMPT_RECONCILIATION_WINDOW_MS` di
+  `src/modules/payment/reconciliation-repository.ts`). Backlog/monitoring
+  memakai filter yang sama. Attempt dengan transaksi, attempt `CANCELLED`, dan
+  attempt `EXPIRED` yang lebih muda tetap diperiksa.
+- **Grant:** `ACTIVATION_GRANTS.staging` menambah `refund`, `privacyRights`,
+  `privacyProof` dan `googleAuth` (tanggal 2026-10-30, rujukan papan fokus).
+  `googleAuth` tetap ditolak (`CONFIG_INCOMPLETE`) sampai env Google OAuth
+  staging dan redirect URI diisi Owner; `refund` memakai config Midtrans yang
+  sudah ada; `privacyProof` butuh Resend yang sudah ada.
+- Bukti lokal:
+  - typecheck lulus; lint 0 error/4 warning lama;
+  - unit 133/1.508 dengan 2 kegagalan di `tests/unit/activation-grants.test.ts`
+    (ekspektasi daftar grant lama); ekspektasi diperbarui dan file itu lulus
+    8/8;
+  - backend 119/947 dengan 1 kegagalan di `tests/backend/staging-preflight.test.ts`
+    (`privacyRights` kini terbuka); diperbarui dan file itu lulus 44/44;
+  - suite unit/backend penuh belum diulang setelah perbaikan; CI menjadi
+    gate-nya;
+  - integration `payment-reconciliation` 15/15 (termasuk tes baru 7 hari) dan
+    `customer-outbox-flow` 10/10 di database test terisolasi;
+  - build lulus.
+- Hosted belum diverifikasi sampai merge dan deploy.
 
 ### Grant aktivasi staging E6, 2026-10-28
 

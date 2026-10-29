@@ -99,21 +99,25 @@ export type ActivationGrant = Readonly<{
 }>;
 
 const OWNER_STAGING_DECISION = "TASKS.md#keputusan-owner-untuk-staging-2026-10-28";
+const OWNER_Q_DECISIONS = "TASKS.md#fokus-aktif-audit-29-oktober-2026";
 
 /**
  * Activation grants per tier. Each grant needs a separate explicit instruction
  * (Req 13.5). Staging holds the Owner's E6 decision of 28 October 2026 and
  * the E1 tester accounts (signup and password login, limited to the listed
- * tester addresses); refund, Google login, analytics and privacy capabilities
- * stay ungranted. `live` is still in no tier's matrix modes. Production entries
+ * tester addresses), plus the Owner's Q2–Q4 answers of 30 October 2026
+ * (refund, Customer privacy rights/proof, Google login). Analytics stays
+ * ungranted. `live` is still in no tier's matrix modes. Production entries
  * are ignored until a production activation path is designed and approved.
  */
 export const ACTIVATION_GRANTS: Readonly<Record<DeploymentTier, readonly ActivationGrant[]>> = Object.freeze({
   "local-test": Object.freeze([]),
   production: Object.freeze([]),
   staging: Object.freeze(
-    ["payment", "shipping", "emailSender", "emailDelivery", "objectStorage", "scheduledJobs", "signup", "passwordAuth"].map(capability =>
-      Object.freeze({ capability, instruction: OWNER_STAGING_DECISION, grantedOn: "2026-10-28" })),
+    ["payment", "shipping", "emailSender", "emailDelivery", "objectStorage", "scheduledJobs", "signup", "passwordAuth"].map((capability): ActivationGrant =>
+      Object.freeze({ capability, instruction: OWNER_STAGING_DECISION, grantedOn: "2026-10-28" }))
+      .concat(["refund", "privacyRights", "privacyProof", "googleAuth"].map((capability): ActivationGrant =>
+        Object.freeze({ capability, instruction: OWNER_Q_DECISIONS, grantedOn: "2026-10-30" }))),
   ),
 });
 
