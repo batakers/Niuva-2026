@@ -1620,6 +1620,18 @@ Admin.
   memperbarui cache; satu halaman detail dan satu gambar produk 200. Kuotasi
   ongkir Biteship dengan dimensi ini belum diuji (bagian T33). Perubahan
   `/custom-print` baru tayang setelah deploy berikutnya.
+- **Deploy staging `main@60f0249`, 2026-10-29 (izin Owner):** builds Netlify
+  diaktifkan sementara; deploy `6ae31cbe32f23ff10942d962` (commit
+  `60f02491`) berstatus `ready`, published 10:16:55 UTC, secret scan 0
+  temuan; build status dikembalikan ke **Stopped** dan log tetap privat
+  (dicek setelah muat ulang). Pemeriksaan anonim: `/`, `/shop`,
+  `/custom-print`, `/login`, `/terms`, `/privacy`, `/admin/sign-in` 200;
+  `/api/admin/account` 401; header CSP, HSTS, `X-Frame-Options`,
+  `X-Robots-Tag: noindex, nofollow` ada. `/custom-print` tidak lagi memuat
+  heading referensi produk maupun tautan "Ajukan untuk Review"; `/shop`
+  memuat 8 tautan produk; `/custom-print/request` tanpa sesi 307 ke
+  `/login?returnTo=...`. Form intake dengan sesi Customer penguji belum
+  diperiksa di hosted.
 
 ### Grant aktivasi staging E6, 2026-10-28
 
