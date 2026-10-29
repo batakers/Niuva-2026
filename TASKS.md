@@ -1654,8 +1654,12 @@ Admin.
   5 s (functions Ohio, database Singapura); rollback bersih (0 baris bisnis,
   0 sesi idle in transaction). Perbaikan: `BoundDatabaseService` memberi
   transaksi outbox/job `maxWait` 10 s dan `timeout` 20 s
-  (`src/modules/database-binding/service.ts`). Email bisnis, BUY kedua dan
-  perbaikan di hosted **belum diverifikasi**.
+  (`src/modules/database-binding/service.ts`). Tiga execute ulang dengan
+  limit 1 juga `JOB_FAILED` (isi job 7,07 s; request 9,4–11,3 s), konsisten
+  dengan transaksi yang diputus di 5 s, bukan jumlah kandidat; satu webhook
+  Midtrans juga butuh 3,5 s. Dengan timeout 20 s, execute hosted sebaiknya
+  tetap limit 1–2 selama function dan database berbeda region. Email
+  bisnis, BUY kedua dan perbaikan di hosted **belum diverifikasi**.
 
 ### Grant aktivasi staging E6, 2026-10-28
 
