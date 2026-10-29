@@ -13,11 +13,15 @@ import { parseWithValidation } from "@/modules/shared/validation";
 
 import {
   CUSTOM_PRINT_V1_PER_UNIT_POLICY,
-  CUSTOM_PRINT_V1_RULE_CODE,
-  CUSTOM_PRINT_V1_RULE_VERSION,
   customPrintPricingPolicySchema,
   type CustomPrintPricingPolicy,
 } from "./policy";
+import {
+  activateCustomPrintRuleInTransaction,
+  type PricingRuleActivationResult,
+} from "./rule-activation";
+
+export type { PricingRuleActivationResult } from "./rule-activation";
 
 export const pricingRuleActivationInputSchema = customPrintPricingPolicySchema
   .pick({ quantitySemantics: true })
@@ -31,22 +35,6 @@ export type PricingRuleActivationInput = z.infer<
 >;
 
 type QuantitySemantics = CustomPrintPricingPolicy["quantitySemantics"];
-
-export type PricingRuleActivationResult = Readonly<{
-  code: string;
-  id: string;
-  idempotent: boolean;
-  previousStatus: "ACTIVE" | "DRAFT" | "RETIRED" | null;
-  quantitySemantics: QuantitySemantics;
-  status: "ACTIVE";
-  version: number;
-}>;
-
-type PricingRuleRecord = Readonly<{
-  definitionJson: unknown;
-  id: string;
-  status: "ACTIVE" | "DRAFT" | "RETIRED";
-}>;
 
 type PricingRuleRepository = Readonly<{
   activate(input: Readonly<{
@@ -157,100 +145,9 @@ class PrismaPricingRuleRepository implements PricingRuleRepository {
     definitionJson: Prisma.InputJsonObject;
     quantitySemantics: QuantitySemantics;
   }>): Promise<PricingRuleActivationResult> {
-    return this.prisma.$transaction(async (transaction) => {
-      const otherActive = await transaction.pricingRuleVersion.findFirst({
-        where: {
-          code: CUSTOM_PRINT_V1_RULE_CODE,
-          status: "ACTIVE",
-          version: { not: CUSTOM_PRINT_V1_RULE_VERSION },
-        },
-        select: { id: true },
-      });
-
-      if (otherActive !== null) {
-        throw appError("CONFLICT", {
-          message:
-            "Masih ada versi CUSTOM_PRINT_V1 lain yang aktif; pensiunkan versi tersebut terlebih dahulu.",
-        });
-      }
-
-      const existing = await transaction.pricingRuleVersion.findUnique({
-        where: {
-          code_version: {
-            code: CUSTOM_PRINT_V1_RULE_CODE,
-            version: CUSTOM_PRINT_V1_RULE_VERSION,
-          },
-        },
-        select: { definitionJson: true, id: true, status: true },
-      });
-
-      const existingRecord: PricingRuleRecord | null = existing === null
-        ? null
-        : {
-            definitionJson: existing.definitionJson,
-            id: existing.id,
-            status: existing.status,
-          };
-
-      if (existingRecord?.status === "ACTIVE") {
-        const current = customPrintPricingPolicySchema.safeParse(
-          existingRecord.definitionJson,
-        );
-
-        if (
-          current.success &&
-          current.data.quantitySemantics === input.quantitySemantics
-        ) {
-          return {
-            code: CUSTOM_PRINT_V1_RULE_CODE,
-            id: existingRecord.id,
-            idempotent: true,
-            previousStatus: "ACTIVE",
-            quantitySemantics: input.quantitySemantics,
-            status: "ACTIVE",
-            version: CUSTOM_PRINT_V1_RULE_VERSION,
-          };
-        }
-
-        throw appError("CONFLICT", {
-          message:
-            "CUSTOM_PRINT_V1 sudah aktif dengan quantity semantics berbeda; tidak diubah diam-diam.",
-        });
-      }
-
-      const row = existing === null
-        ? await transaction.pricingRuleVersion.create({
-            data: {
-              approvedAt: new Date(),
-              approvedByAdminId: input.approvedByAdminId,
-              code: CUSTOM_PRINT_V1_RULE_CODE,
-              definitionJson: input.definitionJson,
-              status: "ACTIVE",
-              version: CUSTOM_PRINT_V1_RULE_VERSION,
-            },
-            select: { id: true, status: true },
-          })
-        : await transaction.pricingRuleVersion.update({
-          data: {
-              approvedAt: new Date(),
-              approvedByAdminId: input.approvedByAdminId,
-              definitionJson: input.definitionJson,
-              status: "ACTIVE",
-            },
-            where: { id: existing.id },
-            select: { id: true, status: true },
-          });
-
-      return {
-        code: CUSTOM_PRINT_V1_RULE_CODE,
-        id: row.id,
-        idempotent: false,
-        previousStatus: existingRecord?.status ?? null,
-        quantitySemantics: input.quantitySemantics,
-        status: "ACTIVE",
-        version: CUSTOM_PRINT_V1_RULE_VERSION,
-      };
-    });
+    return this.prisma.$transaction((transaction) =>
+      activateCustomPrintRuleInTransaction(transaction, input),
+    );
   }
 }
 
