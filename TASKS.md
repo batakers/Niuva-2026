@@ -41,7 +41,7 @@ gelombang berikutnya menunggu penghambatnya.
 | 4 | T08 | A | Retensi file hosted pada berkas T34 | T34 |
 | 5 — rilis | T37 | O | Android + TalkBack (Owner), iPhone + VoiceOver (pinjam); checklist dari agen | — |
 | 5 | T38, T39 | O + A | Backup harian + arsip pembukuan di satu penyimpanan region Jakarta; latihan restore; SOP + simulasi | Perbandingan biaya penyedia (agen), pilihan Owner |
-| 5 | T40 | O | Hosting production di provider Indonesia, ledger readiness (D12), instruksi rilis | Perbandingan provider (agen), pilihan Owner |
+| 5 | T40 | O + A | Production di satu Helipod VPS B Jakarta (aplikasi + PostgreSQL self-managed, backup harian ke S3 Jakarta); ledger readiness (D12); instruksi rilis | Pembelian VPS (Owner); rancangan deploy VPS (agen) |
 
 Keputusan Owner 30 Oktober 2026 ("ya saya menyetujui semua rekomendasi nya.
 kecuali Q5"):
@@ -52,7 +52,10 @@ kecuali Q5"):
   disetujui. Login Google butuh Owner menambah redirect URI staging di Google
   Cloud.
 - **Q5:** production di provider hosting Indonesia, demi biaya yang masuk
-  budget. Provider belum dipilih; agen membandingkan opsi dulu.
+  budget. Keputusan lanjutan 30 Oktober ("Ya, satu VPS"): aplikasi dan
+  PostgreSQL self-managed di **satu Helipod VPS B Jakarta** (2 vCPU, 4 GB,
+  60 GB; Rp118.900/bulan, bayar bulanan dulu), backup harian ke S3 Jakarta.
+  Belum dibeli; pembelian menunggu persetujuan harga final Owner.
 - **Q6, Q7:** backup otomatis harian ke penyimpanan terpisah, satu tempat
   dengan salinan arsip pembukuan, region Jakarta. Penyedia dan biaya belum
   diverifikasi; agen mengajukan opsi.
@@ -1933,6 +1936,29 @@ Atas keputusan Owner Q2–Q4 dan Q10 ("Ya, kerjakan"), branch
     backup harian ke S3 Jakarta. Perkiraan Rp235–615 ribu/bulan; belum
     diverifikasi. Menunggu keputusan Owner.
   - MCP Helipod didaftarkan scope lokal proyek ini (bukan Git).
+
+### Keputusan Q5: satu VPS Jakarta, 2026-10-30
+
+Owner memilih PostgreSQL self-managed di VPS Jakarta, lalu menjalankan
+aplikasi di VPS yang sama ("Ya, satu VPS").
+
+- **Harga resmi:** dibaca lewat MCP Helipod `list_vps_plans` (baca saja),
+  harga bayar bulanan. VPS S Rp79.900, A Rp99.900, **B Rp118.900**,
+  D Rp193.900. Diskon 3 bulan 7%, 6 bulan 10%, tahunan 20%. Harga di
+  screenshot dashboard adalah harga tahunan.
+- **Jaringan:** paket Jakarta bertanda `nat_network`. Docs port forwarding
+  Helipod menyatakan server berbagi IPv4, port 80/443 dirutekan per domain,
+  dan TLS diteruskan apa adanya (sertifikat dipegang server). SSH dan port TCP
+  lain lewat port forward pada `portRange`. Belum diuji di server nyata.
+- **Pertimbangan:** 2 GB terlalu sempit untuk aplikasi + database, jadi build
+  aplikasi tidak dijalankan di VPS. Rancangan build/deploy belum dibuat; jalur
+  CI yang menyentuh `.github/workflows/` butuh instruksi terpisah.
+- **Konsekuensi:** perawatan server (update keamanan, pemantauan, backup,
+  uji restore, perpanjangan) menjadi tanggung jawab operasional Niuva. Ini
+  memengaruhi T38/T39. Database Helipod dan Neon tidak dipakai untuk
+  production.
+- **Belum:** pembelian VPS, provider S3 Jakarta (IDCloudHost atau Biznet Gio),
+  rancangan deploy, dan biaya total terverifikasi.
 
 ### Grant aktivasi staging E6, 2026-10-28
 
