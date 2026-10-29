@@ -31,11 +31,11 @@ gelombang berikutnya menunggu penghambatnya.
 | 1 | T09 (auth) | O | `CUSTOMER_AUTH_CLEANUP` hanya lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
 | 1 | T03, T19 | A + O | Smoke R2 privat/publik lewat unggah media Admin | Sesi Admin Owner |
 | 2 — rekayasa | T10 (B4) | A | Selesai: PR #84 di-deploy 29 Okt, pemalsuan header tetap 429 | — |
-| 2 | T31/T34 (B1) | O | Jalankan `corepack pnpm staging:activate-pricing` dari `main` (PR #86 sudah merge; tanpa deploy) | Sesi Owner |
+| 2 | T31/T34 (B1) | A | Selesai 30 Okt: `CUSTOM_PRINT_V1` v1 `PER_UNIT` aktif di staging (log "Aktivasi pricing MAKE") | — |
 | 2 | T06/D07 (B2) | A | PR #85 di-deploy 29 Okt; berhenti di budget dengan pesan sungguhan diamati saat BUY #2 | — |
 | 2 | T24 (B5) | A | Batas pemeriksaan attempt tanpa transaksi Midtrans | Q10 |
 | 3 — transaksi | T33 | O + A | BUY #2: dua produk, QRIS/GoPay simulator, fulfillment/resi manual sampai email shipped | — |
-| 3 | T34, T36, T19 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim | B1 |
+| 3 | T34, T36, T19 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim | — |
 | 4 — setelah keputusan | T23, T25, T35 | O + A | Failure/refund sandbox: satu otomatis, satu manual | Q1, Q2 |
 | 4 | T14, D04 | O + A | Privacy hosted; login Google staging | Q3, Q4 |
 | 4 | T08 | A | Retensi file hosted pada berkas T34 | T34 |
@@ -94,7 +94,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T28 | M4 | DONE | Email quote available | T06; rantai T26 | Quote/version/access benar; quote superseded/invalid tidak dikirim sebagai aktif. Integration lokal lulus. |
 | T29 | M4 | DONE | Email order shipped | T06; rantai T26 | Status sah; isi berizin; tanpa private URL permanen. Integration lokal lulus, tanpa backfill tanggal historis. |
 | T30 | M4 | DONE | Notifikasi Admin persisten | T06/T26–T29 | Failure terlihat; request/order tetap tersimpan; tanpa WhatsApp otomatis. Integration dan browser lokal lulus; visual Owner/perangkat/AT belum diterima. |
-| T31 | M4 | IN_PROGRESS | Dataset dan tarif launch | T15–T19; Owner | SKU/stok fisik/media/berat/dimensi/rule disetujui untuk target; seed lokal bukan aktivasi launch. Review/import verification. Shop: 8 produk, 34 varian berdimensi paket disetujui Owner dan diimpor ke staging (log 29 Okt). Sisa: pricing rule MAKE aktif di staging; aktivasi kini hanya loopback (`src/modules/pricing/admin-service.ts`). |
+| T31 | M4 | IN_PROGRESS | Dataset dan tarif launch | T15–T19; Owner | SKU/stok fisik/media/berat/dimensi/rule disetujui untuk target; seed lokal bukan aktivasi launch. Review/import verification. Shop: 8 produk, 34 varian berdimensi paket disetujui Owner dan diimpor ke staging (log 29 Okt). Pricing rule `CUSTOM_PRINT_V1` v1 `PER_UNIT` aktif di staging sejak 30 Okt (log "Aktivasi pricing MAKE"). Sisa: aktivasi production pada gate rilis terpisah. |
 | T32 | M5 | DONE | E2E Admin di CI | T02 | Quality pada `4eb8471` sukses, termasuk seluruh 24 journey Owner/Admin/anonim. Regresi landing MFA 6s mencakup respons TOTP 200, navigasi, status ready dan guard 401; sumber auth tidak diubah. [Bukti CI](https://github.com/batakers/Niuva-2026/actions/runs/39155145353). |
 | T33 | M5 | BLOCKED_EXTERNAL | Dua BUY staging | T03, akun staging, provider sandbox, T31 (Owner 28 Okt; T14/T19 diuji terpisah) | Dua variasi transaksi sukses; order/stock/payment/email/status konsisten. Hosted records. |
 | T34 | M5 | BLOCKED_EXTERNAL | Satu MAKE staging | T03, akun staging, provider sandbox, T31 (Owner 28 Okt; T14/T19 diuji terpisah) | Model→review→estimasi→quote→bayar→produksi/QC→ongkir final→kirim pada request/order benar. Hosted records/operator. |
@@ -1823,6 +1823,52 @@ ke **Stopped** dan log tetap privat (dicek setelah muat ulang).
   - Owner menjalankannya dengan kredensial sendiri dan mengetik quantity semantics;
   - tidak perlu deploy;
   - belum dijalankan.
+
+### Aktivasi pricing MAKE di staging (B1), 2026-10-30
+
+Owner meminta agen yang menjalankan aktivasi ("saya beri perintah eksplisit
+dan kebebasan untuk hal itu").
+
+Script `staging:activate-pricing` **tidak dijalankan**. Agen tidak memegang
+`DATABASE_URL` staging, tidak membuka secret, dan pemeriksa izin otomatis
+menolak menjalankan script di terminal Owner. Sebagai gantinya, transaksi
+`activateStagingPricingRule` dijalankan sebagai satu blok `DO` lewat Neon MCP,
+dengan role `niuva_staging_runtime` pada `niuva_staging`. Kredensial tetap di
+sisi Neon. Blok itu mengikuti script langkah demi langkah:
+
+- membaca marker `deployment_database_bindings` (`FOR SHARE`) dan menolak bila
+  tier bukan `staging`. Binding ID tidak dibandingkan dengan env Netlify;
+  target dipilih eksplisit lewat project, branch dan database Neon;
+- advisory lock `hashtext('niuva-custom-print-rates')`;
+- tepat satu Owner aktif, dicatat sebagai approver;
+- menolak bila sudah ada `CUSTOM_PRINT_V1` ACTIVE atau v1;
+- insert v1 ACTIVE ditambah audit `pricing-rule.activated` dengan metadata
+  `operation: activate-staging`, `quantitySemantics: PER_UNIT`, dan
+  `executedVia: neon-mcp`.
+
+Definisi JSON berasal dari `customPrintV1Definition("PER_UNIT")` (kode
+aplikasi lewat jiti, tanpa DB), bukan diketik tangan.
+
+`PER_UNIT` dipilih agen atas kebebasan dari Owner, dan bukan nilai baru:
+
+- Owner mengaktifkan `PER_UNIT` di development pada 2026-09-19
+  (`docs/backend/phase-3-pricing-biteship-contract.md`);
+- preview Customer di Tech Design hanya menghitung bila semantiknya
+  `PER_UNIT`.
+
+Bukti Neon MCP (read-only):
+
+- 1 baris `pricing_rule_versions`: `CUSTOM_PRINT_V1` v1, ACTIVE, `PER_UNIT`;
+- `approved_at` 2026-10-29T19:24:08Z, dengan approver Owner aktif;
+- 1 audit cocok: entity, actor, `operation`, dan `after_json.definition` sama
+  dengan rule.
+
+Belum diverifikasi:
+
+- preview estimasi hosted, yang butuh sesi Customer; akan teruji di T34;
+- script `staging:activate-pricing` di hosted, yang sejauh ini hanya teruji
+  di tes lokal/integration. Bila dijalankan nanti dengan `PER_UNIT`, hasilnya
+  idempoten ("sudah aktif").
 
 ### Grant aktivasi staging E6, 2026-10-28
 
