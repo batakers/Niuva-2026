@@ -4,8 +4,9 @@ Update this after major decisions, completed phases, or bugs that future agents 
 
 ## Current State
 
-- Working baseline: `main` `a3d995a904f6fde7e7e248e8a9c8421de734d521` after PR #68. T03 continuation uses the existing task checkout; local preparation does not establish current hosted/provider/production acceptance.
-- Current work: v1.0 closure. Scope: `PRODUCT.md`; dependencies: `ROADMAP.md`; sole active backlog: `TASKS.md`; completion: `docs/v1-definition-of-done.md`. `.kiro/specs/` is historical evidence.
+- Working baseline: `main` `3e4c667` after PR #82 (29 Oct 2026). Staging `niuva-t03-staging` (Netlify functions us-east-2, Neon ap-southeast-1) runs sandbox providers; dated hosted evidence lives in `TASKS.md`, not here.
+- Current work: v1.0 closure. Scope: `PRODUCT.md`; dependencies: `ROADMAP.md`; sole active backlog: `TASKS.md` (start with its "Fokus aktif" board); completion: `docs/v1-definition-of-done.md`. `.kiro/specs/` is historical evidence.
+- Pricing rule activation is loopback-only (`assertPricingRuleDevelopmentEnvironment`, `src/modules/pricing/admin-service.ts`); no staging path exists yet, so MAKE cannot price on staging.
 - Current task statuses and dated execution evidence belong to `TASKS.md`; this memory does not duplicate its backlog table.
 - Data model: 81 Prisma models (`grep -c '^model ' prisma/schema.prisma`) and 40 migration folders (`ls -d prisma/migrations/*/ | wc -l`). Counts describe files, not an applied database state.
 - Hosted preflight: `corepack pnpm staging:preflight` uses process environment and the canonical origin, capability and database-binding helpers. Runtime privileges and migration history use separate, binding-checked credentials; both client connections require verified TLS. It does not provision, migrate or call transaction providers; safe output omits credentials and resource identifiers. See `docs/backend/t03-hosted-sandbox-runbook.md` for evidence boundaries.

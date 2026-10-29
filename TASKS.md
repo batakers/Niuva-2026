@@ -19,13 +19,49 @@ Input/ref fixture memungkinkan persiapan kode meskipun task induk belum selesai
 di hosted. Kemajuan parsial dicatat pada log, task tetap terbuka sampai seluruh
 acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 
+## Fokus aktif (audit 29 Oktober 2026)
+
+Papan kerja ringkas. Status resmi tetap di tabel di bawah, bukti di log.
+Pelaksana: **A** = agen, **O** = Owner. Gelombang 1 dan 2 boleh paralel;
+gelombang berikutnya menunggu penghambatnya.
+
+| Gelombang | Task | Pelaksana | Langkah berikutnya | Penghambat |
+| --- | --- | --- | --- | --- |
+| 1 — bukti hosted cepat | T07, T24, T09 (auth) | A | Picu manual (E9) `INVENTORY_RESERVATIONS`, `PAYMENT_RECONCILIATION`, `CUSTOMER_AUTH_CLEANUP`, lalu periksa DB | — |
+| 1 | T10, D02 | A | Rate limit staging lewat request terkontrol; tujuan WhatsApp B2B | — |
+| 1 | T03, T19 | A + O | Smoke R2 privat/publik lewat unggah media Admin | Sesi Admin Owner |
+| 2 — rekayasa | T31/T34 (B1) | A | Jalur impor pricing rule ke staging dari nilai Pricing v1 yang disetujui | Deploy atas izin Owner |
+| 2 | T06/D07 (B2) | A | Time budget batch `OUTBOX_DELIVERY`/`OUTBOX_BUSINESS` | Deploy atas izin Owner |
+| 3 — transaksi | T33 | O + A | BUY #2: dua produk, QRIS/GoPay simulator, fulfillment/resi manual sampai email shipped | — |
+| 3 | T34, T36, T19 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim | B1 |
+| 4 — setelah keputusan | T23, T25, T35 | O + A | Failure/refund sandbox: satu otomatis, satu manual | Q1, Q2 |
+| 4 | T14, D04 | O + A | Privacy hosted; login Google staging | Q3, Q4 |
+| 4 | T08 | A | Retensi file hosted pada berkas T34 | T34 |
+| 5 — rilis | T37 | O | Perangkat fisik dan AT | Q9 |
+| 5 | T38, T39 | O + A | Backup + latihan restore; SOP + simulasi | Q6, Q7 |
+| 5 | T40 | O | Hosting production, ledger readiness (D12), instruksi rilis | Q5 |
+
+Keputusan Owner yang ditunggu, dijawab sekaligus:
+
+- **Q1:** metode aktif dan fitur refund di akun Midtrans sandbox Niuva.
+- **Q2:** grant `refund` staging.
+- **Q3:** grant `privacy` staging.
+- **Q4:** grant `googleAuth` staging dan redirect URI OAuth staging.
+- **Q5:** hosting dan region production (latensi Ohio↔Singapura, 29 Okt).
+- **Q6:** metode dan biaya backup untuk RPO 24 jam.
+- **Q7:** tempat salinan arsip pembukuan di Indonesia (PUB-RECORDS).
+- **Q8:** build staging Active hanya untuk `main`, tanpa toggle manual.
+- **Q9:** perangkat fisik/AT dan pengujinya.
+
+Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
+
 ## Task dan acceptance criteria
 
 | ID | M | Status | Hasil kecil | Dependensi | Acceptance criteria dan verifikasi minimum |
 | --- | --- | --- | --- | --- | --- |
 | T01 | M0 | DONE | Rekonsiliasi dokumen v1 | — | Empat dokumen punya fungsi jelas; keputusan lama tidak menjadi backlog aktif; setiap blocker punya ID/pemilik. Link/authority review. |
 | T02 | M0 | DONE | Sinkronkan baseline lokal | T01 | Generate resmi sesuai schema; lint/typecheck resmi lulus; migration/database lama tidak berubah. |
-| T03 | M1 | BLOCKED_EXTERNAL | Kontrak hosted sandbox | T02 | Binding/origin/cookie/CSP konsisten; resource salah ditolak; production tetap tertutup. Konfigurasi dan adapter S3-compatible mengikuti kontrak object storage; resource/provider/grant hosted tetap menunggu Owner. Integration. Catatan 22 Okt (Neon staging disiapkan; Render tertahan di card gate) ada di [runbook](docs/backend/t03-hosted-sandbox-runbook.md); tinjau bukti bertanggal itu sebelum aksi hosted. |
+| T03 | M1 | IN_PROGRESS | Kontrak hosted sandbox | T02 | Binding/origin/cookie/CSP konsisten; resource salah ditolak; production tetap tertutup. Konfigurasi dan adapter S3-compatible mengikuti kontrak object storage. Staging Netlify/Neon aktif sejak 28 Okt: binding marker, origin kanonik (#78), header CSP/HSTS/noindex, sesi Admin/Customer dan production tertutup terbukti (log 28–29 Okt). Sisa: smoke R2 privat/publik hosted. Histori 22 Okt di [runbook](docs/backend/t03-hosted-sandbox-runbook.md). |
 | T04 | M1 | DONE | Producer auth ke outbox | T03 | Proof dan enqueue atomik; proof invalid tidak dikirim; retry tidak memberikan akun/sesi prematur. Integration lokal lulus; hosted delivery tetap menunggu T03. |
 | T05 | M1 | DONE | Producer privacy ke outbox | T04 | Proof sekali pakai/closure aman; revoked/expired dibatalkan. Integration lokal lulus; hosted delivery tetap menunggu T03. |
 | T06 | M1 | DONE | Launcher worker dan status | T04–T05 | CLI dan endpoint bearer-protected memakai JobRunner/OperationalJobState yang sama dengan resource binding, role terbatas, policy eksplisit, lease/cooldown lintas run, monitor dan safe counters; unknown tidak memicu resend otomatis. Unit/backend/integration lokal lulus; scheduler/provider hosted belum diaktifkan. |
@@ -36,7 +72,7 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 | T11 | M2 | DONE | Pengesahan policy publik | T01; Owner | Owner menyetujui isi dan identifier `NIUVA-TERMS-v1.0`/`NIUVA-PRIVACY-v1.0`; tanggal berlaku ditetapkan saat publikasi aktual. Fakta provider, transfer data dan gerbang rilis dicatat terpisah pada readiness yang sudah ada; tidak menghambat T11 atau development lokal. Tidak menjanjikan kemampuan yang belum dibuktikan. |
 | T12 | M2 | DONE | Consent Google publik | T04/T11 | Consent/deklarasi 18+ server terikat state/browser/tujuan dan identitas provider terverifikasi; konsumsi atomik. Proof hilang/expired/replay/race/provider-denied, state/versi berubah, email akun sama, dan closure ditolak. Unit/backend/integration/E2E lokal lulus; aktivasi hosted tetap terpisah. |
 | T13 | M2 | DONE | Signup email publik | T04/T11 | Persetujuan policy dan deklarasi 18+ terpisah; pending sampai email verified; tanpa sesi otomatis; expiry/cooldown/resend/reset/revoke dan pencegahan reattachment setelah closure diuji. Integration/E2E lokal lulus; tanggal publikasi/berlaku dan aktivasi hosted tetap terpisah. |
-| T14 | M2 | BLOCKED_EXTERNAL | Privacy hosted | T05/T11; T03 | Export sendiri, hak data/closure dan kontak kasus aktif tanpa restore akun/riwayat. Integration/E2E/hosted; resource hosted belum tersedia. |
+| T14 | M2 | BLOCKED_INPUT | Privacy hosted | T05/T11; T03 | Export sendiri, hak data/closure dan kontak kasus aktif tanpa restore akun/riwayat. Integration/E2E/hosted. Resource staging sudah ada; grant `privacy` staging belum diberikan Owner (E6). |
 | T15 | M3 | DONE | Draft produk dari Dashboard | T02 | Owner/Admin membuat draft; kategori dapat dipilih tanpa UUID manual; draft tidak tampil publik. Unit, integration, authenticated E2E lokal lulus. |
 | T16 | M3 | DONE | Varian dari Dashboard | T15 | SKU unik, harga/berat/dimensi valid, stok awal mengikuti inventory/ledger. Unit, integration, authenticated E2E lokal lulus. |
 | T17 | M3 | DONE | Draft portfolio dari Dashboard | T02 | Draft baru tersedia; bukti dan data publikasi diperiksa sebelum publish. Unit, integration, authenticated E2E lokal lulus. |
@@ -53,15 +89,15 @@ acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 | T28 | M4 | DONE | Email quote available | T06; rantai T26 | Quote/version/access benar; quote superseded/invalid tidak dikirim sebagai aktif. Integration lokal lulus. |
 | T29 | M4 | DONE | Email order shipped | T06; rantai T26 | Status sah; isi berizin; tanpa private URL permanen. Integration lokal lulus, tanpa backfill tanggal historis. |
 | T30 | M4 | DONE | Notifikasi Admin persisten | T06/T26–T29 | Failure terlihat; request/order tetap tersimpan; tanpa WhatsApp otomatis. Integration dan browser lokal lulus; visual Owner/perangkat/AT belum diterima. |
-| T31 | M4 | BLOCKED_INPUT | Dataset dan tarif launch | T15–T19; Owner | SKU/stok fisik/media/berat/dimensi/rule disetujui untuk target; seed lokal bukan aktivasi launch. Review/import verification. |
+| T31 | M4 | IN_PROGRESS | Dataset dan tarif launch | T15–T19; Owner | SKU/stok fisik/media/berat/dimensi/rule disetujui untuk target; seed lokal bukan aktivasi launch. Review/import verification. Shop: 8 produk, 34 varian berdimensi paket disetujui Owner dan diimpor ke staging (log 29 Okt). Sisa: pricing rule MAKE aktif di staging; aktivasi kini hanya loopback (`src/modules/pricing/admin-service.ts`). |
 | T32 | M5 | DONE | E2E Admin di CI | T02 | Quality pada `4eb8471` sukses, termasuk seluruh 24 journey Owner/Admin/anonim. Regresi landing MFA 6s mencakup respons TOTP 200, navigasi, status ready dan guard 401; sumber auth tidak diubah. [Bukti CI](https://github.com/batakers/Niuva-2026/actions/runs/39155145353). |
 | T33 | M5 | BLOCKED_EXTERNAL | Dua BUY staging | T03, akun staging, provider sandbox, T31 (Owner 28 Okt; T14/T19 diuji terpisah) | Dua variasi transaksi sukses; order/stock/payment/email/status konsisten. Hosted records. |
 | T34 | M5 | BLOCKED_EXTERNAL | Satu MAKE staging | T03, akun staging, provider sandbox, T31 (Owner 28 Okt; T14/T19 diuji terpisah) | Model→review→estimasi→quote→bayar→produksi/QC→ongkir final→kirim pada request/order benar. Hosted records/operator. |
 | T35 | M5 | BLOCKED_EXTERNAL | Failure/refund staging | T21–T25 | Duplicate/nominal salah/late/timeout/full refund/manual exception benar dan teraudit. Sandbox. |
 | T36 | M5 | BLOCKED_INPUT | UAT operasi Admin | T15–T20/T32 | Owner/Admin menambah konten, stock, quote, fulfillment dan keuangan dasar tanpa database/source. UAT record Owner masih diperlukan. |
 | T37 | M5 | BLOCKED_EXTERNAL | UI/perangkat/AT | T33–T36 | Route aktual: viewport, keyboard/fokus/error, zoom/reduced motion; fisik/AT dibuktikan terpisah. |
-| T38 | M5 | BLOCKED_INPUT | Backup/restore | T07–T09/T14/T25; sasaran Owner | Sasaran pemulihan Owner dan resource belum tersedia; drill harus mencegah restore akun tertutup atau replay refund/email. Recovery evidence. |
-| T39 | M5 | BLOCKED_INPUT | SOP dan handover operasi | T33–T38; Owner | Coverage/kalender/eskalasi/alarm/kontak pasca-closure/petugas dibuktikan lewat simulasi. |
+| T38 | M5 | BLOCKED_INPUT | Backup/restore | T07–T09/T14/T25; sasaran Owner | Sasaran Owner E11: RPO 24 jam, RTO 1 hari kerja. Metode/biaya backup dan resource belum diputuskan (Neon Free menyimpan riwayat 6 jam); drill harus mencegah restore akun tertutup atau replay refund/email. Recovery evidence. |
+| T39 | M5 | TODO | SOP dan handover operasi | T33–T38; Owner | Coverage/kalender/eskalasi/alarm/kontak pasca-closure/petugas dibuktikan lewat simulasi. Input Owner E12 (29 Okt) tersedia; menunggu dependensi. |
 | T40 | M6 | BLOCKED_EXTERNAL | Rilis terkendali | Seluruh wajib; instruksi rilis | Kandidat sama dengan bukti; gate ditutup; activation/smoke/monitoring/rollback sesuai izin eksplisit. |
 
 ## Kontrak implementasi lintas task
@@ -1679,6 +1715,34 @@ Admin.
   dan pembacaan inbox oleh Owner **belum diverifikasi**. Batas waktu function
   dibanding jumlah kiriman per run adalah risiko hosting terbuka selama
   function dan database berbeda region.
+
+### Audit backlog dan papan fokus, 2026-10-29
+
+Atas permintaan Owner, backlog diaudit terhadap bukti staging 28–29 Oktober
+(`main@3e4c667`). Hasilnya dimuat pada bagian "Fokus aktif". Perubahan status:
+
+- T03: BLOCKED_EXTERNAL → IN_PROGRESS.
+- T31: BLOCKED_INPUT → IN_PROGRESS.
+- T14: BLOCKED_EXTERNAL → BLOCKED_INPUT (grant `privacy`).
+- T39: BLOCKED_INPUT → TODO.
+
+Tidak ada task yang ditutup.
+
+Dua penghambat teknis baru dicatat:
+
+- **B1:** `assertPricingRuleDevelopmentEnvironment` di
+  `src/modules/pricing/admin-service.ts` menolak `NODE_ENV=production` dan
+  database selain loopback development (`LOCAL_SETUP_DISABLED`),
+  sehingga MAKE (T34) belum dapat dihitung di staging. Perlu jalur impor
+  staging berbinding seperti `staging:import-catalog`, memakai nilai Pricing v1
+  yang sudah disetujui tanpa nilai baru.
+- **B2:** function hosted diputus sekitar 30 s, sedangkan satu kiriman outbox
+  di staging butuh 7–8,5 s (function Ohio, database Singapura). Batch
+  `OUTBOX_DELIVERY`/`OUTBOX_BUSINESS` perlu time budget per run sebelum
+  dijadwalkan (D07).
+
+Lokasi hosting production (Q5) memengaruhi latensi, backup T38 dan
+PUB-RECORDS. Belum diputuskan.
 
 ### Grant aktivasi staging E6, 2026-10-28
 
