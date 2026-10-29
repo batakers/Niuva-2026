@@ -1640,6 +1640,26 @@ Admin.
   Git) mewajibkan nilai ini diisi eksplisit. Belum dijalankan; baseline DB
   sebelum T33: 0 order, 0 payment attempt, 0 reservasi, 34 stock movement,
   2 pesan outbox.
+- **T33 BUY pertama, 2026-10-29 (akun penguji, staging hosted):** order
+  `ORD-20261029-3A6HAD6P` RETAIL, 1 item Rp124.800 + ongkir Biteship
+  Rp11.000 = Rp135.800 (kuotasi ongkir hosted pertama). BCA VA dibayar lewat
+  simulator Midtrans sandbox (percobaan dari aplikasi bank asli ditolak bank,
+  tanpa debit). Neon MCP: dua webhook diproses (`PENDING`, lalu `SETTLED`
+  17.46 WIB); payment `PAY-20261029-EF85JRTN` SETTLED dengan ID transaksi;
+  order PAID; reservasi CONSUMED; stok SKU `103339597167` 5→4 lewat
+  `ORDER_CONSUMPTION` yang tertaut order. Order percobaan
+  `ORD-20261029-Q9XZKMBA` (Rp46.200) tidak dibayar dan dibiarkan kedaluwarsa.
+  `OUTBOX_BUSINESS` dry-run: scanned 3. Execute (limit 10) **gagal**
+  `JOB_FAILED`: isi job 7,3 s, melewati timeout transaksi interaktif Prisma
+  5 s (functions Ohio, database Singapura); rollback bersih (0 baris bisnis,
+  0 sesi idle in transaction). Perbaikan: `BoundDatabaseService` memberi
+  transaksi outbox/job `maxWait` 10 s dan `timeout` 20 s
+  (`src/modules/database-binding/service.ts`). Tiga execute ulang dengan
+  limit 1 juga `JOB_FAILED` (isi job 7,07 s; request 9,4–11,3 s), konsisten
+  dengan transaksi yang diputus di 5 s, bukan jumlah kandidat; satu webhook
+  Midtrans juga butuh 3,5 s. Dengan timeout 20 s, execute hosted sebaiknya
+  tetap limit 1–2 selama function dan database berbeda region. Email
+  bisnis, BUY kedua dan perbaikan di hosted **belum diverifikasi**.
 
 ### Grant aktivasi staging E6, 2026-10-28
 

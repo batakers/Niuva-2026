@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { Prisma } from "@/generated/prisma/client";
 import { assertDatabaseBinding, type DatabaseBindingExpectation } from "@/modules/database-binding/core";
-import type { DatabaseBindingRepository } from "@/modules/database-binding/repository";
-import { BoundDatabaseService } from "@/modules/database-binding/service";
+import type { BindingTransactionOptions, DatabaseBindingRepository } from "@/modules/database-binding/repository";
+import { BOUND_TRANSACTION_OPTIONS, BoundDatabaseService } from "@/modules/database-binding/service";
 import { AppError } from "@/modules/shared/errors";
 
 const bindingId = "cde8a654-498f-4217-a7a1-300a2944be9e";
@@ -12,9 +12,11 @@ const tx = {} as Prisma.TransactionClient;
 class CheckingRepository implements DatabaseBindingRepository {
   marker: unknown = { id: 1, bindingId, tier: "staging" };
   expected: DatabaseBindingExpectation | undefined;
+  options: BindingTransactionOptions | undefined;
 
-  async withVerifiedBinding<T>(expected: DatabaseBindingExpectation, work: (client: Prisma.TransactionClient) => Promise<T>) {
+  async withVerifiedBinding<T>(expected: DatabaseBindingExpectation, work: (client: Prisma.TransactionClient) => Promise<T>, options?: BindingTransactionOptions) {
     this.expected = expected;
+    this.options = options;
     assertDatabaseBinding(expected, this.marker);
     return work(tx);
   }
@@ -92,6 +94,16 @@ describe("bound database capability service", () => {
     expect(effects).toEqual([operation]);
     expect(repository.expected).toEqual({ bindingId, tier: "staging" });
     expect(grantedCapabilities).toEqual([operation === "outbox" ? "emailDelivery" : "scheduledJobs"]);
+  });
+
+  it.each(["outbox", "job"] as const)("gives a %s transaction more than the 5 s Prisma default", async (operation) => {
+    // Staging functions (Ohio) reach the database (Singapore) over a long round
+    // trip; one OUTBOX_BUSINESS execute of three messages took 7.3 s on 29 Oct.
+    const { service, repository } = fixture();
+    await service.run(operation, async () => "completed");
+    expect(repository.options).toEqual(BOUND_TRANSACTION_OPTIONS);
+    expect(BOUND_TRANSACTION_OPTIONS.timeout).toBeGreaterThan(5000);
+    expect(BOUND_TRANSACTION_OPTIONS.maxWait).toBeGreaterThan(2000);
   });
 
   it("does not require email configuration for a scheduled database job", async () => {
