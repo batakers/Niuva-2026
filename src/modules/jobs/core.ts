@@ -7,7 +7,7 @@ const elapsed = z.number().int().min(0).max(2147483647);
 const duration = elapsed.min(1);
 const requestSchema = z.strictObject({ job: jobNameSchema, mode: z.enum(["dry-run", "execute"]), limit: z.number().int().min(1).max(100) });
 const policySchema = z.strictObject({ leaseMs: duration, minIntervalMs: elapsed, failureCooldownMs: duration });
-const counter = z.enum(["scanned", "claimed", "accepted", "retried", "failed", "unknown", "cancelled", "expired", "lostLease", "cleaned", "customers", "pending", "consentProofs", "caseContents", "caseReceipts", "activeHolds", "overdueHolds", "confirmations", "sessions", "emailTokens", "internalGoogleConsents", "googleConsents", "authRateLimits", "pendingRegistrations", "closureFences", "closedConsentProofs", "privacyAuditEvents", "released", "enqueued", "remainingDue", "lagMs", "eligible", "deleted"]);
+const counter = z.enum(["scanned", "claimed", "accepted", "retried", "failed", "unknown", "cancelled", "expired", "lostLease", "cleaned", "customers", "pending", "consentProofs", "caseContents", "caseReceipts", "activeHolds", "overdueHolds", "confirmations", "sessions", "emailTokens", "internalGoogleConsents", "googleConsents", "authRateLimits", "pendingRegistrations", "closureFences", "closedConsentProofs", "privacyAuditEvents", "released", "enqueued", "remainingDue", "lagMs", "eligible", "deleted", "deferred"]);
 const resultSchema = z.strictObject({ counts: z.partialRecord(counter, z.number().int().min(0).max(Number.MAX_SAFE_INTEGER)), cooldownMs: elapsed.optional(), failure: z.enum(["JOB_FAILED", "DELIVERY_FAILED", "OUTCOME_UNKNOWN"]).optional() });
 export type JobName = z.infer<typeof jobNameSchema>;
 export type JobRequest = z.infer<typeof requestSchema>;
@@ -16,6 +16,8 @@ export type JobResult = z.infer<typeof resultSchema>;
 export type JobLease = Readonly<{ job: JobName; id: string; expiresAt: Date }>;
 export type JobContext = Readonly<{
   request: JobRequest; lease: JobLease | null;
+  /** Monotonic milliseconds since the runner started this run, its lease claim included. */
+  elapsedMs(): number;
   withLease<T>(work: (tx: Prisma.TransactionClient, now: Date) => Promise<T>): Promise<T>;
   verifyLease(tx: Prisma.TransactionClient): Promise<Date>;
   recordCooldown(tx: Prisma.TransactionClient, until: Date): Promise<void>;

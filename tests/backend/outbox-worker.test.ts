@@ -54,17 +54,17 @@ describe("outbox job authority boundary", () => {
     let allocated = false;
     const factory = () => { allocated = true; throw new Error("private-configuration-fixture"); };
     const authority = new BoundDatabaseService({ context: { env: { ...source, NODE_ENV: "production", NIUVA_DEPLOYMENT_TIER: "staging", NIUVA_DATABASE_BINDING_ID: randomUUID() }, hasActivationGrant: () => false }, repositoryFactory: factory });
-    const worker = new DurableOutboxWorker({ bound: authority, repository: new PrismaOutboxWorkerRepository(), cipherFactory: factory, senderFactory: factory, policy: { leaseMs: 1000, sendTimeoutMs: 500, retryDelaysMs: [] } });
+    const worker = new DurableOutboxWorker({ bound: authority, repository: new PrismaOutboxWorkerRepository(), cipherFactory: factory, senderFactory: factory, policy: { leaseMs: 1000, sendTimeoutMs: 500, retryDelaysMs: [], runBudgetMs: 1000 } });
     await expect(worker.run({ mode, limit: 1 })).rejects.toMatchObject({ code: "PROVIDER_UNAVAILABLE", status: 503 }); expect(allocated).toBe(false);
   });
   it("rejects malformed run input before authority or factories", async () => {
     const run = vi.fn(async () => { throw new Error("should not be called"); }), factory = () => { throw new Error("should not be allocated"); };
-    const worker = new DurableOutboxWorker({ bound: { run }, repository: new PrismaOutboxWorkerRepository(), cipherFactory: factory, senderFactory: factory, policy: { leaseMs: 1000, sendTimeoutMs: 500, retryDelaysMs: [] } });
+    const worker = new DurableOutboxWorker({ bound: { run }, repository: new PrismaOutboxWorkerRepository(), cipherFactory: factory, senderFactory: factory, policy: { leaseMs: 1000, sendTimeoutMs: 500, retryDelaysMs: [], runBudgetMs: 1000 } });
     await expect(worker.run({ mode: "execute", limit: 1, token: "private-token" })).rejects.toMatchObject({ code: "VALIDATION_ERROR" }); expect(run).not.toHaveBeenCalled();
   });
   it("wraps unexpected binding failure without propagating its message", async () => {
     const run = vi.fn(async () => { throw new Error("private-database-fixture"); }), factory = () => { throw new Error("should not be allocated"); };
-    const worker = new DurableOutboxWorker({ bound: { run }, repository: new PrismaOutboxWorkerRepository(), cipherFactory: factory, senderFactory: factory, policy: { leaseMs: 1000, sendTimeoutMs: 500, retryDelaysMs: [] } });
+    const worker = new DurableOutboxWorker({ bound: { run }, repository: new PrismaOutboxWorkerRepository(), cipherFactory: factory, senderFactory: factory, policy: { leaseMs: 1000, sendTimeoutMs: 500, retryDelaysMs: [], runBudgetMs: 1000 } });
     try { await worker.run({ mode: "execute", limit: 1 }); expect.fail("must deny"); } catch (error) { expect(error).toMatchObject({ code: "PROVIDER_UNAVAILABLE" }); expect(String(error)).not.toContain("private-database-fixture"); }
   });
 });

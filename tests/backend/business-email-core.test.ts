@@ -7,9 +7,14 @@ const content = { reference: "TEST-ORDER-001", accountPath: `/account/orders/${i
 describe("minimum business email content and policy", () => {
   it("requires explicit bounded policy and never invents a delivery lifetime", () => {
     expect(() => parseBusinessPolicy(undefined)).toThrow(); expect(() => parseBusinessPolicy({})).toThrow();
-    for (const maxAgeMs of [0, -1, Infinity, 86400001]) expect(() => parseBusinessPolicy({ maxAgeMs })).toThrow();
-    expect(parseBusinessPolicy({ maxAgeMs: 86400000 })).toEqual({ maxAgeMs: 86400000 });
-    expect(parseBusinessPolicy({ maxAgeMs: 3600000 })).toEqual({ maxAgeMs: 3600000 });
+    for (const maxAgeMs of [0, -1, Infinity, 86400001]) expect(() => parseBusinessPolicy({ maxAgeMs, runBudgetMs: 15000 })).toThrow();
+    expect(parseBusinessPolicy({ maxAgeMs: 86400000, runBudgetMs: 15000 })).toEqual({ maxAgeMs: 86400000, runBudgetMs: 15000 });
+    expect(parseBusinessPolicy({ maxAgeMs: 3600000, runBudgetMs: 15000 })).toEqual({ maxAgeMs: 3600000, runBudgetMs: 15000 });
+  });
+  it("requires an explicit run budget that the single projection transaction can honour", () => {
+    expect(() => parseBusinessPolicy({ maxAgeMs: 3600000 })).toThrow();
+    for (const runBudgetMs of [0, -1, 1.5, Infinity, 20001]) expect(() => parseBusinessPolicy({ maxAgeMs: 3600000, runBudgetMs })).toThrow();
+    expect(parseBusinessPolicy({ maxAgeMs: 3600000, runBudgetMs: 20000 })).toEqual({ maxAgeMs: 3600000, runBudgetMs: 20000 });
   });
   it("renders received/shipped messages from record facts without claiming payment or delivery ETA", () => {
     const received = businessEnvelope({ ...base, purpose: "ORDER_RECEIVED", content });

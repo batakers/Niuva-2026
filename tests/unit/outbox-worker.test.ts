@@ -5,7 +5,7 @@ import { OutboxPayloadCipher } from "@/modules/outbox/cipher";
 import type { OutboxMetadata } from "@/modules/outbox/core";
 import { randomUUID } from "node:crypto";
 
-const policy = { leaseMs: 1000, sendTimeoutMs: 500, retryDelaysMs: [100, 200] };
+const policy = { leaseMs: 1000, sendTimeoutMs: 500, retryDelaysMs: [100, 200], runBudgetMs: 2000 };
 
 describe("durable provider envelope protection", () => {
   const metadata: OutboxMetadata = { id: randomUUID(), messageKey: "fixture-message", proofKind: "AUTH", proofId: randomUUID(), purpose: "AUTH_VERIFY", templateVersion: "v1", fingerprint: "a".repeat(64), expiresAt: new Date("2026-10-15T00:00:00Z") };
@@ -52,7 +52,7 @@ describe("outbox worker input and policy", () => {
     expect(parsed).toEqual(policy); expect(Object.isFrozen(parsed)).toBe(true); expect(Object.isFrozen(parsed.retryDelaysMs)).toBe(true);
     expect(parseWorkerPolicy({ ...policy, retryDelaysMs: [] }).retryDelaysMs).toEqual([]);
   });
-  it.each([{}, { leaseMs: 0 }, { leaseMs: 2_147_483_648 }, { sendTimeoutMs: 0 }, { sendTimeoutMs: 1000 }, { sendTimeoutMs: 1001 }, { retryDelaysMs: [0] }, { retryDelaysMs: [-1] }, { retryDelaysMs: [1.5] }, { retryDelaysMs: [2_147_483_648] }, { retryDelaysMs: Array(100).fill(1) }, { extra: true }])("rejects invalid policy %#", mutation => {
+  it.each([{}, { leaseMs: 0 }, { leaseMs: 2_147_483_648 }, { sendTimeoutMs: 0 }, { sendTimeoutMs: 1000 }, { sendTimeoutMs: 1001 }, { retryDelaysMs: [0] }, { retryDelaysMs: [-1] }, { retryDelaysMs: [1.5] }, { retryDelaysMs: [2_147_483_648] }, { retryDelaysMs: Array(100).fill(1) }, { extra: true }, { runBudgetMs: undefined }, { runBudgetMs: 0 }, { runBudgetMs: 400 }, { runBudgetMs: 500 }, { runBudgetMs: 1.5 }, { runBudgetMs: 2_147_483_648 }])("rejects invalid policy %#", mutation => {
     const raw = Object.keys(mutation).length ? { ...policy, ...mutation } : {};
     expect(() => parseWorkerPolicy(raw)).toThrow();
   });

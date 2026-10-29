@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { emailEnvelopeSchema, type EmailEnvelope } from "../notifications/email-delivery";
+import { BOUND_TRANSACTION_TIMEOUT_MS } from "../database-binding/core";
 import { appError } from "../shared/errors";
 
 export const businessKindSchema = z.enum(["ORDER", "PAYMENT", "QUOTE", "SHIPMENT"]);
@@ -20,7 +21,8 @@ export const businessPayloadSchema = z.strictObject({ business: z.literal(true),
 export type BusinessPayload = z.infer<typeof businessPayloadSchema>;
 export type BusinessProofProjection = Readonly<{ kind: BusinessKind; proofId: string; purpose: BusinessPurpose; to: string; ownerId: string; sourceAt: Date; expiresAt: Date; content: BusinessContent }>;
 export const BUSINESS_MESSAGE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
-const policySchema = z.strictObject({ maxAgeMs: z.number().int().positive().max(BUSINESS_MESSAGE_MAX_AGE_MS) });
+// The projection is one bound transaction, so a run budget beyond its timeout could never be honoured.
+const policySchema = z.strictObject({ maxAgeMs: z.number().int().positive().max(BUSINESS_MESSAGE_MAX_AGE_MS), runBudgetMs: z.number().int().positive().max(BOUND_TRANSACTION_TIMEOUT_MS) });
 export type BusinessPolicy = Readonly<z.infer<typeof policySchema>>;
 export function parseBusinessPolicy(raw: unknown): BusinessPolicy {
   const parsed = policySchema.safeParse(raw);

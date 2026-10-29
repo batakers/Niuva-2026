@@ -27,7 +27,7 @@ afterEach(async () => {
   customers.length = 0; proofs.length = 0; cases.length = 0; googleConsents.length = 0;
 });
 afterAll(async () => { await f?.dispose(); });
-function handlers(senderFactory?: () => OutboxSender) { return createJobHandlers({ prisma: f.client, bound: f.bound, source: f.source, workerPolicy: { leaseMs: 60000, sendTimeoutMs: 1000, retryDelaysMs: [1000] }, ...(senderFactory ? { senderFactory } : {}) }); }
+function handlers(senderFactory?: () => OutboxSender) { return createJobHandlers({ prisma: f.client, bound: f.bound, source: f.source, workerPolicy: { leaseMs: 60000, sendTimeoutMs: 1000, retryDelaysMs: [1000], runBudgetMs: 60000 }, ...(senderFactory ? { senderFactory } : {}) }); }
 function runner(map = handlers(), leaseMs = 60000) { return new JobRunner({ bound: f.bound, expectedRole: f.role, repository: new PrismaJobRepository(), handlers: map, policy: { leaseMs, minIntervalMs: 0, failureCooldownMs: 1000 } }); }
 const run = (job: JobName, mode: "execute" | "dry-run" = "execute", limit = 1) => ({ job, mode, limit });
 async function account(expired = false) {
@@ -47,6 +47,19 @@ describe("bound job handlers", () => {
     expect(await runner(map).run(run("OUTBOX_DELIVERY"))).toMatchObject({ counts: { retried: 1 } });
     expect(await runner(map).run(run("OUTBOX_DELIVERY"))).toMatchObject({ state: "cooldown" }); expect(sends).toBe(1);
     expect((await f.admin.operationalJobState.findUniqueOrThrow({ where: { name: "OUTBOX_DELIVERY" } })).cooldownUntil!.getTime()).toBeGreaterThan(Date.now() + 500000);
+  });
+  it("stops a delivery run before its budget, persists the deferred counter and leaves the rest pending", async () => {
+    for (let i = 0; i < 3; i++) await enqueue();
+    let clock = 0; const sent: string[] = [];
+    // The runner's fake monotonic clock only moves when a send costs 8 s, so the third message would start with 5 s left.
+    const map = createJobHandlers({ prisma: f.client, bound: f.bound, source: f.source, workerPolicy: { leaseMs: 60000, sendTimeoutMs: 5000, retryDelaysMs: [], runBudgetMs: 21000 },
+      senderFactory: () => preparedOutboxSender(message => ({ envelope: { from: "fixture@example.test", to: message.payload.to, subject: "fixture", text: "fixture" }, async send() { clock += 8000; sent.push(message.metadata.id); return { kind: "accepted", providerReference: null }; } })) });
+    const job = new JobRunner({ bound: f.bound, expectedRole: f.role, repository: new PrismaJobRepository(), handlers: map, policy: { leaseMs: 60000, minIntervalMs: 0, failureCooldownMs: 1000 }, clock: () => clock });
+    expect(await job.run(run("OUTBOX_DELIVERY", "execute", 10))).toMatchObject({ state: "completed", counts: { scanned: 2, accepted: 2, deferred: 1 } });
+    expect(sent).toHaveLength(2);
+    expect((await f.admin.operationalJobState.findUniqueOrThrow({ where: { name: "OUTBOX_DELIVERY" } }))).toMatchObject({ leaseId: null, lastFailureCategory: null, counters: { accepted: 2, deferred: 1 } });
+    const rest = await f.admin.durableOutboxMessage.findMany({ where: { proofId: { in: proofs }, id: { notIn: sent } } });
+    expect(rest).toHaveLength(1); expect(rest[0]).toMatchObject({ state: "PENDING", attempts: 0, leaseId: null, sealedEnvelope: null }); expect(rest[0].sealedPayload).not.toBeNull();
   });
   it("does not start a send after preparation consumes the job lease", async () => {
     await enqueue(); let sends = 0;

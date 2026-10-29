@@ -19,6 +19,11 @@ describe("operational job CLI", () => {
   });
   it("runs a bounded dry-run and emits only the summary", async () => { const { factory } = fixture(); expect(await executeJobCli(["run", request, policy], factory)).toMatchObject({ exitCode: 0, output: { state: "completed", counts: { expired: 0 } } }); });
   it("requires explicit worker policy for delivery", async () => { const { factory } = fixture(); expect((await executeJobCli(["run", '{"job":"OUTBOX_DELIVERY","mode":"execute","limit":1}', policy], factory)).exitCode).toBe(1); expect(factory).not.toHaveBeenCalled(); });
+  it("requires an explicit run budget in the delivery worker policy", async () => {
+    const { factory } = fixture(), delivery = '{"job":"OUTBOX_DELIVERY","mode":"execute","limit":1}';
+    expect((await executeJobCli(["run", delivery, policy, '{"leaseMs":10000,"sendTimeoutMs":5000,"retryDelaysMs":[]}'], factory)).exitCode).toBe(1); expect(factory).not.toHaveBeenCalled();
+    expect(await executeJobCli(["run", delivery, policy, '{"leaseMs":10000,"sendTimeoutMs":5000,"retryDelaysMs":[],"runBudgetMs":20000}'], factory)).toMatchObject({ exitCode: 0 });
+  });
   it("does not echo runtime errors or configuration", async () => { expect(await executeJobCli(["run", request, policy], () => { throw appError("PROVIDER_UNAVAILABLE", { message: "private@example.test secret-key" }); })).toEqual({ exitCode: 1, output: { status: "failed", category: "JOB_UNAVAILABLE" } }); });
   it("reports actionable inspection alarms with exit 2", async () => { const { runtime, factory } = fixture(), inspect = runtime.inspect; runtime.inspect = async value => ({ ...await inspect(value), alarms: [{ code: "JOB_NEVER_RUN", job: "OUTBOX_DELIVERY" }] }); expect((await executeJobCli(["inspect", '{"maxLagMs":1000}'], factory)).exitCode).toBe(2); });
 });

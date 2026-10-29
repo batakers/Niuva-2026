@@ -6,7 +6,7 @@ vi.mock("@/lib/observability/persistent-logger", () => ({ createPersistentFailur
 import { GET, POST } from "@/app/api/internal/jobs/business-notifications/route";
 import { executeJobCli } from "@/modules/jobs/cli";
 const secret = "synthetic-business-cron-secret-000000000000";
-const jobPolicy = { leaseMs: 60000, minIntervalMs: 0, failureCooldownMs: 1000 }, businessPolicy = { maxAgeMs: 3600000 };
+const jobPolicy = { leaseMs: 60000, minIntervalMs: 0, failureCooldownMs: 1000 }, businessPolicy = { maxAgeMs: 3600000, runBudgetMs: 15000 };
 function request(data: unknown, authorized = true, type = "application/json") {
   return new Request("http://127.0.0.1:3000/api/internal/jobs/business-notifications", { method: "POST", headers: { "content-type": type, ...(authorized ? { authorization: `Bearer ${secret}` } : {}) }, body: typeof data === "string" ? data : JSON.stringify(data) });
 }
@@ -22,7 +22,7 @@ describe("business notification canonical job adapters", () => {
     const valid = { mode: "execute", limit: 10, jobPolicy, businessPolicy };
     expect((await POST(request(JSON.stringify(valid), true, "text/plain"))).status).toBe(422);
     expect((await POST(request("x".repeat(4097)))).status).toBe(413);
-    for (const data of [{ ...valid, limit: 11 }, { ...valid, businessPolicy: undefined }, { ...valid, businessPolicy: {} }, { ...valid, token: "forged" }, { ...valid, to: "foreign@example.test" }, { ...valid, workerPolicy: {} }]) expect((await POST(request(data))).status).toBe(422);
+    for (const data of [{ ...valid, limit: 11 }, { ...valid, businessPolicy: undefined }, { ...valid, businessPolicy: {} }, { ...valid, businessPolicy: { maxAgeMs: businessPolicy.maxAgeMs } }, { ...valid, businessPolicy: { ...businessPolicy, runBudgetMs: 20001 } }, { ...valid, token: "forged" }, { ...valid, to: "foreign@example.test" }, { ...valid, workerPolicy: {} }]) expect((await POST(request(data))).status).toBe(422);
     expect(state.run).not.toHaveBeenCalled();
   });
   it("forwards explicit policy and keeps run/status uncached", async () => {

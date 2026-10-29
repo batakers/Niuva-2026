@@ -158,7 +158,7 @@ describe("outbox worker persistence", () => {
   });
 });
 
-const policy: WorkerPolicy = { leaseMs: 60_000, sendTimeoutMs: 10_000, retryDelaysMs: [60_000] };
+const policy: WorkerPolicy = { leaseMs: 60_000, sendTimeoutMs: 10_000, retryDelaysMs: [60_000], runBudgetMs: 120_000 };
 function worker(sender: OutboxSender, options: { capabilities?: string[]; env?: Record<string, string | undefined>; policy?: WorkerPolicy; cipherFactory?: () => OutboxPayloadCipher; repository?: PrismaOutboxWorkerRepository } = {}) {
   return new DurableOutboxWorker({ bound: bound(options.capabilities, options.env), repository: options.repository ?? repository, senderFactory: () => sender, cipherFactory: options.cipherFactory ?? (() => cipher), policy: options.policy ?? policy });
 }
@@ -251,6 +251,31 @@ describe("outbox worker job and Customer mailers", () => {
     const sender = fakeSender(async () => { sends++; return kind === "retryable" ? { kind, retryAfterMs: 120_000 } : { kind }; });
     expect(await worker(sender).run({ mode: "execute", limit: 100 })).toMatchObject({ scanned: 1, claimed: 1, cooldownMs: kind === "retryable" ? 120_000 : 0 }); expect(sends).toBe(1);
     expect(await prisma.durableOutboxMessage.count({ where: { proofId: { in: proofs }, state: "PENDING", attempts: 0 } })).toBe(1);
+  });
+  it("stops claiming before the run budget and leaves later messages due without an attempt", async () => {
+    const rows = [await fixture(), await fixture(), await fixture()], at = Date.now(), createdAt = new Date(at - 10_000), sent: string[] = []; let clock = 0;
+    for (const [i, f] of rows.entries()) await prisma.durableOutboxMessage.update({ where: { id: f.row.id }, data: { createdAt, dueAt: new Date(at - 3000 + i * 100) } });
+    const last = await prisma.durableOutboxMessage.findUniqueOrThrow({ where: { id: rows[2].row.id } });
+    // A fake monotonic clock where each send costs 8 s: the third message would start with 5 s left, below the slowest 8 s message.
+    const sender = fakeSender(async input => { clock += 8000; sent.push(input.metadata.id); return { kind: "accepted", providerReference: "budget-fixture" }; });
+    const job = new DurableOutboxWorker({ bound: bound(), repository, senderFactory: () => sender, cipherFactory: () => cipher, clock: () => clock, policy: { ...policy, sendTimeoutMs: 5000, runBudgetMs: 21_000 } });
+    expect(await job.run({ mode: "execute", limit: 10 })).toMatchObject({ scanned: 2, claimed: 2, accepted: 2, failed: 0, unknown: 0, deferred: 1 });
+    expect(sent).toEqual(rows.slice(0, 2).map(f => f.row.id));
+    expect(await prisma.durableOutboxMessage.findUniqueOrThrow({ where: { id: last.id } })).toEqual(last);
+    expect(await job.run({ mode: "execute", limit: 10 })).toMatchObject({ accepted: 1, deferred: 0 });
+    expect(await prisma.durableOutboxMessage.count({ where: { proofId: { in: proofs }, state: "ACCEPTED", attempts: 1 } })).toBe(3);
+  });
+  it("leaves an abandoned lease untouched once the budget is spent, then fails it as unknown without a send", async () => {
+    const f = await fixture(), leased = await claim(f), at = Date.now(); let sends = 0;
+    const abandoned = await prisma.durableOutboxMessage.update({ where: { id: leased.id }, data: { createdAt: new Date(at - 5000), dueAt: new Date(at - 4000), leaseExpiresAt: new Date(at - 100) } });
+    const sender = fakeSender(async () => { sends++; return { kind: "accepted", providerReference: null }; });
+    // Every clock read advances 1 s, so the first check already sees less than one send timeout left.
+    let clock = 0;
+    const late = new DurableOutboxWorker({ bound: bound(), repository, senderFactory: () => sender, cipherFactory: () => cipher, clock: () => clock += 1000, policy: { ...policy, runBudgetMs: policy.sendTimeoutMs + 500 } });
+    expect(await late.run({ mode: "execute", limit: 10 })).toMatchObject({ failed: 0, unknown: 0, deferred: 1 });
+    expect(await prisma.durableOutboxMessage.findUniqueOrThrow({ where: { id: f.row.id } })).toEqual(abandoned);
+    expect(await worker(sender).run({ mode: "execute", limit: 10 })).toMatchObject({ failed: 1, unknown: 1, claimed: 0, deferred: 0 }); expect(sends).toBe(0);
+    expect(await prisma.durableOutboxMessage.findUnique({ where: { id: f.row.id } })).toMatchObject({ state: "FAILED", failureCategory: "OUTCOME_UNKNOWN", sealedPayload: null, attempts: 1 });
   });
   it("rechecks exact expiry after decryption before authorizing a send", async () => {
     const f = await fixture(); let reads = 0, sends = 0;

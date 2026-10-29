@@ -1,7 +1,7 @@
 import type { Prisma } from "../../generated/prisma/client";
 import { requireAllowed, type CapabilityContext } from "../capabilities/resolver";
 import { appError } from "../shared/errors";
-import { readDatabaseBindingExpectation } from "./core";
+import { BOUND_TRANSACTION_TIMEOUT_MS, readDatabaseBindingExpectation } from "./core";
 import type { BindingTransactionOptions, DatabaseBindingRepository } from "./repository";
 
 /**
@@ -9,7 +9,7 @@ import type { BindingTransactionOptions, DatabaseBindingRepository } from "./rep
  * far from the database (staging: Ohio to Singapore), so the 5 s Prisma default
  * aborted a three-message OUTBOX_BUSINESS run. Leases still bound the work.
  */
-export const BOUND_TRANSACTION_OPTIONS: BindingTransactionOptions = Object.freeze({ maxWait: 10_000, timeout: 20_000 });
+export const BOUND_TRANSACTION_OPTIONS: BindingTransactionOptions = Object.freeze({ maxWait: 10_000, timeout: BOUND_TRANSACTION_TIMEOUT_MS });
 
 export type BoundDatabaseServiceOptions = Readonly<{
   context: CapabilityContext & { env: Readonly<Record<string, string | undefined>> };

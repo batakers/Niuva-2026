@@ -4,6 +4,9 @@ import { DEPLOYMENT_TIERS, type DeploymentTier } from "../../lib/env/deployment"
 
 export type DatabaseBindingExpectation = Readonly<{ tier: DeploymentTier; bindingId: string }>;
 
+/** Interactive timeout of every bound outbox/job transaction; see `BOUND_TRANSACTION_OPTIONS`. */
+export const BOUND_TRANSACTION_TIMEOUT_MS = 20_000;
+
 export type DatabaseBindingFailure = "CONFIG_INVALID" | "MARKER_MISSING" | "MARKER_INVALID" | "MARKER_MISMATCH";
 
 export class DatabaseBindingError extends Error {

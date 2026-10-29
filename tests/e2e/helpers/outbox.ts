@@ -19,7 +19,7 @@ export async function drainCustomerOutbox(): Promise<void> {
   const source = { ...E2E_OUTBOX_ENV, DATABASE_URL: connectionString, APP_URL: `http://localhost:${process.env.NIUVA_E2E_PORT ?? 3000}` };
   const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString, max: 2 }) });
   try {
-    const worker = new DurableOutboxWorker({ bound: createOutboxBinding(prisma, source), repository: new PrismaOutboxWorkerRepository(), cipherFactory: () => new OutboxPayloadCipher(readOutboxCipherConfig(source)), senderFactory: () => new CustomerOutboxSender({ auth: createCustomerAuthMailer(source), privacy: createPrivacyMailer(source) }), policy: { leaseMs: 60000, sendTimeoutMs: 1000, retryDelaysMs: [] } });
+    const worker = new DurableOutboxWorker({ bound: createOutboxBinding(prisma, source), repository: new PrismaOutboxWorkerRepository(), cipherFactory: () => new OutboxPayloadCipher(readOutboxCipherConfig(source)), senderFactory: () => new CustomerOutboxSender({ auth: createCustomerAuthMailer(source), privacy: createPrivacyMailer(source) }), policy: { leaseMs: 60000, sendTimeoutMs: 1000, retryDelaysMs: [], runBudgetMs: 60000 } });
     await worker.run({ mode: "execute", limit: 100 });
   } finally { await prisma.$disconnect(); }
 }

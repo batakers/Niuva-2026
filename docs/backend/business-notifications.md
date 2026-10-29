@@ -24,8 +24,11 @@ retry dan status unknown dari outbox existing. Hanya kegagalan eksplisit yang
 aman diulang dapat dijadwalkan ulang; hasil tidak diketahui menjadi terminal,
 bukan alasan membuat intent baru. Provider accepted bukan bukti inbox diterima.
 
-Job memerlukan `businessPolicy: { maxAgeMs }` eksplisit, positif dan maksimal
-86.400.000 ms, selain jobPolicy. Batas teknis 24 jam mengikuti
+Job memerlukan `businessPolicy: { maxAgeMs, runBudgetMs }` eksplisit, selain
+jobPolicy. `runBudgetMs` positif dan maksimal 20.000 ms (timeout transaksi
+bound tempat seluruh proyeksi berjalan); semantik anggaran dan counter
+`deferred` ada di [runbook job](batch-2-operations.md#anggaran-waktu-run-outbox--29-oktober-2026).
+`maxAgeMs` positif dan maksimal 86.400.000 ms. Batas teknis 24 jam mengikuti
 [window idempotency Resend](https://resend.com/docs/dashboard/emails/idempotency-keys);
 umur sejak fakta asli memastikan seluruh retry berhenti sebelum window key
 pengiriman pertama berakhir. Ini bukan nilai umur operasional default atau SLA.
