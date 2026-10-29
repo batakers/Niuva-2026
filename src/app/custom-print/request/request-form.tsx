@@ -780,35 +780,37 @@ export function RequestForm({
           />
         </section>
 
-        <section className="space-y-5" aria-labelledby="product-section-title">
-          <div>
-            <h3 className="border-b border-border pb-3 text-base font-semibold" id="product-section-title">Produk referensi</h3>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              Pilihan ini hanya mengarahkan konteks intake. Produk custom tetap melalui review, quote, dan persetujuan operator; tidak ada checkout langsung.
-            </p>
-          </div>
-          <FormField
-            description="Pilih produk draft yang paling mendekati kebutuhan Anda, atau tandai kebutuhan custom lain bila belum yakin."
-            error={errors.productInterest}
-            id="custom-productInterest"
-            label="Produk yang diminati"
-            required
-          >
-            <select
-              className={controlClass}
-              defaultValue={initialProductInterest ?? unspecifiedProductValue}
-              name="productInterest"
+        {productOptions.length > 0 ? (
+          <section className="space-y-5" aria-labelledby="product-section-title">
+            <div>
+              <h3 className="border-b border-border pb-3 text-base font-semibold" id="product-section-title">Produk referensi</h3>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                Pilihan ini hanya mengarahkan konteks intake. Produk custom tetap melalui review, quote, dan persetujuan operator; tidak ada checkout langsung.
+              </p>
+            </div>
+            <FormField
+              description="Pilih produk draft yang paling mendekati kebutuhan Anda, atau tandai kebutuhan custom lain bila belum yakin."
+              error={errors.productInterest}
+              id="custom-productInterest"
+              label="Produk yang diminati"
               required
             >
-              <option value={unspecifiedProductValue}>Belum menentukan / kebutuhan custom lain</option>
-              {productOptions.map((product) => (
-                <option key={product.sourceProductId} value={product.sourceProductId}>
-                  {product.name}
-                </option>
-              ))}
-            </select>
-          </FormField>
-        </section>
+              <select
+                className={controlClass}
+                defaultValue={initialProductInterest ?? unspecifiedProductValue}
+                name="productInterest"
+                required
+              >
+                <option value={unspecifiedProductValue}>Belum menentukan / kebutuhan custom lain</option>
+                {productOptions.map((product) => (
+                  <option key={product.sourceProductId} value={product.sourceProductId}>
+                    {product.name}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+          </section>
+        ) : <input name="productInterest" type="hidden" value={unspecifiedProductValue} />}
 
         <section className="space-y-5" aria-labelledby="configuration-section-title">
           <h3 className="border-b border-border pb-3 text-base font-semibold" id="configuration-section-title">Konfigurasi awal</h3>

@@ -1,5 +1,5 @@
-import { type Prisma, type StockMovementKind } from "@/generated/prisma/client";
-import { appError } from "@/modules/shared/errors";
+import type { Prisma, StockMovementKind } from "../../generated/prisma/client";
+import { appError } from "../shared/errors";
 
 import { lockVariant } from "./lock-variant";
 

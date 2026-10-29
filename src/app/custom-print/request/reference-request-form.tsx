@@ -167,12 +167,12 @@ export function ReferenceRequestForm({
           <FormField error={errors.targetDeadline} id="reference-targetDeadline" label="Target diperlukan (opsional)">
             <Input className={controlClass} name="targetDeadline" type="date" />
           </FormField>
-          <FormField className="sm:col-span-2" id="reference-productInterest" label="Produk referensi (opsional)">
+          {productOptions.length > 0 ? <FormField className="sm:col-span-2" id="reference-productInterest" label="Produk referensi (opsional)">
             <select className={controlClass} defaultValue={initialProductInterest ?? "CUSTOM_UNSPECIFIED"} name="productInterest">
               <option value="CUSTOM_UNSPECIFIED">Kebutuhan custom lain / belum menentukan</option>
               {productOptions.map((product) => <option key={product.sourceProductId} value={product.sourceProductId}>{product.name}</option>)}
             </select>
-          </FormField>
+          </FormField> : <input name="productInterest" type="hidden" value="CUSTOM_UNSPECIFIED" />}
           <FormField className="sm:col-span-2" description="Link HTTPS opsional. Server tidak mengambil isi link secara otomatis." error={errors.referenceLink} id="reference-referenceLink" label="Link sketsa atau referensi (opsional)">
             <Input className={controlClass} name="referenceLink" type="url" />
           </FormField>

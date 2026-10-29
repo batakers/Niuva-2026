@@ -1,8 +1,9 @@
-import { readFile, stat } from "node:fs/promises";
-import { isAbsolute, relative, resolve } from "node:path";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 import { PrismaClient } from "../src/generated/prisma/client";
+import { assertCatalogMediaFilesExist } from "../src/modules/catalog/media-files";
 import { catalogSeedSchema, seedCatalog } from "../src/modules/catalog/seed";
 
 process.loadEnvFile(".env.local");
@@ -34,26 +35,7 @@ function getSafeDatabaseUrl(): string {
 const raw = await readFile(seedFile, "utf8");
 const parsed = catalogSeedSchema.parse(JSON.parse(raw));
 
-async function assertMappedProductMediaExists(): Promise<void> {
-  const publicRoot = resolve(process.cwd(), "public");
-  for (const product of parsed.products) {
-    for (const media of product.media) {
-      const assetPath = resolve(publicRoot, ...media.storageKey.split("/"));
-      const relativePath = relative(publicRoot, assetPath);
-      if (relativePath.startsWith("..") || isAbsolute(relativePath)) {
-        throw new Error(`Mapping media tidak berada di public/: ${media.storageKey}.`);
-      }
-      try {
-        const asset = await stat(assetPath);
-        if (!asset.isFile()) throw new Error("not a file");
-      } catch {
-        throw new Error(`Asset media belum tersedia untuk mapping ${media.storageKey}.`);
-      }
-    }
-  }
-}
-
-await assertMappedProductMediaExists();
+await assertCatalogMediaFilesExist(parsed, resolve(process.cwd(), "public"));
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: getSafeDatabaseUrl(), max: 1 }) });
 
 try {

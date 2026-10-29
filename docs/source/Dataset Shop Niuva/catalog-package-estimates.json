@@ -1,0 +1,268 @@
+{
+  "version": 1,
+  "basis": "OWNER_ESTIMATE_2026-10-28",
+  "approvedAt": "2026-10-28",
+  "note": "Perkiraan dimensi paket atas instruksi Owner 28 Oktober 2026 karena dataset sumber tidak memuat ukuran paket. Kelas diturunkan dari ukuran produk (8, 12, 15 cm) di detail/varian. Owner dapat mengubah nilai per varian di Admin.",
+  "sizeClasses": {
+    "KEYCHAIN_8CM": {
+      "lengthCm": "12",
+      "widthCm": "8",
+      "heightCm": "4"
+    },
+    "FIGURE_8CM": {
+      "lengthCm": "12",
+      "widthCm": "10",
+      "heightCm": "10"
+    },
+    "FIGURE_12CM": {
+      "lengthCm": "16",
+      "widthCm": "12",
+      "heightCm": "12"
+    },
+    "FIGURE_15CM": {
+      "lengthCm": "19",
+      "widthCm": "14",
+      "heightCm": "14"
+    }
+  },
+  "packages": [
+    {
+      "sku": "103726663896",
+      "sizeClass": "KEYCHAIN_8CM",
+      "lengthCm": "12",
+      "widthCm": "8",
+      "heightCm": "4"
+    },
+    {
+      "sku": "103726333343",
+      "sizeClass": "FIGURE_15CM",
+      "lengthCm": "19",
+      "widthCm": "14",
+      "heightCm": "14"
+    },
+    {
+      "sku": "103726333344",
+      "sizeClass": "FIGURE_12CM",
+      "lengthCm": "16",
+      "widthCm": "12",
+      "heightCm": "12"
+    },
+    {
+      "sku": "103726333345",
+      "sizeClass": "FIGURE_15CM",
+      "lengthCm": "19",
+      "widthCm": "14",
+      "heightCm": "14"
+    },
+    {
+      "sku": "103726333346",
+      "sizeClass": "FIGURE_12CM",
+      "lengthCm": "16",
+      "widthCm": "12",
+      "heightCm": "12"
+    },
+    {
+      "sku": "103726333347",
+      "sizeClass": "FIGURE_15CM",
+      "lengthCm": "19",
+      "widthCm": "14",
+      "heightCm": "14"
+    },
+    {
+      "sku": "103726333348",
+      "sizeClass": "FIGURE_12CM",
+      "lengthCm": "16",
+      "widthCm": "12",
+      "heightCm": "12"
+    },
+    {
+      "sku": "103726333349",
+      "sizeClass": "FIGURE_12CM",
+      "lengthCm": "16",
+      "widthCm": "12",
+      "heightCm": "12"
+    },
+    {
+      "sku": "103726333350",
+      "sizeClass": "FIGURE_8CM",
+      "lengthCm": "12",
+      "widthCm": "10",
+      "heightCm": "10"
+    },
+    {
+      "sku": "103726333351",
+      "sizeClass": "FIGURE_12CM",
+      "lengthCm": "16",
+      "widthCm": "12",
+      "heightCm": "12"
+    },
+    {
+      "sku": "103726333352",
+      "sizeClass": "FIGURE_8CM",
+      "lengthCm": "12",
+      "widthCm": "10",
+      "heightCm": "10"
+    },
+    {
+      "sku": "103726333353",
+      "sizeClass": "FIGURE_12CM",
+      "lengthCm": "16",
+      "widthCm": "12",
+      "heightCm": "12"
+    },
+    {
+      "sku": "103726333354",
+      "sizeClass": "FIGURE_8CM",
+      "lengthCm": "12",
+      "widthCm": "10",
+      "heightCm": "10"
+    },
+    {
+      "sku": "103474501379",
+      "sizeClass": "FIGURE_12CM",
+      "lengthCm": "16",
+      "widthCm": "12",
+      "heightCm": "12"
+    },
+    {
+      "sku": "103343689816",
+      "sizeClass": "KEYCHAIN_8CM",
+      "lengthCm": "12",
+      "widthCm": "8",
+      "heightCm": "4"
+    },
+    {
+      "sku": "103343689817",
+      "sizeClass": "KEYCHAIN_8CM",
+      "lengthCm": "12",
+      "widthCm": "8",
+      "heightCm": "4"
+    },
+    {
+      "sku": "103343689818",
+      "sizeClass": "KEYCHAIN_8CM",
+      "lengthCm": "12",
+      "widthCm": "8",
+      "heightCm": "4"
+    },
+    {
+      "sku": "103343687481",
+      "sizeClass": "FIGURE_12CM",
+      "lengthCm": "16",
+      "widthCm": "12",
+      "heightCm": "12"
+    },
+    {
+      "sku": "103343687482",
+      "sizeClass": "FIGURE_12CM",
+      "lengthCm": "16",
+      "widthCm": "12",
+      "heightCm": "12"
+    },
+    {
+      "sku": "103342790916",
+      "sizeClass": "KEYCHAIN_8CM",
+      "lengthCm": "12",
+      "widthCm": "8",
+      "heightCm": "4"
+    },
+    {
+      "sku": "103342790917",
+      "sizeClass": "KEYCHAIN_8CM",
+      "lengthCm": "12",
+      "widthCm": "8",
+      "heightCm": "4"
+    },
+    {
+      "sku": "103342790918",
+      "sizeClass": "KEYCHAIN_8CM",
+      "lengthCm": "12",
+      "widthCm": "8",
+      "heightCm": "4"
+    },
+    {
+      "sku": "103342790919",
+      "sizeClass": "KEYCHAIN_8CM",
+      "lengthCm": "12",
+      "widthCm": "8",
+      "heightCm": "4"
+    },
+    {
+      "sku": "103342790920",
+      "sizeClass": "KEYCHAIN_8CM",
+      "lengthCm": "12",
+      "widthCm": "8",
+      "heightCm": "4"
+    },
+    {
+      "sku": "103340568955",
+      "sizeClass": "FIGURE_12CM",
+      "lengthCm": "16",
+      "widthCm": "12",
+      "heightCm": "12"
+    },
+    {
+      "sku": "103340568956",
+      "sizeClass": "FIGURE_12CM",
+      "lengthCm": "16",
+      "widthCm": "12",
+      "heightCm": "12"
+    },
+    {
+      "sku": "103339597166",
+      "sizeClass": "FIGURE_12CM",
+      "lengthCm": "16",
+      "widthCm": "12",
+      "heightCm": "12"
+    },
+    {
+      "sku": "103339597167",
+      "sizeClass": "FIGURE_12CM",
+      "lengthCm": "16",
+      "widthCm": "12",
+      "heightCm": "12"
+    },
+    {
+      "sku": "103339597168",
+      "sizeClass": "FIGURE_12CM",
+      "lengthCm": "16",
+      "widthCm": "12",
+      "heightCm": "12"
+    },
+    {
+      "sku": "103339597169",
+      "sizeClass": "FIGURE_12CM",
+      "lengthCm": "16",
+      "widthCm": "12",
+      "heightCm": "12"
+    },
+    {
+      "sku": "103339597170",
+      "sizeClass": "FIGURE_12CM",
+      "lengthCm": "16",
+      "widthCm": "12",
+      "heightCm": "12"
+    },
+    {
+      "sku": "103339597171",
+      "sizeClass": "FIGURE_12CM",
+      "lengthCm": "16",
+      "widthCm": "12",
+      "heightCm": "12"
+    },
+    {
+      "sku": "103339597172",
+      "sizeClass": "FIGURE_12CM",
+      "lengthCm": "16",
+      "widthCm": "12",
+      "heightCm": "12"
+    },
+    {
+      "sku": "103339597173",
+      "sizeClass": "FIGURE_12CM",
+      "lengthCm": "16",
+      "widthCm": "12",
+      "heightCm": "12"
+    }
+  ]
+}

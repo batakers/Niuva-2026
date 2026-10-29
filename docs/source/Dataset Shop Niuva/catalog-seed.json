@@ -42,19 +42,22 @@
       "slug": "kicau-mania-kunci-gantung-kucing-lucu-dengan-desain-kreatif-dan-warna-cerah-untuk-penggemar-kucing-dan-aksesori-unik",
       "variants": [
         {
+          "heightCm": "4",
           "isActive": true,
+          "lengthCm": "12",
           "name": "Default",
           "priceRp": "30000",
           "sku": "103726663896",
           "stockOnHand": 50,
-          "weightGrams": "50"
+          "weightGrams": "50",
+          "widthCm": "8"
         }
       ]
     },
     {
       "categorySlug": "bantal-boneka",
       "description": "NIUVA STUDIO – Jasa 3D print custom\nNiuva Inovasi Utama – Niuva Studio merupakan mitra strategis inovasi dan pengembangan produk. Kami menghadirkan solusi kreatif berbasis riset dari konsultasi untuk menciptakan nilai tambah dan keunggulan yang nyata. Salah satu bentuknya adalah produk berbasis 3D print yang kami tawarkan untuk mengabadikan Special Moments mu!\n\n*** DETAIL PRODUK ***\n\nVariasi Figur Full-Color (Paint)\nMaterial: PLA, Single Color Print, Hand-Painted with Acrylic Paint and Clear Spray Paint (Matte/Glossy) Finish\nSize: 15 cm, 12 cm\n\nVariasi Figur Single Color\nMaterial: PLA, Single Color Print\nSize: 15 cm, 12 cm\n\nVariasi Lego Full-Color (Paint)\nMaterial: PLA, Single Color Print, Hand-Painted with Acrylic Paint and Clear Spray Paint (Matte/Glossy) Finish\nSize: 12 cm, 8 cm\n\nVariasi Lego Full-Color (MultiColor Print)\nMaterial: PLA, Multi-Color Print, Hand-Painted with Acrylic Paint and Clear Spray Paint (Matte/Glossy) Finish\nSize: 12 cm, 8 cm\n\nVariasi Lego Single Color\nMaterial: PLA, Single Color Print\nSize: 12 cm, 8 cm\n\n*** WAKTU PRODUKSI ***\n\nEstimasi penyelesaian mengikuti durasi printing, custom paint job, dan kondisi antrian produksi.\n~6–7 hari\n\n*** TERMS & CONDITION ***\n\n- Desain yang sudah fix dan sudah memasuki tahap cetak tidak bisa revisi lagi\n- Finishing menggunakan hand painting\n- Refund tidak akan diterima apabila tidak ada video unboxing\n\n*** NOTE ***\n\n- Pastikan foto referensi dapat di buka dan tidak error (PNG, JPEG)\n- Maksimal revisi adalah sebelum masuk masa cetak\n- Warna dilakukan secara manual menggunakan cat akrilik\n- Ketika menerima paket, mohon rekam proses saat membuka paket\n\n*** PRE ORDER CUSTOM ORDER ***\n\n- Produksi akan memakan waktu 6–7 hari, tergantung besar/kecil produk dan lama pengecatan\n- Untuk pesanan custom customer WAJIB chat admin terlebih dahulu\n- Pembayaran full 3 hari sebelum delivery (tidak ada deposit)\n- Jika ada kesalahan pengiriman atau kekurangan barang, silakan hubungi kami dan sertakan video sebagai bukti. Komplain tanpa bukti video tidak dapat diproses.",
-      "isPublished": false,
+      "isPublished": true,
       "media": [
         {
           "altText": "Foto produk Wisuda Custom 3D Print - Patung Graduasi 3D Personalisasi untuk Souvenir Khusus",
@@ -91,107 +94,143 @@
       "slug": "wisuda-custom-3d-print-patung-graduasi-3d-personalisasi-untuk-souvenir-khusus",
       "variants": [
         {
+          "heightCm": "14",
           "isActive": true,
+          "lengthCm": "19",
           "name": "Figur Custom Face / 15 cm",
           "priceRp": "95000",
           "sku": "103726333343",
           "stockOnHand": 1,
-          "weightGrams": "100"
+          "weightGrams": "100",
+          "widthCm": "14"
         },
         {
+          "heightCm": "12",
           "isActive": true,
+          "lengthCm": "16",
           "name": "Figur Custom Face / 12 cm",
           "priceRp": "75000",
           "sku": "103726333344",
           "stockOnHand": 1,
-          "weightGrams": "100"
+          "weightGrams": "100",
+          "widthCm": "12"
         },
         {
+          "heightCm": "14",
           "isActive": true,
+          "lengthCm": "19",
           "name": "Figur Painted / 15 cm",
           "priceRp": "85000",
           "sku": "103726333345",
           "stockOnHand": 1,
-          "weightGrams": "100"
+          "weightGrams": "100",
+          "widthCm": "14"
         },
         {
+          "heightCm": "12",
           "isActive": true,
+          "lengthCm": "16",
           "name": "Figur Painted / 12 cm",
           "priceRp": "65000",
           "sku": "103726333346",
           "stockOnHand": 1,
-          "weightGrams": "100"
+          "weightGrams": "100",
+          "widthCm": "12"
         },
         {
+          "heightCm": "14",
           "isActive": true,
+          "lengthCm": "19",
           "name": "Figur Single Color / 15 cm",
           "priceRp": "65000",
           "sku": "103726333347",
           "stockOnHand": 1,
-          "weightGrams": "100"
+          "weightGrams": "100",
+          "widthCm": "14"
         },
         {
+          "heightCm": "12",
           "isActive": true,
+          "lengthCm": "16",
           "name": "Figur Single Color / 12 cm",
           "priceRp": "45000",
           "sku": "103726333348",
           "stockOnHand": 1,
-          "weightGrams": "100"
+          "weightGrams": "100",
+          "widthCm": "12"
         },
         {
+          "heightCm": "12",
           "isActive": true,
+          "lengthCm": "16",
           "name": "Lego Painted / 12 cm",
           "priceRp": "80000",
           "sku": "103726333349",
           "stockOnHand": 1,
-          "weightGrams": "100"
+          "weightGrams": "100",
+          "widthCm": "12"
         },
         {
+          "heightCm": "10",
           "isActive": true,
+          "lengthCm": "12",
           "name": "Lego Painted / 8 cm",
           "priceRp": "60000",
           "sku": "103726333350",
           "stockOnHand": 1,
-          "weightGrams": "100"
+          "weightGrams": "100",
+          "widthCm": "10"
         },
         {
+          "heightCm": "12",
           "isActive": true,
+          "lengthCm": "16",
           "name": "Lego Multicolor / 12 cm",
           "priceRp": "150000",
           "sku": "103726333351",
           "stockOnHand": 1,
-          "weightGrams": "100"
+          "weightGrams": "100",
+          "widthCm": "12"
         },
         {
+          "heightCm": "10",
           "isActive": true,
+          "lengthCm": "12",
           "name": "Lego Multicolor / 8 cm",
           "priceRp": "80000",
           "sku": "103726333352",
           "stockOnHand": 1,
-          "weightGrams": "100"
+          "weightGrams": "100",
+          "widthCm": "10"
         },
         {
+          "heightCm": "12",
           "isActive": true,
+          "lengthCm": "16",
           "name": "Lego Single Color / 12 cm",
           "priceRp": "55000",
           "sku": "103726333353",
           "stockOnHand": 1,
-          "weightGrams": "100"
+          "weightGrams": "100",
+          "widthCm": "12"
         },
         {
+          "heightCm": "10",
           "isActive": true,
+          "lengthCm": "12",
           "name": "Lego Single Color / 8 cm",
           "priceRp": "35000",
           "sku": "103726333354",
           "stockOnHand": 1,
-          "weightGrams": "100"
+          "weightGrams": "100",
+          "widthCm": "10"
         }
       ]
     },
     {
       "categorySlug": "figure-set",
       "description": "NIUVA STUDIO - Jasa 3D print custom\nNiuva Inovasi Utama - Niuva Studio merupakan mitra strategis inovasi dan pengembangan produk. Kami menghadirkan solusi kreatif berbasis riset dari konsultasi untuk menciptakan nilai tambah dan keunggulan yang nyata. Salah satu bentuknya adalah produk berbasis 3D print yang kami tawarkan untuk mengabadikan Special Moments mu!\n\nDETAIL PRODUK :\nMaterial: PLA\nSize: 12cm\nLayer height : 0.2mm\n\nNOTES :\n- tulis fakultas di notes/chat yaa\nJika ada kesalahan pengiriman atau kekurangan barang, silakan hubungi kami dan sertakan video sebagai bukti.\nKomplain tanpa bukti video tidak dapat diproses",
-      "isPublished": false,
+      "isPublished": true,
       "media": [
         {
           "altText": "Foto produk 3D PRINT LEGO FIGURE WISUDAWAN TELKOM UNIVERSITY",
@@ -208,12 +247,15 @@
       "slug": "3d-print-lego-figure-wisudawan-telkom-university",
       "variants": [
         {
+          "heightCm": "12",
           "isActive": true,
+          "lengthCm": "16",
           "name": "Default",
           "priceRp": "150000",
           "sku": "103474501379",
           "stockOnHand": 10,
-          "weightGrams": "150"
+          "weightGrams": "150",
+          "widthCm": "12"
         }
       ]
     },
@@ -277,35 +319,44 @@
       "slug": "3d-print-keychain-gedung-telkom-university-tult-bandung-techno-park",
       "variants": [
         {
+          "heightCm": "4",
           "isActive": true,
+          "lengthCm": "12",
           "name": "TULT BIRU",
           "priceRp": "35200",
           "sku": "103343689816",
           "stockOnHand": 5,
-          "weightGrams": "200"
+          "weightGrams": "200",
+          "widthCm": "8"
         },
         {
+          "heightCm": "4",
           "isActive": true,
+          "lengthCm": "12",
           "name": "BANDUNG TECHNO PARK",
           "priceRp": "30400",
           "sku": "103343689817",
           "stockOnHand": 5,
-          "weightGrams": "200"
+          "weightGrams": "200",
+          "widthCm": "8"
         },
         {
+          "heightCm": "4",
           "isActive": true,
+          "lengthCm": "12",
           "name": "TULT ABU",
           "priceRp": "30400",
           "sku": "103343689818",
           "stockOnHand": 5,
-          "weightGrams": "200"
+          "weightGrams": "200",
+          "widthCm": "8"
         }
       ]
     },
     {
       "categorySlug": "action-figure",
       "description": "NIUVA STUDIO - Jasa 3D print custom\nNiuva Inovasi Utama - Niuva Studio merupakan mitra strategis inovasi dan pengembangan produk. Kami menghadirkan solusi kreatif berbasis riset dari konsultasi untuk menciptakan nilai tambah dan keunggulan yang nyata. Salah satu bentuknya adalah produk berbasis 3D print yang kami tawarkan untuk mengabadikan Special Moments mu!\n\nDETAIL PRODUK :\nMaterial: PLA\nSize: 12cm\nLayer height : 0.2mm\n\nNOTES :\n- tulis fakultas di notes/chat yaa\n\nJika ada kesalahan pengiriman atau kekurangan barang, silakan hubungi kami dan sertakan video sebagai bukti.\nKomplain tanpa bukti video tidak dapat diproses",
-      "isPublished": false,
+      "isPublished": true,
       "media": [
         {
           "altText": "Foto produk 3D Print LEGO Figure Wisudawan Telkom University PLA (Bisa Custom Tali Toga Fakultas)",
@@ -352,20 +403,26 @@
       "slug": "3d-print-lego-figure-wisudawan-telkom-university-pla-bisa-custom-tali-toga-fakultas",
       "variants": [
         {
+          "heightCm": "12",
           "isActive": true,
+          "lengthCm": "16",
           "name": "PEREMPUAN",
           "priceRp": "150000",
           "sku": "103343687481",
           "stockOnHand": 5,
-          "weightGrams": "200"
+          "weightGrams": "200",
+          "widthCm": "12"
         },
         {
+          "heightCm": "12",
           "isActive": true,
+          "lengthCm": "16",
           "name": "LAKI LAKI",
           "priceRp": "150000",
           "sku": "103343687482",
           "stockOnHand": 5,
-          "weightGrams": "200"
+          "weightGrams": "200",
+          "widthCm": "12"
         }
       ]
     },
@@ -439,51 +496,66 @@
       "slug": "3d-print-keychain-animal-telkom-university",
       "variants": [
         {
+          "heightCm": "4",
           "isActive": true,
+          "lengthCm": "12",
           "name": "soang baju merah",
           "priceRp": "20000",
           "sku": "103342790916",
           "stockOnHand": 5,
-          "weightGrams": "200"
+          "weightGrams": "200",
+          "widthCm": "8"
         },
         {
+          "heightCm": "4",
           "isActive": true,
+          "lengthCm": "12",
           "name": "soang baju putih",
           "priceRp": "20000",
           "sku": "103342790917",
           "stockOnHand": 5,
-          "weightGrams": "200"
+          "weightGrams": "200",
+          "widthCm": "8"
         },
         {
+          "heightCm": "4",
           "isActive": true,
+          "lengthCm": "12",
           "name": "maung wisuda",
           "priceRp": "20000",
           "sku": "103342790918",
           "stockOnHand": 5,
-          "weightGrams": "200"
+          "weightGrams": "200",
+          "widthCm": "8"
         },
         {
+          "heightCm": "4",
           "isActive": true,
+          "lengthCm": "12",
           "name": "galih",
           "priceRp": "20000",
           "sku": "103342790919",
           "stockOnHand": 5,
-          "weightGrams": "200"
+          "weightGrams": "200",
+          "widthCm": "8"
         },
         {
+          "heightCm": "4",
           "isActive": true,
+          "lengthCm": "12",
           "name": "merak",
           "priceRp": "20000",
           "sku": "103342790920",
           "stockOnHand": 5,
-          "weightGrams": "200"
+          "weightGrams": "200",
+          "widthCm": "8"
         }
       ]
     },
     {
       "categorySlug": "figure-set",
       "description": "NIUVA STUDIO – Jasa 3D print custom\nNiuva Inovasi Utama – Niuva Studio merupakan mitra strategis inovasi dan pengembangan produk. Kami menghadirkan solusi kreatif berbasis riset dari konsultasi untuk menciptakan nilai tambah dan keunggulan yang nyata. Salah satu bentuknya adalah produk berbasis 3D print yang kami tawarkan untuk mengabadikan Special Moments mu!\n\nDETAIL PRODUK :\nMaterial : PLA\nSize: 12cm\nLayer height : 0.2mm\n\nWAKTU PRODUKSI :\nEstimasi penyelesaian mengikuti durasi printing dan kondisi antrian produksi.\nNOTE :\n- Pastikan file dapat di buka dan tidak error (png, JPEG, STP)\n- Maksimal revisi adalah sebelum masuk masa cetak\n- Warna dilakukan secara manual menggunakan cat akrilik\n- Ketika menerima paket, mohon rekam proses saat membuka paket.\n\nJika ada kesalahan pengiriman atau kekurangan barang, silakan hubungi kami dan sertakan video sebagai bukti. Komplain tanpa bukti video tidak dapat diproses.\n\nTERMS & CONDITION :\n- Pose atau gaya bisa disesuaikan dengan foto referensi\n- Desain yang sudah fix dan sudah memasuki - - tahap cetak tidak bisa revisi lagi.\nFinishing menggunakan hand painting",
-      "isPublished": false,
+      "isPublished": true,
       "media": [
         {
           "altText": "Foto produk 3D PRINT CUSTOM FIGURE SPECIAL MOMENTS (Newborn, weddings, birthday, dll)",
@@ -510,27 +582,33 @@
       "slug": "3d-print-custom-figure-special-moments-newborn-weddings-birthday-dll",
       "variants": [
         {
+          "heightCm": "12",
           "isActive": true,
+          "lengthCm": "16",
           "name": "NO COLOUR",
           "priceRp": "35200",
           "sku": "103340568955",
           "stockOnHand": 5,
-          "weightGrams": "200"
+          "weightGrams": "200",
+          "widthCm": "12"
         },
         {
+          "heightCm": "12",
           "isActive": true,
+          "lengthCm": "16",
           "name": "COLOUR (Acrylic hand painting)",
           "priceRp": "124800",
           "sku": "103340568956",
           "stockOnHand": 5,
-          "weightGrams": "200"
+          "weightGrams": "200",
+          "widthCm": "12"
         }
       ]
     },
     {
       "categorySlug": "figure-set",
       "description": "NIUVA STUDIO – Jasa 3D print custom\nNiuva Inovasi Utama – Niuva Studio merupakan mitra strategis inovasi dan pengembangan produk. Kami menghadirkan solusi kreatif berbasis riset dari konsultasi untuk menciptakan nilai tambah dan keunggulan yang nyata. Salah satu bentuknya adalah produk berbasis 3D print yang kami tawarkan untuk mengabadikan Special Moments mu!\n\nDETAIL PRODUK :\nMaterial : PLA\nSize: 12cm\nLayer height : 0.2mm\n\nWAKTU PRODUKSI :\nEstimasi penyelesaian mengikuti durasi printing dan kondisi antrian produksi.\n\nTERMS & CONDITION :\n- Pose atau gaya bisa disesuaikan dengan foto referensi\n- Desain yang sudah fix dan sudah memasuki tahap cetak tidak bisa revisi lagi.\n- Finishing menggunakan hand painting\n\nNOTE :\n- Pastikan file dapat di buka dan tidak error (png, JPEG, STL)\n- Maksimal revisi adalah sebelum masuk masa cetak\n- Warna dilakukan secara manual menggunakan cat akrilik\n- Ketika menerima paket, mohon rekam proses saat membuka paket.\n\nPRE ORDER CUSTOM ORDER\n\nProduksi akan memakan waktu 1-2 minggu, tergantung besar/kecil produk dan lama pengecatan\nUntuk Pre-Order, customer WAJIB chat admin terlebih dahulu\nPembayaran full 3 hari sebelum delivery (tidak ada deposit)\n\nJika ada kesalahan pengiriman atau kekurangan barang, silakan hubungi kami dan sertakan video sebagai bukti. Komplain tanpa bukti video tidak dapat diproses.",
-      "isPublished": false,
+      "isPublished": true,
       "media": [
         {
           "altText": "Foto produk [PREORDER] 3D PRINT CUSTOM FIGURE (Bubble head, chibi, cartoon, emoji) READ DESCRIPTION FOR ORDER",
@@ -567,68 +645,92 @@
       "slug": "preorder-3d-print-custom-figure-bubble-head-chibi-cartoon-emoji-read-description-for-order",
       "variants": [
         {
+          "heightCm": "12",
           "isActive": true,
+          "lengthCm": "16",
           "name": "CARTOON / NO COLOUR",
           "priceRp": "35200",
           "sku": "103339597166",
           "stockOnHand": 5,
-          "weightGrams": "200"
+          "weightGrams": "200",
+          "widthCm": "12"
         },
         {
+          "heightCm": "12",
           "isActive": true,
+          "lengthCm": "16",
           "name": "CARTOON / COLOUR",
           "priceRp": "124800",
           "sku": "103339597167",
           "stockOnHand": 5,
-          "weightGrams": "200"
+          "weightGrams": "200",
+          "widthCm": "12"
         },
         {
+          "heightCm": "12",
           "isActive": true,
+          "lengthCm": "16",
           "name": "EMOJI / NO COLOUR",
           "priceRp": "70000",
           "sku": "103339597168",
           "stockOnHand": 5,
-          "weightGrams": "200"
+          "weightGrams": "200",
+          "widthCm": "12"
         },
         {
+          "heightCm": "12",
           "isActive": true,
+          "lengthCm": "16",
           "name": "EMOJI / COLOUR",
           "priceRp": "160000",
           "sku": "103339597169",
           "stockOnHand": 5,
-          "weightGrams": "200"
+          "weightGrams": "200",
+          "widthCm": "12"
         },
         {
+          "heightCm": "12",
           "isActive": true,
+          "lengthCm": "16",
           "name": "PETITE / NO COLOUR",
           "priceRp": "70000",
           "sku": "103339597170",
           "stockOnHand": 5,
-          "weightGrams": "200"
+          "weightGrams": "200",
+          "widthCm": "12"
         },
         {
+          "heightCm": "12",
           "isActive": true,
+          "lengthCm": "16",
           "name": "PETITE / COLOUR",
           "priceRp": "160000",
           "sku": "103339597171",
           "stockOnHand": 5,
-          "weightGrams": "200"
+          "weightGrams": "200",
+          "widthCm": "12"
         },
         {
+          "heightCm": "12",
           "isActive": true,
+          "lengthCm": "16",
           "name": "BIG HEAD / NO COLOUR",
           "priceRp": "42000",
           "sku": "103339597172",
           "stockOnHand": 5,
-          "weightGrams": "200"
+          "weightGrams": "200",
+          "widthCm": "12"
         },
         {
+          "heightCm": "12",
           "isActive": true,
+          "lengthCm": "16",
           "name": "BIG HEAD / COLOUR",
           "priceRp": "132000",
           "sku": "103339597173",
           "stockOnHand": 5,
-          "weightGrams": "200"
+          "weightGrams": "200",
+          "widthCm": "12"
         }
       ]
     }

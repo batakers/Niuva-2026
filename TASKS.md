@@ -1503,6 +1503,73 @@ walaupun grant E6 sudah ada. Owner memilih cakupan semua provider.
   117/927, integration 58/522 (DB terisolasi), build lulus (percobaan build
   pertama gagal kehabisan memori karena sempat berjalan bersamaan dengan
   integration; diulang sendirian). Hosted belum diverifikasi.
+- PR #78 di-squash ke `main@7bb7f1f`; deploy `6ae27c314fdce519c53f749d` ready
+  (secret scan 0), build kembali Stopped. Uji `curl` tanpa data: origin
+  kanonik melewati pemeriksaan origin (303 ke `/register?error=validation`),
+  origin asing tetap ditolak (303 `error=origin_not_allowed`); redirect memakai
+  origin kanonik. Daftar penguji sungguhan belum diuji.
+- Daftar penguji pertama berhasil: satu `customer_pending_registrations`
+  (policy v1.0) dan dua `AUTH_VERIFY` PENDING di outbox (daftar + kirim ulang).
+  Pemicu job manual (E9) memakai script lokal Owner yang membaca salinan DPAPI
+  `CRON_SECRET`; body mengikuti contoh `docs/backend/batch-2-operations.md`
+  (`jobPolicy` 30000/0/1000, `workerPolicy` 10000/5000/[]), bukan jadwal.
+  Percobaan awal: 422 (body salah dari script), lalu 503 karena
+  `NIUVA_JOB_DATABASE_ROLE` belum ada; Owner mengizinkan menambah
+  `niuva_staging_runtime` (bukan secret) dan deploy
+  `6ae285f0ba86cb5819fbff10`. Percobaan berikutnya masih 503 tanpa log
+  aplikasi (durasi 4,4 s pada request pertama setelah deploy; penyebab belum
+  diverifikasi, dugaan cold start/compute Neon bangun). Pemeriksaan role,
+  grant (lock, klaim job state, kunci outbox; diuji dalam blok yang
+  dibatalkan) dan keputusan `scheduledJobs` lolos. Percobaan berikutnya
+  `completed`: scanned 2, accepted 1, cancelled 1. DB: pesan terbaru
+  `ACCEPTED` dengan provider reference, pesan lama `CANCELLED`
+  (`PROOF_INVALID`, tautan sudah diganti), `delivery_confirmed=true`.
+  Penerimaan email, verifikasi dan login belum dikonfirmasi Owner.
+- Owner mengonfirmasi email diterima, verifikasi dan login berhasil. Neon MCP:
+  satu `customers` dengan `email_verified_at`, satu
+  `customer_password_credentials`, satu sesi aktif, consent
+  `NIUVA-TERMS-v1.0`/`NIUVA-PRIVACY-v1.0`, pending registration `completed`.
+  Alur akun Customer penguji staging (daftar → email → verifikasi → login)
+  terbukti untuk satu akun. Checkout/pembayaran (T33) belum diuji; katalog
+  staging masih kosong.
+
+### Impor katalog Shop ke staging, 2026-10-29
+
+Keputusan Owner (28 Okt): kedelapan produk dataset siap jual tanpa draft;
+listing custom figure tetap dijual di Shop, sedangkan Custom Print/MAKE hanya
+untuk desain dari customer (dikonfirmasi 29 Okt: hapus referensi produk dari
+Custom Print). Dimensi paket memakai perkiraan yang dapat diubah Owner di
+Admin.
+
+- `catalog-publish-decisions.json`: 8 `PUBLISH_READY_MADE`, `approvedAt`
+  2026-10-28. `catalog-package-estimates.json`: 34 SKU, kelas
+  gantungan kunci 12×8×4, figur 8 cm 12×10×10, figur 12 cm 16×12×12,
+  figur 15 cm 19×14×14 (cm). `catalog:prepare` meregenerasi manifest:
+  8 produk published, 34 varian berdimensi, 50 media. `catalog:prepare` dan
+  `db:seed:catalog` sempat rusak sejak PR #33 karena alias `@/` di rantai
+  `catalog/seed` → `inventory/movement` → `inventory/lock-variant`; diganti
+  import relatif.
+- `/custom-print` tidak lagi menampilkan bagian "Inspirasi produk custom";
+  kedua form pengajuan menyembunyikan pilihan produk dan mengirim
+  `CUSTOM_UNSPECIFIED` bila daftar kosong. Link lama `?product=<id>`
+  diabaikan. Lima produk baru di Shop memakai nama/deskripsi kanonik; copy
+  kurasi untuk kelimanya belum ada (tindak lanjut editorial).
+- Jalur impor: `corepack pnpm staging:import-catalog`
+  (`src/modules/catalog/staging-import.ts`): konfirmasi literal, tier staging
+  eksplisit, `sslmode=verify-full`, binding marker (helper bersama dengan
+  bootstrap Owner), advisory lock, upsert idempoten, menolak katalog
+  published tanpa dimensi; transaksi binding kini menerima `timeout`.
+- Verifikasi lokal (satu per satu): lint 0 error/4 warning lama; typecheck;
+  unit 133/1.493; backend 118/930 (termasuk
+  `tests/backend/staging-catalog-import.test.ts`); integration 59/524 di DB
+  terisolasi (termasuk `tests/integration/staging-catalog-import.test.ts`:
+  4 kategori, 8 produk published, 34 varian berdimensi, 50 media, 34 stock
+  opening, impor kedua idempoten, binding salah menolak tanpa menulis);
+  build lulus; `check:memory` lulus. Browser lokal (`next dev`):
+  `/custom-print` tanpa bagian inspirasi dan tanpa tombol "Ajukan untuk
+  Review" per produk, desktop dan 375 px tanpa overflow horizontal. Form
+  pengajuan (butuh login Customer) tidak dibuka di browser. Tampilan belum
+  direview Owner. Impor hosted belum dijalankan.
 
 ### Grant aktivasi staging E6, 2026-10-28
 
