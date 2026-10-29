@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { isSameOriginRequest } from "@/lib/security/origin";
+import { clientIpCandidate } from "@/lib/security/client-ip";
 import { createRuntimeRateLimiter } from "@/lib/security/shared-rate-limit";
 import { classifyDevice, countryCode, pageViewSchema } from "@/modules/analytics/contract";
 import { PrismaAnalyticsRepository, type AnalyticsRepository } from "@/modules/analytics/repository";
@@ -40,8 +41,7 @@ async function readBoundedBody(request: Request): Promise<string | "TOO_LARGE" |
 }
 
 function rateKey(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim().slice(0, 64) ?? "";
-  const ip = request.headers.get("x-real-ip")?.trim().slice(0, 64) ?? forwarded;
+  const ip = clientIpCandidate(request.headers);
   return createHash("sha256").update(processSalt).update(ip || "unknown").digest("hex");
 }
 

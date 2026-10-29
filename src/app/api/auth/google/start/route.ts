@@ -12,6 +12,7 @@ import {
   safeCustomerReturnTo,
   createCustomerOAuthState,
 } from "@/modules/customer-auth/core";
+import { clientIpCandidate } from "@/lib/security/client-ip";
 import { createRuntimeRateLimiter } from "@/lib/security/shared-rate-limit";
 import { customerCookieSecure } from "@/modules/customer-auth/app-origin";
 import { customerAuthOrigin } from "@/modules/customer-auth/origin";
@@ -29,8 +30,7 @@ const googleStartRateLimiter = createRuntimeRateLimiter({ namespace: "src/app/ap
 });
 
 function rateLimitKey(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for")?.split(",", 1)[0]?.trim();
-  return forwarded || new URL(request.url).origin;
+  return clientIpCandidate(request.headers) || new URL(request.url).origin;
 }
 
 function loginRedirect(

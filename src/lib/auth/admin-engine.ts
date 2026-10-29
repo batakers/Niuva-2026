@@ -6,6 +6,7 @@ import type { PrismaClient } from "@/generated/prisma/client";
 import { ADMIN_AUTH_COOKIE_PREFIX } from "@/lib/auth/admin-session-cookie";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { parseServerEnvironment } from "@/lib/env/server";
+import { trustedClientIpHeaders } from "@/lib/security/client-ip";
 import { sendAdminAuthMail, type AdminAuthMail } from "@/modules/admin-auth/mail";
 import { ADMIN_PASSWORD_MIN_LENGTH, ADMIN_EXISTING_PASSWORD_MAX_LENGTH, adminNewPasswordSchema } from "@/modules/admin-auth/password-policy";
 import { appError } from "@/modules/shared/errors";
@@ -20,6 +21,7 @@ export type AdminAuthEngineOptions = Readonly<{
 export function createAdminAuthEngine(prisma: PrismaClient, options: AdminAuthEngineOptions) {
   const origin = new URL(options.baseUrl);
   if (origin.username || origin.password || origin.pathname !== "/" || origin.search || origin.hash || (options.production && origin.protocol !== "https:")) throw appError("AUTH_UNAVAILABLE");
+  const ipAddressHeaders = trustedClientIpHeaders();
   return betterAuth({
     appName: "NIUVA Admin",
     baseURL: origin.origin,
@@ -68,6 +70,8 @@ export function createAdminAuthEngine(prisma: PrismaClient, options: AdminAuthEn
       cookiePrefix: ADMIN_AUTH_COOKIE_PREFIX,
       useSecureCookies: options.production,
       defaultCookieAttributes: { httpOnly: true, sameSite: "lax", secure: options.production },
+      // Rate-limit buckets follow the platform client IP, not a client-set forwarded header.
+      ...(ipAddressHeaders ? { ipAddress: { ipAddressHeaders } } : {}),
     },
     databaseHooks: {
       session: { create: { before: async (session, context) => {

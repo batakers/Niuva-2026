@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { readBoundedText } from "@/lib/http/body";
+import { clientIpCandidate } from "@/lib/security/client-ip";
 import { createRuntimeRateLimiter } from "@/lib/security/shared-rate-limit";
 import { assertCustomerAuthOrigin, customerAuthOrigin } from "@/modules/customer-auth/origin";
 import { customerCookieSecure } from "@/modules/customer-auth/app-origin";
@@ -19,7 +20,7 @@ export async function POST(request: Request): Promise<Response> {
     if (!request.headers.get("content-type")?.startsWith("application/x-www-form-urlencoded")) throw appError("VALIDATION_ERROR");
     const raw = Object.fromEntries(new URLSearchParams(await readBoundedText(request, 8192)));
     returnTo = safeCustomerReturnTo(raw.returnTo);
-    const key = request.headers.get("x-forwarded-for")?.split(",", 1)[0]?.trim() || new URL(request.url).origin;
+    const key = clientIpCandidate(request.headers) || new URL(request.url).origin;
     if (!(await limiter.check(key)).allowed) throw appError("RATE_LIMITED");
     const token = await new GoogleConsentService().accept(raw);
     const destination = `/api/auth/google/start?returnTo=${encodeURIComponent(returnTo)}`;

@@ -120,6 +120,15 @@ describe("deriveActorKey", () => {
     expect(() => deriveActorKey({ endpointId: endpoint, headers: new Headers({ "x-real-ip": "1.1.1.1" }) })).toThrow(/required for hosted runtimes/);
   });
 
+  it("keeps one hosted bucket when only spoofed forwarded headers change", () => {
+    vi.stubEnv("NIUVA_DEPLOYMENT_TIER", "staging");
+    const hosted = (headers: Record<string, string>) => deriveActorKey({ endpointId: endpoint, headers: new Headers(headers), sharedSecret: "shared-auth-secret" });
+    const real = { "x-nf-client-connection-ip": "203.0.113.5" };
+    const expectedDigest = createHmac("sha256", "shared-auth-secret").update("203.0.113.5").digest("hex");
+    expect(hosted(real)).toBe(`i:${endpoint}:${expectedDigest}`);
+    expect(hosted({ ...real, "x-forwarded-for": "9.9.9.9", "x-real-ip": "8.8.4.4" })).toBe(hosted(real));
+  });
+
   it("is stable within a process when no salt is injected", () => {
     const headers = new Headers({ "x-real-ip": "1.1.1.1" });
     expect(deriveActorKey({ endpointId: endpoint, headers })).toBe(
