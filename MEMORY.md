@@ -25,6 +25,7 @@ Update this after major decisions, completed phases, or bugs that future agents 
 
 ## Decisions
 
+- 2026-10-30 — Owner answered Q1–Q10 (focus board in `TASKS.md`): staging grants `refund`/`privacy`/`googleAuth`; QRIS + GoPay for v1; production on an Indonesian hosting provider (not chosen); daily backup plus bookkeeping copy in one Jakarta-region store (provider/cost belum diverifikasi); staging builds may stay Active for `main`; abandoned attempts stop reconciling after 7 days.
 - 2026-10-27 — T03 staging decisions, authorization and evidence boundaries: see `docs/backend/t03-hosted-sandbox-runbook.md` and `TASKS.md`; current hosted acceptance belum diverifikasi.
 - 2026-08-21 — Product authority: `docs/PRD-Niuva-MVP.md` and addenda; technical authority: `docs/TechDesign-Niuva-MVP.md` and addenda; visual authority: `DESIGN.md`.
 - 2026-08-21 — User guidance level is C (somewhere in between), overriding the older Level A metadata for explanation style only.
@@ -52,7 +53,7 @@ Carried findings retain their IDs; source fixes do not close hosted or release g
 - PUB-AGE / PUB-GUARDIAN — 18+ declaration is implemented, not actual-age verification (`src/modules/customer-auth/age-declaration.ts`). Child/guardian accounts are out of scope; formal/hosted review remains separate (`docs/legal/customer-public-launch-readiness.md`).
 - B2 (carried; original defect resolved in source) — Customer ID or HMAC IP candidate + endpoint keys (`src/lib/http/public-mutation.ts`, `src/lib/security/actor-key.ts`); memory only for local-test, Prisma/PostgreSQL otherwise (`src/lib/security/shared-rate-limit.ts`). Hosted tiers key anonymous actors on the Netlify `x-nf-client-connection-ip` only (`src/lib/security/client-ip.ts`, also used by auth/logout/analytics limiters and Better Auth `ipAddressHeaders`); spoofed forwarded headers stayed 429 on staging 29 Oct (T10 DONE in `TASKS.md`). Revisit the header if production leaves Netlify.
 - B5 (carried; original defect resolved in source) — Tracked observability is wired into `apiError()` with correlation IDs (`src/lib/http/response.ts`) and Admin actions through `toAppErrorLogged` (`src/lib/observability/report.ts`, `src/app/admin/actions.ts`). Plain `toAppError` stays pure; deployed collection/alerting belum diverifikasi.
-- Open inputs — Owner answered E10–E12 on 2026-10-29 (working hours/coverage, RPO 24 h, RTO 1 working day, manual-refund owner/evidence): `TASKS.md`. Still open: methods/refund activation on the Niuva Midtrans account, and where/how the Indonesian copy of bookkeeping records is kept (PUB-RECORDS) — belum diverifikasi. Full-refund direction remains; hosted submission/reconciliation is blocked (T23–T25). Activation/deployment need explicit instructions.
+- Open inputs — Owner answered E10–E12 on 2026-10-29 (working hours/coverage, RPO 24 h, RTO 1 working day, manual-refund owner/evidence): `TASKS.md`. Q1–Q10 answered 2026-10-30 (see Decisions); Midtrans sandbox dashboard features and the PUB-RECORDS store provider remain belum diverifikasi. Full-refund direction remains; hosted submission/reconciliation is blocked (T23–T25). Activation/deployment need explicit instructions.
 - Evidence scope — `docs/frontend/mvp-release-readiness.md` retains its recorded scope. Browser, visual/device/AT, provider, staging, production acceptance: belum diverifikasi in this refresh.
 
 ## Completed

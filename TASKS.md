@@ -33,30 +33,35 @@ gelombang berikutnya menunggu penghambatnya.
 | 2 — rekayasa | T10 (B4) | A | Selesai: PR #84 di-deploy 29 Okt, pemalsuan header tetap 429 | — |
 | 2 | T31/T34 (B1) | A | Selesai 30 Okt: `CUSTOM_PRINT_V1` v1 `PER_UNIT` aktif di staging (log "Aktivasi pricing MAKE") | — |
 | 2 | T06/D07 (B2) | A | PR #85 di-deploy 29 Okt; berhenti di budget dengan pesan sungguhan diamati saat BUY #2 | — |
-| 2 | T24 (B5) | A | Batas pemeriksaan attempt tanpa transaksi Midtrans | Q10 |
+| 2 | T24 (B5) | A | Berhenti memeriksa attempt tanpa transaksi Midtrans setelah 7 hari (Q10) | — |
 | 3 — transaksi | T33 | O + A | BUY #2: dua produk, QRIS/GoPay simulator, fulfillment/resi manual sampai email shipped | — |
 | 3 | T34, T36, T19 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim | — |
-| 4 — setelah keputusan | T23, T25, T35 | O + A | Failure/refund sandbox: satu otomatis, satu manual | Q1, Q2 |
-| 4 | T14, D04 | O + A | Privacy hosted; login Google staging | Q3, Q4 |
+| 4 — setelah keputusan | T23, T25, T35 | O + A | Failure/refund sandbox (QRIS + GoPay): satu otomatis, satu manual; grant `refund` | Cek dashboard Midtrans (Q1) |
+| 4 | T14, D04 | O + A | Grant `privacy` dan `googleAuth`; privacy hosted; login Google staging | Redirect URI Google (Owner) |
 | 4 | T08 | A | Retensi file hosted pada berkas T34 | T34 |
-| 5 — rilis | T37 | O | Perangkat fisik dan AT | Q9 |
-| 5 | T38, T39 | O + A | Backup + latihan restore; SOP + simulasi | Q6, Q7 |
-| 5 | T40 | O | Hosting production, ledger readiness (D12), instruksi rilis | Q5 |
+| 5 — rilis | T37 | O | Android + TalkBack (Owner), iPhone + VoiceOver (pinjam); checklist dari agen | — |
+| 5 | T38, T39 | O + A | Backup harian + arsip pembukuan di satu penyimpanan region Jakarta; latihan restore; SOP + simulasi | Perbandingan biaya penyedia (agen), pilihan Owner |
+| 5 | T40 | O | Hosting production di provider Indonesia, ledger readiness (D12), instruksi rilis | Perbandingan provider (agen), pilihan Owner |
 
-Keputusan Owner yang ditunggu, dijawab sekaligus:
+Keputusan Owner 30 Oktober 2026 ("ya saya menyetujui semua rekomendasi nya.
+kecuali Q5"):
 
-- **Q1:** metode aktif dan fitur refund di akun Midtrans sandbox Niuva.
-- **Q2:** grant `refund` staging.
-- **Q3:** grant `privacy` staging.
-- **Q4:** grant `googleAuth` staging dan redirect URI OAuth staging.
-- **Q5:** hosting dan region production (latensi Ohio↔Singapura, 29 Okt).
-- **Q6:** metode dan biaya backup untuk RPO 24 jam.
-- **Q7:** tempat salinan arsip pembukuan di Indonesia (PUB-RECORDS).
-- **Q8:** build staging Active hanya untuk `main`, tanpa toggle manual.
-- **Q9:** perangkat fisik/AT dan pengujinya.
-- **Q10:** berapa lama attempt kedaluwarsa yang tidak pernah punya transaksi
-  di Midtrans (checkout ditinggalkan) tetap diperiksa sebelum dianggap selesai
-  (B5).
+- **Q1:** v1 memakai QRIS dan GoPay; refund diuji satu otomatis lewat Midtrans
+  dan satu manual. Fitur yang aktif di dashboard sandbox belum dicek.
+- **Q2, Q3, Q4:** grant `refund`, `privacy` dan `googleAuth` untuk staging
+  disetujui. Login Google butuh Owner menambah redirect URI staging di Google
+  Cloud.
+- **Q5:** production di provider hosting Indonesia, demi biaya yang masuk
+  budget. Provider belum dipilih; agen membandingkan opsi dulu.
+- **Q6, Q7:** backup otomatis harian ke penyimpanan terpisah, satu tempat
+  dengan salinan arsip pembukuan, region Jakarta. Penyedia dan biaya belum
+  diverifikasi; agen mengajukan opsi.
+- **Q8:** build staging boleh dibiarkan Active khusus `main`; Deploy Preview
+  tetap mati.
+- **Q9:** Owner menguji Android + TalkBack; iPhone + VoiceOver dipinjam dari
+  teman/keluarga, memakai checklist dari agen.
+- **Q10:** attempt kedaluwarsa tanpa transaksi Midtrans berhenti diperiksa
+  setelah 7 hari.
 
 Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 
