@@ -1,10 +1,10 @@
 # Niuva v1.0 — backlog aktif
 
 **Persetujuan implementasi:** 18 Oktober 2026. Baseline audit:
-`f4799c77fedb86f185db29d6f9b9cbfd63828047`. Branch kerja:
-`codex/niuva-v1-closure`. Scope [PRODUCT.md](PRODUCT.md), dependensi
-[ROADMAP.md](ROADMAP.md), selesai menurut [DoD](docs/v1-definition-of-done.md).
-Branch kerja irisan auth publik: `codex/v1-public-customer-closure`.
+`f4799c77fedb86f185db29d6f9b9cbfd63828047`. Branch kerja kini `claude/*` per
+PR dari `main`; branch `codex/*` lama adalah histori. Scope
+[PRODUCT.md](PRODUCT.md), dependensi [ROADMAP.md](ROADMAP.md), selesai menurut
+[DoD](docs/v1-definition-of-done.md).
 Status awal di bawah tidak mengklaim hasil provider/staging/production.
 
 ## Cara bekerja
@@ -19,29 +19,30 @@ Input/ref fixture memungkinkan persiapan kode meskipun task induk belum selesai
 di hosted. Kemajuan parsial dicatat pada log, task tetap terbuka sampai seluruh
 acceptance criteria selesai. Angka dan penerimaan historis tidak dipromosikan.
 
-## Fokus aktif (audit 29 Oktober 2026)
+## Fokus aktif (audit 30 Oktober 2026)
 
 Papan kerja ringkas. Status resmi tetap di tabel di bawah, bukti di log.
-Pelaksana: **A** = agen, **O** = Owner. Gelombang 1 dan 2 boleh paralel;
-gelombang berikutnya menunggu penghambatnya.
+Pelaksana: **A** = agen, **O** = Owner. Kelompok disusun menurut siapa yang
+bisa menggerakkan task; baris yang selesai pindah ke log. Setiap task terbuka
+ada di papan ini; pekerjaan baru masuk tabel task, bukan file lain.
 
-| Gelombang | Task | Pelaksana | Langkah berikutnya | Penghambat |
+| Kelompok | Task | Pelaksana | Langkah berikutnya | Penghambat |
 | --- | --- | --- | --- | --- |
-| 1 — bukti hosted cepat | T07, T24, T10, D02 | A | Selesai 29 Okt (log "Gelombang 1"); T24 menemukan B5 | — |
-| 1 | T09 (auth) | O | `CUSTOMER_AUTH_CLEANUP` hanya lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
-| 1 | T03, T19 | A + O | Smoke R2 privat/publik lewat unggah media Admin | Sesi Admin Owner |
-| 2 — rekayasa | T10 (B4) | A | Selesai: PR #84 di-deploy 29 Okt, pemalsuan header tetap 429 | — |
-| 2 | T31/T34 (B1) | A | Selesai 30 Okt: `CUSTOM_PRINT_V1` v1 `PER_UNIT` aktif di staging (log "Aktivasi pricing MAKE") | — |
-| 2 | T06/D07 (B2) | A | PR #85 di-deploy 29 Okt; berhenti di budget dengan pesan sungguhan diamati saat BUY #2 | — |
-| 2 | T24 (B5) | A | Batas 7 hari ter-deploy 30 Okt (PR #89); pengecualian attempt >7 hari baru teramati setelah 5 Nov | Waktu |
-| 3 — transaksi | T33 | O + A | BUY #2: dua produk, QRIS/GoPay simulator, fulfillment/resi manual sampai email shipped | — |
-| 3 | T34, T36, T19 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim | — |
-| 4 — setelah keputusan | T23, T25, T35 | O + A | Failure/refund sandbox (QRIS + GoPay): satu otomatis, satu manual; grant `refund` | Cek dashboard Midtrans (Q1) |
-| 4 | T14, D04 | O + A | Grant `privacy` dan `googleAuth`; privacy hosted; login Google staging | Redirect URI Google (Owner) |
-| 4 | T08 | A | Retensi file hosted pada berkas T34 | T34 |
-| 5 — rilis | T37 | O | Android + TalkBack (Owner), iPhone + VoiceOver (pinjam); checklist dari agen | — |
-| 5 | T38, T39 | O + A | Backup harian + arsip pembukuan di satu penyimpanan region Jakarta; latihan restore; SOP + simulasi | Perbandingan biaya penyedia (agen), pilihan Owner |
-| 5 | T40 | O + A | Production di satu Helipod VPS B Jakarta (aplikasi + PostgreSQL self-managed, backup harian ke S3 Jakarta); ledger readiness (D12); instruksi rilis | Pembelian VPS (Owner); rancangan deploy VPS dan checklist keamanan/SEO VPS (agen) |
+| Owner, bisa sekarang | T33 | O + A | BUY #2: dua produk, QRIS/GoPay simulator, fulfillment/resi manual sampai email shipped. Agen memverifikasi DB, job dan email, termasuk B2 berhenti di budget dengan pesan sungguhan | — |
+| | T03, T19 | O + A | Smoke R2 privat/publik lewat unggah media Admin | Sesi Admin Owner |
+| | T09 | O | `CUSTOMER_AUTH_CLEANUP` lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
+| | T23, T25, T35 | O | Cek metode dan fitur refund di dashboard Midtrans sandbox; grant `refund` sudah ada | Q1 |
+| | T36 | O + A | UAT operasi Admin, bisa bersamaan dengan T33/T34 | — |
+| Berantai | T34 → T08 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim; lalu retensi file pada berkas MAKE | T33 dulu |
+| | T14 | O + A | Privacy hosted dengan sesi Customer penguji; grant sudah ter-deploy (#89) | Sesi Customer Owner |
+| | T43 | O + A | Redirect URI Google staging dan env OAuth, lalu login Google | Google Cloud dan instruksi env (Owner) |
+| Menunggu waktu | T24 | A | Cek pengecualian B5 pada attempt 29 Okt mulai 5 Nov; jalur `found` saat BUY #2 | Tanggal 5 Nov |
+| Production | T41 | O + A | Beli VPS B Jakarta (dryRun harga dulu), lalu hardening dan jalur deploy | Pembelian (Owner); Q11–Q13 |
+| | T42 | A | Scheduler job di VPS; IP klien setelah Q11 | Q11 untuk bagian IP |
+| Rilis | T37 | O | Android + TalkBack (Owner), iPhone + VoiceOver (pinjam); checklist dari agen | T33–T36 |
+| | T38 | O + A | `pg_dump` harian ke S3 Jakarta dan latihan restore | T41; Q12 |
+| | T39 | O + A | SOP + simulasi | T33–T38 |
+| | T07, T31, T40 | O + A | Scheduler production (lewat T42), aktivasi rule/dataset production, ledger readiness (D12), instruksi rilis | T41–T43 |
 
 Keputusan Owner 30 Oktober 2026 ("ya saya menyetujui semua rekomendasi nya.
 kecuali Q5"):
@@ -66,6 +67,20 @@ kecuali Q5"):
 - **Q10:** attempt kedaluwarsa tanpa transaksi Midtrans berhenti diperiksa
   setelah 7 hari.
 
+Keputusan Owner yang masih terbuka (audit 30 Oktober; rekomendasi agen, belum
+diputuskan):
+
+- **Q11:** cara aplikasi di VPS mengenali IP asli pengunjung (rate limit,
+  T42). Rekomendasi: tanyakan ke Helipod apakah NAT-nya mendukung PROXY
+  protocol; bila tidak, Cloudflare gratis di depan `niuva.id` (nameserver
+  pindah dari Rumahweb, record Resend dipasang ulang).
+- **Q12:** penyedia S3 region Jakarta untuk backup dan arsip pembukuan
+  (IDCloudHost atau Biznet Gio). Agen menyiapkan perbandingan harga.
+- **Q13:** storage file Customer dan media publik di production: R2 seperti
+  staging, atau S3 Jakarta yang sama dengan backup. Rekomendasi: S3 Jakarta
+  yang sama (satu penyedia, data di Indonesia); kompatibilitas belum
+  diverifikasi.
+
 Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 
 ## Task dan acceptance criteria
@@ -78,7 +93,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T04 | M1 | DONE | Producer auth ke outbox | T03 | Proof dan enqueue atomik; proof invalid tidak dikirim; retry tidak memberikan akun/sesi prematur. Integration lokal lulus; hosted delivery tetap menunggu T03. |
 | T05 | M1 | DONE | Producer privacy ke outbox | T04 | Proof sekali pakai/closure aman; revoked/expired dibatalkan. Integration lokal lulus; hosted delivery tetap menunggu T03. |
 | T06 | M1 | DONE | Launcher worker dan status | T04–T05 | CLI dan endpoint bearer-protected memakai JobRunner/OperationalJobState yang sama dengan resource binding, role terbatas, policy eksplisit, lease/cooldown lintas run, monitor dan safe counters; unknown tidak memicu resend otomatis. Unit/backend/integration lokal lulus; scheduler/provider hosted belum diaktifkan. |
-| T07 | M1 | BLOCKED_EXTERNAL | Job expiry reservasi retail | T03 | Reservation due mengikuti policy existing; pending payment yang masih berlaku menahan pembatalan; attempt kedaluwarsa menjadi EXPIRED, order unpaid menjadi CANCELLED, dan stok dilepas atomik/idempoten; settled/refunded tidak pernah dilepas. Runner/backend/integration lokal lulus. Cadence dan scheduler hosted menunggu Owner/T03. |
+| T07 | M1 | BLOCKED_EXTERNAL | Job expiry reservasi retail | T03; T42 | Reservation due mengikuti policy existing; pending payment yang masih berlaku menahan pembatalan; attempt kedaluwarsa menjadi EXPIRED, order unpaid menjadi CANCELLED, dan stok dilepas atomik/idempoten; settled/refunded tidak pernah dilepas. Runner/backend/integration lokal lulus. Run hosted manual 29 Okt membatalkan order kedaluwarsa dan melepas stok, aman diulang (log "Gelombang 1"). Sisa: scheduler production di VPS (T42). |
 | T08 | M1 | BLOCKED_EXTERNAL | Job retensi file Customer | T03 | 14/60/90 sesuai kelas; hold Owner/privasi tetap setelah closure/purge receipt; order aktif dan bukti keuangan/histori B2B/media publik dilindungi. Klaim DELETE_PENDING, retry key sama, final lease, cursor bounded, HTTP/CLI canonical dan monitoring lulus lokal. PR #58 merged ke main pada `87d47fa`; adapter S3-compatible mempertahankan pembatalan I/O. Resource/scheduler/provider hosted menunggu T03. |
 | T09 | M1 | BLOCKED_EXTERNAL | Cleanup auth/privacy hosted | T03 | Handler auth/privacy berbatas dari PR #56 memakai runner/lease/role/monitor canonical. Tenggat dan hold tetap; bukti lokal diwarisi lalu diuji ulang saat rekonsiliasi. Scheduler/role/resource hosted belum tersedia. |
 | T10 | M1 | DONE | Rate limit lintas instance | T03 | PostgreSQL bersama, HMAC IP stabil dengan secret bersama, dan pembersihan row kedaluwarsa diuji lokal. Hosted 29 Okt (`main@82dd380`): bucket bersama di database staging berbinding, kunci dari `x-nf-client-connection-ip` (pemalsuan header tidak membuka bucket baru), baris kedaluwarsa terhapus. Identitas instance tidak diamati terpisah; store-nya database bersama. |
@@ -94,9 +109,9 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T20 | M3 | DONE | Hero mengikuti published state | T17 | Unpublish/missing/card-only tidak menaut ke detail invalid. Regression unit lulus. |
 | T21 | M4 | DONE | Pengajuan kasus refund | T02; kontrak aktif | Kasus/alokasi persisten, nominal Decimal server dan ownership/closure diuji integration lokal; UI/API dan native form tersedia. Provider/hasil dana tetap T23/T25. |
 | T22 | M4 | DONE | Persetujuan refund Owner | T21 | Owner aktif saja; alasan/retur/audit, version/snapshot immutable, overlap dan approval/receipt ulang diuji integration lokal. Persetujuan belum mengeksekusi uang. |
-| T23 | M4 | BLOCKED_EXTERNAL | Submission refund | T22; merchant | Key/attempt/clock durable, gate merchant/window/retry dan manual Owner termasuk revoke diuji lokal 21 Oktober. Bukti metode/channel/saldo/window sandbox serta jalur manual hosted belum tersedia. |
-| T24 | M4 | BLOCKED_EXTERNAL | Reconciliation pembayaran | T03; guard refund T21/T22 | Get Status/receipt/lease canonical, late/unknown/refund hold dan balapan webhook diuji fixture lokal. Sandbox/merchant serta cadence/role/resource hosted belum terbukti. |
-| T25 | M4 | BLOCKED_EXTERNAL | Reconciliation refund | T23 | Receipt bank/manual immutable, finality seluruh alokasi, hold partial/external dan GET-only lease diuji lokal 21 Oktober. Hasil bank sandbox dan role/resource/cadence hosted belum terbukti; exception tetap ditahan sampai resolusi berbukti. |
+| T23 | M4 | BLOCKED_EXTERNAL | Submission refund | T22; merchant | Key/attempt/clock durable, gate merchant/window/retry dan manual Owner termasuk revoke diuji lokal 21 Oktober. Bukti metode/channel/saldo/window sandbox serta jalur manual hosted belum tersedia. Grant `refund` staging diberikan Owner 30 Okt (Q2); menunggu cek fitur dashboard Midtrans sandbox (Q1). |
+| T24 | M4 | BLOCKED_EXTERNAL | Reconciliation pembayaran | T03; guard refund T21/T22; T42 | Get Status/receipt/lease canonical, late/unknown/refund hold dan balapan webhook diuji fixture lokal. Hosted 29 Okt: Get Status sampai ke Midtrans sandbox (404 menjadi unknown). Batas 7 hari B5 ter-deploy 30 Okt (#89); pengecualian teramati paling cepat 5 Nov. Sisa: jalur `found` saat BUY #2 dan scheduler production (T42). |
+| T25 | M4 | BLOCKED_EXTERNAL | Reconciliation refund | T23 | Receipt bank/manual immutable, finality seluruh alokasi, hold partial/external dan GET-only lease diuji lokal 21 Oktober. Hasil bank sandbox dan role/resource/cadence hosted belum terbukti; exception tetap ditahan sampai resolusi berbukti. Grant `refund` staging ada (Q2); menunggu T23. |
 | T26 | M4 | DONE | Email order received | T06; rantai T24 | Pesan persisten/dedup; email gagal tidak membatalkan order. Integration lokal lulus; inbox/hosted tetap T03/T33–T34. |
 | T27 | M4 | DONE | Email payment confirmed | T06/T24 | Hanya settlement otoritatif; webhook duplikat tidak menduplikasi pesan. Integration lokal lulus; provider/hosted terpisah. |
 | T28 | M4 | DONE | Email quote available | T06; rantai T26 | Quote/version/access benar; quote superseded/invalid tidak dikirim sebagai aktif. Integration lokal lulus. |
@@ -106,12 +121,24 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T32 | M5 | DONE | E2E Admin di CI | T02 | Quality pada `4eb8471` sukses, termasuk seluruh 24 journey Owner/Admin/anonim. Regresi landing MFA 6s mencakup respons TOTP 200, navigasi, status ready dan guard 401; sumber auth tidak diubah. [Bukti CI](https://github.com/batakers/Niuva-2026/actions/runs/39155145353). |
 | T33 | M5 | BLOCKED_EXTERNAL | Dua BUY staging | T03, akun staging, provider sandbox, T31 (Owner 28 Okt; T14/T19 diuji terpisah) | Dua variasi transaksi sukses; order/stock/payment/email/status konsisten. Hosted records. |
 | T34 | M5 | BLOCKED_EXTERNAL | Satu MAKE staging | T03, akun staging, provider sandbox, T31 (Owner 28 Okt; T14/T19 diuji terpisah) | Model→review→estimasi→quote→bayar→produksi/QC→ongkir final→kirim pada request/order benar. Hosted records/operator. |
-| T35 | M5 | BLOCKED_EXTERNAL | Failure/refund staging | T21–T25 | Duplicate/nominal salah/late/timeout/full refund/manual exception benar dan teraudit. Sandbox. |
+| T35 | M5 | BLOCKED_EXTERNAL | Failure/refund staging | T21–T25 | Duplicate/nominal salah/late/timeout/full refund/manual exception benar dan teraudit. Sandbox. Owner Q1: QRIS + GoPay, satu refund otomatis lewat Midtrans dan satu manual. |
 | T36 | M5 | BLOCKED_INPUT | UAT operasi Admin | T15–T20/T32 | Owner/Admin menambah konten, stock, quote, fulfillment dan keuangan dasar tanpa database/source. UAT record Owner masih diperlukan. |
 | T37 | M5 | BLOCKED_EXTERNAL | UI/perangkat/AT | T33–T36 | Route aktual: viewport, keyboard/fokus/error, zoom/reduced motion; fisik/AT dibuktikan terpisah. |
-| T38 | M5 | BLOCKED_INPUT | Backup/restore | T07–T09/T14/T25; sasaran Owner | Sasaran Owner E11: RPO 24 jam, RTO 1 hari kerja. Metode/biaya backup dan resource belum diputuskan (Neon Free menyimpan riwayat 6 jam); drill harus mencegah restore akun tertutup atau replay refund/email. Recovery evidence. |
+| T38 | M5 | BLOCKED_INPUT | Backup/restore | T07–T09/T14/T25; T41; Q12 | Sasaran Owner E11: RPO 24 jam, RTO 1 hari kerja. Q5–Q7: `pg_dump` harian terenkripsi dari PostgreSQL di VPS ke S3 region Jakarta, satu tempat dengan salinan arsip pembukuan; penyedia belum dipilih (Q12). Drill harus mencegah restore akun tertutup atau replay refund/email. Recovery evidence. |
 | T39 | M5 | TODO | SOP dan handover operasi | T33–T38; Owner | Coverage/kalender/eskalasi/alarm/kontak pasca-closure/petugas dibuktikan lewat simulasi. Input Owner E12 (29 Okt) tersedia; menunggu dependensi. |
-| T40 | M6 | BLOCKED_EXTERNAL | Rilis terkendali | Seluruh wajib; instruksi rilis | Kandidat sama dengan bukti; gate ditutup; activation/smoke/monitoring/rollback sesuai izin eksplisit. |
+| T40 | M6 | BLOCKED_EXTERNAL | Rilis terkendali | Seluruh wajib; T41–T43; instruksi rilis | Kandidat sama dengan bukti; gate ditutup; ledger readiness diperbarui (D12); activation/smoke/monitoring/rollback di VPS (T41) sesuai izin eksplisit; DNS `niuva.id` diarahkan; Google Search Console dan Bing Webmaster terverifikasi dan sitemap terkirim. |
+| T41 | M6 | BLOCKED_INPUT | Infrastruktur production VPS Jakarta | Q5; pembelian VPS (Owner); Q11–Q13 | Helipod VPS B Jakarta aktif dengan auto-renew; SSH khusus key; firewall hanya 80/443/SSH; PostgreSQL hanya localhost; Caddy HTTPS `niuva.id` dan `www`; env production di server dengan izin ketat, tidak di Git; unattended-upgrades; monitor uptime eksternal; jalur deploy dan rollback terdokumentasi; smoke pra-DNS di VPS. Production tetap tertutup sampai T40. Rencana di log "Checklist keamanan dan SEO untuk VPS". |
+| T42 | M6 | TODO | Adaptasi runtime untuk VPS | T10; Q11 untuk bagian IP | IP klien terpercaya di VPS menggantikan header Netlify di `src/lib/security/client-ip.ts` (rate limit dan Better Auth), dengan tes pemalsuan header. Scheduler job production lewat timer di VPS memakai runner `src/modules/jobs/`, menutup sisa scheduler T07/T24. Unit/backend/integration lokal, lalu bukti di VPS. |
+| T43 | M2 | BLOCKED_INPUT | Login Google hosted (D04) | T12; grant Q4 | Owner menambah redirect URI staging di Google Cloud; env OAuth staging diisi atas instruksi Owner; consent dan login Google berhasil di staging dengan akun uji. Production ikut T40. |
+
+## Backlog setelah v1
+
+Bukan gate v1: menurut `ROADMAP.md`, perubahan di luar DoD masuk versi
+berikutnya. Dikerjakan hanya atas permintaan Owner.
+
+- Data terstruktur JSON-LD untuk Organization/LocalBusiness dan Product.
+- Gambar Open Graph saat link dibagikan; menunggu aset yang disetujui Owner.
+- Google Business Profile dengan data usaha yang benar (langkah Owner).
 
 ## Kontrak implementasi lintas task
 
@@ -2013,6 +2040,30 @@ belum ada yang dikerjakan.
   versi gratis bernilai Rp0. Domain tidak perlu dibeli lagi; biaya
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
+
+### Audit backlog, 2026-10-30
+
+Atas permintaan Owner ("audit dan analisis TASK.md dulu dan jangan membuat
+task di luar file TASK.md"). Basis: `main` + PR #90. Tidak ada status yang
+naik; tidak ada perubahan kode.
+
+- **Posisi:** 40 task sebelum audit. DONE 22, IN_PROGRESS 3, TODO 2,
+  BLOCKED_EXTERNAL 11, BLOCKED_INPUT 2.
+- **Pekerjaan tanpa baris task, kini dicatat:**
+  - T41: infrastruktur production VPS (Q5);
+  - T42: adaptasi runtime VPS. `client-ip.ts` hanya mempercayai header
+    Netlify, dan scheduler production belum punya rumah;
+  - T43: login Google hosted (D04).
+- **Teks basi diperbarui:** T07, T23, T24, T25, T35, T38, T40, header dan
+  papan fokus.
+- **Search Console/Bing** masuk acceptance T40. JSON-LD, gambar OG dan Google
+  Business Profile masuk "Backlog setelah v1".
+- **Risiko:** staging (Netlify + Neon) tidak membuktikan runtime VPS (IP
+  klien di belakang NAT, Caddy, scheduler, backup). T41 memuat smoke pra-DNS.
+- **Keputusan terbuka baru:** Q11 (IP klien), Q12 (penyedia S3 Jakarta),
+  Q13 (storage production).
+- **Ledger readiness:** REL-02..08 masih menulis "staging belum tersedia";
+  diperbarui di T40 (D12).
 
 ### Grant aktivasi staging E6, 2026-10-28
 
