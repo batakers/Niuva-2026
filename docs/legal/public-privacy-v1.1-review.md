@@ -1,7 +1,8 @@
 # Kebijakan Privasi Niuva v1.1 — draf untuk review Owner
 
-**Status:** draf T44, 30 Oktober 2026. Belum disetujui, belum terbit, dan
-tidak dipakai aplikasi. Versi berlaku tetap `NIUVA-PRIVACY-v1.0`
+**Status:** draf T44, 30 Oktober 2026. Isi disetujui Owner 31 Oktober 2026
+(masa simpan cadangan 30 hari, baris Resend Tokyo). Belum terbit dan tidak
+dipakai aplikasi. Versi berlaku tetap `NIUVA-PRIVACY-v1.0`
 (`src/content/customer-policy/privacy-v1.0.md`).
 
 ## Catatan untuk Owner
@@ -17,18 +18,15 @@ tetap di Cloudflare R2 (Q13). Bagian 3 v1.0 menyebut Netlify (Ohio) dan Neon
    Baris baru Biznet Gio untuk cadangan dan arsip pembukuan.
 2. Bagian 3: lokasi Resend menjadi "Amerika Serikat dan Jepang (Tokyo)",
    karena domain kirim `mail.niuva.id` dibuat di region Tokyo (log TASKS
-   28 Oktober). Mohon dikonfirmasi; bila Owner memilih teks lama, baris ini
-   dikembalikan.
+   28 Oktober). Dikonfirmasi Owner 31 Oktober.
 3. Bagian 6: paragraf cadangan kini menjelaskan cadangan harian milik Niuva,
    disimpan terpisah dari server, dengan masa simpan yang perlu ditetapkan.
 
-**Yang perlu diputuskan Owner sebelum terbit:**
+**Keputusan Owner 31 Oktober:** masa simpan cadangan database **30 hari**;
+teks v1.1 disetujui.
 
-- **Masa simpan cadangan database**, misalnya 30 hari. Ini menentukan berapa
-  lama data yang sudah dihapus masih ada di cadangan. Agen tidak mengisi nilai
-  ini.
-- **Tanggal terbit dan tanggal berlaku**, dengan pemberitahuan sebelum berlaku
-  (bagian 8).
+**Masih perlu diputuskan sebelum terbit:** tanggal terbit dan tanggal berlaku,
+dengan pemberitahuan sebelum berlaku (bagian 8).
 
 **Yang harus terbukti sebelum terbit** (policy tidak boleh menjanjikan hal
 yang belum ada):
@@ -171,7 +169,7 @@ disimpan 10 tahun.
 
 Penghapusan dari database aplikasi tidak langsung menghapus salinan cadangan.
 Salinan cadangan harian disimpan terpisah dari server aplikasi paling lama
-[MASA SIMPAN CADANGAN — ditetapkan Owner], lalu dihapus. Salinan cadangan
+30 hari, lalu dihapus. Salinan cadangan
 tidak dipakai untuk memulihkan data yang sudah dihapus kecuali untuk pemulihan
 bencana.
 
