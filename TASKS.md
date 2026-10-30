@@ -28,7 +28,6 @@ ada di papan ini; pekerjaan baru masuk tabel task, bukan file lain.
 
 | Kelompok | Task | Pelaksana | Langkah berikutnya | Penghambat |
 | --- | --- | --- | --- | --- |
-| Owner, bisa sekarang | T33 | O + A | `ORD-20261030-YAJE5AHR` sampai Shipped dan tiga email delivered (30 Okt). Sisa: satu order dengan dua produk berbeda dan kurir lain (syarat variasi D03) | — |
 | | T03, T19 | O + A | Smoke R2 privat/publik lewat unggah media Admin | Sesi Admin Owner |
 | | T09 | O | `CUSTOMER_AUTH_CLEANUP` lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
 | | T23, T25, T35 | O | Cek metode dan fitur refund di dashboard Midtrans sandbox; grant `refund` sudah ada | Q1 |
@@ -132,7 +131,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T30 | M4 | DONE | Notifikasi Admin persisten | T06/T26–T29 | Failure terlihat; request/order tetap tersimpan; tanpa WhatsApp otomatis. Integration dan browser lokal lulus; visual Owner/perangkat/AT belum diterima. |
 | T31 | M4 | IN_PROGRESS | Dataset dan tarif launch | T15–T19; Owner | SKU/stok fisik/media/berat/dimensi/rule disetujui untuk target; seed lokal bukan aktivasi launch. Review/import verification. Shop: 8 produk, 34 varian berdimensi paket disetujui Owner dan diimpor ke staging (log 29 Okt). Pricing rule `CUSTOM_PRINT_V1` v1 `PER_UNIT` aktif di staging sejak 30 Okt (log "Aktivasi pricing MAKE"). Sisa: aktivasi production pada gate rilis terpisah. |
 | T32 | M5 | DONE | E2E Admin di CI | T02 | Quality pada `4eb8471` sukses, termasuk seluruh 24 journey Owner/Admin/anonim. Regresi landing MFA 6s mencakup respons TOTP 200, navigasi, status ready dan guard 401; sumber auth tidak diubah. [Bukti CI](https://github.com/batakers/Niuva-2026/actions/runs/39155145353). |
-| T33 | M5 | BLOCKED_EXTERNAL | Dua BUY staging | T03, akun staging, provider sandbox, T31 (Owner 28 Okt; T14/T19 diuji terpisah) | Dua variasi transaksi sukses; order/stock/payment/email/status konsisten. Hosted records. 30 Okt: order kedua dibayar, tetapi isinya sama dengan BUY #1 (SKU dan kurir); variasi belum terpenuhi. Order retail tidak bisa sampai Shipped sebelum perbaikan shipment retail (log "T33 BUY #2 dan shipment retail"). |
+| T33 | M5 | DONE | Dua BUY staging | T03, akun staging, provider sandbox, T31 (Owner 28 Okt; T14/T19 diuji terpisah) | Dua variasi transaksi sukses; order/stock/payment/email/status konsisten. Hosted records. 30 Okt: `ORD-20261030-YAJE5AHR` (1 item, J&T EZ) dan `ORD-20261030-WAL2PYJC` (3 produk berbeda, JNE Reguler) sama-sama PAID → Shipped dengan stok, shipment dan tiga email delivered (log "T33 selesai"). Settlement order 3 item lewat rekonsiliasi karena webhook gagal 500; perbaikan webhook (PR #98) dan bukti settlement webhook multi-item di staging menyusul. |
 | T34 | M5 | BLOCKED_EXTERNAL | Satu MAKE staging | T03, akun staging, provider sandbox, T31 (Owner 28 Okt; T14/T19 diuji terpisah) | Model→review→estimasi→quote→bayar→produksi/QC→ongkir final→kirim pada request/order benar. Hosted records/operator. |
 | T35 | M5 | BLOCKED_EXTERNAL | Failure/refund staging | T21–T25 | Duplicate/nominal salah/late/timeout/full refund/manual exception benar dan teraudit. Sandbox. Owner Q1: QRIS + GoPay, satu refund otomatis lewat Midtrans dan satu manual. |
 | T36 | M5 | BLOCKED_INPUT | UAT operasi Admin | T15–T20/T32 | Owner/Admin menambah konten, stock, quote, fulfillment dan keuangan dasar tanpa database/source. UAT record Owner masih diperlukan. |
@@ -2054,6 +2053,35 @@ belum ada yang dikerjakan.
   versi gratis bernilai Rp0. Domain tidak perlu dibeli lagi; biaya
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
+
+### T33 selesai: order variasi sampai Shipped, 2026-10-30
+
+Setelah PR #97 (`6c63707`, deploy `6ae4f9d39f662938de78cda4`, secret scan
+2.305 file bersih), agen membuat checkout yang sama lewat browser dengan sesi
+Customer penguji; Owner membayar QRIS lewat simulator.
+
+- **Order:** `ORD-20261030-WAL2PYJC`, 3 item berbeda (SKU `103339597166`,
+  `103340568955`, `103343689816`), subtotal Rp105.600 + JNE Reguler Rp9.000
+  = Rp114.600. Checkout 3 item kini berhasil, membuktikan perbaikan #97.
+- **Webhook gagal:** notifikasi `PENDING` 20:16:39 UTC diproses; notifikasi
+  settlement 20:17:04 UTC `POST /api/webhooks/midtrans` 500 setelah 7,7 s,
+  pola batas transaksi 5 s yang sama. Perbaikan di PR #98, belum di-deploy.
+- **Rekonsiliasi (jalur `found` kini terbukti hosted):**
+  `PAYMENT_RECONCILIATION` dry-run scanned 2; execute limit 2 → accepted 1
+  (check `SETTLED`, order PAID 20:18:59 UTC, event `SETTLED`), unknown 1
+  (attempt 29 Okt yang ditinggalkan, sesuai B5 sampai 5 Nov), state `failed`.
+- **Stok:** tiga `ORDER_CONSUMPTION` 5 → 4.
+- **Email:** "diterima", "terkonfirmasi" dan "dikirim" delivered (Resend,
+  `ap-northeast-1`); satu run outbox kembali berhenti di budget (deferred 1).
+- **Admin (agen lewat browser dengan sesi Admin Owner, atas izin Owner):**
+  Processing → Ready To Ship → kurir `jne` terisi dari snapshot, resi
+  `TESTBUY3-001` → Shipped 20:32:37 UTC; shipment `jne/reg` Rp9.000 terbentuk
+  dari perbaikan #95.
+- **Penerima uji:** alamat dan nomor kantor Niuva dari policy privacy, atas
+  izin Owner.
+- **Status:** T33 DONE. Dua transaksi BUY dengan variasi produk, jumlah dan
+  kurir konsisten end-to-end. Settlement webhook multi-item di staging
+  **belum diverifikasi** sampai #98 ter-deploy.
 
 ### T33 order variasi: checkout multi-item gagal 500, 2026-10-30
 
