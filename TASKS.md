@@ -28,7 +28,7 @@ ada di papan ini; pekerjaan baru masuk tabel task, bukan file lain.
 
 | Kelompok | Task | Pelaksana | Langkah berikutnya | Penghambat |
 | --- | --- | --- | --- | --- |
-| Owner, bisa sekarang | T33 | O + A | BUY #2: dua produk, QRIS/GoPay simulator, fulfillment/resi manual sampai email shipped. Agen memverifikasi DB, job dan email, termasuk B2 berhenti di budget dengan pesan sungguhan | — |
+| Owner, bisa sekarang | T33 | O + A | `ORD-20261030-YAJE5AHR` dibayar dan email terkirim; lanjut Admin Processing → Ready To Ship → resi → Shipped setelah perbaikan shipment retail ter-deploy. Lalu satu order lagi dengan dua produk berbeda dan kurir lain (syarat variasi D03) | Deploy perbaikan shipment retail |
 | | T03, T19 | O + A | Smoke R2 privat/publik lewat unggah media Admin | Sesi Admin Owner |
 | | T09 | O | `CUSTOMER_AUTH_CLEANUP` lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
 | | T23, T25, T35 | O | Cek metode dan fitur refund di dashboard Midtrans sandbox; grant `refund` sudah ada | Q1 |
@@ -132,7 +132,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T30 | M4 | DONE | Notifikasi Admin persisten | T06/T26–T29 | Failure terlihat; request/order tetap tersimpan; tanpa WhatsApp otomatis. Integration dan browser lokal lulus; visual Owner/perangkat/AT belum diterima. |
 | T31 | M4 | IN_PROGRESS | Dataset dan tarif launch | T15–T19; Owner | SKU/stok fisik/media/berat/dimensi/rule disetujui untuk target; seed lokal bukan aktivasi launch. Review/import verification. Shop: 8 produk, 34 varian berdimensi paket disetujui Owner dan diimpor ke staging (log 29 Okt). Pricing rule `CUSTOM_PRINT_V1` v1 `PER_UNIT` aktif di staging sejak 30 Okt (log "Aktivasi pricing MAKE"). Sisa: aktivasi production pada gate rilis terpisah. |
 | T32 | M5 | DONE | E2E Admin di CI | T02 | Quality pada `4eb8471` sukses, termasuk seluruh 24 journey Owner/Admin/anonim. Regresi landing MFA 6s mencakup respons TOTP 200, navigasi, status ready dan guard 401; sumber auth tidak diubah. [Bukti CI](https://github.com/batakers/Niuva-2026/actions/runs/39155145353). |
-| T33 | M5 | BLOCKED_EXTERNAL | Dua BUY staging | T03, akun staging, provider sandbox, T31 (Owner 28 Okt; T14/T19 diuji terpisah) | Dua variasi transaksi sukses; order/stock/payment/email/status konsisten. Hosted records. |
+| T33 | M5 | BLOCKED_EXTERNAL | Dua BUY staging | T03, akun staging, provider sandbox, T31 (Owner 28 Okt; T14/T19 diuji terpisah) | Dua variasi transaksi sukses; order/stock/payment/email/status konsisten. Hosted records. 30 Okt: order kedua dibayar, tetapi isinya sama dengan BUY #1 (SKU dan kurir); variasi belum terpenuhi. Order retail tidak bisa sampai Shipped sebelum perbaikan shipment retail (log "T33 BUY #2 dan shipment retail"). |
 | T34 | M5 | BLOCKED_EXTERNAL | Satu MAKE staging | T03, akun staging, provider sandbox, T31 (Owner 28 Okt; T14/T19 diuji terpisah) | Model→review→estimasi→quote→bayar→produksi/QC→ongkir final→kirim pada request/order benar. Hosted records/operator. |
 | T35 | M5 | BLOCKED_EXTERNAL | Failure/refund staging | T21–T25 | Duplicate/nominal salah/late/timeout/full refund/manual exception benar dan teraudit. Sandbox. Owner Q1: QRIS + GoPay, satu refund otomatis lewat Midtrans dan satu manual. |
 | T36 | M5 | BLOCKED_INPUT | UAT operasi Admin | T15–T20/T32 | Owner/Admin menambah konten, stock, quote, fulfillment dan keuangan dasar tanpa database/source. UAT record Owner masih diperlukan. |
@@ -2054,6 +2054,41 @@ belum ada yang dikerjakan.
   versi gratis bernilai Rp0. Domain tidak perlu dibeli lagi; biaya
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
+
+### T33 BUY #2 dan shipment retail, 2026-10-30
+
+Owner membuat dan membayar `ORD-20261030-YAJE5AHR` di staging dengan akun
+Customer penguji, lewat simulator Midtrans sandbox. Pemeriksaan agen lewat
+Neon MCP (role runtime) dan Resend MCP:
+
+- **Order:** RETAIL, PAID 16:13:44 UTC; 1 item SKU `103339597167` Rp124.800
+  + ongkir J&T EZ Rp11.000 (Biteship) = Rp135.800.
+- **Pembayaran:** dua webhook diproses (`PENDING` lalu `SETTLED`); attempt
+  SETTLED dengan ID transaksi. Payload yang disimpan tidak memuat jenis
+  pembayaran, jadi QRIS/GoPay hanya dari keterangan Owner.
+- **Stok:** `ORDER_CONSUMPTION` 4 → 3 tertaut order.
+- **Email:** `OUTBOX_BUSINESS` dry-run scanned 2, execute (limit 2) enqueued 2.
+  `OUTBOX_DELIVERY` run pertama accepted 1 dan **deferred 1** karena budget
+  run, sehingga B2 kini teramati dengan pesan sungguhan; run kedua accepted 1.
+  Resend: "Pesanan … diterima" dan "Pembayaran … terkonfirmasi" delivered,
+  dikirim lewat `ap-northeast-1`.
+- **Variasi belum terpenuhi:** SKU, jumlah dan kurir sama dengan BUY #1;
+  hanya metode bayar yang berbeda. D03 meminta variasi varian/pengiriman.
+- **Bug ditemukan:** order retail tidak pernah punya baris `shipments`.
+  Checkout hanya menyimpan `shipment_rate_snapshots`, sedangkan form "Kurir dan
+  nomor resi" di Admin dan transisi ke `SHIPPED` mewajibkan shipment. BUY #1
+  dan BUY #2 sama-sama 0 shipment, sehingga order retail tidak bisa sampai
+  Shipped dan email "dikirim" tidak pernah terbit. Tes lama membuat shipment
+  langsung di fixture.
+- **Perbaikan:** `ShippingRepository.recordShipmentMetadata` membuat shipment
+  order retail dari snapshot ongkir terakhir saat kurir dan resi pertama kali
+  dicatat (service code hanya bila kurir sama dengan yang dikutip). Order
+  custom dan order retail tanpa snapshot tetap ditolak. Halaman Admin
+  menampilkan form untuk order retail Ready To Ship yang punya snapshot, dengan
+  kode kurir terisi dari snapshot. Berlaku untuk order lama tanpa ubah data.
+- **Bukti lokal:** integration `database.test.ts` 17/17 di DB test terisolasi,
+  unit halaman Admin 65/65, backend 121/951, lint 0 error, typecheck, build.
+  Hosted **belum diverifikasi** sampai deploy dan langkah Admin Owner.
 
 ### T42 scheduler: jadwal job production, 2026-10-30
 

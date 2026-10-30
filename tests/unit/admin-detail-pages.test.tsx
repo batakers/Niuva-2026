@@ -222,6 +222,18 @@ describe("order payment hold presentation", () => {
     expect(new URL(href!, "https://niuva.test").searchParams.get("returnTo")).toBe("/admin/queue?group=orders");
   });
 
+  it("offers courier and tracking entry for a retail order that has only its checkout rate", async () => {
+    const rate = { courierCode: "jnt", courierName: "J&T", etaText: null, priceRp: "11000", selectedAt: order.updatedAt, serviceCode: "ez", serviceName: "EZ" };
+    mocks.service.getOrder.mockResolvedValue({ ...order, status: "READY_TO_SHIP", shipmentRates: [rate] });
+    const { unmount } = render(await AdminOrderDetailPage({ params: Promise.resolve({ id: VALID_ID }) }));
+    expect(screen.getByRole("button", { name: "Simpan kurir & resi" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Kode kurir")).toHaveValue("jnt");
+    unmount();
+    mocks.service.getOrder.mockResolvedValue({ ...order, orderType: "CUSTOM_PRINT", status: "READY_TO_SHIP", shipmentRates: [rate] });
+    render(await AdminOrderDetailPage({ params: Promise.resolve({ id: VALID_ID }) }));
+    expect(screen.queryByRole("button", { name: "Simpan kurir & resi" })).not.toBeInTheDocument();
+  });
+
   it("never exposes a manual paid transition for an unpaid order", async () => {
     mocks.service.getOrder.mockResolvedValue({ ...order, status: "PENDING_PAYMENT", paidAt: null });
     render(await AdminOrderDetailPage({ params: Promise.resolve({ id: VALID_ID }) }));
