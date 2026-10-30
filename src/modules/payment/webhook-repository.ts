@@ -64,13 +64,18 @@ type WebhookPaymentAttempt = Readonly<{
   status: PaymentAttemptStatus;
 }>;
 
+// Settlement consumes one reservation per cart line inside this transaction.
+// Prisma's 5 s interactive default rejected a three-line settlement on staging
+// (30 October 2026), so it gets the checkout and bound job budget.
+export const WEBHOOK_TRANSACTION_OPTIONS = Object.freeze({ maxWait: 10_000, timeout: 20_000 });
+
 export class PaymentWebhookRepository {
   constructor(private readonly prisma: PrismaClient = getPrismaClient()) {}
 
   async processMidtransWebhook(
     input: ProcessMidtransWebhookInput,
   ): Promise<MidtransWebhookResult> {
-    return this.prisma.$transaction(transaction => this.processMidtransWebhookIn(transaction, input));
+    return this.prisma.$transaction(transaction => this.processMidtransWebhookIn(transaction, input), WEBHOOK_TRANSACTION_OPTIONS);
   }
 
   async processMidtransWebhookIn(transaction: Prisma.TransactionClient, input: ProcessMidtransWebhookInput): Promise<MidtransWebhookResult> {
