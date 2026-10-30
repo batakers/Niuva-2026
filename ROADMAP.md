@@ -21,7 +21,8 @@ lingkungan; status task tidak otomatis menutup gate readiness.
 | M2 — Customer publik | T11–T14, T43 | M0; outbox M1 untuk bukti lengkap | Consent Google/email, deklarasi 18+, privacy, dan closure memenuhi kontrak. Policy resmi dan kemampuan hosted dibuktikan terpisah. |
 | M3 — Admin mandiri | T15–T20 | M0; T03 untuk media hosted | Owner/Admin dapat menambah draft produk, varian, project, dan media, lalu publish dengan validasi server. |
 | M4 — Penutupan transaksi | T21–T31 | M0; outbox/job M1 | Refund/reconciliation, email bisnis, dataset dan tarif siap untuk pembuktian BUY/MAKE terpadu. |
-| M5 — Pembuktian staging | T32–T39 | M1–M4; resource dan input Owner | Dua transaksi BUY dan satu MAKE, failure/refund, operasi Admin, aksesibilitas dan restore memiliki bukti. |
+| M5a — Redesign frontend | T45–T50 | M0; keputusan Owner 31 Oktober 2026 | Design system, sitemap dan user flow baru diterapkan pada Company, Commerce/MAKE/Customer dan Admin tanpa mengubah aturan bisnis; gate lokal dan capture lokal lulus; review visual Owner tercatat terpisah. |
+| M5 — Pembuktian staging | T32–T39 | M1–M4; M5a untuk T36/T37; resource dan input Owner | Dua transaksi BUY dan satu MAKE, failure/refund, operasi Admin, aksesibilitas dan restore memiliki bukti. |
 | M6 — Rilis terkendali | T40–T42, T44 | M5; seluruh gate wajib | Infrastruktur production VPS dan adaptasi runtime-nya terbukti; instruksi rilis eksplisit, aktivasi terbatas, smoke production, monitoring, dan serah terima rollback. |
 
 M2, M3, dan M4 dapat dikembangkan sebagai irisan terpisah setelah interface
@@ -32,7 +33,10 @@ fixture tidak menjadi pengganti bukti hosted atau keputusan Owner.
 ## Batas perubahan
 
 - Pertahankan modular monolith dan dependency existing. Tidak ada penggantian
-  stack, redesign global, atau refactor seluruh repository dalam roadmap ini.
+  stack atau refactor seluruh repository dalam roadmap ini. Redesign frontend
+  global masuk roadmap atas keputusan Owner 31 Oktober 2026 (M5a): tampilan,
+  sitemap, label dan copy berubah; URL, API, data, auth, harga dan pembayaran
+  tidak.
 - B2B berakhir pada kontak WhatsApp website. Brief/proposal/inquiry B2B baru di
   website tetap di luar scope; record historis tetap dilindungi.
 - Pengelolaan konten mandiri adalah draft → lengkapi → publish, tanpa page
@@ -56,6 +60,7 @@ fixture tidak menjadi pengganti bukti hosted atau keputusan Owner.
 | Retensi arsip/bukti keuangan dan hak data hosted | Owner; fungsi privasi/akuntansi/review | T08/T14/T38; REL-07 |
 | Coverage/pengganti, kalender/jam, SLA quote, penerima retur, engineering bernama | Owner; Rheza | T39; REL-07 |
 | Sasaran backup/restore dan latihan pemulihan | Owner; engineering/privasi | T38; PUB-BACKUP |
+| Pilihan arah visual dan review tampilan hasil redesign | Owner | T46–T50 |
 | Perangkat fisik, AT, penerimaan dan instruksi rilis | Owner; pelaksana QA/operasi | T37/T40; REL-08 |
 
 Identitas, alamat retur, Rheza sebagai petugas utama, arah 18+ melalui deklarasi,
