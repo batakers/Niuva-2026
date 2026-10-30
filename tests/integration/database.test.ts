@@ -561,6 +561,40 @@ describe("isolated PostgreSQL integration harness", () => {
     await expect(prisma.paymentAttempt.count({ where: { orderId: order.id } })).resolves.toBe(1);
   });
 
+  it("creates a retail shipment from the checkout rate on the first courier and tracking entry", async () => {
+    const order = await prisma.order.create({ data: {
+      customerEmail: "fixture@example.test", customerName: "Fixture", customerPhone: "+628000000000",
+      grandTotalRp: "21000", itemsSubtotalRp: "10000", shippingTotalRp: "11000",
+      orderNumber: "ORD-RETAIL-SHIPMENT", orderType: "RETAIL", publicTokenHash: "retail-shipment-token", status: "READY_TO_SHIP",
+      shipmentRates: { create: { courierCode: "jnt", courierName: "J&T", serviceCode: "ez", serviceName: "EZ", priceRp: "11000", providerPayloadJson: {} } },
+      paymentAttempts: { create: { amountRp: "21000", createdAt: new Date("2026-10-06T07:59:00.000Z"), expiresAt: new Date("2026-10-06T08:00:00.000Z"), providerOrderId: "PAY-RETAIL-SHIPMENT", purpose: "ORDER_TOTAL", status: "SETTLED" } },
+    } });
+    const repository = new ShippingRepository(prisma);
+    const first = await repository.recordShipmentMetadata(order.id, { courierCode: "JNT", trackingNumber: "TEST-RETAIL-1" });
+    const created = await prisma.shipment.findMany({ where: { orderId: order.id } });
+    expect(created).toHaveLength(1);
+    expect(created[0]).toMatchObject({ id: first.shipmentId, courierCode: "JNT", serviceCode: "ez", trackingNumber: "TEST-RETAIL-1", status: "PENDING" });
+    expect(created[0]?.shippingAmountRp?.toString()).toBe("11000");
+    const second = await repository.recordShipmentMetadata(order.id, { courierCode: "JNE", trackingNumber: "TEST-RETAIL-2" });
+    expect(second.shipmentId).toBe(first.shipmentId);
+    expect(await prisma.shipment.count({ where: { orderId: order.id } })).toBe(1);
+    await expect(new OrderRepository(prisma).findStatusForMutation(order.id)).resolves.toMatchObject({ shipment: { courierCode: "JNE", trackingNumber: "TEST-RETAIL-2" } });
+  });
+
+  it("does not create a shipment for a custom order or a retail order without a checkout rate", async () => {
+    const repository = new ShippingRepository(prisma);
+    for (const [orderType, orderNumber] of [["CUSTOM_PRINT", "ORD-CUSTOM-NO-SHIPMENT"], ["RETAIL", "ORD-RETAIL-NO-RATE"]] as const) {
+      const order = await prisma.order.create({ data: {
+        customerEmail: "fixture@example.test", customerName: "Fixture", customerPhone: "+628000000000",
+        grandTotalRp: "10000", itemsSubtotalRp: "10000", shippingTotalRp: "0",
+        orderNumber, orderType, publicTokenHash: `${orderNumber}-token`, status: "READY_TO_SHIP",
+        paymentAttempts: { create: { amountRp: "10000", createdAt: new Date("2026-10-06T07:59:00.000Z"), expiresAt: new Date("2026-10-06T08:00:00.000Z"), providerOrderId: `PAY-${orderNumber}`, purpose: "ORDER_TOTAL", status: "SETTLED" } },
+      } });
+      await expect(repository.recordShipmentMetadata(order.id, { courierCode: "JNE", trackingNumber: "TEST-NONE" })).rejects.toMatchObject({ code: "CONFLICT" });
+      expect(await prisma.shipment.count({ where: { orderId: order.id } })).toBe(0);
+    }
+  });
+
   it("keeps partial refunds on hold and does not treat a full refund as permission to fulfill", async () => {
     const now = new Date("2026-10-06T08:00:00.000Z");
     const variant = await createWebhookFixtureVariant("PARTIAL-REFUND", 1);

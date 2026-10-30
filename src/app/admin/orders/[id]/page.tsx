@@ -150,7 +150,7 @@ export default async function AdminOrderDetailPage({
               </AdminActionForm>
             </div>
           ) : null}
-          {!paymentHeld && (currentStatus === "READY_TO_SHIP" || currentStatus === "SHIPPED") && order.shipments.length > 0 ? (
+          {!paymentHeld && (currentStatus === "READY_TO_SHIP" || currentStatus === "SHIPPED") && (order.shipments.length > 0 || (order.orderType === "RETAIL" && order.shipmentRates.length > 0)) ? (
             <div className="mt-6 border-t border-border pt-5">
               <h3 className="text-sm font-semibold">Kurir dan nomor resi</h3>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -159,7 +159,7 @@ export default async function AdminOrderDetailPage({
               <AdminActionForm action={recordShipmentMetadataAction} className="mt-4" submitLabel="Simpan kurir & resi">
                 <input name="orderId" type="hidden" value={order.id} />
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <ShipmentMetadataField label="Kode kurir" name="courierCode" value={order.shipments[0]?.courierCode ?? ""} />
+                  <ShipmentMetadataField label="Kode kurir" name="courierCode" value={order.shipments[0]?.courierCode ?? order.shipmentRates[0]?.courierCode ?? ""} />
                   <ShipmentMetadataField label="Nomor resi" name="trackingNumber" value={order.shipments[0]?.trackingNumber ?? ""} />
                 </div>
               </AdminActionForm>

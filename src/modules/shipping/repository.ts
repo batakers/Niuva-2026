@@ -160,10 +160,16 @@ export class ShippingRepository implements ShippingServiceRepository {
       const order = await transaction.order.findUnique({
       where: { id: orderId },
       select: {
+        orderType: true,
         status: true,
         shipments: {
           orderBy: { createdAt: "desc" },
           select: { id: true },
+          take: 1,
+        },
+        shipmentRates: {
+          orderBy: { selectedAt: "desc" },
+          select: { courierCode: true, priceRp: true, serviceCode: true },
           take: 1,
         },
       },
@@ -179,9 +185,26 @@ export class ShippingRepository implements ShippingServiceRepository {
 
     const shipment = order.shipments[0];
     if (shipment === undefined) {
-      throw appError("CONFLICT", {
-        message: "Order belum memiliki snapshot shipment untuk dicatat.",
+      // Checkout keeps only the rate snapshot for a retail order; its first
+      // manual courier and tracking entry creates the shipment from it. The
+      // quoted service applies only when the courier is the quoted one.
+      const rate = order.shipmentRates[0];
+      if (order.orderType !== "RETAIL" || rate === undefined) {
+        throw appError("CONFLICT", {
+          message: "Order belum memiliki snapshot shipment untuk dicatat.",
+        });
+      }
+      const created = await transaction.shipment.create({
+        data: {
+          courierCode: input.courierCode,
+          orderId,
+          serviceCode: rate.courierCode.toLowerCase() === input.courierCode.toLowerCase() ? rate.serviceCode : null,
+          shippingAmountRp: rate.priceRp,
+          trackingNumber: input.trackingNumber,
+        },
+        select: { id: true },
       });
+      return { shipmentId: created.id };
     }
 
     await transaction.shipment.update({
