@@ -44,8 +44,10 @@ ada di papan ini; pekerjaan baru masuk tabel task, bukan file lain.
 | | T39 | O + A | SOP + simulasi | T33–T38 |
 | | T07, T31, T40 | O + A | Scheduler production (lewat T42), aktivasi rule/dataset production, ledger readiness (D12), instruksi rilis | T41–T43 |
 
-Keputusan Owner 30 Oktober 2026 ("ya saya menyetujui semua rekomendasi nya.
-kecuali Q5"):
+### Keputusan Owner paket Q
+
+Judul ini stabil: kode grant dan jadwal job merujuk anchor-nya. Jawaban
+30 Oktober 2026 ("ya saya menyetujui semua rekomendasi nya. kecuali Q5"):
 
 - **Q1:** v1 memakai QRIS dan GoPay; refund diuji satu otomatis lewat Midtrans
   dan satu manual. Fitur yang aktif di dashboard sandbox belum dicek.
@@ -66,6 +68,15 @@ kecuali Q5"):
   teman/keluarga, memakai checklist dari agen.
 - **Q10:** attempt kedaluwarsa tanpa transaksi Midtrans berhenti diperiksa
   setelah 7 hari.
+- **Q14 (30 Okt, Owner menyetujui rencana T42):** jadwal job production.
+  Email akun dan bisnis tiap 1 menit (limit 10); expiry reservasi tiap
+  5 menit (100); rekonsiliasi pembayaran (10) dan expiry outbox (100) tiap
+  15 menit; rekonsiliasi refund tiap 60 menit (10); retensi file (10),
+  cleanup auth dan privacy (100) tiap 24 jam; alarm bila job tertinggal
+  lebih dari 1 jam. Nilai teknis mengikuti staging: lease job 60 detik,
+  budget outbox 20 detik, `maxAgeMs` email bisnis 24 jam, tanpa retry
+  otomatis email. Dicatat di `JOB_SCHEDULES` (`src/modules/jobs/schedule.ts`).
+  Tujuan alarm dan petugas tetap terbuka (T39/D07).
 
 Keputusan Owner yang masih terbuka (audit 30 Oktober; rekomendasi agen, belum
 diputuskan):
@@ -93,7 +104,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T04 | M1 | DONE | Producer auth ke outbox | T03 | Proof dan enqueue atomik; proof invalid tidak dikirim; retry tidak memberikan akun/sesi prematur. Integration lokal lulus; hosted delivery tetap menunggu T03. |
 | T05 | M1 | DONE | Producer privacy ke outbox | T04 | Proof sekali pakai/closure aman; revoked/expired dibatalkan. Integration lokal lulus; hosted delivery tetap menunggu T03. |
 | T06 | M1 | DONE | Launcher worker dan status | T04–T05 | CLI dan endpoint bearer-protected memakai JobRunner/OperationalJobState yang sama dengan resource binding, role terbatas, policy eksplisit, lease/cooldown lintas run, monitor dan safe counters; unknown tidak memicu resend otomatis. Unit/backend/integration lokal lulus; scheduler/provider hosted belum diaktifkan. |
-| T07 | M1 | BLOCKED_EXTERNAL | Job expiry reservasi retail | T03; T42 | Reservation due mengikuti policy existing; pending payment yang masih berlaku menahan pembatalan; attempt kedaluwarsa menjadi EXPIRED, order unpaid menjadi CANCELLED, dan stok dilepas atomik/idempoten; settled/refunded tidak pernah dilepas. Runner/backend/integration lokal lulus. Run hosted manual 29 Okt membatalkan order kedaluwarsa dan melepas stok, aman diulang (log "Gelombang 1"). Sisa: scheduler production di VPS (T42). |
+| T07 | M1 | BLOCKED_EXTERNAL | Job expiry reservasi retail | T03; T42 | Reservation due mengikuti policy existing; pending payment yang masih berlaku menahan pembatalan; attempt kedaluwarsa menjadi EXPIRED, order unpaid menjadi CANCELLED, dan stok dilepas atomik/idempoten; settled/refunded tidak pernah dilepas. Runner/backend/integration lokal lulus. Run hosted manual 29 Okt membatalkan order kedaluwarsa dan melepas stok, aman diulang (log "Gelombang 1"). Sisa: scheduler production di VPS; jadwal Q14 sudah ada di kode (T42), pemasangan timer dan bukti menunggu T41. |
 | T08 | M1 | BLOCKED_EXTERNAL | Job retensi file Customer | T03 | 14/60/90 sesuai kelas; hold Owner/privasi tetap setelah closure/purge receipt; order aktif dan bukti keuangan/histori B2B/media publik dilindungi. Klaim DELETE_PENDING, retry key sama, final lease, cursor bounded, HTTP/CLI canonical dan monitoring lulus lokal. PR #58 merged ke main pada `87d47fa`; adapter S3-compatible mempertahankan pembatalan I/O. Resource/scheduler/provider hosted menunggu T03. |
 | T09 | M1 | BLOCKED_EXTERNAL | Cleanup auth/privacy hosted | T03 | Handler auth/privacy berbatas dari PR #56 memakai runner/lease/role/monitor canonical. Tenggat dan hold tetap; bukti lokal diwarisi lalu diuji ulang saat rekonsiliasi. Scheduler/role/resource hosted belum tersedia. |
 | T10 | M1 | DONE | Rate limit lintas instance | T03 | PostgreSQL bersama, HMAC IP stabil dengan secret bersama, dan pembersihan row kedaluwarsa diuji lokal. Hosted 29 Okt (`main@82dd380`): bucket bersama di database staging berbinding, kunci dari `x-nf-client-connection-ip` (pemalsuan header tidak membuka bucket baru), baris kedaluwarsa terhapus. Identitas instance tidak diamati terpisah; store-nya database bersama. |
@@ -110,7 +121,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T21 | M4 | DONE | Pengajuan kasus refund | T02; kontrak aktif | Kasus/alokasi persisten, nominal Decimal server dan ownership/closure diuji integration lokal; UI/API dan native form tersedia. Provider/hasil dana tetap T23/T25. |
 | T22 | M4 | DONE | Persetujuan refund Owner | T21 | Owner aktif saja; alasan/retur/audit, version/snapshot immutable, overlap dan approval/receipt ulang diuji integration lokal. Persetujuan belum mengeksekusi uang. |
 | T23 | M4 | BLOCKED_EXTERNAL | Submission refund | T22; merchant | Key/attempt/clock durable, gate merchant/window/retry dan manual Owner termasuk revoke diuji lokal 21 Oktober. Bukti metode/channel/saldo/window sandbox serta jalur manual hosted belum tersedia. Grant `refund` staging diberikan Owner 30 Okt (Q2); menunggu cek fitur dashboard Midtrans sandbox (Q1). |
-| T24 | M4 | BLOCKED_EXTERNAL | Reconciliation pembayaran | T03; guard refund T21/T22; T42 | Get Status/receipt/lease canonical, late/unknown/refund hold dan balapan webhook diuji fixture lokal. Hosted 29 Okt: Get Status sampai ke Midtrans sandbox (404 menjadi unknown). Batas 7 hari B5 ter-deploy 30 Okt (#89); pengecualian teramati paling cepat 5 Nov. Sisa: jalur `found` saat BUY #2 dan scheduler production (T42). |
+| T24 | M4 | BLOCKED_EXTERNAL | Reconciliation pembayaran | T03; guard refund T21/T22; T42 | Get Status/receipt/lease canonical, late/unknown/refund hold dan balapan webhook diuji fixture lokal. Hosted 29 Okt: Get Status sampai ke Midtrans sandbox (404 menjadi unknown). Batas 7 hari B5 ter-deploy 30 Okt (#89); pengecualian teramati paling cepat 5 Nov. Sisa: jalur `found` saat BUY #2 dan scheduler production; jadwal Q14 sudah ada di kode (T42), pemasangan timer dan bukti menunggu T41. |
 | T25 | M4 | BLOCKED_EXTERNAL | Reconciliation refund | T23 | Receipt bank/manual immutable, finality seluruh alokasi, hold partial/external dan GET-only lease diuji lokal 21 Oktober. Hasil bank sandbox dan role/resource/cadence hosted belum terbukti; exception tetap ditahan sampai resolusi berbukti. Grant `refund` staging ada (Q2); menunggu T23. |
 | T26 | M4 | DONE | Email order received | T06; rantai T24 | Pesan persisten/dedup; email gagal tidak membatalkan order. Integration lokal lulus; inbox/hosted tetap T03/T33–T34. |
 | T27 | M4 | DONE | Email payment confirmed | T06/T24 | Hanya settlement otoritatif; webhook duplikat tidak menduplikasi pesan. Integration lokal lulus; provider/hosted terpisah. |
@@ -128,7 +139,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T39 | M5 | TODO | SOP dan handover operasi | T33–T38; Owner | Coverage/kalender/eskalasi/alarm/kontak pasca-closure/petugas dibuktikan lewat simulasi. Input Owner E12 (29 Okt) tersedia; menunggu dependensi. |
 | T40 | M6 | BLOCKED_EXTERNAL | Rilis terkendali | Seluruh wajib; T41–T43; instruksi rilis | Kandidat sama dengan bukti; gate ditutup; ledger readiness diperbarui (D12); activation/smoke/monitoring/rollback di VPS (T41) sesuai izin eksplisit; DNS `niuva.id` diarahkan; Google Search Console dan Bing Webmaster terverifikasi dan sitemap terkirim. |
 | T41 | M6 | BLOCKED_INPUT | Infrastruktur production VPS Jakarta | Q5; pembelian VPS (Owner); Q11–Q13 | Helipod VPS B Jakarta aktif dengan auto-renew; SSH khusus key; firewall hanya 80/443/SSH; PostgreSQL hanya localhost; Caddy HTTPS `niuva.id` dan `www`; env production di server dengan izin ketat, tidak di Git; unattended-upgrades; monitor uptime eksternal; jalur deploy dan rollback terdokumentasi; smoke pra-DNS di VPS. Production tetap tertutup sampai T40. Rencana di log "Checklist keamanan dan SEO untuk VPS". |
-| T42 | M6 | TODO | Adaptasi runtime untuk VPS | T10; Q11 untuk bagian IP | IP klien terpercaya di VPS menggantikan header Netlify di `src/lib/security/client-ip.ts` (rate limit dan Better Auth), dengan tes pemalsuan header. Scheduler job production lewat timer di VPS memakai runner `src/modules/jobs/`, menutup sisa scheduler T07/T24. Unit/backend/integration lokal, lalu bukti di VPS. |
+| T42 | M6 | TODO | Adaptasi runtime untuk VPS | T10; Q11 untuk bagian IP | IP klien terpercaya di VPS menggantikan header Netlify di `src/lib/security/client-ip.ts` (rate limit dan Better Auth), dengan tes pemalsuan header. Scheduler job production lewat timer di VPS memakai runner `src/modules/jobs/`, menutup sisa scheduler T07/T24. Unit/backend/integration lokal, lalu bukti di VPS. 30 Okt: jadwal Q14 dan route tick `/api/internal/jobs/schedule` selesai dengan tes lokal (log "T42 scheduler"); timer dan bukti VPS menunggu T41, bagian IP menunggu Q11. |
 | T43 | M2 | BLOCKED_INPUT | Login Google hosted (D04) | T12; grant Q4 | Owner menambah redirect URI staging di Google Cloud; env OAuth staging diisi atas instruksi Owner; consent dan login Google berhasil di staging dengan akun uji. Production ikut T40. |
 
 ## Backlog setelah v1
@@ -2040,6 +2051,34 @@ belum ada yang dikerjakan.
   versi gratis bernilai Rp0. Domain tidak perlu dibeli lagi; biaya
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
+
+### T42 scheduler: jadwal job production, 2026-10-30
+
+Atas permintaan Owner ("Ya, kerjakan T42") dan persetujuan rencana yang memuat
+tabel jadwal Q14.
+
+- **Kode:**
+  - `src/modules/jobs/schedule.ts` memuat `JOB_SCHEDULES` per tier. Hanya
+    `production` terisi; staging tetap manual (E9). Jadwal divalidasi dengan
+    parser runner yang sama, setiap job paling banyak satu kali, dan job
+    provider maksimal limit 10 seperti adapter HTTP.
+  - Jarak minimum = cadence dikurangi 30 detik, supaya tick per menit tidak
+    melewatkan giliran saat run selesai beberapa detik setelah tick.
+  - `runJobScheduleTick` menjalankan entri berurutan lewat
+    `OperationalJobRuntime.run`. `busy`/`cooldown` berarti belum waktunya;
+    job gagal tidak menghentikan job lain; diakhiri `inspect` untuk alarm.
+  - Route `POST /api/internal/jobs/schedule` (bearer `CRON_SECRET`, body
+    `{}`) menjalankan satu tick jadwal tier ini. Tier tanpa jadwal mendapat
+    503 sebelum runtime dibuat. Route ini juga menjadi jalur HTTP pertama
+    untuk `CUSTOMER_AUTH_CLEANUP` dan `CUSTOMER_PRIVACY_CLEANUP`.
+- **Perbaikan rujukan:** grant Q2–Q4 merujuk anchor papan lama yang hilang
+  setelah PR #91. Rujukan kini `TASKS.md#keputusan-owner-paket-q`, judul
+  stabil di papan fokus.
+- **Production tetap tertutup:** grant production kosong, jadi tick di
+  production gagal aman sampai aktivasi T40.
+- **Belum diverifikasi:** timer systemd, tick di VPS sungguhan, dan
+  pemblokiran `/api/internal/*` dari luar di Caddy (T41). Contoh unit ada di
+  `docs/backend/batch-2-operations.md` bagian "Jadwal production di VPS".
 
 ### Audit backlog, 2026-10-30
 

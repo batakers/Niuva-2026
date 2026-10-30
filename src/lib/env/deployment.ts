@@ -99,7 +99,7 @@ export type ActivationGrant = Readonly<{
 }>;
 
 const OWNER_STAGING_DECISION = "TASKS.md#keputusan-owner-untuk-staging-2026-10-28";
-const OWNER_Q_DECISIONS = "TASKS.md#fokus-aktif-audit-29-oktober-2026";
+const OWNER_Q_DECISIONS = "TASKS.md#keputusan-owner-paket-q";
 
 /**
  * Activation grants per tier. Each grant needs a separate explicit instruction
