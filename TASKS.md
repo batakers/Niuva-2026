@@ -37,11 +37,11 @@ ada di papan ini; pekerjaan baru masuk tabel task, bukan file lain.
 | | T14 | O + A | Privacy hosted dengan sesi Customer penguji; grant sudah ter-deploy (#89) | Sesi Customer Owner |
 | | T43 | O + A | Redirect URI Google staging dan env OAuth, lalu login Google | Google Cloud dan instruksi env (Owner) |
 | Menunggu waktu | T24 | A | Cek pengecualian B5 pada attempt 29 Okt mulai 5 Nov; jalur `found` saat BUY #2 | Tanggal 5 Nov |
-| Production | T41 | O + A | Beli VPS B Jakarta (dryRun harga dulu), lalu hardening dan jalur deploy | Pembelian (Owner); Q11–Q13 |
+| Production | T41 | O + A | Beli VPS B Jakarta (dryRun harga dulu), lalu hardening dan jalur deploy | Pembelian (Owner); Q11 |
 | | T42 | A | Scheduler job di VPS; IP klien setelah Q11 | Q11 untuk bagian IP |
 | Rilis | T37 | O | Android + TalkBack (Owner), iPhone + VoiceOver (pinjam); checklist dari agen | T33–T36 |
-| | T38 | O + A | `pg_dump` harian ke S3 Jakarta dan latihan restore | T41; Q12 |
-| | T44 | O + A | Draf policy privacy versi baru dengan penyedia production; Owner menyetujui teks | Q12–Q13; T41 |
+| | T38 | O + A | `pg_dump` harian ke Biznet Gio (Q12) dan latihan restore | T41; akun dan bucket Biznet Gio (Owner) |
+| | T44 | O + A | Draf policy privacy versi baru dengan penyedia production; Owner menyetujui teks | T41; penyedia sudah dipilih (Q12–Q13) |
 | | T39 | O + A | SOP + simulasi | T33–T38 |
 | | T07, T31, T40 | O + A | Scheduler production (lewat T42), aktivasi rule/dataset production, ledger readiness (D12), instruksi rilis | T41–T43 |
 
@@ -78,27 +78,21 @@ Judul ini stabil: kode grant dan jadwal job merujuk anchor-nya. Jawaban
   budget outbox 20 detik, `maxAgeMs` email bisnis 24 jam, tanpa retry
   otomatis email. Dicatat di `JOB_SCHEDULES` (`src/modules/jobs/schedule.ts`).
   Tujuan alarm dan petugas tetap terbuka (T39/D07).
+- **Q12 (30 Okt, Owner "Setuju keduanya"):** backup database harian dan
+  salinan arsip pembukuan di **Biznet Gio NEO Object Storage** single region
+  (Rp1.000/GB/bulan, tagihan bulanan). Akun dan bucket belum dibuat; fitur
+  versioning/object lock dan cara tagih belum diverifikasi (log "Perbandingan
+  S3 Jakarta").
+- **Q13 (30 Okt, Owner "Setuju keduanya"):** file Customer dan media publik
+  production tetap di **Cloudflare R2**, seperti staging dan policy privacy
+  v1.0. Bucket R2 production terpisah dari staging dan belum dibuat.
 
-Keputusan Owner yang masih terbuka (audit 30 Oktober; rekomendasi agen, belum
-diputuskan):
+Keputusan Owner yang masih terbuka (rekomendasi agen, belum diputuskan):
 
 - **Q11:** cara aplikasi di VPS mengenali IP asli pengunjung (rate limit,
   T42). Rekomendasi: tanyakan ke Helipod apakah NAT-nya mendukung PROXY
   protocol; bila tidak, Cloudflare gratis di depan `niuva.id` (nameserver
   pindah dari Rumahweb, record Resend dipasang ulang).
-- **Q12:** penyedia S3 region Jakarta untuk backup dan arsip pembukuan.
-  Rekomendasi agen (perbandingan 30 Okt, log "Perbandingan S3 Jakarta"):
-  Biznet Gio NEO Object Storage single region, Rp1.000/GB/bulan, tagihan
-  bulanan ke metode bayar terdaftar; perkiraan Rp5–30 ribu/bulan. IDCloudHost
-  separuh harga tetapi memakai saldo prabayar, risiko yang sama dengan alasan
-  database Helipod ditolak. Fitur versioning/object lock keduanya belum
-  diverifikasi.
-- **Q13:** storage file Customer dan media publik di production. Rekomendasi
-  agen berubah setelah perbandingan: **tetap Cloudflare R2**. R2 sudah
-  terpasang dan tercantum di policy privacy v1.0, gratis sampai 10 GB tanpa
-  biaya egress, dan dokumentasinya memuat `If-None-Match` serta Content-MD5
-  yang dipakai publish media. Kedua penyedia Jakarta tidak mendokumentasikan
-  fitur itu maupun CORS; pindah hanya bila lolos smoke kontrak object storage.
 
 Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 
@@ -143,10 +137,10 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T35 | M5 | BLOCKED_EXTERNAL | Failure/refund staging | T21–T25 | Duplicate/nominal salah/late/timeout/full refund/manual exception benar dan teraudit. Sandbox. Owner Q1: QRIS + GoPay, satu refund otomatis lewat Midtrans dan satu manual. |
 | T36 | M5 | BLOCKED_INPUT | UAT operasi Admin | T15–T20/T32 | Owner/Admin menambah konten, stock, quote, fulfillment dan keuangan dasar tanpa database/source. UAT record Owner masih diperlukan. |
 | T37 | M5 | BLOCKED_EXTERNAL | UI/perangkat/AT | T33–T36 | Route aktual: viewport, keyboard/fokus/error, zoom/reduced motion; fisik/AT dibuktikan terpisah. |
-| T38 | M5 | BLOCKED_INPUT | Backup/restore | T07–T09/T14/T25; T41; Q12 | Sasaran Owner E11: RPO 24 jam, RTO 1 hari kerja. Q5–Q7: `pg_dump` harian terenkripsi dari PostgreSQL di VPS ke S3 region Jakarta, satu tempat dengan salinan arsip pembukuan; penyedia belum dipilih (Q12). Drill harus mencegah restore akun tertutup atau replay refund/email. Recovery evidence. |
+| T38 | M5 | BLOCKED_INPUT | Backup/restore | T07–T09/T14/T25; T41; akun Biznet Gio (Owner) | Sasaran Owner E11: RPO 24 jam, RTO 1 hari kerja. Q5–Q7: `pg_dump` harian terenkripsi dari PostgreSQL di VPS ke S3 region Jakarta, satu tempat dengan salinan arsip pembukuan; penyedia Biznet Gio NEO Object Storage (Q12); akun dan bucket belum dibuat. Drill harus mencegah restore akun tertutup atau replay refund/email. Recovery evidence. |
 | T39 | M5 | TODO | SOP dan handover operasi | T33–T38; Owner | Coverage/kalender/eskalasi/alarm/kontak pasca-closure/petugas dibuktikan lewat simulasi. Input Owner E12 (29 Okt) tersedia; menunggu dependensi. |
 | T40 | M6 | BLOCKED_EXTERNAL | Rilis terkendali | Seluruh wajib; T41–T44; instruksi rilis | Kandidat sama dengan bukti; gate ditutup; ledger readiness diperbarui (D12); activation/smoke/monitoring/rollback di VPS (T41) sesuai izin eksplisit; DNS `niuva.id` diarahkan; Google Search Console dan Bing Webmaster terverifikasi dan sitemap terkirim. |
-| T41 | M6 | BLOCKED_INPUT | Infrastruktur production VPS Jakarta | Q5; pembelian VPS (Owner); Q11–Q13 | Helipod VPS B Jakarta aktif dengan auto-renew; SSH khusus key; firewall hanya 80/443/SSH; PostgreSQL hanya localhost; Caddy HTTPS `niuva.id` dan `www`; env production di server dengan izin ketat, tidak di Git; unattended-upgrades; monitor uptime eksternal; jalur deploy dan rollback terdokumentasi; smoke pra-DNS di VPS. Production tetap tertutup sampai T40. Rencana di log "Checklist keamanan dan SEO untuk VPS". |
+| T41 | M6 | BLOCKED_INPUT | Infrastruktur production VPS Jakarta | Q5; pembelian VPS (Owner); Q11 | Helipod VPS B Jakarta aktif dengan auto-renew; SSH khusus key; firewall hanya 80/443/SSH; PostgreSQL hanya localhost; Caddy HTTPS `niuva.id` dan `www`; env production di server dengan izin ketat, tidak di Git; unattended-upgrades; monitor uptime eksternal; jalur deploy dan rollback terdokumentasi; smoke pra-DNS di VPS. Production tetap tertutup sampai T40. Rencana di log "Checklist keamanan dan SEO untuk VPS". |
 | T42 | M6 | TODO | Adaptasi runtime untuk VPS | T10; Q11 untuk bagian IP | IP klien terpercaya di VPS menggantikan header Netlify di `src/lib/security/client-ip.ts` (rate limit dan Better Auth), dengan tes pemalsuan header. Scheduler job production lewat timer di VPS memakai runner `src/modules/jobs/`, menutup sisa scheduler T07/T24. Unit/backend/integration lokal, lalu bukti di VPS. 30 Okt: jadwal Q14 dan route tick `/api/internal/jobs/schedule` selesai dengan tes lokal (log "T42 scheduler"); timer dan bukti VPS menunggu T41, bagian IP menunggu Q11. |
 | T43 | M2 | BLOCKED_INPUT | Login Google hosted (D04) | T12; grant Q4 | Owner menambah redirect URI staging di Google Cloud; env OAuth staging diisi atas instruksi Owner; consent dan login Google berhasil di staging dengan akun uji. Production ikut T40. |
 | T44 | M6 | BLOCKED_INPUT | Policy privacy untuk penyedia production | T11; Q5; Q12–Q13; Owner | Daftar penyedia dan lokasi pemrosesan di `src/content/customer-policy/privacy-v1.0.md` (Netlify Ohio, Neon Singapura) diganti versi baru yang mencantumkan Helipod VPS Jakarta, penyedia backup dan storage file production; Owner menyetujui teks; versi baru terbit sebelum production menerima data Customer (T40). Ditemukan saat perbandingan S3, 30 Okt. |
