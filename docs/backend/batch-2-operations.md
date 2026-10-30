@@ -122,6 +122,45 @@ item yang benar-benar diperiksa. Run yang berhenti karena anggaran tetap
 dipilih dan disetujui untuk lingkungan dan cadence terkait; contoh perintah di
 atas hanya sintaks.
 
+## Jadwal production di VPS — T42, 30 Oktober 2026
+
+Owner menyetujui jadwal Q14 (`TASKS.md#keputusan-owner-paket-q`). Nilainya ada di
+`JOB_SCHEDULES` (`src/modules/jobs/schedule.ts`), bukan di env atau body request.
+Hanya tier `production` yang punya jadwal; staging tetap dipicu manual (E9).
+
+`POST /api/internal/jobs/schedule` dengan bearer `CRON_SECRET` dan body `{}`
+menjalankan satu tick: semua job berurutan lewat runner yang sama, lalu
+`inspect` dengan ambang lag 1 jam. Lease dan cooldown di `OperationalJobState`
+menentukan job mana yang sudah waktunya, jadi pemicu cukup berjalan tiap menit.
+Respons hanya berisi state, counter allowlist dan kode alarm.
+
+Contoh unit systemd untuk VPS (dipasang di T41, belum diuji di server):
+
+```ini
+# /etc/systemd/system/niuva-jobs.service
+[Unit]
+Description=Niuva scheduled jobs tick
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/curl -fsS --max-time 240 -X POST -H @/etc/niuva/jobs-auth.header -H "Content-Type: application/json" --data "{}" http://127.0.0.1:3000/api/internal/jobs/schedule
+
+# /etc/systemd/system/niuva-jobs.timer
+[Unit]
+Description=Run Niuva scheduled jobs every minute
+[Timer]
+OnCalendar=*-*-* *:*:00
+AccuracySec=1s
+Persistent=false
+[Install]
+WantedBy=timers.target
+```
+
+`/etc/niuva/jobs-auth.header` berisi satu baris `Authorization: Bearer <CRON_SECRET>`
+dan hanya bisa dibaca root, sehingga secret tidak muncul di argumen proses. systemd
+tidak memulai tick baru selama tick sebelumnya masih berjalan, dan hasilnya
+masuk journald. Reverse proxy harus menolak `/api/internal/*` dari luar server.
+Tujuan alarm dan petugas belum ditetapkan (T39/D07).
+
 ## Retensi binary Customer — T08, 19 Oktober 2026
 
 `CUSTOMER_FILE_RETENTION` tersedia melalui CLI canonical dan

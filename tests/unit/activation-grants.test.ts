@@ -21,7 +21,7 @@ describe("recorded activation grants", () => {
     for (const grant of ACTIVATION_GRANTS.staging) {
       expect(grant).toMatchObject(e6E1.includes(grant.capability)
         ? { instruction: "TASKS.md#keputusan-owner-untuk-staging-2026-10-28", grantedOn: "2026-10-28" }
-        : { instruction: "TASKS.md#fokus-aktif-audit-29-oktober-2026", grantedOn: "2026-10-30" });
+        : { instruction: "TASKS.md#keputusan-owner-paket-q", grantedOn: "2026-10-30" });
       expect(hasActivationGrant("staging", grant.capability), grant.capability).toBe(true);
       expect(hasActivationGrant("production", grant.capability), grant.capability).toBe(false);
     }
