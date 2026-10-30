@@ -18,11 +18,11 @@ lingkungan; status task tidak otomatis menutup gate readiness.
 | --- | --- | --- | --- |
 | M0 — Scope dan baseline | T01–T02 | Audit dan persetujuan | Kontrak v1 dan backlog tunggal jelas; generate/lint/typecheck resmi dapat dijalankan. |
 | M1 — Keandalan hosted | T03–T10 | M0 | Binding resource/origin, outbox, worker, job, pemantauan, dan batas laju terbukti pada cakupan uji; production tetap tertutup. |
-| M2 — Customer publik | T11–T14 | M0; outbox M1 untuk bukti lengkap | Consent Google/email, deklarasi 18+, privacy, dan closure memenuhi kontrak. Policy resmi dan kemampuan hosted dibuktikan terpisah. |
+| M2 — Customer publik | T11–T14, T43 | M0; outbox M1 untuk bukti lengkap | Consent Google/email, deklarasi 18+, privacy, dan closure memenuhi kontrak. Policy resmi dan kemampuan hosted dibuktikan terpisah. |
 | M3 — Admin mandiri | T15–T20 | M0; T03 untuk media hosted | Owner/Admin dapat menambah draft produk, varian, project, dan media, lalu publish dengan validasi server. |
 | M4 — Penutupan transaksi | T21–T31 | M0; outbox/job M1 | Refund/reconciliation, email bisnis, dataset dan tarif siap untuk pembuktian BUY/MAKE terpadu. |
 | M5 — Pembuktian staging | T32–T39 | M1–M4; resource dan input Owner | Dua transaksi BUY dan satu MAKE, failure/refund, operasi Admin, aksesibilitas dan restore memiliki bukti. |
-| M6 — Rilis terkendali | T40 | M5; seluruh gate wajib | Instruksi rilis eksplisit, aktivasi terbatas, smoke production, monitoring, dan serah terima rollback. |
+| M6 — Rilis terkendali | T40–T42 | M5; seluruh gate wajib | Infrastruktur production VPS dan adaptasi runtime-nya terbukti; instruksi rilis eksplisit, aktivasi terbatas, smoke production, monitoring, dan serah terima rollback. |
 
 M2, M3, dan M4 dapat dikembangkan sebagai irisan terpisah setelah interface
 fondasinya jelas. Pengembangan dengan fixture tidak perlu menunggu semua fakta
