@@ -41,7 +41,7 @@ ada di papan ini; pekerjaan baru masuk tabel task, bukan file lain.
 | | T42 | A | Scheduler job di VPS; IP klien setelah Q11 | Q11 untuk bagian IP |
 | Rilis | T37 | O | Android + TalkBack (Owner), iPhone + VoiceOver (pinjam); checklist dari agen | T33–T36 |
 | | T38 | O + A | `pg_dump` harian ke Biznet Gio (Q12) dan latihan restore | T41; akun dan bucket Biznet Gio (Owner) |
-| | T44 | O + A | Draf policy privacy versi baru dengan penyedia production; Owner menyetujui teks | T41; penyedia sudah dipilih (Q12–Q13) |
+| | T44 | O | Review draf `docs/legal/public-privacy-v1.1-review.md`; tetapkan masa simpan cadangan; konfirmasi lokasi Resend | Keputusan Owner |
 | | T39 | O + A | SOP + simulasi | T33–T38 |
 | | T07, T31, T40 | O + A | Scheduler production (lewat T42), aktivasi rule/dataset production, ledger readiness (D12), instruksi rilis | T41–T43 |
 
@@ -143,7 +143,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T41 | M6 | BLOCKED_INPUT | Infrastruktur production VPS Jakarta | Q5; pembelian VPS (Owner); Q11 | Helipod VPS B Jakarta aktif dengan auto-renew; SSH khusus key; firewall hanya 80/443/SSH; PostgreSQL hanya localhost; Caddy HTTPS `niuva.id` dan `www`; env production di server dengan izin ketat, tidak di Git; unattended-upgrades; monitor uptime eksternal; jalur deploy dan rollback terdokumentasi; smoke pra-DNS di VPS. Production tetap tertutup sampai T40. Rencana di log "Checklist keamanan dan SEO untuk VPS". |
 | T42 | M6 | TODO | Adaptasi runtime untuk VPS | T10; Q11 untuk bagian IP | IP klien terpercaya di VPS menggantikan header Netlify di `src/lib/security/client-ip.ts` (rate limit dan Better Auth), dengan tes pemalsuan header. Scheduler job production lewat timer di VPS memakai runner `src/modules/jobs/`, menutup sisa scheduler T07/T24. Unit/backend/integration lokal, lalu bukti di VPS. 30 Okt: jadwal Q14 dan route tick `/api/internal/jobs/schedule` selesai dengan tes lokal (log "T42 scheduler"); timer dan bukti VPS menunggu T41, bagian IP menunggu Q11. |
 | T43 | M2 | BLOCKED_INPUT | Login Google hosted (D04) | T12; grant Q4 | Owner menambah redirect URI staging di Google Cloud; env OAuth staging diisi atas instruksi Owner; consent dan login Google berhasil di staging dengan akun uji. Production ikut T40. |
-| T44 | M6 | BLOCKED_INPUT | Policy privacy untuk penyedia production | T11; Q5; Q12–Q13; Owner | Daftar penyedia dan lokasi pemrosesan di `src/content/customer-policy/privacy-v1.0.md` (Netlify Ohio, Neon Singapura) diganti versi baru yang mencantumkan Helipod VPS Jakarta, penyedia backup dan storage file production; Owner menyetujui teks; versi baru terbit sebelum production menerima data Customer (T40). Ditemukan saat perbandingan S3, 30 Okt. |
+| T44 | M6 | BLOCKED_INPUT | Policy privacy untuk penyedia production | T11; Q5; Q12–Q13; Owner | Daftar penyedia dan lokasi pemrosesan di `src/content/customer-policy/privacy-v1.0.md` (Netlify Ohio, Neon Singapura) diganti versi baru yang mencantumkan Helipod VPS Jakarta, penyedia backup dan storage file production; Owner menyetujui teks; versi baru terbit sebelum production menerima data Customer (T40). Ditemukan saat perbandingan S3, 30 Okt. Draf v1.1 siap direview (log "T44 draf policy privacy v1.1"); belum disetujui, belum terbit. |
 
 ## Backlog setelah v1
 
@@ -2089,6 +2089,29 @@ tabel jadwal Q14.
   dengan `CRON_SECRET` (dibaca dari salinan DPAPI, tidak dicetak) 503
   `PROVIDER_UNAVAILABLE`, karena staging tidak punya jadwal. Tidak ada job
   yang berjalan.
+
+### T44 draf policy privacy v1.1, 2026-10-30
+
+Atas permintaan Owner ("kamu kerjakan T44"). Draf ada di
+`docs/legal/public-privacy-v1.1-review.md`, mengikuti pola review v1.0. Draf
+tidak dipakai aplikasi; versi berlaku tetap `NIUVA-PRIVACY-v1.0`.
+
+- **Perubahan terhadap v1.0** (diperiksa dengan `diff`; teks lain sama):
+  - bagian 3: Netlify (Ohio) dan Neon (Singapura) diganti Helipod (Jakarta);
+    baris baru Biznet Gio untuk cadangan database dan arsip pembukuan;
+  - bagian 3: lokasi Resend "Amerika Serikat dan Jepang (Tokyo)", karena
+    domain kirim `mail.niuva.id` dibuat di region Tokyo. Perlu konfirmasi
+    Owner;
+  - bagian 6: paragraf cadangan menjelaskan cadangan harian Niuva yang
+    disimpan terpisah dari server, dengan masa simpan yang ditetapkan Owner.
+- **Menunggu Owner:** masa simpan cadangan (placeholder, tidak diisi agen),
+  konfirmasi baris Resend, tanggal terbit dan berlaku, persetujuan teks.
+- **Harus terbukti sebelum terbit:** database production di VPS Helipod
+  (T41), cadangan harian dan penghapusan sesuai masa simpan di Biznet Gio
+  (T38), bucket R2 production berlokasi Asia Pasifik.
+- **Belum dikerjakan:** file `privacy-v1.1.md`, checksum dan metadata di
+  `src/modules/customer-auth/public-policy.ts`, pemberitahuan kepada pemilik
+  akun, dan perlakuan persetujuan v1.0 yang sudah tercatat.
 
 ### Perbandingan S3 Jakarta (Q12/Q13), 2026-10-30
 
