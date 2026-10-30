@@ -2055,6 +2055,34 @@ belum ada yang dikerjakan.
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
 
+### T33 order variasi: checkout multi-item gagal 500, 2026-10-30
+
+Owner meminta agen membuat checkout variasi (Owner yang membayar). Agen
+memakai browser dengan sesi Customer penguji yang sudah login: keranjang
+berisi tiga produk pilihan Owner (keychain TULT Biru, Custom Figure Bubble
+Head Cartoon/No Colour, Custom Figure Special Moments No Colour, masing-masing
+Rp35.200). Penerima uji memakai alamat dan nomor kantor Niuva dari policy
+privacy, atas izin Owner. Biteship mengembalikan 6 opsi; JNE Reguler Rp9.000
+dipilih.
+
+- **Gangguan staging 17:25–17:30 UTC:** `/account`, `/checkout`, `/admin/*`
+  502 karena edge function habis waktu 10 s; database normal; pulih sendiri.
+  Penyebab belum diketahui.
+- **Bug:** `POST /api/checkout` 500 `INTERNAL_ERROR` (17:27, 17:28 percobaan
+  Owner; 17:39 percobaan agen), durasi 8,5–10,4 s, tanpa order tersimpan.
+  Checkout 1 item (BUY #1/#2) berhasil. Dugaan kuat: transaksi interaktif
+  checkout memakai default Prisma 5 s, sementara tiap baris keranjang
+  menjalankan beberapa statement melintasi Ohio–Singapura; pola sama dengan
+  kegagalan job outbox 29 Oktober. Detail exception tidak tercatat (log aman
+  hanya memuat kode), jadi penyebab pasti **belum diverifikasi**.
+- **Perbaikan:** `CheckoutRepository.createCheckoutTransaction` memakai
+  `CHECKOUT_TRANSACTION_OPTIONS` (maxWait 10 s, timeout 20 s), sama dengan
+  transaksi job berbinding. Di production (aplikasi dan database satu VPS)
+  latensi jauh lebih kecil.
+- **Bukti lokal:** backend 122/952 (tes baru memastikan opsi transaksi),
+  integration `database.test.ts` 17/17, lint 0 error, typecheck, build.
+  Checkout tiga item di staging **belum diverifikasi** sampai deploy.
+
 ### T33 BUY #2 dan shipment retail, 2026-10-30
 
 Owner membuat dan membayar `ORD-20261030-YAJE5AHR` di staging dengan akun
