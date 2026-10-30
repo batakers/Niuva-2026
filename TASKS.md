@@ -2054,6 +2054,30 @@ belum ada yang dikerjakan.
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
 
+### Kredit Netlify dan pengajuan provider production, 2026-10-31
+
+- **Deploy staging berhenti:** tim Netlify memakai paket Free (300 kredit per
+  periode 26 Okt–25 Nov). 21 production deploy × 15 kredit = 315 kredit, sehingga
+  deploy `main@06f1f53` (#98, batas transaksi webhook) dan `main@579f35b` (#99)
+  **Skipped due to account credit usage exceeded**. Staging tetap online di
+  `main@6c63707` (#97) memakai kredit operasional. Perbaikan webhook #98 belum
+  live; settlement multi-item di staging sementara lewat `PAYMENT_RECONCILIATION`.
+  Dibaca dari halaman Usage & billing dan Deploys Netlify (baca saja).
+- **Cara kerja baru (Owner, 31 Okt):** perubahan dokumen dikumpulkan dan
+  dikirim sebagai satu PR per kelompok; pertanyaan Owner ditanyakan sekaligus
+  sebelumnya. Sekitar separuh dari 21 deploy berasal dari PR dokumen.
+- **Midtrans production (screenshot Owner, 31 Okt):** akun dibuat dan
+  registrasi bisnis selesai; review bisnis sedang diproses; tahap hasil belum.
+  Belum ada transaksi production. Fitur metode bayar dan refund production
+  belum diverifikasi.
+- **Biteship production:** data diajukan Owner 30 Okt; status belum
+  diverifikasi.
+- **Bila belum disetujui saat rilis:** capability `payment`/`shipping` di
+  production tetap tanpa grant, sehingga checkout Shop dan pembayaran MAKE tidak
+  ditawarkan (halaman cart mensyaratkan Midtrans dan Biteship), sementara
+  company profile, katalog, akun dan WhatsApp B2B tetap jalan. Rilis bertahap
+  atau penundaan adalah keputusan Owner; D08 mensyaratkan provider siap.
+
 ### T33 selesai: order variasi sampai Shipped, 2026-10-30
 
 Setelah PR #97 (`6c63707`, deploy `6ae4f9d39f662938de78cda4`, secret scan
