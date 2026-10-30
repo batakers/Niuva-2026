@@ -108,6 +108,12 @@ function toMoney(value: Prisma.Decimal): Decimal {
   return new Decimal(value.toString());
 }
 
+// The checkout transaction runs several statements per cart line. Prisma's
+// 5 s interactive default cut off a three-line cart when the app and the
+// database sit in different regions (staging, 30 October 2026), so it gets the
+// same budget as bound job transactions.
+export const CHECKOUT_TRANSACTION_OPTIONS = Object.freeze({ maxWait: 10_000, timeout: 20_000 });
+
 export class CheckoutRepository implements CheckoutRepositoryPort {
   constructor(private readonly prisma: PrismaClient = getPrismaClient()) {}
 
@@ -419,7 +425,7 @@ export class CheckoutRepository implements CheckoutRepositoryPort {
         orderNumber: order.orderNumber,
         paymentAttemptId: paymentAttempt.id,
       };
-    });
+    }, CHECKOUT_TRANSACTION_OPTIONS);
   }
 
   async attachPaymentProviderResult(
