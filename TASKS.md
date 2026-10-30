@@ -41,7 +41,7 @@ gelombang berikutnya menunggu penghambatnya.
 | 4 | T08 | A | Retensi file hosted pada berkas T34 | T34 |
 | 5 — rilis | T37 | O | Android + TalkBack (Owner), iPhone + VoiceOver (pinjam); checklist dari agen | — |
 | 5 | T38, T39 | O + A | Backup harian + arsip pembukuan di satu penyimpanan region Jakarta; latihan restore; SOP + simulasi | Perbandingan biaya penyedia (agen), pilihan Owner |
-| 5 | T40 | O + A | Production di satu Helipod VPS B Jakarta (aplikasi + PostgreSQL self-managed, backup harian ke S3 Jakarta); ledger readiness (D12); instruksi rilis | Pembelian VPS (Owner); rancangan deploy VPS (agen) |
+| 5 | T40 | O + A | Production di satu Helipod VPS B Jakarta (aplikasi + PostgreSQL self-managed, backup harian ke S3 Jakarta); ledger readiness (D12); instruksi rilis | Pembelian VPS (Owner); rancangan deploy VPS dan checklist keamanan/SEO VPS (agen) |
 
 Keputusan Owner 30 Oktober 2026 ("ya saya menyetujui semua rekomendasi nya.
 kecuali Q5"):
@@ -1959,6 +1959,52 @@ aplikasi di VPS yang sama ("Ya, satu VPS").
   production.
 - **Belum:** pembelian VPS, provider S3 Jakarta (IDCloudHost atau Biznet Gio),
   rancangan deploy, dan biaya total terverifikasi.
+
+### Checklist keamanan dan SEO untuk VPS (Q5), 2026-10-30
+
+Owner meminta checklist ini dicatat ("Ya, catat"). Isinya rencana kerja,
+belum ada yang dikerjakan.
+
+- **Sudah ada di kode dan ikut pindah ke VPS:**
+  - header keamanan (`src/lib/security/headers.ts`, sudah terbukti di
+    staging);
+  - rate limit di endpoint publik dan sensitif;
+  - TOTP untuk Admin;
+  - revalidasi server untuk harga, stok, ongkir dan Midtrans;
+  - storage file privat dengan signed URL;
+  - `robots.txt` dan `sitemap.xml` dengan origin kanonik;
+  - metadata judul, deskripsi dan Open Graph `id_ID`.
+- **Wajib diubah sebelum pindah:**
+  - `src/lib/security/client-ip.ts` hanya mempercayai header Netlify
+    `x-nf-client-connection-ip` di tier hosted. Di VPS header itu tidak ada,
+    sehingga rate limit dan Better Auth tidak bisa membedakan pengunjung.
+  - Jaringan NAT Helipod meneruskan TLS apa adanya. Apakah server menerima
+    IP asli klien, misalnya lewat PROXY protocol, **belum diverifikasi** dan
+    perlu ditanyakan ke Helipod.
+  - Opsi yang diusulkan agen: Cloudflare (paket gratis) di depan domain.
+    Kode lalu mempercayai `CF-Connecting-IP` hanya untuk koneksi dari
+    rentang IP Cloudflare. Cara ini belum diputuskan Owner.
+- **Server, pengganti peran Netlify:**
+  - Caddy sebagai reverse proxy dengan HTTPS Let's Encrypt otomatis;
+  - firewall yang hanya membuka 80, 443 dan port SSH; PostgreSQL hanya
+    lewat localhost;
+  - SSH khusus key, tanpa password, plus fail2ban;
+  - unattended-upgrades;
+  - env production di server dengan izin file ketat, tidak masuk Git;
+  - `pg_dump` harian terenkripsi ke S3 Jakarta, ditambah latihan restore
+    (T38);
+  - monitor uptime eksternal.
+- **SEO yang belum ada:**
+  - domain production sendiri;
+  - verifikasi Google Search Console dan Bing Webmaster, lalu kirim
+    sitemap;
+  - gambar Open Graph (menunggu aset yang disetujui Owner);
+  - data terstruktur JSON-LD untuk Organization/LocalBusiness dan Product;
+  - Google Business Profile. Ini langkah Owner, memakai data usaha yang
+    benar.
+- **Biaya:** Cloudflare, Let's Encrypt, Search Console dan monitor uptime
+  versi gratis bernilai Rp0. Domain .com lewat Helipod Rp171.009/tahun +
+  PPN 11%. Harga paket gratis pihak ketiga belum diverifikasi ulang.
 
 ### Grant aktivasi staging E6, 2026-10-28
 
