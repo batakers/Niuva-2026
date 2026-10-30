@@ -33,7 +33,7 @@ gelombang berikutnya menunggu penghambatnya.
 | 2 — rekayasa | T10 (B4) | A | Selesai: PR #84 di-deploy 29 Okt, pemalsuan header tetap 429 | — |
 | 2 | T31/T34 (B1) | A | Selesai 30 Okt: `CUSTOM_PRINT_V1` v1 `PER_UNIT` aktif di staging (log "Aktivasi pricing MAKE") | — |
 | 2 | T06/D07 (B2) | A | PR #85 di-deploy 29 Okt; berhenti di budget dengan pesan sungguhan diamati saat BUY #2 | — |
-| 2 | T24 (B5) | A | Kode batas 7 hari (Q10) siap di branch `claude/b5-grants-q-decisions`; hosted belum diverifikasi | Merge + deploy |
+| 2 | T24 (B5) | A | Batas 7 hari ter-deploy 30 Okt (PR #89); pengecualian attempt >7 hari baru teramati setelah 5 Nov | Waktu |
 | 3 — transaksi | T33 | O + A | BUY #2: dua produk, QRIS/GoPay simulator, fulfillment/resi manual sampai email shipped | — |
 | 3 | T34, T36, T19 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim | — |
 | 4 — setelah keputusan | T23, T25, T35 | O + A | Failure/refund sandbox (QRIS + GoPay): satu otomatis, satu manual; grant `refund` | Cek dashboard Midtrans (Q1) |
@@ -41,7 +41,7 @@ gelombang berikutnya menunggu penghambatnya.
 | 4 | T08 | A | Retensi file hosted pada berkas T34 | T34 |
 | 5 — rilis | T37 | O | Android + TalkBack (Owner), iPhone + VoiceOver (pinjam); checklist dari agen | — |
 | 5 | T38, T39 | O + A | Backup harian + arsip pembukuan di satu penyimpanan region Jakarta; latihan restore; SOP + simulasi | Perbandingan biaya penyedia (agen), pilihan Owner |
-| 5 | T40 | O | Hosting production di provider Indonesia, ledger readiness (D12), instruksi rilis | Perbandingan provider (agen), pilihan Owner |
+| 5 | T40 | O + A | Production di satu Helipod VPS B Jakarta (aplikasi + PostgreSQL self-managed, backup harian ke S3 Jakarta); ledger readiness (D12); instruksi rilis | Pembelian VPS (Owner); rancangan deploy VPS dan checklist keamanan/SEO VPS (agen) |
 
 Keputusan Owner 30 Oktober 2026 ("ya saya menyetujui semua rekomendasi nya.
 kecuali Q5"):
@@ -52,7 +52,10 @@ kecuali Q5"):
   disetujui. Login Google butuh Owner menambah redirect URI staging di Google
   Cloud.
 - **Q5:** production di provider hosting Indonesia, demi biaya yang masuk
-  budget. Provider belum dipilih; agen membandingkan opsi dulu.
+  budget. Keputusan lanjutan 30 Oktober ("Ya, satu VPS"): aplikasi dan
+  PostgreSQL self-managed di **satu Helipod VPS B Jakarta** (2 vCPU, 4 GB,
+  60 GB; Rp118.900/bulan, bayar bulanan dulu), backup harian ke S3 Jakarta.
+  Belum dibeli; pembelian menunggu persetujuan harga final Owner.
 - **Q6, Q7:** backup otomatis harian ke penyimpanan terpisah, satu tempat
   dengan salinan arsip pembukuan, region Jakarta. Penyedia dan biaya belum
   diverifikasi; agen mengajukan opsi.
@@ -1904,6 +1907,112 @@ Atas keputusan Owner Q2–Q4 dan Q10 ("Ya, kerjakan"), branch
     `customer-outbox-flow` 10/10 di database test terisolasi;
   - build lulus.
 - Hosted belum diverifikasi sampai merge dan deploy.
+
+### Deploy PR #89, build otomatis Q8 dan cek Helipod, 2026-10-30
+
+- **Q8:** pengaturan Netlify staging diubah dan dicek ulang setelah muat
+  ulang: Build status **Active**, log privat, Branch deploys "Deploy only the
+  production branch", Deploy Previews "Don't deploy pull requests".
+- **PR #89** di-squash ke `main@b7d1de6` (merge dari akun Owner setelah CI
+  Quality hijau). Merge itu otomatis memicu deploy `6ae3cbfc5cb2636cd21101f7`
+  (context production, branch `main`), `ready` 22:44:38 UTC, secret scan 2.166
+  file tanpa temuan. Build otomatis dari merge (Q8) terbukti.
+- **B5 hosted:** dry-run `PAYMENT_RECONCILIATION` completed, scanned 1,
+  `remainingDue` 1: attempt EXPIRED `ORD-20261029-Q9XZKMBA` masih di bawah
+  7 hari sehingga tetap kandidat, sesuai aturan. Pengecualian setelah 7 hari
+  baru bisa diamati setelah 5 November 2026; belum diverifikasi.
+- **Grant Q2–Q4 hosted:** belum diverifikasi lewat alur pengguna; login Google
+  tetap butuh env OAuth dan redirect URI dari Owner.
+- **Q5 (hosting production), riset belum diputuskan:**
+  - Helipod (PT Samudra Inovasi Terpadu, Jakarta) dicek lewat jawaban support
+    (berlabel AI), halaman harga, docs, dan MCP Helipod baca-saja di akun
+    Owner (tanpa membuat resource). Database Helipod adalah Neon lewat agen;
+    region tidak bisa dikonfirmasi; API database tidak punya endpoint
+    restore/PITR; retensi riwayat tidak tertulis; kredit compute prabayar
+    habis berarti database di-suspend; paket Starter 50 CU-jam, Growth
+    100 CU-jam.
+  - Rekomendasi agen: aplikasi di Helipod Apps, database di akun Neon Launch
+    milik Niuva (PITR sampai 7 hari, scale-to-zero bisa dimatikan), plus
+    backup harian ke S3 Jakarta. Perkiraan Rp235–615 ribu/bulan; belum
+    diverifikasi. Menunggu keputusan Owner.
+  - MCP Helipod didaftarkan scope lokal proyek ini (bukan Git).
+
+### Keputusan Q5: satu VPS Jakarta, 2026-10-30
+
+Owner memilih PostgreSQL self-managed di VPS Jakarta, lalu menjalankan
+aplikasi di VPS yang sama ("Ya, satu VPS").
+
+- **Harga resmi:** dibaca lewat MCP Helipod `list_vps_plans` (baca saja),
+  harga bayar bulanan. VPS S Rp79.900, A Rp99.900, **B Rp118.900**,
+  D Rp193.900. Diskon 3 bulan 7%, 6 bulan 10%, tahunan 20%. Harga di
+  screenshot dashboard adalah harga tahunan.
+- **Jaringan:** paket Jakarta bertanda `nat_network`. Docs port forwarding
+  Helipod menyatakan server berbagi IPv4, port 80/443 dirutekan per domain,
+  dan TLS diteruskan apa adanya (sertifikat dipegang server). SSH dan port TCP
+  lain lewat port forward pada `portRange`. Belum diuji di server nyata.
+- **Pertimbangan:** 2 GB terlalu sempit untuk aplikasi + database, jadi build
+  aplikasi tidak dijalankan di VPS. Rancangan build/deploy belum dibuat; jalur
+  CI yang menyentuh `.github/workflows/` butuh instruksi terpisah.
+- **Konsekuensi:** perawatan server (update keamanan, pemantauan, backup,
+  uji restore, perpanjangan) menjadi tanggung jawab operasional Niuva. Ini
+  memengaruhi T38/T39. Database Helipod dan Neon tidak dipakai untuk
+  production.
+- **Belum:** pembelian VPS, provider S3 Jakarta (IDCloudHost atau Biznet Gio),
+  rancangan deploy, dan biaya total terverifikasi.
+
+### Checklist keamanan dan SEO untuk VPS (Q5), 2026-10-30
+
+Owner meminta checklist ini dicatat ("Ya, catat"). Isinya rencana kerja,
+belum ada yang dikerjakan.
+
+- **Sudah ada di kode dan ikut pindah ke VPS:**
+  - header keamanan (`src/lib/security/headers.ts`, sudah terbukti di
+    staging);
+  - rate limit di endpoint publik dan sensitif;
+  - TOTP untuk Admin;
+  - revalidasi server untuk harga, stok, ongkir dan Midtrans;
+  - storage file privat dengan signed URL;
+  - `robots.txt` dan `sitemap.xml` dengan origin kanonik;
+  - metadata judul, deskripsi dan Open Graph `id_ID`.
+- **Wajib diubah sebelum pindah:**
+  - `src/lib/security/client-ip.ts` hanya mempercayai header Netlify
+    `x-nf-client-connection-ip` di tier hosted. Di VPS header itu tidak ada,
+    sehingga rate limit dan Better Auth tidak bisa membedakan pengunjung.
+  - Jaringan NAT Helipod meneruskan TLS apa adanya. Apakah server menerima
+    IP asli klien, misalnya lewat PROXY protocol, **belum diverifikasi** dan
+    perlu ditanyakan ke Helipod.
+  - Opsi yang diusulkan agen: Cloudflare (paket gratis) di depan domain.
+    Kode lalu mempercayai `CF-Connecting-IP` hanya untuk koneksi dari
+    rentang IP Cloudflare. Cara ini belum diputuskan Owner. Untuk
+    `niuva.id`, opsi ini berarti memindahkan nameserver dari Rumahweb ke
+    Cloudflare dan memasang ulang record Resend `mail.niuva.id`. Itu
+    perubahan DNS yang butuh instruksi Owner.
+- **Server, pengganti peran Netlify:**
+  - Caddy sebagai reverse proxy dengan HTTPS Let's Encrypt otomatis;
+  - firewall yang hanya membuka 80, 443 dan port SSH; PostgreSQL hanya
+    lewat localhost;
+  - SSH khusus key, tanpa password, plus fail2ban;
+  - unattended-upgrades;
+  - env production di server dengan izin file ketat, tidak masuk Git;
+  - `pg_dump` harian terenkripsi ke S3 Jakarta, ditambah latihan restore
+    (T38);
+  - monitor uptime eksternal.
+- **Domain:** Owner menegaskan domain Niuva sudah dibeli di Rumahweb
+  (30 Oktober). Domain production adalah `niuva.id` (PRD; Manajemen DNS
+  Rumahweb sudah aktif dan dipakai untuk `mail.niuva.id` sejak 28 Oktober).
+  Tanpa Cloudflare, cukup record A `niuva.id` (dan `www`) ke IP VPS di
+  Rumahweb. Tanggal kedaluwarsa dan auto-renew domain belum diverifikasi.
+- **SEO yang belum ada:**
+  - verifikasi Google Search Console dan Bing Webmaster, lalu kirim
+    sitemap;
+  - gambar Open Graph (menunggu aset yang disetujui Owner);
+  - data terstruktur JSON-LD untuk Organization/LocalBusiness dan Product;
+  - Google Business Profile. Ini langkah Owner, memakai data usaha yang
+    benar.
+- **Biaya:** Cloudflare, Let's Encrypt, Search Console dan monitor uptime
+  versi gratis bernilai Rp0. Domain tidak perlu dibeli lagi; biaya
+  perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
+  pihak ketiga belum diverifikasi ulang.
 
 ### Grant aktivasi staging E6, 2026-10-28
 
