@@ -1983,7 +1983,10 @@ belum ada yang dikerjakan.
     perlu ditanyakan ke Helipod.
   - Opsi yang diusulkan agen: Cloudflare (paket gratis) di depan domain.
     Kode lalu mempercayai `CF-Connecting-IP` hanya untuk koneksi dari
-    rentang IP Cloudflare. Cara ini belum diputuskan Owner.
+    rentang IP Cloudflare. Cara ini belum diputuskan Owner. Untuk
+    `niuva.id`, opsi ini berarti memindahkan nameserver dari Rumahweb ke
+    Cloudflare dan memasang ulang record Resend `mail.niuva.id`. Itu
+    perubahan DNS yang butuh instruksi Owner.
 - **Server, pengganti peran Netlify:**
   - Caddy sebagai reverse proxy dengan HTTPS Let's Encrypt otomatis;
   - firewall yang hanya membuka 80, 443 dan port SSH; PostgreSQL hanya
@@ -1994,8 +1997,12 @@ belum ada yang dikerjakan.
   - `pg_dump` harian terenkripsi ke S3 Jakarta, ditambah latihan restore
     (T38);
   - monitor uptime eksternal.
+- **Domain:** Owner menegaskan domain Niuva sudah dibeli di Rumahweb
+  (30 Oktober). Domain production adalah `niuva.id` (PRD; Manajemen DNS
+  Rumahweb sudah aktif dan dipakai untuk `mail.niuva.id` sejak 28 Oktober).
+  Tanpa Cloudflare, cukup record A `niuva.id` (dan `www`) ke IP VPS di
+  Rumahweb. Tanggal kedaluwarsa dan auto-renew domain belum diverifikasi.
 - **SEO yang belum ada:**
-  - domain production sendiri;
   - verifikasi Google Search Console dan Bing Webmaster, lalu kirim
     sitemap;
   - gambar Open Graph (menunggu aset yang disetujui Owner);
@@ -2003,8 +2010,9 @@ belum ada yang dikerjakan.
   - Google Business Profile. Ini langkah Owner, memakai data usaha yang
     benar.
 - **Biaya:** Cloudflare, Let's Encrypt, Search Console dan monitor uptime
-  versi gratis bernilai Rp0. Domain .com lewat Helipod Rp171.009/tahun +
-  PPN 11%. Harga paket gratis pihak ketiga belum diverifikasi ulang.
+  versi gratis bernilai Rp0. Domain tidak perlu dibeli lagi; biaya
+  perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
+  pihak ketiga belum diverifikasi ulang.
 
 ### Grant aktivasi staging E6, 2026-10-28
 
