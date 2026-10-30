@@ -28,7 +28,7 @@ ada di papan ini; pekerjaan baru masuk tabel task, bukan file lain.
 
 | Kelompok | Task | Pelaksana | Langkah berikutnya | Penghambat |
 | --- | --- | --- | --- | --- |
-| Owner, bisa sekarang | T33 | O + A | `ORD-20261030-YAJE5AHR` dibayar dan email terkirim; lanjut Admin Processing → Ready To Ship → resi → Shipped setelah perbaikan shipment retail ter-deploy. Lalu satu order lagi dengan dua produk berbeda dan kurir lain (syarat variasi D03) | Deploy perbaikan shipment retail |
+| Owner, bisa sekarang | T33 | O + A | `ORD-20261030-YAJE5AHR` sampai Shipped dan tiga email delivered (30 Okt). Sisa: satu order dengan dua produk berbeda dan kurir lain (syarat variasi D03) | — |
 | | T03, T19 | O + A | Smoke R2 privat/publik lewat unggah media Admin | Sesi Admin Owner |
 | | T09 | O | `CUSTOMER_AUTH_CLEANUP` lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
 | | T23, T25, T35 | O | Cek metode dan fitur refund di dashboard Midtrans sandbox; grant `refund` sudah ada | Q1 |
@@ -2089,6 +2089,21 @@ Neon MCP (role runtime) dan Resend MCP:
 - **Bukti lokal:** integration `database.test.ts` 17/17 di DB test terisolasi,
   unit halaman Admin 65/65, backend 121/951, lint 0 error, typecheck, build.
   Hosted **belum diverifikasi** sampai deploy dan langkah Admin Owner.
+- **Hosted setelah PR #95 (`aba6827`, deploy `6ae4ccf3cebfe1f62524e0ae`,
+  secret scan 2.285 file bersih):** Owner menjalankan Processing → Ready To
+  Ship dan menyimpan resi. Shipment retail terbentuk otomatis (jnt, ez,
+  `TESTBUY2-001`, Rp11.000). Tiga klik berikutnya ternyata menyimpan resi
+  ulang, bukan Shipped; ketiga tombol di kotak "Aksi operasional" berwarna
+  sama, sehingga mudah tertukar (catatan UX, belum diperbaiki). Atas izin
+  Owner, agen menekan "Ubah ke Shipped" lewat browser dengan sesi Admin Owner:
+  order SHIPPED, `shipped_at` 17:20:59 UTC. `OUTBOX_BUSINESS` enqueued 1,
+  `OUTBOX_DELIVERY` accepted 1; Resend: "Pesanan … dikirim" delivered.
+  Status shipment tetap `PENDING` karena tidak ada pelacakan kurir otomatis.
+- **Temuan lain:** `POST /api/admin/notifications` sekali 500
+  `INTERNAL_ERROR`/`CODE_DEFECT` pukul 17:14:38 UTC; request sebelum dan
+  sesudahnya 200. Penyebab belum diselidiki.
+- **Sisa T33:** satu order dengan dua produk berbeda dan kurir lain (variasi
+  D03), sampai email dikirim.
 
 ### T42 scheduler: jadwal job production, 2026-10-30
 
