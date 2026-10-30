@@ -4,7 +4,7 @@ Update this after major decisions, completed phases, or bugs that future agents 
 
 ## Current State
 
-- Working baseline: `main` `f3ac38c` after PR #90 (30 Oct 2026). Staging `niuva-t03-staging` (Netlify functions us-east-2, Neon ap-southeast-1) runs sandbox providers; dated hosted evidence lives in `TASKS.md`, not here.
+- Working baseline: `main` `6c63707` after PR #97 (30 Oct 2026). Staging `niuva-t03-staging` (Netlify functions us-east-2, Neon ap-southeast-1) runs sandbox providers; dated hosted evidence lives in `TASKS.md`, not here.
 - Current work: v1.0 closure. Scope: `PRODUCT.md`; dependencies: `ROADMAP.md`; sole active backlog: `TASKS.md` (start with its "Fokus aktif" board); completion: `docs/v1-definition-of-done.md`. `.kiro/specs/` is historical evidence.
 - Current task statuses and dated execution evidence belong to `TASKS.md`; this memory does not duplicate its backlog table.
 - Data model: 81 Prisma models (`grep -c '^model ' prisma/schema.prisma`) and 40 migration folders (`ls -d prisma/migrations/*/ | wc -l`). Counts describe files, not an applied database state.
