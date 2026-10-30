@@ -22,7 +22,7 @@ lingkungan; status task tidak otomatis menutup gate readiness.
 | M3 — Admin mandiri | T15–T20 | M0; T03 untuk media hosted | Owner/Admin dapat menambah draft produk, varian, project, dan media, lalu publish dengan validasi server. |
 | M4 — Penutupan transaksi | T21–T31 | M0; outbox/job M1 | Refund/reconciliation, email bisnis, dataset dan tarif siap untuk pembuktian BUY/MAKE terpadu. |
 | M5 — Pembuktian staging | T32–T39 | M1–M4; resource dan input Owner | Dua transaksi BUY dan satu MAKE, failure/refund, operasi Admin, aksesibilitas dan restore memiliki bukti. |
-| M6 — Rilis terkendali | T40–T42 | M5; seluruh gate wajib | Infrastruktur production VPS dan adaptasi runtime-nya terbukti; instruksi rilis eksplisit, aktivasi terbatas, smoke production, monitoring, dan serah terima rollback. |
+| M6 — Rilis terkendali | T40–T42, T44 | M5; seluruh gate wajib | Infrastruktur production VPS dan adaptasi runtime-nya terbukti; instruksi rilis eksplisit, aktivasi terbatas, smoke production, monitoring, dan serah terima rollback. |
 
 M2, M3, dan M4 dapat dikembangkan sebagai irisan terpisah setelah interface
 fondasinya jelas. Pengembangan dengan fixture tidak perlu menunggu semua fakta
