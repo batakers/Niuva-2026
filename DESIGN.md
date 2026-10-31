@@ -174,7 +174,7 @@ components:
 
 ## Overview
 
-**Status: aktif — Foundation v2.** Fondasi v2 diputuskan Owner pada 31 Oktober 2026 (TASKS.md "Redesign frontend", Q19–Q25, T46) dan menggantikan Foundation/Typography v1.0 yang diotorisasi DS-DEC-019. Acceptance visual Owner, pengujian device/AT, staging, dan produksi tetap gerbang terpisah dan **belum direview**. `version: alpha` di atas adalah versi format Google DESIGN.md, bukan versi fondasi Niuva.
+**Status: aktif — Foundation v2.** Fondasi v2 diputuskan Owner pada 31 Oktober 2026 (TASKS.md "Redesign frontend", Q19–Q25, T46) dan menggantikan Foundation/Typography v1.0 yang diotorisasi DS-DEC-019. Beranda diterima Owner secara visual pada 31 Oktober 2026. Acceptance visual halaman lain, pengujian device/AT, staging, dan produksi tetap gerbang terpisah dan **belum direview**. `version: alpha` di atas adalah versi format Google DESIGN.md, bukan versi fondasi Niuva.
 
 **Creative North Star: "Ide → Produk jadi, dibawa maskot Niuva."** Niuva adalah partner pengembangan produk dengan kapabilitas manufaktur; dunianya terang, tenang, dan ramah. Dasar biru-dingin yang terang menampung permukaan putih membulat di atas hairline; satu bidang Niuva Blue menjadi satu-satunya warna jenuh, dan di sanalah maskot Niuva (render Blender milik Owner) berdiri bersama fakta nyata dalam kartu putih. Judul ringan (Manrope 400) membiarkan isi dan maskot yang berbicara; tindakan berbentuk pill outline.
 

@@ -31,7 +31,7 @@ ada di papan ini; pekerjaan baru masuk tabel task, bukan file lain.
 | | T03, T19 | O + A | Smoke R2 privat/publik lewat unggah media Admin | Sesi Admin Owner |
 | | T09 | O | `CUSTOMER_AUTH_CLEANUP` lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
 | | T23, T25, T35 | O | Cek metode dan fitur refund di dashboard Midtrans sandbox (Owner mengecek, 31 Okt); grant `refund` sudah ada | Q1 |
-| Redesign | T46 → T47 | A | Arah dikunci (Q23–Q25); fondasi dan Beranda selesai lokal; review akhir, DESIGN.md, PR | Postgres lokal untuk E2E (Owner) |
+| Redesign | T46 → T47 | A | Fondasi v2 dan Beranda di `main` (PR #103), Beranda diterima Owner; berikutnya komposisi Layanan dan Proyek | Postgres lokal untuk E2E (Owner) |
 | | T48–T50 | A | Commerce/MAKE, Customer/auth, lalu Admin di atas fondasi T46; verifikasi lokal | T46 |
 | | T36 | O + A | UAT operasi Admin di UI baru | T50 |
 | Berantai | T34 → T08 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim; lalu retensi file pada berkas MAKE | T33 dulu |
@@ -2174,7 +2174,9 @@ Branch `claude/redesign-foundation-company` dari `main@f8c8cbd`.
     tetap tampil apa adanya sampai diubah lewat Admin.
 - **Belum:**
   - E2E lokal (Postgres lokal mati, service perlu hak admin);
-  - review visual Owner atas hasil build;
+  - review visual Owner atas Layanan, Proyek, dan halaman lain. Beranda sudah
+    diterima Owner (31 Okt, "ya, sudah diterima") setelah PR #103 di-merge ke
+    `main` sebagai `7ddb346`;
   - komposisi penuh Layanan/Proyek;
   - lint format `designmd` (unduhan npx diblokir);
   - staging (kredit Netlify pulih 26 Nov).

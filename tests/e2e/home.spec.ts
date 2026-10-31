@@ -41,12 +41,12 @@ test("public homepage exposes the Niuva narrative and entry paths", async ({ pag
   await expect(navigation.getByRole("link", { name: "Cara kerja", exact: true })).toHaveCount(0);
 });
 
-test("Foundation proof keeps Home and the services destination pending visual review", async ({ page }) => {
+test("Foundation proof marks Home as Owner-accepted and keeps the services destination pending visual review", async ({ page }) => {
   await page.goto("/");
   const homepage = page.locator("[data-homepage]");
   await expect(homepage).toHaveAttribute("data-foundation-propagation", "approved");
   await expect(homepage).toHaveAttribute("data-foundation-scope", "homepage");
-  await expect(homepage).toHaveAttribute("data-product-screen-proof-status", "pending-owner-review");
+  await expect(homepage).toHaveAttribute("data-product-screen-proof-status", "approved-owner");
   await expect(homepage).toHaveAttribute("data-typography-version", "2.0");
   await expect(homepage).toHaveCSS("font-family", /Manrope/);
   await page.goto("/project-brief");

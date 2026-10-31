@@ -43,7 +43,8 @@ export function PublicShell({
   const resolvedHeaderAction = headerAction ?? null;
   const showB2BContact = headerAction === undefined && b2bHeaderScopes.has(scope);
   const demoMode = isLocalDemoMode();
-  const productRouteProofStatus = "pending-owner-review";
+  // Owner accepted the homepage visually on 31 Oct 2026; every other public route still awaits review.
+  const productRouteProofStatus = scope === "homepage" ? "approved-owner" : "pending-owner-review";
 
   return (
     <div className="min-h-screen bg-background text-foreground"
