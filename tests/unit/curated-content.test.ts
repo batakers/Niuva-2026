@@ -9,6 +9,7 @@ import {
   curatedServices,
 } from "@/features/frontend-preview/curated-content";
 import { curatedProjectDocumentation } from "@/features/frontend-preview/curated-documentation";
+import { PUBLIC_MEDIA_MAX_ITEMS } from "@/modules/public-media/schema";
 
 describe("approved public content source", () => {
   it("records the Owner approval while keeping the reference preview separate", () => {
@@ -58,12 +59,12 @@ describe("approved public content source", () => {
     const projectIds = new Set<string>([...curatedFeaturedProjects, ...curatedSelectedWorks].map(project => project.id));
     const items = Object.entries(curatedProjectDocumentation).flatMap(([id, list]) => {
       expect(projectIds.has(id)).toBe(true);
-      // Cover plus documentation must fit the admin media limit of 12 per project.
-      expect(list.length + 1).toBeLessThanOrEqual(12);
+      // Cover plus documentation must fit the project gallery limit (24 since 1 Nov 2026).
+      expect(list.length + 1).toBeLessThanOrEqual(PUBLIC_MEDIA_MAX_ITEMS.portfolio);
       return list;
     });
-    expect(items).toHaveLength(42);
-    expect(curatedProjectDocumentation["SW-02"]).toBeUndefined();
+    expect(items).toHaveLength(64);
+    expect(Object.keys(curatedProjectDocumentation)).toHaveLength(projectIds.size);
     for (const item of items) {
       expect(item.sourceReference).toMatch(/^SRC-(PORT|PDS|COMPANY)-00\d p\.\d+$/);
       const file = readFileSync(resolve(process.cwd(), "public", item.publicPath.slice(1)));
@@ -71,8 +72,8 @@ describe("approved public content source", () => {
       expect(file.readUInt32BE(20), item.publicPath).toBe(item.height);
       expect(existsSync(resolve(process.cwd(), item.internalPath))).toBe(true);
     }
-    // The three images the Owner did not approve stay out.
-    expect(items.map(item => item.altText).join(" ")).not.toMatch(/Netflix|spesifikasi|Anak/);
+    // The specification sheet is shown only as unverified evidence.
+    expect(items.find(item => item.altText.startsWith("Lembar spesifikasi"))?.altText).toContain("belum diverifikasi");
   });
 
   it("does not invent full challenge and process stories for summary-only cases", () => {

@@ -394,8 +394,13 @@ selected works now carries one approved PDF-derived card cover listed in
 detail page showing the approved summary, the cover, and Owner-approved
 documentation images. Owner decision, 1 November 2026 ("Setujui yang
 disarankan"): 42 documentation images for 14 projects, with their captions, are
-approved; the 17 optional and 3 not-recommended images from the same review are
-not used. Provenance per file is in
+approved. The same day the Owner asked for every project's documentation to be
+used, the higher-risk images included ("Masukkan semuanya"): 64 images across
+all 17 projects. Captions stay inside this dossier's boundaries (CS-02's
+physical motorcycle is development context only; BeVenTU's specification sheet
+is captioned as unverified), and Elips is shown as printed on its source page,
+with the "MITCH design 2003" inscription still covered and its attribution
+open. Provenance per file is in
 `docs/content/media-proofs/project-documentation/README.md`.
 
 These entries show breadth without pretending that a full narrative is already

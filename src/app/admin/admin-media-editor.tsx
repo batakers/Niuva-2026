@@ -15,7 +15,7 @@ export function AdminMediaEditor({ media, label, owner }: Readonly<{ media: read
   const [rows, setRows] = useState(() => [...media].sort((a, b) => a.sortOrder - b.sortOrder).map((item, index) => ({ storageKey: item.storageKey, altText: item.altText, key: `initial-${index}` })));
   const [available, setAvailable] = useState<readonly Readonly<{ storageKey: string; url: string }>[]>([]);
   const [busy, setBusy] = useState(false), [error, setError] = useState<string | null>(null);
-  const setFormBusy = useAdminFormBusy(), inputId = useId();
+  const setFormBusy = useAdminFormBusy(), inputId = useId(), maxItems = PUBLIC_MEDIA_MAX_ITEMS[owner.kind];
   useEffect(() => { setFormBusy(busy); return () => setFormBusy(false); }, [busy, setFormBusy]);
   function update(index: number, value: string) { setRows(previous => previous.map((item, position) => position === index ? { ...item, altText: value } : item)); }
   function move(index: number, step: number) { setRows(previous => { const next = [...previous]; const target = index + step; if (!next[index] || !next[target]) return previous; [next[index], next[target]] = [next[target]!, next[index]!]; return next; }); }
@@ -27,7 +27,7 @@ export function AdminMediaEditor({ media, label, owner }: Readonly<{ media: read
   }
   async function upload(file: File) {
     setError(null);
-    if (rows.length >= PUBLIC_MEDIA_MAX_ITEMS || !["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > PUBLIC_MEDIA_MAX_BYTES || file.size < 1) { setError("Pilih JPEG, PNG, atau WebP maksimal 10 MiB. Satu galeri memuat maksimal 12 foto."); return; }
+    if (rows.length >= maxItems || !["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > PUBLIC_MEDIA_MAX_BYTES || file.size < 1) { setError(`Pilih JPEG, PNG, atau WebP maksimal 10 MiB. Satu galeri memuat maksimal ${maxItems} foto.`); return; }
     setBusy(true);
     try {
       const intent = await api({ operation: "intent", owner, contentType: file.type, sizeBytes: file.size });
@@ -53,8 +53,8 @@ export function AdminMediaEditor({ media, label, owner }: Readonly<{ media: read
   return <div className="grid gap-3">
     <input name="mediaJson" type="hidden" value={JSON.stringify(rows.map((item, sortOrder) => ({ storageKey: item.storageKey, altText: item.altText, sortOrder })))} />
     <p className="text-sm text-muted-foreground">Pilih urutan dan tulis deskripsi foto untuk pembaca layar. Foto pertama menjadi tampilan utama.</p>
-    <Label className="grid gap-4 text-sm font-medium" htmlFor={inputId}>Unggah foto<Input accept="image/jpeg,image/png,image/webp" disabled={busy || rows.length >= PUBLIC_MEDIA_MAX_ITEMS} id={inputId} type="file" onChange={event => { const file = event.target.files?.[0]; event.target.value = ""; if (file) void upload(file); }} /></Label>
-    <p className="text-xs text-muted-foreground">JPEG, PNG, atau WebP · maksimal 10 MiB per foto · {rows.length}/12 foto. Simpan galeri setelah upload selesai.</p>
+    <Label className="grid gap-4 text-sm font-medium" htmlFor={inputId}>Unggah foto<Input accept="image/jpeg,image/png,image/webp" disabled={busy || rows.length >= maxItems} id={inputId} type="file" onChange={event => { const file = event.target.files?.[0]; event.target.value = ""; if (file) void upload(file); }} /></Label>
+    <p className="text-xs text-muted-foreground">JPEG, PNG, atau WebP · maksimal 10 MiB per foto · {rows.length}/{maxItems} foto. Simpan galeri setelah upload selesai.</p>
     {busy ? <p role="status">Memproses foto…</p> : null}
     {error ? <p className="text-sm text-destructive" role="alert">{error}</p> : null}
     {rows.map((item, index) => <div className="grid min-w-0 gap-3 rounded-lg border border-border p-4" key={item.key}>
@@ -63,7 +63,7 @@ export function AdminMediaEditor({ media, label, owner }: Readonly<{ media: read
       <Label className="grid gap-4 text-sm font-medium">Deskripsi foto<Input className="min-h-11 min-w-0 rounded-lg border border-input bg-background px-3 font-normal outline-none focus-visible:ring-3 focus-visible:ring-ring/50" maxLength={500} required value={item.altText} onChange={event => update(index, event.target.value)} /></Label>
     </div>)}
     <Button variant="outline" className="min-h-11 w-fit" disabled={busy} onClick={() => void loadAvailable()} type="button">Muat foto tersimpan</Button>
-    {available.length ? <Label className="grid gap-4 text-sm font-medium">Pilih foto tersimpan<NativeSelect value="" disabled={busy || rows.length >= PUBLIC_MEDIA_MAX_ITEMS} onChange={event => { const storageKey = event.target.value; if (storageKey) setRows(previous => [...previous, { key: crypto.randomUUID(), storageKey, altText: "" }]); }}><option value="">Pilih foto</option>{available.filter(item => !rows.some(row => row.storageKey === item.storageKey)).map((item, index) => <option key={item.storageKey} value={item.storageKey}>Foto tersimpan {index + 1}</option>)}</NativeSelect></Label> : null}
+    {available.length ? <Label className="grid gap-4 text-sm font-medium">Pilih foto tersimpan<NativeSelect value="" disabled={busy || rows.length >= maxItems} onChange={event => { const storageKey = event.target.value; if (storageKey) setRows(previous => [...previous, { key: crypto.randomUUID(), storageKey, altText: "" }]); }}><option value="">Pilih foto</option>{available.filter(item => !rows.some(row => row.storageKey === item.storageKey)).map((item, index) => <option key={item.storageKey} value={item.storageKey}>Foto tersimpan {index + 1}</option>)}</NativeSelect></Label> : null}
     <p className="text-xs text-muted-foreground">Melepaskan foto dari daftar tidak menghapus berkas asal.</p>
   </div>;
 }

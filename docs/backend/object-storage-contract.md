@@ -79,7 +79,8 @@ tetap dipertahankan. Pemilihan provider tidak mengubah matriks/grant tersebut.
   satu inspeksi stream terbatas, ukuran dan SHA-256. Batas referensi/foto serta
   bukti finansial mengikuti policy existing; bukti finansial tidak dijadikan
   file Customer yang boleh dihapus oleh retensi biasa.
-- Public media tetap JPEG/PNG/WebP maksimal 10 MiB, maksimal 12/gallery,
+- Public media tetap JPEG/PNG/WebP maksimal 10 MiB, maksimal 12/gallery
+  produk dan 24/gallery proyek (addendum PRD 1 November 2026),
   signed quarantine PUT 10 menit dengan deklarasi Content-Length. Server
   memverifikasi gambar sebelum menulis snapshot ke bucket publik dengan
   `If-None-Match: *`; penolakan dibersihkan dari quarantine.
