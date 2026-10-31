@@ -277,6 +277,21 @@
     color: #ffffff;
   }
 
+  /* Tailwind v4 resets buttons to the default cursor; every enabled control shows it can be pressed. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary,
+  select:not(:disabled),
+  label[for],
+  input:is([type="checkbox"], [type="radio"]):not(:disabled) {
+    cursor: pointer;
+  }
+
+  :is(button, select, input):disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
   html {
     accent-color: var(--brand-700);
     caret-color: var(--brand-700);

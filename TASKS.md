@@ -2162,6 +2162,10 @@ Branch `claude/redesign-foundation-company` dari `main@f8c8cbd`.
     empat kolom mulai `lg`, sehingga kolom merek di 768px tidak lagi tergencet
     satu kata per baris. Capture 640–1440 pada `/` dan `/services` tanpa
     overflow; unit shell 35/35.
+  - permintaan Owner 31 Okt: daftar proyek Beranda tanpa em dash, jadi nama
+    karya dan klien tampil dua baris. Semua kontrol yang aktif kini memakai
+    kursor pointer (gaya dasar `globals.css`). Em dash di alamat footer dan
+    judul `/projects` menunggu keputusan Owner.
 - **Belum:**
   - E2E lokal (Postgres lokal mati, service perlu hak admin);
   - review visual Owner atas hasil build;

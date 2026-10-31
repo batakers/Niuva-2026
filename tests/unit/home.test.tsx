@@ -48,6 +48,15 @@ describe("public homepage", () => {
     expect(links[0]).toHaveTextContent(published.title);
   });
 
+  it("sets a dashed project title as the work and its client on two lines, without the em dash", async () => {
+    vi.mocked(getProjectPreview).mockResolvedValue({ projects: [{ ...published, title: "Smart Drop Box — P&G" }], scenario: null });
+    const { container } = render(await Home());
+    const [link] = projectLinks(container);
+    expect(link).toHaveTextContent("Smart Drop Box");
+    expect(link).toHaveTextContent("P&G");
+    expect(link.textContent).not.toContain("—");
+  });
+
   it("does not link card-only projects", async () => {
     vi.mocked(getProjectPreview).mockResolvedValue({ projects: [{ ...published, detailReadiness: "card-only" }], scenario: null });
     const { container } = render(await Home());
