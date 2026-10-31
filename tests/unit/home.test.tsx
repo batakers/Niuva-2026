@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { renderToString } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/image", () => ({
@@ -16,6 +17,7 @@ vi.mock("@/features/frontend-preview/server", () => ({
 import { connection } from "next/server";
 vi.mock("@/modules/site-information/public-reader", async () => ({ getPublicSiteInformation: async () => (await import("@/modules/site-information/defaults")).defaultSiteInformation }));
 import Home, * as homeModule from "@/app/page";
+import { StartingPoints, type StartingPath } from "@/app/home-starting-points";
 import { getProjectPreview } from "@/features/frontend-preview/server";
 import type { ProjectPreviewItem } from "@/features/frontend-preview/types";
 
@@ -75,8 +77,6 @@ describe("public homepage", () => {
     expect(entryPaths.querySelector('a[href="/custom-print"]')).not.toBeNull();
     expect(entryPaths.querySelector('a[href="/shop"]')).not.toBeNull();
     expect(screen.getByRole("heading", { name: "Punya ide atau proyek?" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Sudah punya model 3D?" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Cari produk siap pakai?" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Dari ide menjadi produk nyata." })).toBeInTheDocument();
     for (const stage of ["Ide", "Desain", "Prototipe", "Produk jadi"]) {
       expect(screen.getByRole("heading", { level: 3, name: stage })).toBeInTheDocument();
@@ -87,5 +87,35 @@ describe("public homepage", () => {
     expect(document.querySelectorAll("[data-homepage] .font-mono")).toHaveLength(0);
     expect(document.querySelectorAll("[data-homepage] .font-technical")).toHaveLength(0);
     expect(document.querySelectorAll("[data-homepage] .uppercase")).toHaveLength(0);
+  });
+
+  it("switches one starting point at a time with pressed option chips", async () => {
+    render(await Home());
+    const chooser = screen.getByRole("group", { name: "Pilih titik mulai" });
+    const chip = (name: string) => within(chooser).getByRole("button", { name });
+    expect(chip("Ide atau proyek")).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByRole("heading", { name: "Sudah punya model 3D?" })).toBeNull();
+
+    fireEvent.click(chip("Model 3D"));
+    expect(chip("Model 3D")).toHaveAttribute("aria-pressed", "true");
+    expect(chip("Ide atau proyek")).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("heading", { name: "Sudah punya model 3D?" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Punya ide atau proyek?" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Ajukan untuk Review" })).toHaveAttribute("href", "/custom-print");
+
+    fireEvent.click(chip("Produk siap pakai"));
+    expect(screen.getByRole("heading", { name: "Cari produk siap pakai?" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Lihat Toko" })).toHaveAttribute("href", "/shop");
+  });
+
+  it("lists every starting point and hides the chips before hydration or without JavaScript", () => {
+    const paths: StartingPath[] = ["Satu", "Dua", "Tiga"].map((title) => ({
+      id: title, label: title, title: `${title}?`, description: `Uraian ${title}`,
+      action: <a href={`/${title}`}>Buka {title}</a>, image: "/assets/mascot/niuva-mascot-halo.webp", alt: `Maskot ${title}`, notes: null,
+    }));
+    const markup = new DOMParser().parseFromString(renderToString(<StartingPoints paths={paths} />), "text/html");
+    expect(markup.querySelector('[role="group"]')?.hasAttribute("hidden")).toBe(true);
+    expect([...markup.querySelectorAll("h3")].map((heading) => heading.textContent)).toEqual(["Satu?", "Dua?", "Tiga?"]);
+    expect(markup.querySelectorAll("h3[hidden], div[hidden] > h3")).toHaveLength(0);
   });
 });

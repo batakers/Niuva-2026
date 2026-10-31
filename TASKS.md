@@ -2142,6 +2142,22 @@ Branch `claude/redesign-foundation-company` dari `main@f8c8cbd`.
   - capture 1440/390 untuk `/`, Layanan, detail layanan, Proyek, detail
     proyek, 404 tanpa overflow;
   - spec E2E diperbarui untuk copy baru.
+- **Tinjauan taste-skill Beranda (31 Okt, disetujui Owner "Ya, perbaiki tiga"):**
+  - inspector dev server 1440/768/390: 10 FAIL dan 8 WARN menjadi 6 FAIL dan
+    7 WARN;
+  - tiga perbaikan:
+    - adegan proses: di bawah `lg` setiap tahap membawa render kecilnya
+      sendiri, tanpa panggung sticky yang menutup judul;
+    - judul hero 2 baris mulai `xl`, dan teks di bidang tepi-ke-tepi sejajar
+      dengan logo header (`--panel-inset`);
+    - tiga split titik mulai menjadi satu pemilih dengan option chip
+      `aria-pressed`, dan tanpa JavaScript ketiga jalur tetap tampil;
+  - kontras hero diukur ulang: terendah 4,91:1 (headline);
+  - sisa FAIL adalah aturan Foundation v2 (gradien, hairline, shadow
+    mengambang, kartu pintu) dan judul 4 baris di 390px, yang butuh keputusan
+    copy Owner;
+  - unit `home.test.tsx` 8/8, lint 0 error, typecheck lulus; replay langkah
+    E2E Beranda lokal lulus; E2E resmi tetap di CI.
 - **Belum:**
   - E2E lokal (Postgres lokal mati, service perlu hak admin);
   - review visual Owner atas hasil build;

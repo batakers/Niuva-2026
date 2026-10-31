@@ -21,6 +21,6 @@ STORY: the visitor learns what Niuva does, sees three starting points, follows t
 
 FIRST VIEWPORT: sticky light header; full-width blue panel (radius 30) with the headline on the left (last word cycles prototipe, desain, produk nyata), subcopy, "Hubungi Kami" outline and "Lihat layanan"; the waving mascot render on the right with two white fact cards; three white door cards below: Layanan, Custom 3D Print, Toko.
 
-FORM: user-pinned after two rejected rolls (references motorq.com, x.ai, Niuva mascot pack); seed: 54802243bb3a1e44. Signature interaction: a sticky process scene that swaps mascot renders per stage on scroll; fact cards drift; reduced motion keeps everything static.
+FORM: user-pinned after two rejected rolls (references motorq.com, x.ai, Niuva mascot pack); seed: 54802243bb3a1e44. Signature interaction: a sticky process scene (from `lg`; compact lists each stage with its own small render) that swaps mascot renders per stage on scroll; a starting-point chooser whose option chips swap the path text and mascot panel; fact cards drift; reduced motion keeps everything static.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

@@ -11,6 +11,7 @@ import { publicCompanyProfile, publicServices } from "@/features/public/company-
 import { buildPageSocialMetadata } from "@/lib/site-metadata";
 import { getPublicSiteInformation } from "@/modules/site-information/public-reader";
 import { DriftCard, HeroStageWord, LeaningMascot, ProcessScene, type ProcessStage } from "./home-motion";
+import { StartingPoints, type StartingPath } from "./home-starting-points";
 
 const headingToken = typographySystemTokens.heading.className;
 
@@ -43,6 +44,52 @@ const doors = [
 ] as const;
 
 const factCard = "w-66 rounded-[var(--radius-control)] bg-card p-4 text-foreground shadow-floating";
+const bubble = "absolute max-w-64 rounded-xl bg-card p-3.5 text-caption leading-[1.45] shadow-floating";
+
+const startingPaths: readonly StartingPath[] = [
+  {
+    id: "idea",
+    label: "Ide atau proyek",
+    title: "Punya ide atau proyek?",
+    description: "Ceritakan tujuan, tahap saat ini, dan bahan awal Anda. Tim Niuva membahas kebutuhan, ruang lingkup, dan langkah berikutnya langsung lewat WhatsApp.",
+    action: <B2BContactLink />,
+    image: mascot.collaborate,
+    alt: "Maskot Niuva menunjuk ke depan",
+    notes: (
+      <>
+        <p className={`${bubble} top-6 left-6`}>Contoh: “Kami butuh prototipe casing untuk perangkat baru.”</p>
+        <p className={`${bubble} right-6 bottom-8`}>Niuva: “Bisa. Kirim sketsa atau CAD-nya, kita bahas ruang lingkupnya dulu.”</p>
+      </>
+    ),
+  },
+  {
+    id: "model",
+    label: "Model 3D",
+    title: "Sudah punya model 3D?",
+    description: "Unggah STL, 3MF, atau OBJ secara privat. Operator memeriksa model dan hasil slicing sebelum quote dikirim, jadi Anda menyetujui harga yang sudah diverifikasi.",
+    action: <NiuvaLink href="/custom-print" variant="outline">Ajukan untuk Review</NiuvaLink>,
+    image: mascot.design,
+    alt: "Maskot Niuva memegang laptop",
+    notes: (
+      <>
+        <div className="absolute top-6 left-6 min-w-60 rounded-xl bg-card p-3.5 text-caption shadow-floating">
+          <div className="flex items-center gap-2.5"><span><b className="font-semibold">casing-v2.stl</b> <span className="text-muted-foreground">(contoh)</span></span><span className="ml-auto rounded-full bg-warning-background px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-warning">Perlu review</span></div>
+        </div>
+        <p className={`${bubble} right-6 bottom-8`}>Estimasi awal, bukan harga final.</p>
+      </>
+    ),
+  },
+  {
+    id: "shop",
+    label: "Produk siap pakai",
+    title: "Cari produk siap pakai?",
+    description: "Pilih produk ready-made dan variannya di Toko. Harga, stok, dan ongkir diperiksa ulang saat checkout.",
+    action: <NiuvaLink href="/shop" variant="outline">Lihat Toko</NiuvaLink>,
+    image: mascot.present,
+    alt: "Maskot Niuva memegang tablet",
+    notes: <p className={`${bubble} top-6 left-6`}>Varian, harga, dan stok tampil di setiap produk sebelum Anda menambah ke keranjang.</p>,
+  },
+];
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteInformation = await getPublicSiteInformation();
@@ -75,14 +122,16 @@ export default async function Home() {
 
   return (
     <PublicShell scope="homepage">
-      <main id="main-content">
+      {/* --panel-inset puts text inside the edge-to-edge panels on the header's content gutter. */}
+      <main className="@container [--panel-inset:max(1.5rem,calc((100cqw_-_81rem)/2_+_1.5rem))]" id="main-content">
         <section
           aria-labelledby="hero-title"
-          className="relative mx-3 overflow-hidden rounded-[var(--radius-media)] bg-[radial-gradient(130%_70%_at_50%_100%,var(--brand-400)_0%,var(--brand-600)_32%,var(--brand-700)_62%,var(--brand-800)_100%)] lg:bg-[radial-gradient(70%_110%_at_80%_35%,var(--brand-400)_0%,var(--brand-600)_30%,var(--brand-700)_58%,var(--brand-800)_100%)] text-white sm:mx-6 lg:h-155"
+          className="relative mx-3 overflow-hidden rounded-[var(--radius-media)] bg-[radial-gradient(130%_70%_at_50%_100%,var(--brand-400)_0%,var(--brand-600)_32%,var(--brand-700)_62%,var(--brand-800)_100%)] lg:bg-[radial-gradient(70%_110%_at_80%_35%,var(--brand-400)_0%,var(--brand-600)_30%,var(--brand-700)_58%,var(--brand-800)_100%)] xl:bg-[radial-gradient(52%_105%_at_83%_38%,var(--brand-400)_0%,var(--brand-600)_30%,var(--brand-700)_58%,var(--brand-800)_100%)] text-white sm:mx-6 lg:h-155"
           data-home-section="hero"
           id="hero"
         >
-          <div className="relative z-10 px-6 pt-10 sm:px-12 lg:absolute lg:inset-y-0 lg:left-0 lg:flex lg:w-[50%] lg:flex-col lg:justify-center lg:pr-4 lg:pl-16 lg:pt-0">
+          {/* From xl the column holds "Mitra pengembangan produk / dari riset hingga produk nyata." on two lines. */}
+          <div className="relative z-10 px-6 pt-10 sm:px-(--panel-inset) lg:absolute lg:inset-y-0 lg:left-0 lg:flex lg:w-[calc(var(--panel-inset)+30rem)] lg:flex-col lg:justify-center lg:pr-0 lg:pt-0 xl:w-[calc(var(--panel-inset)+49rem)]">
             <h1 className={`${typographySystemTokens.display.className} text-balance`} id="hero-title">
               <span className="sr-only">{publicCompanyProfile.headline}</span>
               <span aria-hidden="true">{headlineLead} <HeroStageWord words={stageWords} />.</span>
@@ -93,7 +142,7 @@ export default async function Home() {
               <Link className="inline-flex min-h-11 items-center font-semibold text-white underline underline-offset-4 hover:decoration-2" href="/services">Lihat layanan</Link>
             </div>
           </div>
-          <div className="relative h-64 lg:absolute lg:inset-y-0 lg:right-0 lg:h-auto lg:w-[58%]">
+          <div className="relative h-64 lg:absolute lg:inset-y-0 lg:right-0 lg:left-[calc(var(--panel-inset)+30rem)] lg:h-auto xl:left-[calc(var(--panel-inset)+49rem)]">
             <LeaningMascot
               alt="Maskot Niuva melambaikan tangan"
               className="absolute -bottom-7.5 left-1/2 h-[108%] -translate-x-1/2 lg:-bottom-11.5 lg:h-[112%]"
@@ -105,7 +154,7 @@ export default async function Home() {
                 <p className="mt-1 text-caption leading-[1.45] text-muted-foreground">Setiap model direview operator sebelum quote dikirim.</p>
               </div>
             </DriftCard>
-            <DriftCard className="absolute bottom-18 left-[11%] z-20 hidden lg:block" depth={-0.35}>
+            <DriftCard className="absolute bottom-18 left-[-12%] z-20 hidden lg:block" depth={-0.35}>
               <div className={factCard}>
                 <p className="text-base font-semibold">Estimasi awal, bukan harga final</p>
                 <p className="mt-1 text-caption leading-[1.45] text-muted-foreground">Harga final mengikuti hasil slicing operator.</p>
@@ -130,52 +179,12 @@ export default async function Home() {
           <h2 className={headingToken} id="starting-points-title">Mulai dari apa yang sudah Anda punya.</h2>
           <p className="mt-3.5 max-w-[56ch] text-lead leading-[1.6] text-muted-foreground sm:text-lg">Ide untuk dikembangkan, model untuk dicetak, atau produk siap pakai.</p>
 
-          <div className="mt-12 grid gap-16 sm:mt-16 sm:gap-10">
-            <article className="grid items-center gap-6 lg:grid-cols-[1fr_1.1fr] lg:gap-14">
-              <div>
-                <h3 className="text-2xl font-medium tracking-[-0.015em] sm:text-3xl">Punya ide atau proyek?</h3>
-                <p className="mt-3 max-w-[44ch] text-lead leading-[1.65] text-muted-foreground">Ceritakan tujuan, tahap saat ini, dan bahan awal Anda. Tim Niuva membahas kebutuhan, ruang lingkup, dan langkah berikutnya langsung lewat WhatsApp.</p>
-                <B2BContactLink className="mt-5" />
-              </div>
-              <div className="relative h-85 overflow-hidden rounded-[var(--radius-media)] bg-brand-100 sm:h-105">
-                <Image alt="Maskot Niuva menunjuk ke depan" className="absolute -bottom-2 left-1/2 h-[112%] w-auto -translate-x-1/2 object-contain" height={1400} sizes="(max-width: 1024px) 90vw, 560px" src={mascot.collaborate} width={1400} />
-                <p className="absolute top-6 left-6 max-w-64 rounded-xl bg-card p-3.5 text-caption leading-[1.45] shadow-floating">Contoh: “Kami butuh prototipe casing untuk perangkat baru.”</p>
-                <p className="absolute right-6 bottom-8 max-w-64 rounded-xl bg-card p-3.5 text-caption leading-[1.45] shadow-floating">Niuva: “Bisa. Kirim sketsa atau CAD-nya, kita bahas ruang lingkupnya dulu.”</p>
-              </div>
-            </article>
-
-            <article className="grid items-center gap-6 lg:grid-cols-[1.1fr_1fr] lg:gap-14">
-              <div className="lg:order-last">
-                <h3 className="text-2xl font-medium tracking-[-0.015em] sm:text-3xl">Sudah punya model 3D?</h3>
-                <p className="mt-3 max-w-[44ch] text-lead leading-[1.65] text-muted-foreground">Unggah STL, 3MF, atau OBJ secara privat. Operator memeriksa model dan hasil slicing sebelum quote dikirim, jadi Anda menyetujui harga yang sudah diverifikasi.</p>
-                <NiuvaLink className="mt-5" href="/custom-print" variant="outline">Ajukan untuk Review</NiuvaLink>
-              </div>
-              <div className="relative h-85 overflow-hidden rounded-[var(--radius-media)] bg-brand-100 sm:h-105">
-                <Image alt="Maskot Niuva memegang laptop" className="absolute -bottom-2 left-1/2 h-[112%] w-auto -translate-x-1/2 object-contain" height={1400} sizes="(max-width: 1024px) 90vw, 560px" src={mascot.design} width={1400} />
-                <div className="absolute top-6 left-6 min-w-60 rounded-xl bg-card p-3.5 text-caption shadow-floating">
-                  <div className="flex items-center gap-2.5"><span><b className="font-semibold">casing-v2.stl</b> <span className="text-muted-foreground">(contoh)</span></span><span className="ml-auto rounded-full bg-warning-background px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-warning">Perlu review</span></div>
-                </div>
-                <div className="absolute right-6 bottom-8 rounded-xl bg-card px-3.5 py-3 text-caption shadow-floating">Estimasi awal, bukan harga final.</div>
-              </div>
-            </article>
-
-            <article className="grid items-center gap-6 lg:grid-cols-[1fr_1.1fr] lg:gap-14">
-              <div>
-                <h3 className="text-2xl font-medium tracking-[-0.015em] sm:text-3xl">Cari produk siap pakai?</h3>
-                <p className="mt-3 max-w-[44ch] text-lead leading-[1.65] text-muted-foreground">Pilih produk ready-made dan variannya di Toko. Harga, stok, dan ongkir diperiksa ulang saat checkout.</p>
-                <NiuvaLink className="mt-5" href="/shop" variant="outline">Lihat Toko</NiuvaLink>
-              </div>
-              <div className="relative h-85 overflow-hidden rounded-[var(--radius-media)] bg-brand-100 sm:h-105">
-                <Image alt="Maskot Niuva memegang tablet" className="absolute -bottom-2 left-1/2 h-[112%] w-auto -translate-x-1/2 object-contain" height={1400} sizes="(max-width: 1024px) 90vw, 560px" src={mascot.present} width={1400} />
-                <p className="absolute top-6 left-6 max-w-64 rounded-xl bg-card p-3.5 text-caption leading-[1.45] shadow-floating">Varian, harga, dan stok tampil di setiap produk sebelum Anda menambah ke keranjang.</p>
-              </div>
-            </article>
-          </div>
+          <StartingPoints paths={startingPaths} />
         </section>
 
         <section aria-labelledby="process-title" className="mx-3 mt-24 rounded-[var(--radius-media)] border border-border bg-card sm:mx-6 sm:mt-32" data-home-section="process">
           <ProcessScene
-            heading={<h2 className={`${headingToken} pt-8 lg:pt-0`} id="process-title">Dari ide menjadi produk nyata.</h2>}
+            heading={<h2 className={headingToken} id="process-title">Dari ide menjadi produk nyata.</h2>}
             stages={processStages}
           />
         </section>
@@ -213,8 +222,8 @@ export default async function Home() {
           ) : null}
         </section>
 
-        <section aria-labelledby="next-step-title" className="relative mx-3 mt-24 overflow-hidden rounded-[var(--radius-media)] bg-[linear-gradient(140deg,var(--brand-700)_0%,var(--brand-800)_100%)] px-6 pt-11 pb-70 text-white sm:mx-6 sm:mt-32 sm:px-16 lg:h-110 lg:pb-0" data-home-section="next-step">
-          <div className="relative z-10 lg:absolute lg:top-1/2 lg:left-16 lg:-translate-y-1/2">
+        <section aria-labelledby="next-step-title" className="relative mx-3 mt-24 overflow-hidden rounded-[var(--radius-media)] bg-[linear-gradient(140deg,var(--brand-700)_0%,var(--brand-800)_100%)] px-6 pt-11 pb-70 text-white sm:mx-6 sm:mt-32 sm:px-(--panel-inset) lg:h-110 lg:pb-0" data-home-section="next-step">
+          <div className="relative z-10 lg:absolute lg:top-1/2 lg:left-(--panel-inset) lg:-translate-y-1/2">
             <h2 className={`${headingToken} max-w-[13em]`} id="next-step-title">Ceritakan kebutuhan proyek Anda.</h2>
             <B2BContactLink className="mt-7" variant="onBrand" />
           </div>

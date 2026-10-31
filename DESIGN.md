@@ -262,10 +262,11 @@ Ukuran bernama di `@theme`: **`text-caption`** (13.5px / 1.45) untuk isi kartu f
 | Public / reading / admin container | `max-w-public` 81rem / `max-w-reading` 48rem / `max-w-admin` 90rem |
 | Gutter konten public | 1.25rem compact; 3rem mulai 640px |
 | Bidang tepi-ke-tepi | Bidang biru dan panel proses berjarak 0.75rem dari tepi viewport, 1.5rem mulai 640px |
+| Teks di bidang tepi-ke-tepi | Mulai 640px, teks di dalam bidang biru, panel proses, dan bidang penutup sejajar dengan gutter konten (logo header) lewat `--panel-inset` di `main` beranda (container query); compact memakai padding 1.5rem |
 | Jarak semantic | `spacing-section` 8rem (6rem compact); `spacing-content` 1.5rem; `spacing-card` 1rem |
 | Header | Sticky, tinggi minimum 4.5rem, translucent `background` dengan blur |
 
-Ritme beranda: bidang biru penuh-lebar → tiga kartu pintu tepat di bawahnya → seksi berjarak 8rem. Artikel titik mulai memakai grid dua kolom bergantian (teks / panel maskot) mulai `lg`. Pada compact, kartu pintu menjadi pill yang membungkus dan urutan DOM tetap teks → media → tindakan. Ukuran seksi mengikuti isi; tidak wajib satu viewport.
+Ritme beranda: bidang biru penuh-lebar → tiga kartu pintu tepat di bawahnya → seksi berjarak 8rem. Judul hero dua baris mulai `xl` (kolom teks `--panel-inset` + 49rem, cukup untuk kata berganti terpanjang); `lg` tiga baris; compact mengikuti lebar layar. Titik mulai adalah satu pemilih: tiga option chip pill (`aria-pressed`) mengganti teks jalur dan pose panel maskot, dengan teks dan panel berdampingan mulai `lg`; tanpa JavaScript ketiga jalur tampil berurutan dan chip disembunyikan. Pada compact, kartu pintu menjadi pill yang membungkus dan urutan DOM tetap teks → media → tindakan. Ukuran seksi mengikuti isi; tidak wajib satu viewport.
 
 ## Elevation & Depth
 
@@ -323,7 +324,8 @@ Label nyata; field vertikal berjarak 16px (`gap-4`); input memakai `border-input
 - **Maskot bob**: `niuva-bob` 2.4s ease-in-out dua kali (4,8 detik), naik 8px, lalu diam; maskot hero juga condong mengikuti pointer (maks ±7px).
 - **Gerak otomatis selesai sendiri**: animasi yang berjalan tanpa interaksi berhenti sebelum 5 detik (WCAG 2.2.2), sehingga tidak perlu tombol jeda. Gerak yang mengikuti scroll atau pointer boleh terus aktif.
 - **Drift kartu fakta**: kartu fakta hero bergeser terhubung scroll dengan kedalaman masing-masing.
-- **Adegan proses sticky**: panggung maskot sticky menukar pose per tahap (Ide, Desain, Prototipe, Produk jadi) saat tahap mencapai tengah layar; tahap aktif ditandai garis `primary` dan `aria-current="step"`.
+- **Adegan proses sticky** (mulai `lg`): panggung maskot sticky menukar pose per tahap (Ide, Desain, Prototipe, Produk jadi) saat tahap mencapai tengah layar; tahap aktif ditandai garis `primary` dan `aria-current="step"`. Di bawah `lg` tidak ada yang menempel di atas teks: setiap tahap membawa render kecilnya sendiri.
+- **Pergantian titik mulai**: memilih chip menukar pose panel maskot dengan fade/geser 500ms `--ease-emphasis-token`.
 - **Reduced motion**: semua gerak di atas mati; komponen mulai dalam keadaan statis sampai preferensi terbaca, dan CSS global memotong animasi/transisi.
 
 ## Do's and Don'ts
@@ -348,7 +350,7 @@ Bahasa UI adalah Bahasa Indonesia yang langsung. Copy Company menghubungkan kebu
 
 ## Responsive Behavior
 
-Periksa 320/390px, sekitar 768/1024px, serta 1280/1440px sesuai route. Compact bukan desktop yang diperkecil: bidang biru menyusun judul di atas maskot dan menyembunyikan kartu fakta drift; kartu pintu menjadi pill; adegan proses menaruh panggung sticky 40vh di atas daftar tahap; navigasi menjadi disclosure di bawah `xl`. Halaman tidak boleh overflow horizontal.
+Periksa 320/390px, sekitar 768/1024px, serta 1280/1440px sesuai route. Compact bukan desktop yang diperkecil: bidang biru menyusun judul di atas maskot dan menyembunyikan kartu fakta drift; kartu pintu menjadi pill; adegan proses menjadi daftar tahap dengan render maskot kecil per tahap (dua kolom mulai `md`), tanpa panggung sticky; navigasi menjadi disclosure di bawah `xl`. Halaman tidak boleh overflow horizontal.
 
 Kontrol interaktif minimum 44px; navigasi keyboard, heading/landmark, label/error, zoom 200%, focus return pada overlay, dan state loading/empty/error/success diperiksa pada implementasi. Browser emulation tidak membuktikan perangkat fisik atau screen reader.
 
@@ -365,7 +367,7 @@ Ubah dokumen ini hanya untuk keputusan lintas halaman; ubah panduan area untuk k
 
 - Layanan dan Proyek (`/services`, `/projects`, detail) baru mendapat pembersihan token dan label pada pass ini; komposisinya masih v1 (pita putih penuh-lebar, grid kartu lama).
 - Commerce/MAKE/Customer (T48–T49) dan Admin (T50) masih membawa komposisi v1 di bawah token v2.
-- Kontras teks hero diukur pada compositing aktual (teks disembunyikan, latar terterang di kotak setiap teks) pada 1440/1280/390: terendah 5,50:1 untuk headline dan 5,67:1 untuk subcopy (31 Okt 2026). Ukur ulang bila gradien, posisi maskot, atau lebar kolom berubah.
+- Kontras teks hero diukur pada compositing aktual (teks disembunyikan, latar terterang di kotak setiap teks) pada 1440/1280/1024/390 setelah kolom judul dilebarkan dan titik terang `xl` dipersempit ke belakang maskot: terendah 4,91:1 untuk headline, 5,12:1 untuk subcopy, dan 5,43:1 untuk tindakan (31 Okt 2026). Ukur ulang bila gradien, posisi maskot, atau lebar kolom berubah.
 - `button.tsx` masih membawa radius px dari preset shadcn pada ukuran `icon-xs`/`icon-sm`.
 - E2E tidak dijalankan lokal (Postgres tidak aktif). Belum ada acceptance visual Owner, pengujian device/AT, staging, atau produksi.
 - Arsip AUiS dan dokumen fondasi lama tetap bukti historis, bukan instruksi aktif.

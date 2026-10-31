@@ -112,7 +112,10 @@ export type ProcessStage = Readonly<{
   alt: string;
 }>;
 
-/** Sticky process scene: the mascot pose follows the stage nearest the middle of the screen. */
+/**
+ * Process scene. From `lg` a sticky stage swaps the mascot pose for the stage nearest the middle of
+ * the screen; below `lg` each stage carries its own small render, so nothing pins over the text.
+ */
 export function ProcessScene({ heading, stages }: Readonly<{ heading: ReactNode; stages: readonly ProcessStage[] }>) {
   const [active, setActive] = useState(0);
   const refs = useRef<(HTMLLIElement | null)[]>([]);
@@ -131,27 +134,32 @@ export function ProcessScene({ heading, stages }: Readonly<{ heading: ReactNode;
     return () => observer.disconnect();
   }, []);
   return (
-    <div className="grid gap-0 lg:grid-cols-2 lg:gap-10">
-      <div className="px-5 pb-10 sm:px-10 lg:py-18 lg:pr-0 lg:pl-16">
+    <div className="grid lg:grid-cols-2 lg:gap-10">
+      <div className="px-6 py-10 sm:px-(--panel-inset) sm:py-14 lg:py-18 lg:pr-0">
         {heading}
-        <ol className="mt-2">
+        <ol className="mt-8 grid gap-6 md:grid-cols-2 md:gap-x-8 lg:mt-2 lg:block">
           {stages.map((stage, index) => (
             <li
               key={stage.title}
               ref={(node) => { refs.current[index] = node; }}
               data-stage={index}
               aria-current={active === index ? "step" : undefined}
-              className="flex min-h-[52vh] flex-col justify-center border-l-2 border-border pl-7 transition-colors duration-300 aria-[current=step]:border-brand-700 lg:min-h-[62vh]"
+              className="flex items-center gap-5 lg:min-h-[40vh] lg:flex-col lg:items-start lg:justify-center lg:gap-0 lg:border-l-2 lg:border-border lg:pl-7 lg:transition-colors lg:duration-300 lg:aria-[current=step]:border-brand-700"
             >
-              <h3 className="text-3xl font-medium tracking-[-0.02em] sm:text-4xl">{stage.title}</h3>
-              <p className="mt-2.5 max-w-[40ch] text-lead leading-[1.6] text-muted-foreground">{stage.description}</p>
+              <div className="relative aspect-[4/5] w-28 shrink-0 overflow-hidden rounded-[var(--radius-card)] bg-brand-100 sm:w-32 lg:hidden">
+                <Image alt="" className="absolute bottom-[4%] left-1/2 h-[88%] w-auto max-w-none -translate-x-1/2 object-contain" height={1400} sizes="8rem" src={stage.image} width={1400} />
+              </div>
+              <div>
+                <h3 className="text-2xl font-medium tracking-[-0.02em] lg:text-4xl">{stage.title}</h3>
+                <p className="mt-1.5 max-w-[40ch] text-base leading-[1.55] text-muted-foreground lg:mt-2.5 lg:text-lead lg:leading-[1.6]">{stage.description}</p>
+              </div>
             </li>
           ))}
         </ol>
       </div>
       <div
         aria-hidden="true"
-        className="sticky top-19 z-10 order-first m-3 h-[40vh] overflow-hidden rounded-[var(--radius-card)] bg-[radial-gradient(80%_70%_at_50%_40%,var(--neutral-50)_0%,var(--brand-100)_60%,var(--brand-200)_100%)] lg:order-none lg:top-24 lg:m-6 lg:ml-0 lg:h-[calc(100vh-7.5rem)]"
+        className="sticky top-24 m-6 ml-0 hidden h-[calc(100vh-7.5rem)] overflow-hidden rounded-[var(--radius-card)] bg-[radial-gradient(80%_70%_at_50%_40%,var(--neutral-50)_0%,var(--brand-100)_60%,var(--brand-200)_100%)] lg:block"
       >
         {stages.map((stage, index) => (
           <Image
