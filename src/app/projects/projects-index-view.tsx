@@ -23,7 +23,7 @@ export function ProjectsIndexView({ projects, retryHref, scenario }: ProjectsInd
     <PublicShell scope="projects">
       <main id="main-content" className="mx-auto max-w-public px-5 py-10 sm:px-8 sm:py-14">
         <section className="grid gap-6 border-b border-border pb-9 md:grid-cols-[minmax(0,1fr)_minmax(0,0.75fr)] md:items-end">
-          <div><p className="text-sm font-medium text-brand-700">Projects / Case studies</p><h1 className={`${type.display.className} mt-4`}>Bentuk akhirnya punya cerita.</h1></div>
+          <div><h1 className={type.display.className}>Bentuk akhirnya punya cerita.</h1></div>
           <p className="max-w-lg text-lg leading-8 text-muted-foreground md:pl-8">Lihat konteks, keputusan yang tercatat, dan output yang dapat ditinjau. Setiap cerita berhenti pada batas bukti yang tersedia.</p>
         </section>
         {scenario === "loading" ? <div role="status" className="space-y-5 py-8"><p>Memuat daftar project… (preview)</p><div className="h-40 rounded-lg bg-muted motion-safe:animate-pulse" /></div> :

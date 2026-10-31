@@ -32,10 +32,10 @@ test("public navigation exposes active cues on exact, dynamic, and mobile routes
 
   const routeCases = [
     { label: "Layanan", path: "/services" },
-    { label: "Projects", path: "/projects/smart-drop-box-pg" },
-    { label: "Shop", path: "/shop/contoh-dock-modular-meja?preview=examples" },
-    { label: "Custom Print", path: "/custom-print/request" },
-    { label: "Cart", path: "/cart?preview=examples" },
+    { label: "Proyek", path: "/projects/smart-drop-box-pg" },
+    { label: "Toko", path: "/shop/contoh-dock-modular-meja?preview=examples" },
+    { label: "Custom 3D Print", path: "/custom-print/request" },
+    { label: "Keranjang", path: "/cart?preview=examples" },
   ] as const;
 
   for (const routeCase of routeCases) {
@@ -64,7 +64,7 @@ test("public navigation exposes active cues on exact, dynamic, and mobile routes
   const mobileActive = page
     .getByRole("navigation", { name: "Navigasi utama" })
     .locator('a[aria-current="page"]');
-  await expect(mobileActive).toHaveText("Shop");
+  await expect(mobileActive).toHaveText("Toko");
   await expect(mobileActive).toBeVisible();
   await expect(mobileActive).toHaveCSS("min-height", "44px");
   expect(await mobileActive.evaluate((element) => getComputedStyle(element, "::after").height)).toBe("2px");
@@ -107,8 +107,8 @@ test("published project reference keeps evidence boundaries and proof media avai
   await page.goto("/projects");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /index, follow/);
   await expect(page.getByText("17 project")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Enam cerita utama untuk ditinjau." })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Dokumentasi lain yang menunjukkan keluasan karya." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Cerita proyek utama." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Karya lainnya." })).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(17);
   await expect(page.locator("article img")).toHaveCount(6);
 
@@ -152,17 +152,20 @@ test("public company and service routes render approved content", async ({ page 
   const homepageShell = page.locator("[data-homepage]");
   await expect(homepageShell).toHaveAttribute("data-foundation-propagation", "approved");
   await expect(homepageShell).toHaveAttribute("data-typography-propagation", "approved");
-  await expect(homepageShell).toHaveAttribute("data-typography-version", "1.0");
-  await expect(homepageShell).toHaveCSS("font-family", /Space Grotesk/);
+  await expect(homepageShell).toHaveAttribute("data-typography-version", "2.0");
+  await expect(homepageShell).toHaveCSS("font-family", /Manrope/);
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /index, follow/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+  // The hero repeats the headline in an aria-hidden copy whose last word cycles; assert what assistive tech reads.
+  await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName(
     "Mitra pengembangan produk dari riset hingga prototipe.",
   );
   const main = page.getByRole("main");
   await expect(main.getByText("Melalui riset, konsultasi, desain, dan prototyping")).toBeVisible();
-  await expect(main.getByText("niuvamakerspace@gmail.com")).toBeVisible();
-  await expect(main.getByText("+62 851-1767-8901")).toBeVisible();
-  await expect(main.getByText(/Bandung Techno Park/)).toBeVisible();
+  // Foundation v2 keeps the contact details on every public page in the footer's "Bantuan" column.
+  const footer = page.getByRole("contentinfo");
+  await expect(footer.getByText("niuvamakerspace@gmail.com")).toBeVisible();
+  await expect(footer.getByText("+62 851-1767-8901")).toBeVisible();
+  await expect(footer.getByText(/Bandung Techno Park/)).toBeVisible();
 
   await page.getByRole("main").getByRole("link", { name: "Lihat layanan", exact: true }).first().click();
   await expect(page).toHaveURL(/\/services$/);
@@ -170,7 +173,7 @@ test("public company and service routes render approved content", async ({ page 
   await expect(page.getByRole("heading", { name: "Research & Development" })).toBeVisible();
   await expect(page.getByText("Pengembangan produk dan teknologi yang sistematis")).toBeVisible();
   await expect(page.getByText("Arah pembahasan")).toHaveCount(4);
-  await page.getByRole("link", { name: "Lihat projects" }).click();
+  await page.getByRole("link", { name: "Lihat proyek" }).click();
   await expect(page).toHaveURL(/\/projects$/);
 
   for (const width of [320, 390, 1440]) {
@@ -236,8 +239,8 @@ test("Foundation/Typography authorization is present on product PublicShell rout
     await page.goto(path);
     const shell = page.locator("[data-foundation-propagation='approved']").first();
     await expect(shell, path).toHaveAttribute("data-typography-propagation", "approved");
-    await expect(shell, path).toHaveAttribute("data-typography-version", "1.0");
-    await expect(shell, path).toHaveCSS("font-family", /Space Grotesk/);
+    await expect(shell, path).toHaveAttribute("data-typography-version", "2.0");
+    await expect(shell, path).toHaveCSS("font-family", /Manrope/);
   }
 });
 

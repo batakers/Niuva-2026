@@ -74,7 +74,7 @@ export const systemCopy = {
   actions: {
     retry: "Coba lagi",
     home: "Kembali ke beranda",
-    shop: "Lihat Shop",
+    shop: "Lihat Toko",
     adminHome: "Kembali ke Overview",
     publicSite: "Ke halaman publik",
     signIn: "Masuk",

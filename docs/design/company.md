@@ -47,7 +47,7 @@ Objek produk/CAD yang perlu diperiksa utuh memakai contain; dokumentasi proses b
 
 ## Navigasi dan tindakan
 
-Public navigation mempertahankan **Layanan → Projects → Custom Print → Shop**; Cart dan Akun adalah utilitas. Header gelap, active underline, dan disclosure compact mengikuti [PublicShell](../../src/components/niuva/public-shell.tsx) serta [PublicNavigation](../../src/components/niuva/public-navigation.tsx), bukan salinan header referensi eksternal. Disclosure digunakan sebelum link berdesakan, termasuk tablet; tidak menyembunyikan menu lewat horizontal scroll.
+Public navigation mempertahankan **Layanan → Proyek → Custom 3D Print → Toko** (label Q20, 31 Okt 2026); Keranjang dan Akun adalah utilitas. Header terang yang sticky, active underline, dan disclosure compact mengikuti [PublicShell](../../src/components/niuva/public-shell.tsx) serta [PublicNavigation](../../src/components/niuva/public-navigation.tsx), bukan salinan header referensi eksternal. Disclosure digunakan sebelum link berdesakan, termasuk tablet; tidak menyembunyikan menu lewat horizontal scroll.
 
 | Jalur | Tindakan yang benar |
 | --- | --- |
