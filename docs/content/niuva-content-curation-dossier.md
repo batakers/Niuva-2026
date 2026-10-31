@@ -76,7 +76,8 @@ publish every item it contains.
 Owner decision, 31 October 2026: the four categories follow `SRC-COMPANY-002`
 pp. 7–10 (PRD addendum of that date). Apparel & Merchandise work moves to
 Desain & Rekayasa; the service copy in `company-content.ts` (version
-2026-10-31) and the project remapping await the Owner's text approval.
+2026-10-31), the five product types, and the remapping of all 17 projects
+were approved by the Owner on 31 October 2026 ("Setujui semua").
 
 1. **Riset & Pengembangan**
 2. **Desain & Rekayasa**

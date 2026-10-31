@@ -1913,5 +1913,5 @@ Rekayasa. URL layanan lama dialihkan permanen ke penggantinya. Lima jenis
 produk dari Profil 2026 hal. 6 tampil sebagai informasi di halaman Layanan;
 Produk Cetak 3D mengarah ke alur Custom 3D Print yang sudah ada. Kontak B2B
 tetap WhatsApp langsung tanpa login/form, dan aturan bisnis lain tidak
-berubah. Isi tiap layanan dan pemetaan proyek disusun dari Profil 2026 dan
-menunggu persetujuan teks Owner sebelum terbit.
+berubah. Isi tiap layanan, lima jenis produk, dan pemetaan 17 proyek disusun dari
+Profil 2026 dan disetujui Owner pada 31 Oktober 2026.

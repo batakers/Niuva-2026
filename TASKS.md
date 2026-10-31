@@ -133,8 +133,9 @@ sitemap/flow:
   Riset & Pengembangan, Desain & Rekayasa, Prototipe & Manufaktur Digital,
   serta Konsultansi & Workshop. Apparel & Merchandise dilebur ke Desain &
   Rekayasa, URL lama dialihkan permanen, lima jenis produk Profil hal. 6
-  tampil di halaman Layanan. Teks layanan dan pemetaan 17 proyek disusun dari
-  Profil 2026 dan menunggu persetujuan Owner (addendum PRD 31 Okt).
+  tampil di halaman Layanan. Teks layanan, lima jenis produk, dan pemetaan 17
+  proyek disusun dari Profil 2026 dan disetujui Owner 31 Okt ("Setujui semua";
+  addendum PRD 31 Okt).
 
 Keputusan Owner yang masih terbuka (rekomendasi agen, belum diputuskan):
 
