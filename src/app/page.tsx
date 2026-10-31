@@ -205,9 +205,10 @@ export default async function Home() {
             <ul className="border-t border-border">
               {listedProjects.map((project) => (
                 <li key={project.id}>
-                  <Link href={`/projects/${project.slug}`} className="group flex items-baseline justify-between gap-4 border-b border-border py-4 hover:text-brand-800 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
-                    <span className="text-lead font-medium"><ProjectTitle qualifierClassName="mt-0.5 text-ui font-normal" title={project.title} /></span>
-                    <span className="shrink-0 text-ui text-muted-foreground">{project.serviceLabel}</span>
+                  {/* Phones stack the service under the title; longer service names must not push the row wide. */}
+                  <Link href={`/projects/${project.slug}`} className="group flex flex-col gap-1 border-b border-border py-4 hover:text-brand-800 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+                    <span className="min-w-0 text-lead font-medium"><ProjectTitle qualifierClassName="mt-0.5 text-ui font-normal" title={project.title} /></span>
+                    <span className="text-ui text-muted-foreground sm:max-w-[45%] sm:shrink-0 sm:text-right">{project.serviceLabel}</span>
                   </Link>
                 </li>
               ))}
