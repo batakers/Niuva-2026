@@ -32,10 +32,10 @@ test("public navigation exposes active cues on exact, dynamic, and mobile routes
 
   const routeCases = [
     { label: "Layanan", path: "/services" },
-    { label: "Projects", path: "/projects/smart-drop-box-pg" },
-    { label: "Shop", path: "/shop/contoh-dock-modular-meja?preview=examples" },
-    { label: "Custom Print", path: "/custom-print/request" },
-    { label: "Cart", path: "/cart?preview=examples" },
+    { label: "Proyek", path: "/projects/smart-drop-box-pg" },
+    { label: "Toko", path: "/shop/contoh-dock-modular-meja?preview=examples" },
+    { label: "Custom 3D Print", path: "/custom-print/request" },
+    { label: "Keranjang", path: "/cart?preview=examples" },
   ] as const;
 
   for (const routeCase of routeCases) {
@@ -64,7 +64,7 @@ test("public navigation exposes active cues on exact, dynamic, and mobile routes
   const mobileActive = page
     .getByRole("navigation", { name: "Navigasi utama" })
     .locator('a[aria-current="page"]');
-  await expect(mobileActive).toHaveText("Shop");
+  await expect(mobileActive).toHaveText("Toko");
   await expect(mobileActive).toBeVisible();
   await expect(mobileActive).toHaveCSS("min-height", "44px");
   expect(await mobileActive.evaluate((element) => getComputedStyle(element, "::after").height)).toBe("2px");
@@ -107,8 +107,8 @@ test("published project reference keeps evidence boundaries and proof media avai
   await page.goto("/projects");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /index, follow/);
   await expect(page.getByText("17 project")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Enam cerita utama untuk ditinjau." })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Dokumentasi lain yang menunjukkan keluasan karya." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Cerita proyek utama." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Karya lainnya." })).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(17);
   await expect(page.locator("article img")).toHaveCount(6);
 
@@ -170,7 +170,7 @@ test("public company and service routes render approved content", async ({ page 
   await expect(page.getByRole("heading", { name: "Research & Development" })).toBeVisible();
   await expect(page.getByText("Pengembangan produk dan teknologi yang sistematis")).toBeVisible();
   await expect(page.getByText("Arah pembahasan")).toHaveCount(4);
-  await page.getByRole("link", { name: "Lihat projects" }).click();
+  await page.getByRole("link", { name: "Lihat proyek" }).click();
   await expect(page).toHaveURL(/\/projects$/);
 
   for (const width of [320, 390, 1440]) {

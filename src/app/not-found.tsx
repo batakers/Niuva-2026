@@ -21,7 +21,7 @@ export default function RootNotFound() {
     <PublicShell scope="system-not-found">
       <SystemFocusTarget />
       <SystemStateView variant="public" stateId="not-found" {...systemCopy.notFound}>
-        <NiuvaLink href="/" className="min-h-11">
+        <NiuvaLink href="/" variant="outline" className="min-h-11">
           {a.home}
         </NiuvaLink>
         <NiuvaLink href="/shop" variant="outline" className="min-h-11">

@@ -44,7 +44,7 @@ function ProjectMedia({
       <Icon aria-hidden="true" className="size-7" name="image-off" />
       <span className="text-sm">
         {project.detailReadiness === "card-only"
-          ? "Media Selected Works belum dikurasi"
+          ? "Media karya ini belum dikurasi"
           : "Media project belum tersedia"}
       </span>
     </div>
@@ -106,7 +106,7 @@ export function ProjectList({ projects, previewMode = null }: ProjectListProps) 
         </div>
       </fieldset>
 
-      <p className="py-5 text-sm text-muted-foreground" role="status">
+      <p className="py-5 text-right text-sm text-muted-foreground" role="status">
         {filtered.length} project{previewMode === "examples" ? " contoh" : ""}
       </p>
 
@@ -134,9 +134,8 @@ export function ProjectList({ projects, previewMode = null }: ProjectListProps) 
           {featuredProjects.length > 0 && (
             <section aria-labelledby="featured-projects-title">
               <div className="mb-8 max-w-2xl">
-                <p className="text-sm font-medium text-brand-700">Featured case studies</p>
-                <h2 className={`${type.heading.className} mt-3`} id="featured-projects-title">
-                  Enam cerita utama untuk ditinjau.
+                <h2 className={type.heading.className} id="featured-projects-title">
+                  Cerita proyek utama.
                 </h2>
                 <p className="mt-3 text-sm leading-6 text-muted-foreground">
                   Urutan ini bersifat editorial, bukan kronologis. Detail hanya ditampilkan sejauh bukti yang tersedia.
@@ -150,14 +149,14 @@ export function ProjectList({ projects, previewMode = null }: ProjectListProps) 
                       href={`/projects/${project.slug}${previewSuffix}`}
                     >
                       <ProjectMedia isPreview={isPreview} project={project} />
-                      <p className="mt-5 text-sm text-brand-700">{project.serviceLabel}</p>
-                      <h3 className={`${index === 0 ? type.heading.className : type.subheading.className} mt-2 flex items-start justify-between gap-4`}>
+                      <h3 className={`${index === 0 ? type.heading.className : type.subheading.className} mt-5 flex items-start justify-between gap-4`}>
                         {project.title}
                         <Icon aria-hidden="true" className="mt-1 size-5 shrink-0" name="arrow-up-right" />
                       </h3>
+                      <p className="mt-1.5 text-sm text-muted-foreground">{project.serviceLabel}</p>
                       <p className="mt-3 text-sm leading-6 text-muted-foreground">{project.summary}</p>
                       <span className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4">
-                        Lihat cerita project
+                        Lihat cerita proyek
                       </span>
                     </Link>
                   </article>
@@ -169,30 +168,24 @@ export function ProjectList({ projects, previewMode = null }: ProjectListProps) 
           {selectedWorks.length > 0 && (
             <section aria-labelledby="selected-works-title" className="border-t border-border pt-12">
               <div className="max-w-2xl">
-                <p className="text-sm font-medium text-brand-700">Selected Works</p>
-                <h2 className={`${type.heading.className} mt-3`} id="selected-works-title">
-                  Dokumentasi lain yang menunjukkan keluasan karya.
+                <h2 className={type.heading.className} id="selected-works-title">
+                  Karya lainnya.
                 </h2>
                 <p className="mt-3 text-sm leading-6 text-muted-foreground">
                   Entri ini masih berupa ringkasan kartu. Detail proyek dan media akan ditambahkan hanya setelah bukti pendukungnya siap.
                 </p>
               </div>
-              <div className="mt-8 grid gap-x-8 gap-y-10 md:grid-cols-2 lg:grid-cols-3">
+              <ul className="mt-8 overflow-hidden rounded-[var(--radius-media)] border border-border bg-card">
                 {selectedWorks.map(project => (
-                  <article className="border-t border-border pt-5" key={project.id}>
-                    <p className="text-xs font-medium text-brand-700">{project.serviceLabel}</p>
-                    <h3 className="mt-3 font-display text-xl font-semibold leading-tight">{project.title}</h3>
-                    <p className="mt-3 text-sm leading-6 text-muted-foreground">{project.summary}</p>
-                    <ul aria-label={`Tag ${project.title}`} className="mt-4 flex flex-wrap gap-2">
-                      {project.tags.map(tag => (
-                        <li className="rounded-md border border-border px-2 py-1 text-xs text-muted-foreground" key={tag}>
-                          {tag}
-                        </li>
-                      ))}
-                    </ul>
-                  </article>
+                  <li className="border-t border-border first:border-t-0" key={project.id}>
+                    <article className="grid gap-x-8 gap-y-1.5 px-5 py-5 sm:px-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_12rem]">
+                      <h3 className="text-lg font-medium tracking-[-0.01em]">{project.title}</h3>
+                      <p className="text-ui leading-[1.55] text-muted-foreground">{project.summary}</p>
+                      <p className="text-sm text-muted-foreground md:text-right">{project.serviceLabel}</p>
+                    </article>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </section>
           )}
         </div>

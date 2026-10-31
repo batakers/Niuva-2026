@@ -1,6 +1,7 @@
 import {
   AlertCircle,
   ArrowDown,
+  ArrowLeft,
   ArrowRight,
   ArrowUpRight,
   Box,
@@ -37,6 +38,7 @@ import {
 const icons = {
   "alert-circle": AlertCircle,
   "arrow-down": ArrowDown,
+  "arrow-left": ArrowLeft,
   "arrow-right": ArrowRight,
   "arrow-up-right": ArrowUpRight,
   box: Box,

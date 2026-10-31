@@ -29,40 +29,60 @@ const published: ProjectPreviewItem = {
 };
 
 describe("public homepage", () => {
-  it("does not keep a hero project link when no published detail is available", async () => {
+  const projectLinks = (container: HTMLElement) => container.querySelectorAll('[data-home-section="project-proof"] a[href^="/projects/"]');
+
+  it("lists no project links when no published detail is available", async () => {
     const { container } = render(await Home());
-    expect(container.querySelector('[data-home-section="hero"] a[href^="/projects/"]')).toBeNull();
+    expect(projectLinks(container)).toHaveLength(0);
+    expect(screen.getByRole("link", { name: "Lihat semua proyek" })).toHaveAttribute("href", "/projects");
   });
 
-  it("selects the hero from the published collection rather than a fixed slug", async () => {
+  it("lists projects from the published collection rather than a fixed slug", async () => {
     vi.mocked(getProjectPreview).mockResolvedValue({ projects: [published], scenario: null });
     const { container } = render(await Home());
-    const link = container.querySelector('[data-home-section="hero"] a[href^="/projects/"]');
-    expect(link).toHaveAttribute("href", `/projects/${published.slug}`);
-    expect(link).toHaveTextContent(published.title);
+    const links = projectLinks(container);
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute("href", `/projects/${published.slug}`);
+    expect(links[0]).toHaveTextContent(published.title);
   });
 
-  it("does not link card-only projects from the hero", async () => {
+  it("does not link card-only projects", async () => {
     vi.mocked(getProjectPreview).mockResolvedValue({ projects: [{ ...published, detailReadiness: "card-only" }], scenario: null });
+    const { container } = render(await Home());
+    expect(projectLinks(container)).toHaveLength(0);
+  });
+
+  it("keeps project photos off the homepage hero (Owner, 31 Oct 2026)", async () => {
+    vi.mocked(getProjectPreview).mockResolvedValue({ projects: [published], scenario: null });
     const { container } = render(await Home());
     expect(container.querySelector('[data-home-section="hero"] a[href^="/projects/"]')).toBeNull();
   });
+
   it("uses time-based revalidation and no request-time connection() (Req 16.1)", async () => {
     render(await Home());
     expect(homeModule.revalidate).toBe(300);
     expect(connection).not.toHaveBeenCalled();
   });
 
-  it("renders Niuva positioning, entry paths, capabilities, and process", async () => {
+  it("renders Niuva positioning, entry paths, starting points, process, and capabilities", async () => {
     render(await Home());
 
-    expect(screen.getByRole("heading", { level: 1, name: /mitra pengembangan produk dari riset hingga prototipe/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Mitra pengembangan produk dari riset hingga prototipe." })).toBeInTheDocument();
     expect(screen.getAllByText(/melalui riset, konsultasi, desain, dan prototyping/i).length).toBeGreaterThan(0);
-    expect(screen.getByRole("heading", { name: "Punya ide atau project?" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Ingin membuat dari model atau referensi?" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Mau produk siap beli?" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Kompetensi yang menghubungkan ide dengan bentuk." })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Satu alur kerja untuk keputusan yang lebih jelas." })).toBeInTheDocument();
+    const entryPaths = screen.getByRole("navigation", { name: "Titik mulai" });
+    expect(entryPaths.querySelectorAll("a")).toHaveLength(3);
+    expect(entryPaths.querySelector('a[href="/services"]')).not.toBeNull();
+    expect(entryPaths.querySelector('a[href="/custom-print"]')).not.toBeNull();
+    expect(entryPaths.querySelector('a[href="/shop"]')).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Punya ide atau proyek?" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Sudah punya model 3D?" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Cari produk siap pakai?" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Dari ide menjadi produk nyata." })).toBeInTheDocument();
+    for (const stage of ["Ide", "Desain", "Prototipe", "Produk jadi"]) {
+      expect(screen.getByRole("heading", { level: 3, name: stage })).toBeInTheDocument();
+    }
+    expect(screen.getByRole("heading", { name: "Empat layanan untuk setiap tahap proyek." })).toBeInTheDocument();
+    expect(screen.getAllByText("Estimasi awal, bukan harga final", { exact: false }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole("link", { name: "Hubungi Kami" }).length).toBeGreaterThan(0);
     expect(document.querySelectorAll("[data-homepage] .font-mono")).toHaveLength(0);
     expect(document.querySelectorAll("[data-homepage] .font-technical")).toHaveLength(0);

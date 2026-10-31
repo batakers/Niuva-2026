@@ -12,7 +12,7 @@
 
 - **What this is:** Website operasional responsif yang menyatukan company profile dan kontak WhatsApp B2B, retail ready-made, serta custom 3D print berbasis review operator.
 - **Who it is for:** Calon klien B2B, customer retail/B2C, serta Owner/Admin Niuva yang bukan pengguna teknis.
-- **Current phase:** Implement the approved v1.0 closure roadmap from 18 October 2026. `PRODUCT.md` freezes scope, `ROADMAP.md` owns milestone dependencies, `TASKS.md` is the one active backlog/execution ledger, and `docs/v1-definition-of-done.md` owns completion. Foundation/Typography v1.0 remains authorized by DS-DEC-019; `DESIGN.md` is the visual authority. Evidence in `docs/frontend/mvp-release-readiness.md` keeps its recorded local/non-production scope. Visual, physical-device/AT, provider, staging and production acceptance remain separate.
+- **Current phase:** Implement the approved v1.0 closure roadmap from 18 October 2026. `PRODUCT.md` freezes scope, `ROADMAP.md` owns milestone dependencies, `TASKS.md` is the one active backlog/execution ledger, and `docs/v1-definition-of-done.md` owns completion. Foundation v2 (Owner, 31 October 2026; redesign milestone M5a, T45–T50) replaces Foundation/Typography v1.0 and DS-DEC-019; `DESIGN.md` is the visual authority. Evidence in `docs/frontend/mvp-release-readiness.md` keeps its recorded local/non-production scope. Visual, physical-device/AT, provider, staging and production acceptance remain separate.
 
 ## Commands
 
@@ -151,8 +151,8 @@ user request and the authority order above.
 - Custom-print shipping is priced only after final package measurement.
 - The approved logo system locks logo colors. `DESIGN.md` explains the visual
   rules, `src/app/globals.css` holds runtime tokens, and
-  `src/design/typography.ts` holds shared type classes. DS-DEC-019 authorizes
-  Foundation/Typography v1.0 globally; visual/AT/device/provider/production
+  `src/design/typography.ts` holds shared type classes. Foundation v2 (Owner,
+  31 October 2026, T46) applies globally; visual/AT/device/provider/production
   acceptance remains separately scoped.
 - Public pages, checkout, and admin share one Niuva identity but have different
   density and motion needs. Passing tests/build is not visual approval.

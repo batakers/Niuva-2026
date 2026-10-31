@@ -6,8 +6,8 @@ test("public homepage exposes the Niuva narrative and entry paths", async ({ pag
   await expect(page).toHaveTitle("Niuva");
   await expect(page.getByRole("heading", { level: 1, name: "Mitra pengembangan produk dari riset hingga prototipe." })).toBeVisible();
   await expect(page.locator("[data-home-section='entry-paths']")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Kompetensi yang menghubungkan ide dengan bentuk." })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Satu alur kerja untuk keputusan yang lebih jelas." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Empat layanan untuk setiap tahap proyek." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Dari ide menjadi produk nyata." })).toBeVisible();
   await expect(page.locator("[data-home-section='next-step']")).toBeVisible();
   await expect(page.locator("header").getByRole("link", { name: "Hubungi Kami" })).toHaveAttribute(
     "href",
@@ -21,9 +21,11 @@ test("public homepage exposes the Niuva narrative and entry paths", async ({ pag
   const sectionOrder = await page.locator("main > [data-home-section]").evaluateAll((sections) =>
     sections.map((section) => section.getAttribute("data-home-section")),
   );
-  expect(sectionOrder.slice(0, 4)).toEqual(["hero", "entry-paths", "project-proof", "capabilities"]);
-  await page.getByRole("link", { name: "Lihat bukti proyek" }).click();
-  await expect(page).toHaveURL(/#project-proof$/);
+  expect(sectionOrder).toEqual(["hero", "entry-paths", "starting-points", "process", "capabilities", "project-proof", "next-step"]);
+  await expect(page.locator("[data-home-section='hero'] a[href^='/projects/']")).toHaveCount(0);
+  await page.getByRole("link", { name: "Lihat semua proyek" }).click();
+  await expect(page).toHaveURL(/\/projects$/);
+  await page.goto("/");
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();
@@ -31,9 +33,10 @@ test("public homepage exposes the Niuva narrative and entry paths", async ({ pag
   await page.getByRole("button", { name: "Buka menu" }).click();
   const navigation = page.locator("#public-navigation");
   await expect(navigation.getByRole("link", { name: "Layanan", exact: true })).toBeVisible();
-  await expect(navigation.getByRole("link", { name: "Cart", exact: true })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "Keranjang", exact: true })).toBeVisible();
   await expect(navigation.getByRole("link", { name: "Akun", exact: true })).toBeVisible();
-  await expect(navigation.getByRole("link", { name: "Hubungi Kami", exact: true })).toBeVisible();
+  // The B2B action stays in the mobile header next to the menu instead of inside it.
+  await expect(page.locator("header").getByRole("link", { name: "Hubungi Kami", exact: true })).toBeVisible();
   await expect(navigation.getByRole("link", { name: "Pilih jalur", exact: true })).toHaveCount(0);
   await expect(navigation.getByRole("link", { name: "Cara kerja", exact: true })).toHaveCount(0);
 });

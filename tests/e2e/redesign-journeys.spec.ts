@@ -6,10 +6,10 @@ test("public navigation keeps the four paths, separate utilities, and contextual
   await page.goto("/");
   const navigation = page.getByRole("navigation", { name: "Navigasi utama" });
   await expect(navigation.locator('[data-navigation-group="primary"] a')).toHaveText([
-    "Layanan", "Projects", "Custom Print", "Shop",
+    "Layanan", "Proyek", "Custom 3D Print", "Toko",
   ]);
   await expect(navigation.getByRole("link", { name: "Brief Proyek" })).toHaveCount(0);
-  await expect(navigation.locator('[data-navigation-group="utility"] a')).toHaveText(["Cart", "Akun"]);
+  await expect(navigation.locator('[data-navigation-group="utility"] a')).toHaveText(["Keranjang", "Akun"]);
   await expect(page.locator("header").getByRole("link", { name: "Hubungi Kami" })).toHaveAttribute("href", /^https:\/\/wa\.me\//);
 
   for (const [route, label, href] of [
@@ -33,7 +33,7 @@ test("public navigation keeps the four paths, separate utilities, and contextual
   await toggle.focus();
   await expect(toggle).toBeFocused();
   await page.keyboard.press("Enter");
-  await expect(navigation.getByRole("link", { name: "Custom Print" })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "Custom 3D Print" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(toggle).toBeFocused();
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
@@ -80,6 +80,6 @@ test("MAKE offers the available intake and BUY continues from catalog to cart", 
   await page.getByRole("link", { name: /Dock modular meja/ }).click();
   await page.getByRole("radio", { name: /Abu-abu/ }).click();
   await page.getByRole("button", { name: "Tambah ke cart" }).click();
-  await page.getByRole("navigation", { name: "Navigasi utama" }).getByRole("link", { name: "Cart" }).click();
+  await page.getByRole("navigation", { name: "Navigasi utama" }).getByRole("link", { name: "Keranjang" }).click();
   await expect(page.getByRole("heading", { name: "Dock modular meja" })).toBeVisible();
 });
