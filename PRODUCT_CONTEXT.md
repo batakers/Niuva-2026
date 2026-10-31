@@ -54,12 +54,12 @@
 - `engineering`
 - `prototyping`
 - `dukungan manufaktur`
+- `Custom 3D Print` (confirmed 31 Oct 2026, Q20 in `TASKS.md`)
+- `ready-made` (confirmed 31 Oct 2026, Q20 in `TASKS.md`)
 
 ### Candidate product terms — owner confirmation still open
 
 - `project brief`
-- `ready-made`
-- `Custom 3D Print`
 - `Diskusikan Proyek`
 
 Until the candidate terms are confirmed, preserve their source spelling and do not replace them with synonyms (`docs/PRD-Niuva-MVP.md:192,205`; `docs/PRD-Niuva-MVP.md:1327-1328`).

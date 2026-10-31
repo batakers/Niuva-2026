@@ -31,14 +31,16 @@ ada di papan ini; pekerjaan baru masuk tabel task, bukan file lain.
 | | T03, T19 | O + A | Smoke R2 privat/publik lewat unggah media Admin | Sesi Admin Owner |
 | | T09 | O | `CUSTOMER_AUTH_CLEANUP` lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
 | | T23, T25, T35 | O | Cek metode dan fitur refund di dashboard Midtrans sandbox (Owner mengecek, 31 Okt); grant `refund` sudah ada | Q1 |
-| | T36 | O + A | UAT operasi Admin, bisa bersamaan dengan T33/T34 | — |
+| Redesign | T46 → T47 | O + A | Agen menyiapkan tiga arah visual di decision page lokal; Owner memilih satu; fondasi dan Company dibangun di satu PR | Pilihan arah (Q19); Postgres lokal untuk halaman berbasis DB |
+| | T48–T50 | A | Commerce/MAKE, Customer/auth, lalu Admin di atas fondasi T46; verifikasi lokal | T46 |
+| | T36 | O + A | UAT operasi Admin di UI baru | T50 |
 | Berantai | T34 → T08 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim; lalu retensi file pada berkas MAKE | T33 dulu |
 | | T14 | O + A | Privacy hosted dengan sesi Customer penguji; grant sudah ter-deploy (#89) | Sesi Customer Owner |
 | | T43 | O + A | Owner menambah redirect URI `https://niuva-t03-staging.netlify.app/api/auth/google/callback` di Google Cloud; env `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` di Netlify staging atas instruksi Owner; env baru berlaku setelah deploy berikutnya | Kredit Netlify pulih 26 Nov (Q17) |
 | Menunggu waktu | T24 | A | Cek pengecualian B5 pada attempt 29 Okt mulai 5 Nov; jalur `found` saat BUY #2 | Tanggal 5 Nov |
 | Production | T41 | O + A | Agen menyusun rancangan deploy VPS; Owner membeli VPS B Jakarta setelah rancangan siap (Q18), dryRun harga dulu | Rancangan deploy; Q11 |
 | | T42 | A | Scheduler job di VPS; IP klien setelah Q11 | Q11 untuk bagian IP |
-| Rilis | T37 | O | Android + TalkBack (Owner), iPhone + VoiceOver (pinjam); checklist dari agen | T33–T36 |
+| Rilis | T37 | O | Android + TalkBack (Owner), iPhone + VoiceOver (pinjam); checklist dari agen untuk route hasil redesign | T33–T36; T47–T50 |
 | | T38 | O + A | `pg_dump` harian ke Biznet Gio (Q12), simpan 30 hari (Q15), dan latihan restore | T41; akun Biznet Gio bersama VPS (Q18) |
 | | T44 | O + A | Teks v1.1 disetujui (Q15–Q16); tetapkan tanggal terbit, lalu pasang `privacy-v1.1.md` dan metadata setelah VPS dan backup berjalan | T41; T38 |
 | | T39 | O + A | SOP + simulasi | T33–T38 |
@@ -95,6 +97,25 @@ Judul ini stabil: kode grant dan jadwal job merujuk anchor-nya. Jawaban
 - **Q18 (31 Okt):** VPS Helipod dibeli setelah rancangan deploy T41 siap; akun
   dan bucket Biznet Gio dibuat bersamaan dengan VPS.
 
+Redesign frontend (31 Oktober 2026). Owner meminta redesign seluruh frontend
+(design system, sitemap, user flow, halaman Company, Shop/MAKE/checkout/
+Customer dan Admin) dengan fungsi BUY, MAKE dan B2B WhatsApp tetap, cek lokal
+dulu, dan T36/T37 digeser ke setelahnya. Ini mengubah batas "tanpa redesign
+global" di `ROADMAP.md` (milestone M5a, T45–T50). Jawaban atas usulan
+sitemap/flow:
+
+- **Q19:** arah visual baru ditunjukkan dulu sebagai tiga pilihan; Owner
+  memilih satu, lalu arah itu diterapkan ke semua area.
+- **Q20:** label navigasi Bahasa Indonesia untuk publik dan Admin (Layanan,
+  Proyek, Custom 3D Print, Toko, Keranjang, Akun; Ringkasan, Pesanan, Produk &
+  Stok, Customer, dst.). URL tidak berubah. Istilah "Custom 3D Print" dan
+  "ready-made" dikonfirmasi.
+- **Q21:** Customer tetap login di awal sebelum membuka form MAKE; kode auth
+  tidak diubah.
+- **Q22:** layar pertama Beranda dipimpin DEVELOP (positioning partner
+  pengembangan produk dan bukti proyek), dengan pintu Custom 3D Print dan Toko
+  tetap terlihat.
+
 Keputusan Owner yang masih terbuka (rekomendasi agen, belum diputuskan):
 
 - **Q11:** cara aplikasi di VPS mengenali IP asli pengunjung (rate limit,
@@ -143,8 +164,8 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T33 | M5 | DONE | Dua BUY staging | T03, akun staging, provider sandbox, T31 (Owner 28 Okt; T14/T19 diuji terpisah) | Dua variasi transaksi sukses; order/stock/payment/email/status konsisten. Hosted records. 30 Okt: `ORD-20261030-YAJE5AHR` (1 item, J&T EZ) dan `ORD-20261030-WAL2PYJC` (3 produk berbeda, JNE Reguler) sama-sama PAID → Shipped dengan stok, shipment dan tiga email delivered (log "T33 selesai"). Settlement order 3 item lewat rekonsiliasi karena webhook gagal 500; perbaikan webhook (PR #98) dan bukti settlement webhook multi-item di staging menyusul. |
 | T34 | M5 | BLOCKED_EXTERNAL | Satu MAKE staging | T03, akun staging, provider sandbox, T31 (Owner 28 Okt; T14/T19 diuji terpisah) | Model→review→estimasi→quote→bayar→produksi/QC→ongkir final→kirim pada request/order benar. Hosted records/operator. |
 | T35 | M5 | BLOCKED_EXTERNAL | Failure/refund staging | T21–T25 | Duplicate/nominal salah/late/timeout/full refund/manual exception benar dan teraudit. Sandbox. Owner Q1: QRIS + GoPay, satu refund otomatis lewat Midtrans dan satu manual. |
-| T36 | M5 | BLOCKED_INPUT | UAT operasi Admin | T15–T20/T32 | Owner/Admin menambah konten, stock, quote, fulfillment dan keuangan dasar tanpa database/source. UAT record Owner masih diperlukan. |
-| T37 | M5 | BLOCKED_EXTERNAL | UI/perangkat/AT | T33–T36 | Route aktual: viewport, keyboard/fokus/error, zoom/reduced motion; fisik/AT dibuktikan terpisah. |
+| T36 | M5 | BLOCKED_INPUT | UAT operasi Admin | T15–T20/T32; T50 | Owner/Admin menambah konten, stock, quote, fulfillment dan keuangan dasar tanpa database/source. UAT record Owner masih diperlukan. |
+| T37 | M5 | BLOCKED_EXTERNAL | UI/perangkat/AT | T33–T36; T47–T50 | Route aktual: viewport, keyboard/fokus/error, zoom/reduced motion; fisik/AT dibuktikan terpisah. |
 | T38 | M5 | BLOCKED_INPUT | Backup/restore | T07–T09/T14/T25; T41; akun Biznet Gio (Owner) | Sasaran Owner E11: RPO 24 jam, RTO 1 hari kerja. Q5–Q7: `pg_dump` harian terenkripsi dari PostgreSQL di VPS ke S3 region Jakarta, satu tempat dengan salinan arsip pembukuan; penyedia Biznet Gio NEO Object Storage (Q12); cadangan disimpan 30 hari (Q15); akun dan bucket dibuat bersama VPS (Q18). Drill harus mencegah restore akun tertutup atau replay refund/email. Recovery evidence. |
 | T39 | M5 | TODO | SOP dan handover operasi | T33–T38; Owner | Coverage/kalender/eskalasi/alarm/kontak pasca-closure/petugas dibuktikan lewat simulasi. Input Owner E12 (29 Okt) tersedia; menunggu dependensi. |
 | T40 | M6 | BLOCKED_EXTERNAL | Rilis terkendali | Seluruh wajib; T41–T44; instruksi rilis | Kandidat sama dengan bukti; gate ditutup; ledger readiness diperbarui (D12); activation/smoke/monitoring/rollback di VPS (T41) sesuai izin eksplisit; DNS `niuva.id` diarahkan; Google Search Console dan Bing Webmaster terverifikasi dan sitemap terkirim. |
@@ -152,6 +173,12 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T42 | M6 | TODO | Adaptasi runtime untuk VPS | T10; Q11 untuk bagian IP | IP klien terpercaya di VPS menggantikan header Netlify di `src/lib/security/client-ip.ts` (rate limit dan Better Auth), dengan tes pemalsuan header. Scheduler job production lewat timer di VPS memakai runner `src/modules/jobs/`, menutup sisa scheduler T07/T24. Unit/backend/integration lokal, lalu bukti di VPS. 30 Okt: jadwal Q14 dan route tick `/api/internal/jobs/schedule` selesai dengan tes lokal (log "T42 scheduler"); timer dan bukti VPS menunggu T41, bagian IP menunggu Q11. |
 | T43 | M2 | BLOCKED_INPUT | Login Google hosted (D04) | T12; grant Q4 | Owner menambah redirect URI staging di Google Cloud; env OAuth staging diisi atas instruksi Owner; consent dan login Google berhasil di staging dengan akun uji. Production ikut T40. |
 | T44 | M6 | BLOCKED_INPUT | Policy privacy untuk penyedia production | T11; Q5; Q12–Q13; Owner | Daftar penyedia dan lokasi pemrosesan di `src/content/customer-policy/privacy-v1.0.md` (Netlify Ohio, Neon Singapura) diganti versi baru yang mencantumkan Helipod VPS Jakarta, penyedia backup dan storage file production; Owner menyetujui teks; versi baru terbit sebelum production menerima data Customer (T40). Ditemukan saat perbandingan S3, 30 Okt. Draf v1.1 disetujui Owner 31 Okt (Q15–Q16); tanggal terbit, file runtime dan pemberitahuan belum; terbit menunggu T41 dan T38. |
+| T45 | M5a | DONE | Audit, sitemap dan user flow redesign | Keputusan Owner 31 Okt | Audit tampilan sekarang, sitemap dan user flow dengan pembagian visual vs aturan bisnis tercatat di [audit IA](docs/design/redesign-2026-10-31-audit-ia.md); Q19–Q22 dijawab Owner; T36/T37 bergantung pada redesign. Log "T45 — audit, sitemap dan user flow". |
+| T46 | M5a | TODO | Fondasi design system baru | T45; pilihan arah Q19 | Arah terpilih diterapkan ke token, tipe, motion, primitive `components/ui`, shell publik/auth/sistem/Admin, status label, format Rupiah, timeline dan page header bersama; tanpa dependency npm baru; URL, API, data, auth, harga dan pembayaran tetap. Lint/typecheck/test/E2E/build dan capture lokal. |
+| T47 | M5a | TODO | Redesign Company | T46 | `/`, `/services` dan detail, `/projects` dan detail, legal, 404 sesuai sitemap/flow; satu CTA utama per halaman; tanpa klaim baru; DESIGN.md dan panduan Company ditulis ulang dari hasil build. Capture 320–1440, keyboard/fokus, zoom 200%, reduced motion, kontras. |
+| T48 | M5a | TODO | Redesign Commerce dan MAKE | T46 | Toko, produk, keranjang, checkout, Custom 3D Print dan workspace dua mode, status/quote token; copy sistem diganti bahasa pelanggan; kalimat MAKE yang dilindungi tetap; aturan server, harga dan pembayaran tidak berubah. Gate lokal dan capture. |
+| T49 | M5a | TODO | Redesign Customer dan auth | T46, T48 | Hub Akun, detail MAKE/order (konfirmasi terima quote, timeline, Rupiah dan label status konsisten), refund, privasi, enam halaman auth dalam satu frame; allowlist dan gate auth tidak berubah. Gate lokal dan capture. |
+| T50 | M5a | TODO | Redesign Admin | T46 | Shell, Ringkasan, daftar, detail, review Custom Print, keuangan, produk, tarif, konten, laporan, akses/privasi dan state error/denied; Card, status, tabel dan label Indonesia terkonsolidasi; permission dan motion yang disetujui tetap. Gate lokal dan capture. |
 
 ## Backlog setelah v1
 
@@ -2062,6 +2089,46 @@ belum ada yang dikerjakan.
   versi gratis bernilai Rp0. Domain tidak perlu dibeli lagi; biaya
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
+
+### T45 — audit, sitemap dan user flow, 2026-10-31
+
+Owner meminta redesign frontend global (lihat "Redesign frontend" di keputusan
+Owner). Hasilnya ada di [audit IA](docs/design/redesign-2026-10-31-audit-ia.md).
+
+- **Bukti:**
+  - 24 route publik/Customer ditangkap pada 1440 dan 390 px dari dev server lokal
+    `main@4cf9a6e` dengan reduced motion. Capture tidak di-commit.
+  - Postgres lokal mati karena service perlu hak admin. Shop data asli,
+    checkout, Akun, workspace MAKE, quote/order dan seluruh Admin diaudit dari
+    source. `/admin` mengembalikan fallback HTML 503 dari `src/proxy.ts`.
+- **Temuan utama:**
+  - satu template seksi untuk semua isi
+  - eyebrow di setiap seksi
+  - palet slate bawaan
+  - delapan frame berbeda
+  - sekitar 40 teks yang menjelaskan sistem ke pelanggan
+  - bahasa campur
+  - media dikecilkan
+  - mobile yang hanya menumpuk seksi desktop
+- **Dari source:**
+  - quote di Akun diterima tanpa konfirmasi
+  - Rupiah tanpa pemisah ribuan dan enum mentah di Akun
+  - 81 dari 99 Card Admin menimpa default
+- **Di luar scope, dicatat untuk task terpisah:**
+  - `returnTo` halaman refund tidak ada di allowlist auth, sehingga Customer
+    mendarat di `/account`
+  - fallback sign-in Admin tak tercapai
+  - tiga file Admin yatim
+  - konflik retensi pembukuan antara PRD dan PRODUCT.md
+- **Owner menjawab Q19–Q22:**
+  - tiga arah visual ditunjukkan dulu
+  - label Bahasa Indonesia; "Custom 3D Print" dan "ready-made" dikonfirmasi
+  - login MAKE tetap di awal
+  - Beranda dipimpin DEVELOP
+- **Perubahan dokumen:** T46–T50 dibuat, dan T36/T37 bergantung pada T50 dan
+  T47–T50. `ROADMAP.md`, `MEMORY.md` dan `PRODUCT_CONTEXT.md` ikut diperbarui.
+- **Belum:** tidak ada perubahan runtime. Review visual Owner, perangkat/AT dan
+  staging belum dilakukan.
 
 ### Kredit Netlify dan pengajuan provider production, 2026-10-31
 
