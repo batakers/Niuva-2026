@@ -86,6 +86,15 @@ mengganti foto per pilihan varian, buat perubahan terpisah yang mencakup:
 4. acceptance visual untuk desktop/mobile serta fallback saat varian tidak
    memiliki foto.
 
+Keputusan Owner 2026-11-01 ("Ya, pertahankan"): halaman detail produk boleh
+menampilkan foto varian saat varian dipilih, tanpa perubahan model data. Galeri
+hanya berpindah bila `altText` sebuah media sama persis dengan
+`Foto varian <nama varian>` (tanpa membedakan huruf besar/kecil); tanpa
+kecocokan galeri tetap pada foto yang sedang tampil, dan tidak ada foto default
+yang ditebak. Batasannya: mengubah alt text atau nama varian di Admin memutus
+kaitan itu. Relasi `variantId` di atas tetap menjadi jalur bila kaitan resmi
+dibutuhkan. Implementasi: `src/app/shop/[slug]/product-showcase.tsx`.
+
 ### 4. Dimensi paket dan provider
 
 Tidak perlu mengisi ukuran kardus perkiraan pada dataset saat ini. Ukuran
