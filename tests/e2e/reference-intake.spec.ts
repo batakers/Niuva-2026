@@ -2,11 +2,11 @@ import { expect, test } from "@playwright/test";
 import { loginCustomer } from "./helpers/customer";
 
 test("DEVELOP service links open contextual WhatsApp and legacy entry ignores unknown slugs", async ({ page }) => {
-  await page.goto("/services/research-development");
+  await page.goto("/services/riset-pengembangan");
   const contact = page.getByRole("main").getByRole("link", { name: "Hubungi Kami" }).first();
   const href = new URL((await contact.getAttribute("href"))!);
   expect(href.origin).toBe("https://wa.me");
-  expect(href.searchParams.get("text")).toContain("Research & Development");
+  expect(href.searchParams.get("text")).toContain("Riset & Pengembangan");
   await page.goto("/project-brief?service=unknown-service");
   await expect(page).toHaveURL(/\/services$/);
   await expect(page.getByRole("form", { name: "Form project brief" })).toHaveCount(0);

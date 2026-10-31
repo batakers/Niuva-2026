@@ -107,7 +107,7 @@ describe("B2B inquiry contract", () => {
     }).success).toBe(false);
     expect(b2bInquiryInputSchema.safeParse({
       ...input,
-      preferredService: "design-prototyping",
+      preferredService: "desain-rekayasa",
     }).success).toBe(true);
   });
 });

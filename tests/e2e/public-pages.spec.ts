@@ -77,8 +77,8 @@ test("published projects filter and navigate, while local examples retain their 
   await page.goto("/projects");
   await expect(page.getByRole("status")).toContainText("17 project");
   await expect(page.locator("article")).toHaveCount(17);
-  await page.getByLabel("Layanan", { exact: true }).selectOption("Apparel & Merchandise");
-  await expect(page.locator("article")).toHaveCount(3);
+  await page.getByLabel("Layanan", { exact: true }).selectOption("Riset & Pengembangan");
+  await expect(page.locator("article")).toHaveCount(2);
   await page.getByLabel("Cari project").fill("tidak ada");
   await expect(page.getByText("Tidak ada project yang cocok.")).toBeVisible();
   await page.getByRole("button", { name: "Hapus filter" }).click();
@@ -107,13 +107,14 @@ test("published project reference keeps evidence boundaries and proof media avai
   await page.goto("/projects");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /index, follow/);
   await expect(page.getByText("17 project")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Cerita proyek utama." })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Karya lainnya." })).toBeVisible();
+  // One gallery: every project shows its approved cover; only story-ready ones link to a detail page.
+  await expect(page.getByRole("heading", { name: "Semua proyek." })).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(17);
-  await expect(page.locator("article img")).toHaveCount(6);
+  await expect(page.locator("article img")).toHaveCount(17);
+  await expect(page.locator("article a[href^='/projects/']")).toHaveCount(17);
 
-  await page.getByLabel("Layanan", { exact: true }).selectOption("Apparel & Merchandise");
-  await expect(page.getByRole("article")).toHaveCount(3);
+  await page.getByLabel("Layanan", { exact: true }).selectOption("Desain & Rekayasa");
+  await expect(page.getByRole("article")).toHaveCount(11);
   await page.getByLabel("Cari project").fill("Bagit");
   await expect(page.getByRole("article")).toHaveCount(1);
   await page.getByLabel("Layanan", { exact: true }).selectOption("");
@@ -129,6 +130,12 @@ test("published project reference keeps evidence boundaries and proof media avai
   await page.goto("/projects/bagit-arei-smart-bag-v2");
   await expect(page.getByRole("heading", { name: "Konteks dan tantangan" })).toHaveCount(0);
   await expect(page.getByText("Challenge dan process rinci sengaja tidak ditampilkan")).toBeVisible();
+  // Owner-approved documentation (1 Nov 2026) follows the cover; Elips has none approved.
+  const documentation = page.getByRole("region", { name: "Dokumentasi proyek" });
+  await expect(documentation.getByRole("img")).toHaveCount(7);
+  await expect(documentation.getByRole("img", { name: "Bagit V2 dipakai di jalur pendakian." })).toBeVisible();
+  await page.goto("/projects/elips-tandem-bike");
+  await expect(page.getByRole("heading", { name: "Dokumentasi proyek" })).toHaveCount(0);
 
   if (process.env.NIUVA_E2E_PREVIEW_DISABLED === "true") {
     expect(errors).toEqual([]);
@@ -170,8 +177,8 @@ test("public company and service routes render approved content", async ({ page 
   await page.getByRole("main").getByRole("link", { name: "Lihat layanan", exact: true }).first().click();
   await expect(page).toHaveURL(/\/services$/);
   await expect(page.locator("section[id]")).toHaveCount(4);
-  await expect(page.getByRole("heading", { name: "Research & Development" })).toBeVisible();
-  await expect(page.getByText("Pengembangan produk dan teknologi yang sistematis")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Riset & Pengembangan" })).toBeVisible();
+  await expect(page.getByText("Mengembangkan solusi melalui riset, eksplorasi teknologi")).toBeVisible();
   await expect(page.getByText("Arah pembahasan")).toHaveCount(4);
   await page.getByRole("link", { name: "Lihat proyek" }).click();
   await expect(page).toHaveURL(/\/projects$/);
@@ -192,24 +199,29 @@ test("public company and service routes render approved content", async ({ page 
 });
 
 test("four service details offer contextual WhatsApp and only approved project details", async ({ page, request }) => {
-  const slugs = ["research-development", "consultant-workshop", "design-prototyping", "apparel-merchandise"];
+  const slugs = ["riset-pengembangan", "desain-rekayasa", "prototipe-manufaktur-digital", "konsultansi-workshop"];
   for (const slug of slugs) {
     const response = await request.get(`/services/${slug}`);
     expect(response.status(), slug).toBe(200);
   }
   expect((await request.get("/services/layanan-tidak-ada")).status()).toBe(404);
+  // Service URLs from before the Owner's 31 Oct 2026 change redirect permanently to their successor.
+  const legacy = await request.get("/services/design-prototyping", { maxRedirects: 0 });
+  expect(legacy.status()).toBe(308);
+  expect(legacy.headers().location).toMatch(/\/services\/desain-rekayasa$/);
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/services/design-prototyping");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Design & Prototyping");
-  await expect(page.getByRole("link", { name: "Lihat project" }).first()).toBeVisible();
+  await page.goto("/services/desain-rekayasa");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Desain & Rekayasa");
+  // Related projects are whole-card links named by the project title.
+  await expect(page.getByRole("main").getByRole("link", { name: /Smart Drop Box/ })).toBeVisible();
   await expect(page.locator('a[href="/projects/smart-drop-box-pg"]')).toHaveCount(1);
   await expect(page.locator('a[href="/projects/elips-tandem-bike"]')).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   const cta = page.getByRole("main").getByRole("link", { name: "Hubungi Kami" }).first();
   await expect(cta).toHaveAttribute("href", /^https:\/\/wa\.me\//);
-  expect(new URL((await cta.getAttribute("href"))!).searchParams.get("text")).toContain("Design & Prototyping");
+  expect(new URL((await cta.getAttribute("href"))!).searchParams.get("text")).toContain("Desain & Rekayasa");
   await cta.focus();
   await expect(cta).toBeFocused();
   await page.setViewportSize({ width: 1280, height: 900 });

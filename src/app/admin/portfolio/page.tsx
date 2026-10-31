@@ -64,7 +64,7 @@ export default async function AdminPortfolioPage({
             <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
               <div>
                 <h2 className="text-xl font-semibold" id="portfolio-list-title">Project proof</h2>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">Featured project memerlukan konteks, hasil, media, alt text, dan izin publikasi. Selected Works card-only dapat published dengan ringkasan Owner-approved tanpa media.</p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">Featured project memerlukan konteks, hasil, media, alt text, dan izin publikasi. Selected Works card-only dapat published dengan ringkasan Owner-approved; halamannya menampilkan ringkasan tanpa cerita lengkap.</p>
               </div>
               <p className="text-sm text-muted-foreground" role="status">{result.filteredTotal} hasil filter</p>
             </div>

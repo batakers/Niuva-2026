@@ -26,10 +26,10 @@ describe("approved public content", () => {
       phone: "+62 851-1767-8901",
     });
     expect(publicServices.map((service) => service.title)).toEqual([
-      "Research & Development",
-      "Consultant & Workshop",
-      "Design & Prototyping",
-      "Apparel & Merchandise",
+      "Riset & Pengembangan",
+      "Desain & Rekayasa",
+      "Prototipe & Manufaktur Digital",
+      "Konsultansi & Workshop",
     ]);
 
     const projects = getApprovedPortfolioProjects();
@@ -56,6 +56,7 @@ describe("approved public content", () => {
     const serviceUpserts: UpsertInput[] = [];
     const projectUpserts: UpsertInput[] = [];
     const mediaUpserts: UpsertInput[] = [];
+    const serviceUnpublished: unknown[] = [];
 
     const transactionClient = {
       portfolioMedia: {
@@ -79,6 +80,10 @@ describe("approved public content", () => {
           serviceUpserts.push(input);
           return { id: `service-${serviceUpserts.length}` };
         },
+        async updateMany(input: unknown) {
+          serviceUnpublished.push(input);
+          return { count: 0 };
+        },
       },
     };
 
@@ -89,19 +94,25 @@ describe("approved public content", () => {
     } as unknown as PrismaClient;
 
     await expect(seedApprovedPublicContent(prisma)).resolves.toEqual({
-      media: 6,
+      media: 59,
       projects: 17,
       services: 4,
     });
     await expect(seedApprovedPublicContent(prisma)).resolves.toEqual({
-      media: 6,
+      media: 59,
       projects: 17,
       services: 4,
     });
 
     expect(serviceUpserts).toHaveLength(8);
+    // Services outside the approved list are unpublished, never deleted.
+    expect(serviceUnpublished[0]).toEqual({
+      where: { slug: { notIn: publicServices.map((service) => service.slug) } },
+      data: { isPublished: false },
+    });
     expect(projectUpserts).toHaveLength(34);
-    expect(mediaUpserts).toHaveLength(12);
+    // 17 covers plus 42 documentation images, upserted on each of the two runs.
+    expect(mediaUpserts).toHaveLength(118);
     expect(projectUpserts[0]?.create).toMatchObject({
       isFeatured: true,
       isPublished: true,

@@ -10,8 +10,9 @@ import RetiredProjectBriefPage from "@/app/project-brief/page";
 describe("legacy Project Brief entry", () => {
   it.each([
     [undefined, "/services"],
-    ["research-development", "/services/research-development"],
-    ["design-prototyping", "/services/design-prototyping"],
+    ["research-development", "/services/riset-pengembangan"],
+    ["riset-pengembangan", "/services/riset-pengembangan"],
+    ["design-prototyping", "/services/desain-rekayasa"],
     ["unknown", "/services"],
     [["design-prototyping", "unknown"], "/services"],
   ] as const)("preserves only a valid service context: %s", async (service, destination) => {

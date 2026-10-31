@@ -79,12 +79,12 @@ describe("/services/[slug] ISR strategy (RK-16; Req 16.1, 16.8)", () => {
     mocks.listProjects.mockRejectedValueOnce(new Error("db unavailable fixture"));
     render(await serviceModule.default({ params: Promise.resolve({ slug: service.slug }) }));
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(service.title);
-    expect(screen.getByText(/Detail project terkait belum tersedia/)).toBeInTheDocument();
+    expect(screen.getByText(/Detail proyek terkait belum tersedia/)).toBeInTheDocument();
     expect(screen.queryByText("db unavailable fixture")).not.toBeInTheDocument();
     expect(mocks.listProjects).toHaveBeenCalledTimes(1);
   });
 
-  it("only links detail-ready projects from the matching service and caps the list at three", async () => {
+  it("links projects from the matching service, card-only included, and caps the list at three", async () => {
     mocks.listProjects.mockResolvedValueOnce([
       project(),
       project({ slug: "card-only", id: "card-only", detailReadiness: "card-only" }),
@@ -92,11 +92,12 @@ describe("/services/[slug] ISR strategy (RK-16; Req 16.1, 16.8)", () => {
       ...[2, 3, 4].map((number) => project({ slug: `related-${number}`, id: `related-${number}` })),
     ]);
     render(await serviceModule.default({ params: Promise.resolve({ slug: service.slug }) }));
-    const links = screen.getAllByRole("link", { name: "Lihat project" });
+    // Each related project is one card link; "Semua proyek" points at the index, not a project.
+    const links = screen.getAllByRole("link").filter((link) => link.getAttribute("href")?.startsWith("/projects/"));
     expect(links.map((link) => link.getAttribute("href"))).toEqual([
-      "/projects/related-project", "/projects/related-2", "/projects/related-3",
+      "/projects/related-project", "/projects/card-only", "/projects/related-2",
     ]);
-    expect(screen.queryByText(/Detail project terkait belum tersedia/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Detail proyek terkait belum tersedia/)).not.toBeInTheDocument();
   });
 
   it("calls notFound for unknown slugs before reading portfolio data", async () => {

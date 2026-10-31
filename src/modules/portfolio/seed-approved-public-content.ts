@@ -39,6 +39,12 @@ export async function seedApprovedPublicContent(
       });
     }
 
+    // Services renamed by the Owner on 31 Oct 2026 stay in the table but leave the public list.
+    await tx.service.updateMany({
+      where: { slug: { notIn: publicServices.map((service) => service.slug) } },
+      data: { isPublished: false },
+    });
+
     const projects = getApprovedPortfolioProjects();
     let media = 0;
 

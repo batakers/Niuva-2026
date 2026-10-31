@@ -28,12 +28,13 @@ async function assertNoHorizontalOverflow(page: Page, route: string, width: numb
   );
 }
 
+// The Owner accepted Beranda visually on 31 Oct 2026; other routes still await review.
 async function assertRouteShell(page: Page, route: string, width: number) {
   await expect(page.getByRole("main")).toHaveCount(1);
   await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
   await expect(page.locator("[data-product-screen-proof-status]")).toHaveAttribute(
     "data-product-screen-proof-status",
-    "pending-owner-review",
+    route === "/" ? "approved-owner" : "pending-owner-review",
   );
   await assertNoHorizontalOverflow(page, route, width);
 }

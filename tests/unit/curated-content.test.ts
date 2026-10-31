@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
@@ -8,6 +8,7 @@ import {
   curatedSelectedWorks,
   curatedServices,
 } from "@/features/frontend-preview/curated-content";
+import { curatedProjectDocumentation } from "@/features/frontend-preview/curated-documentation";
 
 describe("approved public content source", () => {
   it("records the Owner approval while keeping the reference preview separate", () => {
@@ -17,7 +18,7 @@ describe("approved public content source", () => {
       productionPublicationApproved: true,
     });
     expect(curatedCompanyProfile.publication).toEqual({
-      contentVersion: "2026-09-10",
+      contentVersion: "2026-10-31",
       publicIntegrationApproved: true,
       productionPublicationApproved: true,
     });
@@ -51,6 +52,27 @@ describe("approved public content source", () => {
       expect(existsSync(resolve(process.cwd(), project.cover.internalPath))).toBe(true);
       expect(project.cover.publicPath).toMatch(/^\/media\/portfolio\/cs-0\d-/);
     }
+  });
+
+  it("keeps approved documentation traceable, sized from the file and inside the media limit", () => {
+    const projectIds = new Set<string>([...curatedFeaturedProjects, ...curatedSelectedWorks].map(project => project.id));
+    const items = Object.entries(curatedProjectDocumentation).flatMap(([id, list]) => {
+      expect(projectIds.has(id)).toBe(true);
+      // Cover plus documentation must fit the admin media limit of 12 per project.
+      expect(list.length + 1).toBeLessThanOrEqual(12);
+      return list;
+    });
+    expect(items).toHaveLength(42);
+    expect(curatedProjectDocumentation["SW-02"]).toBeUndefined();
+    for (const item of items) {
+      expect(item.sourceReference).toMatch(/^SRC-(PORT|PDS|COMPANY)-00\d p\.\d+$/);
+      const file = readFileSync(resolve(process.cwd(), "public", item.publicPath.slice(1)));
+      expect(file.readUInt32BE(16), item.publicPath).toBe(item.width);
+      expect(file.readUInt32BE(20), item.publicPath).toBe(item.height);
+      expect(existsSync(resolve(process.cwd(), item.internalPath))).toBe(true);
+    }
+    // The three images the Owner did not approve stay out.
+    expect(items.map(item => item.altText).join(" ")).not.toMatch(/Netflix|spesifikasi|Anak/);
   });
 
   it("does not invent full challenge and process stories for summary-only cases", () => {

@@ -11,13 +11,13 @@ test("B2B contact works without login on mobile and desktop", async ({ page }, t
   await page.emulateMedia({ reducedMotion: "reduce" });
   for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto("/services/design-prototyping");
-    await expect(page).toHaveURL(/\/services\/design-prototyping$/);
+    await page.goto("/services/desain-rekayasa");
+    await expect(page).toHaveURL(/\/services\/desain-rekayasa$/);
     const contact = page.getByRole("main").getByRole("link", { name: "Hubungi Kami", exact: true }).first();
     const url = new URL((await contact.getAttribute("href"))!);
     expect(url.origin).toBe("https://wa.me");
     expect(url.pathname).toBe("/6285117678901");
-    expect(url.searchParams.get("text")).toBe("Halo Niuva, saya ingin membahas kebutuhan Design & Prototyping.");
+    expect(url.searchParams.get("text")).toBe("Halo Niuva, saya ingin membahas kebutuhan Desain & Rekayasa.");
     await expect(page.getByRole("main").getByText("Melalui WhatsApp", { exact: true })).toHaveCount(0);
     await expect(page.getByRole("form", { name: "Form project brief" })).toHaveCount(0);
     await expect(page.locator('a[href^="/project-brief"]')).toHaveCount(0);
@@ -36,7 +36,7 @@ test("B2B contact works without login on mobile and desktop", async ({ page }, t
 
 test("legacy brief and proposal endpoints cannot start a B2B workflow", async ({ page, request }) => {
   await page.goto("/project-brief?service=research-development");
-  await expect(page).toHaveURL(/\/services\/research-development$/);
+  await expect(page).toHaveURL(/\/services\/riset-pengembangan$/);
   await page.goto("/project-brief?service=unknown");
   await expect(page).toHaveURL(/\/services$/);
   for (const path of ["/api/project-brief", "/api/account/inquiries/legacy/quotes/legacy/decision"]) {
@@ -52,7 +52,7 @@ test("WhatsApp contact and legacy redirect work without JavaScript", async ({ br
   try {
     const page = await context.newPage();
     await page.goto("/project-brief?service=design-prototyping");
-    await expect(page).toHaveURL(/\/services\/design-prototyping$/);
+    await expect(page).toHaveURL(/\/services\/desain-rekayasa$/);
     await expect(page.getByRole("main").getByRole("link", { name: "Hubungi Kami" }).first()).toHaveAttribute("href", /^https:\/\/wa\.me\/6285117678901\?text=/);
     await expect(page.getByRole("form")).toHaveCount(0);
   } finally {

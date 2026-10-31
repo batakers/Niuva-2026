@@ -2,14 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { B2BContactLink } from "@/components/niuva/b2b-contact-link";
-import { NiuvaLink } from "@/components/ui/NiuvaLink";
+import { ClosingPanel } from "@/components/niuva/closing-panel";
+import { Icon } from "@/components/ui/Icon";
 import { typographySystemTokens as type } from "@/design/typography";
-import { publicServices } from "@/features/public/company-content";
+import { publicProductTypes, publicServices } from "@/features/public/company-content";
+import { mascotRenders } from "@/features/public/mascot";
 import { buildPageSocialMetadata } from "@/lib/site-metadata";
 
 const SERVICES_TITLE = "Layanan · Niuva";
 const SERVICES_DESCRIPTION =
-  "Research & Development, Consultant & Workshop, Design & Prototyping, serta Apparel & Merchandise dari Niuva.";
+  "Riset & Pengembangan, Desain & Rekayasa, Prototipe & Manufaktur Digital, serta Konsultansi & Workshop dari Niuva.";
 
 export const metadata: Metadata = {
   title: SERVICES_TITLE,
@@ -22,54 +24,95 @@ export const metadata: Metadata = {
   robots: { follow: true, index: true },
 };
 
+const rowLink = "group flex items-center justify-between gap-6 border-b border-border py-5 transition-colors duration-150 hover:text-brand-800 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset";
+
 export default function ServicesPage() {
   return (
     <PublicShell scope="services">
       <main id="main-content">
-        <section className="border-b border-border bg-card">
-          <div className="mx-auto grid max-w-public gap-8 px-5 py-12 sm:px-8 sm:py-16 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-end">
-            <div>
-              <h1 className={`${type.display.className} mt-4 max-w-3xl`}>Dukungan yang mengikuti tahap proyek Anda.</h1></div>
-            <div className="max-w-lg space-y-5 lg:pl-8">
-              <p className="text-lg leading-8 text-muted-foreground">Mulai dari kebutuhan yang belum terpetakan, diskusi tim, desain yang perlu diuji, atau produk beridentitas brand. Pilih titik masuk yang paling dekat dengan kondisi Anda.</p>
-              <B2BContactLink />
-            </div>
+        {/* The four services, set as one large list, are the first screen's picture. */}
+        <section aria-labelledby="services-title" className="mx-auto grid max-w-public gap-12 px-5 pt-14 sm:px-12 sm:pt-20 lg:grid-cols-[minmax(0,35rem)_minmax(0,1fr)] lg:gap-16 xl:grid-cols-[minmax(0,43rem)_minmax(0,1fr)]">
+          <div>
+            <h1 className={type.display.className} id="services-title">Dukungan yang mengikuti tahap proyek Anda.</h1>
+            <p className="mt-5 max-w-[46ch] text-lead leading-[1.6] text-muted-foreground sm:text-lg">Mulai dari kebutuhan yang belum terpetakan, diskusi tim, desain yang perlu diuji, atau produk beridentitas brand. Pilih titik masuk yang paling dekat dengan kondisi Anda.</p>
+            <B2BContactLink className="mt-8" />
           </div>
-        </section>
-        <section className="mx-auto max-w-public px-5 py-12 sm:px-8 sm:py-16" aria-labelledby="choose-service-title">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1fr)] lg:items-end">
-            <div><h2 id="choose-service-title" className={type.heading.className}>Cari layanan dari pekerjaan yang perlu dilakukan.</h2></div>
-            <p className="max-w-2xl text-base leading-7 text-muted-foreground">Keempat layanan dapat saling melengkapi. Lihat kebutuhan awal, proses kerja, dan contoh proyek sebelum menghubungi tim Niuva.</p>
-          </div>
-          <nav aria-label="Lompat ke layanan" className="mt-8 flex flex-wrap gap-2">
-            {publicServices.map((service) => <Link className="inline-flex min-h-11 items-center rounded-lg border border-border bg-card px-4 text-sm font-medium underline-offset-4 hover:border-brand-400 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`#${service.slug}`} key={service.slug}>{service.title}</Link>)}
+          <nav aria-label="Empat layanan Niuva" className="lg:pt-2">
+            <ul className="border-t border-border">
+              {publicServices.map((service) => (
+                <li key={service.slug}>
+                  <a className={rowLink} href={`#${service.slug}`}>
+                    <span>
+                      <span className="block text-2xl font-normal tracking-[-0.015em] sm:text-3xl">{service.title}</span>
+                      <span className="mt-1 block text-ui text-muted-foreground">{service.tags.join(" · ")}</span>
+                    </span>
+                    <Icon aria-hidden="true" className="size-5 shrink-0 text-brand-700 transition-transform duration-200 group-hover:translate-y-1" name="arrow-down" />
+                  </a>
+                </li>
+              ))}
+            </ul>
           </nav>
-          <div className="mt-10 grid border-t border-border lg:grid-cols-2">
-            {publicServices.map((service) => (
-              <section key={service.slug} id={service.slug} aria-labelledby={`${service.slug}-title`}
-                className="scroll-mt-8 border-b border-border py-8 sm:py-10 lg:odd:pr-10 lg:even:border-l lg:even:pl-10">
-                <h3 id={`${service.slug}-title`} className={type.subheading.className}>{service.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{service.tags.join(" · ")}</p>
-                <p className="mt-4 max-w-xl text-lg leading-7">{service.websiteFraming}</p>
-                <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">{service.sourceScope}</p>
-                <dl className="mt-6 divide-y divide-border border-y border-border">
-                  <div className="py-3"><dt className="text-sm font-semibold">Yang bisa Anda bawa</dt><dd className="mt-1 text-sm leading-6 text-muted-foreground">{service.inputs}</dd></div>
-                  <div className="py-3"><dt className="text-sm font-semibold">Arah pembahasan</dt><dd className="mt-1 text-sm leading-6 text-muted-foreground">{service.outputs}</dd></div>
+        </section>
+
+        <div className="mx-auto max-w-public px-5 pt-24 sm:px-12 sm:pt-32">
+          {publicServices.map((service) => (
+            <section
+              aria-labelledby={`${service.slug}-title`}
+              className="grid scroll-mt-24 gap-6 border-t border-border py-12 sm:py-16 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16"
+              id={service.slug}
+              key={service.slug}
+            >
+              <div>
+                <h2 className={type.heading.className} id={`${service.slug}-title`}>{service.title}</h2>
+                <p className="mt-3 text-ui text-muted-foreground">{service.tags.join(" · ")}</p>
+              </div>
+              <div>
+                <p className="max-w-[44ch] text-xl leading-[1.5] sm:text-2xl sm:leading-[1.45]">{service.websiteFraming}</p>
+                <p className="mt-4 max-w-[60ch] text-base leading-[1.6] text-muted-foreground">{service.sourceScope}</p>
+                <dl className="mt-8 grid gap-6 sm:grid-cols-2 sm:gap-10">
+                  <div><dt className="text-ui font-semibold">Yang bisa Anda bawa</dt><dd className="mt-1.5 text-base leading-[1.55] text-muted-foreground">{service.inputs}</dd></div>
+                  <div><dt className="text-ui font-semibold">Arah pembahasan</dt><dd className="mt-1.5 text-base leading-[1.55] text-muted-foreground">{service.outputs}</dd></div>
                 </dl>
-                <div className="mt-5 flex flex-wrap gap-3">
-                  <NiuvaLink className="min-h-11" href={`/services/${service.slug}`} variant="outline">Lihat detail layanan</NiuvaLink>
-                  <B2BContactLink service={service.title} />
-                </div>
-              </section>
+                <Link className="group mt-7 inline-flex min-h-11 items-center gap-2 rounded-lg font-semibold underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/services/${service.slug}`}>
+                  Lihat detail {service.title}
+                  <Icon aria-hidden="true" className="size-5 text-brand-700 transition-transform duration-200 group-hover:translate-x-1" name="arrow-right" />
+                </Link>
+              </div>
+            </section>
+          ))}
+        </div>
+
+        {/* Product types from NIUVA Profile 2026: what the services above produce. */}
+        <section aria-labelledby="product-types-title" className="mx-auto grid max-w-public gap-10 px-5 pt-16 sm:px-12 sm:pt-24 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
+          <div>
+            <h2 className={type.heading.className} id="product-types-title">Yang bisa kami buat.</h2>
+            <p className="mt-4 max-w-[40ch] text-lead leading-[1.6] text-muted-foreground">Jenis produk yang dikembangkan dan dibuat Niuva bersama klien.</p>
+          </div>
+          <dl className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
+            {publicProductTypes.map((product) => (
+              <div key={product.title}>
+                <dt className="text-xl font-medium tracking-[-0.01em]">{product.title}</dt>
+                <dd className="mt-1.5 max-w-[42ch] text-base leading-[1.55] text-muted-foreground">{product.description}</dd>
+                {"href" in product ? (
+                  <dd className="mt-2">
+                    <Link className="group inline-flex min-h-11 items-center gap-2 rounded-lg font-semibold underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={product.href}>
+                      Ajukan lewat Custom 3D Print
+                      <Icon aria-hidden="true" className="size-5 text-brand-700 transition-transform duration-200 group-hover:translate-x-1" name="arrow-right" />
+                    </Link>
+                  </dd>
+                ) : null}
+              </div>
             ))}
-          </div>
+          </dl>
         </section>
-        <section className="border-t border-border bg-card">
-          <div className="mx-auto grid max-w-public gap-6 px-5 py-12 sm:px-8 sm:py-16 md:grid-cols-2 md:items-center">
-            <h2 className={type.heading.className}>Belum tahu harus mulai dari mana?</h2>
-            <div><p className="mb-5 text-base leading-7 text-muted-foreground">Ceritakan kebutuhan proyek Anda kepada tim Niuva. Pembahasan kebutuhan dan penawaran dilanjutkan melalui WhatsApp.</p><div className="flex flex-wrap gap-3"><B2BContactLink /><NiuvaLink className="min-h-11" href="/projects" variant="outline">Lihat proyek</NiuvaLink></div></div>
+
+        <ClosingPanel id="services-next-title" mascot={mascotRenders.victory} title="Belum tahu harus mulai dari mana?">
+          <p className="mt-4 max-w-[40ch] text-lead leading-[1.6] text-white">Ceritakan kebutuhan proyek Anda kepada tim Niuva. Pembahasan kebutuhan dan penawaran dilanjutkan melalui WhatsApp.</p>
+          <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
+            <B2BContactLink variant="onBrand" />
+            <Link className="inline-flex min-h-11 items-center font-semibold text-white underline underline-offset-4 hover:decoration-2" href="/projects">Lihat proyek</Link>
           </div>
-        </section>
+        </ClosingPanel>
       </main>
     </PublicShell>
   );

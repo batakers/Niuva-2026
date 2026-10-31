@@ -46,9 +46,9 @@ describe("sitemap (Req 16.3, 16.7)", () => {
     const urls = (await sitemap()).map((entry) => entry.url);
 
     expect(urls).toContain("https://niuva.example.com/");
-    expect(urls).toContain("https://niuva.example.com/services/research-development");
+    expect(urls).toContain("https://niuva.example.com/services/riset-pengembangan");
     expect(urls).toContain("https://niuva.example.com/projects/alpha");
-    expect(urls).not.toContain("https://niuva.example.com/projects/beta");
+    expect(urls).toContain("https://niuva.example.com/projects/beta");
 
     for (const url of urls) {
       const path = new URL(url).pathname;

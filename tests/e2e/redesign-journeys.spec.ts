@@ -13,7 +13,7 @@ test("public navigation keeps the four paths, separate utilities, and contextual
   await expect(page.locator("header").getByRole("link", { name: "Hubungi Kami" })).toHaveAttribute("href", /^https:\/\/wa\.me\//);
 
   for (const [route, label, href] of [
-    ["/services/design-prototyping", "Hubungi Kami", /^https:\/\/wa\.me\//],
+    ["/services/desain-rekayasa", "Hubungi Kami", /^https:\/\/wa\.me\//],
     ["/custom-print", "Pilih titik mulai", "#start-custom"],
     ["/shop?preview=examples", "Lihat Produk", "#catalog"],
     ["/shop/contoh-dock-modular-meja?preview=examples", "Pilih Varian", "#purchase-options"],
@@ -51,11 +51,11 @@ test("Home primary action stays above the fold and DEVELOP paths keep service co
   }
 
   await page.getByRole("navigation", { name: "Navigasi utama" }).getByRole("link", { name: "Layanan" }).click();
-  await page.getByRole("link", { name: "Lihat detail layanan" }).nth(2).click();
-  await expect(page).toHaveURL(/\/services\/design-prototyping$/);
+  await page.getByRole("link", { name: "Lihat detail Desain & Rekayasa" }).click();
+  await expect(page).toHaveURL(/\/services\/desain-rekayasa$/);
   const serviceContact = page.getByRole("main").getByRole("link", { name: "Hubungi Kami" }).first();
   const serviceUrl = new URL((await serviceContact.getAttribute("href"))!);
-  expect(serviceUrl.searchParams.get("text")).toContain("Design & Prototyping");
+  expect(serviceUrl.searchParams.get("text")).toContain("Desain & Rekayasa");
 
   await page.goto("/");
   await page.locator("#project-proof li a[href^='/projects/']").first().click();

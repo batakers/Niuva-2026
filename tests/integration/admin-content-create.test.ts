@@ -81,7 +81,7 @@ describe("Dashboard content creation against isolated PostgreSQL", () => {
     expect(await prisma.productVariant.count({ where: { productId: parent.id } })).toBe(0);
   });
   it("keeps a new portfolio draft unpublished until its evidence is complete", async () => {
-    const result = await createPortfolioDraftAction(idle, form({ title: "Fixture project", slug: `${prefix}-project`, summary: "Ringkasan fixture.", serviceLabel: "Design & Prototyping", isPublished: "on" }));
+    const result = await createPortfolioDraftAction(idle, form({ title: "Fixture project", slug: `${prefix}-project`, summary: "Ringkasan fixture.", serviceLabel: "Desain & Rekayasa", isPublished: "on" }));
     const saved = await prisma.portfolioProject.findUniqueOrThrow({ where: { slug: `${prefix}-project` } });
     expect(result).toMatchObject({ status: "success", link: `/admin/portfolio/${saved.id}` });
     expect(saved).toMatchObject({ isPublished: false, isFeatured: false, publishedAt: null, challenge: "", process: "", result: "" });
@@ -96,7 +96,7 @@ describe("Dashboard content creation against isolated PostgreSQL", () => {
     access = { ...access, profile: { ...access.profile, isActive: false } };
     expect(await createProductDraftAction(idle, form(values))).toMatchObject({ status: "error" });
     expect(await prisma.product.count({ where: { slug: values.slug } })).toBe(0);
-    expect(await createPortfolioDraftAction(idle, form({ title: "Denied", slug: `${prefix}-denied-project`, summary: "Denied", serviceLabel: "Design & Prototyping" }))).toMatchObject({ status: "error" });
+    expect(await createPortfolioDraftAction(idle, form({ title: "Denied", slug: `${prefix}-denied-project`, summary: "Denied", serviceLabel: "Desain & Rekayasa" }))).toMatchObject({ status: "error" });
     expect(await prisma.portfolioProject.count({ where: { slug: `${prefix}-denied-project` } })).toBe(0);
   });
 });

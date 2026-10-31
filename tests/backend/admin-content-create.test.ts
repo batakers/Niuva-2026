@@ -7,7 +7,7 @@ import type { DomainAuditEvent } from "@/modules/shared/audit";
 const access: AdminAccess = { authUserId: "content-fixture", profile: {
   id: "7c535956-28fc-4e39-9429-349904612c4f", authUserId: "content-fixture", isActive: true, role: "ADMIN",
 } };
-const draft = { title: "Artefak baru", slug: "artefak-baru", summary: "Ringkasan berbasis bukti", serviceLabel: "Design & Prototyping" };
+const draft = { title: "Artefak baru", slug: "artefak-baru", summary: "Ringkasan berbasis bukti", serviceLabel: "Desain & Rekayasa" };
 
 class DraftRepository extends PortfolioRepository {
   created: unknown[] = [];

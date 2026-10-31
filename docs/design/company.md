@@ -32,10 +32,20 @@ Pada halaman yang panjang, ubah bentuk seksi ketika jenis informasinya berubah. 
 
 - Pilih satu ide utama untuk headline; gunakan copy/fakta approved dari source. Besar huruf tidak menggantikan ketepatan pesan.
 - Pakai display untuk positioning singkat. Judul seksi menjelaskan isi, bukan mengulangi slogan. Uraian panjang tetap pada measure body yang terbaca.
-- Eyebrow berguna bila memberi kategori, tahap, atau konteks berbeda dari judul. “Layanan 1 / 4” bukan otomatis informasi yang dibutuhkan pengunjung.
+- Jangan menaruh label kecil di atas judul. Kategori, tahap, atau konteks masuk ke judul atau kalimat pertama. Tautan kembali ("Semua layanan", "Semua proyek") adalah navigasi, bukan label.
 - Selaraskan baseline judul, caption, dan divider agar hubungan antarelemen terlihat. Whitespace yang lebih luas memisahkan topik; jarak yang lebih kecil menandai satu kelompok.
-- Bidang gelap boleh memberi panggung pada positioning atau bukti. Tidak perlu hero gelap pada setiap route atau pola gelap–terang yang berulang mekanis.
-- Fraunces boleh menandai statement editorial yang benar-benar berdiri sendiri. Tidak perlu ditambahkan agar halaman dianggap editorial.
+- Bidang Niuva Blue hanya untuk hero Beranda, hero detail layanan, dan panel penutup; seksi lain tetap di dasar terang atau permukaan putih.
+
+## Komposisi route Company (T47, 31 Oktober 2026)
+
+Dibangun di atas Foundation v2; Beranda diterima Owner 31 Okt 2026, route lain menunggu tinjauan.
+
+- **Beranda:** bidang biru dengan maskot dan kartu fakta → kartu pintu → pemilih titik mulai → adegan proses → daftar layanan → daftar judul proyek → panel penutup.
+- **Layanan:** judul display dan satu aksi "Hubungi Kami" berhadapan dengan daftar besar empat layanan (tautan ke seksinya); tiap layanan satu baris editorial: nama dan tag di kolom pendek, framing bertinta penuh, cakupan, serta "Yang bisa Anda bawa"/"Arah pembahasan" di kolom panjang, lalu "Lihat detail <layanan>"; lima jenis produk Profil 2026 ("Yang bisa kami buat"), dengan Produk Cetak 3D menuju Custom 3D Print; ditutup panel biru.
+- **Detail layanan:** bidang biru dengan pose maskot per layanan (Riset & Pengembangan: ide; Desain & Rekayasa: laptop; Prototipe & Manufaktur Digital: kunci inggris; Konsultansi & Workshop: menunjuk) dan satu kartu fakta "Dibahas lewat WhatsApp"; input → output sebagai dua permukaan berurutan; tiga langkah awal dalam ordered list; kartu proyek terkait atau kosong yang jujur; panel penutup.
+- **Proyek:** judul dan kalimat pendukung bertumpuk, filter, lalu satu galeri "Semua proyek" berurutan editorial: setiap proyek tampil dengan cover yang disetujui dan membuka halaman detailnya sendiri (Owner, 1 Nov 2026); proyek tanpa cerita lengkap menampilkan ringkasan, cover, dan dokumentasi yang disetujui; panel penutup.
+- **Detail proyek:** judul dipecah menjadi nama karya dan klien/keterangan tanpa em dash, ringkasan bertinta penuh, foto bukti besar, cerita dalam baris editorial, panel penutup.
+- **Panel penutup** (`ClosingPanel`) sama di setiap route Company: judul, aksi WhatsApp `onBrand`, dan maskot kemenangan.
 
 ## Bukti dan media
 
@@ -43,7 +53,7 @@ Gunakan media dan publication state yang sudah disetujui. Source konten aktif ad
 
 Caption menjawab apa yang terlihat dan mengapa relevan. Material, ukuran, toleransi, nama klien, durasi, atau hasil kuantitatif hanya ditampilkan jika bersumber. Jangan memakai crosshair, garis ukur, code snippet, atau label teknis sebagai ornamen engineering.
 
-Objek produk/CAD yang perlu diperiksa utuh memakai contain; dokumentasi proses boleh cover dengan crop terkendali. Pilih rasio per artefak. Jangan membuat semua media menjadi gambar stock, screenshot palsu, atau render yang seolah proyek Niuva. Bila bukti tidak tersedia, pilih uraian yang jujur atau state kosong; jangan mengarang case study atau mengembangkan record card-only menjadi cerita lengkap.
+Cover proyek yang dipotong dari PDF beresolusi rendah (360–1.270 px), jadi halaman detail membatasinya 50rem di dalam bingkai putih dan semua gambar portofolio memakai kualitas 90; ganti dengan render atau foto asli ≥2.000 px bila Owner menyediakannya. Galeri "Dokumentasi proyek" di halaman detail menyusun gambar yang disetujui dalam dua kolom masonry pada proporsi aslinya, dengan keterangan di bawah tiap gambar, dan tidak pernah menggambar file lebih lebar dari pikselnya. Objek produk/CAD yang perlu diperiksa utuh memakai contain; dokumentasi proses boleh cover dengan crop terkendali. Pilih rasio per artefak. Jangan membuat semua media menjadi gambar stock, screenshot palsu, atau render yang seolah proyek Niuva. Bila bukti tidak tersedia, pilih uraian yang jujur atau state kosong; jangan mengarang case study atau mengembangkan record card-only menjadi cerita lengkap.
 
 ## Navigasi dan tindakan
 

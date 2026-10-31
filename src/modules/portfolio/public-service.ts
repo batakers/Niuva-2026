@@ -52,11 +52,17 @@ function toPublicProject(
     detailReadiness: resolveDetailReadiness(project, approved),
     evidenceBoundary: approved?.evidenceBoundary,
     id: project.id,
-    media: project.media.map((media) => ({
-      altText: media.altText,
-      sortOrder: media.sortOrder,
-      url: resolvePublicMediaUrl(media.storageKey),
-    })),
+    media: project.media.map((media) => {
+      // Admin uploads carry no dimensions; only the approved static files are matched.
+      const known = approved?.media.find((item) => item.storageKey === media.storageKey);
+      return {
+        altText: media.altText,
+        height: known?.height,
+        sortOrder: media.sortOrder,
+        url: resolvePublicMediaUrl(media.storageKey),
+        width: known?.width,
+      };
+    }),
     process: asOptionalCopy(project.process),
     result: asOptionalCopy(project.result),
     serviceLabel: project.serviceLabel,

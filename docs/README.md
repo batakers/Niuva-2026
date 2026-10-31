@@ -154,6 +154,8 @@ tidak menggantikan PRD, Technical Design, `DESIGN.md`, atau kontrak lifecycle.
 | Backend | [token-reissue-handoff.md](backend/token-reissue-handoff.md) | Customer-link handoff | `ACTIVE` | Saat menilai reissue dan delivery handoff route-bound link. |
 | Content | [niuva-content-curation-dossier.md](content/niuva-content-curation-dossier.md) | Public content source dossier | `ACTIVE` | Saat menilai claim, evidence label, dan public content integration. |
 | Content | [featured-covers/README.md](content/media-proofs/featured-covers/README.md) | Featured-cover asset index | `REFERENCE` | Saat mencari contact sheet dan asset proof featured covers. |
+| Content | [selected-work-covers/README.md](content/media-proofs/selected-work-covers/README.md) | Selected-work cover manifest | `REFERENCE` | Saat menelusuri sumber cover 11 karya terpilih. |
+| Content | [project-documentation/README.md](content/media-proofs/project-documentation/README.md) | Project documentation manifest | `REFERENCE` | Saat menelusuri sumber, ukuran, dan keterangan galeri dokumentasi proyek. |
 | Frontend | [analytics-privacy-notice-draft.md](frontend/analytics-privacy-notice-draft.md) | Analytics privacy notice draft | `REFERENCE` | Saat meninjau pemberitahuan analytics bersama Owner/legal sebelum aktivasi produksi; belum policy approved. |
 | Frontend | [gate-closure-audit.md](frontend/gate-closure-audit.md) | Frontend gate evidence | `ACTIVE` | Saat menilai closure audit untuk checkout, admin, touch, atau provider boundary. |
 | Frontend | [mvp-release-readiness.md](frontend/mvp-release-readiness.md) | Readiness ledger | `ACTIVE` | Saat membutuhkan status handoff terkini dan remaining gates. |

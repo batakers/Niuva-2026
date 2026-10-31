@@ -31,8 +31,8 @@ ada di papan ini; pekerjaan baru masuk tabel task, bukan file lain.
 | | T03, T19 | O + A | Smoke R2 privat/publik lewat unggah media Admin | Sesi Admin Owner |
 | | T09 | O | `CUSTOMER_AUTH_CLEANUP` lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
 | | T23, T25, T35 | O | Cek metode dan fitur refund di dashboard Midtrans sandbox (Owner mengecek, 31 Okt); grant `refund` sudah ada | Q1 |
-| Redesign | T46 → T47 | A | Arah dikunci (Q23–Q25); fondasi dan Beranda selesai lokal; review akhir, DESIGN.md, PR | Postgres lokal untuk E2E (Owner) |
-| | T48–T50 | A | Commerce/MAKE, Customer/auth, lalu Admin di atas fondasi T46; verifikasi lokal | T46 |
+| Redesign | T46 → T47 | A | Beranda di `main` dan diterima Owner; Layanan, Proyek, dan detailnya selesai lokal di `claude/redesign-company-pages`; sisa legal dan 404 | Postgres lokal untuk E2E (Owner) |
+| | T48–T51 | A | Commerce/MAKE, Customer/auth, lalu Admin di atas fondasi T46, ditutup motion pass global (T51); verifikasi lokal | T46 |
 | | T36 | O + A | UAT operasi Admin di UI baru | T50 |
 | Berantai | T34 → T08 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim; lalu retensi file pada berkas MAKE | T33 dulu |
 | | T14 | O + A | Privacy hosted dengan sesi Customer penguji; grant sudah ter-deploy (#89) | Sesi Customer Owner |
@@ -129,6 +129,19 @@ sitemap/flow:
   Owner, yaitu wajah ceria, telunjuk ke atas, serta bohlam menyala dan tanda
   tanya melayang di atas kepala. Pose dan bohlam dibangun dari rig dan skrip
   build paket maskot; paket sumber tidak diubah.
+- **Q26 (31 Okt):** empat layanan publik mengikuti Profil 2026 hal. 7–10:
+  Riset & Pengembangan, Desain & Rekayasa, Prototipe & Manufaktur Digital,
+  serta Konsultansi & Workshop. Apparel & Merchandise dilebur ke Desain &
+  Rekayasa, URL lama dialihkan permanen, lima jenis produk Profil hal. 6
+  tampil di halaman Layanan. Teks layanan, lima jenis produk, dan pemetaan 17
+  proyek disusun dari Profil 2026 dan disetujui Owner 31 Okt ("Setujui semua";
+  addendum PRD 31 Okt).
+- **Q27 (1 Nov):** semua proyek terbit punya halaman detail, termasuk 11 karya
+  `card-only` (addendum PRD 1 Nov). Dokumentasi tambahan dari PDF sumber
+  tampil di halaman detail setelah Owner menyetujui gambar dan keterangannya.
+  Owner menyetujui 42 gambar bertanda disarankan beserta keterangannya
+  ("Setujui yang disarankan", 1 Nov); 17 opsional dan 3 tidak disarankan tidak
+  dipakai. Manifest: `docs/content/media-proofs/project-documentation/`.
 
 Keputusan Owner yang masih terbuka (rekomendasi agen, belum diputuskan):
 
@@ -179,7 +192,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T34 | M5 | BLOCKED_EXTERNAL | Satu MAKE staging | T03, akun staging, provider sandbox, T31 (Owner 28 Okt; T14/T19 diuji terpisah) | Model→review→estimasi→quote→bayar→produksi/QC→ongkir final→kirim pada request/order benar. Hosted records/operator. |
 | T35 | M5 | BLOCKED_EXTERNAL | Failure/refund staging | T21–T25 | Duplicate/nominal salah/late/timeout/full refund/manual exception benar dan teraudit. Sandbox. Owner Q1: QRIS + GoPay, satu refund otomatis lewat Midtrans dan satu manual. |
 | T36 | M5 | BLOCKED_INPUT | UAT operasi Admin | T15–T20/T32; T50 | Owner/Admin menambah konten, stock, quote, fulfillment dan keuangan dasar tanpa database/source. UAT record Owner masih diperlukan. |
-| T37 | M5 | BLOCKED_EXTERNAL | UI/perangkat/AT | T33–T36; T47–T50 | Route aktual: viewport, keyboard/fokus/error, zoom/reduced motion; fisik/AT dibuktikan terpisah. |
+| T37 | M5 | BLOCKED_EXTERNAL | UI/perangkat/AT | T33–T36; T47–T51 | Route aktual: viewport, keyboard/fokus/error, zoom/reduced motion; fisik/AT dibuktikan terpisah. |
 | T38 | M5 | BLOCKED_INPUT | Backup/restore | T07–T09/T14/T25; T41; akun Biznet Gio (Owner) | Sasaran Owner E11: RPO 24 jam, RTO 1 hari kerja. Q5–Q7: `pg_dump` harian terenkripsi dari PostgreSQL di VPS ke S3 region Jakarta, satu tempat dengan salinan arsip pembukuan; penyedia Biznet Gio NEO Object Storage (Q12); cadangan disimpan 30 hari (Q15); akun dan bucket dibuat bersama VPS (Q18). Drill harus mencegah restore akun tertutup atau replay refund/email. Recovery evidence. |
 | T39 | M5 | TODO | SOP dan handover operasi | T33–T38; Owner | Coverage/kalender/eskalasi/alarm/kontak pasca-closure/petugas dibuktikan lewat simulasi. Input Owner E12 (29 Okt) tersedia; menunggu dependensi. |
 | T40 | M6 | BLOCKED_EXTERNAL | Rilis terkendali | Seluruh wajib; T41–T44; instruksi rilis | Kandidat sama dengan bukti; gate ditutup; ledger readiness diperbarui (D12); activation/smoke/monitoring/rollback di VPS (T41) sesuai izin eksplisit; DNS `niuva.id` diarahkan; Google Search Console dan Bing Webmaster terverifikasi dan sitemap terkirim. |
@@ -193,6 +206,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T48 | M5a | TODO | Redesign Commerce dan MAKE | T46 | Toko, produk, keranjang, checkout, Custom 3D Print dan workspace dua mode, status/quote token; copy sistem diganti bahasa pelanggan; kalimat MAKE yang dilindungi tetap; aturan server, harga dan pembayaran tidak berubah. Gate lokal dan capture. |
 | T49 | M5a | TODO | Redesign Customer dan auth | T46, T48 | Hub Akun, detail MAKE/order (konfirmasi terima quote, timeline, Rupiah dan label status konsisten), refund, privasi, enam halaman auth dalam satu frame; allowlist dan gate auth tidak berubah. Gate lokal dan capture. |
 | T50 | M5a | TODO | Redesign Admin | T46 | Shell, Ringkasan, daftar, detail, review Custom Print, keuangan, produk, tarif, konten, laporan, akses/privasi dan state error/denied; Card, status, tabel dan label Indonesia terkonsolidasi; permission dan motion yang disetujui tetap. Gate lokal dan capture. |
+| T51 | M5a | TODO | Motion pass global | T47–T50 | Keputusan Owner 31 Okt: motion inti (adegan, pergantian panel) dan umpan balik interaksi dibuat per halaman di T47–T50; pass ini menyusul setelah semua halaman jadi. Durasi dan easing seragam memakai token DESIGN.md, paling banyak satu gerak khas per halaman, keputusan animasi masuk per seksi (DESIGN.md melarang scroll reveal sebagai hiasan), reduced motion dan WCAG 2.2.2 di semua route, kinerja di ponsel. Capture dan rekaman lokal. |
 
 ## Backlog setelah v1
 
@@ -2104,6 +2118,41 @@ belum ada yang dikerjakan.
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
 
+### T47 — Layanan, Proyek, dan detailnya, 2026-10-31
+
+Branch `claude/redesign-company-pages` dari `main@7ddb346`, dengan antislop DURING
+dan keputusan motion Owner (motion inti per halaman, pass global di T51).
+
+- **Komposisi:** `/services` (daftar besar empat layanan, baris editorial per
+  layanan, panel penutup), `/services/[slug]` (bidang biru dengan pose maskot
+  per layanan, input → output, tiga langkah, proyek terkait), `/projects` dan
+  `/projects/[slug]` (judul bertumpuk, kartu tanpa panah dekoratif, tag pill,
+  ringkasan dan cerita bertinta penuh, panel penutup). Rincian di
+  `docs/design/company.md`.
+- **Bersama:** `ClosingPanel` dipakai semua route Company termasuk Beranda
+  (tanpa perubahan visual Beranda); `--panel-inset` pindah ke `PublicShell`;
+  peta render maskot di `src/features/public/mascot.ts`.
+- **Tanpa perubahan aturan:** URL, sumber data (proyek terkait tetap dari
+  portfolio terbit), tindakan WhatsApp, dan teks bukti tidak berubah. Tautan
+  "Lihat detail layanan" menjadi "Lihat detail <nama layanan>" agar setiap
+  tautan punya nama unik; spec E2E disesuaikan.
+- **Bukti lokal:** semua judul sejajar dengan logo header di 768–1440px
+  (120px di 1440); tanpa overflow 320–1440; kontras hero detail layanan
+  terendah 5,34:1; replay langkah E2E Company 17/17 lulus; unit 136 file /
+  1.524 test lulus; lint 0 error.
+- **Layanan Profil 2026 (Q26) dan cover karya (1 Nov):** empat layanan baru,
+  URL lama dialihkan 308, lima jenis produk di Layanan; Owner menyetujui teks
+  dan pemetaan 17 proyek. Sebelas karya kartu saja mendapat cover dari PDF
+  sumber (opsi A, Bicycle Arcade opsi B; manifest di
+  `docs/content/media-proofs/selected-work-covers/`), dan `/projects` menjadi
+  satu galeri "Semua proyek" dengan 17 gambar; tautan detail tetap hanya enam.
+  Unit 1.525 dan backend lulus; replay Company 17/17; 0 em dash.
+- **Detail untuk semua dan dokumentasi (Q27, 1 Nov):** ke-17 proyek menaut ke
+  halaman detail; 42 gambar dokumentasi yang disetujui tampil sebagai galeri
+  "Dokumentasi proyek" di 14 halaman detail, tidak lebih lebar dari piksel
+  filenya. Seed lokal: 17 proyek, 59 media.
+- **Belum:** E2E resmi (CI), legal dan 404, review visual Owner atas route ini.
+
 ### T46/T47 — fondasi v2 dan Beranda, 2026-10-31
 
 Branch `claude/redesign-foundation-company` dari `main@f8c8cbd`.
@@ -2174,7 +2223,9 @@ Branch `claude/redesign-foundation-company` dari `main@f8c8cbd`.
     tetap tampil apa adanya sampai diubah lewat Admin.
 - **Belum:**
   - E2E lokal (Postgres lokal mati, service perlu hak admin);
-  - review visual Owner atas hasil build;
+  - review visual Owner atas Layanan, Proyek, dan halaman lain. Beranda sudah
+    diterima Owner (31 Okt, "ya, sudah diterima") setelah PR #103 di-merge ke
+    `main` sebagai `7ddb346`;
   - komposisi penuh Layanan/Proyek;
   - lint format `designmd` (unduhan npx diblokir);
   - staging (kredit Netlify pulih 26 Nov).

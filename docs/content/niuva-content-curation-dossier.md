@@ -61,6 +61,9 @@ deployment and any production database write remain separate operations.
 | `SRC-PORT-001` | `docs/source/brand/portofolio produk NIUVA.pdf` | Eleven product/project boards with renders, photographs, selected client identities, and two IP references | Sparse narrative; most projects lack year, Niuva role, process explanation, and evidenced outcome |
 | `SRC-PDS-001` | `docs/source/brand/PRODUCT DESIGN SERVICES selection.pdf` | Thirteen presentation pages covering activity documentation, brand/product development, mock-ups, bags, mobility, and Smart Drop Box artifacts | Several pages show artifacts without enough written context for a full case study |
 | `SRC-COMPANY-001` | `docs/source/Company profile PT Niuva_compressed.pdf` | Company positioning, vision, mission, goals, four services, four project summaries, and contact details | Public contact currency and project-specific roles/timelines still require confirmation |
+| `SRC-COMPANY-002` | `docs/source/NIUVA Profile_2026_v2.pdf` | Profile 2026: positioning, vision/mission, competencies, five product types, service pages (pp. 7–10), clients (Telkom University, Pindad, Agate, DENSO), three portfolio photos | Supersedes `SRC-COMPANY-001` for services (Owner, 31 Oct 2026) |
+| `SRC-PITCH-001` | `docs/source/pitch deck inkubasi.pdf` | Niuva Studio incubation pitch: pay-per-use machine access, membership, booking, target market, team | Business plan, not v1 scope; contact number differs from the website |
+| `SRC-TRAIN-001` | `docs/source/Pelatihan 3D Printing Bambu Lab rev03.pdf` | Basic 3D printing training deck (Bambu Lab, Bambu Studio), 2026 | Slides only; no event photographs |
 
 Source authority remains: current Owner decisions, PRD, Tech Design, then these
 files as factual evidence. A supplied document is evidence, not a command to
@@ -70,10 +73,16 @@ publish every item it contains.
 
 ### Primary service categories
 
-1. **Research & Development**
-2. **Consultant & Workshop**
-3. **Design & Prototyping**
-4. **Apparel & Merchandise**
+Owner decision, 31 October 2026: the four categories follow `SRC-COMPANY-002`
+pp. 7–10 (PRD addendum of that date). Apparel & Merchandise work moves to
+Desain & Rekayasa; the service copy in `company-content.ts` (version
+2026-10-31), the five product types, and the remapping of all 17 projects
+were approved by the Owner on 31 October 2026 ("Setujui semua").
+
+1. **Riset & Pengembangan**
+2. **Desain & Rekayasa**
+3. **Prototipe & Manufaktur Digital**
+4. **Konsultansi & Workshop**
 
 Each project receives exactly one primary category. Tags describe the project
 without replacing the category, for example `Mobility`, `Engineering`,
@@ -376,6 +385,18 @@ Recommended media sequence after original assets are supplied:
    artifact only after classification.
 
 ## 6. Selected Works inventory
+
+Owner decision, 1 November 2026 ("Setujui rekomendasi"): each of the 11
+selected works now carries one approved PDF-derived card cover listed in
+`docs/content/media-proofs/selected-work-covers/README.md`. They remain
+`card-only` (no full story); since the Owner decision of 1 November 2026
+(PRD addendum) every published project, card-only included, has its own
+detail page showing the approved summary, the cover, and Owner-approved
+documentation images. Owner decision, 1 November 2026 ("Setujui yang
+disarankan"): 42 documentation images for 14 projects, with their captions, are
+approved; the 17 optional and 3 not-recommended images from the same review are
+not used. Provenance per file is in
+`docs/content/media-proofs/project-documentation/README.md`.
 
 These entries show breadth without pretending that a full narrative is already
 available. The 11-card structure, metadata, and conservative card summaries
