@@ -51,7 +51,7 @@ test("Home primary action stays above the fold and DEVELOP paths keep service co
   }
 
   await page.getByRole("navigation", { name: "Navigasi utama" }).getByRole("link", { name: "Layanan" }).click();
-  await page.getByRole("link", { name: "Lihat detail layanan" }).nth(2).click();
+  await page.getByRole("link", { name: "Lihat detail Design & Prototyping" }).click();
   await expect(page).toHaveURL(/\/services\/design-prototyping$/);
   const serviceContact = page.getByRole("main").getByRole("link", { name: "Hubungi Kami" }).first();
   const serviceUrl = new URL((await serviceContact.getAttribute("href"))!);

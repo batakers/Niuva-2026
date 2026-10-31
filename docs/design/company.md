@@ -32,10 +32,20 @@ Pada halaman yang panjang, ubah bentuk seksi ketika jenis informasinya berubah. 
 
 - Pilih satu ide utama untuk headline; gunakan copy/fakta approved dari source. Besar huruf tidak menggantikan ketepatan pesan.
 - Pakai display untuk positioning singkat. Judul seksi menjelaskan isi, bukan mengulangi slogan. Uraian panjang tetap pada measure body yang terbaca.
-- Eyebrow berguna bila memberi kategori, tahap, atau konteks berbeda dari judul. “Layanan 1 / 4” bukan otomatis informasi yang dibutuhkan pengunjung.
+- Jangan menaruh label kecil di atas judul. Kategori, tahap, atau konteks masuk ke judul atau kalimat pertama. Tautan kembali ("Semua layanan", "Semua proyek") adalah navigasi, bukan label.
 - Selaraskan baseline judul, caption, dan divider agar hubungan antarelemen terlihat. Whitespace yang lebih luas memisahkan topik; jarak yang lebih kecil menandai satu kelompok.
-- Bidang gelap boleh memberi panggung pada positioning atau bukti. Tidak perlu hero gelap pada setiap route atau pola gelap–terang yang berulang mekanis.
-- Fraunces boleh menandai statement editorial yang benar-benar berdiri sendiri. Tidak perlu ditambahkan agar halaman dianggap editorial.
+- Bidang Niuva Blue hanya untuk hero Beranda, hero detail layanan, dan panel penutup; seksi lain tetap di dasar terang atau permukaan putih.
+
+## Komposisi route Company (T47, 31 Oktober 2026)
+
+Dibangun di atas Foundation v2; Beranda diterima Owner 31 Okt 2026, route lain menunggu tinjauan.
+
+- **Beranda:** bidang biru dengan maskot dan kartu fakta → kartu pintu → pemilih titik mulai → adegan proses → daftar layanan → daftar judul proyek → panel penutup.
+- **Layanan:** judul display dan satu aksi "Hubungi Kami" berhadapan dengan daftar besar empat layanan (tautan ke seksinya); tiap layanan satu baris editorial: nama dan tag di kolom pendek, framing bertinta penuh, cakupan, serta "Yang bisa Anda bawa"/"Arah pembahasan" di kolom panjang, lalu "Lihat detail <layanan>"; ditutup panel biru.
+- **Detail layanan:** bidang biru dengan pose maskot per layanan (Research & Development: ide; Consultant & Workshop: menunjuk; Design & Prototyping: laptop; Apparel & Merchandise: tablet) dan satu kartu fakta "Dibahas lewat WhatsApp"; input → output sebagai dua permukaan berurutan; tiga langkah awal dalam ordered list; kartu proyek terkait atau kosong yang jujur; panel penutup.
+- **Proyek:** judul dan kalimat pendukung bertumpuk, filter, cerita utama bermedia dengan foto proyek sebagai bukti, indeks "Karya lainnya", panel penutup.
+- **Detail proyek:** judul dipecah menjadi nama karya dan klien/keterangan tanpa em dash, ringkasan bertinta penuh, foto bukti besar, cerita dalam baris editorial, panel penutup.
+- **Panel penutup** (`ClosingPanel`) sama di setiap route Company: judul, aksi WhatsApp `onBrand`, dan maskot kemenangan.
 
 ## Bukti dan media
 

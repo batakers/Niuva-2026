@@ -30,7 +30,7 @@ function ProjectMedia({
       <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-card lg:aspect-auto lg:h-80">
         <Image
           alt={cover.altText}
-          className="object-contain"
+          className="object-contain transition-transform duration-500 ease-[var(--ease-emphasis-token)] group-hover:scale-[1.02]"
           fill
           sizes="(min-width: 768px) 50vw, 100vw"
           src={cover.url}
@@ -150,14 +150,14 @@ export function ProjectList({ projects, previewMode = null }: ProjectListProps) 
                       href={`/projects/${project.slug}${previewSuffix}`}
                     >
                       <ProjectMedia isPreview={isPreview} project={project} />
-                      <h3 className={`${index === 0 ? type.heading.className : type.subheading.className} mt-5 flex items-start justify-between gap-4`}>
-<ProjectTitle title={project.title} qualifierClassName="mt-1 text-lead font-normal tracking-normal" />
-                        <Icon aria-hidden="true" className="mt-1 size-5 shrink-0" name="arrow-up-right" />
+                      <h3 className={`${index === 0 ? type.heading.className : type.subheading.className} mt-5 transition-colors duration-150 group-hover:text-brand-800`}>
+                        <ProjectTitle title={project.title} qualifierClassName="mt-1 text-lead font-normal tracking-normal" />
                       </h3>
-                      <p className="mt-1.5 text-sm text-muted-foreground">{project.serviceLabel}</p>
-                      <p className="mt-3 text-sm leading-6 text-muted-foreground">{project.summary}</p>
-                      <span className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4">
+                      <p className="mt-1.5 text-ui text-muted-foreground">{project.serviceLabel}</p>
+                      <p className="mt-3 max-w-[60ch] text-base leading-[1.6] text-muted-foreground">{project.summary}</p>
+                      <span className="mt-4 inline-flex min-h-11 items-center gap-2 font-semibold underline-offset-4 group-hover:underline">
                         Lihat cerita proyek
+                        <Icon aria-hidden="true" className="size-5 text-brand-700 transition-transform duration-200 group-hover:translate-x-1" name="arrow-right" />
                       </span>
                     </Link>
                   </article>
@@ -181,7 +181,7 @@ export function ProjectList({ projects, previewMode = null }: ProjectListProps) 
                   <li className="border-t border-border first:border-t-0" key={project.id}>
                     <article className="grid gap-x-8 gap-y-1.5 px-5 py-5 sm:px-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_12rem]">
                       <h3 className="text-lg font-medium tracking-[-0.01em]"><ProjectTitle title={project.title} qualifierClassName="mt-0.5 text-ui font-normal" /></h3>
-                      <p className="text-ui leading-[1.55] text-muted-foreground">{project.summary}</p>
+                      <p className="text-base leading-[1.55] text-muted-foreground">{project.summary}</p>
                       <p className="text-sm text-muted-foreground md:text-right">{project.serviceLabel}</p>
                     </article>
                   </li>

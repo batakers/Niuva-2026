@@ -1,13 +1,14 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { Metadata } from "next";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { B2BContactLink } from "@/components/niuva/b2b-contact-link";
+import { ClosingPanel } from "@/components/niuva/closing-panel";
 import { typographySystemTokens } from "@/design/typography";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Icon } from "@/components/ui/Icon";
 import { getProjectPreview } from "@/features/frontend-preview/server";
 import { publicCompanyProfile, publicServices } from "@/features/public/company-content";
+import { mascotRenders } from "@/features/public/mascot";
 import { ProjectTitle } from "@/features/public/project-title-view";
 import { buildPageSocialMetadata } from "@/lib/site-metadata";
 import { getPublicSiteInformation } from "@/modules/site-information/public-reader";
@@ -21,15 +22,7 @@ const headingToken = typographySystemTokens.heading.className;
 const headlineLead = "Mitra pengembangan produk dari riset hingga";
 const stageWords = ["prototipe", "desain", "produk nyata"] as const;
 
-const mascot = {
-  halo: "/assets/mascot/niuva-mascot-halo.webp",
-  collaborate: "/assets/mascot/niuva-mascot-collaborate.webp",
-  design: "/assets/mascot/niuva-mascot-design.webp",
-  present: "/assets/mascot/niuva-mascot-present.webp",
-  build: "/assets/mascot/niuva-mascot-build.webp",
-  victory: "/assets/mascot/niuva-mascot-victory.webp",
-  idea: "/assets/mascot/niuva-mascot-idea.webp",
-} as const;
+const mascot = mascotRenders;
 
 const processStages: readonly ProcessStage[] = [
   { title: "Ide", description: "Tujuan, konteks pengguna, dan batasan awal dipetakan bersama.", image: mascot.idea, alt: "Maskot Niuva tersenyum menunjuk ke atas, ke bohlam menyala dan tanda tanya di atas kepala" },
@@ -123,8 +116,7 @@ export default async function Home() {
 
   return (
     <PublicShell scope="homepage">
-      {/* --panel-inset puts text inside the edge-to-edge panels on the header's content gutter. */}
-      <main className="@container [--panel-inset:max(1.5rem,calc((100cqw_-_81rem)/2_+_1.5rem))]" id="main-content">
+      <main id="main-content">
         <section
           aria-labelledby="hero-title"
           className="relative mx-3 overflow-hidden rounded-[var(--radius-media)] bg-[radial-gradient(130%_70%_at_50%_100%,var(--brand-400)_0%,var(--brand-600)_32%,var(--brand-700)_62%,var(--brand-800)_100%)] lg:bg-[radial-gradient(70%_110%_at_80%_35%,var(--brand-400)_0%,var(--brand-600)_30%,var(--brand-700)_58%,var(--brand-800)_100%)] xl:bg-[radial-gradient(52%_105%_at_83%_38%,var(--brand-400)_0%,var(--brand-600)_30%,var(--brand-700)_58%,var(--brand-800)_100%)] text-white sm:mx-6 lg:h-155"
@@ -223,13 +215,9 @@ export default async function Home() {
           ) : null}
         </section>
 
-        <section aria-labelledby="next-step-title" className="relative mx-3 mt-24 overflow-hidden rounded-[var(--radius-media)] bg-[linear-gradient(140deg,var(--brand-700)_0%,var(--brand-800)_100%)] px-6 pt-11 pb-70 text-white sm:mx-6 sm:mt-32 sm:px-(--panel-inset) lg:h-110 lg:pb-0" data-home-section="next-step">
-          <div className="relative z-10 lg:absolute lg:top-1/2 lg:left-(--panel-inset) lg:-translate-y-1/2">
-            <h2 className={`${headingToken} max-w-[13em]`} id="next-step-title">Ceritakan kebutuhan proyek Anda.</h2>
-            <B2BContactLink className="mt-7" variant="onBrand" />
-          </div>
-          <Image alt="" className="absolute -bottom-5 left-1/2 h-70 w-auto -translate-x-1/2 object-contain lg:right-[8%] lg:-bottom-7.5 lg:left-auto lg:h-[118%] lg:translate-x-0" height={1400} sizes="(max-width: 1024px) 70vw, 520px" src={mascot.victory} width={1400} />
-        </section>
+        <ClosingPanel homeSection="next-step" id="next-step-title" mascot={mascot.victory} title="Ceritakan kebutuhan proyek Anda.">
+          <B2BContactLink className="mt-7" variant="onBrand" />
+        </ClosingPanel>
       </main>
     </PublicShell>
   );

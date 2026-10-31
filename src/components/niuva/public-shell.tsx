@@ -46,8 +46,9 @@ export function PublicShell({
   // Owner accepted the homepage visually on 31 Oct 2026; every other public route still awaits review.
   const productRouteProofStatus = scope === "homepage" ? "approved-owner" : "pending-owner-review";
 
+  // --panel-inset puts text inside edge-to-edge panels on the header's content gutter (DESIGN.md Layout).
   return (
-    <div className="min-h-screen bg-background text-foreground"
+    <div className="@container min-h-screen bg-background text-foreground [--panel-inset:max(1.5rem,calc((100cqw_-_81rem)/2_+_1.5rem))]"
       data-foundation-propagation="approved" data-foundation-scope={scope}
       data-product-screen-proof-status={productRouteProofStatus} data-typography-propagation="approved" data-typography-version="2.0"
       data-runtime-mode={demoMode ? "demo" : "standard"}
