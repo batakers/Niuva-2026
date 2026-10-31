@@ -94,12 +94,12 @@ describe("approved public content", () => {
     } as unknown as PrismaClient;
 
     await expect(seedApprovedPublicContent(prisma)).resolves.toEqual({
-      media: 17,
+      media: 59,
       projects: 17,
       services: 4,
     });
     await expect(seedApprovedPublicContent(prisma)).resolves.toEqual({
-      media: 17,
+      media: 59,
       projects: 17,
       services: 4,
     });
@@ -111,7 +111,8 @@ describe("approved public content", () => {
       data: { isPublished: false },
     });
     expect(projectUpserts).toHaveLength(34);
-    expect(mediaUpserts).toHaveLength(34);
+    // 17 covers plus 42 documentation images, upserted on each of the two runs.
+    expect(mediaUpserts).toHaveLength(118);
     expect(projectUpserts[0]?.create).toMatchObject({
       isFeatured: true,
       isPublished: true,

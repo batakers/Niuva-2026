@@ -1,14 +1,19 @@
 import {
   curatedFeaturedProjects,
   curatedSelectedWorks,
+  type CuratedCoverProof,
   type DetailReadiness,
 } from "../../features/frontend-preview/curated-content";
+import { curatedProjectDocumentation } from "../../features/frontend-preview/curated-documentation";
 
 export type ApprovedPortfolioMedia = Readonly<{
   altText: string;
+  /** Source pixels; known only for approved documentation, never for admin uploads. */
+  height?: number;
   publicPath: string;
   sortOrder: number;
   storageKey: string;
+  width?: number;
 }>;
 
 export type ApprovedPortfolioProject = Readonly<{
@@ -33,6 +38,22 @@ function toStorageKey(publicPath: string): string {
   return publicPath.replace(/^\//, "");
 }
 
+/** The approved cover stays at sort order 0; documentation follows in the reviewed order. */
+function approvedMedia(id: string, cover: CuratedCoverProof): readonly ApprovedPortfolioMedia[] {
+  const documentation = curatedProjectDocumentation[id] ?? [];
+  return [
+    { altText: cover.altText, publicPath: cover.publicPath, sortOrder: 0, storageKey: toStorageKey(cover.publicPath) },
+    ...documentation.map((item, index) => ({
+      altText: item.altText,
+      height: item.height,
+      publicPath: item.publicPath,
+      sortOrder: index + 1,
+      storageKey: toStorageKey(item.publicPath),
+      width: item.width,
+    })),
+  ];
+}
+
 /**
  * Produces the owner-approved public projection in editorial order. It is used
  * both by the development reference render and the idempotent Prisma seed.
@@ -45,12 +66,7 @@ export function getApprovedPortfolioProjects(): readonly ApprovedPortfolioProjec
     evidenceBoundary: project.story.evidenceBoundary,
     id: project.id,
     isFeatured: true,
-    media: [{
-      altText: project.cover.altText,
-      publicPath: project.cover.publicPath,
-      sortOrder: 0,
-      storageKey: toStorageKey(project.cover.publicPath),
-    }],
+    media: approvedMedia(project.id, project.cover),
     process: "process" in project.story ? project.story.process : undefined,
     result: project.story.output,
     serviceLabel: project.service,
@@ -66,12 +82,7 @@ export function getApprovedPortfolioProjects(): readonly ApprovedPortfolioProjec
     detailReadiness: work.detailReadiness,
     id: work.id,
     isFeatured: false,
-    media: [{
-      altText: work.cover.altText,
-      publicPath: work.cover.publicPath,
-      sortOrder: 0,
-      storageKey: toStorageKey(work.cover.publicPath),
-    }],
+    media: approvedMedia(work.id, work.cover),
     serviceLabel: work.service,
     slug: work.slug,
     summary: work.summary,

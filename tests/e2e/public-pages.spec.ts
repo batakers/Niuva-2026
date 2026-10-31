@@ -130,6 +130,12 @@ test("published project reference keeps evidence boundaries and proof media avai
   await page.goto("/projects/bagit-arei-smart-bag-v2");
   await expect(page.getByRole("heading", { name: "Konteks dan tantangan" })).toHaveCount(0);
   await expect(page.getByText("Challenge dan process rinci sengaja tidak ditampilkan")).toBeVisible();
+  // Owner-approved documentation (1 Nov 2026) follows the cover; Elips has none approved.
+  const documentation = page.getByRole("region", { name: "Dokumentasi proyek" });
+  await expect(documentation.getByRole("img")).toHaveCount(7);
+  await expect(documentation.getByRole("img", { name: "Bagit V2 dipakai di jalur pendakian." })).toBeVisible();
+  await page.goto("/projects/elips-tandem-bike");
+  await expect(page.getByRole("heading", { name: "Dokumentasi proyek" })).toHaveCount(0);
 
   if (process.env.NIUVA_E2E_PREVIEW_DISABLED === "true") {
     expect(errors).toEqual([]);

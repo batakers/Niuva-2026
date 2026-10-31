@@ -19,8 +19,11 @@ export type ProjectPreviewItem = Readonly<{
   evidenceBoundary?: string;
   media: readonly Readonly<{
     altText: string;
+    /** Source pixels, when known; the detail page never draws an image past them. */
+    height?: number;
     sortOrder: number;
     url?: string;
+    width?: number;
   }>[];
 }>;
 

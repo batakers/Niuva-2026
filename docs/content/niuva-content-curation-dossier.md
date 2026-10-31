@@ -392,7 +392,11 @@ selected works now carries one approved PDF-derived card cover listed in
 `card-only` (no full story); since the Owner decision of 1 November 2026
 (PRD addendum) every published project, card-only included, has its own
 detail page showing the approved summary, the cover, and Owner-approved
-documentation images.
+documentation images. Owner decision, 1 November 2026 ("Setujui yang
+disarankan"): 42 documentation images for 14 projects, with their captions, are
+approved; the 17 optional and 3 not-recommended images from the same review are
+not used. Provenance per file is in
+`docs/content/media-proofs/project-documentation/README.md`.
 
 These entries show breadth without pretending that a full narrative is already
 available. The 11-card structure, metadata, and conservative card summaries

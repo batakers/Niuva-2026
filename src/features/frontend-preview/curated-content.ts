@@ -20,7 +20,7 @@ export type { PortfolioServiceCategory };
 
 export type ContentReviewStatus = "owner-approved" | "candidate";
 export type DetailReadiness = "full-conservative-draft" | "summary-only" | "card-only";
-export type InternalProofPath = `docs/content/media-proofs/${"featured-covers" | "selected-work-covers"}/${string}.png`;
+export type InternalProofPath = `docs/content/media-proofs/${"featured-covers" | "selected-work-covers" | "project-documentation"}/${string}.png`;
 export type PublicPortfolioMediaPath = `/media/portfolio/${string}.png`;
 
 export type CuratedPublicationBoundary = Readonly<{
@@ -69,7 +69,7 @@ export type CuratedSelectedWork = Readonly<{
   tags: readonly string[];
   summary: string;
   sources: readonly string[];
-  /** Owner-approved card cover, 2026-11-01; card-only works still have no detail page. */
+  /** Owner-approved card cover, 2026-11-01. Since Q27 every work also has a detail page. */
   cover: CuratedCoverProof;
   detailReadiness: "card-only";
   copyReviewStatus: "owner-approved";

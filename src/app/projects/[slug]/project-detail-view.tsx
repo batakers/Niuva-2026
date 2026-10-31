@@ -24,7 +24,9 @@ export function ProjectDetailView({ project, scenario }: Readonly<{
   const isPreview = scenario !== null;
   const isEvidenceBounded = Boolean(project.evidenceBoundary);
   const previewSuffix = scenario ? `?preview=${scenario}` : "";
-  const cover = project.media.find((media) => media.url);
+  const [cover, ...documentation] = project.media
+    .filter((media) => media.url)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
   const serviceSlug = publicServices.find((service) => service.title === project.serviceLabel)?.slug;
   const storySections: StorySection[] = [
     ...(project.challenge ? [{ title: "Konteks dan tantangan", body: project.challenge }] : []),
@@ -111,6 +113,46 @@ export function ProjectDetailView({ project, scenario }: Readonly<{
               Challenge dan process rinci sengaja tidak ditampilkan karena bukti pendukungnya belum cukup.
             </p>
           )}
+
+          {documentation.length > 0 ? (
+            <section aria-labelledby="project-documentation-title" className="mt-12 border-t border-border pt-8">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+                <h2 className={type.heading.className} id="project-documentation-title">Dokumentasi proyek</h2>
+                <p className="text-ui text-muted-foreground">{documentation.length} gambar</p>
+              </div>
+              {/* Masonry keeps each file at its own proportion; the inline cap stops a small PDF
+                  image from being drawn wider than its source pixels. */}
+              <ul className="mt-8 columns-1 gap-6 md:columns-2">
+                {documentation.map(item => (
+                  <li className="mb-6 break-inside-avoid" key={item.sortOrder}>
+                    <figure>
+                      <div className="flex justify-center rounded-xl border border-border bg-card p-4 sm:p-6">
+                        {item.url && item.width && item.height ? (
+                          <Image
+                            alt={item.altText}
+                            className="h-auto w-full"
+                            height={item.height}
+                            quality={90}
+                            sizes="(min-width: 48rem) 36rem, 100vw"
+                            src={item.url}
+                            style={{ maxWidth: `${item.width}px` }}
+                            unoptimized={isPreview}
+                            width={item.width}
+                          />
+                        ) : item.url ? (
+                          <div className="relative aspect-[4/3] w-full">
+                            <Image alt={item.altText} className="object-contain" fill quality={90} sizes="(min-width: 48rem) 36rem, 100vw" src={item.url} unoptimized={isPreview} />
+                          </div>
+                        ) : null}
+                      </div>
+                      {/* The alt text already names the image; the visible caption repeats it for sighted readers. */}
+                      <figcaption aria-hidden="true" className="mt-3 text-ui leading-[1.5] text-muted-foreground">{item.altText}</figcaption>
+                    </figure>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
         </div>
 

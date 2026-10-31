@@ -37,8 +37,10 @@ function toProjectPreviewItem(project: ApprovedPortfolioProject): ProjectPreview
     id: project.id,
     media: project.media.map((media) => ({
       altText: media.altText,
+      height: media.height,
       sortOrder: media.sortOrder,
       url: media.publicPath,
+      width: media.width,
     })),
     process: project.process,
     result: project.result,
