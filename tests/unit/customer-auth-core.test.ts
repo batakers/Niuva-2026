@@ -57,6 +57,51 @@ describe("customer auth core", () => {
     expect(safeCustomerReturnTo(undefined)).toBe("/account");
   });
 
+  it("returns to owned order, refund and MAKE pages by exact path pattern", () => {
+    const id = "0f8b6c2e-4d1a-4b7e-9c3f-2a5d8e1b7c40";
+    for (const path of [
+      `/account/orders/${id}`,
+      `/account/orders/${id}/refund`,
+      `/account/make/${id}`,
+      `/account/orders/${id}/refund?from=email#refund-request-heading`,
+    ]) {
+      expect(safeCustomerReturnTo(path)).toBe(path);
+      expect(safeCustomerReturnTo(safeCustomerReturnTo(path))).toBe(path);
+    }
+  });
+
+  it("rejects record paths that are malformed, traversed, encoded or off-origin", () => {
+    const id = "0f8b6c2e-4d1a-4b7e-9c3f-2a5d8e1b7c40";
+    for (const path of [
+      "/account/orders/not-a-uuid/refund",
+      `/account/orders/${id.slice(0, -1)}g`,
+      `/account/orders/${id}/`,
+      `/account/orders/${id}/refund/`,
+      `/account/orders/${id}/refund/extra`,
+      `/account/make/${id}/refund`,
+      `/account/orders/${id}/payment`,
+      `/ACCOUNT/orders/${id}`,
+      `/account/orders/${id}/../../../admin`,
+      `/account/orders/${id}/refund/../../${id}`,
+      `/account/../account/orders/${id}`,
+      `/account/orders/${id}/./refund`,
+      "/account/orders/%2e%2e/%2e%2e/admin",
+      `/account/orders/${id}%2Frefund`,
+      `/account/orders%2F${id}`,
+      `/account/orders/${id}%252Frefund`,
+      `/account/orders/${id}/re\tfund`,
+      `/\\attacker.example/account/orders/${id}`,
+      `\\\\attacker.example/account/orders/${id}`,
+      `https://attacker.example/account/orders/${id}/refund`,
+      `//attacker.example/account/orders/${id}/refund`,
+      `/account/orders/${id}@attacker.example`,
+      `/admin?next=/account/orders/${id}/refund`,
+      `/admin#/account/orders/${id}/refund`,
+    ]) {
+      expect(safeCustomerReturnTo(path)).toBe("/account");
+    }
+  });
+
   it("creates a PKCE pair with a URL-safe challenge", () => {
     const pair = createPkcePair();
 
