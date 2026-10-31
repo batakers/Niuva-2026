@@ -53,7 +53,7 @@ Gunakan media dan publication state yang sudah disetujui. Source konten aktif ad
 
 Caption menjawab apa yang terlihat dan mengapa relevan. Material, ukuran, toleransi, nama klien, durasi, atau hasil kuantitatif hanya ditampilkan jika bersumber. Jangan memakai crosshair, garis ukur, code snippet, atau label teknis sebagai ornamen engineering.
 
-Objek produk/CAD yang perlu diperiksa utuh memakai contain; dokumentasi proses boleh cover dengan crop terkendali. Pilih rasio per artefak. Jangan membuat semua media menjadi gambar stock, screenshot palsu, atau render yang seolah proyek Niuva. Bila bukti tidak tersedia, pilih uraian yang jujur atau state kosong; jangan mengarang case study atau mengembangkan record card-only menjadi cerita lengkap.
+Cover proyek yang dipotong dari PDF beresolusi rendah (360–1.270 px), jadi halaman detail membatasinya 50rem di dalam bingkai putih dan semua gambar portofolio memakai kualitas 90; ganti dengan render atau foto asli ≥2.000 px bila Owner menyediakannya. Objek produk/CAD yang perlu diperiksa utuh memakai contain; dokumentasi proses boleh cover dengan crop terkendali. Pilih rasio per artefak. Jangan membuat semua media menjadi gambar stock, screenshot palsu, atau render yang seolah proyek Niuva. Bila bukti tidak tersedia, pilih uraian yang jujur atau state kosong; jangan mengarang case study atau mengembangkan record card-only menjadi cerita lengkap.
 
 ## Navigasi dan tindakan
 

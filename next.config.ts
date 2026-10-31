@@ -30,6 +30,9 @@ const nextConfig: NextConfig = {
   // the `/a/` avatar namespace so the optimizer cannot proxy arbitrary images.
   // Must stay aligned with img-src in src/lib/security (CSP).
   images: {
+    // 75 is the default; 90 keeps portfolio covers, which are already compressed PDF
+    // extracts, from picking up a second round of visible artefacts.
+    qualities: [75, 90],
     remotePatterns: [
       {
         protocol: "https",

@@ -32,6 +32,7 @@ function ProjectMedia({
           alt={cover.altText}
           className="object-contain transition-transform duration-500 ease-[var(--ease-emphasis-token)] group-hover:scale-[1.02]"
           fill
+          quality={90}
           sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
           src={cover.url}
           unoptimized={isPreview}

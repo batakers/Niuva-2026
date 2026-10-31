@@ -70,16 +70,21 @@ export function ProjectDetailView({ project, scenario }: Readonly<{
 
           {cover?.url ? (
             <figure>
-              <div className="relative aspect-video overflow-hidden rounded-xl border border-border bg-card">
-                <Image
-                  alt={cover.altText}
-                  className="object-contain"
-                  fill
-                  priority
-                  sizes="(min-width: 1280px) 1152px, 100vw"
-                  src={cover.url}
-                  unoptimized={isPreview}
-                />
+              {/* Covers are 1600 px files cut from PDFs; capping them at 50rem keeps sharp screens from
+                  stretching them past the file until original renders or photos replace them. */}
+              <div className="overflow-hidden rounded-xl border border-border bg-card px-4 py-6 sm:px-8 sm:py-10">
+                <div className="relative mx-auto aspect-video w-full max-w-[50rem]">
+                  <Image
+                    alt={cover.altText}
+                    className="object-contain"
+                    fill
+                    priority
+                    quality={90}
+                    sizes="(min-width: 56rem) 50rem, 100vw"
+                    src={cover.url}
+                    unoptimized={isPreview}
+                  />
+                </div>
               </div>
               <figcaption className="mt-3 text-sm text-muted-foreground">{isPreview ? "Visualisasi sintetis untuk preview lokal; bukan bukti proyek klien." : "Visual proyek yang disetujui untuk ditampilkan. Cakupan pekerjaan dijelaskan sesuai bukti di bawah."}</figcaption>
             </figure>
