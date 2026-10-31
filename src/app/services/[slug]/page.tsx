@@ -8,6 +8,7 @@ import { B2BContactLink } from "@/components/niuva/b2b-contact-link";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { typographySystemTokens as type } from "@/design/typography";
 import { publicServices } from "@/features/public/company-content";
+import { ProjectTitle } from "@/features/public/project-title-view";
 import { listPublishedPortfolioProjects } from "@/modules/portfolio/public-service";
 
 export const revalidate = 300;
@@ -100,7 +101,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
                   const cover = project.media.find((media) => media.url);
                   return <li className="min-w-0 border-t border-border pt-5" key={project.id}>
                     {cover?.url ? <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-card"><Image alt={cover.altText} className="object-contain" fill sizes="(min-width: 1024px) 30vw, (min-width: 768px) 45vw, 100vw" src={cover.url} /></div> : null}
-                    <h3 className={`${type.subheading.className} mt-4`}>{project.title}</h3>
+                    <h3 className={`${type.subheading.className} mt-4`}><ProjectTitle qualifierClassName="mt-1 text-base font-normal tracking-normal" title={project.title} /></h3>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">{project.summary}</p>
                     <NiuvaLink className="mt-4 min-h-11" href={`/projects/${project.slug}`} size="sm" variant="outline">Lihat project</NiuvaLink>
                   </li>;

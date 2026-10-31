@@ -8,6 +8,7 @@ import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Icon } from "@/components/ui/Icon";
 import { getProjectPreview } from "@/features/frontend-preview/server";
 import { publicCompanyProfile, publicServices } from "@/features/public/company-content";
+import { ProjectTitle } from "@/features/public/project-title-view";
 import { buildPageSocialMetadata } from "@/lib/site-metadata";
 import { getPublicSiteInformation } from "@/modules/site-information/public-reader";
 import { DriftCard, HeroStageWord, LeaningMascot, ProcessScene, type ProcessStage } from "./home-motion";
@@ -108,12 +109,6 @@ export async function generateMetadata(): Promise<Metadata> {
 // Time-based revalidation (render-strategy.md, 9.13). Must stay a static
 // literal. `revalidatePath("/")` in admin actions invalidates this entry.
 export const revalidate = 300;
-
-// Project titles join the work and its client or qualifier with an em dash; the list sets them as two lines instead.
-function splitProjectTitle(title: string) {
-  const [name, ...rest] = title.split(/\s+—\s+/);
-  return { name, qualifier: rest.length > 0 ? rest.join(", ") : null };
-}
 
 function ArrowRight() {
   return <Icon aria-hidden="true" className="size-5 shrink-0 text-brand-700 transition-transform duration-200 group-hover:translate-x-1" name="arrow-right" />;
@@ -216,20 +211,14 @@ export default async function Home() {
           </div>
           {listedProjects.length > 0 ? (
             <ul className="border-t border-border">
-              {listedProjects.map((project) => {
-                const { name, qualifier } = splitProjectTitle(project.title);
-                return (
-                  <li key={project.id}>
-                    <Link href={`/projects/${project.slug}`} className="group flex items-baseline justify-between gap-4 border-b border-border py-4 hover:text-brand-800 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
-                      <span>
-                        <span className="block text-lead font-medium">{name}</span>
-                        {qualifier ? <span className="mt-0.5 block text-ui text-muted-foreground">{qualifier}</span> : null}
-                      </span>
-                      <span className="shrink-0 text-ui text-muted-foreground">{project.serviceLabel}</span>
-                    </Link>
-                  </li>
-                );
-              })}
+              {listedProjects.map((project) => (
+                <li key={project.id}>
+                  <Link href={`/projects/${project.slug}`} className="group flex items-baseline justify-between gap-4 border-b border-border py-4 hover:text-brand-800 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+                    <span className="text-lead font-medium"><ProjectTitle qualifierClassName="mt-0.5 text-ui font-normal" title={project.title} /></span>
+                    <span className="shrink-0 text-ui text-muted-foreground">{project.serviceLabel}</span>
+                  </Link>
+                </li>
+              ))}
             </ul>
           ) : null}
         </section>

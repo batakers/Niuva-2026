@@ -192,7 +192,7 @@ export const curatedFeaturedProjects = [
     clientOrPartnerLabel: "Arei",
     year: null,
     summary:
-      "Bagit — Arei Smart Bag V2 menunjukkan proses pengembangan iteratif konsep tas dari V1 menuju V2.",
+      "Bagit (Arei Smart Bag V2) menunjukkan proses pengembangan iteratif konsep tas dari V1 menuju V2.",
     detailReadiness: "summary-only",
     story: {
       overview:

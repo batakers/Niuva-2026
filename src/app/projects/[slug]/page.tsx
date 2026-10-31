@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getProjectPreviewBySlug } from "@/features/frontend-preview/server";
+import { projectTitleText } from "@/features/public/project-title";
 import { ProjectDetailView } from "./project-detail-view";
 
 // Time-based revalidation (render-strategy.md, 9.13). Must stay a static
@@ -35,7 +36,7 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${project.title} · Projects · Niuva`,
+    title: `${projectTitleText(project.title)} · Projects · Niuva`,
     description: project.summary,
     robots: { follow: true, index: true },
   };

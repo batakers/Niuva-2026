@@ -2164,8 +2164,14 @@ Branch `claude/redesign-foundation-company` dari `main@f8c8cbd`.
     overflow; unit shell 35/35.
   - permintaan Owner 31 Okt: daftar proyek Beranda tanpa em dash, jadi nama
     karya dan klien tampil dua baris. Semua kontrol yang aktif kini memakai
-    kursor pointer (gaya dasar `globals.css`). Em dash di alamat footer dan
-    judul `/projects` menunggu keputusan Owner.
+    kursor pointer (gaya dasar `globals.css`).
+  - keputusan Owner 31 Okt ("Ya, hapus semua"): tidak ada em dash yang tampil
+    di halaman Company. Judul proyek dipecah menjadi nama karya dan klien atau
+    keterangannya di Beranda, Proyek, detail proyek, dan detail layanan, serta
+    digabung dengan koma di judul dokumen (`src/features/public/project-title.ts`).
+    Alamat default memakai koma, dan ringkasan Bagit memakai tanda kurung.
+    Data judul tidak diubah; alamat yang pernah disimpan Admin di database
+    tetap tampil apa adanya sampai diubah lewat Admin.
 - **Belum:**
   - E2E lokal (Postgres lokal mati, service perlu hak admin);
   - review visual Owner atas hasil build;

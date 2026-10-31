@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/input";
 import type { ProjectPreviewItem, ProjectPreviewMode } from "@/features/frontend-preview/types";
+import { ProjectTitle } from "@/features/public/project-title-view";
 
 type ProjectListProps = {
   projects: readonly ProjectPreviewItem[];
@@ -150,7 +151,7 @@ export function ProjectList({ projects, previewMode = null }: ProjectListProps) 
                     >
                       <ProjectMedia isPreview={isPreview} project={project} />
                       <h3 className={`${index === 0 ? type.heading.className : type.subheading.className} mt-5 flex items-start justify-between gap-4`}>
-                        {project.title}
+<ProjectTitle title={project.title} qualifierClassName="mt-1 text-lead font-normal tracking-normal" />
                         <Icon aria-hidden="true" className="mt-1 size-5 shrink-0" name="arrow-up-right" />
                       </h3>
                       <p className="mt-1.5 text-sm text-muted-foreground">{project.serviceLabel}</p>
@@ -179,7 +180,7 @@ export function ProjectList({ projects, previewMode = null }: ProjectListProps) 
                 {selectedWorks.map(project => (
                   <li className="border-t border-border first:border-t-0" key={project.id}>
                     <article className="grid gap-x-8 gap-y-1.5 px-5 py-5 sm:px-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_12rem]">
-                      <h3 className="text-lg font-medium tracking-[-0.01em]">{project.title}</h3>
+                      <h3 className="text-lg font-medium tracking-[-0.01em]"><ProjectTitle title={project.title} qualifierClassName="mt-0.5 text-ui font-normal" /></h3>
                       <p className="text-ui leading-[1.55] text-muted-foreground">{project.summary}</p>
                       <p className="text-sm text-muted-foreground md:text-right">{project.serviceLabel}</p>
                     </article>

@@ -5,6 +5,7 @@ import { PublicShell } from "@/components/niuva/public-shell";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Icon } from "@/components/ui/Icon";
 import { publicServices } from "@/features/public/company-content";
+import { ProjectTitle } from "@/features/public/project-title-view";
 import type { PreviewScenario, ProjectPreviewItem } from "@/features/frontend-preview/types";
 
 type StorySection = Readonly<{ title: string; body: string }>;
@@ -46,7 +47,7 @@ export function ProjectDetailView({ project, scenario }: Readonly<{
 
         <div className="grid gap-8 py-9 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.7fr)] lg:items-end">
           <div>
-            <h1 className={type.display.className}>{project.title}</h1>
+            <h1 className={type.display.className}><ProjectTitle qualifierClassName="mt-3 text-2xl tracking-normal" title={project.title} /></h1>
             <p className="mt-3 text-ui text-muted-foreground">{project.serviceLabel}</p>
             {(project.year || project.tags.length > 0) && (
               <div className="mt-5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
