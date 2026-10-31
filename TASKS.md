@@ -2134,6 +2134,13 @@ dan keputusan motion Owner (motion inti per halaman, pass global di T51).
   (120px di 1440); tanpa overflow 320–1440; kontras hero detail layanan
   terendah 5,34:1; replay langkah E2E Company 17/17 lulus; unit 136 file /
   1.524 test lulus; lint 0 error.
+- **Layanan Profil 2026 (Q26) dan cover karya (1 Nov):** empat layanan baru,
+  URL lama dialihkan 308, lima jenis produk di Layanan; Owner menyetujui teks
+  dan pemetaan 17 proyek. Sebelas karya kartu saja mendapat cover dari PDF
+  sumber (opsi A, Bicycle Arcade opsi B; manifest di
+  `docs/content/media-proofs/selected-work-covers/`), dan `/projects` menjadi
+  satu galeri "Semua proyek" dengan 17 gambar; tautan detail tetap hanya enam.
+  Unit 1.525 dan backend lulus; replay Company 17/17; 0 em dash.
 - **Belum:** E2E resmi (CI), legal dan 404, review visual Owner atas route ini.
 
 ### T46/T47 — fondasi v2 dan Beranda, 2026-10-31

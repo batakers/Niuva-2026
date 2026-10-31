@@ -22,19 +22,19 @@ afterAll(cleanPublicContent);
 describe("approved public-content seed", () => {
   it("upserts the approved portfolio and exposes only published records through the repository", async () => {
     await expect(seedApprovedPublicContent(prisma)).resolves.toEqual({
-      media: 6,
+      media: 17,
       projects: 17,
       services: 4,
     });
     await expect(seedApprovedPublicContent(prisma)).resolves.toEqual({
-      media: 6,
+      media: 17,
       projects: 17,
       services: 4,
     });
 
     await expect(prisma.service.count({ where: { isPublished: true } })).resolves.toBe(4);
     await expect(prisma.portfolioProject.count({ where: { isPublished: true } })).resolves.toBe(17);
-    await expect(prisma.portfolioMedia.count()).resolves.toBe(6);
+    await expect(prisma.portfolioMedia.count()).resolves.toBe(17);
 
     const repository = new PortfolioRepository(prisma);
     await expect(repository.listPublishedProjects()).resolves.toHaveLength(17);

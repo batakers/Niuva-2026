@@ -20,7 +20,7 @@ export type { PortfolioServiceCategory };
 
 export type ContentReviewStatus = "owner-approved" | "candidate";
 export type DetailReadiness = "full-conservative-draft" | "summary-only" | "card-only";
-export type InternalProofPath = `docs/content/media-proofs/featured-covers/${string}.png`;
+export type InternalProofPath = `docs/content/media-proofs/${"featured-covers" | "selected-work-covers"}/${string}.png`;
 export type PublicPortfolioMediaPath = `/media/portfolio/${string}.png`;
 
 export type CuratedPublicationBoundary = Readonly<{
@@ -69,6 +69,8 @@ export type CuratedSelectedWork = Readonly<{
   tags: readonly string[];
   summary: string;
   sources: readonly string[];
+  /** Owner-approved card cover, 2026-11-01; card-only works still have no detail page. */
+  cover: CuratedCoverProof;
   detailReadiness: "card-only";
   copyReviewStatus: "owner-approved";
   publication: CuratedPublicationBoundary;
@@ -321,6 +323,14 @@ export const curatedSelectedWorks = [
     summary:
       "Waste-Based Product menampilkan eksplorasi visual produk dengan pendekatan material berbasis limbah. Jenis dan sumber material, proses pengolahan, fungsi produk, tahap realisasi, serta hasilnya belum dinyatakan dalam dokumentasi yang tersedia.",
     sources: ["SRC-PORT-001 p.1"],
+    cover: {
+      internalPath: "docs/content/media-proofs/selected-work-covers/sw-01-waste-based-product.png",
+      altText: "Render rak piring dan keranjang berbahan kayu olahan.",
+      sourceReference: "SRC-PORT-001 p.1",
+      reviewStatus: "owner-approved-proof",
+      productionReady: true,
+      publicPath: "/media/portfolio/sw-01-waste-based-product.png",
+    },
     detailReadiness: "card-only",
     copyReviewStatus: "owner-approved",
     publication: approvedForPublic,
@@ -334,6 +344,14 @@ export const curatedSelectedWorks = [
     summary:
       "Elips Tandem Bike menampilkan konsep sepeda tandem untuk mobilitas bersama anak dan pendamping. Dokumentasi yang tersedia memperlihatkan arah desain produk serta hubungan posisi kedua pengguna, tanpa menyatakan status purwarupa, pengujian keselamatan, produksi, atau hasil penggunaan.",
     sources: ["SRC-PORT-001 p.2"],
+    cover: {
+      internalPath: "docs/content/media-proofs/selected-work-covers/sw-02-elips-tandem-bike.png",
+      altText: "Render sepeda tandem anak dan pendamping berwarna kuning, biru, dan merah.",
+      sourceReference: "SRC-PORT-001 p.2",
+      reviewStatus: "owner-approved-proof",
+      productionReady: true,
+      publicPath: "/media/portfolio/sw-02-elips-tandem-bike.png",
+    },
     detailReadiness: "card-only",
     copyReviewStatus: "owner-approved",
     publication: approvedForPublic,
@@ -347,6 +365,14 @@ export const curatedSelectedWorks = [
     summary:
       "Screen Printing Workstation menampilkan studi desain stasiun kerja untuk aktivitas sablon melalui beberapa pandangan produk dan visualisasi detail. Dokumentasi yang tersedia belum membuktikan validasi ergonomi, purwarupa fisik, proses manufaktur, status kekayaan intelektual, atau penggunaan operasional.",
     sources: ["SRC-PORT-001 p.4"],
+    cover: {
+      internalPath: "docs/content/media-proofs/selected-work-covers/sw-03-screen-printing-workstation.png",
+      altText: "Render meja kerja sablon berwarna kuning dengan panel kontrol.",
+      sourceReference: "SRC-PORT-001 p.4",
+      reviewStatus: "owner-approved-proof",
+      productionReady: true,
+      publicPath: "/media/portfolio/sw-03-screen-printing-workstation.png",
+    },
     detailReadiness: "card-only",
     copyReviewStatus: "owner-approved",
     publication: approvedForPublic,
@@ -360,6 +386,14 @@ export const curatedSelectedWorks = [
     summary:
       "Portable Handwash Station menampilkan visualisasi desain stasiun cuci tangan portabel untuk konteks kebersihan publik. Dokumentasi yang tersedia belum menjelaskan mekanisme air, spesifikasi sanitasi, tahap fisik, proses produksi, penerapan, atau hasil penggunaan.",
     sources: ["SRC-PORT-001 p.7"],
+    cover: {
+      internalPath: "docs/content/media-proofs/selected-work-covers/sw-04-portable-handwash-station.png",
+      altText: "Render stasiun cuci tangan portabel berwarna putih.",
+      sourceReference: "SRC-PORT-001 p.7",
+      reviewStatus: "owner-approved-proof",
+      productionReady: true,
+      publicPath: "/media/portfolio/sw-04-portable-handwash-station.png",
+    },
     detailReadiness: "card-only",
     copyReviewStatus: "owner-approved",
     publication: approvedForPublic,
@@ -373,6 +407,14 @@ export const curatedSelectedWorks = [
     summary:
       "Dokumentasi proyek menampilkan eksplorasi visual konsep Sterilizer Tunnel dalam varian 2 fase dan 3 fase untuk konteks kebersihan publik. Materi yang tersedia tidak membuktikan mekanisme, keamanan, efektivitas sterilisasi, validasi, realisasi fisik, ataupun penerapannya.",
     sources: ["SRC-PORT-001 pp.8–9"],
+    cover: {
+      internalPath: "docs/content/media-proofs/selected-work-covers/sw-05-konsep-sterilizer-tunnel.png",
+      altText: "Render terowongan sterilisasi tiga fase.",
+      sourceReference: "SRC-PORT-001 p.8",
+      reviewStatus: "owner-approved-proof",
+      productionReady: true,
+      publicPath: "/media/portfolio/sw-05-konsep-sterilizer-tunnel.png",
+    },
     detailReadiness: "card-only",
     copyReviewStatus: "owner-approved",
     publication: approvedForPublic,
@@ -386,6 +428,14 @@ export const curatedSelectedWorks = [
     summary:
       "Dokumentasi proyek menampilkan mock-up model militer skala 1:10 dalam konteks PT Pindad. Kartu ini membatasi klaim pada artefak model yang terlihat dan tidak menyatakan bahwa Niuva merancang kendaraan asli, mengembangkan sistem militer, melakukan rekayasa kendaraan, atau memproduksi unit skala penuh.",
     sources: ["SRC-PDS-001 p.8"],
+    cover: {
+      internalPath: "docs/content/media-proofs/selected-work-covers/sw-06-mock-up-model-militer-skala-1-10-pindad.png",
+      altText: "Foto model tank skala 1:10 bermotif kamuflase.",
+      sourceReference: "SRC-PDS-001 p.8",
+      reviewStatus: "owner-approved-proof",
+      productionReady: true,
+      publicPath: "/media/portfolio/sw-06-mock-up-model-militer-skala-1-10-pindad.png",
+    },
     detailReadiness: "card-only",
     copyReviewStatus: "owner-approved",
     publication: approvedForPublic,
@@ -399,6 +449,14 @@ export const curatedSelectedWorks = [
     summary:
       "Dokumentasi Field Kitchen Truck menampilkan artefak model dan visualisasi kendaraan khusus dalam konteks PT Bhimasena R&D. Kartu ini tidak menetapkan nama Ganilla, skala model, tujuan operasional, kepemilikan desain kendaraan, tanggung jawab fabrikasi, ataupun hasil penerapannya.",
     sources: ["SRC-PDS-001 p.9"],
+    cover: {
+      internalPath: "docs/content/media-proofs/selected-work-covers/sw-07-field-kitchen-truck-bhimasena.png",
+      altText: "Foto model truk dapur lapangan berwarna hijau zaitun.",
+      sourceReference: "SRC-PDS-001 p.9",
+      reviewStatus: "owner-approved-proof",
+      productionReady: true,
+      publicPath: "/media/portfolio/sw-07-field-kitchen-truck-bhimasena.png",
+    },
     detailReadiness: "card-only",
     copyReviewStatus: "owner-approved",
     publication: approvedForPublic,
@@ -412,6 +470,14 @@ export const curatedSelectedWorks = [
     summary:
       "Dokumentasi proyek menampilkan produk tas kulit dan suasana kegiatan pengembangan di D.I. Yogyakarta. Kartu ini tidak menetapkan nama resmi instansi, bentuk program, identitas atau peran peserta, kepemilikan desain produk, keluaran final, maupun hasil kegiatan.",
     sources: ["SRC-PDS-001 pp.10–11"],
+    cover: {
+      internalPath: "docs/content/media-proofs/selected-work-covers/sw-08-pengembangan-tas-kulit-yogyakarta.png",
+      altText: "Foto tas selempang kulit berwarna cokelat muda.",
+      sourceReference: "SRC-PDS-001 p.11",
+      reviewStatus: "owner-approved-proof",
+      productionReady: true,
+      publicPath: "/media/portfolio/sw-08-pengembangan-tas-kulit-yogyakarta.png",
+    },
     detailReadiness: "card-only",
     copyReviewStatus: "owner-approved",
     publication: approvedForPublic,
@@ -425,6 +491,14 @@ export const curatedSelectedWorks = [
     summary:
       "Dokumentasi proyek menampilkan proses dan visualisasi konsep mobil listrik dalam konteks Telkom University. Kartu ini tidak menetapkan kepemilikan desain kendaraan, ruang lingkup motor listrik atau baterai, tahap purwarupa, pengujian, kelayakan jalan, produksi, ataupun hasil proyek.",
     sources: ["SRC-PDS-001 p.12"],
+    cover: {
+      internalPath: "docs/content/media-proofs/selected-work-covers/sw-09-konsep-mobil-listrik-telkom-university.png",
+      altText: "Render mobil listrik kecil berwarna merah dengan rangka atap.",
+      sourceReference: "SRC-PDS-001 p.12",
+      reviewStatus: "owner-approved-proof",
+      productionReady: true,
+      publicPath: "/media/portfolio/sw-09-konsep-mobil-listrik-telkom-university.png",
+    },
     detailReadiness: "card-only",
     copyReviewStatus: "owner-approved",
     publication: approvedForPublic,
@@ -438,6 +512,14 @@ export const curatedSelectedWorks = [
     summary:
       "Dokumentasi proyek memperlihatkan konteks sebelum–sesudah redesain Motor Xeon untuk konversi listrik. Kartu ini menampilkan arah perubahan desain eksterior tanpa menyatakan bahwa Niuva mengerjakan motor listrik, baterai, kontroler, rekayasa bodi, purwarupa fungsional, pengujian, kelayakan jalan, atau produksi kendaraan.",
     sources: ["SRC-COMPANY-001 p.9"],
+    cover: {
+      internalPath: "docs/content/media-proofs/selected-work-covers/sw-10-redesain-motor-xeon-konversi-listrik.png",
+      altText: "Render motor skuter biru hasil redesain.",
+      sourceReference: "SRC-COMPANY-001 p.9",
+      reviewStatus: "owner-approved-proof",
+      productionReady: true,
+      publicPath: "/media/portfolio/sw-10-redesain-motor-xeon-konversi-listrik.png",
+    },
     detailReadiness: "card-only",
     copyReviewStatus: "owner-approved",
     publication: approvedForPublic,
@@ -451,6 +533,14 @@ export const curatedSelectedWorks = [
     summary:
       "Bicycle Arcade menampilkan perangkat interaktif berbasis sepeda dalam proyek yang melibatkan Agate dan dikaitkan oleh sumber dengan konteks rilis Stranger Things. Dokumentasi tidak menetapkan struktur hubungan para pihak, kepemilikan perangkat keras atau perangkat lunak, mekanisme interaksi, tahap penyerahan, penerapan, maupun hasil penggunaan.",
     sources: ["SRC-COMPANY-001 p.11"],
+    cover: {
+      internalPath: "docs/content/media-proofs/selected-work-covers/sw-11-bicycle-arcade-agate.png",
+      altText: "Render perangkat sepeda arcade berwarna putih.",
+      sourceReference: "SRC-COMPANY-001 p.11",
+      reviewStatus: "owner-approved-proof",
+      productionReady: true,
+      publicPath: "/media/portfolio/sw-11-bicycle-arcade-agate.png",
+    },
     detailReadiness: "card-only",
     copyReviewStatus: "owner-approved",
     publication: approvedForPublic,

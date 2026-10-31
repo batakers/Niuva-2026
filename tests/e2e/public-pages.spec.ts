@@ -107,10 +107,11 @@ test("published project reference keeps evidence boundaries and proof media avai
   await page.goto("/projects");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /index, follow/);
   await expect(page.getByText("17 project")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Cerita proyek utama." })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Karya lainnya." })).toBeVisible();
+  // One gallery: every project shows its approved cover; only story-ready ones link to a detail page.
+  await expect(page.getByRole("heading", { name: "Semua proyek." })).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(17);
-  await expect(page.locator("article img")).toHaveCount(6);
+  await expect(page.locator("article img")).toHaveCount(17);
+  await expect(page.locator("article a[href^='/projects/']")).toHaveCount(6);
 
   await page.getByLabel("Layanan", { exact: true }).selectOption("Desain & Rekayasa");
   await expect(page.getByRole("article")).toHaveCount(11);

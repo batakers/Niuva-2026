@@ -66,7 +66,12 @@ export function getApprovedPortfolioProjects(): readonly ApprovedPortfolioProjec
     detailReadiness: work.detailReadiness,
     id: work.id,
     isFeatured: false,
-    media: [],
+    media: [{
+      altText: work.cover.altText,
+      publicPath: work.cover.publicPath,
+      sortOrder: 0,
+      storageKey: toStorageKey(work.cover.publicPath),
+    }],
     serviceLabel: work.service,
     slug: work.slug,
     summary: work.summary,

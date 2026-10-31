@@ -386,6 +386,11 @@ Recommended media sequence after original assets are supplied:
 
 ## 6. Selected Works inventory
 
+Owner decision, 1 November 2026 ("Setujui rekomendasi"): each of the 11
+selected works now carries one approved PDF-derived card cover listed in
+`docs/content/media-proofs/selected-work-covers/README.md`. They remain
+`card-only`: no detail page, and the approved card summaries are unchanged.
+
 These entries show breadth without pretending that a full narrative is already
 available. The 11-card structure, metadata, and conservative card summaries
 were approved by the Owner on 2026-09-09 and approved for public card-only
