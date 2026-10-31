@@ -10,7 +10,7 @@ describe("product selection preview", () => {
   it("requires an available variant before preparing a cart intent", () => {
     render(<ProductSelection product={exampleShopProducts[0]} />);
 
-    const prepare = screen.getByRole("button", { name: "Tambah ke cart" });
+    const prepare = screen.getByRole("button", { name: "Tambah ke keranjang" });
     expect(prepare).toBeDisabled();
     expect(screen.getByRole("radio", { name: /Hitam/ })).toHaveAttribute("aria-disabled", "true");
 
@@ -36,8 +36,8 @@ describe("product selection preview", () => {
     render(<ProductSelection product={exampleShopProducts[0]} />);
 
     fireEvent.click(screen.getByRole("radio", { name: /Biru/ }));
-    fireEvent.click(screen.getByRole("button", { name: "Tambah ke cart" }));
-    expect(screen.getByText("Pilihan ditambahkan ke cart.")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Tambah ke keranjang" }));
+    expect(screen.getByText("Masuk ke keranjang.")).toBeVisible();
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(window.localStorage.getItem(CART_STORAGE_KEY)).toBe('{"version":1,"items":[{"variantId":"example-dock-blue","quantity":1}]}');
     fetchSpy.mockRestore();
@@ -50,6 +50,6 @@ describe("product selection preview", () => {
     for (const option of within(screen.getByRole("radiogroup")).getAllByRole("radio")) {
       expect(option).toHaveAttribute("aria-disabled", "true");
     }
-    expect(screen.getByRole("button", { name: "Tambah ke cart" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Tambah ke keranjang" })).toBeDisabled();
   });
 });

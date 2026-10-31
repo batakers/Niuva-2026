@@ -205,7 +205,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T45 | M5a | DONE | Audit, sitemap dan user flow redesign | Keputusan Owner 31 Okt | Audit tampilan sekarang, sitemap dan user flow dengan pembagian visual vs aturan bisnis tercatat di [audit IA](docs/design/redesign-2026-10-31-audit-ia.md); Q19–Q22 dijawab Owner; T36/T37 bergantung pada redesign. Log "T45 — audit, sitemap dan user flow". |
 | T46 | M5a | IN_PROGRESS | Fondasi design system baru | T45; pilihan arah Q19 | Arah terpilih diterapkan ke token, tipe, motion, primitive `components/ui`, shell publik/auth/sistem/Admin, status label, format Rupiah, timeline dan page header bersama; tanpa dependency npm baru; URL, API, data, auth, harga dan pembayaran tetap. Lint/typecheck/test/E2E/build dan capture lokal. |
 | T47 | M5a | DONE | Redesign Company | T46 | `/`, `/services` dan detail, `/projects` dan detail, legal, 404 sesuai sitemap/flow; satu CTA utama per halaman; tanpa klaim baru; DESIGN.md dan panduan Company ditulis ulang dari hasil build. Capture 320–1440, keyboard/fokus, zoom 200%, reduced motion, kontras. Selesai 1 Nov 2026 dengan bukti lokal dan CI; review visual Owner baru untuk Beranda, route lain menunggu tinjauan terpisah. |
-| T48 | M5a | TODO | Redesign Commerce dan MAKE | T46 | Toko, produk, keranjang, checkout, Custom 3D Print dan workspace dua mode, status/quote token; copy sistem diganti bahasa pelanggan; kalimat MAKE yang dilindungi tetap; aturan server, harga dan pembayaran tidak berubah. Gate lokal dan capture. |
+| T48 | M5a | IN_PROGRESS | Redesign Commerce dan MAKE | T46 | Toko, produk, keranjang, checkout, Custom 3D Print dan workspace dua mode, status/quote token; copy sistem diganti bahasa pelanggan; kalimat MAKE yang dilindungi tetap; aturan server, harga dan pembayaran tidak berubah. Gate lokal dan capture. |
 | T49 | M5a | TODO | Redesign Customer dan auth | T46, T48 | Hub Akun, detail MAKE/order (konfirmasi terima quote, timeline, Rupiah dan label status konsisten), refund, privasi, enam halaman auth dalam satu frame; allowlist dan gate auth tidak berubah. Gate lokal dan capture. |
 | T50 | M5a | TODO | Redesign Admin | T46 | Shell, Ringkasan, daftar, detail, review Custom Print, keuangan, produk, tarif, konten, laporan, akses/privasi dan state error/denied; Card, status, tabel dan label Indonesia terkonsolidasi; permission dan motion yang disetujui tetap. Gate lokal dan capture. |
 | T51 | M5a | TODO | Motion pass global | T47–T50 | Keputusan Owner 31 Okt: motion inti (adegan, pergantian panel) dan umpan balik interaksi dibuat per halaman di T47–T50; pass ini menyusul setelah semua halaman jadi. Durasi dan easing seragam memakai token DESIGN.md, paling banyak satu gerak khas per halaman, keputusan animasi masuk per seksi (DESIGN.md melarang scroll reveal sebagai hiasan), reduced motion dan WCAG 2.2.2 di semua route, kinerja di ponsel. Capture dan rekaman lokal. |
@@ -2130,6 +2130,28 @@ belum ada yang dikerjakan.
   versi gratis bernilai Rp0. Domain tidak perlu dibeli lagi; biaya
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
+
+### T48 — Toko dan detail produk, 2026-11-01
+
+Branch `claude/redesign-commerce-shop` dari `main@6443471`; potongan pertama T48.
+
+- **Toko:** judul "Produk cetak 3D siap pesan." dan satu kalimat cara membeli,
+  langsung katalog; chip kategori dan cari dalam satu baris; kartu produk
+  persegi berisi foto, kategori, nama, harga, dan stok; panel penutup ke Custom
+  3D Print. Aksi header "Lihat Produk"/"Pilih Varian" dilepas karena Keranjang
+  dengan badge sudah ada di header.
+- **Detail produk:** galeri dengan thumbnail di samping panel keputusan; memilih
+  varian menampilkan fotonya bila alt foto katalog persis "Foto varian <nama>".
+  Copy sistem diganti bahasa pelanggan ("Tambah ke keranjang", "Masuk ke
+  keranjang.", "Harga dan stok diperiksa lagi saat checkout"). 404 produk
+  memakai bidang biru sistem. Harga, stok, isi keranjang lokal, dan aturan
+  server tidak berubah.
+- **Bukti lokal:** katalog dev (3 produk terbit, 12 foto untuk produk Animal)
+  dan preview contoh tanpa overflow 320–1440; replay langkah E2E Toko dan detail
+  produk lulus (filter, cari, varian, jumlah, keranjang, stok habis, 404);
+  memilih "maung wisuda" menampilkan fotonya; badge Keranjang naik ke 2.
+- **Belum:** keranjang, checkout, Custom 3D Print dan workspace, halaman
+  status/quote token; review visual Owner.
 
 ### T47 — legal dan 404, 2026-11-01
 

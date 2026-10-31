@@ -33,8 +33,8 @@ test("B2B uses WhatsApp while local demo checkout remains available", async ({ p
   await expect(page.getByRole("heading", { name: "Desk Organizer Demo" })).toBeVisible();
   await page.getByRole("link", { name: /Desk Organizer Demo/ }).first().click();
   await page.getByRole("radio", { name: /Abu-abu/ }).check();
-  await page.getByRole("button", { name: "Tambah ke cart" }).click();
-  await page.getByRole("link", { name: "Lihat cart" }).click();
+  await page.getByRole("button", { name: "Tambah ke keranjang" }).click();
+  await page.getByRole("link", { name: "Lihat keranjang" }).click();
   await page.getByRole("link", { name: "Lanjut ke checkout" }).click();
   await expect(page).toHaveURL(/\/checkout$/);
   await expect(page.getByText("Checkout demo lokal aktif")).toBeVisible();

@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("shop preview filters products and links to product detail", async ({ page }) => {
   await page.goto("/shop?preview=empty");
-  await expect(page.getByText("Katalog ready-made belum dipublikasikan.")).toBeVisible();
+  await expect(page.getByText("Produk belum tersedia di Toko.")).toBeVisible();
   await page.getByRole("link", { name: "Contoh", exact: true }).click();
   await expect(page.locator("article")).toHaveCount(4);
   await expect(page.getByText("Tersedia", { exact: true })).toHaveCount(3);
@@ -32,7 +32,7 @@ test("homepage and public navigation expose the available Shop route", async ({ 
   await page.goto("/");
   await page.getByRole("navigation", { name: "Titik mulai" }).getByRole("link", { name: /Toko/ }).click();
   await expect(page).toHaveURL(/\/shop$/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Produk ready-made, dengan status yang jelas.");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Produk cetak 3D siap pesan.");
   await expect(page.getByRole("navigation", { name: "Navigasi footer" }).getByRole("link", { name: "Toko" })).toBeVisible();
 });
 
