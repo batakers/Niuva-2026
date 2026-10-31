@@ -33,7 +33,7 @@
       { "name": "duration-normal", "value": "220ms", "purpose": "Transisi state standar." },
       { "name": "ease-standard", "value": "cubic-bezier(0.2, 0, 0, 1)", "purpose": "Easing state kontrol." },
       { "name": "ease-emphasis", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Kata berganti di hero, condong maskot, pergantian pose proses." },
-      { "name": "niuva-bob", "value": "6s ease-in-out infinite, translate 0 -8px", "purpose": "Maskot hero melayang pelan; mati saat reduced motion." },
+      { "name": "niuva-bob", "value": "2.4s ease-in-out x2, translate 0 -8px", "purpose": "Sapaan maskot hero, lalu diam sebelum 5 detik (WCAG 2.2.2); mati saat reduced motion." },
       { "name": "fact-card-drift", "value": "translateY(-scrollY * 0.12 * depth)", "purpose": "Kartu fakta hero bergeser terhubung scroll; mati saat reduced motion." }
     ],
     "breakpoints": [

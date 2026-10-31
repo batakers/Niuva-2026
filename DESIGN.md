@@ -319,8 +319,9 @@ Render Blender maskot Niuva (`public/assets/mascot/*.webp`, masing-masing dengan
 Label nyata; field vertikal berjarak 16px (`gap-4`); input memakai `border-input`. Fokus `focus-visible` ring 3px tanpa layout shift. Badge status memakai pasangan `*-background`/teks dengan label; spinner dekoratif; hasil memakai live region yang tepat. Option chip tetap komposisi Button dengan target 44px dan `aria-pressed`.
 
 ### Motion (signature)
-- **Kata berganti di hero**: kata terakhir judul berganti (prototipe → desain → produk nyata) setiap 2.8s dengan fade/geser 300ms `--ease-emphasis-token`; nama aksesibel judul tetap teks yang disetujui.
-- **Maskot bob**: `niuva-bob` 6s ease-in-out, naik 8px; maskot hero juga condong mengikuti pointer (maks ±7px).
+- **Kata berganti di hero**: kata terakhir judul berganti satu putaran (prototipe → desain → produk nyata → prototipe) dalam 4,5 detik dengan fade/geser 300ms `--ease-emphasis-token`, lalu berhenti pada kata yang disetujui; nama aksesibel judul tetap teks yang disetujui.
+- **Maskot bob**: `niuva-bob` 2.4s ease-in-out dua kali (4,8 detik), naik 8px, lalu diam; maskot hero juga condong mengikuti pointer (maks ±7px).
+- **Gerak otomatis selesai sendiri**: animasi yang berjalan tanpa interaksi berhenti sebelum 5 detik (WCAG 2.2.2), sehingga tidak perlu tombol jeda. Gerak yang mengikuti scroll atau pointer boleh terus aktif.
 - **Drift kartu fakta**: kartu fakta hero bergeser terhubung scroll dengan kedalaman masing-masing.
 - **Adegan proses sticky**: panggung maskot sticky menukar pose per tahap (Ide, Desain, Prototipe, Produk jadi) saat tahap mencapai tengah layar; tahap aktif ditandai garis `primary` dan `aria-current="step"`.
 - **Reduced motion**: semua gerak di atas mati; komponen mulai dalam keadaan statis sampai preferensi terbaca, dan CSS global memotong animasi/transisi.
