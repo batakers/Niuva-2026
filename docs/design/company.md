@@ -46,6 +46,8 @@ Dibangun di atas Foundation v2; Beranda diterima Owner 31 Okt 2026, route lain m
 - **Proyek:** judul dan kalimat pendukung bertumpuk, filter, lalu satu galeri "Semua proyek" berurutan editorial: setiap proyek tampil dengan cover yang disetujui dan membuka halaman detailnya sendiri (Owner, 1 Nov 2026); proyek tanpa cerita lengkap menampilkan ringkasan, cover, dan dokumentasi yang disetujui; panel penutup.
 - **Detail proyek:** judul dipecah menjadi nama karya dan klien/keterangan tanpa em dash, ringkasan bertinta penuh, foto bukti besar, cerita dalam baris editorial, panel penutup.
 - **Panel penutup** (`ClosingPanel`) sama di setiap route Company: judul, aksi WhatsApp `onBrand`, dan maskot kemenangan.
+- **Legal** (`/terms`, `/privacy`): halaman baca yang tenang tanpa bidang biru. Mulai `lg` daftar isi menempel di samping teks; di bawah `lg` ia menjadi disclosure di bawah judul. Versi dan tanggal ada di satu kartu fakta, teks bertinta penuh, tabel bergulir di dalam kartunya, dan dokumen ditutup kartu "Baca juga" ke dokumen pasangannya. Teks resmi tidak diubah; anchor bagian dibuat dari judul tanpa nomornya.
+- **404 dan error publik:** bidang biru dengan geometri detail layanan; maskot ide (tanda tanya dan bohlam) untuk halaman atau proyek yang tidak ada, maskot kunci inggris untuk error. Satu aksi `onBrand` dan satu tautan putih bergaris bawah. Global error tetap teks polos karena stylesheet bisa ikut gagal.
 
 ## Bukti dan media
 

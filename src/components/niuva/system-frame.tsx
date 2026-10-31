@@ -10,8 +10,9 @@ import { SkipLink } from "./skip-link";
  */
 export function SystemFrame({ children }: Readonly<{ children: ReactNode }>) {
   return (
+    // --panel-inset mirrors PublicShell so the blue system field keeps its text on the header gutter.
     <div
-      className="min-h-screen bg-background text-foreground"
+      className="@container min-h-screen bg-background text-foreground [--panel-inset:max(1.5rem,calc((100cqw_-_81rem)/2_+_1.5rem))]"
       data-foundation-scope="system"
       data-product-screen-proof-status="pending-owner-review"
     >

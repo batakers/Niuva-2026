@@ -204,7 +204,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T44 | M6 | BLOCKED_INPUT | Policy privacy untuk penyedia production | T11; Q5; Q12–Q13; Owner | Daftar penyedia dan lokasi pemrosesan di `src/content/customer-policy/privacy-v1.0.md` (Netlify Ohio, Neon Singapura) diganti versi baru yang mencantumkan Helipod VPS Jakarta, penyedia backup dan storage file production; Owner menyetujui teks; versi baru terbit sebelum production menerima data Customer (T40). Ditemukan saat perbandingan S3, 30 Okt. Draf v1.1 disetujui Owner 31 Okt (Q15–Q16); tanggal terbit, file runtime dan pemberitahuan belum; terbit menunggu T41 dan T38. |
 | T45 | M5a | DONE | Audit, sitemap dan user flow redesign | Keputusan Owner 31 Okt | Audit tampilan sekarang, sitemap dan user flow dengan pembagian visual vs aturan bisnis tercatat di [audit IA](docs/design/redesign-2026-10-31-audit-ia.md); Q19–Q22 dijawab Owner; T36/T37 bergantung pada redesign. Log "T45 — audit, sitemap dan user flow". |
 | T46 | M5a | IN_PROGRESS | Fondasi design system baru | T45; pilihan arah Q19 | Arah terpilih diterapkan ke token, tipe, motion, primitive `components/ui`, shell publik/auth/sistem/Admin, status label, format Rupiah, timeline dan page header bersama; tanpa dependency npm baru; URL, API, data, auth, harga dan pembayaran tetap. Lint/typecheck/test/E2E/build dan capture lokal. |
-| T47 | M5a | IN_PROGRESS | Redesign Company | T46 | `/`, `/services` dan detail, `/projects` dan detail, legal, 404 sesuai sitemap/flow; satu CTA utama per halaman; tanpa klaim baru; DESIGN.md dan panduan Company ditulis ulang dari hasil build. Capture 320–1440, keyboard/fokus, zoom 200%, reduced motion, kontras. |
+| T47 | M5a | DONE | Redesign Company | T46 | `/`, `/services` dan detail, `/projects` dan detail, legal, 404 sesuai sitemap/flow; satu CTA utama per halaman; tanpa klaim baru; DESIGN.md dan panduan Company ditulis ulang dari hasil build. Capture 320–1440, keyboard/fokus, zoom 200%, reduced motion, kontras. Selesai 1 Nov 2026 dengan bukti lokal dan CI; review visual Owner baru untuk Beranda, route lain menunggu tinjauan terpisah. |
 | T48 | M5a | TODO | Redesign Commerce dan MAKE | T46 | Toko, produk, keranjang, checkout, Custom 3D Print dan workspace dua mode, status/quote token; copy sistem diganti bahasa pelanggan; kalimat MAKE yang dilindungi tetap; aturan server, harga dan pembayaran tidak berubah. Gate lokal dan capture. |
 | T49 | M5a | TODO | Redesign Customer dan auth | T46, T48 | Hub Akun, detail MAKE/order (konfirmasi terima quote, timeline, Rupiah dan label status konsisten), refund, privasi, enam halaman auth dalam satu frame; allowlist dan gate auth tidak berubah. Gate lokal dan capture. |
 | T50 | M5a | TODO | Redesign Admin | T46 | Shell, Ringkasan, daftar, detail, review Custom Print, keuangan, produk, tarif, konten, laporan, akses/privasi dan state error/denied; Card, status, tabel dan label Indonesia terkonsolidasi; permission dan motion yang disetujui tetap. Gate lokal dan capture. |
@@ -2131,7 +2131,26 @@ belum ada yang dikerjakan.
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
 
-### T47 — Layanan, Proyek, dan detailnya, 2026-10-31
+### T47 — legal dan 404, 2026-11-01
+
+Branch `claude/redesign-legal-404` dari `main@c9b7270`.
+
+- **Legal:** `/terms` dan `/privacy` menjadi halaman baca: daftar isi menempel
+  di samping teks mulai `lg` dan menjadi disclosure di bawah judul pada layar
+  kecil; versi dan tanggal dalam satu kartu fakta; teks bertinta penuh; kartu
+  "Baca juga" ke dokumen pasangannya. Teks resmi dan checksum tidak berubah.
+- **404 dan error publik:** bidang biru dengan maskot (ide untuk 404 dan proyek
+  yang tidak ada, kunci inggris untuk error), satu aksi `onBrand` dan satu
+  tautan putih. Halaman proyek yang tidak ada kini memakai bahasa Indonesia
+  ("Proyek ini tidak tersedia.", "Lihat semua proyek"). Global error tetap teks
+  polos.
+- **Bukti lokal:** tanpa overflow pada 320, 390, 640 (zoom 200%), 768, 1024,
+  dan 1440; anchor daftar isi berhenti di bawah header; urutan fokus 404 judul
+  → "Kembali ke beranda" → "Lihat Toko" dengan ring putih 3 px; kontras bidang
+  biru 404 terendah 5,18:1. Error publik belum dilihat di browser, hanya unit
+  test.
+- **Belum:** review visual Owner atas route Company selain Beranda.
+
 
 Branch `claude/redesign-company-pages` dari `main@7ddb346`, dengan antislop DURING
 dan keputusan motion Owner (motion inti per halaman, pass global di T51).

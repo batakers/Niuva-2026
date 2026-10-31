@@ -90,7 +90,9 @@ describe("Root not-found page", () => {
     expect(actions).toBe(links[1].parentElement);
     expect(heading.compareDocumentPosition(paragraph) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(paragraph.compareDocumentPosition(actions) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(Array.from(main.children).filter((el) => ["H1", "P", "DIV"].includes(el.tagName))).toEqual([
+    // The blue field nests the text column inside main; the order holds within that column.
+    expect(heading.parentElement?.closest("main")).toBe(main);
+    expect(Array.from(heading.parentElement?.children ?? []).filter((el) => ["H1", "P", "DIV"].includes(el.tagName))).toEqual([
       heading,
       paragraph,
       actions,
