@@ -11,13 +11,13 @@ import { isAppError } from "@/modules/shared/errors";
 export const metadata: Metadata = { title: "Order · Akun Niuva", robots: { index: false, follow: false } };
 export default async function AccountOrderPage({ params }: PageProps<"/account/orders/[id]">) {
   await connection();
+  const { id } = await params;
   let customer;
   try { customer = await requireCustomer(); }
   catch (error) {
-    if (isAppError(error) && error.code === "UNAUTHORIZED") redirect("/login?returnTo=/account");
+    if (isAppError(error) && error.code === "UNAUTHORIZED") redirect(`/login?returnTo=${encodeURIComponent(`/account/orders/${id}`)}`);
     throw error;
   }
-  const { id } = await params;
   const order = await new CustomerAuthRepository().getOrderForCustomer(customer.id, id);
   if (order === null) notFound();
   const payment = order.paymentAttempts[0];

@@ -15,6 +15,17 @@ const CUSTOMER_RETURN_TO_PATHS = new Set([
   "/project-brief",
   "/custom-print/request",
 ]);
+// Owned-record pages; each page re-checks ownership after login.
+const CUSTOMER_RETURN_TO_RECORD_PATHS = [
+  /^\/account\/orders\/([0-9a-fA-F-]{36})(?:\/refund)?$/,
+  /^\/account\/make\/([0-9a-fA-F-]{36})$/,
+];
+
+function isCustomerReturnToPath(pathname: string): boolean {
+  if (CUSTOMER_RETURN_TO_PATHS.has(pathname)) return true;
+  const id = CUSTOMER_RETURN_TO_RECORD_PATHS.map((pattern) => pattern.exec(pathname)?.[1]).find(Boolean);
+  return id !== undefined && z.uuid().safeParse(id).success;
+}
 
 const googleIdentitySchema = z.object({
   sub: z.string().trim().min(1),
@@ -71,9 +82,12 @@ export function safeCustomerReturnTo(input: string | undefined): string {
   try {
     const url = new URL(input, "https://niuva.internal");
 
+    // A path the parser had to rewrite (dot segments, backslashes, tabs) is
+    // rejected instead of normalized into an allowed page.
     if (
       url.origin !== "https://niuva.internal" ||
-      !CUSTOMER_RETURN_TO_PATHS.has(url.pathname)
+      url.pathname !== input.split(/[?#]/, 1)[0] ||
+      !isCustomerReturnToPath(url.pathname)
     ) {
       return "/account";
     }

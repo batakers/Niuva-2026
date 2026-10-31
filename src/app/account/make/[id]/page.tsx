@@ -34,13 +34,13 @@ const estimateComponentsSchema = z.object({
 export const metadata: Metadata = { title: "MAKE · Akun Niuva", robots: { index: false, follow: false } };
 export default async function AccountMakePage({ params }: PageProps<"/account/make/[id]">) {
   await connection();
+  const { id } = await params;
   let customer;
   try { customer = await requireCustomer(); }
   catch (error) {
-    if (isAppError(error) && error.code === "UNAUTHORIZED") redirect("/login?returnTo=/account");
+    if (isAppError(error) && error.code === "UNAUTHORIZED") redirect(`/login?returnTo=${encodeURIComponent(`/account/make/${id}`)}`);
     throw error;
   }
-  const { id } = await params;
   const request = await new CustomerWorkRepository().request(customer.id, id);
   if (request === null) notFound();
   const modelReady = request.files.some(({ file }) => file.uploadStatus === "VERIFIED" && isModelExtension(file.extension));

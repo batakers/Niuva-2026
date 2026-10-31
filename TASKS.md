@@ -2154,6 +2154,27 @@ Owner). Hasilnya ada di [audit IA](docs/design/redesign-2026-10-31-audit-ia.md).
   company profile, katalog, akun dan WhatsApp B2B tetap jalan. Rilis bertahap
   atau penundaan adalah keputusan Owner; D08 mensyaratkan provider siap.
 
+### Login kembali ke halaman order, refund dan MAKE, 2026-10-31
+
+- **Masalah (audit redesign T45, di luar scope redesign):**
+  `/account/orders/{id}/refund` mengirim Customer yang belum login ke
+  `/login?returnTo=…/refund`, tetapi `safeCustomerReturnTo` hanya menerima lima
+  path tetap, sehingga setelah login Customer mendarat di `/account`. Halaman
+  order dan MAKE selalu mengirim `returnTo=/account`.
+- **Perbaikan:** `src/modules/customer-auth/core.ts` juga menerima
+  `/account/orders/{uuid}`, `/account/orders/{uuid}/refund` dan
+  `/account/make/{uuid}` lewat pola path penuh plus `z.uuid()`, bukan prefix.
+  Path yang ditulis ulang parser URL (`..`, `.`, backslash, tab) kini ditolak,
+  bukan dinormalisasi; ini juga berlaku untuk lima path lama. Halaman order dan
+  MAKE kini mengirim path miliknya sebagai `returnTo`; kepemilikan tetap dicek
+  halaman setelah login.
+- **Bukti lokal:** unit `tests/unit/customer-auth-core.test.ts` (path diizinkan,
+  traversal, slash ter-encode, backslash, URL absolut, trik query/fragment);
+  lint 0 error/4 warning lama; typecheck lulus; unit 135/1.517; backend terpilih
+  (rute email, consent Google, outbox) 5/87.
+- **Belum diverifikasi:** E2E login dan hosted (deploy staging berhenti sampai
+  26 Nov).
+
 ### T33 selesai: order variasi sampai Shipped, 2026-10-30
 
 Setelah PR #97 (`6c63707`, deploy `6ae4f9d39f662938de78cda4`, secret scan
