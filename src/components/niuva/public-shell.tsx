@@ -56,9 +56,9 @@ export function PublicShell({
         Lewati ke konten utama
       </a>
       <header className="sticky top-0 z-40 bg-background/88 text-foreground backdrop-blur-md supports-[backdrop-filter]:bg-background/80" data-home-section="header">
-        <div className="mx-auto flex min-h-18 max-w-public flex-wrap items-center gap-3 px-5 py-3 sm:px-12">
+        <div className="mx-auto flex min-h-18 max-w-public flex-wrap items-center gap-2 px-5 py-3 sm:gap-3 sm:px-12">
           <Link href="/" aria-label="Niuva, kembali ke halaman utama" className="shrink-0 rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
-            <NiuvaLogo className="h-7 w-auto" preload />
+            <NiuvaLogo className="h-6 w-auto sm:h-7" preload />
           </Link>
           <PublicNavigation action={resolvedHeaderAction} showB2BContact={showB2BContact} />
           {demoMode ? (

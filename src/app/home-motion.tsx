@@ -110,7 +110,6 @@ export type ProcessStage = Readonly<{
   description: string;
   image: string;
   alt: string;
-  bust?: boolean;
 }>;
 
 /** Sticky process scene: the mascot pose follows the stage nearest the middle of the screen. */
@@ -159,8 +158,7 @@ export function ProcessScene({ heading, stages }: Readonly<{ heading: ReactNode;
             key={stage.image}
             alt=""
             className={cn(
-              "absolute left-1/2 w-auto -translate-x-1/2 object-contain drop-shadow-lg transition-[opacity,translate,scale] duration-500 ease-[var(--ease-emphasis-token)]",
-              stage.bust ? "bottom-0 h-[52%]" : "bottom-[8%] h-[76%]",
+              "absolute bottom-[8%] left-1/2 h-[76%] w-auto -translate-x-1/2 object-contain drop-shadow-lg transition-[opacity,translate,scale] duration-500 ease-[var(--ease-emphasis-token)]",
               active === index ? "translate-y-0 scale-100 opacity-100" : "translate-y-3 scale-[0.97] opacity-0",
             )}
             height={1400}

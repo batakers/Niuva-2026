@@ -124,7 +124,9 @@ sitemap/flow:
 - **Q25 (31 Okt):** maskot NIUVA dari paket aset Owner
   (`docs/source/brand/NIUVA_Mascot_Assets`) dipakai di website memakai render
   Blender, bukan model 3D real-time yang terlihat kasar; tahap Ide memakai
-  ekspresi bohlam karena jari pose Think di aset sumber janggal.
+  ekspresi bohlam karena jari pose Think di aset sumber janggal. Koreksi Owner
+  31 Okt: maskot Ide tampil badan penuh, yaitu pose Point dengan wajah bohlam
+  yang dirender dari `master/NIUVA_Master.blend`, bukan potret close-up.
 
 Keputusan Owner yang masih terbuka (rekomendasi agen, belum diputuskan):
 
