@@ -2,24 +2,23 @@
 export const typographySystemTokens = {
   display: {
     className:
-      "text-[40px] font-semibold leading-[43px] tracking-[-0.03em] sm:text-[48px] sm:leading-[51px] sm:tracking-[-0.035em] xl:text-[60px] xl:leading-[63px] xl:tracking-[-0.04em]",
+      "text-[36px] font-normal leading-[1.1] tracking-[-0.022em] sm:text-[48px] xl:text-[58px] xl:leading-[1.08] xl:tracking-[-0.025em]",
   },
   heading: {
     className:
-      "text-[30px] font-semibold leading-[36px] tracking-[-0.02em] sm:text-[36px] sm:leading-[42px] sm:tracking-[-0.025em] xl:text-[40px] xl:leading-[46px] xl:tracking-[-0.03em]",
+      "text-[30px] font-normal leading-[1.12] tracking-[-0.02em] sm:text-[38px] xl:text-[46px] xl:leading-[1.1] xl:tracking-[-0.022em]",
   },
   subheading: {
-    className:
-      "text-[22px] font-semibold leading-[29px] tracking-[-0.015em] sm:text-[24px] sm:leading-[31px]",
+    className: "text-[22px] font-medium leading-[1.25] tracking-[-0.012em] sm:text-[26px]",
   },
   body: {
-    className: "max-w-[70ch] text-[16px] font-normal leading-[24px] tracking-[0em]",
+    className: "max-w-[68ch] text-[16px] font-normal leading-[1.65] sm:text-[17px]",
   },
   "ui-data": {
-    className: "text-[14px] font-medium leading-[20px] tracking-[0em] tabular-nums",
+    className: "text-[14px] font-medium leading-[20px] tabular-nums",
   },
+  /** Former serif accent; kept as a role name so existing auth screens keep working until T49. */
   "editorial-accent": {
-    className:
-      "[font-family:var(--font-public-editorial),Georgia,serif] text-[28px] font-medium leading-[35px] tracking-[-0.01em] sm:text-[32px] sm:leading-[39px] xl:text-[36px] xl:leading-[43px]",
+    className: "text-[28px] font-normal leading-[1.2] tracking-[-0.018em] sm:text-[32px]",
   },
 } as const;

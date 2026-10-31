@@ -4,66 +4,65 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Niuva UI Foundation — runtime tokens for the active DESIGN.md guide.
- * Foundation and Typography propagation was authorized globally on
- * 2026-09-25 by DS-DEC-019.
+ * Niuva UI Foundation v2 — runtime tokens for DESIGN.md.
+ * Owner decision 2026-10-31 (TASKS.md "Redesign frontend", T46) replaces the
+ * v1.0 values authorized by DS-DEC-019.
  *
- * Evidence: Niuva Logo System v1.0 locks --brand-500 (#6390BB), the light
- * wordmark foreground, and light-first usage. The surrounding scale, semantic
- * mapping, spacing, radius, elevation, typography roles, and motion values are
- * summarized in DESIGN.md. Historical proof acceptance is archived; route
- * visual acceptance, AT/device, provider, and production gates remain separate.
- * Human-facing UI is sans-first; technical type uses Space Grotesk in v1.0.
+ * Niuva Logo System v1.0 still locks --brand-500 (#6390BB). The world: a cool
+ * light ground, deep ink, one Niuva-blue field, white rounded surfaces on
+ * hairlines, Manrope for every role, and the Blender-rendered mascot as the
+ * only illustration. Visual, AT/device, provider and production acceptance
+ * remain separate gates.
  */
 :root {
   /* Brand scale: --brand-500 is the locked Niuva Blue identity value. */
-  --brand-50: #f5f9fc;
-  --brand-100: #e8f1f8;
-  --brand-200: #d2e3ef;
-  --brand-300: #b4cfe0;
-  --brand-400: #8fb5cf;
+  --brand-50: #f1f6fb;
+  --brand-100: #e6eef7;
+  --brand-200: #d3e2f0;
+  --brand-300: #b4cde4;
+  --brand-400: #8eb2d3;
   --brand-500: #6390bb;
-  --brand-600: #4f789f;
-  --brand-700: #3f607f;
-  --brand-800: #344f67;
-  --brand-900: #2b4053;
-  --brand-950: #1f2e3b;
+  --brand-600: #4f7ca9;
+  --brand-700: #3d6893;
+  --brand-800: #2d5278;
+  --brand-900: #223f5d;
+  --brand-950: #172c42;
 
-  /* Neutral scale: approved cool-industrial surface system. */
-  --neutral-50: #f8fafc;
-  --neutral-100: #f1f5f9;
-  --neutral-200: #e2e8f0;
-  --neutral-300: #cbd5e1;
-  --neutral-400: #94a3b8;
-  --neutral-500: #64748b;
-  --neutral-600: #475569;
-  --neutral-700: #334155;
-  --neutral-800: #1e293b;
-  --neutral-900: #0f172a;
-  --neutral-950: #020617;
+  /* Neutral scale, tinted toward the brand blue. */
+  --neutral-50: #f7f9fc;
+  --neutral-100: #f2f5f9;
+  --neutral-200: #e4eaf1;
+  --neutral-300: #dbe2eb;
+  --neutral-400: #a9b5c3;
+  --neutral-500: #6b7a8c;
+  --neutral-600: #4a5a6d;
+  --neutral-700: #34465a;
+  --neutral-800: #1f2f42;
+  --neutral-900: #0f1d2e;
+  --neutral-950: #08121f;
 
   /* Semantic shadcn bridge. */
-  --background: var(--neutral-50);
+  --background: var(--neutral-100);
   --foreground: var(--neutral-900);
   --card: #ffffff;
   --card-foreground: var(--neutral-900);
   --popover: #ffffff;
   --popover-foreground: var(--neutral-900);
-  /* Keep brand-500 as the identity accent; actions use a darker blue so white
-   * labels remain WCAG AA at normal text sizes. */
+  /* brand-500 stays the identity accent; actions use brand-700 so white labels
+   * keep WCAG AA at normal text sizes. */
   --primary: var(--brand-700);
   --primary-foreground: #ffffff;
   --secondary: var(--brand-100);
   --secondary-foreground: var(--brand-900);
-  --muted: var(--neutral-100);
+  --muted: var(--neutral-200);
   --muted-foreground: var(--neutral-600);
   --accent: var(--brand-100);
   --accent-foreground: var(--brand-900);
   --destructive: #b91c1c;
   --destructive-foreground: #ffffff;
-  --border: var(--neutral-200);
+  --border: var(--neutral-300);
   --input: var(--neutral-500);
-  --ring: var(--brand-500);
+  --ring: var(--brand-600);
   --success: #166534;
   --success-foreground: #ffffff;
   --success-background: #f0fdf4;
@@ -83,31 +82,30 @@
   --destructive-border: #dc2626;
   --destructive-icon: #b91c1c;
 
-  /* Approved semantic layout, shape, elevation, and motion roles. */
-  --radius-control: 0.5rem;
-  --radius-card: 0.75rem;
-  --radius-media: 1rem;
+  /* Layout, shape, elevation, and motion roles. */
+  --radius-control: 0.75rem;
+  --radius-card: 1.375rem;
+  --radius-media: 1.875rem;
   --radius-pill: 9999px;
   --radius: var(--radius-control);
-  --shadow-card-token: 0 1px 2px rgb(15 23 42 / 0.06);
+  --shadow-card-token: 0 1px 2px rgb(15 29 46 / 0.05);
   --shadow-floating-token:
-    0 16px 32px rgb(15 23 42 / 0.12), 0 2px 8px rgb(15 23 42 / 0.08);
-  --container-public-token: 72rem;
+    0 16px 36px rgb(15 29 46 / 0.14), 0 2px 6px rgb(15 29 46 / 0.08);
+  --container-public-token: 81rem;
   --container-reading-token: 48rem;
   --container-admin-token: 90rem;
-  --section-gap-token: 4rem;
+  --section-gap-token: 8rem;
   --content-gap-token: 1.5rem;
   --card-gap-token: 1rem;
   --duration-fast-token: 150ms;
   --duration-normal-token: 220ms;
   --ease-standard-token: cubic-bezier(0.2, 0, 0, 1);
-  --ease-emphasis-token: cubic-bezier(0.2, 0.8, 0.2, 1);
-  /* Human-facing UI is sans-first; technical type is an explicit exception. */
-  --font-display-token: var(--font-public-sans);
-  --font-body-token: var(--font-public-sans);
-  --font-technical-token: var(--font-public-sans);
+  --ease-emphasis-token: cubic-bezier(0.16, 1, 0.3, 1);
+  --font-display-token: var(--font-niuva-sans);
+  --font-body-token: var(--font-niuva-sans);
+  --font-technical-token: var(--font-niuva-sans);
 
-  --sidebar: var(--neutral-100);
+  --sidebar: var(--neutral-50);
   --sidebar-foreground: var(--neutral-900);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
@@ -250,8 +248,15 @@
   --spacing-section: var(--section-gap-token);
   --spacing-content: var(--content-gap-token);
   --spacing-card: var(--card-gap-token);
-  --font-sans: var(--font-public-sans);
-  --font-mono: var(--font-public-sans);
+  --font-sans: var(--font-niuva-sans);
+  --font-mono: var(--font-niuva-sans);
+  --ease-emphasis: var(--ease-emphasis-token);
+  --text-caption: 0.84375rem;
+  --text-caption--line-height: 1.45;
+  --text-ui: 0.9375rem;
+  --text-ui--line-height: 1.4;
+  --text-lead: 1.0625rem;
+  --text-lead--line-height: 1.65;
   --font-display: var(--font-display-token);
   --font-body: var(--font-body-token);
   --font-technical: var(--font-technical-token);
@@ -265,6 +270,32 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body-token), Arial, Helvetica, sans-serif;
+  }
+
+  ::selection {
+    background: var(--brand-500);
+    color: #ffffff;
+  }
+
+  /* Tailwind v4 resets buttons to the default cursor; every enabled control shows it can be pressed. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary,
+  select:not(:disabled),
+  label[for],
+  input:is([type="checkbox"], [type="radio"]):not(:disabled) {
+    cursor: pointer;
+  }
+
+  :is(button, select, input):disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
+  html {
+    accent-color: var(--brand-700);
+    caret-color: var(--brand-700);
+    scrollbar-color: var(--neutral-400) transparent;
   }
 }
 
@@ -285,6 +316,16 @@
     [data-foundation-scope="admin"] [data-admin-surface] > header:not([data-admin-page-header]) {
       padding: 1.5rem;
     }
+  }
+}
+
+@keyframes niuva-bob {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -8px;
   }
 }
 

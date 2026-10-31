@@ -52,8 +52,10 @@ async function assertAccessibleSections(page: Page) {
 }
 
 async function assertHomepageMedia(page: Page, record: (value: Omit<MediaDiagnostic, "elapsedMs" | "width" | "height">) => void) {
-  const media = page.locator("[data-home-section='project-proof'] img");
-  await expect(media).toHaveCount(3);
+  // The homepage carries mascot renders only; project photos stay on /projects (Owner, 31 Oct 2026).
+  await expect(page.locator("[data-home-section='project-proof'] img")).toHaveCount(0);
+  const media = page.locator("[data-home-section='hero'] img, [data-home-section='starting-points'] img");
+  await expect(media).toHaveCount(4);
 
   for (const [imageIndex, image] of (await media.all()).entries()) {
     const before = await image.evaluate(element => element instanceof HTMLImageElement ? { alt: element.alt, source: element.currentSrc || element.src, complete: element.complete, naturalWidth: element.naturalWidth, naturalHeight: element.naturalHeight } : null);

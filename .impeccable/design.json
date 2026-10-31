@@ -1,348 +1,139 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-29T13:01:09.0192913+07:00",
+  "generatedAt": "2026-10-31T12:00:00+07:00",
   "title": "Design System: Niuva",
   "extensions": {
     "colorMeta": {
-      "niuva-blue": {
-        "role": "primary",
-        "displayName": "Niuva Blue",
-        "canonical": "#6390BB",
-        "tonalRamp": ["#1F2E3B", "#2B4053", "#344F67", "#3F607F", "#4F789F", "#6390BB", "#8FB5CF", "#F5F9FC"]
-      },
-      "blue-paper": {
-        "role": "secondary",
-        "displayName": "Blue Paper",
-        "canonical": "#E8F1F8",
-        "tonalRamp": ["#1F2E3B", "#2B4053", "#344F67", "#3F607F", "#4F789F", "#6390BB", "#B4CFE0", "#E8F1F8"]
-      },
-      "blue-mist": {
-        "role": "secondary",
-        "displayName": "Blue Mist",
-        "canonical": "#B4CFE0",
-        "tonalRamp": ["#1F2E3B", "#2B4053", "#344F67", "#3F607F", "#4F789F", "#6390BB", "#8FB5CF", "#B4CFE0"]
-      },
-      "blue-ink": {
-        "role": "secondary",
-        "displayName": "Blue Ink",
-        "canonical": "#1F2E3B",
-        "tonalRamp": ["#1F2E3B", "#2B4053", "#344F67", "#3F607F", "#4F789F", "#6390BB", "#8FB5CF", "#E8F1F8"]
-      },
-      "cool-paper": {
-        "role": "neutral",
-        "displayName": "Cool Paper",
-        "canonical": "#F8FAFC",
-        "tonalRamp": ["#020617", "#0F172A", "#1E293B", "#334155", "#475569", "#64748B", "#CBD5E1", "#F8FAFC"]
-      },
-      "paper-white": {
-        "role": "neutral",
-        "displayName": "Paper White",
-        "canonical": "#FFFFFF",
-        "tonalRamp": ["#020617", "#0F172A", "#1E293B", "#334155", "#475569", "#64748B", "#F1F5F9", "#FFFFFF"]
-      },
-      "quiet-surface": {
-        "role": "neutral",
-        "displayName": "Quiet Surface",
-        "canonical": "#F1F5F9",
-        "tonalRamp": ["#020617", "#0F172A", "#1E293B", "#334155", "#475569", "#64748B", "#CBD5E1", "#F1F5F9"]
-      },
-      "line-slate": {
-        "role": "neutral",
-        "displayName": "Line Slate",
-        "canonical": "#E2E8F0",
-        "tonalRamp": ["#020617", "#0F172A", "#1E293B", "#334155", "#475569", "#64748B", "#CBD5E1", "#E2E8F0"]
-      },
-      "muted-slate": {
-        "role": "neutral",
-        "displayName": "Muted Slate",
-        "canonical": "#475569",
-        "tonalRamp": ["#020617", "#0F172A", "#1E293B", "#334155", "#475569", "#64748B", "#CBD5E1", "#F8FAFC"]
-      },
-      "working-slate": {
-        "role": "neutral",
-        "displayName": "Working Slate",
-        "canonical": "#1E293B",
-        "tonalRamp": ["#020617", "#0F172A", "#1E293B", "#334155", "#475569", "#64748B", "#CBD5E1", "#F8FAFC"]
-      },
-      "dark-line": {
-        "role": "neutral",
-        "displayName": "Dark Line",
-        "canonical": "#334155",
-        "tonalRamp": ["#020617", "#0F172A", "#1E293B", "#334155", "#475569", "#64748B", "#CBD5E1", "#F8FAFC"]
-      },
-      "graphite": {
-        "role": "neutral",
-        "displayName": "Graphite",
-        "canonical": "#0F172A",
-        "tonalRamp": ["#020617", "#0F172A", "#1E293B", "#334155", "#475569", "#64748B", "#CBD5E1", "#F8FAFC"]
-      },
-      "success": {
-        "role": "tertiary",
-        "displayName": "Success Green",
-        "canonical": "#166534",
-        "tonalRamp": ["#052E16", "#14532D", "#166534", "#15803D", "#16A34A", "#22C55E", "#BBF7D0", "#F0FDF4"]
-      },
-      "success-surface": {
-        "role": "tertiary",
-        "displayName": "Success Surface",
-        "canonical": "#F0FDF4",
-        "tonalRamp": ["#052E16", "#14532D", "#166534", "#15803D", "#16A34A", "#22C55E", "#BBF7D0", "#F0FDF4"]
-      },
-      "success-border": {
-        "role": "tertiary",
-        "displayName": "Success Border",
-        "canonical": "#16A34A",
-        "tonalRamp": ["#052E16", "#14532D", "#166534", "#15803D", "#16A34A", "#22C55E", "#BBF7D0", "#F0FDF4"]
-      },
-      "warning": {
-        "role": "tertiary",
-        "displayName": "Warning Amber",
-        "canonical": "#92400E",
-        "tonalRamp": ["#451A03", "#78350F", "#92400E", "#B45309", "#F59E0B", "#FDE68A", "#FFFBEB", "#FFFDF5"]
-      },
-      "warning-surface": {
-        "role": "tertiary",
-        "displayName": "Warning Surface",
-        "canonical": "#FFFBEB",
-        "tonalRamp": ["#451A03", "#78350F", "#92400E", "#B45309", "#F59E0B", "#FDE68A", "#FFFBEB", "#FFFDF5"]
-      },
-      "warning-border": {
-        "role": "tertiary",
-        "displayName": "Warning Border",
-        "canonical": "#B45309",
-        "tonalRamp": ["#451A03", "#78350F", "#92400E", "#B45309", "#F59E0B", "#FDE68A", "#FFFBEB", "#FFFDF5"]
-      },
-      "info": {
-        "role": "tertiary",
-        "displayName": "Information Blue",
-        "canonical": "#1D4ED8",
-        "tonalRamp": ["#172554", "#1E3A8A", "#1D4ED8", "#2563EB", "#60A5FA", "#BFDBFE", "#EFF6FF", "#F8FBFF"]
-      },
-      "info-surface": {
-        "role": "tertiary",
-        "displayName": "Information Surface",
-        "canonical": "#EFF6FF",
-        "tonalRamp": ["#172554", "#1E3A8A", "#1D4ED8", "#2563EB", "#60A5FA", "#BFDBFE", "#EFF6FF", "#F8FBFF"]
-      },
-      "info-border": {
-        "role": "tertiary",
-        "displayName": "Information Border",
-        "canonical": "#2563EB",
-        "tonalRamp": ["#172554", "#1E3A8A", "#1D4ED8", "#2563EB", "#60A5FA", "#BFDBFE", "#EFF6FF", "#F8FBFF"]
-      },
-      "destructive": {
-        "role": "tertiary",
-        "displayName": "Destructive Red",
-        "canonical": "#B91C1C",
-        "tonalRamp": ["#450A0A", "#7F1D1D", "#B91C1C", "#DC2626", "#F87171", "#FCA5A5", "#FEF2F2", "#FFF7F7"]
-      },
-      "destructive-surface": {
-        "role": "tertiary",
-        "displayName": "Destructive Surface",
-        "canonical": "#FEF2F2",
-        "tonalRamp": ["#450A0A", "#7F1D1D", "#B91C1C", "#DC2626", "#F87171", "#FCA5A5", "#FEF2F2", "#FFF7F7"]
-      },
-      "destructive-border": {
-        "role": "tertiary",
-        "displayName": "Destructive Border",
-        "canonical": "#DC2626",
-        "tonalRamp": ["#450A0A", "#7F1D1D", "#B91C1C", "#DC2626", "#F87171", "#FCA5A5", "#FEF2F2", "#FFF7F7"]
-      }
+      "brand": { "role": "primary", "displayName": "Niuva Blue", "canonical": "#6390BB", "tonalRamp": ["#172C42", "#223F5D", "#2D5278", "#3D6893", "#4F7CA9", "#6390BB", "#B4CDE4", "#F1F6FB"] },
+      "primary": { "role": "primary", "displayName": "Action Blue", "canonical": "#3D6893", "tonalRamp": ["#172C42", "#223F5D", "#2D5278", "#3D6893", "#4F7CA9", "#6390BB", "#B4CDE4", "#F1F6FB"] },
+      "brand-100": { "role": "secondary", "displayName": "Mascot Tint", "canonical": "#E6EEF7", "tonalRamp": ["#172C42", "#223F5D", "#2D5278", "#3D6893", "#8EB2D3", "#D3E2F0", "#E6EEF7", "#F1F6FB"] },
+      "background": { "role": "neutral", "displayName": "Cool Ground", "canonical": "#F2F5F9", "tonalRamp": ["#08121F", "#0F1D2E", "#1F2F42", "#34465A", "#6B7A8C", "#A9B5C3", "#DBE2EB", "#F2F5F9"] },
+      "foreground": { "role": "neutral", "displayName": "Ink", "canonical": "#0F1D2E", "tonalRamp": ["#08121F", "#0F1D2E", "#1F2F42", "#34465A", "#4A5A6D", "#6B7A8C", "#A9B5C3", "#E4EAF1"] },
+      "surface": { "role": "neutral", "displayName": "Paper White", "canonical": "#FFFFFF", "tonalRamp": ["#0F1D2E", "#1F2F42", "#34465A", "#6B7A8C", "#A9B5C3", "#DBE2EB", "#F7F9FC", "#FFFFFF"] },
+      "border": { "role": "neutral", "displayName": "Hairline", "canonical": "#DBE2EB", "tonalRamp": ["#0F1D2E", "#1F2F42", "#34465A", "#6B7A8C", "#A9B5C3", "#DBE2EB", "#E4EAF1", "#F7F9FC"] },
+      "muted-foreground": { "role": "neutral", "displayName": "Muted Ink", "canonical": "#4A5A6D", "tonalRamp": ["#08121F", "#1F2F42", "#34465A", "#4A5A6D", "#6B7A8C", "#A9B5C3", "#DBE2EB", "#F7F9FC"] }
     },
     "typographyMeta": {
-      "display": {
-        "displayName": "Display",
-        "purpose": "Hero or page-level proof heading."
-      },
-      "headline": {
-        "displayName": "Headline",
-        "purpose": "Section-level statement and primary narrative turn."
-      },
-      "title": {
-        "displayName": "Title",
-        "purpose": "Card, process, and entry-path titles."
-      },
-      "body": {
-        "displayName": "Body",
-        "purpose": "Explanatory copy and reading content."
-      },
-      "label": {
-        "displayName": "Label",
-        "purpose": "Navigation, form labels, eyebrow cues, and action labels."
-      },
-      "technical": {
-        "displayName": "Technical",
-        "purpose": "IDs, timestamps, token names, file metadata, and machine-readable status values."
-      }
+      "display": { "displayName": "Display", "purpose": "Judul hero satu per halaman; 36/48/58px, weight 400." },
+      "heading": { "displayName": "Heading", "purpose": "Judul seksi; 30/38/46px, weight 400." },
+      "subheading": { "displayName": "Subheading", "purpose": "Judul kelompok di dalam seksi; 22/26px, weight 500." },
+      "body": { "displayName": "Body", "purpose": "Paragraf; 16/17px, measure maks 68ch." },
+      "lead": { "displayName": "Lead", "purpose": "text-lead: paragraf pengantar dan deskripsi seksi." },
+      "ui": { "displayName": "UI", "purpose": "text-ui: tombol, navigasi, label." },
+      "caption": { "displayName": "Caption", "purpose": "text-caption: isi kartu fakta dan keterangan." },
+      "ui-data": { "displayName": "UI Data", "purpose": "Angka dan data tabular." },
+      "editorial-accent": { "displayName": "Editorial Accent (legacy)", "purpose": "Nama role lama untuk layar auth sampai T49; bukan untuk permukaan baru." }
     },
     "shadows": [
-      {
-        "name": "card-quiet",
-        "value": "0 1px 2px rgb(15 23 42 / 0.06)",
-        "purpose": "Quiet separation for reusable evidence and operational cards."
-      },
-      {
-        "name": "floating",
-        "value": "0 16px 32px rgb(15 23 42 / 0.12), 0 2px 8px rgb(15 23 42 / 0.08)",
-        "purpose": "Temporary overlays and elevated process previews."
-      }
+      { "name": "shadow-card", "value": "0 1px 2px rgb(15 29 46 / 0.05)", "purpose": "Pemisah halus untuk kelompok record." },
+      { "name": "shadow-floating", "value": "0 16px 36px rgb(15 29 46 / 0.14), 0 2px 6px rgb(15 29 46 / 0.08)", "purpose": "Kartu fakta di atas bidang biru/panel maskot; menu, dialog, Sheet." }
     ],
     "motion": [
-      {
-        "name": "fast",
-        "value": "150ms",
-        "purpose": "Micro feedback and control states."
-      },
-      {
-        "name": "standard",
-        "value": "220ms",
-        "purpose": "Short movement and surface transitions."
-      },
-      {
-        "name": "ease-standard",
-        "value": "cubic-bezier(0.2, 0, 0, 1)",
-        "purpose": "Decelerated UI response."
-      },
-      {
-        "name": "ease-emphasis",
-        "value": "cubic-bezier(0.2, 0.8, 0.2, 1)",
-        "purpose": "Purposeful emphasis movement."
-      }
+      { "name": "duration-fast", "value": "150ms", "purpose": "Umpan balik state tombol dan link." },
+      { "name": "duration-normal", "value": "220ms", "purpose": "Transisi state standar." },
+      { "name": "ease-standard", "value": "cubic-bezier(0.2, 0, 0, 1)", "purpose": "Easing state kontrol." },
+      { "name": "ease-emphasis", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Kata berganti di hero, condong maskot, pergantian pose proses." },
+      { "name": "niuva-bob", "value": "2.4s ease-in-out x2, translate 0 -8px", "purpose": "Sapaan maskot hero, lalu diam sebelum 5 detik (WCAG 2.2.2); mati saat reduced motion." },
+      { "name": "fact-card-drift", "value": "translateY(-scrollY * 0.12 * depth)", "purpose": "Kartu fakta hero bergeser terhubung scroll; mati saat reduced motion." }
     ],
     "breakpoints": [
-      {
-        "name": "sm",
-        "value": "640px"
-      },
-      {
-        "name": "md",
-        "value": "768px"
-      },
-      {
-        "name": "lg",
-        "value": "1024px"
-      }
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
     ]
   },
   "components": [
     {
-      "name": "Primary Button",
-      "kind": "button",
-      "refersTo": "button-primary",
-      "description": "The direct next action, filled with Niuva Blue and paired with graphite text.",
-      "html": "<button class='ds-btn-primary' type='button'>Diskusikan Proyek</button>",
-      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; height: 2rem; gap: 0.375rem; padding: 0 0.625rem; border: 1px solid transparent; border-radius: var(--radius-control); background: var(--brand-500); color: var(--neutral-900); font: 500 0.875rem/1.25 var(--font-geist-sans), Arial, Helvetica, sans-serif; white-space: nowrap; transition: background-color 150ms cubic-bezier(0.2, 0, 0, 1), transform 150ms cubic-bezier(0.2, 0, 0, 1); } .ds-btn-primary:hover { background: color-mix(in oklch, var(--brand-500), transparent 20%); } .ds-btn-primary:focus-visible { border-color: var(--brand-500); outline: 3px solid color-mix(in srgb, var(--brand-500), transparent 50%); outline-offset: 0; } .ds-btn-primary:active { transform: translateY(1px); }"
-    },
-    {
       "name": "Outline Button",
       "kind": "button",
       "refersTo": "button-outline",
-      "description": "A lower-emphasis action with a quiet border and context-aware surface.",
-      "html": "<button class='ds-btn-outline' type='button'>Lihat cara kerja</button>",
-      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; height: 2rem; gap: 0.375rem; padding: 0 0.625rem; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--background); color: var(--foreground); font: 500 0.875rem/1.25 var(--font-geist-sans), Arial, Helvetica, sans-serif; white-space: nowrap; transition: background-color 150ms cubic-bezier(0.2, 0, 0, 1), color 150ms cubic-bezier(0.2, 0, 0, 1); } .ds-btn-outline:hover { background: var(--muted); color: var(--foreground); } .ds-btn-outline:focus-visible { border-color: var(--ring); outline: 3px solid color-mix(in srgb, var(--ring), transparent 50%); outline-offset: 0; }"
+      "description": "Tindakan publik default; selalu dipakai untuk Hubungi Kami di dasar terang.",
+      "html": "<a class=\"ds-btn-outline\" href=\"#\">Hubungi Kami</a>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 12px 24px; border-radius: 9999px; border: 1.5px solid color-mix(in srgb, var(--foreground, #0F1D2E) 85%, transparent); background: transparent; color: var(--foreground, #0F1D2E); font-family: Manrope, Arial, sans-serif; font-size: 15px; line-height: 1.4; font-weight: 600; text-decoration: none; transition: background-color 150ms cubic-bezier(0.2,0,0,1), color 150ms cubic-bezier(0.2,0,0,1); } .ds-btn-outline:hover { background: var(--foreground, #0F1D2E); color: var(--background, #F2F5F9); } .ds-btn-outline:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring, #4F7CA9) 50%, transparent); } .ds-btn-outline:active { transform: translateY(1px); }"
     },
     {
-      "name": "Evidence Card",
-      "kind": "card",
-      "refersTo": "evidence-card",
-      "description": "A quiet evidence container for capability, process, or project proof.",
-      "html": "<article class='ds-evidence-card'><p class='ds-eyebrow'>03 · Desain dan prototyping</p><h3>Desain dan prototyping</h3><p>Menerjemahkan konsep menjadi bentuk, detail, dan prototype yang dapat ditinjau bersama.</p><ul><li>Desain</li><li>Prototype</li></ul></article>",
-      "css": ".ds-evidence-card { display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem; overflow: hidden; border-radius: var(--radius-card); background: var(--card); color: var(--card-foreground); box-shadow: 0 0 0 1px rgb(15 23 42 / 0.10), var(--shadow-card-token); font: 400 0.875rem/1.5 var(--font-geist-sans), Arial, Helvetica, sans-serif; } .ds-evidence-card h3 { margin: 0; color: var(--card-foreground); font-size: 1rem; line-height: 1.25; font-weight: 500; } .ds-evidence-card p { margin: 0; color: var(--muted-foreground); } .ds-evidence-card .ds-eyebrow { color: var(--brand-700); font-size: 0.75rem; line-height: 1rem; font-weight: 500; } .ds-evidence-card ul { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.25rem 0 0; padding: 0; list-style: none; } .ds-evidence-card li { padding: 0.25rem 0.5rem; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--muted); color: var(--muted-foreground); font-size: 0.75rem; } .ds-evidence-card:hover { box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand-500), transparent 40%), var(--shadow-card-token); } .ds-evidence-card:focus-within { outline: 3px solid color-mix(in srgb, var(--ring), transparent 50%); outline-offset: 0; }"
+      "name": "onBrand Button",
+      "kind": "button",
+      "refersTo": "button-on-brand",
+      "description": "Outline putih di atas bidang Niuva Blue.",
+      "html": "<div class=\"ds-blue-field\"><a class=\"ds-btn-onbrand\" href=\"#\">Hubungi Kami</a></div>",
+      "css": ".ds-blue-field { padding: 32px; border-radius: 30px; background: radial-gradient(90% 120% at 78% 30%, #8EB2D3 0%, #4F7CA9 38%, #3D6893 70%, #2D5278 100%); } .ds-btn-onbrand { display: inline-flex; align-items: center; min-height: 44px; padding: 12px 24px; border-radius: 9999px; border: 1.5px solid #fff; color: #fff; background: transparent; font-family: Manrope, Arial, sans-serif; font-size: 15px; font-weight: 600; text-decoration: none; transition: background-color 150ms cubic-bezier(0.2,0,0,1), color 150ms cubic-bezier(0.2,0,0,1); } .ds-btn-onbrand:hover { background: #fff; color: #2D5278; } .ds-btn-onbrand:focus-visible { outline: none; box-shadow: 0 0 0 3px rgb(255 255 255 / 0.6); }"
     },
     {
-      "name": "Input Field",
-      "kind": "input",
-      "refersTo": "input",
-      "description": "A compact full-width field with visible focus and semantic invalid state.",
-      "html": "<label class='ds-field-label' for='ds-project-email'>Email</label><input class='ds-input' id='ds-project-email' type='email' placeholder='nama@contoh.com'>",
-      "css": ".ds-field-label { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; color: var(--foreground); font: 500 0.875rem/1.25 var(--font-geist-sans), Arial, Helvetica, sans-serif; } .ds-input { display: block; width: 100%; min-width: 0; height: 2rem; padding: 0 0.625rem; border: 1px solid var(--input); border-radius: var(--radius-control); background: transparent; color: var(--foreground); font: 400 0.875rem/1.25 var(--font-geist-sans), Arial, Helvetica, sans-serif; transition: border-color 150ms cubic-bezier(0.2, 0, 0, 1), box-shadow 150ms cubic-bezier(0.2, 0, 0, 1); } .ds-input::placeholder { color: var(--muted-foreground); } .ds-input:hover { border-color: var(--brand-400); } .ds-input:focus-visible { border-color: var(--ring); outline: 3px solid color-mix(in srgb, var(--ring), transparent 50%); outline-offset: 0; } .ds-input[aria-invalid='true'] { border-color: var(--destructive); outline-color: color-mix(in srgb, var(--destructive), transparent 80%); } .ds-input:disabled { cursor: not-allowed; opacity: 0.5; }"
-    },
-    {
-      "name": "Outline Badge",
-      "kind": "chip",
-      "refersTo": "badge-outline",
-      "description": "A compact status or metadata label; it annotates rather than carries action.",
-      "html": "<span class='ds-badge' role='status'>Project</span>",
-      "css": ".ds-badge { display: inline-flex; align-items: center; justify-content: center; height: 1.25rem; gap: 0.25rem; padding: 0 0.5rem; border: 1px solid var(--border); border-radius: var(--radius-pill); background: transparent; color: var(--foreground); font: 500 0.75rem/1rem var(--font-geist-sans), Arial, Helvetica, sans-serif; white-space: nowrap; transition: background-color 150ms cubic-bezier(0.2, 0, 0, 1), color 150ms cubic-bezier(0.2, 0, 0, 1); } .ds-badge:hover { background: var(--muted); color: var(--muted-foreground); } .ds-badge:focus-visible { border-color: var(--ring); outline: 3px solid color-mix(in srgb, var(--ring), transparent 50%); outline-offset: 0; } .ds-badge[data-tone='success'] { border-color: var(--success-border); background: var(--success-background); color: var(--success); } .ds-badge[data-tone='warning'] { border-color: var(--warning-border); background: var(--warning-background); color: var(--warning); } .ds-badge[data-tone='error'] { border-color: var(--destructive-border); background: var(--destructive-background); color: var(--destructive); }"
-    },
-    {
-      "name": "Navigation",
-      "kind": "nav",
+      "name": "Filled Button",
+      "kind": "button",
       "refersTo": "button-primary",
-      "description": "A dark, focused header with muted links and one clear primary action.",
-      "html": "<header class='ds-nav'><a class='ds-nav-logo' href='#'>Niuva</a><nav aria-label='Navigasi utama'><a href='#services'>Layanan</a><a href='#process'>Cara kerja</a><a href='#paths'>Pilih jalur</a><a class='ds-nav-action' href='#next-step'>Diskusikan Proyek</a></nav></header>",
-      "css": ".ds-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 2rem; padding: 1rem 2rem; border-bottom: 1px solid var(--neutral-700); background: var(--neutral-900); color: var(--neutral-50); font: 400 0.875rem/1.25 var(--font-geist-sans), Arial, Helvetica, sans-serif; } .ds-nav-logo { color: var(--neutral-50); font-weight: 600; text-decoration: none; } .ds-nav nav { display: flex; flex: 1; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 1.25rem; } .ds-nav nav > a:not(.ds-nav-action) { color: var(--neutral-300); text-decoration: none; transition: color 150ms cubic-bezier(0.2, 0, 0, 1); } .ds-nav nav > a:not(.ds-nav-action):hover { color: var(--neutral-50); } .ds-nav a:focus-visible { outline: 3px solid color-mix(in srgb, var(--brand-300), transparent 50%); outline-offset: 2px; } .ds-nav-action { display: inline-flex; align-items: center; min-height: 2rem; padding: 0 0.625rem; border-radius: var(--radius-control); background: var(--brand-500); color: var(--neutral-900); font-weight: 500; text-decoration: none; } .ds-nav-action:hover { background: color-mix(in oklch, var(--brand-500), transparent 20%); }"
+      "description": "Varian terisi untuk area transaksi dan Admin; tidak untuk Hubungi Kami.",
+      "html": "<button class=\"ds-btn-primary\">Lanjutkan</button>",
+      "css": ".ds-btn-primary { min-height: 44px; padding: 12px 24px; border-radius: 9999px; border: none; background: var(--primary, #3D6893); color: #fff; font-family: Manrope, Arial, sans-serif; font-size: 15px; font-weight: 600; transition: background-color 150ms cubic-bezier(0.2,0,0,1); } .ds-btn-primary:hover { background: var(--brand-800, #2D5278); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring, #4F7CA9) 50%, transparent); }"
     },
     {
-      "name": "Status Notice",
-      "kind": "custom",
-      "refersTo": "badge-outline",
-      "description": "A semantic state notice that pairs a reason with a recoverable next action.",
-      "html": "<div class='ds-status-notice ds-status-notice--info' role='status'><svg aria-hidden='true' viewBox='0 0 24 24'><circle cx='12' cy='12' r='9'></circle><path d='M12 10v6'></path><path d='M12 7h.01'></path></svg><div><strong>Informasi</strong><p>Review operator akan dilanjutkan setelah berkas diterima.</p><button class='ds-btn-outline' type='button'>Lihat detail</button></div></div>",
-      "css": ".ds-status-notice { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.75rem; padding: 1rem; border: 1px solid; border-radius: var(--radius-control); font: 400 0.875rem/1.5 var(--font-geist-sans), Arial, Helvetica, sans-serif; } .ds-status-notice svg { width: 1.25rem; height: 1.25rem; margin-top: 0.125rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.75; } .ds-status-notice strong { display: block; margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 600; } .ds-status-notice p { margin: 0; color: currentColor; } .ds-status-notice .ds-btn-outline { margin-top: 0.5rem; border-color: currentColor; background: transparent; color: currentColor; } .ds-status-notice--info { border-color: var(--info-border); background: var(--info-background); color: var(--info); } .ds-status-notice--success { border-color: var(--success-border); background: var(--success-background); color: var(--success); } .ds-status-notice--warning { border-color: var(--warning-border); background: var(--warning-background); color: var(--warning); } .ds-status-notice--error { border-color: var(--destructive-border); background: var(--destructive-background); color: var(--destructive); }"
+      "name": "Door Card",
+      "kind": "card",
+      "refersTo": "content-surface",
+      "description": "Kartu titik mulai di bawah bidang hero: Layanan, Custom 3D Print, Toko.",
+      "html": "<a class=\"ds-door\" href=\"#\"><span><span class=\"ds-door-title\">Custom 3D Print</span><span class=\"ds-door-desc\">Kirim model untuk direview</span></span><svg class=\"ds-door-arrow\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg></a>",
+      "css": ".ds-door { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 24px; border: 1px solid var(--border, #DBE2EB); border-radius: 22px; background: #fff; color: var(--foreground, #0F1D2E); text-decoration: none; font-family: Manrope, Arial, sans-serif; transition: border-color 200ms, translate 200ms; } .ds-door:hover { border-color: #6390BB; translate: 0 -2px; } .ds-door:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, #4F7CA9 50%, transparent); } .ds-door-title { display: block; font-size: 18px; font-weight: 600; } .ds-door-desc { display: block; margin-top: 2px; font-size: 14px; color: #4A5A6D; } .ds-door-arrow { color: #3D6893; transition: transform 200ms; } .ds-door:hover .ds-door-arrow { transform: translateX(4px); }"
     },
     {
-      "name": "Action Queue Item",
-      "kind": "custom",
-      "refersTo": "evidence-card",
-      "description": "An operational card that makes kind, reference, status, and next action scannable.",
-      "html": "<article class='ds-queue-item'><div class='ds-queue-head'><div><p>Project brief</p><h3>Review inquiry baru</h3></div><span class='ds-badge' data-tone='warning'>Menunggu tindakan</span></div><code>INQ-2026-001</code><p class='ds-queue-time'><svg aria-hidden='true' viewBox='0 0 24 24'><circle cx='12' cy='12' r='9'></circle><path d='M12 7v5l3 2'></path></svg>Diperbarui hari ini</p><footer><button class='ds-btn-primary' type='button'>Buka review</button></footer></article>",
-      "css": ".ds-queue-item { display: flex; flex-direction: column; gap: 0.75rem; overflow: hidden; border-radius: var(--radius-card); background: var(--card); color: var(--card-foreground); box-shadow: 0 0 0 1px rgb(15 23 42 / 0.10), var(--shadow-card-token); font: 400 0.875rem/1.5 var(--font-geist-sans), Arial, Helvetica, sans-serif; } .ds-queue-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; padding: 1rem 1rem 0; } .ds-queue-head p { margin: 0; color: var(--brand-700); font-size: 0.75rem; font-weight: 500; } .ds-queue-head h3 { margin: 0.25rem 0 0; font-size: 0.875rem; line-height: 1.375; font-weight: 600; } .ds-queue-item > code { padding: 0 1rem; color: var(--foreground); font: 500 0.75rem/1.25 var(--font-geist-mono), ui-monospace, monospace; } .ds-queue-time { display: flex; align-items: center; gap: 0.375rem; margin: 0; padding: 0 1rem; color: var(--muted-foreground); font-size: 0.75rem; } .ds-queue-time svg { width: 0.875rem; height: 0.875rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.75; } .ds-queue-item footer { display: flex; gap: 0.5rem; padding: 0.75rem 1rem; border-top: 1px solid var(--border); background: color-mix(in srgb, var(--muted), transparent 20%); } .ds-queue-item:hover { box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand-500), transparent 40%), var(--shadow-card-token); }"
+      "name": "Fact Card",
+      "kind": "card",
+      "refersTo": "fact-card",
+      "description": "Fakta produk nyata yang mengambang di atas bidang maskot.",
+      "html": "<div class=\"ds-fact\"><p class=\"ds-fact-title\">Kirim STL, 3MF, atau OBJ</p><p class=\"ds-fact-body\">Setiap model direview operator sebelum quote dikirim.</p></div>",
+      "css": ".ds-fact { width: 264px; padding: 16px; border-radius: 12px; background: #fff; color: #0F1D2E; box-shadow: 0 16px 36px rgb(15 29 46 / 0.14), 0 2px 6px rgb(15 29 46 / 0.08); font-family: Manrope, Arial, sans-serif; } .ds-fact-title { margin: 0; font-size: 16px; font-weight: 600; } .ds-fact-body { margin: 4px 0 0; font-size: 13.5px; line-height: 1.45; color: #4A5A6D; }"
     },
     {
-      "name": "Private File Upload",
+      "name": "Public Navigation Link",
+      "kind": "nav",
+      "description": "Link header pill dengan garis bawah brand-600 pada halaman aktif.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-link\" aria-current=\"page\" href=\"#\">Layanan</a><a class=\"ds-nav-link\" href=\"#\">Proyek</a><a class=\"ds-nav-link\" href=\"#\">Toko</a></nav>",
+      "css": ".ds-nav { display: flex; gap: 8px; padding: 12px; background: rgb(242 245 249 / 0.85); backdrop-filter: blur(12px); font-family: Manrope, Arial, sans-serif; } .ds-nav-link { position: relative; display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 9999px; font-size: 15px; font-weight: 500; color: rgb(15 29 46 / 0.8); text-decoration: none; transition: color 150ms; } .ds-nav-link:hover { color: #0F1D2E; } .ds-nav-link:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, #4F7CA9 50%, transparent); } .ds-nav-link::after { content: ''; position: absolute; left: 12px; right: 12px; bottom: 6px; height: 2px; border-radius: 9999px; background: #4F7CA9; opacity: 0; } .ds-nav-link[aria-current='page'] { color: #0F1D2E; } .ds-nav-link[aria-current='page']::after { opacity: 1; }"
+    },
+    {
+      "name": "Service Row List",
       "kind": "custom",
-      "refersTo": "input",
-      "description": "A dashed private-file boundary with visible processing, accepted, and recovery states.",
-      "html": "<label class='ds-upload'><span class='ds-upload-icon'><svg aria-hidden='true' viewBox='0 0 24 24'><path d='M12 16V4'></path><path d='m7 9 5-5 5 5'></path><path d='M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3'></path></svg></span><span><strong>Pilih satu berkas untuk memulai pemeriksaan.</strong><small>STL, 3MF, OBJ · batas ukuran</small></span></label>",
-      "css": ".ds-upload { display: flex; align-items: center; gap: 0.75rem; min-height: 7rem; padding: 1rem; border: 1px dashed var(--border); border-radius: var(--radius-card); background: color-mix(in srgb, var(--muted), transparent 40%); color: var(--foreground); font: 400 0.875rem/1.5 var(--font-geist-sans), Arial, Helvetica, sans-serif; cursor: pointer; transition: border-color 150ms cubic-bezier(0.2, 0, 0, 1), background-color 150ms cubic-bezier(0.2, 0, 0, 1); } .ds-upload:hover { border-color: var(--brand-300); background: var(--brand-50); } .ds-upload:focus-within { border-color: var(--ring); outline: 3px solid color-mix(in srgb, var(--ring), transparent 50%); outline-offset: 0; } .ds-upload-icon { display: inline-flex; align-items: center; justify-content: center; width: 2.5rem; height: 2.5rem; flex: 0 0 auto; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--background); color: var(--brand-700); } .ds-upload-icon svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.75; } .ds-upload strong, .ds-upload small { display: block; } .ds-upload strong { font-weight: 500; } .ds-upload small { margin-top: 0.25rem; color: var(--muted-foreground); font-size: 0.75rem; }"
+      "refersTo": "content-surface",
+      "description": "Daftar layanan dalam satu permukaan putih radius media, baris dipisah hairline.",
+      "html": "<div class=\"ds-rows\"><a class=\"ds-row\" href=\"#\"><span class=\"ds-row-title\">Research &amp; Development</span><span class=\"ds-row-desc\">Menelusuri kebutuhan, batasan, dan arah teknis.</span></a><a class=\"ds-row\" href=\"#\"><span class=\"ds-row-title\">Design &amp; Prototyping</span><span class=\"ds-row-desc\">Menerjemahkan ide menjadi artefak yang dapat diiterasi.</span></a></div>",
+      "css": ".ds-rows { overflow: hidden; border: 1px solid #DBE2EB; border-radius: 30px; background: #fff; font-family: Manrope, Arial, sans-serif; } .ds-row { display: grid; grid-template-columns: 16rem 1fr; gap: 28px; align-items: center; padding: 28px 36px; border-top: 1px solid #DBE2EB; color: #0F1D2E; text-decoration: none; transition: background-color 150ms; } .ds-row:first-child { border-top: 0; } .ds-row:hover { background: #F7F9FC; } .ds-row:focus-visible { outline: none; box-shadow: inset 0 0 0 3px color-mix(in srgb, #4F7CA9 50%, transparent); } .ds-row-title { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; } .ds-row-desc { font-size: 16px; line-height: 1.55; color: #4A5A6D; }"
     }
   ],
   "narrative": {
-    "northStar": "The Precision Workshop",
-    "overview": "The incumbent system treats the interface like a working design-engineering bench: calm enough to inspect, structured enough to act, and specific enough to show how an idea becomes a product. A light-first foundation provides the open work surface; explicit dark zones create a focused working surface for positioning and process. Niuva Blue is a measured signal for action, identity, and emphasis rather than a decorative wash.\n\nThe visual voice is quiet, precise, human, and evidence-led. Its character comes from clear hierarchy, process markers, technical metadata, and real artefacts—not from generic technology decoration. The system must stay recognizably Niuva while resisting generic SaaS composition, AI-slop patterns, gradients, glassmorphism, neon or glow effects, decorative blobs, oversized pills, and unmotivated 3D.",
+    "northStar": "Ide → Produk jadi, dibawa maskot Niuva.",
+    "overview": "Niuva adalah partner pengembangan produk dengan kapabilitas manufaktur; dunianya terang, tenang, dan ramah. Dasar biru-dingin yang terang menampung permukaan putih membulat di atas hairline; satu bidang Niuva Blue menjadi satu-satunya warna jenuh, dan di sanalah maskot Niuva (render Blender milik Owner) berdiri bersama fakta nyata dalam kartu putih. Judul ringan (Manrope 400) membiarkan isi dan maskot yang berbicara; tindakan berbentuk pill outline.\n\nDunia ini menolak dua default kategori: hero foto proyek dan split gelap ala SaaS. Ilustrasi hanyalah maskot Niuva — tidak ada 3D realtime, tidak ada ilustrasi stok, tidak ada foto proyek di beranda. Foto proyek tetap bukti utama di `/projects`; foto produk tetap milik Toko.",
     "keyCharacteristics": [
-      "Light-first surfaces with deliberate dark working zones.",
-      "Measured blue signal against cool paper and slate graphite.",
-      "Structured asymmetric grids that preserve reading and action paths.",
-      "Sans-first human-facing type with mono reserved for technical values.",
-      "Evidence, process, and outcome before technology spectacle."
+      "Dasar `background` biru-dingin terang, tinta `foreground` biru-gelap, hairline `border`.",
+      "Satu bidang Niuva Blue (gradien `brand-400`→`brand-800`) per layar sebagai panggung maskot dan tindakan utama.",
+      "Permukaan putih membulat 12/22/30px; shadow hanya pada kartu yang mengambang di atas bidang berwarna.",
+      "Manrope untuk setiap peran: 400 untuk judul, 500–600 untuk UI.",
+      "Tindakan pill outline; \"Hubungi Kami\" (WhatsApp B2B) selalu outline.",
+      "Render maskot sebagai satu-satunya ilustrasi, dengan gerak ringan yang berhenti total saat reduced motion."
     ],
     "rules": [
-      {
-        "name": "The Evidence Before Ornament Rule",
-        "body": "Every visual motif should help a visitor understand a real capability, process, decision, or state.",
-        "section": "overview"
-      },
-      {
-        "name": "The Measured Accent Rule",
-        "body": "Niuva Blue earns attention through scarcity and placement; it should identify the next useful action, not tint every surface.",
-        "section": "colors"
-      },
-      {
-        "name": "The Human-First Type Rule",
-        "body": "Do not use mono, forced uppercase, or tracking as decoration; type treatment must clarify whether content is human-facing or technical.",
-        "section": "typography"
-      },
-      {
-        "name": "The Flat-By-Default Rule",
-        "body": "A surface earns elevation only when it is a card, overlay, or interaction state; do not add a shadow to make an otherwise empty composition feel finished.",
-        "section": "elevation"
-      }
+      { "name": "The One Blue Field Rule", "body": "Warna jenuh hanya muncul sebagai satu bidang Niuva Blue (hero, penutup) atau aksen kecil (garis aktif, badge). Seksi lain tetap di dasar terang atau putih.", "section": "colors" },
+      { "name": "The Locked Logo Rule", "body": "`--brand-500` (#6390BB) adalah nilai logo; jangan menggeser, mencampur, atau memakainya sebagai teks normal.", "section": "colors" },
+      { "name": "The Light Heading Rule", "body": "`display` dan `heading` memakai weight 400; penekanan datang dari ukuran dan ruang, bukan bobot. Satu-satunya pengecualian adalah kata berganti di hero (600).", "section": "typography" },
+      { "name": "The Named Size Rule", "body": "Ukuran di luar skala Tailwind memakai `text-caption`/`text-ui`/`text-lead` atau role di `typography.ts`; jangan menulis ukuran px arbitrer di komponen bersama.", "section": "typography" },
+      { "name": "The Float-Only-On-Color Rule", "body": "Kartu putih di dasar terang cukup dengan hairline; shadow floating hanya untuk kartu di atas bidang biru, panel maskot, atau overlay.", "section": "elevation" },
+      { "name": "The Outline Contact Rule", "body": "\"Hubungi Kami\" (WhatsApp B2B, `B2BContactLink`) selalu outline — `outline` di dasar terang, `onBrand` di bidang biru, `link` di footer — tidak pernah tombol terisi.", "section": "components" }
     ],
     "dos": [
-      "Do lead with the product outcome, project evidence, or next decision before exposing technology detail.",
-      "Do use the existing Niuva token roles and component contracts so public, checkout, and admin surfaces share an identity while retaining their appropriate density.",
-      "Do use real project, workshop, process, material, and product evidence when imagery or case-study content is available.",
-      "Do preserve visible keyboard focus, descriptive states, reduced-motion behavior, and readable contrast.",
-      "Do let asymmetry, labels, and process structure create character where a generic card grid would flatten the story."
+      "**Do** gunakan semantic token dan ukuran bernama (`text-caption`, `text-ui`, `text-lead`, role `typography.ts`) alih-alih nilai px arbitrer; test permukaan menolak warna literal dan px arbitrer di kelas komponen bersama.",
+      "**Do** satukan warna jenuh pada satu bidang Niuva Blue dengan teks putih dan tindakan `onBrand`.",
+      "**Do** letakkan fakta nyata di kartu putih yang mengambang di atas bidang maskot.",
+      "**Do** gunakan pill outline untuk tindakan publik dan selalu outline untuk \"Hubungi Kami\".",
+      "**Do** pakai render maskot Owner sebagai ilustrasi, dengan alt yang menjelaskan pose atau alt kosong bila dekoratif.",
+      "**Do** matikan semua gerak nonesensial saat reduced motion dan pertahankan penyampaian state."
     ],
     "donts": [
-      "Don't default to generic SaaS hero layouts, indiscriminate card grids, decorative blobs, gradients, glassmorphism, neon, glow, or unmotivated 3D.",
-      "Don't use technical motifs that do not explain a real Niuva process, material, decision, or state.",
-      "Don't fabricate client outcomes, testimonials, metrics, inventory, pricing decisions, or visual evidence.",
-      "Don't turn every action into a pill or every surface into a floating card.",
-      "Don't use typography, color, or motion as decoration when it reduces scanability or obscures the next action."
+      "**Don't** menaruh foto proyek di beranda (keputusan Owner 31 Oktober); foto proyek tinggal di `/projects`.",
+      "**Don't** menambah 3D realtime, ilustrasi stok, atau ilustrasi selain maskot Niuva.",
+      "**Don't** membuat bidang jenuh kedua atau gradien di luar bidang Niuva Blue dan panggung proses.",
+      "**Don't** memakai tombol terisi untuk \"Hubungi Kami\" atau menyalakan kembali form brief/inquiry B2B.",
+      "**Don't** menebalkan judul `display`/`heading` di atas 400 atau membawa kembali Space Grotesk/Fraunces.",
+      "**Don't** menciptakan klien, outcome, harga, stok, testimoni, atau spesifikasi tanpa sumber; contoh harus diberi label contoh."
     ]
   }
 }

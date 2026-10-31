@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Space_Grotesk } from "next/font/google";
+import { Manrope } from "next/font/google";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PublicPageViewCollector } from "@/components/niuva/public-page-view-collector";
@@ -9,17 +9,9 @@ import { PublicSiteInformationProvider } from "@/components/niuva/public-site-in
 
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({
+const manrope = Manrope({
   display: "swap",
-  variable: "--font-public-sans",
-  subsets: ["latin"],
-  weight: "variable",
-});
-
-const fraunces = Fraunces({
-  axes: ["opsz"],
-  display: "swap",
-  variable: "--font-public-editorial",
+  variable: "--font-niuva-sans",
   subsets: ["latin"],
   weight: "variable",
 });
@@ -31,7 +23,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="id"
-      className={`${spaceGrotesk.variable} ${fraunces.variable} h-full antialiased`}
+      className={`${manrope.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <TooltipProvider>

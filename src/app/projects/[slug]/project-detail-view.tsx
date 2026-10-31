@@ -5,6 +5,7 @@ import { PublicShell } from "@/components/niuva/public-shell";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Icon } from "@/components/ui/Icon";
 import { publicServices } from "@/features/public/company-content";
+import { ProjectTitle } from "@/features/public/project-title-view";
 import type { PreviewScenario, ProjectPreviewItem } from "@/features/frontend-preview/types";
 
 type StorySection = Readonly<{ title: string; body: string }>;
@@ -34,7 +35,8 @@ export function ProjectDetailView({ project, scenario }: Readonly<{
     <PublicShell scope="project-detail" contactService={publicServices.find(service => service.slug === serviceSlug)?.title}>
       <main className="mx-auto max-w-public px-5 py-10 sm:px-8 sm:py-14" id="main-content">
         <NiuvaLink className="min-h-11" href={`/projects${previewSuffix}`} size="sm" variant="outline">
-          ← Semua projects{scenario === "examples" ? " contoh" : ""}
+          <Icon aria-hidden="true" className="size-4" name="arrow-left" />
+          Semua proyek{scenario === "examples" ? " contoh" : ""}
         </NiuvaLink>
 
         {isPreview && (
@@ -45,8 +47,8 @@ export function ProjectDetailView({ project, scenario }: Readonly<{
 
         <div className="grid gap-8 py-9 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.7fr)] lg:items-end">
           <div>
-            <p className="text-sm text-brand-700">{project.serviceLabel}</p>
-            <h1 className={`${type.display.className} mt-4`}>{project.title}</h1>
+            <h1 className={type.display.className}><ProjectTitle qualifierClassName="mt-3 text-2xl tracking-normal" title={project.title} /></h1>
+            <p className="mt-3 text-ui text-muted-foreground">{project.serviceLabel}</p>
             {(project.year || project.tags.length > 0) && (
               <div className="mt-5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 {project.year && <span className="rounded-md border border-border px-2 py-1">{project.year}</span>}

@@ -1,70 +1,108 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { B2BContactLink } from "@/components/niuva/b2b-contact-link";
-
 import { typographySystemTokens } from "@/design/typography";
-import { EvidenceCard } from "@/components/niuva";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Icon } from "@/components/ui/Icon";
 import { getProjectPreview } from "@/features/frontend-preview/server";
 import { publicCompanyProfile, publicServices } from "@/features/public/company-content";
+import { ProjectTitle } from "@/features/public/project-title-view";
 import { buildPageSocialMetadata } from "@/lib/site-metadata";
-import { cn } from "@/lib/utils";
 import { getPublicSiteInformation } from "@/modules/site-information/public-reader";
+import { DriftCard, HeroStageWord, LeaningMascot, ProcessScene, type ProcessStage } from "./home-motion";
+import { StartingPoints, type StartingPath } from "./home-starting-points";
 
-const processSteps = [
-  {
-    number: "01",
-    name: "Idea",
-    description: "Tujuan, konteks, dan batasan awal menjadi dasar keputusan.",
-  },
-  {
-    number: "02",
-    name: "Design",
-    description: "Arah produk diterjemahkan menjadi bentuk dan detail yang dapat ditinjau.",
-  },
-  {
-    number: "03",
-    name: "Prototype",
-    description: "Konsep diuji melalui iterasi yang membuat hal penting terlihat lebih awal.",
-  },
-  {
-    number: "04",
-    name: "Finished Product",
-    description: "Hasil dikembangkan menuju produk nyata dengan dukungan manufaktur yang relevan.",
-  },
+const headingToken = typographySystemTokens.heading.className;
+
+// The approved headline ends with "prototipe."; the visual word cycles through the
+// promise (Owner Q23, 31 Oct 2026) while the heading keeps the approved text for AT.
+const headlineLead = "Mitra pengembangan produk dari riset hingga";
+const stageWords = ["prototipe", "desain", "produk nyata"] as const;
+
+const mascot = {
+  halo: "/assets/mascot/niuva-mascot-halo.webp",
+  collaborate: "/assets/mascot/niuva-mascot-collaborate.webp",
+  design: "/assets/mascot/niuva-mascot-design.webp",
+  present: "/assets/mascot/niuva-mascot-present.webp",
+  build: "/assets/mascot/niuva-mascot-build.webp",
+  victory: "/assets/mascot/niuva-mascot-victory.webp",
+  idea: "/assets/mascot/niuva-mascot-idea.webp",
+} as const;
+
+const processStages: readonly ProcessStage[] = [
+  { title: "Ide", description: "Tujuan, konteks pengguna, dan batasan awal dipetakan bersama.", image: mascot.idea, alt: "Maskot Niuva tersenyum menunjuk ke atas, ke bohlam menyala dan tanda tanya di atas kepala" },
+  { title: "Desain", description: "Arah produk diterjemahkan menjadi bentuk dan detail yang dapat ditinjau.", image: mascot.design, alt: "Maskot Niuva memegang laptop" },
+  { title: "Prototipe", description: "Konsep diuji melalui iterasi fisik, termasuk cetak 3D di workshop.", image: mascot.build, alt: "Maskot Niuva memegang kunci inggris" },
+  { title: "Produk jadi", description: "Hasil dikembangkan menuju produk nyata dengan dukungan manufaktur yang relevan.", image: mascot.victory, alt: "Maskot Niuva mengangkat kedua tangan" },
+];
+
+const doors = [
+  { href: "/services", title: "Layanan", description: "Diskusikan kebutuhan proyek B2B" },
+  { href: "/custom-print", title: "Custom 3D Print", description: "Kirim model untuk direview" },
+  { href: "/shop", title: "Toko", description: "Produk ready-made" },
 ] as const;
 
-const displayToken = typographySystemTokens.display.className;
-const headingToken = typographySystemTokens.heading.className;
-const subheadingToken = typographySystemTokens.subheading.className;
+const factCard = "w-66 rounded-[var(--radius-control)] bg-card p-4 text-foreground shadow-floating";
+const bubble = "absolute max-w-64 rounded-xl bg-card p-3.5 text-caption leading-[1.45] shadow-floating";
 
-function SectionMarker({ children, className }: { children: ReactNode; className?: string }) {
-  return (
-    <p className={cn("font-body text-sm font-medium text-brand-700", className)}>
-      {children}
-    </p>
-  );
-}
-
-function PathArrow() {
-  return <Icon aria-hidden="true" className="size-4" name="arrow-up-right" />;
-}
+const startingPaths: readonly StartingPath[] = [
+  {
+    id: "idea",
+    label: "Ide atau proyek",
+    title: "Punya ide atau proyek?",
+    description: "Ceritakan tujuan, tahap saat ini, dan bahan awal Anda. Tim Niuva membahas kebutuhan, ruang lingkup, dan langkah berikutnya langsung lewat WhatsApp.",
+    action: <B2BContactLink />,
+    image: mascot.collaborate,
+    alt: "Maskot Niuva menunjuk ke depan",
+    notes: (
+      <>
+        <p className={`${bubble} top-6 left-6`}>Contoh: “Kami butuh prototipe casing untuk perangkat baru.”</p>
+        <p className={`${bubble} right-6 bottom-8`}>Niuva: “Bisa. Kirim sketsa atau CAD-nya, kita bahas ruang lingkupnya dulu.”</p>
+      </>
+    ),
+  },
+  {
+    id: "model",
+    label: "Model 3D",
+    title: "Sudah punya model 3D?",
+    description: "Unggah STL, 3MF, atau OBJ secara privat. Operator memeriksa model dan hasil slicing sebelum quote dikirim, jadi Anda menyetujui harga yang sudah diverifikasi.",
+    action: <NiuvaLink href="/custom-print" variant="outline">Ajukan untuk Review</NiuvaLink>,
+    image: mascot.design,
+    alt: "Maskot Niuva memegang laptop",
+    notes: (
+      <>
+        <div className="absolute top-6 left-6 min-w-60 rounded-xl bg-card p-3.5 text-caption shadow-floating">
+          <div className="flex items-center gap-2.5"><span><b className="font-semibold">casing-v2.stl</b> <span className="text-muted-foreground">(contoh)</span></span><span className="ml-auto rounded-full bg-warning-background px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-warning">Perlu review</span></div>
+        </div>
+        <p className={`${bubble} right-6 bottom-8`}>Estimasi awal, bukan harga final.</p>
+      </>
+    ),
+  },
+  {
+    id: "shop",
+    label: "Produk siap pakai",
+    title: "Cari produk siap pakai?",
+    description: "Pilih produk ready-made dan variannya di Toko. Harga, stok, dan ongkir diperiksa ulang saat checkout.",
+    action: <NiuvaLink href="/shop" variant="outline">Lihat Toko</NiuvaLink>,
+    image: mascot.present,
+    alt: "Maskot Niuva memegang tablet",
+    notes: <p className={`${bubble} top-6 left-6`}>Varian, harga, dan stok tampil di setiap produk sebelum Anda menambah ke keranjang.</p>,
+  },
+];
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteInformation = await getPublicSiteInformation();
   return {
-  title: "Niuva",
-  description: siteInformation.shortDescription,
-  ...buildPageSocialMetadata({
     title: "Niuva",
     description: siteInformation.shortDescription,
-    path: "/",
-  }),
-  robots: { follow: true, index: true },
+    ...buildPageSocialMetadata({
+      title: "Niuva",
+      description: siteInformation.shortDescription,
+      path: "/",
+    }),
+    robots: { follow: true, index: true },
   };
 }
 
@@ -72,385 +110,125 @@ export async function generateMetadata(): Promise<Metadata> {
 // literal. `revalidatePath("/")` in admin actions invalidates this entry.
 export const revalidate = 300;
 
+function ArrowRight() {
+  return <Icon aria-hidden="true" className="size-5 shrink-0 text-brand-700 transition-transform duration-200 group-hover:translate-x-1" name="arrow-right" />;
+}
+
 export default async function Home() {
   const siteInformation = await getPublicSiteInformation();
   // Portfolio evidence is additive; a database outage must not take down the
   // company narrative and the primary contact paths on the homepage.
   const { projects } = await getProjectPreview(undefined).catch(() => ({ projects: [] as const }));
-  const selectedProjects = projects
-    .filter((project) => project.detailReadiness !== "card-only")
-    .slice(0, 3);
-  const heroProject = selectedProjects.find((project) => project.media.some((media) => media.url));
-  const heroMedia = heroProject?.media.find((media) => media.url);
-
-  const capabilityCards = publicServices.map((service, index) => ({
-    actionLabel: "Tinjau layanan",
-    description: service.websiteFraming,
-    eyebrow: `Layanan ${index + 1} / ${publicServices.length}`,
-    href: `/services#${service.slug}`,
-    meta: service.tags,
-    title: service.title,
-  }));
+  const listedProjects = projects.filter((project) => project.detailReadiness !== "card-only").slice(0, 4);
 
   return (
     <PublicShell scope="homepage">
-      <main id="main-content">
+      {/* --panel-inset puts text inside the edge-to-edge panels on the header's content gutter. */}
+      <main className="@container [--panel-inset:max(1.5rem,calc((100cqw_-_81rem)/2_+_1.5rem))]" id="main-content">
         <section
           aria-labelledby="hero-title"
-          className="dark scroll-mt-6 overflow-hidden bg-background text-foreground"
+          className="relative mx-3 overflow-hidden rounded-[var(--radius-media)] bg-[radial-gradient(130%_70%_at_50%_100%,var(--brand-400)_0%,var(--brand-600)_32%,var(--brand-700)_62%,var(--brand-800)_100%)] lg:bg-[radial-gradient(70%_110%_at_80%_35%,var(--brand-400)_0%,var(--brand-600)_30%,var(--brand-700)_58%,var(--brand-800)_100%)] xl:bg-[radial-gradient(52%_105%_at_83%_38%,var(--brand-400)_0%,var(--brand-600)_30%,var(--brand-700)_58%,var(--brand-800)_100%)] text-white sm:mx-6 lg:h-155"
           data-home-section="hero"
           id="hero"
         >
-          <div className="mx-auto max-w-public px-5 sm:px-8">
-            <div className={cn("grid gap-8 py-10 sm:py-14 lg:items-center lg:gap-12", heroProject && "lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]")}>
-              <div className="max-w-3xl">
-                <SectionMarker className="text-brand-300">
-                  Niuva · mitra pengembangan produk
-                </SectionMarker>
-                <h1
-                  className={`${displayToken} mt-4 max-w-4xl text-neutral-50`}
-                  id="hero-title"
-                >
-                  {publicCompanyProfile.headline}
-                </h1>
-                <p className="mt-4 max-w-2xl text-base leading-7 text-neutral-300 sm:text-lg sm:leading-8">
-                  {siteInformation.shortDescription}
-                </p>
-                <div className="mt-6 flex flex-wrap items-center gap-3">
-                  <B2BContactLink />
-                  <Link
-                    className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-neutral-600 px-4 text-sm font-medium text-neutral-50 transition-colors hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                    href="#project-proof"
-                  >
-                    Lihat bukti proyek
-                    <Icon aria-hidden="true" className="size-4" name="arrow-right" />
-                  </Link>
-                </div>
-              </div>
-
-              {heroProject && heroMedia?.url ? <Link
-                className="group block rounded-xl border border-neutral-700 bg-card p-3 text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand-300 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
-                href={`/projects/${heroProject.slug}`}
-              >
-                <figure>
-                  <div className="relative aspect-[5/4] overflow-hidden rounded-lg bg-white">
-                    <Image
-                      alt={heroMedia.altText}
-                      className="object-contain"
-                      fill
-                      priority
-                      sizes="(min-width: 1024px) 45vw, 100vw"
-                      src={heroMedia.url}
-                    />
-                  </div>
-                  <figcaption className="flex flex-wrap items-center justify-between gap-2 px-1 pt-3 text-sm">
-                    <span>{heroProject.title}</span>
-                    <span className="inline-flex items-center gap-1 font-semibold text-brand-300 underline-offset-4 group-hover:underline">Lihat cerita proyek <PathArrow /></span>
-                  </figcaption>
-                </figure>
-              </Link> : null}
+          {/* From xl the column holds "Mitra pengembangan produk / dari riset hingga produk nyata." on two lines. */}
+          <div className="relative z-10 px-6 pt-10 sm:px-(--panel-inset) lg:absolute lg:inset-y-0 lg:left-0 lg:flex lg:w-[calc(var(--panel-inset)+30rem)] lg:flex-col lg:justify-center lg:pr-0 lg:pt-0 xl:w-[calc(var(--panel-inset)+49rem)]">
+            <h1 className={`${typographySystemTokens.display.className} text-balance`} id="hero-title">
+              <span className="sr-only">{publicCompanyProfile.headline}</span>
+              <span aria-hidden="true">{headlineLead} <HeroStageWord words={stageWords} />.</span>
+            </h1>
+            <p className="mt-5 max-w-[44ch] text-base leading-[1.6] text-white sm:text-lg">{siteInformation.shortDescription}</p>
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+              <B2BContactLink variant="onBrand" />
+              <Link className="inline-flex min-h-11 items-center font-semibold text-white underline underline-offset-4 hover:decoration-2" href="/services">Lihat layanan</Link>
             </div>
+          </div>
+          <div className="relative h-64 lg:absolute lg:inset-y-0 lg:right-0 lg:left-[calc(var(--panel-inset)+30rem)] lg:h-auto xl:left-[calc(var(--panel-inset)+49rem)]">
+            <LeaningMascot
+              alt="Maskot Niuva melambaikan tangan"
+              className="absolute -bottom-7.5 left-1/2 h-[108%] -translate-x-1/2 lg:-bottom-11.5 lg:h-[112%]"
+              src={mascot.halo}
+            />
+            <DriftCard className="absolute top-21 right-[9%] z-20 hidden lg:block" depth={0.5}>
+              <div className={factCard}>
+                <p className="text-base font-semibold">Kirim STL, 3MF, atau OBJ</p>
+                <p className="mt-1 text-caption leading-[1.45] text-muted-foreground">Setiap model direview operator sebelum quote dikirim.</p>
+              </div>
+            </DriftCard>
+            <DriftCard className="absolute bottom-18 left-[-12%] z-20 hidden lg:block" depth={-0.35}>
+              <div className={factCard}>
+                <p className="text-base font-semibold">Estimasi awal, bukan harga final</p>
+                <p className="mt-1 text-caption leading-[1.45] text-muted-foreground">Harga final mengikuti hasil slicing operator.</p>
+              </div>
+            </DriftCard>
           </div>
         </section>
 
-        <section
-          aria-labelledby="entry-paths-title"
-          className="scroll-mt-6 border-b border-border bg-card py-16 sm:py-20"
-          data-home-section="entry-paths"
-          id="entry-paths"
-        >
-          <div className="mx-auto max-w-public px-5 sm:px-8">
-            <div className="grid gap-6 lg:grid-cols-[minmax(14rem,0.55fr)_minmax(0,1fr)] lg:items-end">
-              <div>
-                <SectionMarker>Pilih titik mulai</SectionMarker>
-                <h2
-                  className={`${headingToken} mt-3 max-w-xl`}
-                  id="entry-paths-title"
-                >
-                  Mulai dari kebutuhan yang sudah Anda punya.
-                </h2>
-              </div>
-              <p className="max-w-2xl text-base leading-7 text-muted-foreground">
-                Tidak semua project dimulai dari tempat yang sama. Pilih jalur yang
-                paling dekat dengan konteks Anda, lalu bawa percakapan ke tahap
-                berikutnya dengan lebih terarah.
-              </p>
-            </div>
+        <nav aria-label="Titik mulai" className="mx-3 mt-3 flex flex-wrap gap-2 sm:mx-6 md:mt-4 md:grid md:grid-cols-3 md:gap-3.5" data-home-section="entry-paths">
+          {doors.map((door) => (
+            <Link key={door.href} href={door.href} className="group flex min-h-11 items-center justify-between gap-4 rounded-full border border-border bg-card px-4 py-2 transition-[border-color,translate] duration-200 hover:-translate-y-0.5 hover:border-brand-500 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:rounded-[var(--radius-card)] md:px-6 md:py-5">
+              <span>
+                <span className="block text-ui font-semibold md:text-lg">{door.title}</span>
+                <span className="mt-0.5 hidden text-sm text-muted-foreground md:block">{door.description}</span>
+              </span>
+              <span className="hidden md:block"><ArrowRight /></span>
+            </Link>
+          ))}
+        </nav>
 
-            <div className="mt-10 grid gap-4 lg:grid-cols-12">
-              <Link
-                className="group flex min-h-72 flex-col justify-between rounded-xl border border-brand-300 bg-brand-100 p-6 transition-colors hover:border-brand-500 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:p-8 lg:col-span-7"
-                href="/services"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <span className="text-xs font-medium text-brand-800">
-                    DEVELOP · Project
-                  </span>
-                  <PathArrow />
-                </div>
-                <div className="mt-12 max-w-lg">
-                  <h3 className={`${subheadingToken} text-brand-950`}>
-                    Punya ide atau project?
-                  </h3>
-                  <p className="mt-3 max-w-md text-sm leading-6 text-brand-900">
-                    Untuk kebutuhan B2B, R&D, design, prototype, merchandise, atau
-                    project custom yang membutuhkan pembahasan lebih dalam.
-                  </p>
-                </div>
-                <span className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-brand-950">
-                  Lihat layanan
-                  <Icon aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-1" name="arrow-right" />
-                </span>
+        <section aria-labelledby="starting-points-title" className="mx-auto max-w-public px-5 pt-24 sm:px-12 sm:pt-32" data-home-section="starting-points">
+          <h2 className={headingToken} id="starting-points-title">Mulai dari apa yang sudah Anda punya.</h2>
+          <p className="mt-3.5 max-w-[56ch] text-lead leading-[1.6] text-muted-foreground sm:text-lg">Ide untuk dikembangkan, model untuk dicetak, atau produk siap pakai.</p>
+
+          <StartingPoints paths={startingPaths} />
+        </section>
+
+        <section aria-labelledby="process-title" className="mx-3 mt-24 rounded-[var(--radius-media)] border border-border bg-card sm:mx-6 sm:mt-32" data-home-section="process">
+          <ProcessScene
+            heading={<h2 className={headingToken} id="process-title">Dari ide menjadi produk nyata.</h2>}
+            stages={processStages}
+          />
+        </section>
+
+        <section aria-labelledby="capabilities-title" className="mx-auto max-w-public px-5 pt-24 sm:px-12 sm:pt-32" data-home-section="capabilities">
+          <h2 className={headingToken} id="capabilities-title">Empat layanan untuk setiap tahap proyek.</h2>
+          <div className="mt-10 overflow-hidden rounded-[var(--radius-media)] border border-border bg-card">
+            {publicServices.map((service) => (
+              <Link key={service.slug} href={`/services/${service.slug}`} className="group grid gap-x-7 gap-y-1.5 border-t border-border px-5 py-6 transition-colors first:border-t-0 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset sm:px-9 md:grid-cols-[21rem_1fr_2rem] md:items-center md:py-7">
+                <h3 className="text-xl font-medium tracking-[-0.01em] sm:text-2xl">{service.title}</h3>
+                <p className="text-base leading-[1.55] text-muted-foreground md:order-none">{service.websiteFraming}</p>
+                <span className="hidden md:block"><ArrowRight /></span>
               </Link>
-
-              <div className="grid gap-4 sm:grid-cols-2 lg:col-span-5 lg:grid-cols-1">
-                <Link
-                  className="group flex min-h-40 flex-col justify-between rounded-xl border border-border bg-background p-5 transition-colors hover:border-brand-400 hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                  href="/custom-print"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <span className="text-xs font-medium text-brand-700">
-                      MAKE · Custom print
-                    </span>
-                    <PathArrow />
-                  </div>
-                  <div className="mt-8">
-                    <h3 className={subheadingToken}>Ingin membuat dari model atau referensi?</h3>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      Kirim model 3D yang siap diperiksa, atau mulai dari sketsa, foto, dan kebutuhan awal. Operator meninjau sebelum quote.
-                    </p>
-                  </div>
-                </Link>
-
-                <Link
-                  className="group flex min-h-40 flex-col justify-between rounded-xl border border-border bg-background p-5 transition-colors hover:border-brand-400 hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                  href="/shop"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <span className="text-xs font-medium text-brand-700">
-                      BUY · Ready-made
-                    </span>
-                    <PathArrow />
-                  </div>
-                  <div className="mt-8">
-                    <h3 className={subheadingToken}>Mau produk siap beli?</h3>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      Pilih produk dan varian yang tersedia, lalu lanjutkan melalui cart dan checkout saat layanan transaksi aktif.
-                    </p>
-                  </div>
-                  <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold">
-                    Lihat katalog
-                    <Icon aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-1" name="arrow-right" />
-                  </span>
-                </Link>
-              </div>
-            </div>
+            ))}
           </div>
         </section>
 
-        <section
-          aria-labelledby="project-proof-title"
-          className="border-b border-border bg-card py-16 sm:py-20"
-          data-home-section="project-proof"
-          id="project-proof"
-        >
-          <div className="mx-auto max-w-public px-5 sm:px-8">
-            <div className="grid gap-8 lg:grid-cols-[minmax(14rem,0.55fr)_minmax(0,1fr)] lg:items-end lg:gap-16">
-              <div>
-                <SectionMarker>Bukti proyek terpilih</SectionMarker>
-                <h2 className={`${headingToken} mt-3 max-w-xl`} id="project-proof-title">
-                  Lihat bagaimana keputusan menjadi artefak yang dapat ditinjau.
-                </h2>
-              </div>
-              <div className="flex flex-wrap items-end justify-between gap-4">
-                <p className="max-w-2xl text-base leading-7 text-muted-foreground">
-                  Cerita berikut berasal dari materi yang sudah disetujui untuk publikasi. Klaim dibatasi pada bukti yang tersedia, bukan asumsi tentang deployment atau performa.
-                </p>
-                <NiuvaLink href="/projects" variant="outline" className="min-h-11 shrink-0 gap-2">
-                  Lihat semua project
-                  <PathArrow />
-                </NiuvaLink>
-              </div>
-            </div>
-
-            {selectedProjects.length === 0 ? (
-              <div className="mt-10 rounded-xl border border-info-border bg-info-background p-5 text-sm leading-6 text-info" role="status">
-                Bukti project terpilih belum tersedia pada runtime ini. Halaman Projects tetap menjadi tempat rujukan saat record published siap ditampilkan.
-              </div>
-            ) : (
-              <div className="mt-10 grid gap-6 lg:grid-cols-3">
-                {selectedProjects.map((project) => {
-                  const cover = project.media.find((media) => media.url !== undefined);
-                  return (
-                    <article className="group min-w-0" key={project.id}>
-                      <Link className="block rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/projects/${project.slug}`}>
-                        <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-muted">
-                          {cover?.url ? (
-                            <Image alt={cover.altText} className="object-cover transition-transform [transition-duration:var(--duration-normal-token)] [transition-timing-function:var(--ease-standard-token)] group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100" fill sizes="(min-width: 1024px) 30vw, 100vw" src={cover.url} />
-                          ) : (
-                            <div className="flex h-full items-center justify-center px-5 text-center text-sm text-muted-foreground">Media project belum tersedia</div>
-                          )}
-                        </div>
-                        <div className="mt-5">
-                          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-brand-700">
-                            <span>{project.serviceLabel}</span>
-                            {project.year ? <span>{project.year}</span> : null}
-                          </div>
-                          <h3 className={`${subheadingToken} mt-2 underline-offset-4 group-hover:underline`}>{project.title}</h3>
-                          <p className="mt-3 text-sm leading-6 text-muted-foreground">{project.summary}</p>
-                        </div>
-                      </Link>
-                    </article>
-                  );
-                })}
-              </div>
-            )}
+        <section aria-labelledby="project-proof-title" className="mx-auto grid max-w-public gap-10 px-5 pt-24 sm:px-12 sm:pt-32 lg:grid-cols-2 lg:items-end" data-home-section="project-proof" id="project-proof">
+          <div>
+            <h2 className={headingToken} id="project-proof-title">Proyek yang sudah dikerjakan.</h2>
+            <p className="mt-3.5 max-w-[48ch] text-lead leading-[1.6] text-muted-foreground">Cerita, proses, dan batas bukti setiap proyek ada di halaman Proyek.</p>
+            <NiuvaLink className="mt-7" href="/projects" variant="outline">Lihat semua proyek</NiuvaLink>
           </div>
-        </section>
-
-        <section
-          aria-labelledby="capabilities-title"
-          className="scroll-mt-6 bg-background py-16 sm:py-20"
-          data-home-section="capabilities"
-          id="capabilities"
-        >
-          <div className="mx-auto max-w-public px-5 sm:px-8">
-            <div className="grid gap-10 lg:grid-cols-[minmax(14rem,0.55fr)_minmax(0,1fr)] lg:gap-16">
-              <div>
-                <SectionMarker>Layanan yang tersedia</SectionMarker>
-                <h2
-                  className={`${headingToken} mt-3 max-w-md`}
-                  id="capabilities-title"
-                >
-                  Kompetensi yang menghubungkan ide dengan bentuk.
-                </h2>
-                <p className="mt-5 max-w-sm text-base leading-7 text-muted-foreground">
-                  Empat layanan ini menjadi titik masuk untuk kebutuhan yang berbeda,
-                  tetapi tetap berada dalam cara kerja Niuva yang sama: terukur dan
-                  konkret.
-                </p>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                {capabilityCards.map((capability) => (
-                  <EvidenceCard
-                    actionLabel={"actionLabel" in capability ? capability.actionLabel : undefined}
-                    description={capability.description}
-                    eyebrow={capability.eyebrow}
-                    href={"href" in capability ? capability.href : undefined}
-                    key={capability.title}
-                    meta={capability.meta}
-                    title={capability.title}
-                    variant="capability"
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section
-          aria-labelledby="process-title"
-          className="dark scroll-mt-6 bg-background py-16 text-foreground sm:py-20"
-          data-home-section="process"
-          id="process"
-        >
-          <div className="mx-auto max-w-public px-5 sm:px-8">
-            <div className="grid gap-10 lg:grid-cols-[minmax(14rem,0.7fr)_minmax(0,1fr)] lg:gap-16">
-              <div>
-                <SectionMarker className="text-brand-300">
-                  Cara kerja · dari ide ke produk
-                </SectionMarker>
-                <h2
-                  className={`${headingToken} mt-3 max-w-xl text-neutral-50`}
-                  id="process-title"
-                >
-                  Satu alur kerja untuk keputusan yang lebih jelas.
-                </h2>
-                <p className="mt-5 max-w-md text-base leading-7 text-neutral-300">
-                  Setiap tahap membawa percakapan lebih dekat ke produk yang dapat
-                  ditinjau, diuji, dan dikembangkan dengan konteks yang tetap utuh.
-                </p>
-                <div className="mt-8 inline-flex rounded-lg border border-neutral-600 px-3 py-2 text-sm font-medium text-brand-300">
-                  Ide → desain → prototipe → produk jadi
-                </div>
-              </div>
-
-              <ol className="border-t border-neutral-700" aria-label="Tahapan kerja Niuva">
-                {processSteps.map((step) => (
-                  <li
-                    className="grid gap-4 border-b border-neutral-700 py-5 sm:grid-cols-[4rem_minmax(0,1fr)] sm:gap-6"
-                    key={`detail-${step.number}`}
-                  >
-                    <span className="text-sm font-medium tabular-nums text-brand-300">{step.number}</span>
-                    <div className="grid gap-2 sm:grid-cols-[minmax(10rem,0.6fr)_minmax(0,1fr)] sm:gap-6">
-                      <h3 className="font-body text-xl font-semibold text-neutral-50">{step.name}</h3>
-                      <p className="text-sm leading-6 text-neutral-300">{step.description}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </div>
-        </section>
-
-        <section
-          aria-labelledby="next-step-title"
-          className="scroll-mt-6 border-b border-border bg-brand-50 py-16 sm:py-20"
-          data-home-section="next-step"
-          id="next-step"
-        >
-          <div className="mx-auto max-w-public px-5 sm:px-8">
-            <div className="grid gap-8 rounded-xl border border-brand-200 bg-brand-100 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.55fr)] lg:items-end lg:p-10">
-              <div>
-                <SectionMarker>Langkah berikutnya</SectionMarker>
-                <h2
-                  className={`${headingToken} mt-3 max-w-2xl text-brand-950`}
-                  id="next-step-title"
-                >
-                  Bawa konteks awalnya. Kita tentukan langkah berikutnya.
-                </h2>
-                <p className="mt-5 max-w-2xl text-base leading-7 text-brand-900">
-                  Mulai dari tujuan, tahap, dan batasan yang sudah diketahui. Pilih
-                  jalur yang paling sesuai, lalu lanjutkan percakapan dengan konteks
-                  yang cukup untuk ditinjau bersama.
-                </p>
-              </div>
-              <div className="border-l border-brand-300 pl-5 sm:pl-6">
-                <p className="text-xs font-medium text-brand-800">
-                  Mulai dari
-                </p>
-                <div className="mt-4 grid gap-2">
-                  <B2BContactLink />
-                  <Link
-                    className="inline-flex items-center justify-between gap-3 rounded-lg border border-brand-300 bg-background px-3 py-2.5 text-sm font-semibold text-brand-950 transition-colors hover:border-brand-500 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                    href="/services"
-                  >
-                    Lihat layanan
-                    <PathArrow />
+          {listedProjects.length > 0 ? (
+            <ul className="border-t border-border">
+              {listedProjects.map((project) => (
+                <li key={project.id}>
+                  <Link href={`/projects/${project.slug}`} className="group flex items-baseline justify-between gap-4 border-b border-border py-4 hover:text-brand-800 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+                    <span className="text-lead font-medium"><ProjectTitle qualifierClassName="mt-0.5 text-ui font-normal" title={project.title} /></span>
+                    <span className="shrink-0 text-ui text-muted-foreground">{project.serviceLabel}</span>
                   </Link>
-                  <Link
-                    className="inline-flex items-center justify-between gap-3 rounded-lg border border-brand-300 bg-background px-3 py-2.5 text-sm font-semibold text-brand-950 transition-colors hover:border-brand-500 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                    href="/projects"
-                  >
-                    Lihat projects
-                    <PathArrow />
-                  </Link>
-                </div>
-                <address className="mt-6 border-t border-brand-300 pt-5 text-sm not-italic leading-6 text-brand-900">
-                  <p>{siteInformation.address}</p>
-                  <div className="mt-3 flex flex-col gap-1">
-                    <a className="underline underline-offset-4" href={`mailto:${siteInformation.email}`}>
-                      {siteInformation.email}
-                    </a>
-                    <a className="underline underline-offset-4" href={`tel:+${siteInformation.phone.replace(/\D/g, "")}`}>
-                      {siteInformation.phone}
-                    </a>
-                  </div>
-                </address>
-              </div>
-            </div>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </section>
+
+        <section aria-labelledby="next-step-title" className="relative mx-3 mt-24 overflow-hidden rounded-[var(--radius-media)] bg-[linear-gradient(140deg,var(--brand-700)_0%,var(--brand-800)_100%)] px-6 pt-11 pb-70 text-white sm:mx-6 sm:mt-32 sm:px-(--panel-inset) lg:h-110 lg:pb-0" data-home-section="next-step">
+          <div className="relative z-10 lg:absolute lg:top-1/2 lg:left-(--panel-inset) lg:-translate-y-1/2">
+            <h2 className={`${headingToken} max-w-[13em]`} id="next-step-title">Ceritakan kebutuhan proyek Anda.</h2>
+            <B2BContactLink className="mt-7" variant="onBrand" />
           </div>
+          <Image alt="" className="absolute -bottom-5 left-1/2 h-70 w-auto -translate-x-1/2 object-contain lg:right-[8%] lg:-bottom-7.5 lg:left-auto lg:h-[118%] lg:translate-x-0" height={1400} sizes="(max-width: 1024px) 70vw, 520px" src={mascot.victory} width={1400} />
         </section>
       </main>
     </PublicShell>

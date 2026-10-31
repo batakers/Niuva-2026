@@ -23,7 +23,7 @@ export const publicCompanyProfile = {
     "Melalui riset, konsultasi, desain, dan prototyping, Niuva membantu organisasi mengubah kebutuhan menjadi arah produk yang dapat ditinjau sebelum realisasi.",
   contact: {
     location:
-      "Bandung Techno Park — Gedung D Lt. 1 (Ruang Makerspace), Jl. Telekomunikasi No. 1, Sukapura",
+      "Bandung Techno Park, Gedung D Lt. 1 (Ruang Makerspace), Jl. Telekomunikasi No. 1, Sukapura",
     email: "niuvamakerspace@gmail.com",
     phone: "+62 851-1767-8901",
     phoneHref: "tel:+6285117678901",

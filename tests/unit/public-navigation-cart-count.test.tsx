@@ -18,7 +18,7 @@ describe("PublicNavigation cart count", () => {
   it("shows no count for an empty or corrupt cart and leaves corrupt data untouched", () => {
     window.localStorage.setItem(CART_STORAGE_KEY, "{broken");
     render(<PublicNavigation action={null} />);
-    expect(screen.getByRole("link", { name: "Cart" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Keranjang" })).toBeTruthy();
     expect(window.localStorage.getItem(CART_STORAGE_KEY)).toBe("{broken");
   });
 
@@ -27,11 +27,11 @@ describe("PublicNavigation cart count", () => {
     cart = addCartItem(cart, { variantId: "b", quantity: 1 });
     window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
     render(<PublicNavigation action={null} />);
-    expect(screen.getByRole("link", { name: /Cart, 3 item di cart/ })).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Keranjang, 3 item di keranjang/ })).toBeTruthy();
 
     act(() => {
       writeCart(window.localStorage, addCartItem(cart, { variantId: "c", quantity: 2 }));
     });
-    expect(screen.getByRole("link", { name: /Cart, 5 item di cart/ })).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Keranjang, 5 item di keranjang/ })).toBeTruthy();
   });
 });

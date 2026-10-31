@@ -30,10 +30,10 @@ test("shop preview exposes loading and error recovery", async ({ page }) => {
 
 test("homepage and public navigation expose the available Shop route", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("link", { name: /Mau produk siap beli/ }).click();
+  await page.getByRole("navigation", { name: "Titik mulai" }).getByRole("link", { name: /Toko/ }).click();
   await expect(page).toHaveURL(/\/shop$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Produk ready-made, dengan status yang jelas.");
-  await expect(page.getByRole("navigation", { name: "Navigasi footer" }).getByRole("link", { name: "Shop" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Navigasi footer" }).getByRole("link", { name: "Toko" })).toBeVisible();
 });
 
 test("shop stays readable without overflow across supported viewports", async ({ page }) => {

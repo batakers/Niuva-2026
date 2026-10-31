@@ -31,7 +31,7 @@ ada di papan ini; pekerjaan baru masuk tabel task, bukan file lain.
 | | T03, T19 | O + A | Smoke R2 privat/publik lewat unggah media Admin | Sesi Admin Owner |
 | | T09 | O | `CUSTOMER_AUTH_CLEANUP` lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
 | | T23, T25, T35 | O | Cek metode dan fitur refund di dashboard Midtrans sandbox (Owner mengecek, 31 Okt); grant `refund` sudah ada | Q1 |
-| Redesign | T46 → T47 | O + A | Agen menyiapkan tiga arah visual di decision page lokal; Owner memilih satu; fondasi dan Company dibangun di satu PR | Pilihan arah (Q19); Postgres lokal untuk halaman berbasis DB |
+| Redesign | T46 → T47 | A | Arah dikunci (Q23–Q25); fondasi dan Beranda selesai lokal; review akhir, DESIGN.md, PR | Postgres lokal untuk E2E (Owner) |
 | | T48–T50 | A | Commerce/MAKE, Customer/auth, lalu Admin di atas fondasi T46; verifikasi lokal | T46 |
 | | T36 | O + A | UAT operasi Admin di UI baru | T50 |
 | Berantai | T34 → T08 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim; lalu retensi file pada berkas MAKE | T33 dulu |
@@ -115,6 +115,20 @@ sitemap/flow:
 - **Q22:** layar pertama Beranda dipimpin DEVELOP (positioning partner
   pengembangan produk dan bukti proyek), dengan pintu Custom 3D Print dan Toko
   tetap terlihat.
+- **Q23 (31 Okt):** arah visual dikunci setelah dua set ditolak, mengikuti
+  referensi Owner motorq.com dan x.ai: latar terang, Manrope, satu panel biru
+  Niuva dengan maskot dan kartu info, gerak saat scroll. Kata terakhir headline
+  boleh berganti (prototipe, desain, produk nyata).
+- **Q24 (31 Okt):** Beranda tanpa foto proyek; proyek tampil sebagai daftar
+  judul. Foto proyek tetap di halaman Proyek.
+- **Q25 (31 Okt):** maskot NIUVA dari paket aset Owner
+  (`docs/source/brand/NIUVA_Mascot_Assets`) dipakai di website memakai render
+  Blender, bukan model 3D real-time yang terlihat kasar; tahap Ide memakai
+  ekspresi bohlam karena jari pose Think di aset sumber janggal. Koreksi Owner
+  31 Okt: maskot Ide tampil badan penuh dengan pose baru dari tiga referensi
+  Owner, yaitu wajah ceria, telunjuk ke atas, serta bohlam menyala dan tanda
+  tanya melayang di atas kepala. Pose dan bohlam dibangun dari rig dan skrip
+  build paket maskot; paket sumber tidak diubah.
 
 Keputusan Owner yang masih terbuka (rekomendasi agen, belum diputuskan):
 
@@ -174,8 +188,8 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T43 | M2 | BLOCKED_INPUT | Login Google hosted (D04) | T12; grant Q4 | Owner menambah redirect URI staging di Google Cloud; env OAuth staging diisi atas instruksi Owner; consent dan login Google berhasil di staging dengan akun uji. Production ikut T40. |
 | T44 | M6 | BLOCKED_INPUT | Policy privacy untuk penyedia production | T11; Q5; Q12–Q13; Owner | Daftar penyedia dan lokasi pemrosesan di `src/content/customer-policy/privacy-v1.0.md` (Netlify Ohio, Neon Singapura) diganti versi baru yang mencantumkan Helipod VPS Jakarta, penyedia backup dan storage file production; Owner menyetujui teks; versi baru terbit sebelum production menerima data Customer (T40). Ditemukan saat perbandingan S3, 30 Okt. Draf v1.1 disetujui Owner 31 Okt (Q15–Q16); tanggal terbit, file runtime dan pemberitahuan belum; terbit menunggu T41 dan T38. |
 | T45 | M5a | DONE | Audit, sitemap dan user flow redesign | Keputusan Owner 31 Okt | Audit tampilan sekarang, sitemap dan user flow dengan pembagian visual vs aturan bisnis tercatat di [audit IA](docs/design/redesign-2026-10-31-audit-ia.md); Q19–Q22 dijawab Owner; T36/T37 bergantung pada redesign. Log "T45 — audit, sitemap dan user flow". |
-| T46 | M5a | TODO | Fondasi design system baru | T45; pilihan arah Q19 | Arah terpilih diterapkan ke token, tipe, motion, primitive `components/ui`, shell publik/auth/sistem/Admin, status label, format Rupiah, timeline dan page header bersama; tanpa dependency npm baru; URL, API, data, auth, harga dan pembayaran tetap. Lint/typecheck/test/E2E/build dan capture lokal. |
-| T47 | M5a | TODO | Redesign Company | T46 | `/`, `/services` dan detail, `/projects` dan detail, legal, 404 sesuai sitemap/flow; satu CTA utama per halaman; tanpa klaim baru; DESIGN.md dan panduan Company ditulis ulang dari hasil build. Capture 320–1440, keyboard/fokus, zoom 200%, reduced motion, kontras. |
+| T46 | M5a | IN_PROGRESS | Fondasi design system baru | T45; pilihan arah Q19 | Arah terpilih diterapkan ke token, tipe, motion, primitive `components/ui`, shell publik/auth/sistem/Admin, status label, format Rupiah, timeline dan page header bersama; tanpa dependency npm baru; URL, API, data, auth, harga dan pembayaran tetap. Lint/typecheck/test/E2E/build dan capture lokal. |
+| T47 | M5a | IN_PROGRESS | Redesign Company | T46 | `/`, `/services` dan detail, `/projects` dan detail, legal, 404 sesuai sitemap/flow; satu CTA utama per halaman; tanpa klaim baru; DESIGN.md dan panduan Company ditulis ulang dari hasil build. Capture 320–1440, keyboard/fokus, zoom 200%, reduced motion, kontras. |
 | T48 | M5a | TODO | Redesign Commerce dan MAKE | T46 | Toko, produk, keranjang, checkout, Custom 3D Print dan workspace dua mode, status/quote token; copy sistem diganti bahasa pelanggan; kalimat MAKE yang dilindungi tetap; aturan server, harga dan pembayaran tidak berubah. Gate lokal dan capture. |
 | T49 | M5a | TODO | Redesign Customer dan auth | T46, T48 | Hub Akun, detail MAKE/order (konfirmasi terima quote, timeline, Rupiah dan label status konsisten), refund, privasi, enam halaman auth dalam satu frame; allowlist dan gate auth tidak berubah. Gate lokal dan capture. |
 | T50 | M5a | TODO | Redesign Admin | T46 | Shell, Ringkasan, daftar, detail, review Custom Print, keuangan, produk, tarif, konten, laporan, akses/privasi dan state error/denied; Card, status, tabel dan label Indonesia terkonsolidasi; permission dan motion yang disetujui tetap. Gate lokal dan capture. |
@@ -2089,6 +2103,81 @@ belum ada yang dikerjakan.
   versi gratis bernilai Rp0. Domain tidak perlu dibeli lagi; biaya
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
+
+### T46/T47 — fondasi v2 dan Beranda, 2026-10-31
+
+Branch `claude/redesign-foundation-company` dari `main@f8c8cbd`.
+
+- **Arah:** dua set arah ditolak Owner; arah dikunci pada prototipe statis lokal
+  ("Ya, kunci dan mulai"), lalu Q23–Q25 dicatat di keputusan Owner.
+- **Fondasi (T46):**
+  - token v2 di `src/app/globals.css`: latar #F2F5F9, ink #0F1D2E, skala biru
+    Niuva, radius 12/22/30, ukuran teks bernama `text-caption`/`text-ui`/
+    `text-lead`;
+  - font Manrope lewat `next/font` (Space Grotesk dan Fraunces dilepas);
+  - tombol pil dengan varian `outline` dan `onBrand`; logo memilih berkas
+    untuk latar terang;
+  - header terang sticky dengan label Indonesia, "Hubungi Kami" di header
+    mobile; footer Jelajahi / Bantuan / Akun dan legal; 404 memakai pil outline.
+  - Tanpa dependency npm baru; maskot dari render Blender Owner dikonversi ke
+    WebP (sekitar 90–100 KB) dengan sidecar provenance.
+- **Beranda (T47, sebagian):**
+  - panel biru dengan maskot melambai dan dua kartu fakta, tiga pintu, tiga blok
+    titik mulai, adegan proses sticky berganti pose, empat layanan, daftar judul
+    proyek tanpa foto, penutup;
+  - headline tetap untuk AT, kata terakhir hanya berganti secara visual.
+  - Layanan, detail layanan, Proyek, detail proyek: label Indonesia, eyebrow
+    dihapus, "Karya lainnya" menjadi daftar ringkas. Komposisi penuh halaman
+    tersebut belum dikerjakan.
+- **Review Impeccable:**
+  - detector 0 temuan; finish reviewer: fix → 6/8 resolved, 2 partial
+    (pencatatan build path, DESIGN.md).
+  - Kemudian dicatat dan DESIGN.md + `.impeccable/design.json` ditulis ulang
+    dari hasil build.
+  - Kontras hero diukur pada compositing aktual: terendah 5,50:1 (headline) dan
+    5,67:1 (subcopy) pada 1440/1280/390.
+- **Gate lokal:**
+  - lint 0 error (4 warning lama), typecheck lulus;
+  - unit 135 file/1.518 test lulus; production build lulus;
+  - capture 1440/390 untuk `/`, Layanan, detail layanan, Proyek, detail
+    proyek, 404 tanpa overflow;
+  - spec E2E diperbarui untuk copy baru.
+- **Tinjauan taste-skill Beranda (31 Okt, disetujui Owner "Ya, perbaiki tiga"):**
+  - inspector dev server 1440/768/390: 10 FAIL dan 8 WARN menjadi 6 FAIL dan
+    7 WARN;
+  - tiga perbaikan:
+    - adegan proses: di bawah `lg` setiap tahap membawa render kecilnya
+      sendiri, tanpa panggung sticky yang menutup judul;
+    - judul hero 2 baris mulai `xl`, dan teks di bidang tepi-ke-tepi sejajar
+      dengan logo header (`--panel-inset`);
+    - tiga split titik mulai menjadi satu pemilih dengan option chip
+      `aria-pressed`, dan tanpa JavaScript ketiga jalur tetap tampil;
+  - kontras hero diukur ulang: terendah 4,91:1 (headline);
+  - sisa FAIL adalah aturan Foundation v2 (gradien, hairline, shadow
+    mengambang, kartu pintu) dan judul 4 baris di 390px, yang butuh keputusan
+    copy Owner;
+  - unit `home.test.tsx` 8/8, lint 0 error, typecheck lulus; replay langkah
+    E2E Beranda lokal lulus; E2E resmi tetap di CI.
+  - footer publik di tablet: kolom merek mendapat baris sendiri di `md` dan
+    empat kolom mulai `lg`, sehingga kolom merek di 768px tidak lagi tergencet
+    satu kata per baris. Capture 640–1440 pada `/` dan `/services` tanpa
+    overflow; unit shell 35/35.
+  - permintaan Owner 31 Okt: daftar proyek Beranda tanpa em dash, jadi nama
+    karya dan klien tampil dua baris. Semua kontrol yang aktif kini memakai
+    kursor pointer (gaya dasar `globals.css`).
+  - keputusan Owner 31 Okt ("Ya, hapus semua"): tidak ada em dash yang tampil
+    di halaman Company. Judul proyek dipecah menjadi nama karya dan klien atau
+    keterangannya di Beranda, Proyek, detail proyek, dan detail layanan, serta
+    digabung dengan koma di judul dokumen (`src/features/public/project-title.ts`).
+    Alamat default memakai koma, dan ringkasan Bagit memakai tanda kurung.
+    Data judul tidak diubah; alamat yang pernah disimpan Admin di database
+    tetap tampil apa adanya sampai diubah lewat Admin.
+- **Belum:**
+  - E2E lokal (Postgres lokal mati, service perlu hak admin);
+  - review visual Owner atas hasil build;
+  - komposisi penuh Layanan/Proyek;
+  - lint format `designmd` (unduhan npx diblokir);
+  - staging (kredit Netlify pulih 26 Nov).
 
 ### T45 — audit, sitemap dan user flow, 2026-10-31
 

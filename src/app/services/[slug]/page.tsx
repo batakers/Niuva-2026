@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Icon } from "@/components/ui/Icon";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
@@ -7,6 +8,7 @@ import { B2BContactLink } from "@/components/niuva/b2b-contact-link";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { typographySystemTokens as type } from "@/design/typography";
 import { publicServices } from "@/features/public/company-content";
+import { ProjectTitle } from "@/features/public/project-title-view";
 import { listPublishedPortfolioProjects } from "@/modules/portfolio/public-service";
 
 export const revalidate = 300;
@@ -49,9 +51,8 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
       <main id="main-content">
         <section className="border-b border-border bg-card">
           <div className="mx-auto max-w-public px-5 py-10 sm:px-8 sm:py-14">
-            <NiuvaLink className="min-h-11" href="/services" size="sm" variant="outline">← Semua layanan</NiuvaLink>
-            <p className="mt-7 text-sm font-medium text-brand-700">Layanan Niuva</p>
-            <h1 className={`${type.display.className} mt-4 max-w-4xl`}>{service.title}</h1>
+            <NiuvaLink className="min-h-11" href="/services" size="sm" variant="outline"><Icon aria-hidden="true" className="size-4" name="arrow-left" />Semua layanan</NiuvaLink>
+            <h1 className={`${type.display.className} mt-8 max-w-4xl`}>{service.title}</h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">{service.websiteFraming}</p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <B2BContactLink service={service.title} />
@@ -63,8 +64,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
         <section className="border-b border-border bg-background" aria-labelledby="service-fit-title">
           <div className="mx-auto grid max-w-public gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] lg:gap-16">
             <div>
-              <p className="text-sm font-medium text-brand-700">Kecocokan dan input</p>
-              <h2 className={`${type.heading.className} mt-3`} id="service-fit-title">Mulai dari kondisi proyek Anda.</h2>
+              <h2 className={type.heading.className} id="service-fit-title">Mulai dari kondisi proyek Anda.</h2>
             </div>
             <div className="space-y-8">
               <p className="text-lg leading-8">{service.sourceScope}</p>
@@ -78,7 +78,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
 
         <section className="border-b border-border bg-card" aria-labelledby="service-review-title">
           <div className="mx-auto grid max-w-public gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] lg:gap-16">
-            <div><p className="text-sm font-medium text-brand-700">Proses peninjauan</p><h2 className={`${type.heading.className} mt-3`} id="service-review-title">Langkah awal dibuat jelas sebelum ruang lingkup disepakati.</h2></div>
+            <div><h2 className={type.heading.className} id="service-review-title">Langkah awal dibuat jelas sebelum ruang lingkup disepakati.</h2></div>
             <ol className="divide-y divide-border border-y border-border">
               <li className="grid gap-2 py-5 sm:grid-cols-[9rem_minmax(0,1fr)]"><h3 className="font-semibold">Bagikan konteks</h3><p className="text-sm leading-6 text-muted-foreground">Ceritakan tujuan, tahap saat ini, dan bahan awal melalui WhatsApp.</p></li>
               <li className="grid gap-2 py-5 sm:grid-cols-[9rem_minmax(0,1fr)]"><h3 className="font-semibold">Tinjau kebutuhan</h3><p className="text-sm leading-6 text-muted-foreground">Tim Niuva meninjau informasi tersebut untuk memahami keputusan dan batasan yang perlu dibahas bersama.</p></li>
@@ -90,8 +90,8 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
         <section className="bg-background" aria-labelledby="related-projects-title">
           <div className="mx-auto max-w-public px-5 py-16 sm:px-8">
             <div className="flex flex-wrap items-end justify-between gap-5">
-              <div><p className="text-sm font-medium text-brand-700">Bukti yang dapat ditinjau</p><h2 className={`${type.heading.className} mt-3`} id="related-projects-title">Projects terkait</h2></div>
-              <NiuvaLink className="min-h-11" href="/projects" variant="outline">Semua projects</NiuvaLink>
+              <div><h2 className={type.heading.className} id="related-projects-title">Proyek terkait</h2></div>
+              <NiuvaLink className="min-h-11" href="/projects" variant="outline">Semua proyek</NiuvaLink>
             </div>
             {relatedProjects.length === 0 ? (
               <p className="mt-8 max-w-2xl text-sm leading-6 text-muted-foreground">Detail project terkait belum tersedia untuk ditampilkan. Anda dapat membahas kebutuhan dengan tim melalui WhatsApp.</p>
@@ -101,7 +101,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
                   const cover = project.media.find((media) => media.url);
                   return <li className="min-w-0 border-t border-border pt-5" key={project.id}>
                     {cover?.url ? <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-card"><Image alt={cover.altText} className="object-contain" fill sizes="(min-width: 1024px) 30vw, (min-width: 768px) 45vw, 100vw" src={cover.url} /></div> : null}
-                    <h3 className={`${type.subheading.className} mt-4`}>{project.title}</h3>
+                    <h3 className={`${type.subheading.className} mt-4`}><ProjectTitle qualifierClassName="mt-1 text-base font-normal tracking-normal" title={project.title} /></h3>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">{project.summary}</p>
                     <NiuvaLink className="mt-4 min-h-11" href={`/projects/${project.slug}`} size="sm" variant="outline">Lihat project</NiuvaLink>
                   </li>;

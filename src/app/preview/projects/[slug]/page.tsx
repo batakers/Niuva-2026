@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getProjectPreviewBySlug } from "@/features/frontend-preview/server";
+import { projectTitleText } from "@/features/public/project-title";
 import { ProjectDetailView } from "@/app/projects/[slug]/project-detail-view";
 
 type Props = {
@@ -24,7 +25,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   }
 
   return {
-    title: `${project.title} · Projects · Niuva`,
+    title: `${projectTitleText(project.title)} · Projects · Niuva`,
     description: project.summary,
     robots: { follow: false, index: false },
   };

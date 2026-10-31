@@ -16,14 +16,14 @@ export function SystemFrame({ children }: Readonly<{ children: ReactNode }>) {
       data-product-screen-proof-status="pending-owner-review"
     >
       <SkipLink />
-      <header className="dark border-b border-border bg-background text-foreground">
-        <div className="mx-auto flex max-w-public items-center px-5 py-2.5 sm:px-8">
+      <header className="bg-background text-foreground">
+        <div className="mx-auto flex h-18 max-w-public items-center px-5 sm:px-12">
           <Link
             href="/"
             aria-label="Niuva, kembali ke halaman utama"
             className="inline-flex min-h-11 shrink-0 items-center rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
           >
-            <NiuvaLogo className="h-7 w-auto sm:h-8" priority />
+            <NiuvaLogo className="h-7 w-auto" preload />
           </Link>
         </div>
       </header>
