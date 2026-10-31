@@ -203,7 +203,8 @@ test("four service details offer contextual WhatsApp and only approved project d
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/services/design-prototyping");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Design & Prototyping");
-  await expect(page.getByRole("link", { name: "Lihat project" }).first()).toBeVisible();
+  // Related projects are whole-card links named by the project title.
+  await expect(page.getByRole("main").getByRole("link", { name: /Smart Drop Box/ })).toBeVisible();
   await expect(page.locator('a[href="/projects/smart-drop-box-pg"]')).toHaveCount(1);
   await expect(page.locator('a[href="/projects/elips-tandem-bike"]')).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
