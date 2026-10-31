@@ -218,14 +218,25 @@ berikutnya. Dikerjakan hanya atas permintaan Owner.
 - Data terstruktur JSON-LD untuk Organization/LocalBusiness dan Product.
 - Gambar Open Graph saat link dibagikan; menunggu aset yang disetujui Owner.
 - Google Business Profile dengan data usaha yang benar (langkah Owner).
+- **T52 — Tag, tahun, dan urutan proyek lewat Dashboard Admin** (dicatat atas
+  permintaan Owner, 1 November 2026; belum dijadwalkan). Saat ini tag dan tahun
+  ke-17 proyek berasal dari data kurasi di kode, proyek baru dari Dashboard
+  tampil tanpa keduanya, dan urutan `/projects` otomatis (unggulan, tanggal
+  terbit, judul). PRD membatasi Admin pada pengelolaan sederhana, jadi ini
+  penambahan scope. Kriteria: Owner/Admin dapat mengubah tag, tahun, dan
+  urutan tampil proyek; input divalidasi Zod di server dan tersimpan lewat
+  migration baru yang ditinjau; perubahan tampil di `/projects`, detail
+  proyek, Beranda, dan proyek terkait di halaman layanan setelah revalidasi;
+  seed konten publik tidak menimpa nilai yang sudah diubah Admin. Bergantung
+  pada T50 supaya formnya memakai pola Admin baru.
 
 ## Kontrak implementasi lintas task
 
 - Create Admin memakai Server Actions terotorisasi, validasi Zod, domain service
   dan repository. Jangan menaruh business rule di route atau mempercayai ID
   pemilik/harga/stock/versi dari browser.
-- Media publik Admin: JPEG/PNG/WebP maksimal 10 MiB/file, maksimal 12/gallery,
-  key server, ownership, intent/confirm dan renderer untuk host/key yang
+- Media publik Admin: JPEG/PNG/WebP maksimal 10 MiB/file, maksimal 12/gallery
+  produk dan 24/gallery proyek (addendum PRD 1 November 2026), key server, ownership, intent/confirm dan renderer untuk host/key yang
   dikendalikan aplikasi. Tetap dukung media statis lama. Tidak memakai file
   privat Customer sebagai media publik dan tidak menambah page builder.
 - Outbox bisnis memperluas event yang didukung tanpa melemahkan proof
