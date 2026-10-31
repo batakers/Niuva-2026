@@ -84,7 +84,7 @@ describe("/services/[slug] ISR strategy (RK-16; Req 16.1, 16.8)", () => {
     expect(mocks.listProjects).toHaveBeenCalledTimes(1);
   });
 
-  it("only links detail-ready projects from the matching service and caps the list at three", async () => {
+  it("links projects from the matching service, card-only included, and caps the list at three", async () => {
     mocks.listProjects.mockResolvedValueOnce([
       project(),
       project({ slug: "card-only", id: "card-only", detailReadiness: "card-only" }),
@@ -95,7 +95,7 @@ describe("/services/[slug] ISR strategy (RK-16; Req 16.1, 16.8)", () => {
     // Each related project is one card link; "Semua proyek" points at the index, not a project.
     const links = screen.getAllByRole("link").filter((link) => link.getAttribute("href")?.startsWith("/projects/"));
     expect(links.map((link) => link.getAttribute("href"))).toEqual([
-      "/projects/related-project", "/projects/related-2", "/projects/related-3",
+      "/projects/related-project", "/projects/card-only", "/projects/related-2",
     ]);
     expect(screen.queryByText(/Detail proyek terkait belum tersedia/)).not.toBeInTheDocument();
   });

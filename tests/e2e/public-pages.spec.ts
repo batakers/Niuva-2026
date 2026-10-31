@@ -111,7 +111,7 @@ test("published project reference keeps evidence boundaries and proof media avai
   await expect(page.getByRole("heading", { name: "Semua proyek." })).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(17);
   await expect(page.locator("article img")).toHaveCount(17);
-  await expect(page.locator("article a[href^='/projects/']")).toHaveCount(6);
+  await expect(page.locator("article a[href^='/projects/']")).toHaveCount(17);
 
   await page.getByLabel("Layanan", { exact: true }).selectOption("Desain & Rekayasa");
   await expect(page.getByRole("article")).toHaveCount(11);

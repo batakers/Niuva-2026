@@ -8,7 +8,7 @@ Status: **CONFIRMED — Owner-approved public assets, 2026-11-01** ("Setujui rek
 - Transformasi terbatas pada ekstraksi gambar tertanam (mask dikomposisikan di atas putih), resize, dan padding putih ke 1600 × 900 px. Tidak ada generative fill, retouching, atau perubahan semantik.
 - Resolusi 1600 × 900 adalah ukuran output, bukan jaminan resolusi asli; kolom upscale mencatat pembesarannya.
 - Teks, label, atau logo yang terlihat di dalam gambar adalah bagian dokumentasi sumber dan tidak otomatis menjadi klaim website.
-- Kartu ini tidak membuka halaman detail (PRD: `card-only`); ringkasan kartu tetap teks yang disetujui Owner pada 2026-09-09/10.
+- Sejak keputusan Owner 1 November 2026 setiap karya ini punya halaman detail; ringkasannya tetap teks yang disetujui Owner pada 2026-09-09/10.
 - Opsi B Elips tidak dipakai: gambar asli di PDF memuat tulisan "MITCH design 2003" yang tertutup label di halaman sumber; atribusinya menunggu konfirmasi Owner.
 - Opsi A Bicycle Arcade tidak dipakai karena memuat visual bertema Netflix Stranger Things.
 

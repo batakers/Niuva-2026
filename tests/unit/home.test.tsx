@@ -57,10 +57,10 @@ describe("public homepage", () => {
     expect(link.textContent).not.toContain("—");
   });
 
-  it("does not link card-only projects", async () => {
+  it("links projects without a full story too, since every project has its own page (Owner, 1 Nov 2026)", async () => {
     vi.mocked(getProjectPreview).mockResolvedValue({ projects: [{ ...published, detailReadiness: "card-only" }], scenario: null });
     const { container } = render(await Home());
-    expect(projectLinks(container)).toHaveLength(0);
+    expect(projectLinks(container)).toHaveLength(1);
   });
 
   it("keeps project photos off the homepage hero (Owner, 31 Oct 2026)", async () => {

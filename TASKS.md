@@ -136,6 +136,9 @@ sitemap/flow:
   tampil di halaman Layanan. Teks layanan, lima jenis produk, dan pemetaan 17
   proyek disusun dari Profil 2026 dan disetujui Owner 31 Okt ("Setujui semua";
   addendum PRD 31 Okt).
+- **Q27 (1 Nov):** semua proyek terbit punya halaman detail, termasuk 11 karya
+  `card-only` (addendum PRD 1 Nov). Dokumentasi tambahan dari PDF sumber
+  tampil di halaman detail setelah Owner menyetujui gambar dan keterangannya.
 
 Keputusan Owner yang masih terbuka (rekomendasi agen, belum diputuskan):
 

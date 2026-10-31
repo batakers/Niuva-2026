@@ -63,7 +63,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
   let relatedProjects: Awaited<ReturnType<typeof listPublishedPortfolioProjects>> = [];
   try {
     relatedProjects = (await listPublishedPortfolioProjects()).filter((project) =>
-      project.serviceLabel === service.title && project.detailReadiness !== "card-only",
+      project.serviceLabel === service.title,
     );
   } catch {
     // Service information remains available when the published portfolio cannot be read.

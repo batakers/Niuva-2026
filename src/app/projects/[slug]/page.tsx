@@ -28,7 +28,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const { project } = await getProjectPreviewBySlug(slug, undefined);
 
-  if (project === null || project.detailReadiness === "card-only") {
+  if (project === null) {
     return {
       title: "Project tidak ditemukan · Niuva",
       robots: { follow: false, index: false },
@@ -45,7 +45,7 @@ export async function generateMetadata({
 export default async function ProjectDetail({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const { project } = await getProjectPreviewBySlug(slug, undefined);
-  if (!project || project.detailReadiness === "card-only") notFound();
+  if (!project) notFound();
 
   return <ProjectDetailView project={project} scenario={null} />;
 }

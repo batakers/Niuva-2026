@@ -95,16 +95,18 @@ export function ProjectDetailView({ project, scenario }: Readonly<{
             </div>
           )}
 
-          <div className="mt-12 divide-y divide-border border-y border-border">
-            {storySections.map(section => (
-              <section className="grid gap-5 py-8 md:grid-cols-[minmax(0,0.65fr)_minmax(0,1fr)] md:gap-12" key={section.title}>
-                <h2 className={type.heading.className}>{section.title}</h2>
-                <p className="max-w-[62ch] text-base leading-[1.7] sm:text-lg">{section.body}</p>
-              </section>
-            ))}
-          </div>
+          {storySections.length > 0 ? (
+            <div className="mt-12 divide-y divide-border border-y border-border">
+              {storySections.map(section => (
+                <section className="grid gap-5 py-8 md:grid-cols-[minmax(0,0.65fr)_minmax(0,1fr)] md:gap-12" key={section.title}>
+                  <h2 className={type.heading.className}>{section.title}</h2>
+                  <p className="max-w-[62ch] text-base leading-[1.7] sm:text-lg">{section.body}</p>
+                </section>
+              ))}
+            </div>
+          ) : null}
 
-          {project.detailReadiness === "summary-only" && (
+          {project.detailReadiness !== "full-conservative-draft" && (
             <p className="mt-6 rounded-[var(--radius-control)] border border-border bg-card px-4 py-3 text-ui leading-[1.55] text-muted-foreground">
               Challenge dan process rinci sengaja tidak ditampilkan karena bukti pendukungnya belum cukup.
             </p>

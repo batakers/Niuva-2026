@@ -49,10 +49,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
 
   for (const project of result?.projects ?? []) {
-    if (project.detailReadiness === "card-only") {
-      continue;
-    }
-
     entries.push({ url: absolute(`/projects/${encodeURIComponent(project.slug)}`) });
   }
 

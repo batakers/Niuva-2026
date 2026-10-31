@@ -112,7 +112,7 @@ export default async function Home() {
   // Portfolio evidence is additive; a database outage must not take down the
   // company narrative and the primary contact paths on the homepage.
   const { projects } = await getProjectPreview(undefined).catch(() => ({ projects: [] as const }));
-  const listedProjects = projects.filter((project) => project.detailReadiness !== "card-only").slice(0, 4);
+  const listedProjects = projects.slice(0, 4);
 
   return (
     <PublicShell scope="homepage">

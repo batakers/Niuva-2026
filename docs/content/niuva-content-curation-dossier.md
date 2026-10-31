@@ -389,7 +389,10 @@ Recommended media sequence after original assets are supplied:
 Owner decision, 1 November 2026 ("Setujui rekomendasi"): each of the 11
 selected works now carries one approved PDF-derived card cover listed in
 `docs/content/media-proofs/selected-work-covers/README.md`. They remain
-`card-only`: no detail page, and the approved card summaries are unchanged.
+`card-only` (no full story); since the Owner decision of 1 November 2026
+(PRD addendum) every published project, card-only included, has its own
+detail page showing the approved summary, the cover, and Owner-approved
+documentation images.
 
 These entries show breadth without pretending that a full narrative is already
 available. The 11-card structure, metadata, and conservative card summaries

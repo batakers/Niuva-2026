@@ -1915,3 +1915,14 @@ Produk Cetak 3D mengarah ke alur Custom 3D Print yang sudah ada. Kontak B2B
 tetap WhatsApp langsung tanpa login/form, dan aturan bisnis lain tidak
 berubah. Isi tiap layanan, lima jenis produk, dan pemetaan 17 proyek disusun dari
 Profil 2026 dan disetujui Owner pada 31 Oktober 2026.
+
+## Addendum 1 November 2026 — Halaman detail untuk semua proyek
+
+Owner memutuskan setiap proyek yang terbit punya halaman `/projects/[slug]`
+sendiri, termasuk karya `card-only`. Aturan sebelumnya (`card-only` tampil
+sebagai kartu tanpa halaman detail) tidak berlaku lagi. `card-only` kini
+berarti proyek tanpa cerita lengkap: halaman detailnya memuat ringkasan yang
+sudah disetujui, cover, catatan bahwa konteks dan proses rinci belum
+ditampilkan, serta dokumentasi tambahan yang disetujui Owner per gambar.
+Halaman layanan, sitemap, dan Beranda boleh menautkan proyek ini. Klaim baru
+tetap dilarang; setiap gambar tambahan memerlukan keterangan yang akurat.

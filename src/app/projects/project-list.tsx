@@ -139,34 +139,25 @@ export function ProjectList({ projects, previewMode = null }: ProjectListProps) 
               Urutan ini bersifat editorial, bukan kronologis. Cerita lengkap tersedia pada proyek yang buktinya sudah cukup; karya lain tampil sebagai ringkasan.
             </p>
           </div>
-          {/* One gallery for every project; only story-ready ones link to a detail page (PRD: card-only has none). */}
+          {/* One gallery; every project opens its own page (Owner, 1 Nov 2026). Story-ready ones say so. */}
           <ul className="grid gap-x-8 gap-y-12 md:grid-cols-2 lg:grid-cols-3">
             {filtered.map(project => {
               const hasStory = project.detailReadiness !== "card-only";
-              const body = (
-                <>
-                  <ProjectMedia isPreview={isPreview} project={project} />
-                  <h3 className={`mt-5 text-xl font-medium tracking-[-0.01em] sm:text-2xl${hasStory ? " transition-colors duration-150 group-hover:text-brand-800" : ""}`}>
-                    <ProjectTitle title={project.title} qualifierClassName="mt-1 text-ui font-normal tracking-normal" />
-                  </h3>
-                  <p className="mt-1.5 text-ui text-muted-foreground">{project.serviceLabel}</p>
-                  <p className="mt-3 max-w-[60ch] text-base leading-[1.6] text-muted-foreground">{project.summary}</p>
-                  {hasStory ? (
-                    <span className="mt-4 inline-flex min-h-11 items-center gap-2 font-semibold underline-offset-4 group-hover:underline">
-                      Lihat cerita proyek
-                      <Icon aria-hidden="true" className="size-5 text-brand-700 transition-transform duration-200 group-hover:translate-x-1" name="arrow-right" />
-                    </span>
-                  ) : null}
-                </>
-              );
               return (
                 <li className="min-w-0" key={project.id}>
                   <article>
-                    {hasStory ? (
-                      <Link className="group block rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/projects/${project.slug}${previewSuffix}`}>
-                        {body}
-                      </Link>
-                    ) : body}
+                    <Link className="group block rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/projects/${project.slug}${previewSuffix}`}>
+                      <ProjectMedia isPreview={isPreview} project={project} />
+                      <h3 className="mt-5 text-xl font-medium tracking-[-0.01em] transition-colors duration-150 group-hover:text-brand-800 sm:text-2xl">
+                        <ProjectTitle title={project.title} qualifierClassName="mt-1 text-ui font-normal tracking-normal" />
+                      </h3>
+                      <p className="mt-1.5 text-ui text-muted-foreground">{project.serviceLabel}</p>
+                      <p className="mt-3 max-w-[60ch] text-base leading-[1.6] text-muted-foreground">{project.summary}</p>
+                      <span className="mt-4 inline-flex min-h-11 items-center gap-2 font-semibold underline-offset-4 group-hover:underline">
+                        {hasStory ? "Lihat cerita proyek" : "Lihat proyek"}
+                        <Icon aria-hidden="true" className="size-5 text-brand-700 transition-transform duration-200 group-hover:translate-x-1" name="arrow-right" />
+                      </span>
+                    </Link>
                   </article>
                 </li>
               );
