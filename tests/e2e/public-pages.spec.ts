@@ -155,7 +155,8 @@ test("public company and service routes render approved content", async ({ page 
   await expect(homepageShell).toHaveAttribute("data-typography-version", "2.0");
   await expect(homepageShell).toHaveCSS("font-family", /Manrope/);
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /index, follow/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+  // The hero repeats the headline in an aria-hidden copy whose last word cycles; assert what assistive tech reads.
+  await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName(
     "Mitra pengembangan produk dari riset hingga prototipe.",
   );
   const main = page.getByRole("main");
