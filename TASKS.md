@@ -2150,6 +2150,12 @@ Branch `claude/redesign-commerce-shop` dari `main@6443471`; potongan pertama T48
   dan preview contoh tanpa overflow 320–1440; replay langkah E2E Toko dan detail
   produk lulus (filter, cari, varian, jumlah, keranjang, stok habis, 404);
   memilih "maung wisuda" menampilkan fotonya; badge Keranjang naik ke 2.
+- **Katalog lokal dan nama tampilan:** DB dev diisi ulang dari `catalog-seed.json`
+  (keputusan Owner 28 Okt, 8 produk published; DB dev sebelumnya masih 18 Sep,
+  3 published). Owner menyetujui nama dan ringkasan tampilan lima produk
+  lainnya ("Setujui usulan", 1 Nov). Terbuka untuk Owner: cara pembeli
+  mengirim foto/catatan untuk produk custom, kategori etalase, dan dua listing
+  figur wisudawan yang mirip.
 - **Belum:** keranjang, checkout, Custom 3D Print dan workspace, halaman
   status/quote token; review visual Owner.
 

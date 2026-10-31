@@ -4,8 +4,9 @@ type ShopDisplayCopy = Readonly<{
   summary: string;
 }>;
 
-// Presentation copy for the three Owner-published ready-made products. Catalog
-// records, terms, slugs, price, and stock remain the source of truth.
+// Owner-approved presentation copy for the eight published products: three first,
+// the other five on 1 Nov 2026 ("Setujui usulan"; display names leave out the LEGO
+// trademark). Catalog records, terms, slugs, price, and stock remain the source of truth.
 const approvedDisplayCopy: Readonly<Record<string, Readonly<{
   sourceName: string;
   name: string;
@@ -25,6 +26,31 @@ const approvedDisplayCopy: Readonly<Record<string, Readonly<{
     sourceName: "3D PRINT KEYCHAIN ANIMAL TELKOM UNIVERSITY",
     name: "Gantungan Kunci Animal Telkom University",
     summary: "Gantungan kunci cetak 3D berbahan PLA, ukuran produk 8 cm, dengan pilihan karakter pada halaman detail.",
+  },
+  "preorder-3d-print-custom-figure-bubble-head-chibi-cartoon-emoji-read-description-for-order": {
+    sourceName: "[PREORDER] 3D PRINT CUSTOM FIGURE (Bubble head, chibi, cartoon, emoji) READ DESCRIPTION FOR ORDER",
+    name: "Figur Custom Gaya Kartun (Pre-order)",
+    summary: "Figur cetak 3D berbahan PLA, ukuran 12 cm, dari foto referensi dalam gaya kartun, emoji, petite, atau big head; polos atau dicat tangan.",
+  },
+  "3d-print-custom-figure-special-moments-newborn-weddings-birthday-dll": {
+    sourceName: "3D PRINT CUSTOM FIGURE SPECIAL MOMENTS (Newborn, weddings, birthday, dll)",
+    name: "Figur Custom Special Moments",
+    summary: "Figur cetak 3D berbahan PLA, ukuran 12 cm, dari foto momen seperti kelahiran, pernikahan, atau ulang tahun; polos atau dicat tangan dengan akrilik.",
+  },
+  "wisuda-custom-3d-print-patung-graduasi-3d-personalisasi-untuk-souvenir-khusus": {
+    sourceName: "Wisuda Custom 3D Print - Patung Graduasi 3D Personalisasi untuk Souvenir Khusus",
+    name: "Figur Wisuda Personalisasi",
+    summary: "Figur wisuda cetak 3D berbahan PLA, ukuran 8–15 cm, dengan pilihan gaya dan pewarnaan.",
+  },
+  "3d-print-lego-figure-wisudawan-telkom-university-pla-bisa-custom-tali-toga-fakultas": {
+    sourceName: "3D Print LEGO Figure Wisudawan Telkom University PLA (Bisa Custom Tali Toga Fakultas)",
+    name: "Figur Wisudawan Telkom University, Tali Toga Fakultas",
+    summary: "Figur wisudawan cetak 3D berbahan PLA, ukuran 12 cm, pilihan perempuan atau laki-laki, dengan tali toga sesuai fakultas.",
+  },
+  "3d-print-lego-figure-wisudawan-telkom-university": {
+    sourceName: "3D PRINT LEGO FIGURE WISUDAWAN TELKOM UNIVERSITY",
+    name: "Figur Wisudawan Telkom University",
+    summary: "Figur wisudawan cetak 3D berbahan PLA, ukuran 12 cm.",
   },
 };
 

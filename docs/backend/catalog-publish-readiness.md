@@ -63,11 +63,15 @@ baru hanya diperlukan bila kebutuhan operasional itu benar-benar muncul.
 
 ### 2. Publish approval
 
-Produk published: Kicau Mania, Keychain Gedung Telkom University, dan Keychain
-Animal Telkom University. Lima produk lain tetap draft karena checkout belum
-menangkap kebutuhan custom seperti referensi foto, revisi, preorder, chat, atau
-catatan fakultas. Seluruh produk draft tetap memiliki media; statusnya tidak
-disebabkan kekurangan foto.
+Keputusan Owner 2026-10-28 (`catalog-publish-decisions.json`): kedelapan produk
+published, termasuk lima listing custom figure yang sebelumnya draft. Risiko
+yang dulu menahan kelimanya tetap terbuka: checkout belum menangkap kebutuhan
+custom seperti referensi foto, revisi, preorder, chat, atau catatan fakultas.
+
+Nama dan ringkasan tampilan Shop untuk kedelapan produk disetujui Owner (tiga
+lebih dulu, lima pada 2026-11-01, "Setujui usulan") dan tinggal di
+`src/features/public/shop-display-copy.ts`; nama tampilan tidak memakai merek
+LEGO. Nama katalog sumber tetap tersimpan dan tampil di deskripsi lengkap.
 
 ### 3. Variant-media binding
 
