@@ -161,9 +161,11 @@ test("public company and service routes render approved content", async ({ page 
   );
   const main = page.getByRole("main");
   await expect(main.getByText("Melalui riset, konsultasi, desain, dan prototyping")).toBeVisible();
-  await expect(main.getByText("niuvamakerspace@gmail.com")).toBeVisible();
-  await expect(main.getByText("+62 851-1767-8901")).toBeVisible();
-  await expect(main.getByText(/Bandung Techno Park/)).toBeVisible();
+  // Foundation v2 keeps the contact details on every public page in the footer's "Bantuan" column.
+  const footer = page.getByRole("contentinfo");
+  await expect(footer.getByText("niuvamakerspace@gmail.com")).toBeVisible();
+  await expect(footer.getByText("+62 851-1767-8901")).toBeVisible();
+  await expect(footer.getByText(/Bandung Techno Park/)).toBeVisible();
 
   await page.getByRole("main").getByRole("link", { name: "Lihat layanan", exact: true }).first().click();
   await expect(page).toHaveURL(/\/services$/);
