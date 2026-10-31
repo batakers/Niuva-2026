@@ -2158,6 +2158,10 @@ Branch `claude/redesign-foundation-company` dari `main@f8c8cbd`.
     copy Owner;
   - unit `home.test.tsx` 8/8, lint 0 error, typecheck lulus; replay langkah
     E2E Beranda lokal lulus; E2E resmi tetap di CI.
+  - footer publik di tablet: kolom merek mendapat baris sendiri di `md` dan
+    empat kolom mulai `lg`, sehingga kolom merek di 768px tidak lagi tergencet
+    satu kata per baris. Capture 640–1440 pada `/` dan `/services` tanpa
+    overflow; unit shell 35/35.
 - **Belum:**
   - E2E lokal (Postgres lokal mati, service perlu hak admin);
   - review visual Owner atas hasil build;

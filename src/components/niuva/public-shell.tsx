@@ -77,8 +77,9 @@ export function PublicShell({
       </header>
       {children}
       <footer className="mt-24 border-t border-border bg-background text-foreground sm:mt-32" data-home-section="footer">
-        <div className="mx-auto grid max-w-public gap-10 px-5 pt-12 pb-16 sm:px-12 md:grid-cols-[minmax(0,1.4fr)_minmax(9rem,0.8fr)_minmax(13rem,1.2fr)_minmax(9rem,0.8fr)]">
-          <div className="space-y-4">
+        {/* Tablet gives the brand its own row; four columns only fit from lg. */}
+        <div className="mx-auto grid max-w-public gap-10 px-5 pt-12 pb-16 sm:px-12 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)_minmax(0,0.8fr)] lg:grid-cols-[minmax(0,1.4fr)_minmax(9rem,0.8fr)_minmax(13rem,1.2fr)_minmax(9rem,0.8fr)]">
+          <div className="space-y-4 md:col-span-3 lg:col-span-1">
             <Link href="/" aria-label="Niuva, kembali ke halaman utama" className="inline-flex rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"><NiuvaLogo className="h-7 w-auto" /></Link>
             <p className="max-w-sm text-ui leading-6 text-muted-foreground"><PublicSiteDescription /></p>
             <p className="text-sm text-muted-foreground">Niuva Inovasi Utama</p>
