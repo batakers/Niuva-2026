@@ -16,7 +16,7 @@ export default function ProjectNotFound() {
         variant="public"
       >
         <NiuvaLink href="/projects" variant="onBrand" className="min-h-11">Lihat semua proyek</NiuvaLink>
-        <NiuvaLink href="/" variant="link" className="min-h-11 px-0 text-white underline underline-offset-4 hover:decoration-2 focus-visible:ring-white/60">Kembali ke beranda</NiuvaLink>
+        <NiuvaLink href="/" variant="link" className="-mx-2 min-h-11 px-2 text-white underline underline-offset-4 hover:decoration-2 focus-visible:ring-white/60">Kembali ke beranda</NiuvaLink>
       </SystemStateView>
     </PublicShell>
   );

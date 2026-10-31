@@ -2147,8 +2147,10 @@ Branch `claude/redesign-legal-404` dari `main@c9b7270`.
 - **Bukti lokal:** tanpa overflow pada 320, 390, 640 (zoom 200%), 768, 1024,
   dan 1440; anchor daftar isi berhenti di bawah header; urutan fokus 404 judul
   → "Kembali ke beranda" → "Lihat Toko" dengan ring putih 3 px; kontras bidang
-  biru 404 terendah 5,18:1. Error publik belum dilihat di browser, hanya unit
-  test.
+  biru 404 terendah 5,18:1. Error publik diperiksa dengan Playwright lewat route
+  pemicu sementara (dihapus, tidak di-commit): judul menerima fokus, Tab ke
+  "Coba lagi" lalu "Kembali ke beranda" dengan ring putih, tanpa overflow
+  320–1440, `noindex`, pesan error asli tidak tampil, kontras terendah 6,00:1.
 - **Belum:** review visual Owner atas route Company selain Beranda.
 
 

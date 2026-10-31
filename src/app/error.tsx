@@ -24,7 +24,7 @@ export default function PublicError({ retry }: Readonly<{ retry: () => void }>) 
         <Button type="button" variant="onBrand" className="min-h-11" onClick={() => retry()}>
           {systemCopy.actions.retry}
         </Button>
-        <NiuvaLink href="/" variant="link" className="min-h-11 px-0 text-white underline underline-offset-4 hover:decoration-2 focus-visible:ring-white/60">
+        <NiuvaLink href="/" variant="link" className="-mx-2 min-h-11 px-2 text-white underline underline-offset-4 hover:decoration-2 focus-visible:ring-white/60">
           {systemCopy.actions.home}
         </NiuvaLink>
       </SystemStateView>
