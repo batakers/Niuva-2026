@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 
 import { PublicShell } from "@/components/niuva/public-shell";
 import { B2BContactLink } from "@/components/niuva/b2b-contact-link";
@@ -9,7 +9,7 @@ import { ClosingPanel } from "@/components/niuva/closing-panel";
 import { Icon } from "@/components/ui/Icon";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { typographySystemTokens as type } from "@/design/typography";
-import { publicServices } from "@/features/public/company-content";
+import { legacyServiceSlugs, publicServices } from "@/features/public/company-content";
 import { mascotRenders } from "@/features/public/mascot";
 import { ProjectTitle } from "@/features/public/project-title-view";
 import { listPublishedPortfolioProjects } from "@/modules/portfolio/public-service";
@@ -21,10 +21,10 @@ type ServiceSlug = (typeof publicServices)[number]["slug"];
 
 // Each service gets the mascot pose that matches its work; the pose illustrates, it claims nothing.
 const serviceMascot: Readonly<Record<ServiceSlug, { src: string; alt: string }>> = {
-  "research-development": { src: mascotRenders.idea, alt: "Maskot Niuva tersenyum menunjuk ke atas, ke bohlam menyala dan tanda tanya" },
-  "consultant-workshop": { src: mascotRenders.collaborate, alt: "Maskot Niuva menunjuk ke depan" },
-  "design-prototyping": { src: mascotRenders.design, alt: "Maskot Niuva memegang laptop" },
-  "apparel-merchandise": { src: mascotRenders.present, alt: "Maskot Niuva memegang tablet" },
+  "riset-pengembangan": { src: mascotRenders.idea, alt: "Maskot Niuva tersenyum menunjuk ke atas, ke bohlam menyala dan tanda tanya" },
+  "desain-rekayasa": { src: mascotRenders.design, alt: "Maskot Niuva memegang laptop" },
+  "prototipe-manufaktur-digital": { src: mascotRenders.build, alt: "Maskot Niuva memegang kunci inggris" },
+  "konsultansi-workshop": { src: mascotRenders.collaborate, alt: "Maskot Niuva menunjuk ke depan" },
 };
 
 const firstSteps = [
@@ -52,7 +52,11 @@ export async function generateMetadata({ params }: ServicePageProps): Promise<Me
 }
 
 export default async function ServiceDetailPage({ params }: ServicePageProps) {
-  const service = findService((await params).slug);
+  const { slug } = await params;
+  // Links shared before the Owner's 31 Oct 2026 service change keep working.
+  const successor = legacyServiceSlugs[slug];
+  if (successor) permanentRedirect(`/services/${successor}`);
+  const service = findService(slug);
   if (!service) notFound();
   const mascot = serviceMascot[service.slug];
 

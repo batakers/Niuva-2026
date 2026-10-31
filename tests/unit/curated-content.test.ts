@@ -17,7 +17,7 @@ describe("approved public content source", () => {
       productionPublicationApproved: true,
     });
     expect(curatedCompanyProfile.publication).toEqual({
-      contentVersion: "2026-09-10",
+      contentVersion: "2026-10-31",
       publicIntegrationApproved: true,
       productionPublicationApproved: true,
     });

@@ -44,7 +44,7 @@ for (const role of ["OWNER", "ADMIN"] as const) test(`${role} creates product, o
   await page.getByRole("link", { name: "Tambah project", exact: true }).click();
   await page.getByRole("textbox", { name: /^Judul project/ }).fill("Project browser fixture");
   await page.getByRole("textbox", { name: /^Tautan project/ }).fill(`browser-project-${suffix}`);
-  await page.getByRole("combobox", { name: /^Layanan/ }).selectOption({ label: "Design & Prototyping" });
+  await page.getByRole("combobox", { name: /^Layanan/ }).selectOption({ label: "Desain & Rekayasa" });
   await page.getByRole("textbox", { name: /^Ringkasan project/ }).fill("Ringkasan fixture, belum merupakan bukti publikasi.");
   await page.getByRole("button", { name: "Simpan draft project", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("Draft project tersimpan");

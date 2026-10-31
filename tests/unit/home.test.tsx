@@ -25,7 +25,7 @@ beforeEach(() => vi.mocked(getProjectPreview).mockResolvedValue({ projects: [], 
 
 const published: ProjectPreviewItem = {
   id: "project-test", slug: "proyek-yang-terbit", title: "Proyek yang terbit",
-  summary: "Ringkasan bukti proyek", serviceLabel: "Design & Prototyping",
+  summary: "Ringkasan bukti proyek", serviceLabel: "Desain & Rekayasa",
   clientName: null, year: null, tags: [], detailReadiness: "summary-only",
   media: [{ altText: "Artefak proyek yang terbit", sortOrder: 0, url: "/media/portfolio/published.png" }],
 };

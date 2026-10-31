@@ -5,13 +5,13 @@ import { B2BContactLink } from "@/components/niuva/b2b-contact-link";
 import { ClosingPanel } from "@/components/niuva/closing-panel";
 import { Icon } from "@/components/ui/Icon";
 import { typographySystemTokens as type } from "@/design/typography";
-import { publicServices } from "@/features/public/company-content";
+import { publicProductTypes, publicServices } from "@/features/public/company-content";
 import { mascotRenders } from "@/features/public/mascot";
 import { buildPageSocialMetadata } from "@/lib/site-metadata";
 
 const SERVICES_TITLE = "Layanan · Niuva";
 const SERVICES_DESCRIPTION =
-  "Research & Development, Consultant & Workshop, Design & Prototyping, serta Apparel & Merchandise dari Niuva.";
+  "Riset & Pengembangan, Desain & Rekayasa, Prototipe & Manufaktur Digital, serta Konsultansi & Workshop dari Niuva.";
 
 export const metadata: Metadata = {
   title: SERVICES_TITLE,
@@ -81,6 +81,30 @@ export default function ServicesPage() {
             </section>
           ))}
         </div>
+
+        {/* Product types from NIUVA Profile 2026: what the services above produce. */}
+        <section aria-labelledby="product-types-title" className="mx-auto grid max-w-public gap-10 px-5 pt-16 sm:px-12 sm:pt-24 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
+          <div>
+            <h2 className={type.heading.className} id="product-types-title">Yang bisa kami buat.</h2>
+            <p className="mt-4 max-w-[40ch] text-lead leading-[1.6] text-muted-foreground">Jenis produk yang dikembangkan dan dibuat Niuva bersama klien.</p>
+          </div>
+          <dl className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
+            {publicProductTypes.map((product) => (
+              <div key={product.title}>
+                <dt className="text-xl font-medium tracking-[-0.01em]">{product.title}</dt>
+                <dd className="mt-1.5 max-w-[42ch] text-base leading-[1.55] text-muted-foreground">{product.description}</dd>
+                {"href" in product ? (
+                  <dd className="mt-2">
+                    <Link className="group inline-flex min-h-11 items-center gap-2 rounded-lg font-semibold underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={product.href}>
+                      Ajukan lewat Custom 3D Print
+                      <Icon aria-hidden="true" className="size-5 text-brand-700 transition-transform duration-200 group-hover:translate-x-1" name="arrow-right" />
+                    </Link>
+                  </dd>
+                ) : null}
+              </div>
+            ))}
+          </dl>
+        </section>
 
         <ClosingPanel id="services-next-title" mascot={mascotRenders.victory} title="Belum tahu harus mulai dari mana?">
           <p className="mt-4 max-w-[40ch] text-lead leading-[1.6] text-white">Ceritakan kebutuhan proyek Anda kepada tim Niuva. Pembahasan kebutuhan dan penawaran dilanjutkan melalui WhatsApp.</p>

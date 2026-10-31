@@ -26,10 +26,10 @@ describe("approved public content", () => {
       phone: "+62 851-1767-8901",
     });
     expect(publicServices.map((service) => service.title)).toEqual([
-      "Research & Development",
-      "Consultant & Workshop",
-      "Design & Prototyping",
-      "Apparel & Merchandise",
+      "Riset & Pengembangan",
+      "Desain & Rekayasa",
+      "Prototipe & Manufaktur Digital",
+      "Konsultansi & Workshop",
     ]);
 
     const projects = getApprovedPortfolioProjects();
@@ -56,6 +56,7 @@ describe("approved public content", () => {
     const serviceUpserts: UpsertInput[] = [];
     const projectUpserts: UpsertInput[] = [];
     const mediaUpserts: UpsertInput[] = [];
+    const serviceUnpublished: unknown[] = [];
 
     const transactionClient = {
       portfolioMedia: {
@@ -79,6 +80,10 @@ describe("approved public content", () => {
           serviceUpserts.push(input);
           return { id: `service-${serviceUpserts.length}` };
         },
+        async updateMany(input: unknown) {
+          serviceUnpublished.push(input);
+          return { count: 0 };
+        },
       },
     };
 
@@ -100,6 +105,11 @@ describe("approved public content", () => {
     });
 
     expect(serviceUpserts).toHaveLength(8);
+    // Services outside the approved list are unpublished, never deleted.
+    expect(serviceUnpublished[0]).toEqual({
+      where: { slug: { notIn: publicServices.map((service) => service.slug) } },
+      data: { isPublished: false },
+    });
     expect(projectUpserts).toHaveLength(34);
     expect(mediaUpserts).toHaveLength(12);
     expect(projectUpserts[0]?.create).toMatchObject({

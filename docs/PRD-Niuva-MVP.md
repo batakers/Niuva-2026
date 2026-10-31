@@ -1896,3 +1896,22 @@ Overview memakai susunan bento tetap untuk Owner/Admin: empat sinyal pekerjaan t
 Customers menyediakan direktori dan riwayat berdasarkan customerId sah. Konten berisi Portfolio dan Informasi Situs. Keuangan berisi invoice seluruh layanan, transaksi pembayaran, dan pengeluaran. B2B memakai satu invoice total proyek dengan pembayaran penuh atau DP + pelunasan yang ditentukan Owner; Owner/Admin memverifikasi transfer langsung dan mencatatnya. Keduanya boleh menerbitkan, mengoreksi, dan membatalkan catatan invoice/pembayaran manual/pengeluaran dengan alasan serta history; koreksi tidak menjalankan refund provider atau membatalkan pekerjaan otomatis.
 
 Laporan menyatukan operasional, keuangan, dan trafik. Tarif Custom Print berada pada Pengaturan khusus Owner dengan Ubah → Tinjau → Terapkan dan versi immutable; quote terbit lama tidak direprice. Admin & Akses/penonaktifan Admin dan Privasi Customer tetap Owner-only. Pola daftar → detail lengkap → tindakan serta return context berlaku lintas Admin. Diskon, Add Widget, AI Assistant, dan layout personal tidak ditambahkan. Kebijakan auth, lifecycle Customer, otoritas provider, pajak, serta retensi legal yang belum diputuskan tetap mengikuti sumber owning-nya.
+
+## Addendum 31 Oktober 2026 — Empat layanan mengikuti Profil 2026
+
+Owner memutuskan empat layanan publik mengikuti halaman layanan rinci di
+`docs/source/NIUVA Profile_2026_v2.pdf` (hal. 7–10). Daftar di "The Problem
+We're Solving" dan aturan `/services/[slug]` kini berlaku untuk:
+
+1. Riset & Pengembangan (`/services/riset-pengembangan`)
+2. Desain & Rekayasa (`/services/desain-rekayasa`)
+3. Prototipe & Manufaktur Digital (`/services/prototipe-manufaktur-digital`)
+4. Konsultansi & Workshop (`/services/konsultansi-workshop`)
+
+Apparel & Merchandise tidak lagi menjadi layanan; karyanya masuk Desain &
+Rekayasa. URL layanan lama dialihkan permanen ke penggantinya. Lima jenis
+produk dari Profil 2026 hal. 6 tampil sebagai informasi di halaman Layanan;
+Produk Cetak 3D mengarah ke alur Custom 3D Print yang sudah ada. Kontak B2B
+tetap WhatsApp langsung tanpa login/form, dan aturan bisnis lain tidak
+berubah. Isi tiap layanan dan pemetaan proyek disusun dari Profil 2026 dan
+menunggu persetujuan teks Owner sebelum terbit.

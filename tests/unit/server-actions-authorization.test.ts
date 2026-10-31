@@ -142,7 +142,7 @@ const MANIFEST: Readonly<Record<string, Readonly<Record<string, ManifestEntry>>>
   "src/app/admin/content-create-actions.ts": {
     createProductDraftAction: { permission: "CATALOG_WRITE", fields: { name: "Synthetic draft", slug: "synthetic-draft", description: "Synthetic description" } },
     createVariantAction: { permission: "CATALOG_WRITE", fields: { productId: UUID, name: "Synthetic variant", sku: "SYNTHETIC-SKU", priceRp: "1000", weightGrams: "20", stockOnHand: "1", isActive: "on" } },
-    createPortfolioDraftAction: { permission: "PORTFOLIO_WRITE", fields: { title: "Synthetic project", slug: "synthetic-project", summary: "Synthetic summary", serviceLabel: "Design & Prototyping" } },
+    createPortfolioDraftAction: { permission: "PORTFOLIO_WRITE", fields: { title: "Synthetic project", slug: "synthetic-project", summary: "Synthetic summary", serviceLabel: "Desain & Rekayasa" } },
   },
   "src/app/admin/finance/actions.ts": {
     createInvoiceDraftAction: { permission: "FINANCE_WRITE", fields: { sourceKind: "ORDER_TOTAL", sourceId: UUID, idempotencyKey: UUID_2 } },

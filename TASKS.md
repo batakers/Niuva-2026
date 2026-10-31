@@ -129,6 +129,12 @@ sitemap/flow:
   Owner, yaitu wajah ceria, telunjuk ke atas, serta bohlam menyala dan tanda
   tanya melayang di atas kepala. Pose dan bohlam dibangun dari rig dan skrip
   build paket maskot; paket sumber tidak diubah.
+- **Q26 (31 Okt):** empat layanan publik mengikuti Profil 2026 hal. 7–10:
+  Riset & Pengembangan, Desain & Rekayasa, Prototipe & Manufaktur Digital,
+  serta Konsultansi & Workshop. Apparel & Merchandise dilebur ke Desain &
+  Rekayasa, URL lama dialihkan permanen, lima jenis produk Profil hal. 6
+  tampil di halaman Layanan. Teks layanan dan pemetaan 17 proyek disusun dari
+  Profil 2026 dan menunggu persetujuan Owner (addendum PRD 31 Okt).
 
 Keputusan Owner yang masih terbuka (rekomendasi agen, belum diputuskan):
 
