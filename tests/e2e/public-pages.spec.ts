@@ -86,8 +86,8 @@ test("published projects filter and navigate, while local examples retain their 
   await page.getByRole("link", { name: /Smart Drop Box/ }).click();
   await expect(page.getByRole("heading", { name: "Konteks dan tantangan" })).toBeVisible();
   await page.goto("/projects/slug-tidak-ada");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Cerita ini belum dapat ditampilkan.");
-  await page.getByRole("link", { name: "Kembali ke Projects" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Proyek ini tidak tersedia.");
+  await page.getByRole("link", { name: "Lihat semua proyek" }).click();
   if (process.env.NIUVA_E2E_PREVIEW_DISABLED === "true") return;
   await page.getByRole("link", { name: "Contoh sintetis", exact: true }).click();
   await expect(page.locator("article")).toHaveCount(2);
@@ -149,6 +149,27 @@ test("published project reference keeps evidence boundaries and proof media avai
   expect((await request.get("/api/frontend-preview/media/unknown")).status()).toBe(404);
   expect((await request.get("/api/frontend-preview/media/..%2F..%2F.env")).status()).toBe(404);
   expect(errors).toEqual([]);
+});
+
+test("legal pages keep a table of contents and point to each other", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/terms");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Syarat Layanan Niuva");
+  // From lg the contents sit beside the text; below lg they fold into a disclosure.
+  const contents = page.getByRole("navigation", { name: "Daftar isi" });
+  await expect(contents).toHaveCount(1);
+  await contents.getByRole("link", { name: "7. Berkas dan hak atas desain" }).click();
+  await expect(page).toHaveURL(/#berkas-dan-hak-atas-desain$/);
+  await expect(page.getByRole("heading", { name: "7. Berkas dan hak atas desain" })).toBeInViewport();
+  await page.getByRole("link", { name: /Baca juga/ }).click();
+  await expect(page).toHaveURL(/\/privacy$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Kebijakan Privasi Niuva");
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator("summary", { hasText: "Daftar isi" }).click();
+  await page.getByRole("navigation", { name: "Daftar isi" }).getByRole("link", { name: "6. Masa penyimpanan" }).click();
+  await expect(page.getByRole("heading", { name: "6. Masa penyimpanan" })).toBeInViewport();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
 test("public company and service routes render approved content", async ({ page }) => {

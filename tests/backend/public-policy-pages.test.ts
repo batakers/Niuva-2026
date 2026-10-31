@@ -12,7 +12,7 @@ vi.mock("@/modules/customer-auth/public-policy", async original => {
 import TermsPage from "@/app/terms/page";
 import PrivacyPage from "@/app/privacy/page";
 import { PublicPolicyPage } from "@/components/niuva/public-policy-page";
-import { PolicyDocument } from "@/components/niuva/policy-document";
+import { PolicyDocument, policyOutline } from "@/components/niuva/policy-document";
 import { readApprovedCustomerPolicy } from "@/modules/customer-auth/public-policy-content";
 
 beforeEach(() => { dates.publishedAt = null; dates.effectiveAt = null; });
@@ -52,5 +52,16 @@ describe("policy document renderer", () => {
     expect(html).toContain("Paragraf <strong class=\"font-semibold text-foreground\">tebal</strong> lanjutan.");
     expect(html).toContain("<li>satu sambungan</li>"); expect(html).toContain("<th scope=\"col\"");
     expect(html).toContain("&lt;b&gt;x&lt;/b&gt;");
+  });
+
+  it("gives every section a unique anchor that is also a valid CSS selector", () => {
+    const source = "# Judul\n\n## 1. Data **Anda**\n\nTeks.\n\n## Data Anda\n\n## 2. Hak & Pilihan";
+    expect(policyOutline(source)).toEqual([
+      { id: "data-anda", title: "1. Data Anda" },
+      { id: "data-anda-2", title: "Data Anda" },
+      { id: "hak-pilihan", title: "2. Hak & Pilihan" },
+    ]);
+    const html = renderToStaticMarkup(createElement(PolicyDocument, { source }));
+    expect(html).toContain('id="data-anda"'); expect(html).toContain('id="data-anda-2"'); expect(html).toContain('id="hak-pilihan"');
   });
 });

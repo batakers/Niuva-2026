@@ -371,9 +371,9 @@ Ubah dokumen ini hanya untuk keputusan lintas halaman; ubah panduan area untuk k
 
 ## Known Gaps
 
-- Legal (`/terms`, `/privacy`) dan 404 masih komposisi v1 di bawah token v2; Beranda, Layanan, detail layanan, Proyek, dan detail proyek sudah memakai komposisi v2 (T47).
+- Semua route Company memakai komposisi v2 (T47): Beranda, Layanan dan detailnya, Proyek dan detailnya, legal (`/terms`, `/privacy`), serta 404 dan error publik. Halaman error publik diperiksa di browser lewat route pemicu sementara yang tidak di-commit (1 Nov 2026).
 - Commerce/MAKE/Customer (T48–T49) dan Admin (T50) masih membawa komposisi v1 di bawah token v2.
-- Kontras teks hero diukur pada compositing aktual (teks disembunyikan, latar terterang di kotak setiap teks) pada 1440/1280/1024/390 setelah kolom judul dilebarkan dan titik terang `xl` dipersempit ke belakang maskot: terendah 4,91:1 untuk headline, 5,12:1 untuk subcopy, dan 5,43:1 untuk tindakan (31 Okt 2026). Ukur ulang bila gradien, posisi maskot, atau lebar kolom berubah.
+- Kontras teks hero diukur pada compositing aktual (teks disembunyikan, latar terterang di kotak setiap teks) pada 1440/1280/1024/390 setelah kolom judul dilebarkan dan titik terang `xl` dipersempit ke belakang maskot: terendah 4,91:1 untuk headline, 5,12:1 untuk subcopy, dan 5,43:1 untuk tindakan (31 Okt 2026). Bidang biru 404 dan error memakai geometri detail layanan: terendah 5,18:1 (judul 404, 1024) dan 6,00:1 (subcopy error, 1024) pada 1 Nov 2026. Ukur ulang bila gradien, posisi maskot, atau lebar kolom berubah.
 - `button.tsx` masih membawa radius px dari preset shadcn pada ukuran `icon-xs`/`icon-sm`.
 - E2E tidak dijalankan lokal (Postgres tidak aktif). Belum ada acceptance visual Owner, pengujian device/AT, staging, atau produksi.
 - Arsip AUiS dan dokumen fondasi lama tetap bukti historis, bukan instruksi aktif.
