@@ -26,11 +26,11 @@ const mascot = {
   present: "/assets/mascot/niuva-mascot-present.webp",
   build: "/assets/mascot/niuva-mascot-build.webp",
   victory: "/assets/mascot/niuva-mascot-victory.webp",
-  idea: "/assets/mascot/niuva-mascot-ide.webp",
+  idea: "/assets/mascot/niuva-mascot-idea.webp",
 } as const;
 
 const processStages: readonly ProcessStage[] = [
-  { title: "Ide", description: "Tujuan, konteks pengguna, dan batasan awal dipetakan bersama.", image: mascot.idea, alt: "Maskot Niuva dengan ikon bohlam di layar wajah, menunjuk ke samping" },
+  { title: "Ide", description: "Tujuan, konteks pengguna, dan batasan awal dipetakan bersama.", image: mascot.idea, alt: "Maskot Niuva tersenyum menunjuk ke atas, ke bohlam menyala dan tanda tanya di atas kepala" },
   { title: "Desain", description: "Arah produk diterjemahkan menjadi bentuk dan detail yang dapat ditinjau.", image: mascot.design, alt: "Maskot Niuva memegang laptop" },
   { title: "Prototipe", description: "Konsep diuji melalui iterasi fisik, termasuk cetak 3D di workshop.", image: mascot.build, alt: "Maskot Niuva memegang kunci inggris" },
   { title: "Produk jadi", description: "Hasil dikembangkan menuju produk nyata dengan dukungan manufaktur yang relevan.", image: mascot.victory, alt: "Maskot Niuva mengangkat kedua tangan" },
