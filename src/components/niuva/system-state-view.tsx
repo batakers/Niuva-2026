@@ -48,7 +48,7 @@ export function SystemStateView({ variant, title, description, eyebrow, stateId,
             {children ? <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">{children}</div> : null}
           </div>
           <div className="relative h-64 lg:absolute lg:inset-y-0 lg:right-0 lg:left-[calc(var(--panel-inset)+38rem)] lg:h-auto">
-            <Image alt="" className="absolute -bottom-7.5 left-1/2 h-[108%] w-auto max-w-none -translate-x-1/2 object-contain drop-shadow-xl lg:-bottom-10 lg:h-[112%]" height={1400} sizes="(max-width: 1024px) 90vw, 560px" src={mascot} width={1400} />
+            <Image alt="" className="absolute -bottom-7.5 left-1/2 h-[108%] w-auto max-w-none -translate-x-1/2 object-contain drop-shadow-xl lg:-bottom-10 lg:h-[112%]" height={1400} preload sizes="(max-width: 1024px) 90vw, 560px" src={mascot} width={1400} />
           </div>
         </div>
       </main>

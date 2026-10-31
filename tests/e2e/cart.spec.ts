@@ -6,12 +6,12 @@ test("product selection adds only variant ID and quantity to the local cart", as
   await page.goto("/shop/contoh-dock-modular-meja?preview=examples");
   await page.getByRole("radio", { name: /Abu-abu/ }).click();
   await page.getByRole("button", { name: "Tambah jumlah" }).click();
-  await page.getByRole("button", { name: "Tambah ke cart" }).click();
+  await page.getByRole("button", { name: "Tambah ke keranjang" }).click();
 
   expect(await page.evaluate(key => window.localStorage.getItem(key), storageKey)).toBe(
     '{"version":1,"items":[{"variantId":"example-dock-grey","quantity":2}]}',
   );
-  await page.getByRole("link", { name: "Lihat cart" }).click();
+  await page.getByRole("link", { name: "Lihat keranjang" }).click();
   await expect(page).toHaveURL(/\/cart\?preview=examples$/);
   await expect(page.locator('a[href="/cart"]').filter({ hasText: "2 item di keranjang" }).first()).toBeAttached();
   await expect(page.getByRole("heading", { level: 3, name: "Dock modular meja" })).toBeVisible();

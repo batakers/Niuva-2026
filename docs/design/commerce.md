@@ -11,6 +11,15 @@ Seluruh surface di atas mengikuti kontrak shadcn/ui global di [DESIGN.md](../../
 - Media produk dan viewer khusus tetap memiliki tugas domainnya; kontrol dan feedback antarmukanya mengikuti komponen bersama. Kebutuhan viewer tidak memberi izin menambahkan dependency atau mengubah akses file privat.
 - Penerapan komponen mempertahankan name/value form, submit/validasi, state server, auth/permission, serta aturan harga dan pembayaran. Tema shadcn mengikuti token Niuva dan kepadatan Commerce; layout account tidak menjadi workspace Admin.
 
+## Komposisi route (Foundation v2, T48)
+
+Dibangun di atas Foundation v2; belum ditinjau Owner.
+
+- **Toko (`/shop`):** judul display dan satu kalimat cara membeli, lalu langsung katalog: chip kategori (`aria-pressed`) dan kolom cari di satu baris, jumlah produk, kemudian grid kartu produk persegi (1/2/3 kolom). Kartu berisi foto utuh (contain) di permukaan putih, kategori, nama, harga ("Mulai" hanya bila harga varian berbeda), dan status stok berwarna; tanpa ringkasan panjang. Panel penutup biru dengan maskot kunci inggris mengarah ke Custom 3D Print. Header tidak membawa aksi tambahan; Keranjang dengan badge jumlah sudah ada di utilitas.
+- **Detail produk:** tautan "Kembali ke Toko", lalu galeri dan panel keputusan berdampingan mulai `lg`. Galeri: foto persegi besar, keterangan "Foto n dari N", dan thumbnail (satu baris geser di ponsel, grid mulai `sm`). Memilih varian menampilkan fotonya bila katalog memiliki foto beralt "Foto varian <nama varian>"; tanpa kecocokan galeri tidak berpindah. Panel: kategori, nama, ringkasan, harga dan stok, daftar varian, kartu harga dan jumlah, tombol terisi "Tambah ke keranjang", dan satu kalimat bahwa harga dan stok diperiksa lagi saat checkout. Deskripsi katalog lengkap ada di disclosure di bawahnya.
+- **Produk tidak ditemukan:** bidang biru sistem dengan maskot ide, "Lihat Toko" dan "Kembali ke beranda".
+- Copy memakai bahasa pelanggan ("keranjang", "Toko"); batas server tetap dinyatakan dengan kalimat sederhana, tanpa istilah sistem seperti "browser" atau "otoritas".
+
 ## Informasi berada dekat keputusan
 
 | Surface | Informasi utama | Bentuk yang sesuai |

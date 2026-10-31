@@ -5,19 +5,16 @@ import { getShopDisplayCopy } from "@/features/public/shop-display-copy";
 describe("Shop presentation copy", () => {
   const published = catalogSeed.products.filter((product) => product.isPublished);
 
-  it("curates the three approved ready-made products and shows the canonical record for the rest", () => {
-    // Owner decision 28 October 2026: all eight products are published; only
-    // three have approved presentation copy so far.
+  it("curates every published product with Owner-approved presentation copy", () => {
+    // Owner decision 28 October 2026: all eight products are published. Display
+    // copy: three approved earlier, the other five on 1 November 2026.
     expect(published).toHaveLength(8);
-    const curated = published.filter((product) => getShopDisplayCopy(product).curated);
-    expect(curated).toHaveLength(3);
-    for (const product of curated) {
+    for (const product of published) {
       const display = getShopDisplayCopy(product);
+      expect(display.curated, product.slug).toBe(true);
       expect(display.name.length).toBeLessThan(product.name.length);
-      expect(display.summary).not.toContain("NIUVA STUDIO – Jasa 3D print custom");
-    }
-    for (const product of published.filter((item) => !curated.includes(item))) {
-      expect(getShopDisplayCopy(product), product.slug).toEqual({ curated: false, name: product.name, summary: product.description });
+      expect(display.name).not.toMatch(/LEGO|PREORDER|READ DESCRIPTION/);
+      expect(display.summary).not.toContain("NIUVA STUDIO");
     }
   });
 

@@ -17,7 +17,12 @@ const rupiah = new Intl.NumberFormat("id-ID", {
   style: "currency",
 });
 
-export function ProductSelection({ product, previewEnabled = true }: { product: PublicShopProduct; previewEnabled?: boolean }) {
+export function ProductSelection({ product, previewEnabled = true, onVariantChange }: {
+  product: PublicShopProduct;
+  previewEnabled?: boolean;
+  /** Lets the gallery show the chosen variant's photo. */
+  onVariantChange?: (variantId: string) => void;
+}) {
   const hydrated = useHydrated();
   const [selectedId, setSelectedId] = useState<string>();
   const [quantity, setQuantity] = useState(1);
@@ -30,6 +35,7 @@ export function ProductSelection({ product, previewEnabled = true }: { product: 
     setSelectedId(optionId);
     setQuantity(1);
     setCartResult("idle");
+    onVariantChange?.(optionId);
   }
 
   function changeQuantity(next: number) {
@@ -59,22 +65,18 @@ export function ProductSelection({ product, previewEnabled = true }: { product: 
   }
 
   return (
-    <section aria-labelledby="purchase-options-title" className="mt-8 scroll-mt-8 border-t border-border pt-7" id="purchase-options">
-      <h2 id="purchase-options-title" className="text-lg font-semibold">Pilih varian dan jumlah</h2>
-      <p className="mt-2 text-sm leading-6 text-muted-foreground">
-        Harga dan ketersediaan mengikuti varian. Keduanya akan diverifikasi kembali oleh server saat checkout tersedia.
-      </p>
+    <section aria-labelledby="purchase-options-title" className="mt-8 scroll-mt-24" id="purchase-options">
+      <h2 id="purchase-options-title" className="sr-only">Pilih varian dan jumlah</h2>
 
       {!hasAvailableVariant ? (
-        <div className="mt-5">
-          <StatusNotice tone="warning" title="Semua varian sedang habis." description="Anda tetap dapat meninjau pilihan, tetapi belum ada varian yang dapat disiapkan untuk cart." />
+        <div className="mb-6">
+          <StatusNotice tone="warning" title="Semua varian sedang habis." description="Anda masih bisa melihat pilihannya, tetapi belum bisa menambahkannya ke keranjang." />
         </div>
       ) : null}
 
       <VariantSelector
-        className="mt-6"
-        description="Varian berstatus stok habis tidak dapat dipilih."
-        label="Varian produk"
+        description="Varian yang stoknya habis tidak bisa dipilih."
+        label="Varian"
         onChange={chooseVariant}
         options={product.variants.map(variant => ({
           availability: variant.stockOnHand > 0 ? "available" : "out-of-stock",
@@ -87,26 +89,26 @@ export function ProductSelection({ product, previewEnabled = true }: { product: 
         variant="list"
       />
 
-      <div className="mt-7 grid gap-6 border-y border-border py-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+      <div className="mt-6 grid gap-5 rounded-[var(--radius-card)] border border-border bg-card p-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:p-6">
         <div>
-          <p className="text-xs text-muted-foreground">Harga pilihan</p>
+          <p className="text-caption text-muted-foreground">Harga</p>
           <p className="mt-1 text-2xl font-semibold tabular-nums" aria-live="polite">
-            {selected ? rupiah.format(BigInt(selected.priceRp)) : "Pilih varian"}
+            {selected ? rupiah.format(BigInt(selected.priceRp)) : "Pilih varian dulu"}
           </p>
-          <p id="selection-state" className="mt-2 text-xs leading-5 text-muted-foreground">
-            {selected ? `${selected.name}, maksimum ${selected.stockOnHand}${previewEnabled ? " pada data contoh" : " tersedia saat ini"}.` : "Pilih satu varian yang tersedia untuk mengatur jumlah."}
+          <p id="selection-state" className="mt-1 text-caption leading-[1.45] text-muted-foreground">
+            {selected ? `${selected.name}, maksimal ${selected.stockOnHand}${previewEnabled ? " pada data contoh" : ""}.` : "Jumlah bisa diatur setelah varian dipilih."}
           </p>
         </div>
 
         <div>
-          <label htmlFor="product-quantity" className="mb-2 block text-sm font-medium">Jumlah</label>
+          <label htmlFor="product-quantity" className="mb-2 block text-ui font-medium">Jumlah</label>
           <div className="flex items-center gap-2">
             <Button type="button" variant="outline" size="icon" className="size-11 cursor-pointer" aria-label="Kurangi jumlah"
               disabled={!hydrated || !selected || quantity <= 1} onClick={() => changeQuantity(quantity - 1)}>
               <Icon aria-hidden="true" name="minus" />
             </Button>
             <Input id="product-quantity" type="number" inputMode="numeric" min={1} max={selected?.stockOnHand ?? 1}
-              className="h-11 w-20 text-center text-base tabular-nums" value={quantity} disabled={!hydrated || !selected}
+              className="h-11 w-16 text-center text-base tabular-nums" value={quantity} disabled={!hydrated || !selected}
               onChange={event => changeQuantity(Number.parseInt(event.target.value, 10) || 1)} />
             <Button type="button" variant="outline" size="icon" className="size-11 cursor-pointer" aria-label="Tambah jumlah"
               disabled={!hydrated || !selected || quantity >= selected.stockOnHand} onClick={() => changeQuantity(quantity + 1)}>
@@ -116,28 +118,28 @@ export function ProductSelection({ product, previewEnabled = true }: { product: 
         </div>
       </div>
 
-      <Button type="button" size="lg" className="mt-6 min-h-11 w-full cursor-pointer" disabled={!canPrepare}
+      <Button type="button" size="lg" className="mt-5 min-h-12 w-full cursor-pointer" disabled={!canPrepare}
         aria-describedby="selection-state cart-preview-note" onClick={addSelectionToCart}>
-        Tambah ke cart
+        Tambah ke keranjang
       </Button>
-      <p id="cart-preview-note" className="mt-3 text-xs leading-5 text-muted-foreground">
-        Cart lokal hanya menyimpan ID varian dan jumlah. Harga, stok, ongkir, dan total final tidak disimpan sebagai otoritas browser.
+      <p id="cart-preview-note" className="mt-3 text-caption leading-[1.45] text-muted-foreground">
+        Harga dan stok diperiksa lagi saat checkout. Ongkir dihitung di checkout.
       </p>
 
       {cartResult === "added" || cartResult === "recovered" ? (
         <div className="mt-5">
           <StatusNotice
             tone="success"
-            title="Pilihan ditambahkan ke cart."
-            description={`${quantity} × ${selected?.name ?? "varian"} tersimpan lokal.${cartResult === "recovered" ? " Data cart lama yang tidak valid telah dibersihkan." : ""} Belum ada reservasi stok atau transaksi yang dibuat.`}
-            action={<NiuvaLink href={previewEnabled ? "/cart?preview=examples" : "/cart"} variant="outline" className="min-h-11">Lihat cart</NiuvaLink>}
+            title="Masuk ke keranjang."
+            description={`${quantity} × ${selected?.name ?? "varian"}. Stok belum ditahan sampai pesanan dibuat.${cartResult === "recovered" ? " Isi keranjang lama yang rusak sudah dibersihkan." : ""}`}
+            action={<NiuvaLink href={previewEnabled ? "/cart?preview=examples" : "/cart"} variant="outline" className="min-h-11">Lihat keranjang</NiuvaLink>}
           />
         </div>
       ) : null}
       {cartResult === "error" ? (
-        <div className="mt-5"><StatusNotice tone="error" title="Pilihan belum tersimpan." description="Browser menolak akses penyimpanan lokal. Periksa pengaturan browser lalu coba lagi." /></div>
+        <div className="mt-5"><StatusNotice tone="error" title="Belum bisa disimpan ke keranjang." description="Browser ini menolak penyimpanan. Periksa pengaturan browser, lalu coba lagi." /></div>
       ) : null}
-      <noscript><p className="mt-3 text-sm text-muted-foreground">Aktifkan JavaScript untuk memilih varian, mengatur jumlah, dan menyimpan cart lokal.</p></noscript>
+      <noscript><p className="mt-3 text-ui text-muted-foreground">Aktifkan JavaScript untuk memilih varian dan menambah produk ke keranjang.</p></noscript>
     </section>
   );
 }

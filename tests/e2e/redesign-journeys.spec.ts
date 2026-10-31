@@ -15,8 +15,6 @@ test("public navigation keeps the four paths, separate utilities, and contextual
   for (const [route, label, href] of [
     ["/services/desain-rekayasa", "Hubungi Kami", /^https:\/\/wa\.me\//],
     ["/custom-print", "Pilih titik mulai", "#start-custom"],
-    ["/shop?preview=examples", "Lihat Produk", "#catalog"],
-    ["/shop/contoh-dock-modular-meja?preview=examples", "Pilih Varian", "#purchase-options"],
   ] as const) {
     await page.goto(route);
     await expect(page.locator("header").getByRole("link", { name: label })).toHaveAttribute("href", href);
@@ -79,7 +77,7 @@ test("MAKE offers the available intake and BUY continues from catalog to cart", 
   await page.goto("/shop?preview=examples");
   await page.getByRole("link", { name: /Dock modular meja/ }).click();
   await page.getByRole("radio", { name: /Abu-abu/ }).click();
-  await page.getByRole("button", { name: "Tambah ke cart" }).click();
+  await page.getByRole("button", { name: "Tambah ke keranjang" }).click();
   await page.getByRole("navigation", { name: "Navigasi utama" }).getByRole("link", { name: "Keranjang" }).click();
   await expect(page.getByRole("heading", { name: "Dock modular meja" })).toBeVisible();
 });
