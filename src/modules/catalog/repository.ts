@@ -25,6 +25,8 @@ export type PublicCatalogProduct = Readonly<{
   slug: string;
   variants: readonly Readonly<{
     id: string;
+    /** The variant's own gallery photo, when one is linked. */
+    media?: Readonly<{ storageKey: string }> | null;
     name: string;
     priceRp: Prisma.Decimal;
     sku: string;
@@ -98,6 +100,7 @@ export class CatalogRepository implements CatalogRepositoryPort {
           orderBy: { createdAt: "asc" },
           select: {
             id: true,
+            media: { select: { storageKey: true } },
             name: true,
             priceRp: true,
             sku: true,
@@ -141,6 +144,7 @@ export class CatalogRepository implements CatalogRepositoryPort {
           orderBy: { createdAt: "asc" },
           select: {
             id: true,
+            media: { select: { storageKey: true } },
             name: true,
             priceRp: true,
             sku: true,
@@ -274,6 +278,18 @@ export class CatalogRepository implements CatalogRepositoryPort {
         throw appError("NOT_FOUND");
       }
 
+      if (typeof input.mediaId === "string") {
+        const media = await transaction.productMedia.findFirst({
+          where: { id: input.mediaId, productId: current.product.id },
+          select: { id: true },
+        });
+        if (media === null) {
+          throw appError("VALIDATION_ERROR", {
+            details: { mediaId: "Foto varian harus berasal dari galeri produk ini." },
+          });
+        }
+      }
+
       const isActive = input.isActive ?? current.isActive;
       if (current.product.isPublished && current.isActive && !isActive) {
         const activeVariantCount = await transaction.productVariant.count({
@@ -332,16 +348,41 @@ export class CatalogRepository implements CatalogRepositoryPort {
       }
 
       await assertOwnedPublicMedia(transaction, { kind: "product", id: productId }, items.map(item => item.storageKey));
-      await transaction.productMedia.deleteMany({ where: { productId } });
-      if (items.length > 0) {
-        await transaction.productMedia.createMany({
-          data: items.map((item) => ({
-            altText: item.altText,
-            productId,
-            sortOrder: item.sortOrder,
-            storageKey: item.storageKey,
-          })),
-        });
+      // A photo that stays in the gallery keeps its row (and every variant pointing at it); rows
+      // that leave are deleted, which clears those links through ON DELETE SET NULL.
+      const wanted = new Set(items.map(item => item.storageKey));
+      const existing = await transaction.productMedia.findMany({
+        where: { productId },
+        orderBy: { sortOrder: "asc" },
+        select: { id: true, storageKey: true },
+      });
+      const kept = new Map<string, string>();
+      const dropped: string[] = [];
+      for (const row of existing) {
+        if (wanted.has(row.storageKey) && !kept.has(row.storageKey)) kept.set(row.storageKey, row.id);
+        else dropped.push(row.id);
+      }
+      if (dropped.length > 0) {
+        await transaction.productMedia.deleteMany({ where: { id: { in: dropped } } });
+      }
+      // Park kept rows on negative positions first so reordering never hits (productId, sortOrder).
+      let parked = -1;
+      for (const id of kept.values()) {
+        await transaction.productMedia.update({ where: { id }, data: { sortOrder: parked } });
+        parked -= 1;
+      }
+      for (const item of items) {
+        const id = kept.get(item.storageKey);
+        if (id === undefined) {
+          await transaction.productMedia.create({
+            data: { altText: item.altText, productId, sortOrder: item.sortOrder, storageKey: item.storageKey },
+          });
+        } else {
+          await transaction.productMedia.update({
+            where: { id },
+            data: { altText: item.altText, sortOrder: item.sortOrder },
+          });
+        }
       }
 
       return { productId: product.id, mediaCount: items.length };

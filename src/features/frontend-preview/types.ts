@@ -38,7 +38,9 @@ export type PublicShopProduct = Omit<PublicCatalogProduct, "media" | "variants">
     url?: string;
   }>[];
   variants: readonly Readonly<
-    Omit<CatalogVariant, "priceRp" | "weightGrams"> & {
+    Omit<CatalogVariant, "media" | "priceRp" | "weightGrams"> & {
+      /** Public URL of the variant's linked gallery photo; storage keys stay server-side. */
+      photoUrl?: string;
       priceRp: string;
       weightGrams: string;
     }

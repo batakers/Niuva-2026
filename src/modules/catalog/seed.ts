@@ -22,6 +22,8 @@ const seedVariantSchema = z.object({
   isActive: z.boolean().default(true),
   lengthCm: decimal.optional(),
   name: text,
+  /** Storage key of this variant's photo in the same product's media list. */
+  photoStorageKey: mediaStorageKey.optional(),
   priceRp: money,
   sku: text,
   stockOnHand: z.int().nonnegative().max(2_147_483_647),
@@ -75,11 +77,15 @@ export const catalogSeedSchema = z
         }
         sortOrders.add(media.sortOrder);
       }
+      const mediaKeys = new Set(product.media.map((media) => media.storageKey));
       for (const variant of product.variants) {
         if (skus.has(variant.sku)) {
           context.addIssue({ code: "custom", message: `SKU duplikat: ${variant.sku}.`, path: ["products"] });
         }
         skus.add(variant.sku);
+        if (variant.photoStorageKey !== undefined && !mediaKeys.has(variant.photoStorageKey)) {
+          context.addIssue({ code: "custom", message: `Foto varian ${variant.sku} tidak ada di media ${product.slug}.`, path: ["products"] });
+        }
       }
     }
   });
@@ -144,6 +150,7 @@ export async function seedCatalogInTransaction(
       select: { id: true },
     });
 
+    const variantIds = new Map<string, string>();
     for (const variant of product.variants) {
       const existing = await tx.productVariant.findUnique({ where: { sku: variant.sku }, select: { id: true, productId: true } });
       if (existing !== null && existing.productId !== persisted.id) {
@@ -165,6 +172,7 @@ export async function seedCatalogInTransaction(
           },
           select: { id: true },
         });
+        variantIds.set(variant.sku, created.id);
         await recordStockMovement(tx, {
           balanceBefore: 0,
           balanceAfter: variant.stockOnHand,
@@ -172,6 +180,7 @@ export async function seedCatalogInTransaction(
           variantId: created.id,
         });
       } else {
+        variantIds.set(variant.sku, existing.id);
         await tx.productVariant.update({
           where: { id: existing.id },
           data: {
@@ -200,6 +209,19 @@ export async function seedCatalogInTransaction(
         update: { altText: media.altText, storageKey: media.storageKey },
       });
       mediaCount += 1;
+    }
+
+    // Link variant photos once the media rows exist. A variant without a photo key keeps
+    // whatever link an admin set; the import never clears it.
+    for (const variant of product.variants) {
+      const variantId = variantIds.get(variant.sku);
+      if (variant.photoStorageKey === undefined || variantId === undefined) continue;
+      const media = await tx.productMedia.findFirst({
+        where: { productId: persisted.id, storageKey: variant.photoStorageKey },
+        select: { id: true },
+      });
+      if (media === null) throw new Error(`Foto varian ${variant.sku} belum tersimpan.`);
+      await tx.productVariant.update({ where: { id: variantId }, data: { mediaId: media.id } });
     }
   }
 

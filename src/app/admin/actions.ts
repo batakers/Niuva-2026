@@ -363,6 +363,8 @@ export const updateVariantAction: AdminAction = async (_previous, formData) => {
       heightCm: optionalText(formData, "heightCm") || undefined,
       isActive: checkbox(formData, "isActive"),
       lengthCm: optionalText(formData, "lengthCm") || undefined,
+      // An empty choice clears the variant's photo link.
+      mediaId: optionalText(formData, "mediaId") ?? null,
       name: text(formData, "name"),
       priceRp: text(formData, "priceRp"),
       sku: text(formData, "sku"),

@@ -249,6 +249,7 @@ export type AdminProductDetail = Readonly<{
     id: string;
     isActive: boolean;
     lengthCm: string | null;
+    mediaId: string | null;
     name: string;
     priceRp: string;
     sku: string;
@@ -725,6 +726,7 @@ export class AdminOperationsService {
             id: true,
             isActive: true,
             lengthCm: true,
+            mediaId: true,
             name: true,
             priceRp: true,
             sku: true,
@@ -751,6 +753,7 @@ export class AdminOperationsService {
         id: variant.id,
         isActive: variant.isActive,
         lengthCm: variant.lengthCm?.toString() ?? null,
+        mediaId: variant.mediaId,
         name: variant.name,
         priceRp: variant.priceRp.toString(),
         sku: variant.sku,

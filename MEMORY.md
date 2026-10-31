@@ -7,7 +7,7 @@ Update this after major decisions, completed phases, or bugs that future agents 
 - Working baseline: `main` `6c63707` after PR #97 (30 Oct 2026). Staging `niuva-t03-staging` (Netlify functions us-east-2, Neon ap-southeast-1) runs sandbox providers; dated hosted evidence lives in `TASKS.md`, not here.
 - Current work: v1.0 closure. Scope: `PRODUCT.md`; dependencies: `ROADMAP.md`; sole active backlog: `TASKS.md` (start with its "Fokus aktif" board); completion: `docs/v1-definition-of-done.md`. `.kiro/specs/` is historical evidence.
 - Current task statuses and dated execution evidence belong to `TASKS.md`; this memory does not duplicate its backlog table.
-- Data model: 81 Prisma models (`grep -c '^model ' prisma/schema.prisma`) and 40 migration folders (`ls -d prisma/migrations/*/ | wc -l`). Counts describe files, not an applied database state.
+- Data model: 81 Prisma models (`grep -c '^model ' prisma/schema.prisma`) and 41 migration folders (`ls -d prisma/migrations/*/ | wc -l`). Counts describe files, not an applied database state.
 - Hosted preflight: `corepack pnpm staging:preflight` uses process environment and the canonical origin, capability and database-binding helpers. Runtime privileges and migration history use separate, binding-checked credentials; both client connections require verified TLS. It does not provision, migrate or call transaction providers; safe output omits credentials and resource identifiers. See `docs/backend/t03-hosted-sandbox-runbook.md` for evidence boundaries.
 - Auth, two separate systems:
   - Owner/Admin: Better Auth + TOTP (`src/lib/auth/admin-engine.ts`); `src/lib/auth/admin.ts` requires `mfaVerified`, `twoFactorEnabled`, and an active AdminProfile. `src/proxy.ts` checks only Admin session-cookie presence and must not import the engine or database (edge bundle; enforced by `tests/unit/proxy-edge-imports.test.ts`). Staging has no signup: `corepack pnpm staging:bootstrap-owner` (`src/modules/admin/staging-owner-bootstrap.ts`) creates the first Owner once on a verified staging binding; Admins come from the Owner invitation flow. Clerk SDK is absent; `src/lib/auth/clerk.ts` only re-exports `./admin` (deprecated).
@@ -63,7 +63,7 @@ Carried findings retain their IDs; source fixes do not close hosted or release g
 - [x] Step 4 agent-documentation scaffold
 - [x] Application scaffold baseline
 - [x] Verification harness
-- [x] Core schema: 81 models, 40 migration folders; T12/T13 migration applied only to a new isolated local test database
+- [x] Core schema: 81 models, 41 migration folders; T12/T13 migration applied only to a new isolated local test database
 - [x] Auth: Better Auth/TOTP for Owner/Admin; Customer DB sessions; T12/T13 public signup tested locally, hosted gates remain
 - [x] Active B2B WhatsApp path and retired Project Brief boundaries present
 - [x] Company routes on Foundation v2 (T47), verified locally; Owner visual review per route is tracked in `TASKS.md`
