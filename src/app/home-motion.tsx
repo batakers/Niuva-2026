@@ -17,34 +17,37 @@ function useReducedMotion() {
   return reduced;
 }
 
-/** Visual-only cycling word; the heading keeps its approved accessible name. */
+/**
+ * Visual-only cycling word; the heading keeps its approved accessible name.
+ * It runs one pass and settles back on the first (approved) word within five
+ * seconds, so the motion ends on its own and needs no pause control (WCAG 2.2.2).
+ */
 export function HeroStageWord({ words }: Readonly<{ words: readonly string[] }>) {
   const reduced = useReducedMotion();
   const [index, setIndex] = useState(0);
   const [leaving, setLeaving] = useState(false);
   useEffect(() => {
     if (reduced || words.length < 2) return;
-    let swap: number | undefined;
-    const timer = window.setInterval(() => {
-      setLeaving(true);
-      swap = window.setTimeout(() => {
-        setIndex((current) => (current + 1) % words.length);
+    const stepMs = 4500 / words.length;
+    const timers: number[] = [];
+    for (let step = 1; step <= words.length; step += 1) {
+      timers.push(window.setTimeout(() => setLeaving(true), step * stepMs - 320));
+      timers.push(window.setTimeout(() => {
+        setIndex(step % words.length);
         setLeaving(false);
-      }, 320);
-    }, 2800);
-    return () => {
-      window.clearInterval(timer);
-      window.clearTimeout(swap);
-    };
+      }, step * stepMs));
+    }
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, [reduced, words.length]);
+  const settled = reduced || !leaving;
   return (
     <span
       className={cn(
         "inline-block font-semibold transition-[opacity,translate] duration-300 ease-[var(--ease-emphasis-token)]",
-        leaving ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100",
+        settled ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0",
       )}
     >
-      {words[index]}
+      {words[reduced ? 0 : index]}
     </span>
   );
 }
@@ -84,12 +87,13 @@ export function LeaningMascot({ alt, src, className }: Readonly<{ alt: string; s
     return () => window.removeEventListener("pointermove", onMove);
   }, [reduced]);
   // Position lives on the outer box; the pointer transform only touches the inner one.
+  // The greeting bob plays twice (4.8 s) and then rests, keeping idle motion under five seconds.
   return (
     <div className={className}>
       <div ref={ref} className="h-full transition-transform duration-500 ease-[var(--ease-emphasis-token)]">
         <Image
           alt={alt}
-          className="h-full w-auto max-w-none object-contain drop-shadow-xl motion-safe:animate-[niuva-bob_6s_ease-in-out_infinite]"
+          className="h-full w-auto max-w-none object-contain drop-shadow-xl motion-safe:animate-[niuva-bob_2.4s_ease-in-out_2]"
           height={1400}
           preload
           sizes="(max-width: 768px) 90vw, 680px"

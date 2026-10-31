@@ -47,8 +47,8 @@ test("Foundation proof keeps Home and the services destination pending visual re
   await expect(homepage).toHaveAttribute("data-foundation-propagation", "approved");
   await expect(homepage).toHaveAttribute("data-foundation-scope", "homepage");
   await expect(homepage).toHaveAttribute("data-product-screen-proof-status", "pending-owner-review");
-  await expect(homepage).toHaveAttribute("data-typography-version", "1.0");
-  await expect(homepage).toHaveCSS("font-family", /Space Grotesk/);
+  await expect(homepage).toHaveAttribute("data-typography-version", "2.0");
+  await expect(homepage).toHaveCSS("font-family", /Manrope/);
   await page.goto("/project-brief");
   await expect(page).toHaveURL(/\/services$/);
   await expect(page.locator("[data-foundation-scope='services']")).toHaveAttribute("data-product-screen-proof-status", "pending-owner-review");

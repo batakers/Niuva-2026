@@ -22,7 +22,7 @@ async function expectRootNotFound(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(ROOT_NOT_FOUND_TITLE);
   await expect(page.locator("main#main-content")).toHaveCount(1);
   await expect(page.getByRole("link", { name: "Kembali ke beranda" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Lihat Shop" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Lihat Toko" })).toBeVisible();
 }
 
 test.describe("Root_Not_Found", () => {

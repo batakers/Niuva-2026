@@ -152,8 +152,8 @@ test("public company and service routes render approved content", async ({ page 
   const homepageShell = page.locator("[data-homepage]");
   await expect(homepageShell).toHaveAttribute("data-foundation-propagation", "approved");
   await expect(homepageShell).toHaveAttribute("data-typography-propagation", "approved");
-  await expect(homepageShell).toHaveAttribute("data-typography-version", "1.0");
-  await expect(homepageShell).toHaveCSS("font-family", /Space Grotesk/);
+  await expect(homepageShell).toHaveAttribute("data-typography-version", "2.0");
+  await expect(homepageShell).toHaveCSS("font-family", /Manrope/);
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /index, follow/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Mitra pengembangan produk dari riset hingga prototipe.",
@@ -236,8 +236,8 @@ test("Foundation/Typography authorization is present on product PublicShell rout
     await page.goto(path);
     const shell = page.locator("[data-foundation-propagation='approved']").first();
     await expect(shell, path).toHaveAttribute("data-typography-propagation", "approved");
-    await expect(shell, path).toHaveAttribute("data-typography-version", "1.0");
-    await expect(shell, path).toHaveCSS("font-family", /Space Grotesk/);
+    await expect(shell, path).toHaveAttribute("data-typography-version", "2.0");
+    await expect(shell, path).toHaveCSS("font-family", /Manrope/);
   }
 });
 
