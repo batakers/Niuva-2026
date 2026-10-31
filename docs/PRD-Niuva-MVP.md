@@ -100,7 +100,8 @@ Owner menyetujui [scope v1](../PRODUCT.md#kontrak-v10--18-oktober-2026),
 [Definition of Done](v1-definition-of-done.md). Scope Admin kini mencakup
 pembuatan draft produk, varian, portfolio dan upload media publik sederhana
 melalui Dashboard, tanpa database/source dan tanpa full CMS/page builder.
-Media Admin JPEG/PNG/WebP maksimal 10 MiB/file dan 12 item/gallery; ownership,
+Media Admin JPEG/PNG/WebP maksimal 10 MiB/file dan 12 item/gallery (galeri
+proyek 24 item sejak addendum 1 November 2026); ownership,
 validasi server dan pemisahan dari file Customer privat wajib dipertahankan.
 
 Profil/ringkasan akun Customer tidak bebas diedit; tindakan MAKE/quote/privasi
@@ -1926,3 +1927,9 @@ sudah disetujui, cover, catatan bahwa konteks dan proses rinci belum
 ditampilkan, serta dokumentasi tambahan yang disetujui Owner per gambar.
 Halaman layanan, sitemap, dan Beranda boleh menautkan proyek ini. Klaim baru
 tetap dilarang; setiap gambar tambahan memerlukan keterangan yang akurat.
+
+Pada hari yang sama Owner meminta semua dokumentasi proyek dari PDF sumber
+dipakai, termasuk gambar yang agen tandai berisiko ("Masukkan semuanya"). Karena
+Savero memiliki 22 gambar dokumentasi, Owner menaikkan batas galeri proyek
+menjadi **24 item** (cover dan dokumentasi). Galeri produk Toko tetap 12 item;
+format, ukuran 10 MiB, ownership, dan validasi server tidak berubah.

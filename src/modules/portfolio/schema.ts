@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isPublicMediaKey } from "@/modules/public-media/schema";
+import { PUBLIC_MEDIA_MAX_ITEMS, isPublicMediaKey } from "@/modules/public-media/schema";
 import { portfolioServiceCategories } from "@/features/public/company-content";
 
 const requiredText = z.string().trim().min(1);
@@ -53,7 +53,7 @@ export const replacePortfolioMediaSchema = z.object({
         storageKey: publicMediaStorageKey,
       }),
     )
-    .max(12),
+    .max(PUBLIC_MEDIA_MAX_ITEMS.portfolio),
 });
 
 export type UpdatePortfolioProjectInput = z.infer<

@@ -140,8 +140,10 @@ sitemap/flow:
   `card-only` (addendum PRD 1 Nov). Dokumentasi tambahan dari PDF sumber
   tampil di halaman detail setelah Owner menyetujui gambar dan keterangannya.
   Owner menyetujui 42 gambar bertanda disarankan beserta keterangannya
-  ("Setujui yang disarankan", 1 Nov); 17 opsional dan 3 tidak disarankan tidak
-  dipakai. Manifest: `docs/content/media-proofs/project-documentation/`.
+  ("Setujui yang disarankan", 1 Nov); hari yang sama Owner meminta semua
+  dokumentasi proyek dipakai, termasuk yang berisiko ("Masukkan semuanya"), dan
+  menaikkan batas galeri proyek ke 24 item (galeri produk tetap 12): 64 gambar
+  untuk 17 proyek. Manifest: `docs/content/media-proofs/project-documentation/`.
 
 Keputusan Owner yang masih terbuka (rekomendasi agen, belum diputuskan):
 
@@ -2150,7 +2152,8 @@ dan keputusan motion Owner (motion inti per halaman, pass global di T51).
 - **Detail untuk semua dan dokumentasi (Q27, 1 Nov):** ke-17 proyek menaut ke
   halaman detail; 42 gambar dokumentasi yang disetujui tampil sebagai galeri
   "Dokumentasi proyek" di 14 halaman detail, tidak lebih lebar dari piksel
-  filenya. Seed lokal: 17 proyek, 59 media.
+  filenya. Seed lokal: 17 proyek, 59 media. Setelah semua dokumentasi dipakai,
+  galeri ada di 17 halaman (Savero 22 gambar); seed lokal 81 media.
 - **Belum:** E2E resmi (CI), legal dan 404, review visual Owner atas route ini.
 
 ### T46/T47 — fondasi v2 dan Beranda, 2026-10-31

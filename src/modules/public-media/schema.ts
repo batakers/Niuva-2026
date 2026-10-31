@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 export const PUBLIC_MEDIA_MAX_BYTES = 10 * 1024 * 1024;
-export const PUBLIC_MEDIA_MAX_ITEMS = 12;
+/** Owner, 1 Nov 2026 (PRD addendum): a project gallery holds up to 24 items; product galleries stay at 12. */
+export const PUBLIC_MEDIA_MAX_ITEMS = { portfolio: 24, product: 12 } as const satisfies Record<"portfolio" | "product", number>;
 export const publicMediaOwnerSchema = z.object({ kind: z.enum(["product", "portfolio"]), id: z.uuid() }).strict();
 export type PublicMediaOwner = z.infer<typeof publicMediaOwnerSchema>;
 export const publicMediaIntentSchema = z.object({
