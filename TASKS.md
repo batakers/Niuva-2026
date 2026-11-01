@@ -32,7 +32,7 @@ ada di papan ini; pekerjaan baru masuk tabel task, bukan file lain.
 | | T09 | O | `CUSTOMER_AUTH_CLEANUP` lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
 | | T23, T25, T35 | O | Cek metode dan fitur refund di dashboard Midtrans sandbox (Owner mengecek, 31 Okt); grant `refund` sudah ada | Q1 |
 | Redesign | T46 → T47 | A | Beranda di `main` dan diterima Owner; Layanan, Proyek, dan detailnya selesai lokal di `claude/redesign-company-pages`; sisa legal dan 404 | Postgres lokal untuk E2E (Owner) |
-| | T51 | A | Motion pass global setelah semua halaman v2; verifikasi lokal. Commerce/MAKE (T48), Customer/auth (T49), dan Admin (T50) selesai 1 Nov | T47–T50 |
+| Redesign | T45–T51 | A | Redesign M5a selesai 2 Nov (bukti lokal dan CI); review visual Owner per route masih terbuka | — |
 | | T36 | O + A | UAT operasi Admin di UI baru | T50 |
 | Berantai | T34 → T08 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim; lalu retensi file pada berkas MAKE | T33 dulu |
 | | T14 | O + A | Privacy hosted dengan sesi Customer penguji; grant sudah ter-deploy (#89) | Sesi Customer Owner |
@@ -208,7 +208,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T48 | M5a | DONE | Redesign Commerce dan MAKE | T46 | Toko, produk, keranjang, checkout, Custom 3D Print dan workspace dua mode, status/quote token; copy sistem diganti bahasa pelanggan; kalimat MAKE yang dilindungi tetap; aturan server, harga dan pembayaran tidak berubah. Gate lokal dan capture. Selesai 1 Nov 2026 lewat PR #107, #110, #111, #112, dan #113 dengan bukti lokal dan CI; review visual Owner menunggu. Label status dari data dan detail MAKE/order akun lanjut di T49. |
 | T49 | M5a | DONE | Redesign Customer dan auth | T46, T48 | Hub Akun, detail MAKE/order (konfirmasi terima quote, timeline, Rupiah dan label status konsisten), refund, privasi, enam halaman auth dalam satu frame; allowlist dan gate auth tidak berubah. Gate lokal dan capture. Selesai 1 Nov 2026 lewat PR #114, #115, dan #116 dengan bukti lokal dan CI; review visual Owner menunggu. |
 | T50 | M5a | DONE | Redesign Admin | T46 | Shell, Ringkasan, daftar, detail, review Custom Print, keuangan, produk, tarif, konten, laporan, akses/privasi dan state error/denied; Card, status, tabel dan label Indonesia terkonsolidasi; permission dan motion yang disetujui tetap. Gate lokal dan capture. Selesai 1 Nov 2026 lewat PR #117 dengan bukti lokal dan CI; review visual Owner menunggu. |
-| T51 | M5a | TODO | Motion pass global | T47–T50 | Keputusan Owner 31 Okt: motion inti (adegan, pergantian panel) dan umpan balik interaksi dibuat per halaman di T47–T50; pass ini menyusul setelah semua halaman jadi. Durasi dan easing seragam memakai token DESIGN.md, paling banyak satu gerak khas per halaman, keputusan animasi masuk per seksi (DESIGN.md melarang scroll reveal sebagai hiasan), reduced motion dan WCAG 2.2.2 di semua route, kinerja di ponsel. Capture dan rekaman lokal. |
+| T51 | M5a | DONE | Motion pass global | T47–T50 | Keputusan Owner 31 Okt: motion inti (adegan, pergantian panel) dan umpan balik interaksi dibuat per halaman di T47–T50; pass ini menyusul setelah semua halaman jadi. Durasi dan easing seragam memakai token DESIGN.md, paling banyak satu gerak khas per halaman, keputusan animasi masuk per seksi (DESIGN.md melarang scroll reveal sebagai hiasan), reduced motion dan WCAG 2.2.2 di semua route, kinerja di ponsel. Capture dan rekaman lokal. Selesai 2 Nov 2026 dengan bukti lokal dan CI; Beranda mempertahankan adegan maskot yang diterima Owner sebagai satu bahasa gerak. |
 | T53 | M4 | IN_PROGRESS | Kaitan foto ke varian | T31; keputusan Owner 1 Nov | `ProductVariant.mediaId` nullable (banyak varian boleh satu foto, `ON DELETE SET NULL`) lewat migration baru; importer/seed mengisi dari foto varian sumber; editor varian Admin memilih foto dari galeri produk yang sama dan server menolak foto produk lain; simpan galeri mempertahankan foto yang tetap dipakai; halaman produk memakai kaitan ini dengan alt text sebagai cadangan. Staging: `db:deploy` dan impor ulang katalog hanya atas instruksi Owner. |
 
 ## Backlog setelah v1
@@ -2131,6 +2131,40 @@ belum ada yang dikerjakan.
   versi gratis bernilai Rp0. Domain tidak perlu dibeli lagi; biaya
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
+
+### T51 — motion pass global, 2026-11-02
+
+Branch `claude/motion-pass` dari `main@1ee2504` (setelah PR #117); atas
+permintaan Owner ("ya lanjut ke T51").
+
+- **Token:** `--duration-slow-token` 500ms ditambahkan untuk pergantian pose
+  dan panel (palet DESIGN.md sudah menyebutnya). `--default-transition-duration`
+  dan `--default-transition-timing-function` di `@theme` membuat setiap
+  `transition-*` tanpa durasi sendiri memakai 150ms dan kurva standar.
+- **Durasi mentah:** 22 kelas `duration-100/150/200/300/500` diganti token:
+  hover dan panah 150ms; zoom gambar kartu proyek/layanan dan garis tahap aktif
+  220ms; pose maskot dan panel 500ms dengan kurva emphasis; menu, select, dan
+  dialog 150ms (sebelumnya 100ms, kini sesuai motion menu Admin yang
+  disetujui). Kata berganti di hero tetap 300ms sebagai signature yang
+  diterima Owner.
+- **WCAG 2.2.2:** 21 skeleton `animate-pulse` sebelumnya berdenyut tanpa
+  henti; `--animate-pulse` kini dua denyut 2 detik lalu diam. Bob maskot (2×
+  2,4 detik) dan kata hero (4,5 detik) sudah berhenti sendiri.
+- **Keputusan:** tidak ada animasi masuk per seksi; konten tampil sejak frame
+  pertama. Beranda mempertahankan adegan maskotnya; route lain hanya umpan
+  balik interaksi dan perubahan state. Semua gerak memakai transform, opacity,
+  atau warna; tidak ada `transition-all`.
+- **Bukti lokal:** lint (0 error), typecheck, unit 139 file/1.539 test.
+  Pemeriksaan Playwright 17/17: skeleton berhenti setelah dua denyut, transisi
+  bawaan 150ms dengan kurva standar, pose Beranda 500ms, tidak ada animasi
+  otomatis yang masih berjalan setelah 5,5 detik di delapan route publik dan
+  transaksi, dan pada reduced motion kata hero tidak berganti serta transisi
+  runtuh. Rekaman lokal Beranda dengan dan tanpa reduced motion. E2E terhadap
+  dev server: Beranda, halaman sistem, layout auth dengan reduced motion, status
+  pesanan, dan review quote lulus; spec yang butuh login Customer tiruan
+  dibuktikan di CI (server E2E lokal menolak port DB 55432 yang dipakai cluster
+  lain, sesuai pengamannya).
+- **Belum:** review visual Owner per route; uji perangkat fisik dan AT (T37).
 
 ### T50 — seluruh Admin dalam satu PR, 2026-11-01
 

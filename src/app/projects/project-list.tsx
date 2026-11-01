@@ -30,7 +30,7 @@ function ProjectMedia({
       <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-card">
         <Image
           alt={cover.altText}
-          className="object-contain transition-transform duration-500 ease-[var(--ease-emphasis-token)] group-hover:scale-[1.02]"
+          className="object-contain transition-transform duration-[var(--duration-normal-token)] group-hover:scale-[1.02]"
           fill
           quality={90}
           sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
@@ -148,14 +148,14 @@ export function ProjectList({ projects, previewMode = null }: ProjectListProps) 
                   <article>
                     <Link className="group block rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/projects/${project.slug}${previewSuffix}`}>
                       <ProjectMedia isPreview={isPreview} project={project} />
-                      <h3 className="mt-5 text-xl font-medium tracking-[-0.01em] transition-colors duration-150 group-hover:text-brand-800 sm:text-2xl">
+                      <h3 className="mt-5 text-xl font-medium tracking-[-0.01em] transition-colors duration-[var(--duration-fast-token)] group-hover:text-brand-800 sm:text-2xl">
                         <ProjectTitle title={project.title} qualifierClassName="mt-1 text-ui font-normal tracking-normal" />
                       </h3>
                       <p className="mt-1.5 text-ui text-muted-foreground">{project.serviceLabel}</p>
                       <p className="mt-3 max-w-[60ch] text-base leading-[1.6] text-muted-foreground">{project.summary}</p>
                       <span className="mt-4 inline-flex min-h-11 items-center gap-2 font-semibold underline-offset-4 group-hover:underline">
                         {hasStory ? "Lihat cerita proyek" : "Lihat proyek"}
-                        <Icon aria-hidden="true" className="size-5 text-brand-700 transition-transform duration-200 group-hover:translate-x-1" name="arrow-right" />
+                        <Icon aria-hidden="true" className="size-5 text-brand-700 transition-transform duration-[var(--duration-fast-token)] group-hover:translate-x-1" name="arrow-right" />
                       </span>
                     </Link>
                   </article>

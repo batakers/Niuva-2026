@@ -90,7 +90,7 @@ export function LeaningMascot({ alt, src, className }: Readonly<{ alt: string; s
   // The greeting bob plays twice (4.8 s) and then rests, keeping idle motion under five seconds.
   return (
     <div className={className}>
-      <div ref={ref} className="h-full transition-transform duration-500 ease-[var(--ease-emphasis-token)]">
+      <div ref={ref} className="h-full transition-transform duration-[var(--duration-slow-token)] ease-[var(--ease-emphasis-token)]">
         <Image
           alt={alt}
           className="h-full w-auto max-w-none object-contain drop-shadow-xl motion-safe:animate-[niuva-bob_2.4s_ease-in-out_2]"
@@ -144,7 +144,7 @@ export function ProcessScene({ heading, stages }: Readonly<{ heading: ReactNode;
               ref={(node) => { refs.current[index] = node; }}
               data-stage={index}
               aria-current={active === index ? "step" : undefined}
-              className="flex items-center gap-5 lg:min-h-[40vh] lg:flex-col lg:items-start lg:justify-center lg:gap-0 lg:border-l-2 lg:border-border lg:pl-7 lg:transition-colors lg:duration-300 lg:aria-[current=step]:border-brand-700"
+              className="flex items-center gap-5 lg:min-h-[40vh] lg:flex-col lg:items-start lg:justify-center lg:gap-0 lg:border-l-2 lg:border-border lg:pl-7 lg:transition-colors lg:duration-[var(--duration-normal-token)] lg:aria-[current=step]:border-brand-700"
             >
               <div className="relative aspect-[4/5] w-28 shrink-0 overflow-hidden rounded-[var(--radius-card)] bg-brand-100 sm:w-32 lg:hidden">
                 <Image alt="" className="absolute bottom-[4%] left-1/2 h-[88%] w-auto max-w-none -translate-x-1/2 object-contain" height={1400} sizes="8rem" src={stage.image} width={1400} />
@@ -166,7 +166,7 @@ export function ProcessScene({ heading, stages }: Readonly<{ heading: ReactNode;
             key={stage.image}
             alt=""
             className={cn(
-              "absolute bottom-[8%] left-1/2 h-[76%] w-auto -translate-x-1/2 object-contain drop-shadow-lg transition-[opacity,translate,scale] duration-500 ease-[var(--ease-emphasis-token)]",
+              "absolute bottom-[8%] left-1/2 h-[76%] w-auto -translate-x-1/2 object-contain drop-shadow-lg transition-[opacity,translate,scale] duration-[var(--duration-slow-token)] ease-[var(--ease-emphasis-token)]",
               active === index ? "translate-y-0 scale-100 opacity-100" : "translate-y-3 scale-[0.97] opacity-0",
             )}
             height={1400}

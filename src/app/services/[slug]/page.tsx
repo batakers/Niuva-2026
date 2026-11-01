@@ -143,9 +143,9 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
                   <li className="min-w-0" key={project.id}>
                     <Link className="group block rounded-[var(--radius-card)] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/projects/${project.slug}`}>
                       <div className="relative aspect-[4/3] overflow-hidden rounded-[var(--radius-card)] border border-border bg-card">
-                        {cover?.url ? <Image alt={cover.altText} className="object-contain transition-transform duration-500 ease-[var(--ease-emphasis-token)] group-hover:scale-[1.02]" fill quality={90} sizes="(min-width: 1024px) 30vw, (min-width: 768px) 45vw, 100vw" src={cover.url} /> : null}
+                        {cover?.url ? <Image alt={cover.altText} className="object-contain transition-transform duration-[var(--duration-normal-token)] group-hover:scale-[1.02]" fill quality={90} sizes="(min-width: 1024px) 30vw, (min-width: 768px) 45vw, 100vw" src={cover.url} /> : null}
                       </div>
-                      <h3 className="mt-5 text-xl font-medium tracking-[-0.01em] transition-colors duration-150 group-hover:text-brand-800"><ProjectTitle qualifierClassName="mt-1 text-ui font-normal tracking-normal" title={project.title} /></h3>
+                      <h3 className="mt-5 text-xl font-medium tracking-[-0.01em] transition-colors duration-[var(--duration-fast-token)] group-hover:text-brand-800"><ProjectTitle qualifierClassName="mt-1 text-ui font-normal tracking-normal" title={project.title} /></h3>
                       <p className="mt-2 line-clamp-3 text-base leading-[1.55] text-muted-foreground">{project.summary}</p>
                     </Link>
                   </li>

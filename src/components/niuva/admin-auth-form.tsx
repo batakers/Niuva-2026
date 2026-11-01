@@ -14,8 +14,8 @@ type Stage = "loading" | "sign-in" | "factor" | "enroll" | "setup" | "forgot" | 
 const focusClass = "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card";
 const fieldClass = "flex flex-col items-stretch gap-4";
 const inputClass = `min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base caret-primary disabled:cursor-wait disabled:opacity-60 ${focusClass}`;
-const buttonClass = `inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors duration-150 hover:bg-brand-800 active:bg-brand-900 disabled:cursor-wait disabled:opacity-50 motion-reduce:transition-none ${focusClass}`;
-const secondaryButtonClass = `min-h-11 rounded-lg text-sm font-medium text-primary underline underline-offset-4 transition-colors duration-150 hover:text-brand-900 disabled:opacity-50 motion-reduce:transition-none ${focusClass}`;
+const buttonClass = `inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors duration-[var(--duration-fast-token)] hover:bg-brand-800 active:bg-brand-900 disabled:cursor-wait disabled:opacity-50 motion-reduce:transition-none ${focusClass}`;
+const secondaryButtonClass = `min-h-11 rounded-lg text-sm font-medium text-primary underline underline-offset-4 transition-colors duration-[var(--duration-fast-token)] hover:text-brand-900 disabled:opacity-50 motion-reduce:transition-none ${focusClass}`;
 
 export async function postAdminAuth(path: string, body: Readonly<Record<string, unknown>>): Promise<Record<string, unknown>> {
   const response = await fetch(`/api/admin/auth${path}`, { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });

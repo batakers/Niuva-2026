@@ -99,6 +99,7 @@
   --card-gap-token: 1rem;
   --duration-fast-token: 150ms;
   --duration-normal-token: 220ms;
+  --duration-slow-token: 500ms;
   --ease-standard-token: cubic-bezier(0.2, 0, 0, 1);
   --ease-emphasis-token: cubic-bezier(0.16, 1, 0.3, 1);
   --font-display-token: var(--font-niuva-sans);
@@ -251,6 +252,11 @@
   --font-sans: var(--font-niuva-sans);
   --font-mono: var(--font-niuva-sans);
   --ease-emphasis: var(--ease-emphasis-token);
+  /* Every transition without its own duration follows the 150ms feedback token and the standard curve. */
+  --default-transition-duration: var(--duration-fast-token);
+  --default-transition-timing-function: var(--ease-standard-token);
+  /* Skeletons pulse twice and rest, so automatic motion stops before 5 seconds (WCAG 2.2.2). */
+  --animate-pulse: pulse 2s var(--ease-standard-token) 2;
   --text-caption: 0.84375rem;
   --text-caption--line-height: 1.45;
   --text-ui: 0.9375rem;
