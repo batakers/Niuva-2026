@@ -22,7 +22,10 @@ function getSnapshot() {
   }
 }
 
-/** Cart unit count from client storage. Null on the server and during hydration, so static HTML is unchanged. */
+/**
+ * Unit count of the real cart, which the header link opens; preview example carts are not counted.
+ * Null on the server and during hydration, so static HTML is unchanged.
+ */
 export function useCartCount(): number | null {
   return useSyncExternalStore(subscribe, getSnapshot, () => null);
 }
