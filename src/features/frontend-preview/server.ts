@@ -145,6 +145,7 @@ function serializeShopProducts(
     slug: product.slug,
     variants: product.variants.map((variant) => ({
       id: variant.id,
+      ...(variant.media ? { photoUrl: resolvePublicProductMediaUrl(variant.media.storageKey) } : {}),
       name: variant.name,
       priceRp: variant.priceRp.toString(),
       sku: variant.sku,

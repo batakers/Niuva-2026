@@ -258,6 +258,11 @@ for (const product of dataset.products) {
   const categorySlug = categoryName ? slugify(categoryName) : undefined;
   if (categorySlug && categoryName) categoryNames.set(categorySlug, categoryName);
 
+  // Media first, so each verified variant can name its own photo by storage key.
+  const media = prepareMedia(product, productSlug, imageByProduct.get(productId) ?? []);
+  if (media.length === 0) throw new Error(`Produk ${productId} tidak memiliki media lokal.`);
+  const storageKeyBySourcePath = new Map(media.map((item) => [item.sourcePath, item.storageKey]));
+
   const sourceVariants = variantsByProduct.get(productId) ?? [];
   const productVariants = sourceVariants.filter(isVerifiedVariant);
   skippedPlaceholders += sourceVariants.length - productVariants.length;
@@ -269,9 +274,11 @@ for (const product of dataset.products) {
       const optionValues = [variant.varian_1_nilai, variant.varian_2_nilai]
         .map(optionalText)
         .filter((value): value is string => value !== undefined);
+      const photoStorageKey = storageKeyBySourcePath.get(localPath(variant.foto_varian_lokal, `variants.${sku}.foto_varian_lokal`));
       return {
         isActive: true,
         name: optionValues.length > 0 ? optionValues.join(" / ") : text(variant.variant_nama_produk, "variant_nama_produk"),
+        ...(photoStorageKey === undefined ? {} : { photoStorageKey }),
         priceRp: integerText(variant.harga_varian, `variants.${sku}.harga_varian`),
         sku,
         stockOnHand: Math.max(0, Math.trunc(numberValue(variant.stok_varian, `variants.${sku}.stok_varian`))),
@@ -292,8 +299,6 @@ for (const product of dataset.products) {
       }];
     })();
 
-  const media = prepareMedia(product, productSlug, imageByProduct.get(productId) ?? []);
-  if (media.length === 0) throw new Error(`Produk ${productId} tidak memiliki media lokal.`);
   preparedProducts.push({
     categorySlug,
     description: cleanDescription(text(product.deskripsi, `products.${productId}.deskripsi`)),

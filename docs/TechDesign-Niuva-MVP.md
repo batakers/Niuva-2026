@@ -873,9 +873,15 @@ length_cm DECIMAL(12,3) NULL
 width_cm DECIMAL(12,3) NULL
 height_cm DECIMAL(12,3) NULL
 is_active BOOLEAN
+media_id UUID FK NULL -> product_media(id) ON DELETE SET NULL
 created_at TIMESTAMPTZ
 updated_at TIMESTAMPTZ
 ```
+
+`media_id` (addendum 1 November 2026) points a variant at its own photo in the
+same product's gallery; many variants may share one photo. The catalog service
+rejects a photo from another product, and the Admin gallery save keeps the rows
+of photos that stay, so reordering never drops a link.
 
 ### `product_media`
 

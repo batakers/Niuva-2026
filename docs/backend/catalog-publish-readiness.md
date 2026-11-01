@@ -75,25 +75,28 @@ LEGO. Nama katalog sumber tetap tersimpan dan tampil di deskripsi lengkap.
 
 ### 3. Variant-media binding
 
-Untuk MVP yang sekarang, Owner menyetujui galeri produk dengan `altText` varian
-sebagai fallback. Jangan menambahkan `variantId` atau menebak foto default
-tanpa bukti kebutuhan UX. Jika pengalaman customer memang harus
-mengganti foto per pilihan varian, buat perubahan terpisah yang mencakup:
+Keputusan Owner 2026-11-01 ("Ya, setelah #107"): kaitan resmi varian ke foto
+dibuat. Keempat butir yang dulu disyaratkan sudah diputuskan:
 
-1. keputusan apakah satu media boleh terikat ke banyak varian;
-2. migrasi nullable `ProductMedia.variantId` dan constraint/index;
-3. kontrak seed/importer dan editor admin;
-4. acceptance visual untuk desktop/mobile serta fallback saat varian tidak
-   memiliki foto.
-
-Keputusan Owner 2026-11-01 ("Ya, pertahankan"): halaman detail produk boleh
-menampilkan foto varian saat varian dipilih, tanpa perubahan model data. Galeri
-hanya berpindah bila `altText` sebuah media sama persis dengan
-`Foto varian <nama varian>` (tanpa membedakan huruf besar/kecil); tanpa
-kecocokan galeri tetap pada foto yang sedang tampil, dan tidak ada foto default
-yang ditebak. Batasannya: mengubah alt text atau nama varian di Admin memutus
-kaitan itu. Relasi `variantId` di atas tetap menjadi jalur bila kaitan resmi
-dibutuhkan. Implementasi: `src/app/shop/[slug]/product-showcase.tsx`.
+1. **Arah relasi:** varian menunjuk ke foto (`ProductVariant.mediaId`, nullable),
+   sehingga banyak varian boleh memakai satu foto. Data sumber membutuhkannya:
+   satu foto Tokopedia dipakai 12 varian Figur Wisuda, 8 varian Figur Custom Gaya
+   Kartun, dan 2 varian Figur Custom Special Moments.
+2. **Migration:** `20261101120000_product_variant_media` menambah kolom
+   nullable, index, dan foreign key `ON DELETE SET NULL`; tidak ada data yang
+   diubah atau dihapus. Staging menunggu `db:deploy` dan impor ulang atas
+   instruksi Owner.
+3. **Seed, importer, dan Admin:** `catalog:prepare` menulis `photoStorageKey`
+   per varian dari foto varian sumber; seed mengaitkannya setelah media
+   tersimpan dan tidak pernah mengosongkan kaitan yang dibuat Admin. Editor
+   varian Admin punya pilihan "Foto varian" dari galeri produk yang sama, dan
+   server menolak foto produk lain. Menyimpan galeri kini mempertahankan baris
+   foto yang tetap dipakai, sehingga urutan bisa diubah tanpa memutus kaitan;
+   foto yang dikeluarkan dari galeri mengosongkan kaitannya.
+4. **Tampilan:** halaman produk menampilkan foto yang terkait saat varian dipilih.
+   Kecocokan alt text persis `Foto varian <nama varian>` (keputusan Owner yang
+   sama hari itu) tetap menjadi cadangan untuk baris yang belum terkait; tanpa
+   keduanya galeri tidak berpindah dan tidak menebak foto.
 
 ### 4. Dimensi paket dan provider
 

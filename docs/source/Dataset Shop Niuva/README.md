@@ -29,8 +29,9 @@ turunan yang sudah divalidasi oleh `catalogSeedSchema`.
 - Impor ke DB staging: `corepack pnpm staging:import-catalog` (Owner, binding
   staging terverifikasi, idempoten, tanpa provider).
 
-Media varian dipetakan sebagai media galeri produk karena model `ProductMedia`
-saat ini berscope produk, bukan relasi varian. Sidecar
+Media varian tetap menjadi media galeri produk. Sejak 2026-11-01 setiap varian
+seed membawa `photoStorageKey`, sehingga seed mengisi `ProductVariant.mediaId`
+(32 varian; dua produk single-SKU tanpa foto varian). Sidecar
 `variant-media-map.json` menyimpan 38 mapping sumber (32 yang ikut seed dan 6
 placeholder) sehingga relasi varian→foto tetap dapat diaudit. Alt text tetap
 mencatat nilai varian ketika tersedia; tidak ada foto yang dibuat atau diunduh

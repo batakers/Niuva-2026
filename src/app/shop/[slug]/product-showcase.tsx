@@ -10,10 +10,14 @@ import { ProductSelection } from "./product-selection";
 
 type Media = PublicShopProduct["media"][number];
 
-// The catalog import names each variant photo "Foto varian <nama varian>"; only that exact text
-// links a photo to a variant, so a choice never jumps to a guessed picture.
-function variantPhotoIndex(media: readonly Media[], variantName: string) {
-  const wanted = `foto varian ${variantName}`.trim().toLocaleLowerCase("id");
+// The variant's linked photo wins. Until every catalog row carries that link, an alt text of exactly
+// "Foto varian <nama varian>" still counts (Owner, 1 Nov 2026); nothing else moves the gallery.
+function variantPhotoIndex(media: readonly Media[], variant: PublicShopProduct["variants"][number]) {
+  if (variant.photoUrl) {
+    const linked = media.findIndex(item => item.url === variant.photoUrl);
+    if (linked >= 0) return linked;
+  }
+  const wanted = `foto varian ${variant.name}`.trim().toLocaleLowerCase("id");
   return media.findIndex(item => item.altText.trim().toLocaleLowerCase("id") === wanted);
 }
 
@@ -44,7 +48,7 @@ export function ProductShowcase({ heading, previewEnabled, product }: Readonly<{
   function showVariant(variantId: string) {
     const variant = product.variants.find(item => item.id === variantId);
     if (!variant) return;
-    const index = variantPhotoIndex(media, variant.name);
+    const index = variantPhotoIndex(media, variant);
     if (index >= 0) setActive(index);
   }
 

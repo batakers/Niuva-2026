@@ -209,6 +209,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T49 | M5a | TODO | Redesign Customer dan auth | T46, T48 | Hub Akun, detail MAKE/order (konfirmasi terima quote, timeline, Rupiah dan label status konsisten), refund, privasi, enam halaman auth dalam satu frame; allowlist dan gate auth tidak berubah. Gate lokal dan capture. |
 | T50 | M5a | TODO | Redesign Admin | T46 | Shell, Ringkasan, daftar, detail, review Custom Print, keuangan, produk, tarif, konten, laporan, akses/privasi dan state error/denied; Card, status, tabel dan label Indonesia terkonsolidasi; permission dan motion yang disetujui tetap. Gate lokal dan capture. |
 | T51 | M5a | TODO | Motion pass global | T47–T50 | Keputusan Owner 31 Okt: motion inti (adegan, pergantian panel) dan umpan balik interaksi dibuat per halaman di T47–T50; pass ini menyusul setelah semua halaman jadi. Durasi dan easing seragam memakai token DESIGN.md, paling banyak satu gerak khas per halaman, keputusan animasi masuk per seksi (DESIGN.md melarang scroll reveal sebagai hiasan), reduced motion dan WCAG 2.2.2 di semua route, kinerja di ponsel. Capture dan rekaman lokal. |
+| T53 | M4 | IN_PROGRESS | Kaitan foto ke varian | T31; keputusan Owner 1 Nov | `ProductVariant.mediaId` nullable (banyak varian boleh satu foto, `ON DELETE SET NULL`) lewat migration baru; importer/seed mengisi dari foto varian sumber; editor varian Admin memilih foto dari galeri produk yang sama dan server menolak foto produk lain; simpan galeri mempertahankan foto yang tetap dipakai; halaman produk memakai kaitan ini dengan alt text sebagai cadangan. Staging: `db:deploy` dan impor ulang katalog hanya atas instruksi Owner. |
 
 ## Backlog setelah v1
 
@@ -2130,6 +2131,31 @@ belum ada yang dikerjakan.
   versi gratis bernilai Rp0. Domain tidak perlu dibeli lagi; biaya
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
+
+### T53 — kaitan foto ke varian, 2026-11-01
+
+Branch `claude/catalog-variant-photo` dari `main@edb975a` (setelah PR #107),
+atas persetujuan Owner ("Ya, setelah #107").
+
+- **Data:** migration `20261101120000_product_variant_media` (kolom nullable,
+  index, FK `ON DELETE SET NULL`); `catalog-seed.json` dibuat ulang dengan
+  `catalog:prepare` dan kini membawa `photoStorageKey` untuk 32 dari 34 varian.
+- **Admin:** pilihan "Foto varian" di editor varian; server menolak foto dari
+  produk lain. Menyimpan galeri mempertahankan baris foto yang tetap dipakai
+  (urutan diparkir ke posisi negatif sebelum disusun ulang); foto yang keluar
+  mengosongkan kaitannya. Validasi baru menolak foto atau urutan ganda.
+- **Toko:** varian publik membawa URL fotonya; galeri berpindah ke foto itu,
+  dengan alt text sebagai cadangan. Di DB dev, 32 varian di 7 produk berpindah
+  foto saat dipilih (sebelumnya 10 lewat alt text).
+- **Bukti lokal:** migration diterapkan ke DB dev dan ke DB test baru yang
+  terisolasi (`niuva_variant_media_test`; DB test lama punya migration gagal
+  sejak 7 Okt dan tidak disentuh); test integrasi baru
+  `catalog-variant-media.test.ts` lulus (seed, baca publik, galeri diurutkan
+  ulang, foto dikeluarkan, foto produk lain ditolak) bersama impor staging dan
+  media publik Admin.
+- **Belum:** editor Admin belum dibuka di browser (butuh sesi Admin dengan
+  TOTP); migration dan impor ulang staging menunggu instruksi Owner setelah
+  26 Nov.
 
 ### T48 — Toko dan detail produk, 2026-11-01
 

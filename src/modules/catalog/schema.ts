@@ -52,6 +52,8 @@ export const updateVariantSchema = z
     heightCm: nonNegativeDecimal.nullable().optional(),
     isActive: z.boolean().optional(),
     lengthCm: nonNegativeDecimal.nullable().optional(),
+    /** A photo from the same product's gallery, or null for none. */
+    mediaId: z.uuid().nullable().optional(),
     name: requiredText.optional(),
     priceRp: nonNegativeMoney.optional(),
     sku: requiredText.optional(),
@@ -77,7 +79,16 @@ export const replaceProductMediaSchema = z.object({
         storageKey: publicMediaStorageKey,
       }),
     )
-    .max(12),
+    .max(12)
+    .superRefine((items, context) => {
+      // Rows are matched by storage key so a kept photo keeps its id and its variant links.
+      if (new Set(items.map(item => item.storageKey)).size !== items.length) {
+        context.addIssue({ code: "custom", message: "Satu foto hanya boleh muncul sekali di galeri." });
+      }
+      if (new Set(items.map(item => item.sortOrder)).size !== items.length) {
+        context.addIssue({ code: "custom", message: "Urutan foto tidak boleh sama." });
+      }
+    }),
 });
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;
