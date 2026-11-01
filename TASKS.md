@@ -2171,8 +2171,8 @@ PR"), setelah potongan shell dan Ringkasan di bawah.
   Admin, tarif, refund, dan privasi 10 file/103 test. E2E Admin lengkap
   dijalankan lokal dengan sesi Owner dan Admin sungguhan terhadap DB test
   terisolasi `niuva_variant_media_test` (DB test lama tidak disentuh): 29/31
-  pada run pertama; dua kegagalan berasal dari label lama di test dan
-  diperbaiki di `0ea34ec`. Capture dengan sesi Owner: 28 route desktop, 7
+  pada run pertama dan kedua; kegagalannya berasal dari label atau kalimat lama
+  di test (`0ea34ec` dan spec laporan), lalu spec yang diperbaiki lulus. Capture dengan sesi Owner: 28 route desktop, 7
   route ponsel, dan sign-in; satu h1, tanpa overflow, tanpa error console.
 - **Belum:** review visual Owner untuk Admin; motion pass global (T51).
 

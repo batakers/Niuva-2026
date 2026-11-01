@@ -23,7 +23,7 @@ for (const role of ["OWNER", "ADMIN"] as const) test(`${role} reads bento Overvi
   await expect(page.getByRole("table", { name: "Penerimaan terkonfirmasi", exact: true })).toBeVisible();
   await page.getByRole("navigation", { name: "Bagian laporan" }).getByRole("link", { name: "Trafik Situs" }).click();
   await expect(page.getByRole("heading", { name: "Trafik Situs", exact: true })).toBeVisible();
-  await expect(page.getByText(/bukan pengunjung unik atau atribusi order/)).toBeVisible();
+  await expect(page.getByText(/bukan pengunjung unik atau atribusi pesanan/)).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
   await page.screenshot({ path: `.local/admin-redesign/captures/reports-${role.toLowerCase()}-320.png`, fullPage: true, caret: "initial" });
   await page.setViewportSize({ width: 1440, height: 900 }); await page.goto("/admin/reports?tab=summary&range=30d");
