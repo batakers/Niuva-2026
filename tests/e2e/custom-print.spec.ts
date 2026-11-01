@@ -14,8 +14,9 @@ test("custom print landing explains the operator-reviewed path without instant-p
   await expect(page.getByText("STL · 3MF · OBJ")).toBeVisible();
   await expect(page.getByText("STEP · STP")).toBeVisible();
   await expect(page.getByText("Tidak ada harga final instan dari geometri.", { exact: false })).toBeVisible();
-  await expect(page.getByRole("img", { name: /ilustrasi konseptual model 3D/i })).toBeVisible();
-  await expect(page.getByText("Bukan hasil produksi Niuva.", { exact: false })).toBeVisible();
+  // Foundation v2: the Owner's mascot is the only illustration; the old concept render is gone.
+  await expect(page.getByRole("img", { name: "Maskot Niuva memegang laptop" })).toBeVisible();
+  await expect(page.locator('img[src*="custom-print-file-to-object"]')).toHaveCount(0);
 
   const referenceStart = page.getByRole("link", { name: "Mulai dari referensi" });
   if (await referenceStart.count() > 0) {

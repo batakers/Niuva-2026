@@ -4,9 +4,11 @@ import { connection } from "next/server";
 import { typographySystemTokens as type } from "@/design/typography";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { B2BContactLink } from "@/components/niuva/b2b-contact-link";
+import { ClosingPanel } from "@/components/niuva/closing-panel";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Icon, type IconName } from "@/components/ui/Icon";
+import { mascotRenders } from "@/features/public/mascot";
 import { getServerCapabilities } from "@/lib/env/server";
 import { CUSTOM_FLOW_PRODUCT_OPTIONS } from "@/modules/custom-print/product-intake";
 import { CUSTOM_FILE_MAX_BYTES, REFERENCE_PHOTO_MAX_BYTES } from "@/modules/policy/privacy";
@@ -14,65 +16,62 @@ import { CUSTOM_FILE_MAX_BYTES, REFERENCE_PHOTO_MAX_BYTES } from "@/modules/poli
 export const metadata: Metadata = {
   title: "Custom 3D Print · Niuva",
   description:
-    "Pahami alur file privat, review operator, slicing, quote, produksi, dan pengiriman untuk kebutuhan custom 3D print.",
+    "Kirim model 3D atau referensi Anda. Operator Niuva memeriksa file dan hasil slicing, lalu mengirim quote sebelum produksi.",
 };
 
 const workflow = [
   {
     label: "File dan konfigurasi",
-    description:
-      "Mulai dari model 3D/CAD atau deskripsi dan referensi. Unit model, material, jumlah, dan catatan membantu pemeriksaan saat tersedia.",
-    icon: "file-box",
+    description: "Kirim model 3D/CAD, atau deskripsi dan referensi, lengkap dengan material, jumlah, dan catatan Anda.",
   },
   {
     label: "Review dan slicing operator",
-    description:
-      "Operator memeriksa file lalu mencatat berat, durasi, material, konfigurasi, dan temuan yang relevan dari slicer.",
-    icon: "scan-search",
+    description: "Operator memeriksa file, lalu mencatat berat, durasi cetak, dan temuan penting dari slicer.",
   },
   {
     label: "Quote dan persetujuan",
-    description:
-      "Niuva menyusun quote dari hasil review. Produksi belum berjalan sebelum quote disetujui dan pembayaran terverifikasi.",
-    icon: "receipt-text",
+    description: "Niuva mengirim quote dari hasil review. Anda menerima atau menolaknya dari akun.",
   },
   {
     label: "Produksi dan QC",
-    description:
-      "Pekerjaan masuk produksi sesuai konfigurasi yang disepakati, lalu melalui finishing dan quality control.",
-    icon: "package-check",
+    description: "Setelah pembayaran terverifikasi, pesanan dicetak, di-finishing, dan diperiksa sebelum dikirim.",
   },
-] as const satisfies readonly Readonly<{
-  description: string;
-  icon: IconName;
-  label: string;
-}>[];
+] as const;
 
 const preparationItems = [
   "Konfirmasi unit atau skala model, terutama untuk STL.",
-  "Tentukan kebutuhan material, warna, dan jumlah awal.",
-  "Sertakan catatan fungsi, area kritis, atau orientasi bila relevan.",
-  "Pastikan Anda berhak mengirim dan memproses file tersebut.",
+  "Tentukan material, warna, dan jumlah awal.",
+  "Tulis fungsi, area kritis, atau orientasi cetak bila penting.",
+  "Pastikan Anda berhak mengirim file tersebut.",
 ] as const;
+
+const boundaries = [
+  { term: "Harga", icon: "circle-dollar-sign", detail: "Estimasi awal, bukan harga final. Tidak ada harga final instan dari geometri. Quote disusun setelah operator memeriksa hasil slicing dan biaya pekerjaan." },
+  { term: "File", icon: "lock-keyhole", detail: "File Anda disimpan privat. Hanya tim Niuva yang membukanya, lewat tautan yang berlaku singkat." },
+  { term: "Ongkir", icon: "package-check", detail: "Dihitung setelah produksi dan QC selesai, dari ukuran paket final." },
+] as const satisfies readonly Readonly<{ detail: string; icon: IconName; term: string }>[];
 
 const commonQuestions = [
   {
     question: "Saya baru punya sketsa atau foto. Bisa mulai?",
-    answer: "Bisa. Pilih mode referensi awal, jelaskan kebutuhan dan perkiraan jumlah, lalu tambahkan link HTTPS atau satu foto bila tersedia. Model dapat ditambahkan pada request yang sama lewat akun saat siap.",
+    answer: "Bisa. Mulai dari referensi: jelaskan kebutuhan dan perkiraan jumlah, lalu tambahkan link HTTPS atau satu foto bila ada. Model 3D bisa ditambahkan nanti dari akun, dengan nomor referensi yang sama.",
   },
   {
     question: "Apakah semua file menghasilkan simulasi biaya?",
-    answer: "Tidak. STL, OBJ, dan 3MF dapat dipakai untuk simulasi komponen hanya jika Anda juga mempunyai berat dan durasi per unit dari slicer sendiri, memilih PLA atau ABS dan filament stok Niuva. STEP dan STP tetap masuk review manual.",
+    answer: "Tidak. Simulasi tersedia untuk STL, OBJ, dan 3MF bila Anda punya berat dan durasi cetak per unit dari slicer sendiri, dengan PLA atau ABS dari stok Niuva. STEP dan STP selalu diperiksa manual.",
   },
   {
     question: "Apakah simulasi atau estimasi awal adalah harga final?",
-    answer: "Bukan. Simulasi customer hanya memuat komponen material dan waktu mesin. Operator memeriksa file, konfigurasi, dan biaya lain sebelum menerbitkan estimasi produksi dan quotation. Ongkir dihitung terpisah dari ukuran paket final.",
+    answer: "Bukan. Simulasi hanya menghitung material dan waktu mesin. Operator memeriksa file, konfigurasi, dan biaya lain sebelum mengirim quote. Ongkir dihitung terpisah dari ukuran paket final.",
   },
   {
-    question: "Kapan pekerjaan menjadi order?",
-    answer: "Request masuk review operator lebih dulu. Setelah quotation dikirim, Anda dapat menerima atau menolaknya dari akun. Order custom baru dibuat dari quotation yang diterima dan divalidasi ulang.",
+    question: "Kapan pekerjaan menjadi pesanan?",
+    answer: "Setiap pengajuan direview operator lebih dulu. Setelah quote dikirim, Anda dapat menerima atau menolaknya dari akun. Pesanan baru dibuat dari quote yang Anda terima, setelah diperiksa ulang.",
   },
 ] as const;
+
+const startCard = "flex min-w-0 flex-col rounded-[var(--radius-card)] border border-border bg-card p-6 sm:p-8";
+const factRow = "grid grid-cols-[minmax(0,9rem)_minmax(0,1fr)] gap-3 py-3";
 
 export default async function CustomPrintPage() {
   await connection();
@@ -95,6 +94,8 @@ export default async function CustomPrintPage() {
     : previewEnabled
       ? "frontend-preview" as const
       : "capability-gated" as const;
+  const modelAvailable = customerAuthEnabled && (liveEnabled || previewEnabled);
+  const referenceAvailable = customerAuthEnabled && databaseEnabled;
 
   const maxFileSizeLabel = `${CUSTOM_FILE_MAX_BYTES / 1_024 / 1_024} MiB`;
   const maxPhotoSizeLabel = `${REFERENCE_PHOTO_MAX_BYTES / 1_024 / 1_024} MiB`;
@@ -102,245 +103,158 @@ export default async function CustomPrintPage() {
   return (
     <PublicShell functionalStatus={functionalStatus} scope="custom-print" headerAction={{ href: "#start-custom", label: "Pilih titik mulai" }}>
       <main id="main-content" data-custom-print>
-        <section className="dark overflow-hidden border-b border-border bg-background text-foreground">
-          <div className="mx-auto grid max-w-public gap-8 px-5 py-10 sm:px-8 sm:py-14 lg:grid-cols-[minmax(0,0.9fr)_minmax(28rem,1.1fr)] lg:items-center">
-            <div className="max-w-2xl">
-              <p className="text-sm font-medium text-brand-300">Custom 3D Print</p>
-              <h1 className={`${type.display.className} mt-4 text-balance`}>
-                Review dulu. Baru produksi.
-              </h1>
-              <p className="mt-5 max-w-xl text-base leading-7 text-neutral-300">
-                Mulai dari model siap atau referensi awal. Operator meninjau kebutuhan dan hasil slicing sebelum Niuva menyusun quote yang dapat Anda setujui.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <NiuvaLink className="min-h-11 gap-2" href="#start-custom">
-                  Pilih titik mulai
-                  <Icon aria-hidden="true" className="size-4" name="arrow-down" />
-                </NiuvaLink>
-                <NiuvaLink className="min-h-11" href="#workflow" variant="outline">
-                  Pahami proses
-                </NiuvaLink>
-              </div>
+        {/* Same blue-field geometry as a service detail, so its measured text contrast carries over. */}
+        <section
+          aria-labelledby="custom-print-title"
+          className="relative mx-3 overflow-hidden rounded-[var(--radius-media)] bg-[radial-gradient(130%_70%_at_50%_100%,var(--brand-400)_0%,var(--brand-600)_32%,var(--brand-700)_62%,var(--brand-800)_100%)] text-white sm:mx-6 lg:h-120 lg:bg-[radial-gradient(52%_105%_at_83%_38%,var(--brand-400)_0%,var(--brand-600)_30%,var(--brand-700)_58%,var(--brand-800)_100%)]"
+        >
+          <div className="relative z-10 px-6 pt-10 sm:px-(--panel-inset) lg:absolute lg:inset-y-0 lg:left-0 lg:flex lg:w-[calc(var(--panel-inset)+38rem)] lg:flex-col lg:justify-center lg:pr-0 lg:pt-0">
+            <h1 className={`${type.display.className} text-balance`} id="custom-print-title">Review dulu. Baru produksi.</h1>
+            <p className="mt-5 max-w-[44ch] text-base leading-[1.6] text-white sm:text-lg">Kirim model 3D atau ceritakan referensi Anda. Operator memeriksa kebutuhan dan hasil slicing, lalu mengirim quote untuk Anda setujui sebelum produksi dimulai.</p>
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+              <NiuvaLink className="min-h-11" href="#start-custom" variant="onBrand">Pilih titik mulai</NiuvaLink>
+              <a className="inline-flex min-h-11 items-center font-semibold text-white underline underline-offset-4 hover:decoration-2" href="#workflow">Lihat alurnya</a>
             </div>
-
-            <figure className="overflow-hidden rounded-xl border border-neutral-700 bg-neutral-950">
-              <div className="relative aspect-[3/2]">
-                <Image
-                  alt="Ilustrasi konseptual model 3D yang berubah dari wireframe menjadi lapisan cetak"
-                  className="object-cover"
-                  fill
-                  priority
-                  sizes="(min-width: 1024px) 52vw, 100vw"
-                  src="/assets/illustrations/custom-print-file-to-object.png"
-                />
-              </div>
-              <figcaption className="border-t border-neutral-700 px-4 py-3 text-xs leading-5 text-neutral-400">
-                Ilustrasi konseptual alur file ke objek. Bukan hasil produksi Niuva.
-              </figcaption>
-            </figure>
           </div>
-        </section>
-
-        <section className="scroll-mt-8 border-b border-border bg-card" id="start-custom" aria-labelledby="modes-title">
-          <div className="mx-auto max-w-public px-5 py-12 sm:px-8 sm:py-16">
-            <p className="text-sm font-medium text-brand-700">Dua titik mulai MAKE</p>
-            <h2 className={`${type.heading.className} mt-3`} id="modes-title">Pilih sesuai bahan yang sudah Anda miliki.</h2>
-            {!customerAuthEnabled ? <div className="mt-6 max-w-3xl"><StatusNotice tone="warning" title="Login Customer belum tersedia pada runtime ini." description="Anda dapat mempelajari pilihan dan prosesnya. Pengiriman request menunggu login Customer tersedia; tidak ada file atau kebutuhan yang akan dikirim dari halaman ini." /></div> : null}
-            <div className="mt-10 grid gap-8 border-t border-border md:grid-cols-2 md:gap-12">
-              <div className="pt-7">
-                <h3 className={type.subheading.className}>Saya punya model 3D/CAD</h3>
-                <p className="mt-3 leading-7 text-muted-foreground">Unggah model privat, konfirmasi unit atau skala, lalu beri material dan perkiraan jumlah. STL, OBJ, dan 3MF dapat disertai berat serta durasi per unit dari slicer Anda untuk simulasi komponen opsional. STEP/STP diperiksa manual.</p>
-                <p className="mt-3 text-sm font-medium">{liveEnabled ? "Upload privat tersedia pada runtime ini." : "Upload model sedang tidak tersedia pada runtime ini."}</p>
-                {customerAuthEnabled && liveEnabled && <NiuvaLink className="mt-5 min-h-11" href="/custom-print/request">Siapkan model untuk review</NiuvaLink>}
-              </div>
-              <div className="border-t border-border pt-7 md:border-l md:border-t-0 md:pl-12">
-                <h3 className={type.subheading.className}>Saya baru punya referensi</h3>
-                <p className="mt-3 leading-7 text-muted-foreground">Ceritakan fungsi dan kebutuhan awal beserta perkiraan jumlah. Link HTTPS dan satu foto privat bersifat opsional. Nomor referensi tetap sama ketika model ditambahkan kemudian.</p>
-                <p className="mt-3 text-sm font-medium">{databaseEnabled ? liveEnabled ? "Deskripsi, link, dan foto dapat dikirim." : "Deskripsi dan link dapat dikirim tanpa upload foto." : "Pengiriman menunggu database tersedia."}</p>
-                {customerAuthEnabled && databaseEnabled && <NiuvaLink className="mt-5 min-h-11" href="/custom-print/request?mode=reference" variant="outline">Ajukan referensi untuk review</NiuvaLink>}
-              </div>
+          <div className="relative h-64 lg:absolute lg:inset-y-0 lg:right-0 lg:left-[calc(var(--panel-inset)+38rem)] lg:h-auto">
+            <Image alt="Maskot Niuva memegang laptop" className="absolute -bottom-7.5 left-1/2 h-[108%] w-auto max-w-none -translate-x-1/2 object-contain drop-shadow-xl lg:-bottom-10 lg:h-[112%]" height={1400} preload sizes="(max-width: 1024px) 90vw, 560px" src={mascotRenders.design} width={1400} />
+            <div className="absolute top-14 right-(--panel-inset) z-20 hidden w-66 rounded-[var(--radius-control)] bg-card p-4 text-foreground shadow-floating xl:block">
+              <p className="text-base font-semibold">Quote sebelum produksi</p>
+              <p className="mt-1 text-caption leading-[1.45] text-muted-foreground">Produksi dimulai setelah quote Anda setujui dan pembayaran terverifikasi.</p>
             </div>
           </div>
         </section>
 
-        <section className="border-b border-border bg-background" aria-labelledby="files-title">
-          <div className="mx-auto max-w-public px-5 py-16 sm:px-8 sm:py-20">
-            <div className="grid gap-5 lg:grid-cols-12">
-              <div className="rounded-xl border border-border bg-card p-6 sm:p-8 lg:col-span-7">
-                <p className="text-sm font-medium text-brand-700">Dossier file</p>
-                <h2 className={`${type.heading.className} mt-3 max-w-xl`} id="files-title">
-                  Bawa file dan konteks yang membantu review.
-                </h2>
-                <div className="mt-8 grid gap-8 sm:grid-cols-2">
-                  <div>
-                    <p className="text-sm font-semibold">Model siap diperiksa</p>
-                    <p className="mt-2 text-2xl font-semibold tracking-tight">STL · 3MF · OBJ</p>
-                    <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                      Format awal untuk alur model 3D. File tetap melalui validasi dan review operator.
-                    </p>
+        <section aria-labelledby="modes-title" className="mx-auto max-w-public scroll-mt-24 px-5 pt-24 sm:px-12 sm:pt-32" id="start-custom">
+          <h2 className={type.heading.className} id="modes-title">Mulai dari yang sudah Anda punya.</h2>
+          <p className="mt-4 max-w-[52ch] text-lead leading-[1.6] text-muted-foreground">Keduanya masuk ke review operator yang sama. Referensi bisa dilengkapi dengan model 3D nanti.</p>
+          {!customerAuthEnabled ? <div className="mt-8 max-w-3xl"><StatusNotice tone="warning" title="Login Customer belum tersedia saat ini." description="Anda tetap bisa membaca pilihan dan alurnya. Pengajuan bisa dikirim setelah login Customer tersedia." /></div> : null}
+
+          <div className="mt-10 grid gap-4 md:grid-cols-2 md:gap-5">
+            <article aria-labelledby="mode-model-title" className={startCard}>
+              <h3 className="text-2xl font-medium tracking-[-0.015em]" id="mode-model-title">Saya punya model 3D/CAD</h3>
+              <p className="mt-3 max-w-[48ch] text-base leading-[1.6] text-muted-foreground">Unggah model secara privat, konfirmasi unit atau skala, lalu pilih material dan jumlah. Punya berat dan durasi dari slicer sendiri? Anda bisa melihat simulasi biaya komponen.</p>
+              <dl className="mt-6 divide-y divide-border border-y border-border text-ui">
+                <div className={factRow}><dt className="font-normal text-muted-foreground">Model</dt><dd className="font-semibold">STL · 3MF · OBJ</dd></div>
+                <div className={factRow}><dt className="font-normal text-muted-foreground">Diperiksa manual</dt><dd className="font-semibold">STEP · STP</dd></div>
+                <div className={factRow}><dt className="font-normal text-muted-foreground">Ukuran maksimal</dt><dd className="font-semibold tabular-nums">{maxFileSizeLabel} per file</dd></div>
+              </dl>
+              <div className="mt-auto pt-6">
+                {!liveEnabled ? <p className="mb-4 text-ui font-normal text-muted-foreground">{previewEnabled ? "Preview lokal: file diperiksa di perangkat ini dan tidak dikirim." : "Unggah model belum tersedia saat ini."}</p> : null}
+                {modelAvailable ? <NiuvaLink className="min-h-11" href="/custom-print/request" variant="outline">Siapkan model untuk review</NiuvaLink> : null}
+              </div>
+            </article>
+
+            <article aria-labelledby="mode-reference-title" className={startCard}>
+              <h3 className="text-2xl font-medium tracking-[-0.015em]" id="mode-reference-title">Saya baru punya referensi</h3>
+              <p className="mt-3 max-w-[48ch] text-base leading-[1.6] text-muted-foreground">Ceritakan fungsi dan kebutuhan awal beserta perkiraan jumlah. Model 3D bisa ditambahkan nanti, dengan nomor referensi yang sama.</p>
+              <dl className="mt-6 divide-y divide-border border-y border-border text-ui">
+                <div className={factRow}><dt className="font-normal text-muted-foreground">Deskripsi</dt><dd className="font-semibold">Wajib, dengan perkiraan jumlah</dd></div>
+                <div className={factRow}><dt className="font-normal text-muted-foreground">Link referensi</dt><dd className="font-semibold">HTTPS, opsional</dd></div>
+                <div className={factRow}><dt className="font-normal text-muted-foreground">Foto atau sketsa</dt><dd className="font-semibold">JPG atau PNG, maks. {maxPhotoSizeLabel}, opsional</dd></div>
+              </dl>
+              <div className="mt-auto pt-6">
+                {!databaseEnabled ? <p className="mb-4 text-ui font-normal text-muted-foreground">Pengajuan referensi belum tersedia saat ini.</p>
+                  : !liveEnabled ? <p className="mb-4 text-ui font-normal text-muted-foreground">Foto belum bisa diunggah saat ini; deskripsi dan link tetap bisa dikirim.</p> : null}
+                {referenceAvailable ? <NiuvaLink className="min-h-11" href="/custom-print/request?mode=reference" variant="outline">Ajukan referensi untuk review</NiuvaLink> : null}
+              </div>
+            </article>
+          </div>
+
+          <div className="mt-10 grid gap-6 border-t border-border pt-8 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] lg:gap-10">
+            <h3 className="text-xl font-medium tracking-[-0.01em]">Sebelum mengirim</h3>
+            <ul className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
+              {preparationItems.map((item) => (
+                <li className="flex gap-3 text-base leading-[1.55]" key={item}>
+                  <Icon aria-hidden="true" className="mt-1 size-4 shrink-0 text-primary" name="check" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <section aria-labelledby="workflow-title" className="mx-auto max-w-public scroll-mt-24 px-5 pt-24 sm:px-12 sm:pt-32" id="workflow">
+          <h2 className={type.heading.className} id="workflow-title">Dari file sampai barang jadi.</h2>
+          <p className="mt-4 max-w-[52ch] text-lead leading-[1.6] text-muted-foreground">Setiap tahap punya keputusan yang jelas. Tidak ada yang diproduksi sebelum Anda menyetujui quote.</p>
+          <ol className="mt-10 grid gap-8 md:grid-cols-2 md:gap-10 lg:grid-cols-4">
+            {workflow.map(({ description, label }, index) => (
+              <li className="border-t border-border pt-5" key={label}>
+                <span aria-hidden="true" className="flex size-8 items-center justify-center rounded-full bg-brand-100 text-ui font-semibold text-brand-800 tabular-nums">{index + 1}</span>
+                <h3 className="mt-4 text-xl font-medium tracking-[-0.01em]">{label}</h3>
+                <p className="mt-2 max-w-[40ch] text-base leading-[1.6] text-muted-foreground">{description}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        {CUSTOM_FLOW_PRODUCT_OPTIONS.length > 0 ? (
+          <section aria-labelledby="custom-products-title" className="mx-auto max-w-public px-5 pt-24 sm:px-12 sm:pt-32">
+            <h2 className={type.heading.className} id="custom-products-title">Pilih referensi, lalu biarkan operator mengunci detailnya.</h2>
+            <p className="mt-4 max-w-[52ch] text-lead leading-[1.6] text-muted-foreground">Produk ini butuh detail custom, jadi tetap melalui review dan quote. Harga katalog tidak berlaku untuk alur ini.</p>
+            <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {CUSTOM_FLOW_PRODUCT_OPTIONS.map((product) => (
+                <li className="flex min-w-0 flex-col overflow-hidden rounded-[var(--radius-card)] border border-border bg-card" key={product.sourceProductId}>
+                  <div className="relative aspect-square">
+                    {product.imagePath ? <Image alt={`Foto referensi ${product.name}`} className="object-contain" fill sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw" src={product.imagePath} /> : null}
                   </div>
-                  <div className="border-t border-border pt-6 sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0">
-                    <p className="text-sm font-semibold">Lampiran untuk review manual</p>
-                    <p className="mt-2 text-2xl font-semibold tracking-tight">STEP · STP</p>
-                    <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                      Diterima sebagai referensi manual, bukan untuk analisis geometri atau harga otomatis.
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-8 border-t border-border pt-6 text-sm leading-6 text-muted-foreground">
-                  Batas model adalah {maxFileSizeLabel} per file. Foto referensi opsional JPG, JPEG, atau PNG dibatasi {maxPhotoSizeLabel}. Ekstensi dan MIME tetap divalidasi sebelum review.
-                </div>
-              </div>
-
-              <aside className="rounded-xl bg-brand-950 p-6 text-neutral-50 sm:p-8 lg:col-span-5" aria-labelledby="prepare-title">
-                <p className="text-sm font-medium text-brand-300">Sebelum mengirim</p>
-                <h3 className={`${type.subheading.className} mt-3`} id="prepare-title">Empat hal yang mempercepat pemeriksaan.</h3>
-                <ul className="mt-6 space-y-4">
-                  {preparationItems.map((item) => (
-                    <li className="flex gap-3 text-sm leading-6 text-neutral-300" key={item}>
-                      <Icon aria-hidden="true" className="mt-1 size-4 shrink-0 text-brand-300" name="check" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </aside>
-            </div>
-          </div>
-        </section>
-
-        <section className="border-b border-border bg-card" id="workflow" aria-labelledby="workflow-title">
-          <div className="mx-auto grid max-w-public gap-10 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[minmax(16rem,0.55fr)_minmax(0,1fr)] lg:gap-16">
-            <div className="lg:sticky lg:top-8 lg:self-start">
-              <p className="text-sm font-medium text-brand-700">Alur yang dapat ditinjau</p>
-              <h2 className={`${type.heading.className} mt-3`} id="workflow-title">
-                Keputusan penting tidak diserahkan pada tebakan browser.
-              </h2>
-              <p className="mt-5 max-w-md text-base leading-7 text-muted-foreground">
-                Model atau referensi awal dapat menjadi titik mulai. Operator tetap memverifikasi model dan hasil slicing sebelum estimasi produksi atau quote diterbitkan.
-              </p>
-            </div>
-
-            <ol className="border-t border-border">
-              {workflow.map(({ description, icon, label }) => (
-                <li className="grid gap-4 border-b border-border py-7 sm:grid-cols-[3rem_minmax(0,1fr)]" key={label}>
-                  <span className="flex size-11 items-center justify-center rounded-lg border border-brand-300 bg-brand-100 text-brand-800">
-                    <Icon aria-hidden="true" className="size-5" name={icon} />
-                  </span>
-                  <div>
-                    <h3 className={type.subheading.className}>{label}</h3>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{description}</p>
+                  <div className="flex flex-1 flex-col border-t border-border p-5">
+                    <h3 className="text-lg font-medium">{product.name}</h3>
+                    <p className="mt-2 line-clamp-3 text-ui font-normal text-muted-foreground">Varian referensi: {product.variantNames.join(", ")}.</p>
+                    {customerAuthEnabled ? <NiuvaLink className="mt-5 min-h-11 self-start" href={`/custom-print/request?product=${encodeURIComponent(product.sourceProductId)}`} variant="outline">Ajukan untuk Review</NiuvaLink> : null}
                   </div>
                 </li>
               ))}
-            </ol>
-          </div>
-        </section>
+            </ul>
+          </section>
+        ) : null}
 
-        {CUSTOM_FLOW_PRODUCT_OPTIONS.length > 0 ? <section className="border-b border-border bg-background" aria-labelledby="custom-products-title">
-          <div className="mx-auto max-w-public px-5 py-16 sm:px-8 sm:py-20">
-            <div className="max-w-3xl">
-              <p className="text-sm font-medium text-brand-700">Inspirasi produk custom</p>
-              <h2 className={`${type.heading.className} mt-3`} id="custom-products-title">
-                Pilih referensi, lalu biarkan operator mengunci detailnya.
-              </h2>
-              <p className="mt-5 text-base leading-7 text-muted-foreground">
-                Produk berikut memiliki foto referensi, tetapi tetap draft karena membutuhkan konteks custom, review, dan quote. Harga pada katalog bukan checkout otomatis untuk alur ini.
-              </p>
-            </div>
-            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {CUSTOM_FLOW_PRODUCT_OPTIONS.map((product) => (
-                <article className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card" key={product.sourceProductId}>
-                  <div className="relative aspect-[4/3] bg-muted">
-                    {product.imagePath ? <Image alt={`Foto referensi ${product.name}`} className="object-contain" fill sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw" src={product.imagePath} /> : null}
-                  </div>
-                  <div className="flex flex-1 flex-col p-5">
-                    <h3 className="text-base font-semibold leading-6">{product.name}</h3>
-                    <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground">
-                      Varian referensi: {product.variantNames.join(", ")}.
-                    </p>
-                    {customerAuthEnabled ? <NiuvaLink className="mt-5 min-h-11 w-full" href={`/custom-print/request?product=${encodeURIComponent(product.sourceProductId)}`}>
-                      Ajukan untuk Review
-                    </NiuvaLink> : <p className="mt-5 border-t border-border pt-4 text-sm leading-6 text-muted-foreground">Pengajuan menunggu login Customer tersedia.</p>}
-                  </div>
-                </article>
-              ))}
-            </div>
+        <section aria-labelledby="boundaries-title" className="mx-auto grid max-w-public gap-10 px-5 pt-24 sm:px-12 sm:pt-32 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
+          <div>
+            <h2 className={type.heading.className} id="boundaries-title">Harga, file, dan ongkir punya aturannya sendiri.</h2>
+            <p className="mt-4 max-w-[44ch] text-lead leading-[1.6] text-muted-foreground">Supaya angka yang Anda setujui adalah angka yang sudah diperiksa.</p>
           </div>
-        </section> : null}
-
-        <section className="border-b border-border bg-card" aria-labelledby="boundaries-title">
-          <div className="mx-auto grid max-w-public gap-10 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-2 lg:items-start">
-            <div>
-              <p className="text-sm font-medium text-brand-700">Batas yang dibuat jelas</p>
-              <h2 className={`${type.heading.className} mt-3 max-w-xl`} id="boundaries-title">
-                File privat dan harga final punya jalur verifikasi sendiri.
-              </h2>
-            </div>
-            <dl className="divide-y divide-border border-y border-border">
-              <div className="grid gap-2 py-5 sm:grid-cols-[10rem_minmax(0,1fr)]">
-                <dt className="flex items-center gap-2 text-sm font-semibold"><Icon aria-hidden="true" className="size-4 text-brand-700" name="lock-keyhole" /> Akses file</dt>
-                <dd className="text-sm leading-6 text-muted-foreground">Saat upload aktif, file customer disimpan privat dan Admin mengaksesnya melalui tautan singkat.</dd>
+          <dl className="divide-y divide-border rounded-[var(--radius-media)] border border-border bg-card">
+            {boundaries.map(({ detail, icon, term }) => (
+              <div className="grid gap-2 px-6 py-6 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-6 sm:px-8" key={term}>
+                <dt className="flex items-center gap-2.5 self-start text-lg font-medium"><Icon aria-hidden="true" className="size-5 text-primary" name={icon} />{term}</dt>
+                <dd className="text-base leading-[1.6]">{detail}</dd>
               </div>
-              <div className="grid gap-2 py-5 sm:grid-cols-[10rem_minmax(0,1fr)]">
-                <dt className="flex items-center gap-2 text-sm font-semibold"><Icon aria-hidden="true" className="size-4 text-brand-700" name="scan-search" /> Harga</dt>
-                <dd className="text-sm leading-6 text-muted-foreground">Estimasi awal, bukan harga final. Tidak ada harga final instan dari geometri. Quote disusun setelah input slicer diverifikasi operator dan biaya pekerjaan dinilai.</dd>
-              </div>
-              <div className="grid gap-2 py-5 sm:grid-cols-[10rem_minmax(0,1fr)]">
-                <dt className="flex items-center gap-2 text-sm font-semibold"><Icon aria-hidden="true" className="size-4 text-brand-700" name="package-check" /> Pengiriman</dt>
-                <dd className="text-sm leading-6 text-muted-foreground">Biaya pengiriman custom dihitung setelah produksi, QC, dan ukuran paket final tersedia.</dd>
-              </div>
-            </dl>
+            ))}
+          </dl>
+        </section>
+
+        <section aria-labelledby="faq-title" className="mx-auto grid max-w-public gap-8 px-5 pt-24 sm:px-12 sm:pt-32 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
+          <h2 className={type.heading.className} id="faq-title">Pertanyaan yang sering muncul.</h2>
+          <div className="divide-y divide-border rounded-[var(--radius-card)] border border-border bg-card">
+            {commonQuestions.map(({ question, answer }) => (
+              <details className="group" key={question}>
+                <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 rounded-[var(--radius-card)] px-5 py-3 text-lg font-medium focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:px-6 [&::-webkit-details-marker]:hidden">
+                  {question}
+                  <Icon aria-hidden="true" className="size-4 shrink-0 transition-transform duration-[var(--duration-normal-token)] group-open:rotate-180 motion-reduce:transition-none" name="arrow-down" />
+                </summary>
+                <p className="max-w-[62ch] px-5 pb-5 text-base leading-[1.65] text-muted-foreground sm:px-6">{answer}</p>
+              </details>
+            ))}
           </div>
         </section>
 
-        <section className="border-b border-border bg-background" aria-labelledby="faq-title">
-          <div className="mx-auto grid max-w-public gap-8 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] lg:gap-16">
-            <div><p className="text-sm font-medium text-brand-700">Sebelum mengajukan</p><h2 className={`${type.heading.className} mt-3`} id="faq-title">Pertanyaan yang sering muncul.</h2></div>
-            <div className="divide-y divide-border border-y border-border">
-              {commonQuestions.map(({ question, answer }) => <details className="group py-5" key={question}>
-                <summary className="min-h-11 cursor-pointer py-2 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700">{question}</summary>
-                <p className="max-w-2xl pb-2 pr-4 text-sm leading-7 text-muted-foreground">{answer}</p>
-              </details>)}
-            </div>
-          </div>
-        </section>
-
-        <section className="bg-background" id="request-readiness" aria-labelledby="request-title">
-          <div className="mx-auto grid max-w-public gap-8 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[minmax(0,0.9fr)_minmax(24rem,1.1fr)] lg:items-center">
-            <div>
-              <p className="text-sm font-medium text-brand-700">Langkah berikutnya</p>
-              <h2 className={`${type.heading.className} mt-3`} id="request-title">Pilih titik mulai sesuai yang sudah Anda punya.</h2>
-              <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground">
-                Model siap masuk review file. Jika baru punya sketsa, foto, atau kebutuhan awal, kirim referensi dan tambahkan model pada request yang sama nanti.
-              </p>
-            </div>
-            <StatusNotice
-              tone="info"
-              title={!customerAuthEnabled
-                ? "Pengiriman menunggu login Customer."
-                : databaseEnabled
-                ? "Referensi awal dapat dikirim untuk ditriase operator."
-                : previewEnabled
-                  ? "Form model siap untuk preview lokal."
-                  : "Form request menunggu database."}
-              description={!customerAuthEnabled
-                ? "Pilihan dan proses dapat Anda pelajari sekarang. Request belum dapat dikirim pada runtime ini."
-                : databaseEnabled
-                ? liveEnabled
-                  ? "Mulai dengan referensi atau unggah model secara privat. Kelayakan cetak dan quote tetap menunggu review operator."
-                  : "Kirim deskripsi dan link tanpa upload. Foto dan model baru dapat diunggah setelah storage privat tersedia."
-                : previewEnabled
-                  ? "Preview model hanya menguji metadata lokal; tidak membuat request nyata."
-                  : "Pengiriman request belum tersedia. Hubungi tim Niuva melalui WhatsApp untuk membahas kebutuhan Anda."}
-              action={customerAuthEnabled && databaseEnabled
-                ? <NiuvaLink className="min-h-11" href="/custom-print/request?mode=reference">Mulai dari referensi</NiuvaLink>
-                : customerAuthEnabled && (liveEnabled || previewEnabled)
-                  ? <NiuvaLink className="min-h-11" href="/custom-print/request">Saya punya model</NiuvaLink>
-                  : undefined}
-              secondaryAction={customerAuthEnabled && liveEnabled ? <NiuvaLink className="min-h-11" href="/custom-print/request" variant="outline">Saya punya model</NiuvaLink> : <B2BContactLink />}
-            />
-          </div>
-        </section>
+        <ClosingPanel id="request-title" mascot={mascotRenders.build} title="Siap mengirim kebutuhan Anda?">
+          {referenceAvailable || modelAvailable ? (
+            <>
+              <p className="mt-4 max-w-[40ch] text-lead leading-[1.6] text-white">Operator meninjau setiap pengajuan dan mengirim quote sebelum apa pun dicetak.</p>
+              <div className="mt-7 flex flex-wrap gap-3">
+                {modelAvailable ? <NiuvaLink className="min-h-11" href="/custom-print/request" variant="onBrand">Saya punya model</NiuvaLink> : null}
+                {referenceAvailable ? <NiuvaLink className="min-h-11" href="/custom-print/request?mode=reference" variant="onBrand">Mulai dari referensi</NiuvaLink> : null}
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="mt-4 max-w-[40ch] text-lead leading-[1.6] text-white"><span>Pengiriman menunggu login Customer.</span> Sementara itu, ceritakan kebutuhan Anda kepada tim Niuva lewat WhatsApp.</p>
+              <B2BContactLink className="mt-7" variant="onBrand" />
+            </>
+          )}
+        </ClosingPanel>
       </main>
     </PublicShell>
   );
