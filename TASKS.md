@@ -2132,6 +2132,39 @@ belum ada yang dikerjakan.
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
 
+### T49 — Refund dan Pusat privasi, 2026-11-01
+
+Branch `claude/redesign-customer-refund-privacy` dari `main@c6ce0d1` (setelah
+PR #114); potongan kedua T49 ("ok sudah saya merge").
+
+- **Pengajuan refund:** tautan "Kembali ke pesanan", judul display, strip fakta
+  (nomor pesanan, pembayaran terverifikasi), satu kartu sesuai keadaan (kasus,
+  form, atau pembayaran perlu diperiksa), dan kartu bantuan. Form, validasi,
+  Server Action, dan aturan refund tidak berubah; ringkasan kasus kini menulis
+  "Pembayaran pesanan" (juga terlihat di Admin).
+- **Pusat privasi:** empat tugas sebagai kartu, penutupan akun terakhir dengan
+  garis merah, daftar permintaan dan kontak di samping. Catatan "Tersedia
+  khusus Development lokal dan test. Policy Customer publik masih berupa draf."
+  menjadi "Pusat privasi saat ini hanya aktif untuk pengujian. Kebijakan privasi
+  untuk Customer publik belum terbit." (`publishedAt` policy masih `null`).
+  Tanggapan Owner tidak lagi memakai garis kiri. Konfirmasi dan hasil penutupan
+  memakai judul display dan satu kartu; tautan "Ke Pusat privasi" pindah ke atas.
+- **Komponen:** tombol `PrivacyForm` untuk Customer memakai `buttonVariants`
+  (default atau destructive) dan kontrolnya `bg-card`; mode Owner di Admin
+  ikut warna kontrol yang sama. Endpoint, name/value form, dan alur POST native
+  untuk penutupan tidak berubah.
+- **Struktur:** tampilan refund dan Pusat privasi dipisah ke `refund-view.tsx`
+  dan `privacy-center-view.tsx`; page tetap memegang sesi dan data.
+- **Bukti lokal:** lint (0 error), typecheck, unit 139 file/1.539 test, backend
+  privasi dan refund 8 file/49 test. Pemeriksaan Playwright 51/51 lewat route
+  sementara yang tidak di-commit: Tab dari alasan ke tombol refund, error
+  menerima fokus dan input tetap, tiga keadaan refund, validasi koreksi
+  memfokuskan field, empat tugas dan daftar permintaan, keadaan kosong, belum
+  aktif, dan error, alert tautan tidak berlaku di halaman konfirmasi, satu h1
+  dan tanpa overflow 320–1440, tanpa error console. Capture desktop dan ponsel.
+- **Belum:** E2E privasi dan refund dengan sesi Customer (di CI), enam halaman
+  auth (potongan terakhir T49), review visual Owner.
+
 ### T49 — Akun, detail Custom 3D Print, dan detail pesanan, 2026-11-01
 
 Branch `claude/redesign-customer-account` dari `main@a03f88c` (setelah PR #113);
