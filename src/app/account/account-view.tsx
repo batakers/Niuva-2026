@@ -97,11 +97,17 @@ export function AccountView({
               </div>
             )}
             <dl className="min-w-0">
-              <dt className="sr-only">Nama</dt>
-              <dd className="truncate text-lg font-medium">{name}</dd>
+              {account.profile.displayName ? (
+                <>
+                  <dt className="sr-only">Nama</dt>
+                  <dd className="truncate text-lg font-medium">{account.profile.displayName}</dd>
+                </>
+              ) : null}
               <dt className="sr-only">Email terverifikasi</dt>
-              <dd className="break-all text-ui font-normal text-muted-foreground">
-                {account.profile.email} <span className="whitespace-nowrap">· terverifikasi</span>
+              {/* The email stays its own text node: without a name it is the only identity line. */}
+              <dd className={account.profile.displayName ? "text-ui font-normal text-muted-foreground" : "text-lg font-medium"}>
+                <span className="break-all">{account.profile.email}</span>{" "}
+                <span className="whitespace-nowrap text-ui font-normal text-muted-foreground">· terverifikasi</span>
               </dd>
             </dl>
           </div>

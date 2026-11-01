@@ -2162,7 +2162,9 @@ potongan pertama T49 ("#113 sudah merge").
   `QuoteService`). Status pengiriman di halaman bertoken tidak lagi mentah.
 - **Test:** E2E akun, login, dan status pesanan mengikuti judul dan copy baru;
   menolak quote di E2E akun kini melewati konfirmasi; test baru untuk formatter
-  dan label. Tidak ada assertion yang dihapus.
+  dan label, serta test tampilan Akun: email tetap teks tersendiri dan tidak
+  diulang saat nama kosong (dibaca E2E login email tanpa JavaScript). Tidak ada
+  assertion yang dihapus.
 - **Bukti lokal:** lint (0 error), typecheck, unit 138 file/1.536 test pada run
   penuh dengan tiga test timing (hash scrypt dan pemindaian Server Action) yang
   timeout di bawah beban lalu lulus saat dijalankan sendiri; backend terkait 7
