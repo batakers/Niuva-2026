@@ -2154,6 +2154,15 @@ T48, atas persetujuan Owner ("Ya, lanjut T48").
   nama dan email akun di checkout (serta email akun di form MAKE) benar-benar
   read-only seperti yang tertulis; server tetap memakai identitas sesi. Tautan
   pemulihan checkout live tidak lagi menuju keranjang/Toko preview.
+- **Keranjang preview terpisah:** halaman `?preview=` menyimpan varian contoh di
+  `niuva.cart.preview.v1`, bukan di keranjang asli `niuva.cart.v1`. Sebelumnya
+  item contoh ikut ke `/cart` asli dan tampil "Varian belum dapat dikenali"
+  (ditemukan Owner saat cek lokal). Badge dan tautan "Keranjang" di header
+  mengikuti keranjang asli; alur preview memakai "Lihat keranjang". Hanya lokal:
+  preview tidak aktif di staging/produksi. Bukti: unit 4 file/27 test, E2E
+  `cart`/`product-detail` dan dua test `redesign-journeys` 12/12 terhadap dev
+  server; tujuh test checkout dan test BUY `redesign-journeys` berhenti di login
+  Customer dev server (OAuth mock hanya di server E2E), jadi dibuktikan di CI.
 - **Bukti lokal:** lint (0 error), typecheck, unit 137 file/1.528 test (termasuk
   test regresi `readOnly`). Pemeriksaan Playwright terhadap dev server, 53/53
   lulus: keranjang contoh 320–1440 (satu h1, tanpa overflow, tanpa error

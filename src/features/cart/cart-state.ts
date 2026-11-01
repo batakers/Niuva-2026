@@ -1,4 +1,7 @@
 export const CART_STORAGE_KEY = "niuva.cart.v1";
+/** Local `?preview=` pages keep their example variants here, so they never reach the real cart. */
+export const PREVIEW_CART_STORAGE_KEY = "niuva.cart.preview.v1";
+export type CartStorageKey = typeof CART_STORAGE_KEY | typeof PREVIEW_CART_STORAGE_KEY;
 export const CART_SCHEMA_VERSION = 1 as const;
 export const MAX_CART_QUANTITY = 99;
 
@@ -69,10 +72,17 @@ export function parseCart(raw: string | null): CartReadResult {
   }
 }
 
-export function readCart(storage: Pick<Storage, "getItem" | "removeItem">): CartReadResult {
+export function cartStorageKey(preview: boolean): CartStorageKey {
+  return preview ? PREVIEW_CART_STORAGE_KEY : CART_STORAGE_KEY;
+}
+
+export function readCart(
+  storage: Pick<Storage, "getItem" | "removeItem">,
+  key: CartStorageKey = CART_STORAGE_KEY,
+): CartReadResult {
   try {
-    const result = parseCart(storage.getItem(CART_STORAGE_KEY));
-    if (result.recovered) storage.removeItem(CART_STORAGE_KEY);
+    const result = parseCart(storage.getItem(key));
+    if (result.recovered) storage.removeItem(key);
     return result;
   } catch {
     return { snapshot: EMPTY_CART, recovered: false, storageAvailable: false };
@@ -86,9 +96,13 @@ export function countCartUnits(snapshot: CartSnapshot) {
   return snapshot.items.reduce((total, item) => total + item.quantity, 0);
 }
 
-export function writeCart(storage: Pick<Storage, "setItem">, snapshot: CartSnapshot) {
+export function writeCart(
+  storage: Pick<Storage, "setItem">,
+  snapshot: CartSnapshot,
+  key: CartStorageKey = CART_STORAGE_KEY,
+) {
   try {
-    storage.setItem(CART_STORAGE_KEY, JSON.stringify(snapshot));
+    storage.setItem(key, JSON.stringify(snapshot));
     if (typeof window !== "undefined") window.dispatchEvent(new Event(CART_CHANGE_EVENT));
     return true;
   } catch {

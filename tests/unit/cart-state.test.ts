@@ -3,8 +3,10 @@ import {
   addCartItem,
   CART_SCHEMA_VERSION,
   CART_STORAGE_KEY,
+  cartStorageKey,
   EMPTY_CART,
   parseCart,
+  PREVIEW_CART_STORAGE_KEY,
   readCart,
   removeCartItem,
   updateCartItem,
@@ -58,5 +60,16 @@ describe("cart state", () => {
     expect(result.recovered).toBe(true);
     expect(result.snapshot).toEqual(EMPTY_CART);
     expect(window.localStorage.getItem(CART_STORAGE_KEY)).toBeNull();
+  });
+
+  it("keeps preview example variants out of the real cart", () => {
+    const real = addCartItem(EMPTY_CART, { variantId: "variant-a", quantity: 1 });
+    const example = addCartItem(EMPTY_CART, { variantId: "example-tray-single", quantity: 1 });
+    writeCart(window.localStorage, real, cartStorageKey(false));
+    writeCart(window.localStorage, example, cartStorageKey(true));
+
+    expect(cartStorageKey(true)).toBe(PREVIEW_CART_STORAGE_KEY);
+    expect(readCart(window.localStorage).snapshot).toEqual(real);
+    expect(readCart(window.localStorage, PREVIEW_CART_STORAGE_KEY).snapshot).toEqual(example);
   });
 });

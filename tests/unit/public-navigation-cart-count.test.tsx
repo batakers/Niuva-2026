@@ -2,7 +2,7 @@ import { act, cleanup, render, screen } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PublicNavigation } from "@/components/niuva/public-navigation";
-import { addCartItem, CART_STORAGE_KEY, EMPTY_CART, writeCart } from "@/features/cart/cart-state";
+import { addCartItem, CART_STORAGE_KEY, EMPTY_CART, PREVIEW_CART_STORAGE_KEY, writeCart } from "@/features/cart/cart-state";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/shop" }));
 
@@ -33,5 +33,14 @@ describe("PublicNavigation cart count", () => {
       writeCart(window.localStorage, addCartItem(cart, { variantId: "c", quantity: 2 }));
     });
     expect(screen.getByRole("link", { name: /Keranjang, 5 item di keranjang/ })).toBeTruthy();
+  });
+
+  it("counts only the real cart the link opens, not the preview example cart", () => {
+    render(<PublicNavigation action={null} />);
+    act(() => {
+      writeCart(window.localStorage, addCartItem(EMPTY_CART, { variantId: "example-tray-single", quantity: 4 }), PREVIEW_CART_STORAGE_KEY);
+    });
+    expect(screen.getByRole("link", { name: "Keranjang" })).toHaveAttribute("href", "/cart");
+    expect(document.querySelector("[data-cart-count]")).toBeNull();
   });
 });

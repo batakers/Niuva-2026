@@ -8,7 +8,7 @@ import { useHydrated } from "@/components/niuva/use-hydrated";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { EMPTY_CART, readCart, type CartSnapshot } from "@/features/cart/cart-state";
+import { cartStorageKey, EMPTY_CART, readCart, type CartSnapshot } from "@/features/cart/cart-state";
 import type { PreviewScenario, PublicShopProduct } from "@/features/frontend-preview/types";
 import { getShopDisplayCopy } from "@/features/public/shop-display-copy";
 import { ShippingOptions, type ShippingOptionsMode, type ShippingPreviewOption, type ShippingPreviewStatus } from "./shipping-options";
@@ -310,9 +310,12 @@ export function CheckoutForm({
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const idempotencyKeyRef = useRef<string | undefined>(undefined);
 
+  // A `?preview=` scenario checks out the example cart, never the real one.
+  const storageKey = cartStorageKey(catalogStatus !== null);
+
   useEffect(() => {
     const loadTimer = window.setTimeout(() => {
-      const cart = readCart(window.localStorage);
+      const cart = readCart(window.localStorage, storageKey);
       setSnapshot(cart.snapshot);
       setStorageAvailable(cart.storageAvailable);
       if (isLive) {
@@ -344,7 +347,7 @@ export function CheckoutForm({
       setLoadState("ready");
     }, 0);
     return () => window.clearTimeout(loadTimer);
-  }, [isLive]);
+  }, [isLive, storageKey]);
 
   useEffect(() => () => clearTimeout(timer.current), []);
   useEffect(() => {

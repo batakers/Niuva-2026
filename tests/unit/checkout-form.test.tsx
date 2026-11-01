@@ -1,11 +1,12 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CheckoutForm, type CheckoutPreviewScenario } from "@/app/checkout/checkout-form";
-import { CART_STORAGE_KEY } from "@/features/cart/cart-state";
+import { CART_STORAGE_KEY, PREVIEW_CART_STORAGE_KEY } from "@/features/cart/cart-state";
 import { exampleShopProducts } from "@/features/frontend-preview/fixtures";
 
+// Preview checkout reads the example cart; live tests seed the real cart themselves.
 function seedCart() {
-  window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify({
+  window.localStorage.setItem(PREVIEW_CART_STORAGE_KEY, JSON.stringify({
     version: 1,
     items: [{ variantId: "example-dock-grey", quantity: 2 }],
   }));
@@ -95,7 +96,8 @@ describe("checkout frontend preview", () => {
 
     expect(screen.getByText("Preview checkout siap ditinjau.")).toBeVisible();
     expect(fetchSpy).not.toHaveBeenCalled();
-    expect(window.localStorage.getItem(CART_STORAGE_KEY)).toContain("example-dock-grey");
+    expect(window.localStorage.getItem(PREVIEW_CART_STORAGE_KEY)).toContain("example-dock-grey");
+    expect(window.localStorage.getItem(CART_STORAGE_KEY)).toBeNull();
   });
 
   it("recovers unavailable shipping options without losing the address", async () => {

@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { loginCustomer } from "./helpers/customer";
 
-const storageKey = "niuva.cart.v1";
+const storageKey = "niuva.cart.preview.v1";
 
 async function seedCheckout(page: Page) {
   await page.addInitScript(({ key }) => {
