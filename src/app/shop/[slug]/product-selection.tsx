@@ -130,6 +130,7 @@ export function ProductSelection({ product, previewEnabled = true, onVariantChan
       {cartResult === "added" || cartResult === "recovered" ? (
         <div className="mt-5">
           <StatusNotice
+            enter
             tone="success"
             title="Masuk ke keranjang."
             description={`${quantity} × ${selected?.name ?? "varian"}. Stok belum ditahan sampai pesanan dibuat.${cartResult === "recovered" ? " Isi keranjang lama yang rusak sudah dibersihkan." : ""}`}
@@ -138,7 +139,7 @@ export function ProductSelection({ product, previewEnabled = true, onVariantChan
         </div>
       ) : null}
       {cartResult === "error" ? (
-        <div className="mt-5"><StatusNotice tone="error" title="Belum bisa disimpan ke keranjang." description="Browser ini menolak penyimpanan. Periksa pengaturan browser, lalu coba lagi." /></div>
+        <div className="mt-5"><StatusNotice enter tone="error" title="Belum bisa disimpan ke keranjang." description="Browser ini menolak penyimpanan. Periksa pengaturan browser, lalu coba lagi." /></div>
       ) : null}
       <noscript><p className="mt-3 text-ui text-muted-foreground">Aktifkan JavaScript untuk memilih varian dan menambah produk ke keranjang.</p></noscript>
     </section>

@@ -71,7 +71,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
 
   return (
     <PublicShell scope="services" contactService={service.title}>
-      <main id="main-content">
+      <main id="main-content" data-smooth-anchors>
         <div className="mx-auto max-w-public px-5 pt-6 sm:px-12 sm:pt-8">
           <NiuvaLink className="min-h-11" href="/services" size="sm" variant="outline"><Icon aria-hidden="true" className="size-4" name="arrow-left" />Semua layanan</NiuvaLink>
         </div>
@@ -85,7 +85,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
             <p className="mt-5 max-w-[44ch] text-base leading-[1.6] text-white sm:text-lg">{service.websiteFraming}</p>
             <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
               <B2BContactLink service={service.title} variant="onBrand" />
-              <a className="inline-flex min-h-11 items-center font-semibold text-white underline underline-offset-4 hover:decoration-2" href="#related-projects-title">Lihat proyek terkait</a>
+              <a className="inline-flex min-h-11 items-center font-semibold text-white underline underline-offset-4 hover:decoration-2" href="#related-projects">Lihat proyek terkait</a>
             </div>
           </div>
           <div className="relative h-64 lg:absolute lg:inset-y-0 lg:right-0 lg:left-[calc(var(--panel-inset)+38rem)] lg:h-auto">
@@ -128,7 +128,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
           </ol>
         </section>
 
-        <section aria-labelledby="related-projects-title" className="mx-auto max-w-public scroll-mt-24 px-5 pt-24 sm:px-12 sm:pt-32">
+        <section aria-labelledby="related-projects-title" className="mx-auto max-w-public scroll-mt-24 px-5 pt-24 sm:px-12 sm:pt-32" id="related-projects">
           <div className="flex flex-wrap items-end justify-between gap-5">
             <h2 className={type.heading.className} id="related-projects-title">Proyek terkait</h2>
             <NiuvaLink className="min-h-11" href="/projects" variant="outline">Semua proyek</NiuvaLink>

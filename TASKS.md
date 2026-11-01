@@ -32,7 +32,7 @@ ada di papan ini; pekerjaan baru masuk tabel task, bukan file lain.
 | | T09 | O | `CUSTOMER_AUTH_CLEANUP` lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
 | | T23, T25, T35 | O | Cek metode dan fitur refund di dashboard Midtrans sandbox (Owner mengecek, 31 Okt); grant `refund` sudah ada | Q1 |
 | Redesign | T46 → T47 | A | Beranda di `main` dan diterima Owner; Layanan, Proyek, dan detailnya selesai lokal di `claude/redesign-company-pages`; sisa legal dan 404 | Postgres lokal untuk E2E (Owner) |
-| Redesign | T45–T51 | A | Redesign M5a selesai 2 Nov (bukti lokal dan CI); review visual Owner per route masih terbuka | — |
+| Redesign | T45–T51, T54 | A | Redesign M5a dan motion lanjutan selesai 2 Nov (bukti lokal; CI di PR); review visual Owner per route masih terbuka | — |
 | | T36 | O + A | UAT operasi Admin di UI baru | T50 |
 | Berantai | T34 → T08 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim; lalu retensi file pada berkas MAKE | T33 dulu |
 | | T14 | O + A | Privacy hosted dengan sesi Customer penguji; grant sudah ter-deploy (#89) | Sesi Customer Owner |
@@ -209,6 +209,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T49 | M5a | DONE | Redesign Customer dan auth | T46, T48 | Hub Akun, detail MAKE/order (konfirmasi terima quote, timeline, Rupiah dan label status konsisten), refund, privasi, enam halaman auth dalam satu frame; allowlist dan gate auth tidak berubah. Gate lokal dan capture. Selesai 1 Nov 2026 lewat PR #114, #115, dan #116 dengan bukti lokal dan CI; review visual Owner menunggu. |
 | T50 | M5a | DONE | Redesign Admin | T46 | Shell, Ringkasan, daftar, detail, review Custom Print, keuangan, produk, tarif, konten, laporan, akses/privasi dan state error/denied; Card, status, tabel dan label Indonesia terkonsolidasi; permission dan motion yang disetujui tetap. Gate lokal dan capture. Selesai 1 Nov 2026 lewat PR #117 dengan bukti lokal dan CI; review visual Owner menunggu. |
 | T51 | M5a | DONE | Motion pass global | T47–T50 | Keputusan Owner 31 Okt: motion inti (adegan, pergantian panel) dan umpan balik interaksi dibuat per halaman di T47–T50; pass ini menyusul setelah semua halaman jadi. Durasi dan easing seragam memakai token DESIGN.md, paling banyak satu gerak khas per halaman, keputusan animasi masuk per seksi (DESIGN.md melarang scroll reveal sebagai hiasan), reduced motion dan WCAG 2.2.2 di semua route, kinerja di ponsel. Capture dan rekaman lokal. Selesai 2 Nov 2026 dengan bukti lokal dan CI; Beranda mempertahankan adegan maskot yang diterima Owner sebagai satu bahasa gerak. |
+| T54 | M5a | DONE | Motion lanjutan dari sweep peluang | T51 | Empat saran sweep 2 Nov yang diminta Owner dikerjakan semua: tautan ke seksi di halaman yang sama menggulir halus hanya pada halaman yang ikut (`data-smooth-anchors`) sementara pindah halaman tetap langsung ke atas; panel konfirmasi quote dan notifikasi hasil aksi masuk 220ms; menu publik di bawah 1280px turun 150ms; "Lihat proyek terkait" mendarat di bawah header. Reduced motion tetap mati. Rencana di `plans/002`–`005`. Selesai 2 Nov 2026 dengan bukti lokal. |
 | T53 | M4 | IN_PROGRESS | Kaitan foto ke varian | T31; keputusan Owner 1 Nov | `ProductVariant.mediaId` nullable (banyak varian boleh satu foto, `ON DELETE SET NULL`) lewat migration baru; importer/seed mengisi dari foto varian sumber; editor varian Admin memilih foto dari galeri produk yang sama dan server menolak foto produk lain; simpan galeri mempertahankan foto yang tetap dipakai; halaman produk memakai kaitan ini dengan alt text sebagai cadangan. Staging: `db:deploy` dan impor ulang katalog hanya atas instruksi Owner. |
 
 ## Backlog setelah v1
@@ -2131,6 +2132,42 @@ belum ada yang dikerjakan.
   versi gratis bernilai Rp0. Domain tidak perlu dibeli lagi; biaya
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
+
+### T54 — motion lanjutan dari sweep peluang, 2026-11-02
+
+Branch `claude/motion-follow-up` dari `main@3df76db` (setelah PR #118); atas
+permintaan Owner ("kerjakan semuanya berdasarkan 4 saran tersebut"). Rencana
+per saran ada di `plans/002`–`005`.
+
+- **Scroll ke seksi:** `html:has([data-smooth-anchors])` memakai
+  `scroll-behavior: smooth`; `/custom-print` dan `/services/[slug]` ikut lewat
+  `<main data-smooth-anchors>`. `<html data-scroll-behavior="smooth">` membuat
+  Next 16 memotong scroll saat pindah halaman. Halaman lain, skip link, dan
+  ringkasan error tetap instan.
+- **Perbaikan anchor:** "Lihat proyek terkait" mengarah ke
+  `<section id="related-projects">`. Sebelumnya target adalah `<h2>`, sedangkan
+  `scroll-mt-24` ada di section, sehingga judul mendarat di y=0 di bawah header
+  (yang berakhir di y=72).
+- **Konten setelah klik:** `src/design/motion.ts` (`motionSystemClasses.enter`)
+  memakai `@starting-style`: opacity dan naik 8px, 220ms, kurva standar. Kelas
+  ini dipakai di panel konfirmasi quote (halaman quote dan Akun) dan
+  `StatusNotice enter` untuk hasil tambah ke keranjang dan request Custom 3D
+  Print. Notice yang tampil bersama halaman tidak berubah.
+- **Menu publik:** di bawah 1280px, `<nav>` turun 4px sambil fade dalam 150ms;
+  di desktop tidak ada gerak saat halaman dimuat.
+- **Bukti lokal:** lint, typecheck, unit (termasuk test baru `StatusNotice
+  enter`). Pemeriksaan Playwright 15/15 terhadap dev server:
+  - empat tautan menggulir bertahap 316–568ms dan judul mendarat di bawah header;
+  - `/shop` tetap instan;
+  - pindah halaman dua arah langsung ke atas;
+  - reduced motion instan;
+  - panel quote memakai transisi opacity dan translate 220ms dengan fokus langsung
+    di panel (0,01ms saat reduced motion);
+  - notice keranjang memakai 220ms dan tidak ada notice yang bergerak saat
+    halaman dimuat;
+  - menu 150ms di 390 dan 1024px, tanpa gerak di 1440px.
+  Notice request form dibuktikan lewat unit test komponen.
+- **Belum:** review visual Owner; uji perangkat fisik dan AT (T37).
 
 ### T51 — motion pass global, 2026-11-02
 

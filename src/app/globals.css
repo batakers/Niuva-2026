@@ -303,6 +303,11 @@
     caret-color: var(--brand-700);
     scrollbar-color: var(--neutral-400) transparent;
   }
+
+  /* Pages whose links jump further down the same page opt in; skip links and error summaries elsewhere stay instant. */
+  html:has([data-smooth-anchors]) {
+    scroll-behavior: smooth;
+  }
 }
 
 @layer components {

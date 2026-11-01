@@ -137,6 +137,19 @@ describe("Niuva P0 components", () => {
     expect(screen.getAllByRole("button", { name: "Tindakan" })).toHaveLength(4);
   });
 
+  it("enters with motion only when a StatusNotice is the result of a client action", () => {
+    render(
+      <div>
+        <StatusNotice description="Tampil bersama halaman." title="Notice halaman" tone="info" />
+        <StatusNotice description="Muncul setelah klik." enter title="Hasil aksi" tone="success" />
+      </div>,
+    );
+
+    const [pageNotice, resultNotice] = document.querySelectorAll("[data-component='status-notice']");
+    expect(pageNotice).not.toHaveClass("starting:opacity-0");
+    expect(resultNotice).toHaveClass("transition-[opacity,translate]", "starting:opacity-0", "starting:translate-y-2");
+  });
+
   it("keeps ActionQueueItem focused on an operator decision", () => {
     render(
       <ActionQueueItem

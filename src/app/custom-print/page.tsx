@@ -102,7 +102,7 @@ export default async function CustomPrintPage() {
 
   return (
     <PublicShell functionalStatus={functionalStatus} scope="custom-print" headerAction={{ href: "#start-custom", label: "Pilih titik mulai" }}>
-      <main id="main-content" data-custom-print>
+      <main id="main-content" data-custom-print data-smooth-anchors>
         {/* Same blue-field geometry as a service detail, so its measured text contrast carries over. */}
         <section
           aria-labelledby="custom-print-title"
