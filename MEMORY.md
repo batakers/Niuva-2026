@@ -73,6 +73,7 @@ Carried findings retain their IDs; source fixes do not close hosted or release g
 - [x] Motion pass (T51): durations and easing on tokens, skeleton pulses stop after two beats, no section entrance animation; verified locally
 - [x] Motion follow-up (T54): smooth in-page anchors on opt-in pages, 220ms entrance for quote confirmation and action results, public menu drop-in; verified locally
 - [x] Status notices (T55): one `StatusNotice` v2 for in-page messages across public, Customer and Admin; single-variant products preselect and hide the importer's "Default" name; verified locally
+- [x] Named sizes in `cn()` (T56): `src/lib/utils.ts` registers `text-caption`/`text-ui`/`text-lead` with tailwind-merge, so they survive next to colour classes; Owner chose to follow `DESIGN.md` sizes over the earlier render (2 Nov); verified locally
 - [x] Retail/MAKE checkout/quote/order source paths present; runtime belum diverifikasi
 - [ ] UI Foundation: DS-DEC-019 authorization remains; visual/device/AT acceptance belum diverifikasi
 - [ ] v1.0 closure/launch: open gates remain in `TASKS.md`
