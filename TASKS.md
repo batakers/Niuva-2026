@@ -31,9 +31,8 @@ ada di papan ini; pekerjaan baru masuk tabel task, bukan file lain.
 | | T03, T19 | O + A | Smoke R2 privat/publik lewat unggah media Admin | Sesi Admin Owner |
 | | T09 | O | `CUSTOMER_AUTH_CLEANUP` lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
 | | T23, T25, T35 | O | Cek metode dan fitur refund di dashboard Midtrans sandbox (Owner mengecek, 31 Okt); grant `refund` sudah ada | Q1 |
-| Redesign | T46 → T47 | A | Beranda di `main` dan diterima Owner; Layanan, Proyek, dan detailnya selesai lokal di `claude/redesign-company-pages`; sisa legal dan 404 | Postgres lokal untuk E2E (Owner) |
-| Redesign | T45–T51, T54–T56 | A | Redesign M5a, motion lanjutan, pesan status v2, dan ukuran bernama di `cn()` selesai 2 Nov (bukti lokal; CI di PR); review visual Owner per route masih terbuka | — |
-| | T36 | O + A | UAT operasi Admin di UI baru | T50 |
+| Redesign | T45–T51, T54–T56 | O | Review visual per route; Beranda diterima 31 Okt. Kode selesai 2 Nov dan ada di `main` (bukti lokal dan CI); cek staging setelah 26 Nov | Review Owner |
+| | T36 | O + A | UAT operasi Admin di UI baru | Sesi UAT Owner (T50 selesai) |
 | Berantai | T34 → T08 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim; lalu retensi file pada berkas MAKE | T33 dulu |
 | | T14 | O + A | Privacy hosted dengan sesi Customer penguji; grant sudah ter-deploy (#89) | Sesi Customer Owner |
 | | T43 | O + A | Owner menambah redirect URI `https://niuva-t03-staging.netlify.app/api/auth/google/callback` di Google Cloud; env `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` di Netlify staging atas instruksi Owner; env baru berlaku setelah deploy berikutnya | Kredit Netlify pulih 26 Nov (Q17) |
@@ -203,7 +202,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T43 | M2 | BLOCKED_INPUT | Login Google hosted (D04) | T12; grant Q4 | Owner menambah redirect URI staging di Google Cloud; env OAuth staging diisi atas instruksi Owner; consent dan login Google berhasil di staging dengan akun uji. Production ikut T40. |
 | T44 | M6 | BLOCKED_INPUT | Policy privacy untuk penyedia production | T11; Q5; Q12–Q13; Owner | Daftar penyedia dan lokasi pemrosesan di `src/content/customer-policy/privacy-v1.0.md` (Netlify Ohio, Neon Singapura) diganti versi baru yang mencantumkan Helipod VPS Jakarta, penyedia backup dan storage file production; Owner menyetujui teks; versi baru terbit sebelum production menerima data Customer (T40). Ditemukan saat perbandingan S3, 30 Okt. Draf v1.1 disetujui Owner 31 Okt (Q15–Q16); tanggal terbit, file runtime dan pemberitahuan belum; terbit menunggu T41 dan T38. |
 | T45 | M5a | DONE | Audit, sitemap dan user flow redesign | Keputusan Owner 31 Okt | Audit tampilan sekarang, sitemap dan user flow dengan pembagian visual vs aturan bisnis tercatat di [audit IA](docs/design/redesign-2026-10-31-audit-ia.md); Q19–Q22 dijawab Owner; T36/T37 bergantung pada redesign. Log "T45 — audit, sitemap dan user flow". |
-| T46 | M5a | IN_PROGRESS | Fondasi design system baru | T45; pilihan arah Q19 | Arah terpilih diterapkan ke token, tipe, motion, primitive `components/ui`, shell publik/auth/sistem/Admin, status label, format Rupiah, timeline dan page header bersama; tanpa dependency npm baru; URL, API, data, auth, harga dan pembayaran tetap. Lint/typecheck/test/E2E/build dan capture lokal. |
+| T46 | M5a | DONE | Fondasi design system baru | T45; pilihan arah Q19 | Arah terpilih diterapkan ke token, tipe, motion, primitive `components/ui`, shell publik/auth/sistem/Admin, status label, format Rupiah, timeline dan page header bersama; tanpa dependency npm baru; URL, API, data, auth, harga dan pembayaran tetap. Lint/typecheck/test/E2E/build dan capture lokal. Selesai 2 Nov 2026 lewat #103 dan T47–T56 (#104–#121), dengan bukti lokal dan CI; review visual Owner per route masih terbuka (Beranda diterima 31 Okt). |
 | T47 | M5a | DONE | Redesign Company | T46 | `/`, `/services` dan detail, `/projects` dan detail, legal, 404 sesuai sitemap/flow; satu CTA utama per halaman; tanpa klaim baru; DESIGN.md dan panduan Company ditulis ulang dari hasil build. Capture 320–1440, keyboard/fokus, zoom 200%, reduced motion, kontras. Selesai 1 Nov 2026 dengan bukti lokal dan CI; review visual Owner baru untuk Beranda, route lain menunggu tinjauan terpisah. |
 | T48 | M5a | DONE | Redesign Commerce dan MAKE | T46 | Toko, produk, keranjang, checkout, Custom 3D Print dan workspace dua mode, status/quote token; copy sistem diganti bahasa pelanggan; kalimat MAKE yang dilindungi tetap; aturan server, harga dan pembayaran tidak berubah. Gate lokal dan capture. Selesai 1 Nov 2026 lewat PR #107, #110, #111, #112, dan #113 dengan bukti lokal dan CI; review visual Owner menunggu. Label status dari data dan detail MAKE/order akun lanjut di T49. |
 | T49 | M5a | DONE | Redesign Customer dan auth | T46, T48 | Hub Akun, detail MAKE/order (konfirmasi terima quote, timeline, Rupiah dan label status konsisten), refund, privasi, enam halaman auth dalam satu frame; allowlist dan gate auth tidak berubah. Gate lokal dan capture. Selesai 1 Nov 2026 lewat PR #114, #115, dan #116 dengan bukti lokal dan CI; review visual Owner menunggu. |
@@ -2134,6 +2133,41 @@ belum ada yang dikerjakan.
   versi gratis bernilai Rp0. Domain tidak perlu dibeli lagi; biaya
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
+
+### T46 — penutupan status fondasi v2, 2026-11-02
+
+Atas permintaan Owner ("Ya, rapikan"). Status T46 tertinggal di IN_PROGRESS
+setelah semua kriterianya masuk `main`:
+
+- **Token, tipe, motion:**
+  - token v2, Manrope, dan ukuran bernama di #103;
+  - motion memakai token di #118 (T51) dan #119 (T54);
+  - ukuran bernama dihormati `cn()` di #121 (T56).
+- **Primitive `components/ui`:**
+  - tombol pil di #103;
+  - `buttonVariants` dengan tailwind-merge dan Card default di #117 (T50);
+  - `StatusNotice` v2 di #120 (T55).
+- **Shell:**
+  - header dan footer publik serta 404 di #103 dan #106;
+  - `CustomerAuthFrame` di #116;
+  - shell Admin di #117.
+- **Status label dan format Rupiah:**
+  - `src/features/customer-status/labels.ts` dan `src/modules/shared/format.ts`
+    di #114;
+  - `src/modules/admin/status-labels.ts` di #117.
+- **Timeline dan page header bersama:**
+  - `OrderStatusTimeline` di #113;
+  - `src/app/admin/admin-page-header.tsx` di #117.
+- **Batas:**
+  - `package.json` tidak berubah sejak T45 (#101), jadi tidak ada dependency
+    npm baru;
+  - setiap PR menyatakan URL, API, data, auth, harga, dan pembayaran tetap.
+- **Gate:** Quality gates (lint, typecheck, test, E2E, build) lulus di ke-16 PR
+  redesign, dari #103 sampai #121; capture lokal tercatat di log tiap task.
+- **Belum:**
+  - review visual Owner per route (baru Beranda yang diterima);
+  - uji perangkat dan AT (T37);
+  - cek staging setelah deploy Netlify dibuka lagi 26 November.
 
 ### T56 — ukuran bernama di `cn()`, 2026-11-02
 

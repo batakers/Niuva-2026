@@ -75,5 +75,6 @@ Carried findings retain their IDs; source fixes do not close hosted or release g
 - [x] Status notices (T55): one `StatusNotice` v2 for in-page messages across public, Customer and Admin; single-variant products preselect and hide the importer's "Default" name; verified locally
 - [x] Named sizes in `cn()` (T56): `src/lib/utils.ts` registers `text-caption`/`text-ui`/`text-lead` with tailwind-merge, so they survive next to colour classes; Owner chose to follow `DESIGN.md` sizes over the earlier render (2 Nov); verified locally
 - [x] Retail/MAKE checkout/quote/order source paths present; runtime belum diverifikasi
-- [ ] UI Foundation: DS-DEC-019 authorization remains; visual/device/AT acceptance belum diverifikasi
+- [x] Foundation v2 (T46): tokens, type, motion, shared primitives and shells in `main` through #103–#121; verified locally and in CI
+- [ ] UI acceptance: Owner visual review (only Beranda accepted), device/AT (T37) and staging belum diverifikasi
 - [ ] v1.0 closure/launch: open gates remain in `TASKS.md`
