@@ -32,7 +32,7 @@ ada di papan ini; pekerjaan baru masuk tabel task, bukan file lain.
 | | T09 | O | `CUSTOMER_AUTH_CLEANUP` lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
 | | T23, T25, T35 | O | Cek metode dan fitur refund di dashboard Midtrans sandbox (Owner mengecek, 31 Okt); grant `refund` sudah ada | Q1 |
 | Redesign | T46 → T47 | A | Beranda di `main` dan diterima Owner; Layanan, Proyek, dan detailnya selesai lokal di `claude/redesign-company-pages`; sisa legal dan 404 | Postgres lokal untuk E2E (Owner) |
-| | T49–T51 | A | Customer/auth, lalu Admin di atas fondasi T46, ditutup motion pass global (T51); verifikasi lokal. Commerce/MAKE (T48) selesai 1 Nov | T46 |
+| | T50–T51 | A | Admin di atas fondasi T46, ditutup motion pass global (T51); verifikasi lokal. Commerce/MAKE (T48) dan Customer/auth (T49) selesai 1 Nov | T46 |
 | | T36 | O + A | UAT operasi Admin di UI baru | T50 |
 | Berantai | T34 → T08 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim; lalu retensi file pada berkas MAKE | T33 dulu |
 | | T14 | O + A | Privacy hosted dengan sesi Customer penguji; grant sudah ter-deploy (#89) | Sesi Customer Owner |
@@ -206,7 +206,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T46 | M5a | IN_PROGRESS | Fondasi design system baru | T45; pilihan arah Q19 | Arah terpilih diterapkan ke token, tipe, motion, primitive `components/ui`, shell publik/auth/sistem/Admin, status label, format Rupiah, timeline dan page header bersama; tanpa dependency npm baru; URL, API, data, auth, harga dan pembayaran tetap. Lint/typecheck/test/E2E/build dan capture lokal. |
 | T47 | M5a | DONE | Redesign Company | T46 | `/`, `/services` dan detail, `/projects` dan detail, legal, 404 sesuai sitemap/flow; satu CTA utama per halaman; tanpa klaim baru; DESIGN.md dan panduan Company ditulis ulang dari hasil build. Capture 320–1440, keyboard/fokus, zoom 200%, reduced motion, kontras. Selesai 1 Nov 2026 dengan bukti lokal dan CI; review visual Owner baru untuk Beranda, route lain menunggu tinjauan terpisah. |
 | T48 | M5a | DONE | Redesign Commerce dan MAKE | T46 | Toko, produk, keranjang, checkout, Custom 3D Print dan workspace dua mode, status/quote token; copy sistem diganti bahasa pelanggan; kalimat MAKE yang dilindungi tetap; aturan server, harga dan pembayaran tidak berubah. Gate lokal dan capture. Selesai 1 Nov 2026 lewat PR #107, #110, #111, #112, dan #113 dengan bukti lokal dan CI; review visual Owner menunggu. Label status dari data dan detail MAKE/order akun lanjut di T49. |
-| T49 | M5a | IN_PROGRESS | Redesign Customer dan auth | T46, T48 | Hub Akun, detail MAKE/order (konfirmasi terima quote, timeline, Rupiah dan label status konsisten), refund, privasi, enam halaman auth dalam satu frame; allowlist dan gate auth tidak berubah. Gate lokal dan capture. |
+| T49 | M5a | DONE | Redesign Customer dan auth | T46, T48 | Hub Akun, detail MAKE/order (konfirmasi terima quote, timeline, Rupiah dan label status konsisten), refund, privasi, enam halaman auth dalam satu frame; allowlist dan gate auth tidak berubah. Gate lokal dan capture. Selesai 1 Nov 2026 lewat PR #114, #115, dan #116 dengan bukti lokal dan CI; review visual Owner menunggu. |
 | T50 | M5a | TODO | Redesign Admin | T46 | Shell, Ringkasan, daftar, detail, review Custom Print, keuangan, produk, tarif, konten, laporan, akses/privasi dan state error/denied; Card, status, tabel dan label Indonesia terkonsolidasi; permission dan motion yang disetujui tetap. Gate lokal dan capture. |
 | T51 | M5a | TODO | Motion pass global | T47–T50 | Keputusan Owner 31 Okt: motion inti (adegan, pergantian panel) dan umpan balik interaksi dibuat per halaman di T47–T50; pass ini menyusul setelah semua halaman jadi. Durasi dan easing seragam memakai token DESIGN.md, paling banyak satu gerak khas per halaman, keputusan animasi masuk per seksi (DESIGN.md melarang scroll reveal sebagai hiasan), reduced motion dan WCAG 2.2.2 di semua route, kinerja di ponsel. Capture dan rekaman lokal. |
 | T53 | M4 | IN_PROGRESS | Kaitan foto ke varian | T31; keputusan Owner 1 Nov | `ProductVariant.mediaId` nullable (banyak varian boleh satu foto, `ON DELETE SET NULL`) lewat migration baru; importer/seed mengisi dari foto varian sumber; editor varian Admin memilih foto dari galeri produk yang sama dan server menolak foto produk lain; simpan galeri mempertahankan foto yang tetap dipakai; halaman produk memakai kaitan ini dengan alt text sebagai cadangan. Staging: `db:deploy` dan impor ulang katalog hanya atas instruksi Owner. |
@@ -2131,6 +2131,42 @@ belum ada yang dikerjakan.
   versi gratis bernilai Rp0. Domain tidak perlu dibeli lagi; biaya
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
+
+### T49 — enam halaman auth, 2026-11-01
+
+Branch `claude/redesign-customer-auth` dari `main@c6ce0d1`, lalu `main` setelah
+PR #115 di-merge ke branch tanpa force-push; potongan terakhir T49
+("#115 sudah merge").
+
+- **Satu frame:** `CustomerAuthFrame` dipakai `/login`, `/register`,
+  `/verify-email`, `/forgot-password`, `/reset-password`, dan `/register/google`.
+  Isinya logo dan pill outline "Kembali ke situs", satu kolom 448px di tengah,
+  dan footer tenang. Frame kini melaporkan tipografi 2.0.
+- **Kolom:** label eyebrow huruf kapital "Akun Niuva" dan role `editorial-accent`
+  dilepas. Urutannya kini h1 role `heading`, satu kalimat, lalu form dan notice
+  di satu kartu putih, dengan tautan pindah atau kembali di bawah kartu.
+- **`/register/google`:** sebelumnya kolom polos tanpa header, kini masuk frame
+  yang sama. Catatannya menjadi "Pendaftaran publik dengan Google masih dalam
+  pengujian dan belum dibuka. Kebijakan v1.0 sudah disetujui Owner tetapi belum
+  terbit."
+- **Detail:** "Buka email" menjadi pill outline (sebelumnya `summary` terisi);
+  alamat verifikasi di kotak netral; label dan bantuan memakai ukuran `ui` dan
+  `caption`. Form, endpoint, field, kapabilitas, allowlist, dan branding tombol
+  Google tidak berubah.
+- **Bukti lokal:** lint (0 error), typecheck, unit 139 file/1.539 test, backend
+  auth Customer 14 file/100 test. `customer-auth.spec.ts` terhadap dev server
+  6/10: matriks layout 320–1440 dengan reduced motion, kontras dan target header,
+  perpindahan Login/Daftar, notice, dan pending Google lulus. Tiga test butuh
+  login Google tiruan dari server E2E, dan satu test urutan keyboard tersandung
+  catatan pengujian internal yang hanya tampil di dev; keempatnya dibuktikan di
+  CI. `/register/google` memberi 404 di dev karena kebijakan publik belum aktif,
+  jadi dicek lewat route sementara yang tidak di-commit. Capture desktop, ponsel,
+  dan 320px.
+- **Ditemukan untuk T50:** `buttonVariants({ variant: "outline" })` tanpa `cn()`
+  membuat `border-transparent` menang atas warna garis outline, sehingga garis
+  tombol hilang di beberapa halaman Admin (misalnya tautan refund di detail
+  order Admin). Di sini hanya "Buka email" yang diperbaiki.
+- **Belum:** review visual Owner untuk semua route T49.
 
 ### T49 — Refund dan Pusat privasi, 2026-11-01
 
