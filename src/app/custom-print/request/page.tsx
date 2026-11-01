@@ -15,6 +15,7 @@ import {
   getCustomFlowProductOption,
 } from "@/modules/custom-print/product-intake";
 import { RequestForm } from "./request-form";
+import { publicEstimateSearchParams, readPublicEstimatePrefill } from "@/modules/custom-print/public-estimate";
 import { ReferenceRequestForm } from "./reference-request-form";
 
 export const metadata: Metadata = {
@@ -45,7 +46,7 @@ const referenceNextSteps = [
 
 export default async function CustomPrintRequestPage({
   searchParams,
-}: Readonly<{ searchParams: Promise<{ mode?: string | string[]; product?: string | string[] }> }>) {
+}: Readonly<{ searchParams: Promise<Record<string, string | string[] | undefined>> }>) {
   await connection();
   const params = await searchParams;
   const modeParam = Array.isArray(params.mode) ? params.mode[0] : params.mode;
@@ -54,9 +55,19 @@ export default async function CustomPrintRequestPage({
   const initialProductInterest = productParam !== undefined && getCustomFlowProductOption(productParam) !== null
     ? productParam
     : undefined;
+  // Calculator numbers survive login only after the same validation the calculator applied.
+  const initialEstimate = referenceMode ? null : readPublicEstimatePrefill(params);
   const returnParams = new URLSearchParams();
   if (referenceMode) returnParams.set("mode", "reference");
   if (initialProductInterest) returnParams.set("product", initialProductInterest);
+  if (initialEstimate) {
+    for (const [key, value] of publicEstimateSearchParams({
+      material: initialEstimate.material,
+      quantity: initialEstimate.quantity,
+      weightGramsPerUnit: initialEstimate.weightGramsPerUnit,
+      printDurationSecondsPerUnit: (initialEstimate.hours * 60 + initialEstimate.minutes) * 60,
+    })) returnParams.set(key, value);
+  }
   const returnTo = `/custom-print/request${returnParams.size > 0 ? `?${returnParams.toString()}` : ""}`;
   let customer;
   try { customer = await requireCustomer(); }
@@ -123,6 +134,7 @@ export default async function CustomPrintRequestPage({
                 uploadsEnabled={liveEnabled}
               /> : <RequestForm
                 customerEmail={customer.email}
+                initialEstimate={initialEstimate ?? undefined}
                 initialProductInterest={initialProductInterest}
                 liveEnabled={liveEnabled}
                 previewEnabled={previewEnabled}

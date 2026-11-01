@@ -183,6 +183,17 @@ Niuva MVP akan dibangun sebagai **modular monolith** menggunakan **Next.js 16.3 
    diverifikasi, lalu estimasi produksi operator sebagai angka utama ketika
    tersedia; quotation adalah penawaran terpisah. Admin menampilkan input
    customer terpisah dari hasil slicer yang diverifikasi operator.
+5. **Kalkulator estimasi publik (2 November 2026).**
+   - Saat render, `/custom-print` membaca aturan `ACTIVE` `CUSTOM_PRINT_V1` lewat
+     repository. Hanya tepat satu aturan dengan definisi valid, versi yang
+     cocok, dan semantik `PER_UNIT` yang diteruskan ke klien.
+   - Kalkulator klien memakai `calculatePrintQuote()` dengan `NIUVA_STOCK`,
+     tanpa endpoint baru, tanpa persistensi, dan tanpa sesi.
+   - Kegagalan database atau aturan yang tidak layak menampilkan keadaan belum
+     tersedia.
+   - Nominal dari browser tidak pernah dikirim. Prefill form pengajuan hanya
+     membawa material, jumlah, berat, dan durasi lewat query yang divalidasi
+     ulang di server; alur `preview-estimate` dan submit di atas tetap berlaku.
 
 ## Kontrak teknis Customer work, estimasi, ongkir kasar, dan B2B quote
 

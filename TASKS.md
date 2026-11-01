@@ -211,6 +211,8 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T54 | M5a | DONE | Motion lanjutan dari sweep peluang | T51 | Empat saran sweep 2 Nov yang diminta Owner dikerjakan semua: tautan ke seksi di halaman yang sama menggulir halus hanya pada halaman yang ikut (`data-smooth-anchors`) sementara pindah halaman tetap langsung ke atas; panel konfirmasi quote dan notifikasi hasil aksi masuk 220ms; menu publik di bawah 1280px turun 150ms; "Lihat proyek terkait" mendarat di bawah header. Reduced motion tetap mati. Rencana di `plans/002`–`005`. Selesai 2 Nov 2026 dengan bukti lokal. |
 | T55 | M5a | DONE | Pesan status v2 dan produk satu varian | T54 | Atas permintaan Owner 2 Nov ("Ya, kerjakan"): `StatusNotice` versi v2 (permukaan tonal tenang, judul `foreground`, deskripsi `muted-foreground`, label nada hanya untuk pembaca layar, ukuran `inline`, `role="note"`, `children`); sekitar 30 kotak pesan buatan sendiri dan `Alert` mentah di publik, Akun, dan Admin dipindah ke komponen itu; konfirmasi tambah ke keranjang menjadi satu baris; produk satu varian terpilih otomatis tanpa label "Default" di produk, keranjang, dan checkout. Selesai 2 Nov 2026 dengan bukti lokal. |
 | T56 | M5a | DONE | Ukuran bernama di `cn()` | T55 | Keputusan Owner 2 Nov (pilihan B, "Ikuti DESIGN.md"): `cn()` mengenal `text-caption`/`text-ui`/`text-lead` sebagai ukuran font sehingga tidak lagi terbuang oleh kelas warna. Akibatnya label tombol 15px, label status timeline pesanan 13,5px, kualifier proyek `muted-foreground`, deskripsi Card 15px, serta badge status, header tabel, dan breadcrumb Admin 13,5px. Perbandingan sebelum/sesudah di 19 route publik dan 24 halaman Admin. Selesai 2 Nov 2026 dengan bukti lokal; review visual Owner menunggu. |
+| T57 | M4 | DONE | Sewa Studio di Custom 3D Print | Keputusan Owner 2 Nov | Seksi `#studio` di `/custom-print` dan satu baris ajakan di bawah kartu titik mulai. Harga sewa printer, filamen, dan slicing dari pricelist Owner; alamat dari Informasi Situs; booking manual lewat WhatsApp +62 813-2140-7815. Jam buka, mesin, DP, pembatalan, dan syarat membership menunggu data Owner dan dikonfirmasi saat booking. Booking digital tetap di luar MVP. Selesai 2 Nov 2026 dengan bukti lokal. |
+| T58 | M4 | DONE | Kalkulator estimasi publik | Keputusan Owner 2 Nov | Seksi `#estimate` di `/custom-print` tanpa login dan tanpa file: material PLA/ABS, jumlah, berat dan durasi per unit dari slicer; aturan `CUSTOM_PRINT_V1` aktif dan filamen stok Niuva; tidak disimpan; label estimasi awal. Tombol membawa angka ke form pengajuan (prefill tervalidasi, sumber angka tetap dikonfirmasi pelanggan). Tampil "belum tersedia" tanpa tepat satu aturan aktif yang layak; aktivasi aturan tetap gerbang Owner di Admin → Tarif. Selesai 2 Nov 2026 dengan bukti lokal. |
 | T53 | M4 | IN_PROGRESS | Kaitan foto ke varian | T31; keputusan Owner 1 Nov | `ProductVariant.mediaId` nullable (banyak varian boleh satu foto, `ON DELETE SET NULL`) lewat migration baru; importer/seed mengisi dari foto varian sumber; editor varian Admin memilih foto dari galeri produk yang sama dan server menolak foto produk lain; simpan galeri mempertahankan foto yang tetap dipakai; halaman produk memakai kaitan ini dengan alt text sebagai cadangan. Staging: `db:deploy` dan impor ulang katalog hanya atas instruksi Owner. |
 
 ## Backlog setelah v1
@@ -221,6 +223,18 @@ berikutnya. Dikerjakan hanya atas permintaan Owner.
 - Data terstruktur JSON-LD untuk Organization/LocalBusiness dan Product.
 - Gambar Open Graph saat link dibagikan; menunggu aset yang disetujui Owner.
 - Google Business Profile dengan data usaha yang benar (langkah Owner).
+- **T59 — Pilot estimasi harga dari file 3D (Opsi B)**:
+  - **Asal:** dipilih Owner, lalu dicatat 2 November 2026 sesuai addendum PRD hari itu.
+  - **Cara kerja:** slicer (Bambu Studio atau OrcaSlicer CLI) berjalan di VPS
+    dengan profil Niuva. Antrean di `src/modules/jobs/` menghasilkan berat dan
+    durasi untuk kalkulator Pricing v1. Hasilnya tetap estimasi.
+  - **Penghambat:**
+    - VPS (T41);
+    - bahan Owner: versi slicer, ekspor profil printer, PLA/ABS, dan proses
+      Niuva, serta 10–20 model yang pernah dicetak dengan berat dan durasi
+      hasil operator;
+    - persetujuan dependency binary slicer.
+  - **Langkah pertama:** uji akurasi lokal.
 - **T52 — Tag, tahun, dan urutan proyek lewat Dashboard Admin** (dicatat atas
   permintaan Owner, 1 November 2026; belum dijadwalkan). Saat ini tag dan tahun
   ke-17 proyek berasal dari data kurasi di kode, proyek baru dari Dashboard
@@ -2133,6 +2147,61 @@ belum ada yang dikerjakan.
   versi gratis bernilai Rp0. Domain tidak perlu dibeli lagi; biaya
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
+
+### T57/T58 — Sewa Studio dan kalkulator estimasi publik, 2026-11-02
+
+Branch `claude/studio-and-estimate`. Owner memilih arah yang disarankan agen
+("Ya, ikuti saran"), lalu menjawab beberapa hal:
+- penempatan: seksi di Custom 3D Print dengan ajakan "kalau mau print sendiri";
+- WhatsApp: nomor pitch deck;
+- isi halaman: harga dan alamat;
+- Full Service: hanya untuk penyewa.
+
+Sumber harga adalah `docs/source/Pricelist 3D Print Niuva.xlsx`. Tabel "Service"
+di pitch deck ternyata salinan tabel Workstation, jadi yang dipakai adalah isi
+Excel. Keputusan dicatat di addendum PRD dan Tech Design 2 November 2026.
+
+- **T57 Sewa Studio:**
+  - `src/features/public/studio-rental.ts` memuat tiga kelompok harga, yaitu
+    sewa printer, filamen, dan slicing; "Sewa PC" dan "Self Service" di Excel
+    sama persis, jadi digabung menjadi satu baris.
+  - `src/app/custom-print/studio-rental-section.tsx` menampilkan alamat dari
+    Informasi Situs dan "Booking lewat WhatsApp" ke +62 813-2140-7815.
+  - Ajakan satu baris "Ingin mencetak sendiri? … Lihat harga sewa" ada di
+    bawah dua kartu titik mulai.
+- **T58 Kalkulator:**
+  - `src/modules/custom-print/public-estimate.ts` memakai validasi input yang
+    sama dengan simulasi form dan `calculatePrintQuote()` dengan `NIUVA_STOCK`.
+  - `public-estimate-service.ts` membaca tepat satu aturan aktif yang layak.
+  - `src/app/custom-print/estimate-calculator.tsx` menghitung di browser,
+    tanpa endpoint baru dan tanpa penyimpanan.
+  - Form pengajuan menerima prefill (material, jumlah, berat, durasi) yang
+    divalidasi ulang di server dan dibawa melalui login. Kotak opt-in sudah
+    tercentang, tetapi konfirmasi sumber angka tetap kosong.
+  - `formatExactRupiah` dipindah ke `src/modules/shared/format.ts`.
+- **Bukti lokal:**
+  - lint 0 error; typecheck lulus;
+  - unit 141 file, 1.566 test lulus, termasuk `public-estimate.test.tsx` dan
+    test prefill form;
+  - pemeriksaan Playwright di dev server pada 1440 dan 390px:
+    - harga, alamat, dan tautan WhatsApp studio;
+    - ajakan melompat ke `#studio`;
+    - tanpa overflow dan tanpa error console;
+  - kalkulator di database dev tampil "belum tersedia" karena tidak ada tepat
+    satu aturan aktif. Keadaan siap diperiksa lewat route sementara yang tidak
+    di-commit, memakai aturan Pricing v1 bawaan: 2 × 18,4 g PLA × 1 jam 30 menit
+    = Rp51.800, beserta tautan prefill;
+  - E2E publik tanpa login: 16 lulus. Satu test butuh login Customer tiruan
+    dan dibuktikan di CI.
+- **Belum:**
+  - review visual Owner;
+  - aktivasi aturan Pricing v1 di Admin agar kalkulator tampil di staging dan
+    produksi;
+  - data jam buka, mesin, DP, pembatalan, dan membership dari Owner;
+  - nomor Informasi Situs (+62 851-1767-8901) berbeda dengan nomor booking
+    studio;
+  - istilah "komunal" dan "bawa sendiri" pada tarif jasa cetak masih perlu
+    satu definisi dari Owner.
 
 ### T46 — penutupan status fondasi v2, 2026-11-02
 
