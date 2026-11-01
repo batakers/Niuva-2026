@@ -53,7 +53,8 @@ test("checkout validates required fields and never calls provider boundaries", a
   await page.goto("/checkout?preview=examples&state=ready");
   await expect(page.locator("[data-product-screen-functional]")).toHaveAttribute("data-product-screen-functional", "frontend-preview");
   await page.getByRole("button", { name: "Tinjau opsi pengiriman" }).click();
-  const errorSummary = page.getByText("Periksa kembali data checkout.").locator("xpath=../..");
+  // The focus target wraps the error notice, whatever the notice renders inside.
+  const errorSummary = page.getByRole("alert").filter({ hasText: "Periksa kembali data checkout." }).locator("xpath=..");
   await expect(errorSummary).toBeFocused();
 
   await fillCheckout(page);

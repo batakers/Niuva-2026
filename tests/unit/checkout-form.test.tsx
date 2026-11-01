@@ -77,6 +77,10 @@ describe("checkout frontend preview", () => {
 
     const summary = screen.getByText("Periksa kembali data checkout.").closest("[tabindex]");
     expect(summary).toHaveFocus();
+    // The focus target is the direct parent of the error notice (the E2E locator relies on this).
+    const notice = screen.getAllByRole("alert").filter(alert => alert.textContent?.includes("Periksa kembali data checkout."));
+    expect(notice).toHaveLength(1);
+    expect(notice[0].parentElement).toBe(summary);
     expect(screen.getByLabelText(/Nama pemesan/)).toHaveAttribute("aria-invalid", "true");
     expect(screen.getByLabelText("Kecamatan")).not.toBeRequired();
     expect(screen.getByLabelText(/Kode pos/)).toBeRequired();
