@@ -7,9 +7,9 @@ test("retail status exposes a safe public timeline and next expectation", async 
 
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Pembayaran diterima");
   await expect(page.getByRole("heading", { name: "ORD-260907-R4K8" })).toBeVisible();
-  await expect(page.getByRole("list", { name: "Tahapan Retail order" })).toBeVisible();
+  await expect(page.getByRole("list", { name: "Tahapan pesanan Toko" })).toBeVisible();
   await expect(page.getByText("Alamat lengkap, kontak customer, file privat, dan catatan operator tidak ditampilkan.")).toBeVisible();
-  await expect(page.getByText("Query browser hanya memilih skenario tampilan dan tidak menentukan status order nyata.")).toBeVisible();
+  await expect(page.getByText("Pilihan skenario hanya mengubah tampilan, bukan status pesanan sungguhan.", { exact: false })).toBeVisible();
   await expect(page.getByText("NVA-DEMO-4821")).toHaveCount(0);
   await expect(page.getByText(/preview-order/)).toHaveCount(0);
 });

@@ -1,11 +1,5 @@
 import type { ReactNode } from "react";
 
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { cn } from "@/lib/utils";
 
@@ -39,9 +33,10 @@ export type OrderStatusTimelineProps = {
   className?: string;
 };
 
+// Names the step list for assistive technology ("Tahapan pesanan Toko").
 const variantLabels: Record<OrderStatusTimelineVariant, string> = {
-  "retail-order": "Retail order",
-  "custom-quote": "Custom quote",
+  "retail-order": "pesanan Toko",
+  "custom-quote": "pesanan Custom 3D Print",
 };
 
 const stateLabels: Record<OrderStatusStepState, string> = {
@@ -66,7 +61,7 @@ const stateIcons: Record<OrderStatusStepState, IconName> = {
 
 const stateClasses: Record<OrderStatusStepState, string> = {
   pending: "border-border bg-muted text-muted-foreground",
-  current: "border-brand-400 bg-brand-100 text-brand-800",
+  current: "border-primary bg-primary text-primary-foreground",
   completed: "border-success-border bg-success-background text-success",
   delayed: "border-warning-border bg-warning-background text-warning",
   failed: "border-destructive-border bg-destructive-background text-destructive",
@@ -85,100 +80,96 @@ export function OrderStatusTimeline({
   className,
 }: OrderStatusTimelineProps) {
   return (
-    <Card
-      className={cn("shadow-card", size === "compact" && "text-sm", className)}
+    <div
+      className={cn(
+        "rounded-[var(--radius-card)] border border-border bg-card",
+        size === "compact" ? "p-4 text-sm" : "p-5 sm:p-6",
+        className,
+      )}
       data-component="order-status-timeline"
       data-size={size}
       data-variant={variant}
-      size={size === "compact" ? "sm" : "default"}
     >
-      <CardHeader>
-        <p className="font-body text-xs font-medium text-brand-700">
-          {variantLabels[variant]}
-        </p>
-        <h3 className="text-base leading-snug font-semibold">{title ?? "Status proses"}</h3>
-        {description ? (
-          <p className="text-sm leading-6 text-muted-foreground">{description}</p>
-        ) : null}
-      </CardHeader>
+      <h3 className="text-lg font-medium tracking-[-0.01em]">{title ?? "Status proses"}</h3>
+      {description ? (
+        <p className="mt-1 text-ui font-normal text-muted-foreground">{description}</p>
+      ) : null}
 
-      <CardContent>
-        <ol aria-label={`Tahapan ${variantLabels[variant]}`} className="space-y-0">
-          {steps.map((step, index) => {
-            const iconName = stateIcons[step.state];
-            const isCurrent = step.state === "current";
+      <ol aria-label={`Tahapan ${variantLabels[variant]}`} className="mt-5">
+        {steps.map((step, index) => {
+          const iconName = stateIcons[step.state];
+          const isCurrent = step.state === "current";
 
-            return (
-              <li
-                aria-current={isCurrent ? "step" : undefined}
-                className={cn(
-                  "relative flex gap-3 pb-5 last:pb-0",
-                  size === "compact" && "gap-2 pb-4",
-                )}
-                data-state={step.state}
-                key={step.id}
-              >
-                <div className="relative flex w-8 shrink-0 justify-center">
-                  {index < steps.length - 1 ? (
-                    <span
-                      aria-hidden="true"
-                      className="absolute top-8 bottom-0 w-px bg-border"
-                    />
-                  ) : null}
+          return (
+            <li
+              aria-current={isCurrent ? "step" : undefined}
+              className={cn(
+                "relative flex gap-3 pb-5 last:pb-0",
+                size === "compact" && "gap-2 pb-4",
+              )}
+              data-state={step.state}
+              key={step.id}
+            >
+              <div className="relative flex w-8 shrink-0 justify-center">
+                {index < steps.length - 1 ? (
                   <span
                     aria-hidden="true"
+                    className="absolute top-8 bottom-0 w-px bg-border"
+                  />
+                ) : null}
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "relative z-10 flex size-8 items-center justify-center rounded-full border",
+                    size === "compact" && "size-7",
+                    stateClasses[step.state],
+                  )}
+                >
+                  <Icon aria-hidden="true" className="size-4" name={iconName} />
+                </span>
+              </div>
+              <div className="min-w-0 flex-1 space-y-1 pt-1">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                  <p className={cn("text-base", isCurrent ? "font-semibold" : "font-medium")}>{step.label}</p>
+                  <span
                     className={cn(
-                      "relative z-10 flex size-8 items-center justify-center rounded-full border",
-                      size === "compact" && "size-7",
-                      stateClasses[step.state],
+                      "text-caption font-medium text-muted-foreground",
+                      step.state === "failed" || step.state === "cancelled"
+                        ? "text-destructive"
+                        : step.state === "delayed" || step.state === "access-expired"
+                          ? "text-warning"
+                          : step.state === "completed"
+                            ? "text-success"
+                            : step.state === "current"
+                              ? "text-primary"
+                              : undefined,
                     )}
                   >
-                    <Icon aria-hidden="true" className="size-4" name={iconName} />
+                    {stateLabels[step.state]}
                   </span>
                 </div>
-                <div className="min-w-0 flex-1 space-y-1 pt-0.5">
-                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                    <p className="text-sm font-medium text-foreground">{step.label}</p>
-                    <span
-                      className={cn(
-                        "text-xs font-medium text-muted-foreground",
-                        step.state === "failed" || step.state === "cancelled"
-                          ? "text-destructive"
-                          : step.state === "delayed" || step.state === "access-expired"
-                            ? "text-warning"
-                            : step.state === "completed"
-                              ? "text-success"
-                              : step.state === "current"
-                                ? "text-brand-700"
-                                : undefined,
-                      )}
-                    >
-                      {stateLabels[step.state]}
-                    </span>
-                  </div>
-                  {step.description ? (
-                    <p className="text-xs leading-5 text-muted-foreground">{step.description}</p>
-                  ) : null}
-                  {step.timestamp ? (
-                    <p className="font-mono text-xs text-muted-foreground">{step.timestamp}</p>
-                  ) : null}
-                </div>
-              </li>
-            );
-          })}
-        </ol>
-      </CardContent>
+                {step.description ? (
+                  <p className="text-ui font-normal leading-[1.55] text-muted-foreground">{step.description}</p>
+                ) : null}
+                {step.timestamp ? (
+                  <p className="text-caption tabular-nums text-muted-foreground">{step.timestamp}</p>
+                ) : null}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
 
       {nextExpectation || action ? (
-        <CardFooter className="flex-wrap items-start justify-between gap-3">
+        <div className="mt-5 flex flex-wrap items-start justify-between gap-3 border-t border-border pt-4">
           {nextExpectation ? (
-            <p className="min-w-0 flex-1 text-xs leading-5 text-muted-foreground">
-              <span className="font-medium text-foreground">Berikutnya:</span> {nextExpectation}
+            <p className="min-w-0 flex-1 text-ui font-normal leading-[1.55] text-muted-foreground">
+              <span className="font-semibold text-foreground">Berikutnya:</span> {nextExpectation}
             </p>
           ) : <span />}
           {action ? <div className="flex flex-wrap gap-2">{action}</div> : null}
-        </CardFooter>
+        </div>
       ) : null}
-    </Card>
+    </div>
   );
 }

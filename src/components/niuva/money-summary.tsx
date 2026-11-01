@@ -1,12 +1,6 @@
 import type { ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
 import { StatusNotice, type StatusNoticeTone } from "@/components/niuva/status-notice";
 import { cn } from "@/lib/utils";
 
@@ -35,13 +29,9 @@ export type MoneySummaryProps = {
   note?: string;
   action?: ReactNode;
   variant?: MoneySummaryVariant;
+  /** Heading level of the title within the page outline. */
+  headingLevel?: 2 | 3;
   className?: string;
-};
-
-const variantLabels: Record<MoneySummaryVariant, string> = {
-  checkout: "Checkout",
-  quote: "Custom quote",
-  compact: "Summary",
 };
 
 const statusLabels: Record<MoneySummaryStatus, string> = {
@@ -58,22 +48,22 @@ const statusNoticeCopy: Record<
 > = {
   loading: {
     title: "Rincian sedang dimuat",
-    description: "Kami sedang mengambil rincian terbaru dari server.",
+    description: "Kami sedang mengambil rincian terbaru.",
     tone: "info",
   },
   changed: {
     title: "Rincian berubah",
-    description: "Nilai ini perlu diverifikasi ulang sebelum workflow dilanjutkan.",
+    description: "Nilai ini perlu diperiksa ulang sebelum Anda melanjutkan.",
     tone: "warning",
   },
   unavailable: {
     title: "Rincian belum tersedia",
-    description: "Rincian belum dapat ditampilkan dari sumber yang berwenang.",
+    description: "Rincian belum dapat ditampilkan saat ini.",
     tone: "warning",
   },
   error: {
     title: "Rincian tidak dapat dimuat",
-    description: "Terjadi kendala saat mengambil rincian. Coba muat ulang atau minta pemeriksaan operator.",
+    description: "Rincian gagal dimuat. Muat ulang halaman, atau hubungi Niuva bila masalahnya berlanjut.",
     tone: "error",
   },
 };
@@ -102,91 +92,68 @@ export function MoneySummary({
   note,
   action,
   variant = "checkout",
+  headingLevel = 3,
   className,
 }: MoneySummaryProps) {
   const notice = sourceStatus === "ready" ? null : statusNoticeCopy[sourceStatus];
+  const Heading = headingLevel === 2 ? "h2" : "h3";
 
   return (
-    <Card
+    <section
       aria-busy={sourceStatus === "loading" || undefined}
       className={cn(
-        "shadow-card",
-        variant === "quote" && "bg-muted/30",
+        "rounded-[var(--radius-card)] border border-border bg-card",
+        variant === "compact" ? "p-4" : "p-5 sm:p-6",
         className,
       )}
       data-component="money-summary"
       data-source-status={sourceStatus}
       data-variant={variant}
-      size={variant === "compact" ? "sm" : "default"}
     >
-      <CardHeader>
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="font-body text-xs font-medium text-brand-700">
-              {variantLabels[variant]}
-            </p>
-            <h3 className="mt-1 text-base leading-snug font-semibold">
-              {title ?? "Rincian biaya"}
-            </h3>
-          </div>
-          <Badge variant={getBadgeVariant(sourceStatus)}>
-            {statusLabels[sourceStatus]}
-          </Badge>
-        </div>
-        {description ? (
-          <p className="text-sm leading-6 text-muted-foreground">{description}</p>
-        ) : null}
-      </CardHeader>
+      <div className="flex items-start justify-between gap-3">
+        <Heading className="text-xl font-medium tracking-[-0.015em]">{title ?? "Rincian biaya"}</Heading>
+        {/* A badge only marks a state that needs attention; "ready" is the normal case. */}
+        {sourceStatus === "ready" ? null : (
+          <Badge variant={getBadgeVariant(sourceStatus)}>{statusLabels[sourceStatus]}</Badge>
+        )}
+      </div>
+      {description ? (
+        <p className="mt-2 text-ui font-normal leading-[1.55] text-muted-foreground">{description}</p>
+      ) : null}
 
-      <CardContent className="flex flex-1 flex-col gap-4">
-        <dl className="divide-y divide-border border-y border-border">
-          {lines.map((line, index) => (
-            <div
-              className="grid grid-cols-[minmax(0,1fr)_auto] gap-4 py-3 first:pt-3 last:pb-3"
-              key={`${line.label}-${index}`}
-            >
-              <dt className="min-w-0 text-sm text-muted-foreground">
-                <span className="block truncate text-foreground">{line.label}</span>
-                {line.detail ? <span className="block text-xs">{line.detail}</span> : null}
-              </dt>
-              <dd className="font-body text-sm font-medium tabular-nums text-foreground">{line.value}</dd>
-            </div>
-          ))}
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-4 py-4">
-            <dt className="text-sm font-semibold text-foreground">
-              Total
-                <span className="mt-1 block text-xs font-normal text-muted-foreground">
-                  Mata uang: {currency}
-              </span>
+      <dl className="mt-5 divide-y divide-border border-y border-border">
+        {lines.map((line, index) => (
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-4 py-3" key={`${line.label}-${index}`}>
+            <dt className="min-w-0">
+              <span className="block text-ui font-medium">{line.label}</span>
+              {line.detail ? <span className="mt-0.5 block text-caption text-muted-foreground">{line.detail}</span> : null}
             </dt>
-            <dd className="text-right">
-              <span className="block text-xl font-semibold tracking-tight text-foreground">
-                {total}
-              </span>
-              <span className="font-body text-xs tabular-nums text-muted-foreground">{currency}</span>
-            </dd>
+            <dd className="text-ui font-medium tabular-nums">{line.value}</dd>
           </div>
-        </dl>
+        ))}
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-4 py-4">
+          <dt className="text-base font-semibold">Total</dt>
+          <dd className="text-right">
+            <span className="block text-2xl font-semibold tracking-[-0.015em] tabular-nums">{total}</span>
+            <span className="text-caption tabular-nums text-muted-foreground">{currency}</span>
+          </dd>
+        </div>
+      </dl>
 
-        {note ? (
-          <p className="border-l-2 border-brand-300 pl-3 text-xs leading-5 text-muted-foreground">
-            <span className="font-medium text-foreground">Sumber:</span> {note}
-          </p>
-        ) : null}
+      {note ? <p className="mt-4 text-caption leading-[1.45] text-muted-foreground">{note}</p> : null}
 
-        {notice ? (
-          <StatusNotice
-            action={action}
-            className="flex-1 p-3"
-            description={notice.description}
-            role={sourceStatus === "error" ? "alert" : "status"}
-            title={notice.title}
-            tone={notice.tone}
-          />
-        ) : null}
-      </CardContent>
+      {notice ? (
+        <StatusNotice
+          action={action}
+          className="mt-4 p-3"
+          description={notice.description}
+          role={sourceStatus === "error" ? "alert" : "status"}
+          title={notice.title}
+          tone={notice.tone}
+        />
+      ) : null}
 
-      {!notice && action ? <CardFooter className="justify-end gap-2">{action}</CardFooter> : null}
-    </Card>
+      {!notice && action ? <div className="mt-5 flex flex-wrap gap-2">{action}</div> : null}
+    </section>
   );
 }

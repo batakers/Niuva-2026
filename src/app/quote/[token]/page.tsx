@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 
 import { PublicShell } from "@/components/niuva/public-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
+import { NiuvaLink } from "@/components/ui/NiuvaLink";
+import { typographySystemTokens as type } from "@/design/typography";
 import {
   getLiveQuoteReview,
   getQuotePreview,
@@ -15,7 +16,7 @@ import { QuoteReview } from "./quote-review";
 
 export const metadata: Metadata = {
   title: "Review quote · Niuva",
-  description: "Review scope, asumsi, masa berlaku, dan rincian quote custom print Niuva.",
+  description: "Tinjau scope, asumsi, masa berlaku, dan rincian quote Custom 3D Print Niuva.",
   robots: { follow: false, index: false },
 };
 
@@ -46,15 +47,14 @@ export default async function QuotePage({ params, searchParams }: PageProps<"/qu
 
       return (
         <PublicShell functionalStatus="server-backed" scope="quote-review">
-          <main className="mx-auto max-w-public px-5 py-16 sm:px-8 sm:py-24" id="main-content">
+          <main className="mx-auto max-w-public px-5 pt-10 sm:px-12 sm:pt-14" id="main-content">
             <div className="max-w-2xl">
-              <p className="text-sm font-medium text-brand-700">Review quote</p>
-              <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-5xl">Quote belum dapat dimuat.</h1>
+              <h1 className={`${type.display.className} text-balance`}>Quote belum dapat dimuat.</h1>
               <div className="mt-8">
                 <StatusNotice
-                  action={<Link className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/quote/${token}`}>Coba lagi</Link>}
-                  description="Quote tidak diubah. Muat ulang tautan ini untuk mencoba membaca snapshot server kembali."
-                  title="Layanan quote sementara tidak tersedia"
+                  action={<NiuvaLink className="min-h-11" href={`/quote/${token}`} variant="outline">Coba lagi</NiuvaLink>}
+                  description="Quote Anda tidak berubah. Muat ulang tautan ini sebentar lagi."
+                  title="Quote sementara tidak dapat dibuka"
                   tone="error"
                 />
               </div>
@@ -79,18 +79,14 @@ export default async function QuotePage({ params, searchParams }: PageProps<"/qu
   if (preview.state === "loading") {
     return (
       <PublicShell scope="quote-review">
-        <main className="mx-auto max-w-public px-5 py-12 sm:px-8 sm:py-16" id="main-content">
-          <div aria-busy="true" aria-live="polite" className="max-w-3xl">
-            <p className="text-sm font-medium text-brand-700">Memuat quote contoh</p>
-            <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-5xl">
-              Rincian quote sedang disiapkan.
-            </h1>
-            <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground">
-              Belum ada keputusan yang dapat dibuat sampai scope dan snapshot harga tersedia.
-            </p>
-            <div className="mt-10 grid gap-5 lg:grid-cols-12">
-              <div className="h-64 animate-pulse rounded-xl bg-muted motion-reduce:animate-none lg:col-span-7" />
-              <div className="h-64 animate-pulse rounded-xl bg-muted motion-reduce:animate-none lg:col-span-5" />
+        <main className="mx-auto max-w-public px-5 pt-10 sm:px-12 sm:pt-14" id="main-content">
+          <div aria-busy="true" aria-live="polite">
+            <h1 className={`${type.display.className} max-w-[16em] text-balance`}>Rincian quote sedang disiapkan.</h1>
+            <p className="mt-4 max-w-[56ch] text-lead leading-[1.6]">Keputusan baru bisa dibuat setelah scope dan harga quote tampil.</p>
+            <div className="mt-8 h-24 rounded-[var(--radius-card)] bg-muted motion-safe:animate-pulse" />
+            <div className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-12">
+              <div className="h-72 rounded-[var(--radius-card)] bg-muted motion-safe:animate-pulse" />
+              <div className="h-72 rounded-[var(--radius-card)] bg-muted motion-safe:animate-pulse" />
             </div>
           </div>
         </main>

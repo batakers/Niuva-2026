@@ -28,7 +28,7 @@ function isRetailScenario(scenario: ReadyScenario): scenario is RetailScenario {
 
 const retailSteps: readonly StepDefinition[] = [
   { id: "waiting-payment", label: "Menunggu pembayaran", description: "Order dibuat dan menunggu pembayaran terverifikasi.", timestamp: "7 September 2026, 09.12 WIB" },
-  { id: "paid", label: "Pembayaran diterima", description: "Pembayaran telah diverifikasi oleh server.", timestamp: "7 September 2026, 09.18 WIB" },
+  { id: "paid", label: "Pembayaran diterima", description: "Pembayaran sudah dikonfirmasi.", timestamp: "7 September 2026, 09.18 WIB" },
   { id: "processing", label: "Order diproses", description: "Item disiapkan dan diperiksa sebelum pengiriman." },
   { id: "ready-to-ship", label: "Siap dikirim", description: "Paket telah selesai disiapkan." },
   { id: "shipped", label: "Dalam pengiriman", description: "Paket sudah diserahkan kepada mitra pengiriman." },
@@ -36,9 +36,9 @@ const retailSteps: readonly StepDefinition[] = [
 ];
 
 const customSteps: readonly StepDefinition[] = [
-  { id: "submitted", label: "Request diterima", description: "Konfigurasi dan file masuk ke antrean review.", timestamp: "5 September 2026, 10.20 WIB" },
+  { id: "submitted", label: "Pengajuan diterima", description: "Konfigurasi dan file masuk ke antrean review.", timestamp: "5 September 2026, 10.20 WIB" },
   { id: "under-review", label: "Review operator", description: "Operator memeriksa konfigurasi dan hasil slicer.", timestamp: "6 September 2026, 14.10 WIB" },
-  { id: "quote-pending", label: "Menunggu persetujuan quote", description: "Quote immutable tersedia untuk ditinjau." },
+  { id: "quote-pending", label: "Menunggu persetujuan quote", description: "Quote tersedia untuk ditinjau dan tidak berubah selama berlaku." },
   { id: "waiting-payment", label: "Menunggu pembayaran", description: "Quote sudah diterima dan order menunggu pembayaran." },
   { id: "paid", label: "Pembayaran diterima", description: "Pembayaran utama telah diverifikasi." },
   { id: "production", label: "Dalam produksi", description: "Pencetakan berjalan sesuai scope yang disetujui." },
@@ -123,7 +123,7 @@ export function buildExampleOrderStatus(
 
   const customStates: Record<CustomScenario, Readonly<{ currentId: string; description: string; label: string }>> = {
     "custom-quote-pending": { currentId: "quote-pending", label: "Quote menunggu keputusan", description: "Tinjau scope, asumsi, total, dan masa berlaku sebelum menerima quote." },
-    "custom-quote-accepted": { currentId: "waiting-payment", label: "Menunggu pembayaran utama", description: "Quote diterima. Pembayaran nyata tetap harus dibuat dan diverifikasi oleh server." },
+    "custom-quote-accepted": { currentId: "waiting-payment", label: "Menunggu pembayaran utama", description: "Quote diterima. Pembayaran sungguhan tetap perlu dibuat dan dikonfirmasi." },
     "custom-production": { currentId: "production", label: "Custom print dalam produksi", description: "Produksi berjalan berdasarkan scope quote yang sudah dikunci." },
     "custom-awaiting-shipping-payment": { currentId: "shipping-payment", label: "Menunggu pembayaran pengiriman", description: "Paket final sudah diukur dan biaya pengiriman menunggu pembayaran." },
   };
@@ -133,9 +133,9 @@ export function buildExampleOrderStatus(
   const nextAction = customScenario === "custom-quote-pending"
     ? { kind: "quote" as const, label: "Tinjau quote contoh", title: "Keputusan quote diperlukan", description: "Tinjau versi quote aktif sebelum masa berlakunya selesai.", tone: "warning" as const }
     : customScenario === "custom-quote-accepted"
-      ? { kind: "payment-unavailable" as const, label: "Pembayaran belum aktif", title: "Pembayaran utama menunggu integrasi", description: "Preview tidak membuat transaksi atau menganggap browser sebagai bukti pembayaran.", tone: "info" as const }
+      ? { kind: "payment-unavailable" as const, label: "Pembayaran belum aktif", title: "Pembayaran utama menunggu integrasi", description: "Preview tidak membuat transaksi atau pembayaran.", tone: "info" as const }
       : customScenario === "custom-awaiting-shipping-payment"
-        ? { kind: "shipping-payment-unavailable" as const, label: "Pembayaran pengiriman belum aktif", title: "Biaya pengiriman siap ditinjau", description: "Preview tidak membuka Midtrans atau membuat payment attempt.", tone: "info" as const }
+        ? { kind: "shipping-payment-unavailable" as const, label: "Pembayaran pengiriman belum aktif", title: "Biaya pengiriman siap ditinjau", description: "Preview tidak membuka halaman pembayaran atau membuat tagihan.", tone: "info" as const }
         : { kind: "none" as const, title: "Tidak ada tindakan yang diperlukan", description: "Tim Niuva akan memperbarui status setelah tahap produksi berikutnya selesai.", tone: "info" as const };
 
   return {
