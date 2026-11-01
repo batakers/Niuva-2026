@@ -1962,10 +1962,12 @@ mencetak sendiri datang ke studio Niuva. Harga mengikuti pricelist Owner
 
 **Alamat dan booking:**
 - Alamat memakai Informasi Situs.
-- Booking manual lewat WhatsApp +62 813-2140-7815. Nomor ini dari pitch deck
-  dan dipilih Owner khusus untuk booking studio.
-- Jam buka, jumlah dan tipe mesin, DP, pembatalan, dan syarat membership
-  dikonfirmasi saat booking. Situs tidak memuatnya sampai Owner memberikannya.
+- Booking manual lewat nomor WhatsApp di Informasi Situs.
+- Pada hari yang sama Owner meminta satu nomor untuk seluruh situs: nomor dari
+  pitch deck, +62 813-2140-7815, yang kini menjadi nilai awal Informasi Situs.
+- Jam buka: Senin–Jumat, 09.00–17.00 WIB.
+- Jumlah dan tipe mesin, DP, pembatalan, dan syarat membership dikonfirmasi
+  saat booking. Situs tidak memuatnya sampai Owner memberikannya.
 - Booking digital, pembayaran sewa online, dan membership otomatis tetap di luar
   MVP. Rental Reservation dan Membership Automation tetap manual.
 

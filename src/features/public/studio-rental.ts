@@ -43,10 +43,11 @@ export const studioPriceGroups: readonly StudioPriceGroup[] = [
 /** The cheapest hourly rental, used by the hook on the Custom 3D Print start options. */
 export const studioHourlyFromRp = 12_000;
 
-/** Studio bookings use the number from the pitch deck, chosen by the Owner for this purpose on 2 November 2026. */
-export const studioBookingPhone = "+62 813-2140-7815";
+/** Opening hours given by the Owner on 2 November 2026. */
+export const studioOpeningHours = "Senin–Jumat, 09.00–17.00 WIB";
 
-export function createStudioBookingWhatsAppHref(phone: string = studioBookingPhone): string {
+/** Bookings go to the site WhatsApp number from Informasi Situs, so one Admin change updates every contact. */
+export function createStudioBookingWhatsAppHref(phone: string): string {
   const message = "Halo Niuva, saya ingin booking sewa printer di studio. Mohon info jadwal yang tersedia.";
   return `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`;
 }

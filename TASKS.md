@@ -211,7 +211,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T54 | M5a | DONE | Motion lanjutan dari sweep peluang | T51 | Empat saran sweep 2 Nov yang diminta Owner dikerjakan semua: tautan ke seksi di halaman yang sama menggulir halus hanya pada halaman yang ikut (`data-smooth-anchors`) sementara pindah halaman tetap langsung ke atas; panel konfirmasi quote dan notifikasi hasil aksi masuk 220ms; menu publik di bawah 1280px turun 150ms; "Lihat proyek terkait" mendarat di bawah header. Reduced motion tetap mati. Rencana di `plans/002`–`005`. Selesai 2 Nov 2026 dengan bukti lokal. |
 | T55 | M5a | DONE | Pesan status v2 dan produk satu varian | T54 | Atas permintaan Owner 2 Nov ("Ya, kerjakan"): `StatusNotice` versi v2 (permukaan tonal tenang, judul `foreground`, deskripsi `muted-foreground`, label nada hanya untuk pembaca layar, ukuran `inline`, `role="note"`, `children`); sekitar 30 kotak pesan buatan sendiri dan `Alert` mentah di publik, Akun, dan Admin dipindah ke komponen itu; konfirmasi tambah ke keranjang menjadi satu baris; produk satu varian terpilih otomatis tanpa label "Default" di produk, keranjang, dan checkout. Selesai 2 Nov 2026 dengan bukti lokal. |
 | T56 | M5a | DONE | Ukuran bernama di `cn()` | T55 | Keputusan Owner 2 Nov (pilihan B, "Ikuti DESIGN.md"): `cn()` mengenal `text-caption`/`text-ui`/`text-lead` sebagai ukuran font sehingga tidak lagi terbuang oleh kelas warna. Akibatnya label tombol 15px, label status timeline pesanan 13,5px, kualifier proyek `muted-foreground`, deskripsi Card 15px, serta badge status, header tabel, dan breadcrumb Admin 13,5px. Perbandingan sebelum/sesudah di 19 route publik dan 24 halaman Admin. Selesai 2 Nov 2026 dengan bukti lokal; review visual Owner menunggu. |
-| T57 | M4 | DONE | Sewa Studio di Custom 3D Print | Keputusan Owner 2 Nov | Seksi `#studio` di `/custom-print` dan satu baris ajakan di bawah kartu titik mulai. Harga sewa printer, filamen, dan slicing dari pricelist Owner; alamat dari Informasi Situs; booking manual lewat WhatsApp +62 813-2140-7815. Jam buka, mesin, DP, pembatalan, dan syarat membership menunggu data Owner dan dikonfirmasi saat booking. Booking digital tetap di luar MVP. Selesai 2 Nov 2026 dengan bukti lokal. |
+| T57 | M4 | DONE | Sewa Studio di Custom 3D Print | Keputusan Owner 2 Nov | Seksi `#studio` di `/custom-print` dan satu baris ajakan di bawah kartu titik mulai. Harga sewa printer, filamen, dan slicing dari pricelist Owner; alamat dari Informasi Situs; jam buka Senin–Jumat 09.00–17.00 WIB; booking manual lewat nomor WhatsApp Informasi Situs, yang kini satu untuk seluruh situs (+62 813-2140-7815). Mesin, DP, pembatalan, dan syarat membership menunggu data Owner dan dikonfirmasi saat booking. Booking digital tetap di luar MVP. Selesai 2 Nov 2026 dengan bukti lokal. |
 | T58 | M4 | DONE | Kalkulator estimasi publik | Keputusan Owner 2 Nov | Seksi `#estimate` di `/custom-print` tanpa login dan tanpa file: material PLA/ABS, jumlah, berat dan durasi per unit dari slicer; aturan `CUSTOM_PRINT_V1` aktif dan filamen stok Niuva; tidak disimpan; label estimasi awal. Tombol membawa angka ke form pengajuan (prefill tervalidasi, sumber angka tetap dikonfirmasi pelanggan). Tampil "belum tersedia" tanpa tepat satu aturan aktif yang layak; aktivasi aturan tetap gerbang Owner di Admin → Tarif. Selesai 2 Nov 2026 dengan bukti lokal. |
 | T53 | M4 | IN_PROGRESS | Kaitan foto ke varian | T31; keputusan Owner 1 Nov | `ProductVariant.mediaId` nullable (banyak varian boleh satu foto, `ON DELETE SET NULL`) lewat migration baru; importer/seed mengisi dari foto varian sumber; editor varian Admin memilih foto dari galeri produk yang sama dan server menolak foto produk lain; simpan galeri mempertahankan foto yang tetap dipakai; halaman produk memakai kaitan ini dengan alt text sebagai cadangan. Staging: `db:deploy` dan impor ulang katalog hanya atas instruksi Owner. |
 
@@ -2151,7 +2151,9 @@ belum ada yang dikerjakan.
 ### T57/T58 — Sewa Studio dan kalkulator estimasi publik, 2026-11-02
 
 Branch `claude/studio-and-estimate`. Owner memilih arah yang disarankan agen
-("Ya, ikuti saran"), lalu menjawab beberapa hal:
+("Ya, ikuti saran"), lalu menjawab beberapa hal. Setelah PR dibuka, Owner
+juga meminta satu nomor WhatsApp untuk seluruh situs ("ya kamu saja yg ubah")
+dan memberi jam buka Senin–Jumat 09.00–17.00 WIB:
 - penempatan: seksi di Custom 3D Print dengan ajakan "kalau mau print sendiri";
 - WhatsApp: nomor pitch deck;
 - isi halaman: harga dan alamat;
@@ -2166,7 +2168,11 @@ Excel. Keputusan dicatat di addendum PRD dan Tech Design 2 November 2026.
     sewa printer, filamen, dan slicing; "Sewa PC" dan "Self Service" di Excel
     sama persis, jadi digabung menjadi satu baris.
   - `src/app/custom-print/studio-rental-section.tsx` menampilkan alamat dari
-    Informasi Situs dan "Booking lewat WhatsApp" ke +62 813-2140-7815.
+    Informasi Situs, jam buka, dan "Booking lewat WhatsApp" ke nomor
+    Informasi Situs.
+  - Nomor awal Informasi Situs (`publicCompanyProfile.contact`) kini
+    +62 813-2140-7815. Lingkungan yang sudah menerbitkan Informasi Situs
+    tetap memakai nilai tersimpan sampai nomornya diganti lewat Admin.
   - Ajakan satu baris "Ingin mencetak sendiri? … Lihat harga sewa" ada di
     bawah dua kartu titik mulai.
 - **T58 Kalkulator:**
@@ -2197,9 +2203,10 @@ Excel. Keputusan dicatat di addendum PRD dan Tech Design 2 November 2026.
   - review visual Owner;
   - aktivasi aturan Pricing v1 di Admin agar kalkulator tampil di staging dan
     produksi;
-  - data jam buka, mesin, DP, pembatalan, dan membership dari Owner;
-  - nomor Informasi Situs (+62 851-1767-8901) berbeda dengan nomor booking
-    studio;
+  - data mesin, DP, pembatalan, dan membership dari Owner;
+  - kebijakan privasi dan syarat layanan v1.0, dua halaman privasi Akun, dan
+    SOP layanan masih mencantumkan 085117678901 sebagai kontak. Mengubahnya
+    menyentuh versi kebijakan, jadi menunggu keputusan Owner;
   - istilah "komunal" dan "bawa sendiri" pada tarif jasa cetak masih perlu
     satu definisi dari Owner.
 

@@ -32,7 +32,8 @@ Dibangun di atas Foundation v2; belum ditinjau Owner.
       belum tersedia saat ini."
   - **Seksi studio** `#studio` sebelum FAQ:
     - judul "Ingin mencetak sendiri? Datang ke studio Niuva.";
-    - alamat dari Informasi Situs dan tombol "Booking lewat WhatsApp";
+    - alamat dan jam buka dalam daftar hairline, lalu tombol "Booking lewat
+      WhatsApp" ke nomor Informasi Situs;
     - tiga kartu harga hairline: Sewa printer, Filamen, dan Slicing (lebar
       penuh).
 - **Custom 3D Print (`/custom-print`):** bidang biru dengan geometri detail layanan: judul "Review dulu. Baru produksi.", satu kalimat, "Pilih titik mulai" (`onBrand`) dan tautan "Lihat alurnya", maskot laptop, dan satu kartu fakta mulai `xl`. Lalu dua kartu titik mulai yang setara (model 3D/CAD dan referensi), masing-masing dengan daftar fakta berhairline (format, batas ukuran) dan satu tombol outline; daftar "Sebelum mengirim"; alur empat langkah bernomor; batas Harga/File/Ongkir dalam satu permukaan putih (memuat "Estimasi awal, bukan harga final." tepat satu kali); FAQ disclosure; panel penutup dengan maskot kunci inggris. Tidak ada ilustrasi selain maskot.

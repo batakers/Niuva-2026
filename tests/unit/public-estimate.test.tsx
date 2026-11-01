@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { EstimateCalculator } from "@/app/custom-print/estimate-calculator";
 import { StudioRentalSection } from "@/app/custom-print/studio-rental-section";
-import { createStudioBookingWhatsAppHref, studioPriceGroups } from "@/features/public/studio-rental";
+import { createStudioBookingWhatsAppHref, studioOpeningHours, studioPriceGroups } from "@/features/public/studio-rental";
 import { defaultSiteInformation } from "@/modules/site-information/defaults";
 import {
   calculatePublicEstimate,
@@ -115,15 +115,17 @@ describe("estimate calculator", () => {
 });
 
 describe("studio rental", () => {
-  it("publishes the Owner price list and books on the studio WhatsApp number", () => {
+  it("publishes the Owner price list and hours and books on the site WhatsApp number", () => {
     const amounts = studioPriceGroups.flatMap(group => group.prices.map(price => price.amountRp));
     expect(amounts).toEqual([12_000, 75_000, 500_000, 5_000, 500, 0, 15_000, 35_000]);
-    expect(createStudioBookingWhatsAppHref()).toMatch(/^https:\/\/wa\.me\/6281321407815\?text=/);
+    expect(defaultSiteInformation.phone).toBe("+62 813-2140-7815");
+    expect(createStudioBookingWhatsAppHref(defaultSiteInformation.phone)).toMatch(/^https:\/\/wa\.me\/6281321407815\?text=/);
 
     render(<StudioRentalSection />);
     expect(screen.getByRole("heading", { level: 2, name: "Ingin mencetak sendiri? Datang ke studio Niuva." })).toBeVisible();
     expect(screen.getByText(defaultSiteInformation.address)).toBeVisible();
     expect(screen.getByText("Gratis")).toBeVisible();
-    expect(screen.getByRole("link", { name: "Booking lewat WhatsApp" })).toHaveAttribute("href", createStudioBookingWhatsAppHref());
+    expect(screen.getByText(studioOpeningHours)).toBeVisible();
+    expect(screen.getByRole("link", { name: "Booking lewat WhatsApp" })).toHaveAttribute("href", createStudioBookingWhatsAppHref(defaultSiteInformation.phone));
   });
 });

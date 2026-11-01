@@ -1,8 +1,8 @@
 import { typographySystemTokens as type } from "@/design/typography";
 import { PublicSiteAddress } from "@/components/niuva/public-site-information";
-import { NiuvaLink } from "@/components/ui/NiuvaLink";
-import { createStudioBookingWhatsAppHref, studioBookingPhone, studioPriceGroups } from "@/features/public/studio-rental";
+import { studioOpeningHours, studioPriceGroups } from "@/features/public/studio-rental";
 import { formatRupiah } from "@/modules/shared/format";
+import { StudioBookingLink } from "./studio-booking-link";
 
 /** For visitors who would rather print themselves: studio prices, the published address, and a WhatsApp booking. */
 export function StudioRentalSection() {
@@ -12,12 +12,17 @@ export function StudioRentalSection() {
         <div>
           <h2 className={`${type.heading.className} text-balance`} id="studio-title">Ingin mencetak sendiri? Datang ke studio Niuva.</h2>
           <p className="mt-4 max-w-[44ch] text-lead leading-[1.6] text-muted-foreground">Sewa printer per jam, siapkan file di laptop Anda atau PC studio, lalu lihat model Anda tercetak langsung.</p>
-          <dl className="mt-8 border-t border-border pt-5 text-ui">
-            <dt className="font-normal text-muted-foreground">Alamat studio</dt>
-            <dd className="mt-1 max-w-[40ch] text-base leading-[1.55]"><PublicSiteAddress /></dd>
+          <dl className="mt-8 divide-y divide-border border-y border-border text-ui">
+            <div className="py-4">
+              <dt className="font-normal text-muted-foreground">Alamat studio</dt>
+              <dd className="mt-1 max-w-[40ch] text-base leading-[1.55]"><PublicSiteAddress /></dd>
+            </div>
+            <div className="py-4">
+              <dt className="font-normal text-muted-foreground">Jam buka</dt>
+              <dd className="mt-1 text-base leading-[1.55]">{studioOpeningHours}</dd>
+            </div>
           </dl>
-          <NiuvaLink className="mt-8 min-h-11" href={createStudioBookingWhatsAppHref()} rel="noreferrer">Booking lewat WhatsApp</NiuvaLink>
-          <p className="mt-3 max-w-[44ch] text-caption leading-[1.45] text-muted-foreground">WhatsApp {studioBookingPhone}. Jam buka, mesin yang tersedia, dan syarat membership dikonfirmasi saat booking.</p>
+          <StudioBookingLink />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
