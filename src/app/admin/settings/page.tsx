@@ -13,7 +13,7 @@ export default async function AdminSettingsPage() {
   if (gate.access.profile.role !== "OWNER") return <AdminAccessView state="FORBIDDEN" />;
   return <AdminShell active="settings" role="OWNER"><main id="main-content" className="space-y-6">
     <AdminPageHeader title="Pengaturan" description="Kelola akses tim dan kebijakan operasional Niuva." breadcrumbs={[{ label: "Pengaturan" }]} />
-    <Card as="section" className="gap-0 py-0 ring-0 divide-y divide-border rounded-xl border border-border bg-card" aria-label="Pengaturan Owner">
+    <Card as="section" className="gap-0 py-0 divide-y divide-border" aria-label="Pengaturan Owner">
       <Link href="/admin/settings/custom-print-rates" className="block rounded-xl p-6 hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"><h2 className="font-semibold">Tarif Custom Print</h2><p className="mt-1 text-sm text-muted-foreground">Ubah tarif bahan dan waktu mesin, tinjau, lalu terapkan versi baru.</p></Link>
       <Link href="/admin/admins" className="block rounded-xl p-6 hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"><h2 className="font-semibold">Admin & Akses</h2><p className="mt-1 text-sm text-muted-foreground">Undang anggota tim, lihat status, dan nonaktifkan akses Admin.</p></Link>
       <Link href="/admin/finance/settings" className="block rounded-xl p-6 hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"><h2 className="font-semibold">Penagihan & Rekening</h2><p className="mt-1 text-sm text-muted-foreground">Atur identitas penerbit dan rekening Niuva untuk invoice.</p></Link>

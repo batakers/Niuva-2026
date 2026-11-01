@@ -166,7 +166,7 @@ describe("Niuva P0 components", () => {
       />,
     );
 
-    expect(screen.getByRole("listitem", { name: "Order DEMO-027" })).toHaveAttribute(
+    expect(screen.getByRole("listitem", { name: "Pesanan DEMO-027" })).toHaveAttribute(
       "data-status",
       "action-pending",
     );

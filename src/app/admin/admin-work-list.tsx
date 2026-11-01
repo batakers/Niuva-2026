@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Table, TableCaption, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import Link from "next/link";
@@ -6,6 +5,7 @@ import { withAdminReturnTo } from "@/modules/admin/navigation";
 import type { ActionQueueGroup, ActionQueueItem } from "@/modules/admin/action-queue";
 import { ACTION_QUEUE_GROUPS } from "@/modules/admin/action-queue";
 import type { ReportRange } from "@/modules/analytics/contract";
+import { AdminStatusBadge, adminTableHeaderClass } from "@/app/admin/admin-ui";
 
 const groupLabels: Record<ActionQueueGroup, string> = {
   all: "Semua",
@@ -59,7 +59,7 @@ export function AdminWorkList({
 }: Readonly<{ items: readonly ActionQueueItem[]; emptyMessage?: string; returnTo?: string }>) {
   if (items.length === 0) {
     return (
-      <Card className="gap-0 py-0 ring-0 rounded-xl border border-dashed border-border bg-card p-6" role="status">
+      <Card className="gap-0 border-dashed p-6" role="status">
         <p className="font-semibold">{emptyMessage}</p>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">Pekerjaan baru akan muncul saat status operasional berubah.</p>
       </Card>
@@ -68,10 +68,10 @@ export function AdminWorkList({
 
   return (
     <>
-      <Card className="gap-0 py-0 ring-0 hidden overflow-x-auto rounded-xl border border-border bg-card lg:block">
+      <Card className="gap-0 py-0 hidden overflow-x-auto lg:block">
         <Table className="w-full text-left text-sm">
           <TableCaption className="sr-only">Pekerjaan operasional Niuva</TableCaption>
-          <TableHeader className="border-b border-border bg-muted text-xs font-medium text-muted-foreground">
+          <TableHeader className={adminTableHeaderClass}>
             <TableRow>
               <TableHead className="px-5 py-3 font-medium" scope="col">Pekerjaan</TableHead>
               <TableHead className="px-5 py-3 font-medium" scope="col">Referensi</TableHead>
@@ -98,7 +98,7 @@ export function AdminWorkList({
       </Card>
       <ul aria-label="Pekerjaan operasional Niuva" className="grid gap-3 lg:hidden">
         {items.map((item) => (
-          <Card as="li" className="gap-0 py-0 ring-0 min-w-0 rounded-xl border border-border bg-card p-4" key={item.id}>
+          <Card as="li" className="gap-0 min-w-0 p-4" key={item.id}>
             <div className="flex flex-wrap items-start justify-between gap-2">
               <strong className="text-sm font-semibold">{item.title}</strong>
               <AttentionLabel item={item} />
@@ -123,8 +123,6 @@ function WorkLink({ item, returnTo }: Readonly<{ item: ActionQueueItem; returnTo
 
 function AttentionLabel({ item }: Readonly<{ item: ActionQueueItem }>) {
   return (
-    <Badge variant="outline" className={`mt-1 inline-flex w-fit rounded-full border px-2.5 py-1 text-xs font-medium ${item.attention === "EXCEPTION" ? "border-warning-border bg-warning-background text-warning" : "border-info-border bg-info-background text-info"}`}>
-      {item.attention === "EXCEPTION" ? "Exception" : "Perlu tindakan"}
-    </Badge>
+    <AdminStatusBadge className="mt-1" label={item.attention === "EXCEPTION" ? "Perlu pemeriksaan" : "Perlu tindakan"} tone={item.attention === "EXCEPTION" ? "danger" : "attention"} value={item.attention} />
   );
 }

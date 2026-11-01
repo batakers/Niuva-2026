@@ -11,6 +11,7 @@ import { StatusNotice } from "@/components/niuva/status-notice";
 import { withAdminReturnTo } from "@/modules/admin/navigation";
 import { isEstimateCurrent } from "@/modules/custom-print/estimate";
 import type { CustomPrintPageData } from "../custom-print-page-data";
+import { AdminStatusBadge } from "@/app/admin/admin-ui";
 export type ReviewStep = "review" | "estimate" | "quote";
 export function parseReviewStep(value: unknown): ReviewStep { return value === "estimate" || value === "quote" ? value : "review"; }
 const dateFormatter = new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Jakarta" });
@@ -22,11 +23,11 @@ export function CustomPrintReviewWorkspace({ data, step, returnTo }: Readonly<{ 
   const hasDraft = request.quotes.some(quote => quote.status === "DRAFT");
   return <div className="space-y-6">
     <nav aria-label="Tahapan review dan quote" className="flex flex-wrap gap-2">
-      {([["review", "1. Review slicer"], ["estimate", "2. Estimasi"], ["quote", "3. Quote"]] as const).map(([value, label]) => <Link className={`inline-flex min-h-11 items-center rounded-lg border px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 ${step === value ? "border-brand-300 bg-brand-50 text-brand-900" : "border-border bg-card text-muted-foreground"}`} aria-current={step === value ? "step" : undefined} href={withAdminReturnTo(`/admin/custom-print/${request.id}/review?step=${value}`, returnTo)} key={value}>{label}</Link>)}
+      {([["review", "1. Review slicer"], ["estimate", "2. Estimasi"], ["quote", "3. Quote"]] as const).map(([value, label]) => <Link className={`inline-flex min-h-11 items-center rounded-full border px-4 text-ui font-medium transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 ${step === value ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground hover:border-foreground/40"}`} aria-current={step === value ? "step" : undefined} href={withAdminReturnTo(`/admin/custom-print/${request.id}/review?step=${value}`, returnTo)} key={value}>{label}</Link>)}
     </nav>
     {step === "review" ? <>
-        <Card as="section" aria-labelledby="review-title" className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-5 sm:p-6">
-          <h2 className="text-xl font-semibold" id="review-title">Review slicer operator</h2>
+        <Card as="section" aria-labelledby="review-title" className="gap-0 p-5 sm:p-6">
+          <h2 className="text-xl font-medium tracking-[-0.015em]" id="review-title">Review slicer operator</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">Catat berat dan durasi yang sudah diverifikasi. Quantity harus sama dengan request agar quote dapat dihitung server.</p>
           {!request.modelReady ? (
             <StatusNotice className="mt-5" tone="info" title="Menunggu model 3D/CAD terverifikasi" description="Foto dan link referensi membantu triase, tetapi belum dapat dislicing. Customer dapat menambahkan model lewat tautan privat pada request yang sama." />
@@ -50,8 +51,8 @@ export function CustomPrintReviewWorkspace({ data, step, returnTo }: Readonly<{ 
         </Card>
       <StepLink id={request.id} step="estimate" returnTo={returnTo} label="Lanjut ke estimasi" />
     </> : step === "estimate" ? <>
-        <Card as="section" aria-labelledby="estimate-title" className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-5 sm:p-6">
-          <h2 className="text-xl font-semibold" id="estimate-title">Estimasi produksi pascareview</h2>
+        <Card as="section" aria-labelledby="estimate-title" className="gap-0 p-5 sm:p-6">
+          <h2 className="text-xl font-medium tracking-[-0.015em]" id="estimate-title">Estimasi produksi pascareview</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">Operator menilai seluruh biaya pekerjaan sebelum kisaran 100%–130% dipublikasikan. Faktor awal ini belum terkalibrasi oleh riwayat pekerjaan. Ongkir tidak termasuk.</p>
           {latestEstimate ? <p className="mt-4 rounded-lg border border-info-border bg-info-background p-4 text-sm font-medium text-info">Versi {latestEstimate.version} · {currencyFormatter.format(BigInt(latestEstimate.lowerRp.toFixed(0)))}–{currencyFormatter.format(BigInt(latestEstimate.upperRp.toFixed(0)))} · terbit {dateFormatter.format(latestEstimate.publishedAt)}{estimateCurrent ? "" : " · review atau tarif berubah, terbitkan versi baru"}</p> : <StatusNotice className="mt-4" title="Perlu review" description="Belum ada estimasi terbit untuk request ini." tone="info" />}
           {review && activeRule && request.modelReady && ["QUOTE_READY", "QUOTE_SENT"].includes(request.status) ? <AdminActionForm action={publishCustomPrintEstimateAction} className="mt-5" submitLabel={latestEstimate ? "Terbitkan versi estimasi baru" : "Terbitkan estimasi"}>
@@ -64,8 +65,8 @@ export function CustomPrintReviewWorkspace({ data, step, returnTo }: Readonly<{ 
       <StepLink id={request.id} step="review" returnTo={returnTo} label="Periksa review slicer" />
       <StepLink id={request.id} step="quote" returnTo={returnTo} label="Lanjut ke quote" />
     </> : <>
-        <Card as="section" aria-labelledby="quote-title" className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-5 sm:p-6">
-          <h2 className="text-xl font-semibold" id="quote-title">Quote & pricing rule</h2>
+        <Card as="section" aria-labelledby="quote-title" className="gap-0 p-5 sm:p-6">
+          <h2 className="text-xl font-medium tracking-[-0.015em]" id="quote-title">Quote & pricing rule</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">Setelah diterbitkan, snapshot quote menjadi immutable. Tautan ini disiapkan untuk dibagikan manual melalui kanal customer yang disepakati; Niuva belum mengirimkannya otomatis.</p>
           {pricing === null ? <StatusNotice className="mt-4" tone="warning" title="Pricing rules belum dapat dimuat" description="Draft quote ditahan sampai daftar aturan harga dapat dibaca oleh admin." /> : activeRule === null ? <StatusNotice className="mt-4" tone="warning" title="Belum ada pricing rule aktif" description="Owner harus mengaktifkan rule yang disetujui sebelum operator membuat quote." /> : <>
             <div className="mt-4 rounded-lg border border-info-border bg-info-background p-4 text-sm"><p className="font-semibold text-info">Rule aktif: {activeRule.code} v{activeRule.version}</p><p className="mt-1 text-info">Quote akan menyimpan snapshot rule ini. Perubahan rule baru tidak mengubah quote yang sudah dikirim.</p></div>
@@ -88,9 +89,7 @@ export function CustomPrintReviewWorkspace({ data, step, returnTo }: Readonly<{ 
                           {quote.expiresAt ? ` · berlaku sampai ${dateFormatter.format(quote.expiresAt)}` : ""}
                         </p>
                       </div>
-                      <span className="rounded-md border border-brand-300 bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-800">
-                        {formatStatus(quote.status)}
-                      </span>
+                      <AdminStatusBadge value={quote.status} />
                     </div>
                     <p className="mt-4 text-lg font-semibold tabular-nums">
                       {currencyFormatter.format(BigInt(quote.finalTotalRp))}
@@ -124,9 +123,9 @@ export function CustomPrintReviewWorkspace({ data, step, returnTo }: Readonly<{ 
           </div>
         </Card>
 {!["CANCELLED", "DECLINED"].includes(request.status) ? <>
-        <Card as="section" aria-labelledby="rough-package-title" className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-5 sm:p-6">
-          <h2 className="text-xl font-semibold" id="rough-package-title">Paket perkiraan untuk cek ongkir</h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">Customer dapat meminta rate testing dari akun setelah paket perkiraan terisi. Ongkir kasar tidak masuk quote, order, atau pembayaran.</p>
+        <Card as="section" aria-labelledby="rough-package-title" className="gap-0 p-5 sm:p-6">
+          <h2 className="text-xl font-medium tracking-[-0.015em]" id="rough-package-title">Paket perkiraan untuk cek ongkir</h2>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">Customer dapat meminta rate testing dari akun setelah paket perkiraan terisi. Ongkir kasar tidak masuk quote, pesanan, atau pembayaran.</p>
           <AdminActionForm action={saveEstimatedCustomPackageAction} className="mt-5" submitLabel="Simpan paket perkiraan">
             <input name="requestId" type="hidden" value={request.id} />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5"><Field label="Berat (g)" name="weightGrams" required type="number" value="" /><Field label="Panjang (cm)" name="lengthCm" required type="number" value="" /><Field label="Lebar (cm)" name="widthCm" required type="number" value="" /><Field label="Tinggi (cm)" name="heightCm" required type="number" value="" /><Field label="Nilai paket (IDR)" name="declaredValueRp" required type="number" value="" /></div>
@@ -137,8 +136,7 @@ export function CustomPrintReviewWorkspace({ data, step, returnTo }: Readonly<{ 
     </>}
   </div>;
 }
-function StepLink({ id, step, returnTo, label }: Readonly<{ id: string; step: ReviewStep; returnTo: string; label: string }>) { return <Link className={buttonVariants({ variant: "outline", className: "mr-3 inline-flex min-h-11 items-center rounded-lg border border-border bg-card px-4 text-sm font-semibold text-brand-700 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" })} href={withAdminReturnTo(`/admin/custom-print/${id}/review?step=${step}`, returnTo)}>{label}</Link>; }
+function StepLink({ id, step, returnTo, label }: Readonly<{ id: string; step: ReviewStep; returnTo: string; label: string }>) { return <Link className={buttonVariants({ variant: "outline", className: "mr-3 min-h-11" })} href={withAdminReturnTo(`/admin/custom-print/${id}/review?step=${step}`, returnTo)}>{label}</Link>; }
 function Field({ label, name, required, type, value }: Readonly<{ label: string; name: string; required?: boolean; type: string; value: string }>) { return <Label className="grid gap-4 text-sm font-medium" htmlFor={name}><span>{label}</span><Input className={inputClass} defaultValue={value} id={name} name={name} required={required} type={type} /></Label>; }
-function formatStatus(value: string): string { return value.toLocaleLowerCase("id").split("_").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" "); }
 const inputClass = "min-h-11 rounded-lg border border-input bg-background px-3 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm";
 const textareaClass = "min-h-24 rounded-lg border border-input bg-background px-3 py-2 text-base leading-6 outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm";

@@ -43,6 +43,13 @@ Tabel dipakai untuk membandingkan record, bukan dipaksa menjadi kumpulan card be
 
 Nilai unknown/unavailable memakai penjelasan; bukan nol palsu. Empty state memberi langkah operasional yang relevan. Ringkasan keuangan, trafik, dan aktivitas tidak menciptakan laba, saldo rekening, unique visitor, attribution, atau data contoh. Grafik Recharts adalah presentasi; uang canonical tetap string/BigInt/Decimal sesuai service, dan tabel data native tetap tersedia.
 
+## Status, kartu, dan tabel bersama (T50)
+
+- Status tampil lewat `AdminStatusBadge` (`src/app/admin/admin-ui.tsx`) dengan label dan nada dari `src/modules/admin/status-labels.ts`: amber bila operator perlu bertindak, merah bila perlu perbaikan, hijau bila selesai, netral untuk sisanya. Jangan menampilkan enum mentah atau menulis ulang label per halaman.
+- `Card` dipakai dengan default (putih, hairline, radius kartu); halaman hanya menambah padding atau tata letak. Hitungan di atas daftar memakai `AdminSummaryCard`.
+- Header tabel memakai `adminTableHeaderClass`: kalimat biasa, pita `neutral-50`, tanpa huruf kapital berjarak.
+- Copy memakai "pesanan", "Produk Toko", dan "Custom Print"; aksi status berbunyi "Ubah ke <label status>".
+
 ## Primitive dan interaksi
 
 - Pakai Button, Field, Input, NativeInput, NativeSelect, Table, Card, Badge, Avatar, breadcrumb, Sheet, dan Chart lokal sesuai perilakunya.

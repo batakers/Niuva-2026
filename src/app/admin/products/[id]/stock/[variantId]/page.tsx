@@ -25,7 +25,7 @@ const kindLabel: Readonly<Record<string, string>> = {
   OPENING_BALANCE: "Saldo awal",
   CATALOG_IMPORT: "Impor katalog",
   MANUAL_ADJUSTMENT: "Penyesuaian Admin",
-  ORDER_CONSUMPTION: "Konsumsi order",
+  ORDER_CONSUMPTION: "Konsumsi pesanan",
 };
 
 export default async function AdminStockHistoryPage({
@@ -65,8 +65,8 @@ export default async function AdminStockHistoryPage({
           <Balance label="Tersedia" value={history.variant.available} />
         </section>
 
-        <Card as="section" aria-labelledby="movements-title" className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-5 sm:p-6">
-          <h2 className="text-xl font-semibold" id="movements-title">Perubahan saldo</h2>
+        <Card as="section" aria-labelledby="movements-title" className="gap-0 p-5 sm:p-6">
+          <h2 className="text-xl font-medium tracking-[-0.015em]" id="movements-title">Perubahan saldo</h2>
           {history.movements.length === 0 ? (
             <p className="mt-5 text-sm text-muted-foreground">Tidak ada perubahan pada halaman ini.</p>
           ) : (
@@ -95,5 +95,5 @@ export default async function AdminStockHistoryPage({
 }
 
 function Balance({ label, value }: Readonly<{ label: string; value: number }>) {
-  return <Card className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-4"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></Card>;
+  return <Card className="gap-0 p-4"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></Card>;
 }

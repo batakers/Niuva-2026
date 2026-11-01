@@ -54,7 +54,7 @@ describe("Admin activity timeline", () => {
     const service = new AdminActivityTimelineService(prisma);
     const result = await service.list(access("ADMIN"), 1);
     expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { NOT: { OR: expect.arrayContaining([{ entityType: { in: ["AdminProfile", "AdminInvitation", "CUSTOMER_PRIVACY_REQUEST"] } }]) } }, take: 31 }));
-    expect(result.items[0]).toMatchObject({ title: "Status order diperbarui", group: "Pesanan", href: null });
+    expect(result.items[0]).toMatchObject({ title: "Status pesanan diperbarui", group: "Pesanan", href: null });
     expect(JSON.stringify(result)).not.toContain("do-not-show");
     await service.list(access("OWNER"), 1);
     expect(findMany).toHaveBeenLastCalledWith(expect.objectContaining({ where: undefined }));

@@ -18,6 +18,7 @@ import { StatusNotice } from "@/components/niuva/status-notice";
 import type { AdminAccess } from "@/lib/auth/admin";
 import type { FailureKind } from "@/lib/observability/logger";
 import { AdminOperationsService, type AdminProductRow } from "@/modules/admin/operations";
+import { AdminStatusBadge, AdminSummaryCard, adminTableHeaderClass } from "@/app/admin/admin-ui";
 
 export const metadata: Metadata = {
   title: "Produk & Stok · Admin Niuva",
@@ -56,15 +57,15 @@ export default async function AdminProductsPage({
           <AdminListControls area="products" query={query} />
 
           <section aria-label="Ringkasan products" className="mt-6 grid gap-3 sm:grid-cols-3">
-            <SummaryCard label="Hasil filter" value={String(result.filteredTotal)} />
-            <SummaryCard label="Terpublikasi di halaman ini" value={String(published)} />
-            <SummaryCard label="Stok menipis di halaman ini" value={String(lowStock)} />
+            <AdminSummaryCard label="Hasil filter" value={String(result.filteredTotal)} />
+            <AdminSummaryCard label="Terbit di halaman ini" value={String(published)} />
+            <AdminSummaryCard label="Stok menipis di halaman ini" value={String(lowStock)} />
           </section>
 
           <section className="mt-8" aria-labelledby="products-list-title">
             <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
               <div>
-                <h2 className="text-xl font-semibold" id="products-list-title">Katalog internal</h2>
+                <h2 className="text-xl font-medium tracking-[-0.015em]" id="products-list-title">Katalog internal</h2>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">Kelola harga, varian, stok, dan tampilan produk di situs.</p>
               </div>
               <p className="text-sm text-muted-foreground" role="status">{result.filteredTotal} hasil filter</p>
@@ -96,24 +97,21 @@ async function loadProducts(access: AdminAccess, query: AdminListQuery): Promise
   }
 }
 
-function SummaryCard({ label, value }: Readonly<{ label: string; value: string }>) {
-  return <Card className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-4"><p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></Card>;
-}
 
 function ProductCard({ item, returnTo }: Readonly<{ item: AdminProductRow; returnTo: string }>) {
   const activeVariants = item.variants.filter((variant) => variant.isActive);
   const totalStock = activeVariants.reduce((total, variant) => total + variant.stockOnHand, 0);
   return (
-    <Card as="article" className="gap-0 py-0 ring-0 min-w-0 rounded-xl border border-border bg-card p-5 sm:p-6">
+    <Card as="article" className="gap-0 min-w-0 p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-medium uppercase tracking-[0.1em] text-brand-700">{item.category?.name ?? "Tanpa kategori"}</p>
-          <h3 className="mt-2 text-lg font-semibold"><Link className="underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/products/${item.id}`, returnTo)}>{item.name}</Link></h3>
+          <p className="text-xs font-medium text-brand-700">{item.category?.name ?? "Tanpa kategori"}</p>
+          <h3 className="mt-2 text-lg font-medium tracking-[-0.015em]"><Link className="underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/products/${item.id}`, returnTo)}>{item.name}</Link></h3>
           <p className="mt-1 font-mono text-xs text-muted-foreground">{item.slug}</p>
         </div>
-        <div className="flex flex-wrap gap-2 text-xs font-semibold">
-          <span className={item.isPublished ? "rounded-md border border-success-border bg-success-background px-2.5 py-1 text-success" : "rounded-md border border-warning-border bg-warning-background px-2.5 py-1 text-warning"}>{item.isPublished ? "Published" : "Draft"}</span>
-          <span className="rounded-md border border-border bg-muted px-2.5 py-1 text-muted-foreground">{item.mediaCount} foto</span>
+        <div className="flex flex-wrap gap-2">
+          <AdminStatusBadge label={item.isPublished ? "Terbit" : "Draft"} tone={item.isPublished ? "success" : "attention"} value={item.isPublished ? "PUBLISHED" : "DRAFT"} />
+          <AdminStatusBadge label={`${item.mediaCount} foto`} tone="neutral" value="MEDIA" />
         </div>
       </div>
       <p className="mt-4 max-w-3xl text-sm leading-6 text-muted-foreground">{item.description}</p>
@@ -123,7 +121,7 @@ function ProductCard({ item, returnTo }: Readonly<{ item: AdminProductRow; retur
         ) : (
           <Table className="w-full min-w-[34rem] text-left text-sm">
             <TableCaption className="sr-only">Varian {item.name}</TableCaption>
-            <TableHeader className="text-xs uppercase tracking-[0.1em] text-muted-foreground"><TableRow><TableHead className="pb-3 font-medium" scope="col">Varian</TableHead><TableHead className="pb-3 font-medium" scope="col">SKU</TableHead><TableHead className="pb-3 font-medium" scope="col">Harga</TableHead><TableHead className="pb-3 text-right font-medium" scope="col">Stok</TableHead></TableRow></TableHeader>
+            <TableHeader className={adminTableHeaderClass}><TableRow><TableHead className="pb-3 font-medium" scope="col">Varian</TableHead><TableHead className="pb-3 font-medium" scope="col">SKU</TableHead><TableHead className="pb-3 font-medium" scope="col">Harga</TableHead><TableHead className="pb-3 text-right font-medium" scope="col">Stok</TableHead></TableRow></TableHeader>
             <TableBody className="divide-y divide-border">
               {item.variants.map((variant) => <TableRow key={variant.id}><TableHead className="py-3 font-medium" scope="row">{variant.name}{!variant.isActive ? " (nonaktif)" : ""}</TableHead><TableCell className="py-3 font-mono text-xs text-muted-foreground">{variant.sku}</TableCell><TableCell className="py-3 tabular-nums">{currencyFormatter.format(BigInt(variant.priceRp))}</TableCell><TableCell className={`py-3 text-right font-semibold tabular-nums ${variant.stockOnHand === 0 ? "text-warning" : variant.stockOnHand <= 3 ? "text-warning" : "text-foreground"}`}>{variant.stockOnHand}</TableCell></TableRow>)}
             </TableBody>

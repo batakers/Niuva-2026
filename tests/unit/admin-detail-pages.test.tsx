@@ -237,7 +237,7 @@ describe("order payment hold presentation", () => {
   it("never exposes a manual paid transition for an unpaid order", async () => {
     mocks.service.getOrder.mockResolvedValue({ ...order, status: "PENDING_PAYMENT", paidAt: null });
     render(await AdminOrderDetailPage({ params: Promise.resolve({ id: VALID_ID }) }));
-    expect(screen.queryByRole("button", { name: "Ubah ke Paid" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Ubah ke Dibayar" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Siapkan pembayaran shipping" })).not.toBeInTheDocument();
   });
 });

@@ -40,8 +40,8 @@ const kindLabels: Record<ActionQueueKind, string> = {
   inquiry: "Project brief",
   "custom-review": "Custom 3D Print",
   quote: "Quote",
-  order: "Order",
-  package: "Package",
+  order: "Pesanan",
+  package: "Paket",
   stock: "Stok",
 };
 

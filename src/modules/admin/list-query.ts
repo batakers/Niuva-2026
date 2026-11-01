@@ -35,6 +35,4 @@ export function adminListQueryParams(query: AdminListQuery): Readonly<Record<str
   return Object.fromEntries(Object.entries(query).filter(([key, value]) => key !== "page" && typeof value === "string")) as Record<string, string>;
 }
 
-export function adminStatusLabel(value: string): string {
-  return value.toLowerCase().split("_").map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
-}
+export { adminStatusLabel } from "./status-labels";

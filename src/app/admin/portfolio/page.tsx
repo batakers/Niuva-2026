@@ -18,6 +18,7 @@ import type { AdminAccess } from "@/lib/auth/admin";
 import type { FailureKind } from "@/lib/observability/logger";
 import { AdminOperationsService, type AdminPortfolioRow } from "@/modules/admin/operations";
 import { isApprovedCardOnlyPortfolioProject } from "@/modules/portfolio/public-content";
+import { AdminStatusBadge, AdminSummaryCard } from "@/app/admin/admin-ui";
 
 export const metadata: Metadata = {
   title: "Portfolio · Admin Niuva",
@@ -55,15 +56,15 @@ export default async function AdminPortfolioPage({
           <AdminListControls area="portfolio" query={query} />
 
           <section aria-label="Ringkasan portfolio" className="mt-6 grid gap-3 sm:grid-cols-3">
-            <SummaryCard label="Hasil filter" value={String(result.filteredTotal)} />
-            <SummaryCard label="Published di halaman ini" value={String(published)} />
-            <SummaryCard label="Featured di halaman ini" value={String(featured)} />
+            <AdminSummaryCard label="Hasil filter" value={String(result.filteredTotal)} />
+            <AdminSummaryCard label="Terbit di halaman ini" value={String(published)} />
+            <AdminSummaryCard label="Featured di halaman ini" value={String(featured)} />
           </section>
 
           <section className="mt-8" aria-labelledby="portfolio-list-title">
             <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
               <div>
-                <h2 className="text-xl font-semibold" id="portfolio-list-title">Project proof</h2>
+                <h2 className="text-xl font-medium tracking-[-0.015em]" id="portfolio-list-title">Project proof</h2>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">Featured project memerlukan konteks, hasil, media, alt text, dan izin publikasi. Selected Works card-only dapat published dengan ringkasan Owner-approved; halamannya menampilkan ringkasan tanpa cerita lengkap.</p>
               </div>
               <p className="text-sm text-muted-foreground" role="status">{result.filteredTotal} hasil filter</p>
@@ -95,25 +96,22 @@ async function loadPortfolio(access: AdminAccess, query: AdminListQuery): Promis
   }
 }
 
-function SummaryCard({ label, value }: Readonly<{ label: string; value: string }>) {
-  return <Card className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-4"><p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></Card>;
-}
 
 function PortfolioCard({ item, returnTo }: Readonly<{ item: AdminPortfolioRow; returnTo: string }>) {
   const isCardOnly = isApprovedCardOnlyPortfolioProject(item);
 
   return (
-    <Card as="article" className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-5 sm:p-6">
+    <Card as="article" className="gap-0 p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-medium uppercase tracking-[0.1em] text-brand-700">{item.serviceLabel}</p>
-          <h3 className="mt-2 text-lg font-semibold"><Link className="underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/portfolio/${item.id}`, returnTo)}>{item.title}</Link></h3>
+          <p className="text-xs font-medium text-brand-700">{item.serviceLabel}</p>
+          <h3 className="mt-2 text-lg font-medium tracking-[-0.015em]"><Link className="underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/portfolio/${item.id}`, returnTo)}>{item.title}</Link></h3>
           <p className="mt-1 text-sm text-muted-foreground">{item.clientName ?? "Client tidak ditampilkan"}</p>
         </div>
-        <div className="flex flex-wrap gap-2 text-xs font-semibold">
-          <span className={item.isPublished ? "rounded-md border border-success-border bg-success-background px-2.5 py-1 text-success" : "rounded-md border border-warning-border bg-warning-background px-2.5 py-1 text-warning"}>{item.isPublished ? "Published" : "Draft"}</span>
-          {item.isFeatured ? <span className="rounded-md border border-brand-300 bg-brand-50 px-2.5 py-1 text-brand-800">Featured</span> : null}
-          {isCardOnly ? <span className="rounded-md border border-border bg-muted px-2.5 py-1 text-muted-foreground">Card-only</span> : null}
+        <div className="flex flex-wrap gap-2">
+          <AdminStatusBadge label={item.isPublished ? "Terbit" : "Draft"} tone={item.isPublished ? "success" : "attention"} value={item.isPublished ? "PUBLISHED" : "DRAFT"} />
+          {item.isFeatured ? <AdminStatusBadge label="Unggulan" tone="neutral" value="FEATURED" /> : null}
+          {isCardOnly ? <AdminStatusBadge label="Kartu saja" tone="neutral" value="CARD_ONLY" /> : null}
         </div>
       </div>
       <p className="mt-4 max-w-3xl text-sm leading-6 text-muted-foreground">{item.summary}</p>

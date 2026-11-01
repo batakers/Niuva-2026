@@ -29,7 +29,7 @@ export function AdminSessionActions({
     <div className="flex flex-wrap items-center gap-3">
       {retryHref ? (
         <Link
-          className={buttonVariants({ variant: "outline", className: "inline-flex min-h-11 items-center rounded-lg border border-border px-3 text-sm font-semibold hover:border-brand-400 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" })}
+          className={buttonVariants({ variant: "outline", className: "min-h-11" })}
           href={retryHref}
         >
           Muat ulang
@@ -37,7 +37,7 @@ export function AdminSessionActions({
       ) : null}
       {showLogout ? (
         <>
-          <Link className={buttonVariants({ variant: "outline", className: "inline-flex min-h-11 items-center rounded-lg border border-border px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" })} href="/admin/security">Keamanan akun</Link>
+          <Link className={buttonVariants({ variant: "outline", className: "min-h-11" })} href="/admin/security">Keamanan akun</Link>
           <Button variant="ghost"
             className={`inline-flex min-h-11 items-center rounded-lg border px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 ${buttonClassName}`}
             type="button"
