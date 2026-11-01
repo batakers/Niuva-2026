@@ -6,10 +6,11 @@ import { FormField } from "@/components/niuva/form-field";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { useHydrated } from "@/components/niuva/use-hydrated";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EMPTY_CART, readCart, type CartSnapshot } from "@/features/cart/cart-state";
 import type { PreviewScenario, PublicShopProduct } from "@/features/frontend-preview/types";
+import { getShopDisplayCopy } from "@/features/public/shop-display-copy";
 import { ShippingOptions, type ShippingOptionsMode, type ShippingPreviewOption, type ShippingPreviewStatus } from "./shipping-options";
 
 export type CheckoutPreviewScenario =
@@ -160,7 +161,13 @@ const previewShippingOptions: readonly ShippingPreviewOption[] = [
   { id: "preview-economy", carrier: "Kurir contoh", service: "Ekonomi", eta: "4 sampai 7 hari", priceRp: "17000" },
 ];
 
-const controlClass = "min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 py-2 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+const controlClass = "min-h-11 w-full min-w-0 rounded-lg border border-input bg-card px-3 py-2 text-base outline-none transition-colors read-only:border-border read-only:bg-muted/60 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+const stepClass = "rounded-[var(--radius-card)] border border-border bg-card p-5 sm:p-7";
+const legendClass = "mb-5 flex items-center gap-3 text-xl font-medium tracking-[-0.015em]";
+
+function StepNumber({ value }: { value: number }) {
+  return <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-100 text-ui font-semibold text-brand-800 tabular-nums">{value}</span>;
+}
 const rupiah = new Intl.NumberFormat("id-ID", { currency: "IDR", maximumFractionDigits: 0, style: "currency" });
 const CHECKOUT_IDEMPOTENCY_STORAGE_KEY = "niuva.checkout.idempotency-key";
 const CHECKOUT_RECOVERY_STORAGE_KEY = "niuva.checkout.recovery";
@@ -195,10 +202,10 @@ const checkoutApiErrorSchema = z.object({
 }).partial();
 
 function checkoutApiErrorMessage(code: string | undefined, fallback: string): string {
-  if (code === "OUT_OF_STOCK") return "Stok berubah saat checkout. Tinjau Cart sebelum mencoba lagi.";
-  if (code === "SHIPPING_PROVIDER_UNAVAILABLE") return "Tarif pengiriman sudah tidak tersedia. Muat ulang opsi pengiriman lalu coba lagi.";
-  if (code === "PROVIDER_UNAVAILABLE") return "Layanan pembayaran belum tersedia. Coba lagi setelah layanan kembali siap.";
-  if (code === "CONFLICT") return "Checkout perlu dimuat ulang karena data atau kunci idempotensi berubah. Tinjau Cart lalu coba lagi.";
+  if (code === "OUT_OF_STOCK") return "Stok berubah saat checkout. Periksa keranjang, lalu coba lagi.";
+  if (code === "SHIPPING_PROVIDER_UNAVAILABLE") return "Tarif pengiriman sudah tidak tersedia. Muat ulang opsi pengiriman, lalu coba lagi.";
+  if (code === "PROVIDER_UNAVAILABLE") return "Layanan pembayaran belum tersedia. Coba lagi sebentar lagi.";
+  if (code === "CONFLICT") return "Data checkout berubah. Periksa keranjang, lalu coba lagi.";
   return fallback;
 }
 
@@ -587,11 +594,14 @@ export function CheckoutForm({
     }
   }
 
+  const cartHref = previewEnabled ? "/cart?preview=examples" : "/cart";
+  const shopHref = previewEnabled ? "/shop?preview=examples" : "/shop";
+
   if (loadState === "loading") {
     return (
-      <section aria-label="Memuat checkout" aria-busy="true" role="status" className="grid gap-8 md:grid-cols-12">
-        <div className="space-y-4 md:col-span-8"><p className="text-sm text-muted-foreground">Membaca cart lokal…</p><div className="h-80 rounded-xl bg-muted motion-safe:animate-pulse" /></div>
-        <div className="h-72 rounded-xl bg-muted motion-safe:animate-pulse md:col-span-4" />
+      <section aria-label="Memuat checkout" aria-busy="true" role="status" className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-12">
+        <div className="space-y-4"><p className="text-ui text-muted-foreground">Membaca isi keranjang…</p><div className="h-80 rounded-[var(--radius-card)] bg-muted motion-safe:animate-pulse" /></div>
+        <div className="h-72 rounded-[var(--radius-card)] bg-muted motion-safe:animate-pulse" />
       </section>
     );
   }
@@ -601,8 +611,8 @@ export function CheckoutForm({
       return (
         <StatusNotice
           action={<NiuvaLink href="/checkout" variant="outline" className="min-h-11">Muat ulang checkout</NiuvaLink>}
-          description="Sumber katalog atau provider checkout sedang tidak dapat dijangkau. Tidak ada order atau pembayaran yang dibuat."
-          title="Checkout live belum dapat dimuat."
+          description="Katalog atau layanan pembayaran sedang tidak dapat dijangkau. Belum ada pesanan atau pembayaran yang dibuat."
+          title="Checkout belum dapat dimuat."
           tone="error"
         />
       );
@@ -611,37 +621,39 @@ export function CheckoutForm({
       <StatusNotice
         tone="info"
         title="Checkout belum tersedia untuk transaksi."
-        description="Produk publik dan koneksi provider belum siap. Tidak ada data checkout, order, reservasi, tarif, atau pembayaran yang dibuat."
-        action={<NiuvaLink href="/cart" variant="outline" className="min-h-11">Kembali ke Cart</NiuvaLink>}
+        description="Produk atau layanan pembayaran belum siap. Isi keranjang tetap tersimpan, dan belum ada pesanan yang dibuat."
+        action={<NiuvaLink href="/cart" variant="outline" className="min-h-11">Kembali ke keranjang</NiuvaLink>}
       />
     );
   }
 
   if (!storageAvailable) {
-    return <StatusNotice tone="error" title="Cart browser tidak dapat dibaca." description="Izinkan penyimpanan browser, lalu kembali ke Cart sebelum memulai checkout." action={<NiuvaLink href="/cart?preview=examples" variant="outline" className="min-h-11">Kembali ke Cart</NiuvaLink>} />;
+    return <StatusNotice tone="error" title="Isi keranjang tidak bisa dibaca." description="Browser ini menolak penyimpanan. Izinkan penyimpanan situs, lalu buka keranjang lagi." action={<NiuvaLink href={cartHref} variant="outline" className="min-h-11">Kembali ke keranjang</NiuvaLink>} />;
   }
 
   if (snapshot.items.length === 0) {
-    return <StatusNotice tone="info" title="Belum ada item untuk checkout." description="Tambahkan varian yang tersedia ke Cart sebelum mengisi kontak dan alamat." action={<NiuvaLink href="/shop?preview=examples" variant="outline" className="min-h-11">Pilih produk contoh</NiuvaLink>} />;
+    return <StatusNotice tone="info" title="Belum ada produk untuk checkout." description="Tambahkan produk ke keranjang dulu, lalu kembali ke sini." action={<NiuvaLink href={shopHref} variant="outline" className="min-h-11">Lihat Toko</NiuvaLink>} />;
   }
 
   if (hasUnavailableItem) {
-    return <StatusNotice tone="warning" title="Cart perlu ditinjau kembali." description="Ada item yang tidak dikenali atau jumlahnya melebihi stok tampilan. Perbaiki Cart sebelum melanjutkan." action={<NiuvaLink href="/cart?preview=examples" variant="outline" className="min-h-11">Tinjau Cart</NiuvaLink>} />;
+    return <StatusNotice tone="warning" title="Keranjang perlu diperiksa lagi." description="Ada produk yang tidak dikenali atau jumlahnya melebihi stok. Perbaiki keranjang sebelum melanjutkan." action={<NiuvaLink href={cartHref} variant="outline" className="min-h-11">Buka keranjang</NiuvaLink>} />;
   }
 
   const busy = result === "submitting" || reviewingRates;
+  const totalQuantity = snapshot.items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <form noValidate onSubmit={submit} aria-label="Form checkout Customer" aria-busy={busy} className="grid gap-8 md:grid-cols-12 md:items-start">
-      <div className="min-w-0 space-y-8 md:col-span-8">
-        {isLive ? (
-          <aside aria-label={demoMode ? "Checkout demo lokal" : "Checkout transaksi"} className="rounded-lg border border-success-border bg-success-background p-4 text-success">
-            <p className="text-sm font-semibold">{demoMode ? "Checkout demo lokal aktif" : "Checkout transaksi aktif"}</p>
-            <p className="mt-2 text-sm leading-6">{demoMode ? "Server akan memuat ulang katalog, stok, ongkir, total, dan membuat order idempotent di database lokal dengan adapter provider deterministik." : "Server akan memuat ulang katalog, stok, ongkir, total, dan membuat satu order idempotent sebelum membuka pembayaran sandbox."}</p>
+    <form noValidate onSubmit={submit} aria-label="Form checkout Customer" aria-busy={busy} className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-12">
+      <div className="min-w-0 space-y-6">
+        {isLive && demoMode ? (
+          <aside aria-label="Checkout demo lokal" className="rounded-[var(--radius-control)] border border-success-border bg-success-background p-4 text-success">
+            <p className="text-ui font-semibold">Checkout demo lokal aktif</p>
+            <p className="mt-1 text-ui font-normal leading-[1.55]">Pesanan disimpan di database lokal. Pembayaran dan kurir memakai adapter demo, jadi tidak ada panggilan keluar.</p>
           </aside>
-        ) : (
-          <aside aria-label="Kontrol preview checkout" className="rounded-lg border border-info-border bg-info-background p-4 text-info">
-            <p className="text-sm font-semibold">Preview lokal · tidak membuat transaksi</p>
+        ) : null}
+        {!isLive ? (
+          <aside aria-label="Kontrol preview checkout" className="rounded-[var(--radius-control)] border border-info-border bg-info-background p-4 text-info">
+            <p className="text-ui font-semibold">Preview lokal · tidak membuat transaksi</p>
             <FormField id="checkout-preview-scenario" label="Skenario checkout" className="mt-3">
               <select
                 className={controlClass}
@@ -659,13 +671,13 @@ export function CheckoutForm({
               </select>
             </FormField>
           </aside>
-        )}
+        ) : null}
 
-        <div ref={statusRef} tabIndex={-1} className="rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+        <div ref={statusRef} tabIndex={-1} className="rounded-[var(--radius-control)] empty:hidden focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
           {Object.keys(errors).length > 0 ? (
-            <div role="alert" className="rounded-lg border border-destructive-border bg-destructive-background p-4 text-destructive">
-              <p className="font-semibold">Periksa kembali data checkout.</p>
-              <ul className="mt-2 list-inside list-disc text-sm">
+            <div role="alert" className="rounded-[var(--radius-control)] border border-destructive-border bg-destructive-background p-4 text-destructive">
+              <p className="text-ui font-semibold">Periksa kembali data checkout.</p>
+              <ul className="mt-2 list-inside list-disc text-ui font-normal">
                 {Object.entries(errors).filter((entry): entry is [CheckoutField, string] => Boolean(entry[1])).map(([field, message]) => (
                   <li key={field}>
                     <a href={`#checkout-${field}`} className="underline underline-offset-4" onClick={event => { event.preventDefault(); document.getElementById(`checkout-${field}`)?.focus(); }}>
@@ -676,89 +688,88 @@ export function CheckoutForm({
               </ul>
             </div>
           ) : null}
-          {result === "submitting" ? <p role="status" className="text-sm text-muted-foreground">{isLive ? demoMode ? "Membuat order demo lokal…" : "Membuat order dan membuka pembayaran sandbox…" : "Memeriksa simulasi checkout… Data tidak dikirim."}</p> : null}
-          {result === "reviewed" ? <StatusNotice tone="success" title="Preview checkout siap ditinjau." description="Kontak, alamat, dan opsi pengiriman lolos validasi lokal. Belum ada order, reservasi, token pembayaran, atau data yang dikirim." /> : null}
+          {result === "submitting" ? <p role="status" className="text-ui text-muted-foreground">{isLive ? demoMode ? "Membuat pesanan demo…" : "Membuat pesanan…" : "Memeriksa simulasi checkout… Data tidak dikirim."}</p> : null}
+          {result === "reviewed" ? <StatusNotice tone="success" title="Preview checkout siap ditinjau." description="Kontak, alamat, dan opsi pengiriman lolos validasi lokal. Belum ada pesanan, pembayaran, atau data yang dikirim." /> : null}
           {result === "payment-pending" && isLive ? (
             <StatusNotice
               action={
                 <div className="flex flex-wrap gap-2">
                   {paymentRedirectUrl && orderStatus === "PENDING_PAYMENT" ? (
-                    <a className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={paymentRedirectUrl} rel="noreferrer" target="_blank">
+                    <a className={buttonVariants({ className: "min-h-11" })} href={paymentRedirectUrl} rel="noreferrer" target="_blank">
                       {demoMode ? "Buka pembayaran demo" : "Buka pembayaran sandbox"}
                     </a>
                   ) : null}
-                  {orderStatusToken ? <NiuvaLink className="min-h-11" href={`/orders/${orderStatusToken}`} variant="outline">Lihat status order</NiuvaLink> : null}
+                  {orderStatusToken ? <NiuvaLink className="min-h-11" href={`/orders/${orderStatusToken}`} variant="outline">Lihat status pesanan</NiuvaLink> : null}
                 </div>
               }
               description={demoMode
-                ? orderNumber ? `Order ${orderNumber} tersimpan di database lokal dengan status ${orderStatusLabels[orderStatus]}. Tidak ada provider eksternal yang dipanggil.` : `Order demo tersimpan di database lokal dengan status ${orderStatusLabels[orderStatus]}.`
+                ? orderNumber ? `Pesanan ${orderNumber} tersimpan di database lokal dengan status ${orderStatusLabels[orderStatus]}. Tidak ada layanan luar yang dipanggil.` : `Pesanan demo tersimpan di database lokal dengan status ${orderStatusLabels[orderStatus]}.`
                 : orderNumber
                   ? orderStatus === "PENDING_PAYMENT"
-                    ? `Order ${orderNumber} sudah dibuat dan menunggu pembayaran. Status PAID hanya dapat ditetapkan setelah webhook provider diverifikasi server.`
-                    : `Order ${orderNumber} dipulihkan dengan status ${orderStatusLabels[orderStatus]}. Status ini berasal dari server.`
-                  : `Order sudah dibuat dengan status ${orderStatusLabels[orderStatus]}.`}
-              title={demoMode ? "Order demo tersimpan." : orderStatus === "PENDING_PAYMENT" ? "Checkout tersimpan, pembayaran menunggu." : "Status order dipulihkan."}
+                    ? `Pesanan ${orderNumber} sudah dibuat. Selesaikan pembayaran; statusnya berubah setelah pembayaran dikonfirmasi.`
+                    : `Pesanan ${orderNumber} berstatus ${orderStatusLabels[orderStatus]}.`
+                  : `Pesanan sudah dibuat dengan status ${orderStatusLabels[orderStatus]}.`}
+              title={demoMode ? "Pesanan demo tersimpan." : orderStatus === "PENDING_PAYMENT" ? "Pesanan tersimpan, menunggu pembayaran." : "Status pesanan dipulihkan."}
               tone={orderStatus === "PENDING_PAYMENT" ? "info" : "success"}
             />
           ) : null}
-          {result === "payment-pending" && !isLive ? <StatusNotice tone="info" title="Simulasi pembayaran masih menunggu." description="Browser tidak menyimpulkan status pembayaran. Pada integrasi nyata, status hanya berubah setelah notifikasi provider diverifikasi server." action={<Button type="button" variant="outline" className="min-h-11" onClick={resetOutcome}>Kembali ke ringkasan</Button>} /> : null}
-          {result === "payment-error" ? <StatusNotice tone="error" title={isLive ? "Checkout belum dapat dibuat." : "Simulasi pembayaran gagal."} description={isLive ? serverError ?? "Periksa data dan coba lagi." : "Isian checkout tetap tersedia dan tidak ada transaksi nyata. Kembali ke skenario siap untuk mencoba alur pemulihan."} action={isLive && serverErrorCode === "OUT_OF_STOCK" ? <NiuvaLink href="/cart" variant="outline" className="min-h-11">Tinjau Cart</NiuvaLink> : <Button type="button" variant="outline" className="min-h-11" onClick={resetOutcome}>{isLive ? "Coba lagi" : "Coba lagi"}</Button>} /> : null}
+          {result === "payment-pending" && !isLive ? <StatusNotice tone="info" title="Simulasi pembayaran masih menunggu." description="Status pembayaran tidak ditentukan di halaman ini. Pada transaksi nyata, status berubah setelah pembayaran dikonfirmasi." action={<Button type="button" variant="outline" className="min-h-11" onClick={resetOutcome}>Kembali ke ringkasan</Button>} /> : null}
+          {result === "payment-error" ? <StatusNotice tone="error" title={isLive ? "Pesanan belum dapat dibuat." : "Simulasi pembayaran gagal."} description={isLive ? serverError ?? "Periksa data, lalu coba lagi." : "Isian checkout tetap tersedia dan tidak ada transaksi nyata. Kembali ke skenario siap untuk mencoba alur pemulihan."} action={isLive && serverErrorCode === "OUT_OF_STOCK" ? <NiuvaLink href="/cart" variant="outline" className="min-h-11">Buka keranjang</NiuvaLink> : <Button type="button" variant="outline" className="min-h-11" onClick={resetOutcome}>Coba lagi</Button>} /> : null}
         </div>
 
-        <fieldset disabled={busy} className="min-w-0 space-y-5 rounded-xl border border-border bg-card p-5 shadow-card sm:p-6">
-          <legend className="px-2 text-lg font-semibold">1. Kontak pemesan</legend>
-          <p className="text-sm leading-6 text-muted-foreground">Checkout membutuhkan akun Customer yang login dengan Google. Tanda * menunjukkan field wajib.</p>
-          <div className="grid gap-5 sm:grid-cols-2">
-            <FormField id="checkout-customerName" label="Nama pemesan (Customer)" required error={errors.customerName} description="Diambil dari akun Customer dan tidak dapat diubah di checkout." className="sm:col-span-2"><Input name="customerName" autoComplete="name" defaultValue={customer?.displayName ?? customer?.email ?? ""} readOnly required className={controlClass} /></FormField>
-            <FormField id="checkout-customerEmail" label="Email terverifikasi" required error={errors.customerEmail} description="Email ini berasal dari akun Customer yang sedang login." ><Input name="customerEmail" type="email" autoComplete="email" defaultValue={customer?.email ?? ""} readOnly required className={controlClass} /></FormField>
-            <FormField id="checkout-customerPhone" label="Nomor WhatsApp pemesan" required error={errors.customerPhone}><Input name="customerPhone" type="tel" autoComplete="tel" required className={controlClass} /></FormField>
-          </div>
-        </fieldset>
+        <div className={stepClass}>
+          <fieldset disabled={busy} className="min-w-0">
+            <legend className={legendClass}><StepNumber value={1} />Kontak pemesan</legend>
+            <p className="-mt-2 mb-5 text-ui font-normal leading-[1.55] text-muted-foreground">Nama dan email diambil dari akun Anda. Tanda * menandai isian wajib.</p>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <FormField id="checkout-customerName" label="Nama pemesan" required error={errors.customerName} className="sm:col-span-2"><Input name="customerName" autoComplete="name" defaultValue={customer?.displayName ?? customer?.email ?? ""} readOnly required className={controlClass} /></FormField>
+              <FormField id="checkout-customerEmail" label="Email terverifikasi" required error={errors.customerEmail}><Input name="customerEmail" type="email" autoComplete="email" defaultValue={customer?.email ?? ""} readOnly required className={controlClass} /></FormField>
+              <FormField id="checkout-customerPhone" label="Nomor WhatsApp pemesan" required error={errors.customerPhone} description="Dipakai bila ada pertanyaan tentang pesanan."><Input name="customerPhone" type="tel" autoComplete="tel" required className={controlClass} /></FormField>
+            </div>
+          </fieldset>
+        </div>
 
-        <fieldset disabled={busy} className="min-w-0 space-y-5 rounded-xl border border-border bg-card p-5 shadow-card sm:p-6">
-          <legend className="px-2 text-lg font-semibold">2. Alamat penerima</legend>
-          <div className="grid gap-5 sm:grid-cols-2">
-            <FormField id="checkout-recipientName" label="Nama penerima" required error={errors.recipientName}><Input name="recipientName" autoComplete="shipping name" required className={controlClass} /></FormField>
-            <FormField id="checkout-addressPhone" label="Nomor WhatsApp penerima" required error={errors.addressPhone}><Input name="addressPhone" type="tel" autoComplete="shipping tel" required className={controlClass} /></FormField>
-            <FormField id="checkout-addressLine" label="Alamat lengkap" required error={errors.addressLine} description="Nama jalan, nomor bangunan, RT/RW, dan detail lokasi yang membantu kurir." className="sm:col-span-2"><textarea name="addressLine" autoComplete="shipping street-address" required rows={3} className={controlClass} /></FormField>
-            <FormField id="checkout-district" label="Kecamatan" error={errors.district}><Input name="district" autoComplete="shipping address-level3" className={controlClass} /></FormField>
-            <FormField id="checkout-city" label="Kota atau kabupaten" required error={errors.city}><Input name="city" autoComplete="shipping address-level2" required className={controlClass} /></FormField>
-            <FormField id="checkout-province" label="Provinsi" required error={errors.province}><Input name="province" autoComplete="shipping address-level1" required className={controlClass} /></FormField>
-            <FormField id="checkout-postalCode" label="Kode pos" required error={errors.postalCode}><Input name="postalCode" inputMode="numeric" autoComplete="shipping postal-code" required maxLength={5} className={controlClass} /></FormField>
-            <FormField id="checkout-country" label="Negara" variant="readOnly" className="sm:col-span-2"><Input value="Indonesia" readOnly className={controlClass} /></FormField>
-          </div>
-          <Button type="button" variant="outline" className="min-h-11" disabled={reviewingRates} onClick={reviewRates}>{reviewingRates ? "Memuat opsi pengiriman…" : "Tinjau opsi pengiriman"}</Button>
-        </fieldset>
+        <div className={stepClass}>
+          <fieldset disabled={busy} className="min-w-0">
+            <legend className={legendClass}><StepNumber value={2} />Alamat penerima</legend>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <FormField id="checkout-recipientName" label="Nama penerima" required error={errors.recipientName}><Input name="recipientName" autoComplete="shipping name" required className={controlClass} /></FormField>
+              <FormField id="checkout-addressPhone" label="Nomor WhatsApp penerima" required error={errors.addressPhone}><Input name="addressPhone" type="tel" autoComplete="shipping tel" required className={controlClass} /></FormField>
+              <FormField id="checkout-addressLine" label="Alamat lengkap" required error={errors.addressLine} description="Nama jalan, nomor bangunan, RT/RW, dan petunjuk yang membantu kurir." className="sm:col-span-2"><textarea name="addressLine" autoComplete="shipping street-address" required rows={3} className={controlClass} /></FormField>
+              <FormField id="checkout-district" label="Kecamatan" error={errors.district}><Input name="district" autoComplete="shipping address-level3" className={controlClass} /></FormField>
+              <FormField id="checkout-city" label="Kota atau kabupaten" required error={errors.city}><Input name="city" autoComplete="shipping address-level2" required className={controlClass} /></FormField>
+              <FormField id="checkout-province" label="Provinsi" required error={errors.province}><Input name="province" autoComplete="shipping address-level1" required className={controlClass} /></FormField>
+              <FormField id="checkout-postalCode" label="Kode pos" required error={errors.postalCode}><Input name="postalCode" inputMode="numeric" autoComplete="shipping postal-code" required maxLength={5} className={controlClass} /></FormField>
+              <FormField id="checkout-country" label="Negara" variant="readOnly" className="sm:col-span-2"><Input value="Indonesia" readOnly className={controlClass} /></FormField>
+            </div>
+            <Button type="button" variant="outline" className="mt-6 min-h-11" disabled={reviewingRates} onClick={reviewRates}>{reviewingRates ? "Memuat opsi pengiriman…" : "Tinjau opsi pengiriman"}</Button>
+          </fieldset>
+        </div>
 
         <ShippingOptions mode={mode} status={shippingStatus} options={shippingOptions} selectedId={selectedShippingId} error={errors.shippingOption} onChange={value => { setSelectedShippingId(value); setErrors(clearShippingError); setResult("idle"); }} onRetry={retryRates} />
       </div>
 
-      <aside aria-labelledby="checkout-summary-title" className="rounded-xl border border-border bg-card p-5 shadow-card md:sticky md:top-6 md:col-span-4 sm:p-6">
-        <p className="text-xs font-medium text-brand-700">Authority ledger</p>
-        <h2 id="checkout-summary-title" className="mt-2 text-xl font-semibold">Ringkasan untuk validasi server</h2>
-        <dl className="mt-6 space-y-4 text-sm">
+      <aside aria-labelledby="checkout-summary-title" className="rounded-[var(--radius-card)] border border-border bg-card p-5 sm:p-6 lg:sticky lg:top-24">
+        <h2 id="checkout-summary-title" className="text-xl font-medium tracking-[-0.015em]">Ringkasan pesanan</h2>
+        <ul className="mt-5 divide-y divide-border border-y border-border">
           {resolvedItems.map(({ item, match }) => match ? (
-            <div key={item.variantId} className="border-b border-border pb-4">
-              <dt className="font-medium">{match.product.name}</dt>
-              <dd className="mt-1 flex justify-between gap-4 text-muted-foreground"><span>{match.variant.name} · {item.quantity} item</span><span className="shrink-0 tabular-nums">{rupiah.format(BigInt(match.variant.priceRp) * BigInt(item.quantity))}</span></dd>
-            </div>
+            <li key={item.variantId} className="py-3">
+              <p className="text-ui font-medium">{getShopDisplayCopy(match.product).name}</p>
+              <p className="mt-0.5 flex justify-between gap-4 text-caption text-muted-foreground"><span>{match.variant.name} · {item.quantity} barang</span><span className="shrink-0 text-ui font-medium tabular-nums text-foreground">{rupiah.format(BigInt(match.variant.priceRp) * BigInt(item.quantity))}</span></p>
+            </li>
           ) : null)}
-          <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Subtotal browser</dt><dd className="font-medium tabular-nums">{rupiah.format(subtotal)}</dd></div>
-          <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Pengiriman simulasi</dt><dd className="font-medium tabular-nums">{selectedShipping ? rupiah.format(shippingTotal) : "Belum dipilih"}</dd></div>
-          <div className="flex justify-between gap-4 border-t border-border pt-4 text-base"><dt className="font-semibold">Estimasi total</dt><dd className="font-semibold tabular-nums">{selectedShipping ? rupiah.format(estimatedTotal) : "Belum lengkap"}</dd></div>
+        </ul>
+        <dl className="mt-4 space-y-3 text-ui">
+          <div className="flex items-baseline justify-between gap-4"><dt className="font-normal text-muted-foreground">Subtotal ({totalQuantity} barang)</dt><dd className="font-medium tabular-nums">{rupiah.format(subtotal)}</dd></div>
+          <div className="flex items-baseline justify-between gap-4"><dt className="font-normal text-muted-foreground">{isLive ? "Ongkir" : "Ongkir (contoh)"}</dt><dd className="text-right font-medium tabular-nums">{selectedShipping ? rupiah.format(shippingTotal) : "Pilih di langkah 3"}</dd></div>
+          <div className="flex items-baseline justify-between gap-4 border-t border-border pt-3"><dt className="font-semibold">Perkiraan total</dt><dd className="text-right text-lead font-semibold tabular-nums">{selectedShipping ? rupiah.format(estimatedTotal) : "Belum lengkap"}</dd></div>
         </dl>
 
-        <div className="mt-6 space-y-3 border-l-2 border-brand-300 pl-4 text-sm leading-6 text-muted-foreground">
-          <p><span className="font-medium text-foreground">Browser:</span> mengumpulkan input dan menampilkan estimasi.</p>
-          <p><span className="font-medium text-foreground">Server:</span> memuat ulang produk, stok, harga, ongkir, dan total.</p>
-          <p><span className="font-medium text-foreground">Provider:</span> {demoMode ? "adapter demo deterministik; tidak ada network call." : isLive ? "dihubungi setelah data server valid; callback tetap diverifikasi." : "baru dihubungi setelah data server valid."}</p>
-        </div>
-
-        <Button type="submit" size="lg" disabled={!hydrated || busy || shippingStatus !== "ready" || !selectedShippingId} className="mt-6 min-h-11 w-full">
-          {busy ? (isLive ? demoMode ? "Membuat order demo…" : "Membuat order…" : "Memeriksa preview…") : isLive ? demoMode ? "Buat order demo" : "Buat order dan lanjutkan pembayaran" : "Tinjau checkout"}
+        <Button type="submit" size="lg" disabled={!hydrated || busy || shippingStatus !== "ready" || !selectedShippingId} className="mt-6 min-h-12 w-full">
+          {busy ? (isLive ? demoMode ? "Membuat pesanan demo…" : "Membuat pesanan…" : "Memeriksa preview…") : isLive ? demoMode ? "Buat pesanan demo" : "Buat pesanan" : "Tinjau checkout"}
         </Button>
-        <p className="mt-3 text-xs leading-5 text-muted-foreground">{demoMode ? "Mode demo: server memvalidasi ulang harga, stok, ongkir, total, dan menulis order ke database lokal. Tidak ada provider eksternal." : isLive ? "Server akan memvalidasi ulang seluruh harga, stok, ongkir, dan total. Jangan anggap pembayaran berhasil dari browser." : "Tombol ini hanya menguji alur frontend. Tidak ada order, reservasi, tarif provider, atau pembayaran yang dibuat."}</p>
-        <noscript><p className="mt-3 text-sm text-destructive">Aktifkan JavaScript untuk membaca Cart lokal dan meninjau checkout.</p></noscript>
+        <p className="mt-3 text-caption leading-[1.45] text-muted-foreground">{demoMode ? "Mode demo: harga, stok, ongkir, dan total diperiksa ulang, lalu pesanan disimpan di database lokal." : isLive ? "Harga, stok, ongkir, dan total diperiksa lagi saat pesanan dibuat. Pesanan dianggap lunas setelah pembayaran dikonfirmasi." : "Preview lokal: tombol ini hanya menguji alur. Tidak ada pesanan, tarif, atau pembayaran yang dibuat."}</p>
+        <noscript><p className="mt-3 text-ui text-destructive">Aktifkan JavaScript untuk membaca keranjang dan menyelesaikan checkout.</p></noscript>
       </aside>
     </form>
   );

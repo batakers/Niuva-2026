@@ -57,14 +57,16 @@ export function FormField({
     return null;
   }
 
+  const typedControl = fieldControl as React.ReactElement<FieldControlProps>;
   const enhancedControl = React.cloneElement(
-    fieldControl as React.ReactElement<FieldControlProps>,
+    typedControl,
     {
       id,
       "aria-describedby": describedBy,
       "aria-invalid": error ? true : undefined,
       disabled: disabled || undefined,
-      readOnly: variant === "readOnly" || undefined,
+      // Keep a control's own readOnly: account-sourced checkout fields must stay read-only.
+      readOnly: variant === "readOnly" || typedControl.props.readOnly || undefined,
     },
   );
 

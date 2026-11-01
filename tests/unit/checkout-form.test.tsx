@@ -209,9 +209,9 @@ describe("checkout live server flow", () => {
     fireEvent.click(screen.getByRole("radio", { name: /Jalur Express/ }));
     fireEvent.submit(form);
 
-    await screen.findByText("Checkout tersimpan, pembayaran menunggu.");
-    expect(screen.getByText(/Order ORD-20260914-ABCDEFGH/)).toBeVisible();
-    expect(screen.getByRole("link", { name: "Lihat status order" })).toHaveAttribute("href", "/orders/order-status-token");
+    await screen.findByText("Pesanan tersimpan, menunggu pembayaran.");
+    expect(screen.getByText(/Pesanan ORD-20260914-ABCDEFGH/)).toBeVisible();
+    expect(screen.getByRole("link", { name: "Lihat status pesanan" })).toHaveAttribute("href", "/orders/order-status-token");
     expect(screen.queryByText("snap-token-that-never-renders")).not.toBeInTheDocument();
     expect(calls.map(({ method, url }) => `${method ?? "GET"} ${url}`)).toEqual([
       "POST /api/shipping/rates",
@@ -273,12 +273,12 @@ describe("checkout live server flow", () => {
     fireEvent.click(screen.getByRole("radio", { name: /Jalur Express/ }));
     fireEvent.submit(form);
 
-    await screen.findByText("Checkout tersimpan, pembayaran menunggu.");
+    await screen.findByText("Pesanan tersimpan, menunggu pembayaran.");
     expect(screen.getByRole("link", { name: "Buka pembayaran sandbox" })).toHaveAttribute(
       "href",
       "https://payment.example.test/retry",
     );
-    expect(screen.getByRole("link", { name: "Lihat status order" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Lihat status pesanan" })).toHaveAttribute(
       "href",
       "/orders/recovered-order-status-token",
     );
@@ -344,7 +344,7 @@ describe("checkout live server flow", () => {
     fireEvent.click(screen.getByRole("radio", { name: /Jalur Express/ }));
     fireEvent.submit(form);
 
-    await screen.findByText("Checkout belum dapat dibuat.");
+    await screen.findByText("Pesanan belum dapat dibuat.");
     expect(screen.queryByText("provider-token")).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Buka pembayaran sandbox" })).not.toBeInTheDocument();
   });

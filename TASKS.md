@@ -2132,10 +2132,45 @@ belum ada yang dikerjakan.
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
 
+### T48 — Keranjang dan checkout, 2026-11-01
+
+Branch `claude/redesign-commerce-checkout` dari `main@5de8a65`; potongan kedua
+T48, atas persetujuan Owner ("Ya, lanjut T48").
+
+- **Keranjang:** judul "Keranjang" dan satu kalimat, lalu isi keranjang di satu
+  permukaan putih bergaris hairline: foto varian (dari kaitan T53, cadangan foto
+  sampul), kategori, nama yang menaut ke detail produk, varian, total baris dan
+  harga per barang, jumlah, stok, dan "Hapus". Ringkasan di samping mulai `lg`:
+  subtotal, ongkir "Dihitung di checkout", dan "Lanjut ke checkout". Keranjang
+  kosong memakai panel maskot `brand-100` dengan "Lihat Toko". Label "Validation
+  ledger" dan penjelasan Browser/Checkout dilepas.
+- **Checkout:** tautan "Kembali ke keranjang", judul "Selesaikan pesanan", lalu
+  tiga langkah bernomor (Kontak pemesan, Alamat penerima, Opsi pengiriman) di
+  permukaan putih dan ringkasan pesanan dengan "Perkiraan total". Copy sistem
+  ("Authority ledger", Browser/Server/Provider, "order", "webhook") diganti
+  bahasa pelanggan ("pesanan", "Buat pesanan", "Lihat status pesanan"). Aturan
+  server, harga, ongkir, idempotensi, dan pembayaran tidak berubah.
+- **Perbaikan:** `FormField` tidak lagi menimpa `readOnly` milik kontrol, jadi
+  nama dan email akun di checkout (serta email akun di form MAKE) benar-benar
+  read-only seperti yang tertulis; server tetap memakai identitas sesi. Tautan
+  pemulihan checkout live tidak lagi menuju keranjang/Toko preview.
+- **Bukti lokal:** lint (0 error), typecheck, unit 137 file/1.528 test (termasuk
+  test regresi `readOnly`). Pemeriksaan Playwright terhadap dev server, 53/53
+  lulus: keranjang contoh 320–1440 (satu h1, tanpa overflow, tanpa error
+  console), total baris, jumlah, hapus, keranjang kosong, data rusak, item tak
+  dikenal, stok habis; checkout 320–1440 lewat route sementara yang tidak
+  di-commit (login Google dev mengarah ke Google sungguhan), field akun
+  read-only, ringkasan error menerima fokus, total Rp539.000, skenario
+  siap/menunggu, urutan Tab. Keranjang live di DB dev menampilkan foto varian.
+- **Belum:** checkout live dengan sesi Customer (E2E di CI), Custom 3D Print dan
+  workspace, halaman status/quote token; review visual Owner.
+
 ### T53 — kaitan foto ke varian, 2026-11-01
 
 Branch `claude/catalog-variant-photo` dari `main@edb975a` (setelah PR #107),
-atas persetujuan Owner ("Ya, setelah #107").
+atas persetujuan Owner ("Ya, setelah #107"). Merged ke `main` pada `5de8a65`
+(PR #108) setelah CI lulus pada percobaan ketiga; dua percobaan pertama
+terhenti di instal Chromium karena mirror apt runner tidak merespons.
 
 - **Data:** migration `20261101120000_product_variant_media` (kolom nullable,
   index, FK `ON DELETE SET NULL`); `catalog-seed.json` dibuat ulang dengan

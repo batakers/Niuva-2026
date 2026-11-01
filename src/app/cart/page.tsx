@@ -9,8 +9,8 @@ import { getServerCapabilities, isLocalDemoMode } from "@/lib/env/server";
 import { CartItems } from "./cart-items";
 
 export const metadata: Metadata = {
-  title: "Cart · Niuva",
-  description: "Tinjau pilihan produk ready-made sebelum melanjutkan ke checkout Customer.",
+  title: "Keranjang · Niuva",
+  description: "Periksa produk, varian, dan jumlahnya sebelum checkout di Niuva.",
 };
 
 type CartPageProps = {
@@ -54,20 +54,18 @@ export default async function CartPage({ searchParams }: CartPageProps) {
   return (
     <PublicShell functionalStatus={functionalStatus} scope="cart">
       <main id="main-content">
-        <section className="border-b border-border bg-card">
-          <div className="mx-auto max-w-public px-5 py-12 sm:px-8 sm:py-16">
-            <p className="text-sm font-medium text-brand-700">Cart</p>
-            <h1 className={`${type.heading.className} mt-4 max-w-4xl`}>Tinjau pilihan sebelum data diperiksa kembali.</h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground">
-              Cart ini menyimpan ID varian dan jumlah di browser. Harga, stok, ongkir, dan total final tetap harus diverifikasi server saat checkout.
-            </p>
-          </div>
-        </section>
+        {/* Commerce guide: a short heading, then the items and their summary. */}
+        <div className="mx-auto max-w-public px-5 pt-10 sm:px-12 sm:pt-14">
+          <h1 className={type.heading.className}>Keranjang</h1>
+          <p className="mt-4 max-w-[52ch] text-lead leading-[1.6]">Periksa produk dan jumlahnya. Harga, stok, dan ongkir dihitung lagi saat pesanan dibuat.</p>
+        </div>
 
-        <div className="mx-auto max-w-public px-5 py-10 sm:px-8 sm:py-14">
+        <div className="mx-auto max-w-public px-5 pb-20 pt-10 sm:px-12 sm:pb-28 sm:pt-12">
+          <CartItems demoMode={demoMode} products={products} catalogStatus={catalogStatus} liveEnabled={liveEnabled} previewEnabled={previewEnabled} />
+
           {process.env.NODE_ENV === "development" && !liveEnabled ? (
-            <aside aria-label="Preview cart" className="mb-8 rounded-lg border border-info-border bg-info-background p-4 text-info">
-              <p className="text-sm font-semibold">Preview lokal, data produk sintetis dan bukan inventory Niuva</p>
+            <aside aria-label="Preview keranjang" className="mt-12 rounded-[var(--radius-control)] border border-info-border bg-info-background p-4 text-info">
+              <p className="text-ui font-semibold">Preview lokal, data produk sintetis dan bukan inventory Niuva</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {[["examples", "Contoh"], ["empty", "Data produk kosong"], ["loading", "Data produk memuat"], ["error", "Data produk gagal"]].map(([value, label]) => (
                   <NiuvaLink key={value} href={`/cart?preview=${value}`} variant="outline" size="sm" className="min-h-11" aria-current={scenario === value ? "page" : undefined}>{label}</NiuvaLink>
@@ -75,8 +73,6 @@ export default async function CartPage({ searchParams }: CartPageProps) {
               </div>
             </aside>
           ) : null}
-
-          <CartItems demoMode={demoMode} products={products} catalogStatus={catalogStatus} liveEnabled={liveEnabled} previewEnabled={previewEnabled} />
         </div>
       </main>
     </PublicShell>
