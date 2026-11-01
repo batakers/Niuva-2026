@@ -51,10 +51,10 @@ test("Owner navigates search, activity, account and deactivates an Admin", async
   }
   await page.keyboard.press("Control+k");
   await expect(page.getByRole("searchbox", { name: "Cari di Admin" })).toBeFocused();
-  await page.getByRole("searchbox", { name: "Cari di Admin" }).fill("Orders");
+  await page.getByRole("searchbox", { name: "Cari di Admin" }).fill("Pesanan");
   await page.getByRole("searchbox", { name: "Cari di Admin" }).press("Enter");
   await expect(page.getByRole("heading", { name: "Pencarian global" })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Orders.*Halaman Admin/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Pesanan.*Halaman Admin/ })).toBeVisible();
   if (process.env.NIUVA_ADMIN_UX_EVIDENCE === "1") await page.screenshot({ path: resolve(".local/admin-dashboard-ux/captures/search-1440.png"), fullPage: true });
   await page.getByRole("button", { name: /Buka notifikasi/ }).click();
   await page.route(url => url.pathname === "/admin/activity", async route => {

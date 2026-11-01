@@ -23,7 +23,7 @@ test("Admin reads a customer and returns from its legitimate order", async ({ pa
   await expect(page.getByRole("heading", { name: "Customer", exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Customer Browser Fixture", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Riwayat pekerjaan" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Kembali ke Customers" })).toHaveAttribute("href", list);
+  await expect(page.getByRole("link", { name: "Kembali ke Customer" })).toHaveAttribute("href", list);
   await page.getByRole("link", { name: order.orderNumber, exact: true }).click();
   await expect(page.getByRole("heading", { name: "Detail pesanan", exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Kembali ke Riwayat customer", exact: true }).click();
