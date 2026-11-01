@@ -1,6 +1,11 @@
 import "server-only";
 
 import type { OrderStatus } from "@/generated/prisma/client";
+import {
+  orderStatusDescription,
+  orderStatusLabel,
+  shipmentStatusLabel,
+} from "@/features/customer-status/labels";
 import { OrderStatusService, type PublicOrderStatus } from "@/modules/order/status-service";
 
 export type OrderStatusPreviewScenario =
@@ -146,8 +151,6 @@ export async function getLiveOrderStatus(input: Readonly<{
 
 function toOrderStatusPreview(order: PublicOrderStatus): OrderStatusPreview {
   const custom = order.orderType === "CUSTOM_PRINT";
-  const stages = custom ? customStages : retailStages;
-  const currentIndex = currentStageIndex(order.status, custom);
   const items = order.items.map((item) => ({
     label: item.nameSnapshot,
     quantity: item.quantity,
@@ -160,50 +163,14 @@ function toOrderStatusPreview(order: PublicOrderStatus): OrderStatusPreview {
   const total = publicCurrencyFormatter.format(
     BigInt(toIntegerString(order.grandTotalRp ?? fallbackTotal)),
   );
-  const cancelled = order.status === "CANCELLED";
-  const steps = cancelled
-    ? [
-        ...stages.map((stage) => ({
-          description: stage.description,
-          id: stage.id,
-          label: stage.label,
-          state: "pending" as const,
-        })),
-        {
-          description: "Pesanan dihentikan.",
-          id: "cancelled",
-          label: "Order dibatalkan",
-          state: "cancelled" as const,
-          ...(order.cancelledAt === null
-            ? {}
-            : { timestamp: publicDateFormatter.format(order.cancelledAt) }),
-        },
-      ]
-    : stages.map((stage, index) => ({
-        description: stage.description,
-        id: stage.id,
-        label: stage.label,
-        state:
-          index < currentIndex
-            ? ("completed" as const)
-            : index === currentIndex
-              ? ("current" as const)
-              : ("pending" as const),
-        ...(index === 0 ? { timestamp: publicDateFormatter.format(order.createdAt) } : {}),
-        ...(stage.id === "paid" && order.paidAt !== null
-          ? { timestamp: publicDateFormatter.format(order.paidAt) }
-          : {}),
-        ...(stage.id === "completed" && order.completedAt !== null
-          ? { timestamp: publicDateFormatter.format(order.completedAt) }
-          : {}),
-      }));
+  const steps = buildOrderSteps(order);
 
   return {
     createdAt: publicDateFormatter.format(order.createdAt),
-    currentDescription: statusDescription(order.status, custom),
-    currentLabel: statusLabel(order.status, custom),
+    currentDescription: orderStatusDescription(order.status, custom),
+    currentLabel: orderStatusLabel(order.status, custom),
     items,
-    nextAction: nextAction(order.status, custom),
+    nextAction: orderNextAction(order.status, custom),
     orderNumber: order.orderNumber,
     orderType: order.orderType,
     ...(order.payment === undefined
@@ -219,7 +186,7 @@ function toOrderStatusPreview(order: PublicOrderStatus): OrderStatusPreview {
     paidAt: order.paidAt === null ? null : publicDateFormatter.format(order.paidAt),
     shipment: order.shipments[0]
       ? {
-          status: order.shipments[0].status,
+          status: shipmentStatusLabel(order.shipments[0].status),
           trackingNumber: order.shipments[0].trackingNumber,
         }
       : null,
@@ -228,26 +195,75 @@ function toOrderStatusPreview(order: PublicOrderStatus): OrderStatusPreview {
   };
 }
 
+/** Timeline steps for one stored order; the token status page and the Customer account share them. */
+export function buildOrderSteps(order: Pick<
+  PublicOrderStatus,
+  "cancelledAt" | "completedAt" | "createdAt" | "orderType" | "paidAt" | "status"
+>): OrderStatusPreview["steps"] {
+  const custom = order.orderType === "CUSTOM_PRINT";
+  const stages = custom ? customStages : retailStages;
+
+  if (order.status === "CANCELLED") {
+    return [
+      ...stages.map((stage) => ({
+        description: stage.description,
+        id: stage.id,
+        label: stage.label,
+        state: "pending" as const,
+      })),
+      {
+        description: "Pesanan dihentikan.",
+        id: "cancelled",
+        label: "Pesanan dibatalkan",
+        state: "cancelled" as const,
+        ...(order.cancelledAt === null
+          ? {}
+          : { timestamp: publicDateFormatter.format(order.cancelledAt) }),
+      },
+    ];
+  }
+
+  const currentIndex = currentStageIndex(order.status, custom);
+  return stages.map((stage, index) => ({
+    description: stage.description,
+    id: stage.id,
+    label: stage.label,
+    state:
+      index < currentIndex
+        ? ("completed" as const)
+        : index === currentIndex
+          ? ("current" as const)
+          : ("pending" as const),
+    ...(index === 0 ? { timestamp: publicDateFormatter.format(order.createdAt) } : {}),
+    ...(stage.id === "paid" && order.paidAt !== null
+      ? { timestamp: publicDateFormatter.format(order.paidAt) }
+      : {}),
+    ...(stage.id === "completed" && order.completedAt !== null
+      ? { timestamp: publicDateFormatter.format(order.completedAt) }
+      : {}),
+  }));
+}
+
 type Stage = Readonly<{ description: string; id: string; label: string }>;
 
 const retailStages: readonly Stage[] = [
-  { description: "Order tercatat dan menunggu pembayaran.", id: "payment", label: "Pembayaran" },
+  { description: "Pesanan tercatat dan menunggu pembayaran.", id: "payment", label: "Pembayaran" },
   { description: "Pembayaran sudah dikonfirmasi.", id: "paid", label: "Pembayaran terverifikasi" },
   { description: "Pesanan sedang diproses.", id: "processing", label: "Diproses" },
   { description: "Paket siap diserahkan ke kurir.", id: "ready-to-ship", label: "Siap dikirim" },
   { description: "Paket telah diserahkan ke kurir.", id: "shipped", label: "Dikirim" },
-  { description: "Order selesai.", id: "completed", label: "Selesai" },
+  { description: "Pesanan selesai.", id: "completed", label: "Selesai" },
 ];
 
 const customStages: readonly Stage[] = [
-  { description: "Order custom menunggu pembayaran.", id: "payment", label: "Pembayaran" },
+  { description: "Pesanan custom menunggu pembayaran.", id: "payment", label: "Pembayaran" },
   { description: "Pembayaran sudah dikonfirmasi.", id: "paid", label: "Pembayaran terverifikasi" },
   { description: "Pekerjaan masuk produksi.", id: "production", label: "Produksi" },
   { description: "Finishing dan quality control berjalan.", id: "qc", label: "Finishing & QC" },
   { description: "Paket final diukur dan menunggu pembayaran pengiriman.", id: "shipping-payment", label: "Pengukuran paket" },
   { description: "Paket siap diserahkan ke kurir.", id: "ready-to-ship", label: "Siap dikirim" },
   { description: "Paket telah diserahkan ke kurir.", id: "shipped", label: "Dikirim" },
-  { description: "Order selesai.", id: "completed", label: "Selesai" },
+  { description: "Pesanan selesai.", id: "completed", label: "Selesai" },
 ];
 
 function currentStageIndex(status: OrderStatus, custom: boolean): number {
@@ -276,36 +292,8 @@ function currentStageIndex(status: OrderStatus, custom: boolean): number {
   return indexByStatus[status] ?? 0;
 }
 
-function statusLabel(status: OrderStatus, custom: boolean): string {
-  if (status === "CANCELLED") return "Order dibatalkan";
-  if (status === "PENDING_PAYMENT" || status === "WAITING_PAYMENT") return "Menunggu pembayaran";
-  if (status === "PAID") return "Pembayaran terverifikasi";
-  if (status === "PROCESSING") return "Sedang diproses";
-  if (status === "IN_PRODUCTION") return "Sedang diproduksi";
-  if (status === "FINISHING_QC") return "Finishing & QC";
-  if (status === "WAITING_SHIPPING_PAYMENT") return "Menunggu pembayaran pengiriman";
-  if (status === "READY_TO_SHIP") return "Siap dikirim";
-  if (status === "SHIPPED") return "Dikirim";
-  if (status === "COMPLETED") return "Selesai";
-  if (status === "UNDER_REVIEW" || status === "WAITING_FOR_APPROVAL") return custom ? "Menunggu persetujuan" : "Sedang ditinjau";
-  if (status === "SUBMITTED") return "Diterima";
-  return "Status sedang diproses";
-}
-
-function statusDescription(status: OrderStatus, custom: boolean): string {
-  if (status === "CANCELLED") return "Pesanan ini dibatalkan. Hubungi Niuva bila Anda membutuhkan penjelasan.";
-  if (status === "PENDING_PAYMENT" || status === "WAITING_PAYMENT") return "Pesanan tercatat dan menunggu pembayaran.";
-  if (status === "PAID") return custom ? "Pembayaran terverifikasi. Pekerjaan custom akan bergerak ke produksi." : "Pembayaran terverifikasi. Pesanan segera masuk proses.";
-  if (status === "PROCESSING" || status === "IN_PRODUCTION") return "Tim Niuva sedang memproses pesanan Anda.";
-  if (status === "FINISHING_QC") return "Pesanan custom sedang di-finishing dan diperiksa kualitasnya.";
-  if (status === "WAITING_SHIPPING_PAYMENT") return "Paket final sudah diukur. Pembayaran pengiriman menunggu instruksi resmi Niuva.";
-  if (status === "READY_TO_SHIP") return "Paket siap dikirim setelah detail pengiriman terkonfirmasi.";
-  if (status === "SHIPPED") return "Paket sudah diserahkan ke kurir.";
-  if (status === "COMPLETED") return "Pesanan sudah selesai.";
-  return "Status pesanan sedang diperbarui.";
-}
-
-function nextAction(status: OrderStatus, custom: boolean): OrderStatusPreview["nextAction"] {
+/** What the Customer can expect next for a stored status; shared with the Customer account. */
+export function orderNextAction(status: OrderStatus, custom: boolean): OrderStatusPreview["nextAction"] {
   if (status === "PENDING_PAYMENT" || status === "WAITING_PAYMENT") {
     return {
       description: "Bayar hanya melalui instruksi resmi Niuva. Status berubah setelah pembayaran dikonfirmasi.",
@@ -331,7 +319,7 @@ function nextAction(status: OrderStatus, custom: boolean): OrderStatusPreview["n
     };
   }
   if (status === "COMPLETED") {
-    return { description: "Tidak ada tindakan berikutnya pada status ini.", kind: "none", title: "Order selesai", tone: "success" };
+    return { description: "Tidak ada tindakan berikutnya pada status ini.", kind: "none", title: "Pesanan selesai", tone: "success" };
   }
   return {
     description: custom ? "Tim Niuva memperbarui status saat tahap custom berikutnya dimulai." : "Tim Niuva memperbarui status saat pesanan masuk tahap berikutnya.",

@@ -30,21 +30,21 @@ test("custom states follow quote, production, and final shipping payment order",
 
 test("shipping and completed scenarios reveal only safe shipment details", async ({ page }) => {
   await page.goto(`${previewUrl}&state=retail-shipped`);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Order dalam pengiriman");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Pesanan dalam pengiriman");
   await expect(page.getByText("NVA-DEMO-4821")).toBeVisible();
   await expect(page.getByText("Nomor lacak ini sintetis dan tidak membuka situs provider.")).toBeVisible();
 
   await page.goto(`${previewUrl}&state=retail-completed`);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Order selesai");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Pesanan selesai");
   await expect(page.getByText("Tidak ada tindakan lanjutan", { exact: true })).toBeVisible();
 });
 
 test("late payment stays cancelled and requires full refund reconciliation", async ({ page }) => {
   await page.goto(`${previewUrl}&state=late-payment`);
 
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Refund penuh sedang direkonsiliasi");
-  await expect(page.getByText("Order tetap dibatalkan", { exact: false })).toBeVisible();
-  await expect(page.getByText("Jangan melakukan pembayaran ulang. Siapkan nomor order saat menghubungi Niuva melalui kanal konfirmasi Anda.")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Refund penuh sedang diproses");
+  await expect(page.getByText("Pesanan tetap dibatalkan", { exact: false })).toBeVisible();
+  await expect(page.getByText("Jangan melakukan pembayaran ulang. Siapkan nomor pesanan saat menghubungi Niuva melalui kanal konfirmasi Anda.")).toBeVisible();
   await expect(page.getByText("Stok atau pemenuhan tidak dilanjutkan.")).toBeVisible();
 });
 
@@ -63,13 +63,13 @@ test("token and service failures reveal no order projection", async ({ page }) =
 
   const response = await page.goto("/orders/token-tidak-valid?preview=examples");
   expect(response?.status()).toBe(404);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Status order tidak dapat ditampilkan.");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Status pesanan tidak dapat ditampilkan.");
   await expect(page.getByText("ORD-260907-R4K8")).toHaveCount(0);
 });
 
 test("loading remains non-authoritative", async ({ page }) => {
   await page.goto(`${previewUrl}&state=loading`);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Status order sedang diperiksa.");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Status pesanan sedang diperiksa.");
   await expect(page.getByText("ORD-260907-R4K8")).toHaveCount(0);
   await expect(page.getByRole("main").getByRole("button")).toHaveCount(0);
 });

@@ -33,7 +33,7 @@ test("register links to existing Google Customer login, opens Account, and logou
   await page.getByRole("link", { name: "Lanjutkan dengan Google" }).click();
 
   await expect(page).toHaveURL(/\/account$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Pekerjaan dan order Anda." })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Pekerjaan dan pesanan Anda." })).toBeVisible();
   await expect(page.getByText("demo-customer@example.test")).toBeVisible();
 
   const [logoutResponse] = await Promise.all([
@@ -147,7 +147,7 @@ test("OAuth remains a native navigation when JavaScript is unavailable", async (
     await page.goto("/register?returnTo=/account");
     await page.getByRole("link", { name: "Lanjutkan dengan Google" }).click();
     await expect(page).toHaveURL(/\/account$/);
-    await expect(page.getByRole("heading", { level: 1, name: "Pekerjaan dan order Anda." })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Pekerjaan dan pesanan Anda." })).toBeVisible();
   } finally {
     await context.close();
   }

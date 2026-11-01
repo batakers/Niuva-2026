@@ -7,7 +7,7 @@ import { CustomerLogoutButton } from "@/components/niuva/customer-logout-button"
 
 describe("Customer controls that require client event handlers", () => {
   it.each([
-    ["MAKE quote decisions", <QuoteDecision key="make" requestId="request" quoteId="quote" />],
+    ["MAKE quote decisions", <QuoteDecision decidable key="make" requestId="request" quoteId="quote" />],
     ["logout", <CustomerLogoutButton key="logout" />],
   ])("keeps %s disabled in server HTML and enables it after hydration", async (_, element) => {
     const container = document.createElement("div");

@@ -11,14 +11,14 @@ export async function loginCustomer(page: Page): Promise<void> {
     };
     await page.context().addCookies(saved.cookies);
     await page.goto("/account");
-    if (await page.getByRole("heading", { level: 1, name: "Pekerjaan dan order Anda." }).isVisible()) return;
+    if (await page.getByRole("heading", { level: 1, name: "Pekerjaan dan pesanan Anda." }).isVisible()) return;
   } catch {
     // The first test creates the local mock Customer session.
   }
   await page.goto("/register?returnTo=/account");
   await page.getByRole("link", { name: "Lanjutkan dengan Google" }).click();
   await expect(page).toHaveURL(/\/account$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Pekerjaan dan order Anda." })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Pekerjaan dan pesanan Anda." })).toBeVisible();
   await mkdir(join(process.cwd(), "test-results"), { recursive: true });
   await page.context().storageState({ path: statePath });
 }

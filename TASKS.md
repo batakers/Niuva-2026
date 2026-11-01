@@ -206,7 +206,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T46 | M5a | IN_PROGRESS | Fondasi design system baru | T45; pilihan arah Q19 | Arah terpilih diterapkan ke token, tipe, motion, primitive `components/ui`, shell publik/auth/sistem/Admin, status label, format Rupiah, timeline dan page header bersama; tanpa dependency npm baru; URL, API, data, auth, harga dan pembayaran tetap. Lint/typecheck/test/E2E/build dan capture lokal. |
 | T47 | M5a | DONE | Redesign Company | T46 | `/`, `/services` dan detail, `/projects` dan detail, legal, 404 sesuai sitemap/flow; satu CTA utama per halaman; tanpa klaim baru; DESIGN.md dan panduan Company ditulis ulang dari hasil build. Capture 320–1440, keyboard/fokus, zoom 200%, reduced motion, kontras. Selesai 1 Nov 2026 dengan bukti lokal dan CI; review visual Owner baru untuk Beranda, route lain menunggu tinjauan terpisah. |
 | T48 | M5a | DONE | Redesign Commerce dan MAKE | T46 | Toko, produk, keranjang, checkout, Custom 3D Print dan workspace dua mode, status/quote token; copy sistem diganti bahasa pelanggan; kalimat MAKE yang dilindungi tetap; aturan server, harga dan pembayaran tidak berubah. Gate lokal dan capture. Selesai 1 Nov 2026 lewat PR #107, #110, #111, #112, dan #113 dengan bukti lokal dan CI; review visual Owner menunggu. Label status dari data dan detail MAKE/order akun lanjut di T49. |
-| T49 | M5a | TODO | Redesign Customer dan auth | T46, T48 | Hub Akun, detail MAKE/order (konfirmasi terima quote, timeline, Rupiah dan label status konsisten), refund, privasi, enam halaman auth dalam satu frame; allowlist dan gate auth tidak berubah. Gate lokal dan capture. |
+| T49 | M5a | IN_PROGRESS | Redesign Customer dan auth | T46, T48 | Hub Akun, detail MAKE/order (konfirmasi terima quote, timeline, Rupiah dan label status konsisten), refund, privasi, enam halaman auth dalam satu frame; allowlist dan gate auth tidak berubah. Gate lokal dan capture. |
 | T50 | M5a | TODO | Redesign Admin | T46 | Shell, Ringkasan, daftar, detail, review Custom Print, keuangan, produk, tarif, konten, laporan, akses/privasi dan state error/denied; Card, status, tabel dan label Indonesia terkonsolidasi; permission dan motion yang disetujui tetap. Gate lokal dan capture. |
 | T51 | M5a | TODO | Motion pass global | T47–T50 | Keputusan Owner 31 Okt: motion inti (adegan, pergantian panel) dan umpan balik interaksi dibuat per halaman di T47–T50; pass ini menyusul setelah semua halaman jadi. Durasi dan easing seragam memakai token DESIGN.md, paling banyak satu gerak khas per halaman, keputusan animasi masuk per seksi (DESIGN.md melarang scroll reveal sebagai hiasan), reduced motion dan WCAG 2.2.2 di semua route, kinerja di ponsel. Capture dan rekaman lokal. |
 | T53 | M4 | IN_PROGRESS | Kaitan foto ke varian | T31; keputusan Owner 1 Nov | `ProductVariant.mediaId` nullable (banyak varian boleh satu foto, `ON DELETE SET NULL`) lewat migration baru; importer/seed mengisi dari foto varian sumber; editor varian Admin memilih foto dari galeri produk yang sama dan server menolak foto produk lain; simpan galeri mempertahankan foto yang tetap dipakai; halaman produk memakai kaitan ini dengan alt text sebagai cadangan. Staging: `db:deploy` dan impor ulang katalog hanya atas instruksi Owner. |
@@ -2131,6 +2131,52 @@ belum ada yang dikerjakan.
   versi gratis bernilai Rp0. Domain tidak perlu dibeli lagi; biaya
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
+
+### T49 — Akun, detail Custom 3D Print, dan detail pesanan, 2026-11-01
+
+Branch `claude/redesign-customer-account` dari `main@a03f88c` (setelah PR #113);
+potongan pertama T49 ("#113 sudah merge").
+
+- **Hub Akun:** judul display "Pekerjaan dan pesanan Anda.", profil satu baris
+  (nama, email terverifikasi, Pusat privasi, Logout), lalu daftar Custom 3D
+  Print dan riwayat pesanan sebagai baris berhairline yang menaut ke detail.
+  Status tampil sebagai label; warna amber hanya bila langkah berikutnya menunggu
+  Customer. Form tautkan pengajuan lama ada di samping mulai `lg`. Sebelumnya
+  status pengajuan dan quote tampil sebagai enum mentah (`QUOTE_SENT`, `SENT`).
+- **Detail Custom 3D Print:** judul berisi status, strip fakta, quote lebih dulu
+  bila sudah ada, lalu estimasi dan simulasi. Rupiah, berat ("12,5 g"), durasi
+  ("15 menit"), dan sumber filamen ditulis untuk pelanggan; sebelumnya "Rp 25000",
+  "900 detik", dan `NIUVA_STOCK`. Terima dan tolak quote kini memakai konfirmasi
+  seperti halaman quote bertoken (fokus, Escape, "Kembali"), dan hasil keputusan
+  serta tautan pembayaran tetap tampil setelah halaman dimuat ulang. Perkiraan
+  ongkir pindah ke samping dengan copy tanpa istilah sistem.
+- **Detail pesanan:** judul berisi status, strip fakta, timeline yang sama dengan
+  status pesanan bertoken, lalu langkah berikutnya (atau "Lanjutkan pembayaran"),
+  rincian, pembayaran, pengiriman, dan refund di samping. Query akun kini juga
+  membaca `paidAt`, `completedAt`, `cancelledAt`, dan tujuan pembayaran (baca saja).
+- **Label status bersama:** `src/features/customer-status/labels.ts` menjadi satu
+  sumber label pesanan, pengajuan, quote, pembayaran, pengiriman, dan jenis
+  pesanan untuk halaman bertoken dan akun; "Order" diganti "pesanan" di label,
+  data preview, dan dua judul halaman status bertoken. Formatter Rupiah, gram,
+  dan durasi pindah ke `src/modules/shared/format.ts` (dipakai juga oleh
+  `QuoteService`). Status pengiriman di halaman bertoken tidak lagi mentah.
+- **Test:** E2E akun, login, dan status pesanan mengikuti judul dan copy baru;
+  menolak quote di E2E akun kini melewati konfirmasi; test baru untuk formatter
+  dan label, serta test tampilan Akun: email tetap teks tersendiri dan tidak
+  diulang saat nama kosong (dibaca E2E login email tanpa JavaScript). Tidak ada
+  assertion yang dihapus.
+- **Bukti lokal:** lint (0 error), typecheck, unit 138 file/1.536 test pada run
+  penuh dengan tiga test timing (hash scrypt dan pemindaian Server Action) yang
+  timeout di bawah beban lalu lulus saat dijalankan sendiri; backend terkait 7
+  file/41 test; E2E `order-status`, `quote-review`, dan `system-pages` terhadap
+  dev server 25/25; pemeriksaan quote dan status bertoken T48 58/58. Pemeriksaan
+  Playwright 70/70 lewat route sementara yang tidak di-commit (halaman akun butuh
+  login Customer): satu h1, tanpa enum mentah, konfirmasi quote dengan Enter,
+  Escape, "Kembali", hasil gagal dan berhasil dengan API tiruan, perkiraan ongkir,
+  empat state pengajuan dan lima state pesanan, tanpa overflow 320–1440, tanpa
+  error console. Capture desktop dan ponsel.
+- **Belum:** E2E akun dengan sesi Customer (di CI), refund dan privasi, enam
+  halaman auth (potongan berikutnya T49), review visual Owner.
 
 ### T48 — Quote dan status pesanan, 2026-11-01
 

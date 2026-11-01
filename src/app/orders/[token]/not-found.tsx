@@ -7,7 +7,7 @@ export default function OrderStatusNotFound() {
   return (
     <PublicShell scope="order-status">
       <main className="mx-auto max-w-public px-5 pt-10 sm:px-12 sm:pt-14" id="main-content">
-        <h1 className={`${type.display.className} max-w-3xl text-balance`}>Status order tidak dapat ditampilkan.</h1>
+        <h1 className={`${type.display.className} max-w-3xl text-balance`}>Status pesanan tidak dapat ditampilkan.</h1>
         <div className="mt-8 max-w-2xl">
           <StatusNotice
             action={<NiuvaLink className="min-h-11" href="/" variant="outline">Kembali ke beranda</NiuvaLink>}
