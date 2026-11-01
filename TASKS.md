@@ -32,7 +32,7 @@ ada di papan ini; pekerjaan baru masuk tabel task, bukan file lain.
 | | T09 | O | `CUSTOMER_AUTH_CLEANUP` lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
 | | T23, T25, T35 | O | Cek metode dan fitur refund di dashboard Midtrans sandbox (Owner mengecek, 31 Okt); grant `refund` sudah ada | Q1 |
 | Redesign | T46 → T47 | A | Beranda di `main` dan diterima Owner; Layanan, Proyek, dan detailnya selesai lokal di `claude/redesign-company-pages`; sisa legal dan 404 | Postgres lokal untuk E2E (Owner) |
-| Redesign | T45–T51, T54, T55 | A | Redesign M5a, motion lanjutan, dan pesan status v2 selesai 2 Nov (bukti lokal; CI di PR); review visual Owner per route masih terbuka | — |
+| Redesign | T45–T51, T54–T56 | A | Redesign M5a, motion lanjutan, pesan status v2, dan ukuran bernama di `cn()` selesai 2 Nov (bukti lokal; CI di PR); review visual Owner per route masih terbuka | — |
 | | T36 | O + A | UAT operasi Admin di UI baru | T50 |
 | Berantai | T34 → T08 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim; lalu retensi file pada berkas MAKE | T33 dulu |
 | | T14 | O + A | Privacy hosted dengan sesi Customer penguji; grant sudah ter-deploy (#89) | Sesi Customer Owner |
@@ -211,6 +211,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T51 | M5a | DONE | Motion pass global | T47–T50 | Keputusan Owner 31 Okt: motion inti (adegan, pergantian panel) dan umpan balik interaksi dibuat per halaman di T47–T50; pass ini menyusul setelah semua halaman jadi. Durasi dan easing seragam memakai token DESIGN.md, paling banyak satu gerak khas per halaman, keputusan animasi masuk per seksi (DESIGN.md melarang scroll reveal sebagai hiasan), reduced motion dan WCAG 2.2.2 di semua route, kinerja di ponsel. Capture dan rekaman lokal. Selesai 2 Nov 2026 dengan bukti lokal dan CI; Beranda mempertahankan adegan maskot yang diterima Owner sebagai satu bahasa gerak. |
 | T54 | M5a | DONE | Motion lanjutan dari sweep peluang | T51 | Empat saran sweep 2 Nov yang diminta Owner dikerjakan semua: tautan ke seksi di halaman yang sama menggulir halus hanya pada halaman yang ikut (`data-smooth-anchors`) sementara pindah halaman tetap langsung ke atas; panel konfirmasi quote dan notifikasi hasil aksi masuk 220ms; menu publik di bawah 1280px turun 150ms; "Lihat proyek terkait" mendarat di bawah header. Reduced motion tetap mati. Rencana di `plans/002`–`005`. Selesai 2 Nov 2026 dengan bukti lokal. |
 | T55 | M5a | DONE | Pesan status v2 dan produk satu varian | T54 | Atas permintaan Owner 2 Nov ("Ya, kerjakan"): `StatusNotice` versi v2 (permukaan tonal tenang, judul `foreground`, deskripsi `muted-foreground`, label nada hanya untuk pembaca layar, ukuran `inline`, `role="note"`, `children`); sekitar 30 kotak pesan buatan sendiri dan `Alert` mentah di publik, Akun, dan Admin dipindah ke komponen itu; konfirmasi tambah ke keranjang menjadi satu baris; produk satu varian terpilih otomatis tanpa label "Default" di produk, keranjang, dan checkout. Selesai 2 Nov 2026 dengan bukti lokal. |
+| T56 | M5a | DONE | Ukuran bernama di `cn()` | T55 | Keputusan Owner 2 Nov (pilihan B, "Ikuti DESIGN.md"): `cn()` mengenal `text-caption`/`text-ui`/`text-lead` sebagai ukuran font sehingga tidak lagi terbuang oleh kelas warna. Akibatnya label tombol 15px, label status timeline pesanan 13,5px, kualifier proyek `muted-foreground`, deskripsi Card 15px, serta badge status, header tabel, dan breadcrumb Admin 13,5px. Perbandingan sebelum/sesudah di 19 route publik dan 24 halaman Admin. Selesai 2 Nov 2026 dengan bukti lokal; review visual Owner menunggu. |
 | T53 | M4 | IN_PROGRESS | Kaitan foto ke varian | T31; keputusan Owner 1 Nov | `ProductVariant.mediaId` nullable (banyak varian boleh satu foto, `ON DELETE SET NULL`) lewat migration baru; importer/seed mengisi dari foto varian sumber; editor varian Admin memilih foto dari galeri produk yang sama dan server menolak foto produk lain; simpan galeri mempertahankan foto yang tetap dipakai; halaman produk memakai kaitan ini dengan alt text sebagai cadangan. Staging: `db:deploy` dan impor ulang katalog hanya atas instruksi Owner. |
 
 ## Backlog setelah v1
@@ -2133,6 +2134,59 @@ belum ada yang dikerjakan.
   versi gratis bernilai Rp0. Domain tidak perlu dibeli lagi; biaya
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
+
+### T56 — ukuran bernama di `cn()`, 2026-11-02
+
+Branch `claude/cn-named-sizes` dari `claude/notice-v2` (PR #120 belum di-merge
+saat itu), karena temuan `cn()` dan entri Known Gaps-nya berasal dari T55.
+Owner memilih B ("Ikuti DESIGN.md") pada 2 Nov. Pilihan A mempertahankan
+ukuran lama yang selama ini tampil.
+
+- **Perbaikan:**
+  - `src/lib/utils.ts` memakai `extendTailwindMerge` dengan `theme.text`
+    `caption`, `ui`, dan `lead`;
+  - ukuran bernama kini bertahan di samping kelas warna, dan ukuran Tailwind
+    yang ditulis sesudahnya (`text-sm` tombol kecil) menggantikannya;
+  - komentar workaround di `StatusNotice` dihapus;
+  - DESIGN.md: entri Known Gaps `cn()` dihapus, Named Size Rule mencatat
+    perilaku ini dan meminta ukuran bernama baru didaftarkan di `cn()`.
+- **Perbandingan sebelum/sesudah:**
+  - metode: 1280px, reduced motion; ukuran, warna, weight, dan line-height
+    setiap elemen bertulisan, dicocokkan per tag + teks + urutan; DB test
+    terisolasi `niuva_variant_media_test`;
+  - publik, 19 route (Beranda, Layanan dan detail, Proyek dan detail, Toko,
+    produk, keranjang, Custom 3D Print dan pengajuan, status pesanan dua state,
+    quote, legal, login, registrasi, lupa password, 404): 83 dari 1.300 elemen
+    berubah, dan semuanya hasil yang diharapkan:
+    - 48 label tombol 16px menjadi 15px;
+    - 17 label status timeline pesanan 16px menjadi 13,5px;
+    - 17 kualifier `ProjectTitle` (Beranda, Proyek, detail layanan dan proyek)
+      dari `foreground` menjadi `muted-foreground`;
+    - 1 tombol di dalam notice Toko 14px menjadi 15px;
+  - Admin dengan sesi Owner sungguhan, 19 daftar dan 5 detail: 465 dari 5.087
+    elemen berubah, tanpa perubahan warna:
+    - 209 `AdminStatusBadge`, 90 header tabel, dan 61 breadcrumb 14px menjadi
+      13,5px;
+    - 103 label tombol menjadi 15px (sebelumnya 16px atau 14px);
+    - 2 `CardDescription` 14px menjadi 15px;
+  - 25 baris Admin tidak berpasangan: stempel waktu dan jumlah akun Admin yang
+    berubah antarrun;
+  - capture sebelum/sesudah hero Beranda, daftar proyek Beranda, dan timeline
+    pesanan dikirim ke Owner.
+- **Bukti lokal:**
+  - lint 0 error; typecheck lulus;
+  - unit 140 file, 1.549 test lulus, termasuk test baru
+    `tests/unit/class-merge.test.ts`;
+  - E2E publik dan Customer terhadap dev server dengan env setara CI di DB test
+    terisolasi: 113 lulus, 5 dilewati (spec production-path butuh tier
+    production). `checkout.spec.ts` sempat gagal karena selector notice; lulus
+    7/7 setelah perbaikan selector dari PR #120 (`6c4a3de`) masuk ke branch;
+  - E2E Admin dengan sesi Owner/Admin sungguhan: 31/31. Dua navigasi lewat
+    klik melewati batas 5 detik saat route pertama kali dikompilasi; keduanya
+    lulus saat diulang.
+- **Belum:**
+  - review visual Owner;
+  - uji perangkat fisik dan AT (T37).
 
 ### T55 — pesan status v2 dan produk satu varian, 2026-11-02
 

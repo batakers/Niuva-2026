@@ -114,7 +114,6 @@ export function StatusNotice({
       {secondaryActionNode}
     </div>
   ) : null;
-  // Sizes sit on the text elements, not the root: the shared class merger reads `text-ui` as a color.
   const words = (
     <div className="min-w-0 space-y-1">
       <p className={`text-ui ${inline ? "font-medium" : "font-semibold"} text-foreground`}>{title}</p>
