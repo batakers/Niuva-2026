@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { useHydrated } from "@/components/niuva/use-hydrated";
+import { motionSystemClasses } from "@/design/motion";
 import { Button, buttonVariants } from "@/components/ui/button";
 
 type Decision = "accept" | "decline";
@@ -86,7 +87,7 @@ export function QuoteDecision({ decidable, requestId, quoteId }: Readonly<{ deci
       {decision !== null ? (
         <div
           aria-labelledby="account-quote-confirmation-title"
-          className="rounded-[var(--radius-card)] border border-warning-border bg-warning-background p-5 text-warning focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          className={`rounded-[var(--radius-card)] border border-warning-border bg-warning-background p-5 text-warning focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 ${motionSystemClasses.enter}`}
           onKeyDown={(event) => {
             if (event.key === "Escape" && !pending) cancel();
           }}

@@ -683,6 +683,7 @@ export function RequestForm({
         ) : null}
         {result === "ready" && isPreview ? (
           <StatusNotice
+            enter
             description="Informasi dan metadata file lolos pemeriksaan lokal. Tidak ada file, request, nomor referensi, atau pesan yang dikirim."
             title="Preview request siap ditinjau."
             tone="success"
@@ -690,6 +691,7 @@ export function RequestForm({
         ) : null}
         {result === "ready" && isLive && referenceNumber ? (
           <div className="space-y-3"><StatusNotice
+            enter
             action={
               <div className="flex flex-wrap gap-2">
                 {requestId ? <NiuvaLink className="min-h-11" href={`/account/make/${requestId}`}>Lihat status di akun</NiuvaLink> : null}
@@ -710,6 +712,7 @@ export function RequestForm({
         ) : null}
         {result === "unavailable" ? (
           <StatusNotice
+            enter
             description="Tidak ada file atau informasi yang dikirim. Simpan catatan Anda di tempat lain sebelum meninggalkan halaman."
             title="Pengiriman request belum tersedia."
             tone="info"
@@ -717,6 +720,7 @@ export function RequestForm({
         ) : null}
         {result === "error" ? (
           <StatusNotice
+            enter
             description={serverError ?? "Request belum tersimpan. Coba lagi."}
             title="Request belum tersimpan."
             tone="error"

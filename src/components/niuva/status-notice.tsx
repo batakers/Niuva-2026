@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon, type IconName } from "@/components/ui/Icon";
+import { motionSystemClasses } from "@/design/motion";
 import { cn } from "@/lib/utils";
 
 export type StatusNoticeTone = "success" | "warning" | "info" | "error";
@@ -25,6 +26,8 @@ export type StatusNoticeProps = {
   ariaLive?: "polite" | "assertive" | "off";
   role?: "status" | "alert";
   size?: StatusNoticeSize;
+  /** The notice is the result of a client action and enters with motion; never for notices rendered with the page. */
+  enter?: boolean;
   className?: string;
 };
 
@@ -62,6 +65,7 @@ export function StatusNotice({
   ariaLive,
   role,
   size = "default",
+  enter = false,
   className,
 }: StatusNoticeProps) {
   const resolvedRole = role ?? (tone === "error" ? "alert" : "status");
@@ -87,6 +91,7 @@ export function StatusNotice({
         "gap-3",
         size === "compact" ? "p-3" : "p-4",
         toneClasses[tone],
+        enter && motionSystemClasses.enter,
         className,
       )}
       data-component="status-notice"

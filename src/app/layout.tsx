@@ -24,6 +24,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="id"
       className={`${manrope.variable} h-full antialiased`}
+      data-scroll-behavior="smooth"
     >
       <body className="min-h-full flex flex-col">
         <TooltipProvider>

@@ -50,7 +50,7 @@ export function PublicNavigation({ action, showB2BContact = false }: { action: P
         <span className="max-sm:sr-only">Menu</span>
       </Button>
       <nav id="public-navigation" aria-label="Navigasi utama"
-        className={`${open ? "flex" : "hidden"} order-last w-full flex-col gap-1 border-t border-border pt-3 pb-2 xl:order-none xl:ml-8 xl:flex xl:w-auto xl:flex-1 xl:flex-row xl:items-center xl:gap-1 xl:border-0 xl:p-0`}>
+        className={`${open ? "flex" : "hidden"} order-last w-full flex-col gap-1 border-t border-border pt-3 pb-2 xl:order-none xl:ml-8 xl:flex xl:w-auto xl:flex-1 xl:flex-row xl:items-center xl:gap-1 xl:border-0 xl:p-0 max-xl:transition-[opacity,translate] max-xl:starting:-translate-y-1 max-xl:starting:opacity-0`}>
         <div className="flex flex-col gap-1 xl:flex-row xl:items-center xl:gap-2" data-navigation-group="primary">
           {primaryLinks.map(({ href, label }) => {
             const current = isActiveRoute(pathname, href);

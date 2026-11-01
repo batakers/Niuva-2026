@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod";
 
+import { motionSystemClasses } from "@/design/motion";
 import { typographySystemTokens as type } from "@/design/typography";
 import { MoneySummary } from "@/components/niuva/money-summary";
 import { StatusNotice, type StatusNoticeTone } from "@/components/niuva/status-notice";
@@ -393,7 +394,7 @@ export function QuoteReview({
           {decision !== null ? (
             <div
               aria-labelledby="quote-confirmation-title"
-              className="rounded-[var(--radius-card)] border border-warning-border bg-warning-background p-5 text-warning focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:p-6"
+              className={`rounded-[var(--radius-card)] border border-warning-border bg-warning-background p-5 text-warning focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:p-6 ${motionSystemClasses.enter}`}
               ref={decisionRef}
               onKeyDown={(event) => {
                 if (event.key === "Escape" && requestState !== "submitting") cancelDecision();
