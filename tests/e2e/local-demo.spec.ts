@@ -49,7 +49,7 @@ test("B2B uses WhatsApp while local demo checkout remains available", async ({ p
   await page.getByRole("link", { name: "Lihat status pesanan" }).click();
   await expect(page).toHaveURL(/\/orders\/[^/?]+$/);
   await expect(page.getByRole("heading", { level: 1, name: "Menunggu pembayaran" })).toBeVisible();
-  await expect(page.getByText("Projection server terotorisasi token.")).toBeVisible();
+  await expect(page.locator("main#main-content")).toHaveAttribute("data-order-source", "live");
 
   expect(externalProviderRequests).toEqual([]);
 });

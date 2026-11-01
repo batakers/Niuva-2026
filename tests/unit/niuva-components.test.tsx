@@ -290,7 +290,7 @@ describe("Niuva P1 components", () => {
       />,
     );
 
-    expect(screen.getByRole("list", { name: "Tahapan Custom quote" })).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "Tahapan pesanan Custom 3D Print" })).toBeInTheDocument();
     expect(screen.getAllByRole("listitem")).toHaveLength(4);
     expect(screen.getByRole("listitem", { current: "step" })).toHaveTextContent("Sedang berjalan");
     expect(screen.getByText("Akses berakhir")).toBeInTheDocument();

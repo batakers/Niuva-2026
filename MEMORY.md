@@ -67,6 +67,7 @@ Carried findings retain their IDs; source fixes do not close hosted or release g
 - [x] Auth: Better Auth/TOTP for Owner/Admin; Customer DB sessions; T12/T13 public signup tested locally, hosted gates remain
 - [x] Active B2B WhatsApp path and retired Project Brief boundaries present
 - [x] Company routes on Foundation v2 (T47), verified locally; Owner visual review per route is tracked in `TASKS.md`
+- [x] Commerce and MAKE routes on Foundation v2 (T48), verified locally; Owner visual review and Customer/Admin routes are tracked in `TASKS.md`
 - [x] Retail/MAKE checkout/quote/order source paths present; runtime belum diverifikasi
 - [ ] UI Foundation: DS-DEC-019 authorization remains; visual/device/AT acceptance belum diverifikasi
 - [ ] v1.0 closure/launch: open gates remain in `TASKS.md`

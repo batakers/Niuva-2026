@@ -170,7 +170,7 @@ function toOrderStatusPreview(order: PublicOrderStatus): OrderStatusPreview {
           state: "pending" as const,
         })),
         {
-          description: "Order dihentikan sesuai status server.",
+          description: "Pesanan dihentikan.",
           id: "cancelled",
           label: "Order dibatalkan",
           state: "cancelled" as const,
@@ -232,7 +232,7 @@ type Stage = Readonly<{ description: string; id: string; label: string }>;
 
 const retailStages: readonly Stage[] = [
   { description: "Order tercatat dan menunggu pembayaran.", id: "payment", label: "Pembayaran" },
-  { description: "Pembayaran terverifikasi oleh server.", id: "paid", label: "Pembayaran terverifikasi" },
+  { description: "Pembayaran sudah dikonfirmasi.", id: "paid", label: "Pembayaran terverifikasi" },
   { description: "Pesanan sedang diproses.", id: "processing", label: "Diproses" },
   { description: "Paket siap diserahkan ke kurir.", id: "ready-to-ship", label: "Siap dikirim" },
   { description: "Paket telah diserahkan ke kurir.", id: "shipped", label: "Dikirim" },
@@ -241,7 +241,7 @@ const retailStages: readonly Stage[] = [
 
 const customStages: readonly Stage[] = [
   { description: "Order custom menunggu pembayaran.", id: "payment", label: "Pembayaran" },
-  { description: "Pembayaran terverifikasi oleh server.", id: "paid", label: "Pembayaran terverifikasi" },
+  { description: "Pembayaran sudah dikonfirmasi.", id: "paid", label: "Pembayaran terverifikasi" },
   { description: "Pekerjaan masuk produksi.", id: "production", label: "Produksi" },
   { description: "Finishing dan quality control berjalan.", id: "qc", label: "Finishing & QC" },
   { description: "Paket final diukur dan menunggu pembayaran pengiriman.", id: "shipping-payment", label: "Pengukuran paket" },
@@ -293,22 +293,22 @@ function statusLabel(status: OrderStatus, custom: boolean): string {
 }
 
 function statusDescription(status: OrderStatus, custom: boolean): string {
-  if (status === "CANCELLED") return "Order ini dibatalkan oleh workflow server. Hubungi Niuva bila membutuhkan penjelasan lebih lanjut.";
-  if (status === "PENDING_PAYMENT" || status === "WAITING_PAYMENT") return "Order tercatat dan menunggu pembayaran yang diverifikasi server.";
+  if (status === "CANCELLED") return "Pesanan ini dibatalkan. Hubungi Niuva bila Anda membutuhkan penjelasan.";
+  if (status === "PENDING_PAYMENT" || status === "WAITING_PAYMENT") return "Pesanan tercatat dan menunggu pembayaran.";
   if (status === "PAID") return custom ? "Pembayaran terverifikasi. Pekerjaan custom akan bergerak ke produksi." : "Pembayaran terverifikasi. Pesanan segera masuk proses.";
-  if (status === "PROCESSING" || status === "IN_PRODUCTION") return "Tim Niuva sedang memproses order sesuai data yang tersimpan.";
-  if (status === "FINISHING_QC") return "Order custom berada pada tahap finishing dan quality control.";
+  if (status === "PROCESSING" || status === "IN_PRODUCTION") return "Tim Niuva sedang memproses pesanan Anda.";
+  if (status === "FINISHING_QC") return "Pesanan custom sedang di-finishing dan diperiksa kualitasnya.";
   if (status === "WAITING_SHIPPING_PAYMENT") return "Paket final sudah diukur. Pembayaran pengiriman menunggu instruksi resmi Niuva.";
   if (status === "READY_TO_SHIP") return "Paket siap dikirim setelah detail pengiriman terkonfirmasi.";
   if (status === "SHIPPED") return "Paket sudah diserahkan ke kurir.";
-  if (status === "COMPLETED") return "Order ditandai selesai oleh server.";
-  return "Status order dibaca dari projection publik yang aman.";
+  if (status === "COMPLETED") return "Pesanan sudah selesai.";
+  return "Status pesanan sedang diperbarui.";
 }
 
 function nextAction(status: OrderStatus, custom: boolean): OrderStatusPreview["nextAction"] {
   if (status === "PENDING_PAYMENT" || status === "WAITING_PAYMENT") {
     return {
-      description: "Pembayaran hanya dilakukan melalui instruksi resmi Niuva. Status PAID hanya berubah setelah webhook diverifikasi server.",
+      description: "Bayar hanya melalui instruksi resmi Niuva. Status berubah setelah pembayaran dikonfirmasi.",
       kind: "support",
       title: "Pembayaran masih menunggu",
       tone: "warning",
@@ -316,7 +316,7 @@ function nextAction(status: OrderStatus, custom: boolean): OrderStatusPreview["n
   }
   if (status === "WAITING_SHIPPING_PAYMENT") {
     return {
-      description: "Paket final sudah diukur. Hubungi Niuva melalui kanal konfirmasi untuk instruksi pembayaran pengiriman; status berubah setelah webhook diverifikasi.",
+      description: "Paket final sudah diukur. Hubungi Niuva melalui kanal konfirmasi untuk instruksi pembayaran pengiriman; status berubah setelah pembayaran dikonfirmasi.",
       kind: "support",
       title: "Pembayaran pengiriman menunggu instruksi",
       tone: "warning",
@@ -324,7 +324,7 @@ function nextAction(status: OrderStatus, custom: boolean): OrderStatusPreview["n
   }
   if (status === "CANCELLED") {
     return {
-      description: "Order tidak dibuka kembali otomatis. Hubungi Niuva bila ada pembayaran terlambat atau perlu penanganan khusus.",
+      description: "Pesanan tidak dibuka kembali otomatis. Hubungi Niuva bila ada pembayaran terlambat atau perlu penanganan khusus.",
       kind: "support",
       title: "Hubungi Niuva bila perlu bantuan",
       tone: "error",
@@ -334,9 +334,9 @@ function nextAction(status: OrderStatus, custom: boolean): OrderStatusPreview["n
     return { description: "Tidak ada tindakan berikutnya pada status ini.", kind: "none", title: "Order selesai", tone: "success" };
   }
   return {
-    description: custom ? "Tim Niuva akan memperbarui status saat tahap custom berikutnya tervalidasi." : "Tim Niuva akan memperbarui status saat tahap fulfillment berikutnya tervalidasi.",
+    description: custom ? "Tim Niuva memperbarui status saat tahap custom berikutnya dimulai." : "Tim Niuva memperbarui status saat pesanan masuk tahap berikutnya.",
     kind: "none",
-    title: "Menunggu pembaruan operasional",
+    title: "Menunggu tahap berikutnya",
     tone: "info",
   };
 }

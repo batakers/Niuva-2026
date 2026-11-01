@@ -32,7 +32,7 @@ ada di papan ini; pekerjaan baru masuk tabel task, bukan file lain.
 | | T09 | O | `CUSTOMER_AUTH_CLEANUP` lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
 | | T23, T25, T35 | O | Cek metode dan fitur refund di dashboard Midtrans sandbox (Owner mengecek, 31 Okt); grant `refund` sudah ada | Q1 |
 | Redesign | T46 → T47 | A | Beranda di `main` dan diterima Owner; Layanan, Proyek, dan detailnya selesai lokal di `claude/redesign-company-pages`; sisa legal dan 404 | Postgres lokal untuk E2E (Owner) |
-| | T48–T51 | A | Commerce/MAKE, Customer/auth, lalu Admin di atas fondasi T46, ditutup motion pass global (T51); verifikasi lokal | T46 |
+| | T49–T51 | A | Customer/auth, lalu Admin di atas fondasi T46, ditutup motion pass global (T51); verifikasi lokal. Commerce/MAKE (T48) selesai 1 Nov | T46 |
 | | T36 | O + A | UAT operasi Admin di UI baru | T50 |
 | Berantai | T34 → T08 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim; lalu retensi file pada berkas MAKE | T33 dulu |
 | | T14 | O + A | Privacy hosted dengan sesi Customer penguji; grant sudah ter-deploy (#89) | Sesi Customer Owner |
@@ -205,7 +205,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T45 | M5a | DONE | Audit, sitemap dan user flow redesign | Keputusan Owner 31 Okt | Audit tampilan sekarang, sitemap dan user flow dengan pembagian visual vs aturan bisnis tercatat di [audit IA](docs/design/redesign-2026-10-31-audit-ia.md); Q19–Q22 dijawab Owner; T36/T37 bergantung pada redesign. Log "T45 — audit, sitemap dan user flow". |
 | T46 | M5a | IN_PROGRESS | Fondasi design system baru | T45; pilihan arah Q19 | Arah terpilih diterapkan ke token, tipe, motion, primitive `components/ui`, shell publik/auth/sistem/Admin, status label, format Rupiah, timeline dan page header bersama; tanpa dependency npm baru; URL, API, data, auth, harga dan pembayaran tetap. Lint/typecheck/test/E2E/build dan capture lokal. |
 | T47 | M5a | DONE | Redesign Company | T46 | `/`, `/services` dan detail, `/projects` dan detail, legal, 404 sesuai sitemap/flow; satu CTA utama per halaman; tanpa klaim baru; DESIGN.md dan panduan Company ditulis ulang dari hasil build. Capture 320–1440, keyboard/fokus, zoom 200%, reduced motion, kontras. Selesai 1 Nov 2026 dengan bukti lokal dan CI; review visual Owner baru untuk Beranda, route lain menunggu tinjauan terpisah. |
-| T48 | M5a | IN_PROGRESS | Redesign Commerce dan MAKE | T46 | Toko, produk, keranjang, checkout, Custom 3D Print dan workspace dua mode, status/quote token; copy sistem diganti bahasa pelanggan; kalimat MAKE yang dilindungi tetap; aturan server, harga dan pembayaran tidak berubah. Gate lokal dan capture. |
+| T48 | M5a | DONE | Redesign Commerce dan MAKE | T46 | Toko, produk, keranjang, checkout, Custom 3D Print dan workspace dua mode, status/quote token; copy sistem diganti bahasa pelanggan; kalimat MAKE yang dilindungi tetap; aturan server, harga dan pembayaran tidak berubah. Gate lokal dan capture. Selesai 1 Nov 2026 lewat PR #107, #110, #111, #112, dan #113 dengan bukti lokal dan CI; review visual Owner menunggu. Label status dari data dan detail MAKE/order akun lanjut di T49. |
 | T49 | M5a | TODO | Redesign Customer dan auth | T46, T48 | Hub Akun, detail MAKE/order (konfirmasi terima quote, timeline, Rupiah dan label status konsisten), refund, privasi, enam halaman auth dalam satu frame; allowlist dan gate auth tidak berubah. Gate lokal dan capture. |
 | T50 | M5a | TODO | Redesign Admin | T46 | Shell, Ringkasan, daftar, detail, review Custom Print, keuangan, produk, tarif, konten, laporan, akses/privasi dan state error/denied; Card, status, tabel dan label Indonesia terkonsolidasi; permission dan motion yang disetujui tetap. Gate lokal dan capture. |
 | T51 | M5a | TODO | Motion pass global | T47–T50 | Keputusan Owner 31 Okt: motion inti (adegan, pergantian panel) dan umpan balik interaksi dibuat per halaman di T47–T50; pass ini menyusul setelah semua halaman jadi. Durasi dan easing seragam memakai token DESIGN.md, paling banyak satu gerak khas per halaman, keputusan animasi masuk per seksi (DESIGN.md melarang scroll reveal sebagai hiasan), reduced motion dan WCAG 2.2.2 di semua route, kinerja di ponsel. Capture dan rekaman lokal. |
@@ -2131,6 +2131,46 @@ belum ada yang dikerjakan.
   versi gratis bernilai Rp0. Domain tidak perlu dibeli lagi; biaya
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
+
+### T48 — Quote dan status pesanan, 2026-11-01
+
+Branch `claude/redesign-commerce-quote-status` dari `main@79d2f44`, lalu `main`
+setelah PR #112 di-merge ke branch tanpa force-push; potongan terakhir T48
+("Ya, lanjut").
+
+- **Review quote:** panel gelap `brand-950`, eyebrow, heading berikon, dan
+  catatan bergaris kiri dilepas. Strip fakta (nomor quote, versi, berlaku
+  sampai), scope 2×2, asumsi dalam satu daftar, dan rincian serta keputusan di
+  samping mulai `lg`. Konfirmasi tertutup dengan Escape dan fokus kembali ke
+  tombol pembukanya. Berat tampil "128,4 g" (sebelumnya "128,400000 g") lewat
+  pemangkasan string tanpa konversi float.
+- **Status pesanan:** panel gelap yang mengulang h1 diganti strip fakta (nomor
+  pesanan, jenis, dibuat); langkah berikutnya lebih dulu di samping, lalu
+  ringkasan, pengiriman, dan bantuan. Not-found pesanan kini memakai shell
+  publik seperti not-found quote.
+- **Komponen domain:** `MoneySummary` dan `OrderStatusTimeline` tanpa
+  bayangan, eyebrow berbahasa Inggris, dan garis kiri; badge "Siap digunakan"
+  yang selalu tampil dilepas; nama daftar timeline berbahasa Indonesia.
+- **Copy:** "snapshot", "projection server", "browser", "webhook", "order
+  payable", dan "fixture" diganti bahasa pelanggan di halaman, proyeksi status
+  live, detail asumsi `QuoteService`, dan data preview. Label status dari data
+  ("Order selesai" dan sejenisnya) tidak diubah; itu cakupan T49. Keputusan
+  quote, pembayaran, token akses, dan aturan server tidak berubah.
+- **Test:** dua test yang membaca teks "Projection server terotorisasi token"
+  kini memeriksa `data-order-source="live"`; dua lainnya mengikuti nama daftar
+  dan banner preview baru. Tidak ada assertion yang dihapus.
+- **Bukti lokal:** lint (0 error), typecheck, unit 137 file/1.531 test; backend
+  123/124 file pada run penuh (test timing `next-image-optimizer` gagal di
+  bawah beban dan lulus sendiri; tidak terkait), test quote backend 21/21. E2E
+  `quote-review`, `order-status`, dan `system-pages` terhadap dev server 24/24.
+  Pemeriksaan Playwright 58/58: Enter membuka konfirmasi yang menerima fokus,
+  Escape dan "Kembali" mengembalikan fokus, menolak memindahkan fokus ke kartu
+  keputusan, ring fokus terlihat, tujuh skenario quote dan lima belas skenario
+  pesanan dengan satu h1 tanpa panel gelap, not-found dengan header dan footer,
+  tanpa overflow 320–1440, tanpa error console. Capture sebelum dan sesudah
+  untuk desktop dan ponsel.
+- **Belum:** status pesanan live dengan pembayaran sungguhan (jalurnya sama
+  dengan preview), review visual Owner untuk semua route T48.
 
 ### T48 — Custom 3D Print, workspace, dan status pengajuan, 2026-11-01
 

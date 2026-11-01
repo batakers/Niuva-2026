@@ -773,7 +773,7 @@ export class QuoteService {
       NIUVA_STOCK: "Stok Niuva",
     }[snapshot.data.filamentSource];
     const durationLabel = formatPrintDuration(snapshot.data.printDurationSeconds);
-    const weightLabel = `${snapshot.data.weightGrams} g`;
+    const weightLabel = `${formatGrams(snapshot.data.weightGrams)} g`;
     const configuration = snapshot.data.configurationJson;
     const unitLabel =
       configuration !== undefined && typeof configuration.unit === "string"
@@ -783,12 +783,12 @@ export class QuoteService {
     return {
       assumptions: [
         {
-          detail: "Nilai slicer yang dibekukan bersama quote.",
+          detail: "Dari hasil slicing operator; tidak berubah selama quote berlaku.",
           label: "Berat hasil review",
           value: weightLabel,
         },
         {
-          detail: "Durasi dari review operator, bukan estimasi browser.",
+          detail: "Durasi cetak dari review operator.",
           label: "Durasi mesin",
           value: durationLabel,
         },
@@ -798,7 +798,7 @@ export class QuoteService {
           value: sourceLabel,
         },
         {
-          detail: "Ongkir custom dihitung setelah paket final selesai diukur.",
+          detail: "Ongkir dihitung setelah paket final selesai diukur.",
           label: "Pengiriman",
           value: "Belum termasuk",
         },
@@ -817,7 +817,7 @@ export class QuoteService {
           value: quote.machineSubtotalRp.toFixed(0),
         },
         ...(snapshot.data.estimate?.additionalCosts.map((cost) => ({
-          detail: "Pos biaya yang dinilai operator dan dibekukan pada estimasi.",
+          detail: "Biaya tambahan yang dinilai operator.",
           label: cost.name,
           value: cost.amountRp,
         })) ?? []),
@@ -1189,4 +1189,11 @@ function formatPrintDuration(seconds: number): string {
   }
 
   return `${hours} jam${minutes === 0 ? "" : ` ${minutes} menit`}`;
+}
+
+/** "128.400000" → "128,4": trims stored decimal padding without float conversion. */
+function formatGrams(value: string): string {
+  const [whole, fraction = ""] = value.split(".");
+  const trimmed = fraction.replace(/0+$/, "");
+  return trimmed === "" ? whole : `${whole},${trimmed}`;
 }

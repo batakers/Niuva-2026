@@ -179,7 +179,7 @@ describe("OrderStatus next action DOM", () => {
       expect(value).not.toContain("/quote/preview-quote");
       expect(value).not.toContain("preview=examples");
     }
-    expect(screen.getByText(/Projection server terotorisasi token/)).toBeInTheDocument();
+    expect(container.querySelector("main")).toHaveAttribute("data-order-source", "live");
   });
 
   it("live: omitting isPreview behaves as live even when quoteHref is missing", () => {
@@ -188,7 +188,7 @@ describe("OrderStatus next action DOM", () => {
     );
 
     expect(screen.getByText("Tautan quote belum tersedia")).toBeInTheDocument();
-    expect(screen.getByText(/Projection server terotorisasi token/)).toBeInTheDocument();
+    expect(container.querySelector("main")).toHaveAttribute("data-order-source", "live");
     for (const value of allAttributeValues(container)) {
       expect(value).not.toContain("/quote/preview-quote");
       expect(value).not.toContain("preview=examples");

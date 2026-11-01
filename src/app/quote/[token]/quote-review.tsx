@@ -8,8 +8,7 @@ import { MoneySummary } from "@/components/niuva/money-summary";
 import { StatusNotice, type StatusNoticeTone } from "@/components/niuva/status-notice";
 import { useHydrated } from "@/components/niuva/use-hydrated";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
-import { Button } from "@/components/ui/button";
-import { Icon } from "@/components/ui/Icon";
+import { Button, buttonVariants } from "@/components/ui/button";
 import type { QuotePreview, QuotePreviewState } from "@/features/frontend-preview/quote";
 
 type Decision = "accept" | "decline" | null;
@@ -58,27 +57,27 @@ const stateCopy: Record<SettledQuoteState, Readonly<{
   tone: StatusNoticeTone;
 }>> = {
   accepted: {
-    description: "Keputusan diterima hanya pada simulasi lokal. Belum ada order, pembayaran, atau pesan yang dibuat.",
+    description: "Keputusan diterima hanya di preview lokal. Belum ada pesanan, pembayaran, atau pesan yang dibuat.",
     title: "Quote ditandai diterima dalam preview.",
     tone: "success",
   },
   declined: {
-    description: "Keputusan ditolak hanya pada simulasi lokal. Quote dan request nyata tidak berubah.",
+    description: "Keputusan ditolak hanya di preview lokal. Quote dan pengajuan sungguhan tidak berubah.",
     title: "Quote ditandai ditolak dalam preview.",
     tone: "info",
   },
   expired: {
-    description: "Masa berlaku tujuh hari sudah berakhir. Quote ini tidak dapat diterima dan memerlukan versi baru dari operator.",
+    description: "Masa berlaku tujuh hari sudah berakhir. Quote ini tidak dapat diterima; operator perlu mengirim versi baru.",
     title: "Quote sudah kedaluwarsa.",
     tone: "warning",
   },
   superseded: {
-    description: "Versi ini telah digantikan. Gunakan tautan quote terbaru agar scope dan harga yang ditinjau tetap konsisten.",
+    description: "Versi ini sudah digantikan. Buka tautan quote terbaru agar scope dan harga yang Anda tinjau sesuai.",
     title: "Versi quote yang lebih baru tersedia.",
     tone: "warning",
   },
   valid: {
-    description: "Tinjau scope, asumsi, dan total sebelum membuat keputusan. Seluruh data di halaman ini adalah fixture development.",
+    description: "Periksa scope, asumsi, dan total sebelum membuat keputusan. Semua data di halaman ini adalah contoh.",
     title: "Quote contoh siap ditinjau.",
     tone: "info",
   },
@@ -105,6 +104,8 @@ export function QuoteReview({
   const [paymentRedirectUrl, setPaymentRedirectUrl] = useState<string>();
   const [paymentStatus, setPaymentStatus] = useState<QuoteOrderStatus>("WAITING_PAYMENT");
   const decisionRef = useRef<HTMLDivElement>(null);
+  const acceptRef = useRef<HTMLButtonElement>(null);
+  const declineRef = useRef<HTMLButtonElement>(null);
   const stateRef = useRef<HTMLDivElement>(null);
   const currentCopy = stateCopy[state];
 
@@ -115,6 +116,13 @@ export function QuoteReview({
   useEffect(() => {
     if (state !== initialState) stateRef.current?.focus();
   }, [initialState, state]);
+
+  // Cancelling the inline confirmation returns focus to the button that opened it.
+  function cancelDecision() {
+    const trigger = decision === "decline" ? declineRef.current : acceptRef.current;
+    setDecision(null);
+    queueMicrotask(() => trigger?.focus());
+  }
 
   async function confirmDecision() {
     if (decision === null || state !== "valid" || requestState === "submitting") return;
@@ -163,7 +171,7 @@ export function QuoteReview({
   const applyAcceptedPayload = useCallback((payload: unknown) => {
     const parsed = quoteAcceptanceResponseSchema.safeParse(payload);
     if (!parsed.success) {
-      throw new Error("Respons kelanjutan quote tidak valid.");
+      throw new Error("Kelanjutan quote belum dapat dibaca. Muat ulang halaman ini.");
     }
 
     setOrderNumber(parsed.data.orderNumber);
@@ -245,7 +253,7 @@ export function QuoteReview({
         ...currentCopy,
         title:
           state === "accepted"
-            ? "Quote diterima dan order dibuat."
+            ? "Quote diterima dan pesanan dibuat."
             : state === "declined"
               ? "Quote ditolak."
               : state === "expired"
@@ -257,193 +265,163 @@ export function QuoteReview({
           state === "accepted"
             ? orderStatusToken
               ? paymentRedirectUrl && paymentStatus === "WAITING_PAYMENT"
-                ? `Quote sudah diterima dan order ${orderNumber ?? "payable"} menunggu pembayaran. Lanjutkan pembayaran atau buka status order.`
-                : "Quote sudah diterima dan order payable dibuat oleh server. Lanjutkan melalui tautan status order."
+                ? `Pesanan ${orderNumber ?? "Anda"} menunggu pembayaran. Lanjutkan pembayaran atau lihat status pesanan.`
+                : "Pesanan sudah dibuat. Lanjutkan lewat halaman status pesanan."
               : orderNumber
-                ? `Quote sudah diterima dan order payable dibuat oleh server. Nomor order ${orderNumber} tercatat; simpan nomor ini bila perlu menghubungi Niuva.`
-                : "Quote sudah diterima dan order payable dibuat oleh server. Jika membutuhkan status order, hubungi Niuva dengan nomor quote ini."
+                ? `Pesanan ${orderNumber} sudah dibuat. Simpan nomor ini bila perlu menghubungi Niuva.`
+                : "Pesanan sudah dibuat. Hubungi Niuva dengan nomor quote ini untuk melihat statusnya."
             : state === "declined"
-              ? "Quote ditandai ditolak. Hubungi Niuva jika scope perlu dibahas kembali."
+              ? "Hubungi Niuva bila scope perlu dibahas kembali."
               : state === "expired"
-                ? "Masa berlaku quote sudah selesai. Minta operator mengirim versi quote terbaru bila masih ingin melanjutkan."
+                ? "Masa berlaku quote sudah selesai. Minta operator mengirim versi terbaru bila masih ingin melanjutkan."
                 : state === "superseded"
                   ? "Quote ini sudah digantikan oleh versi terbaru. Minta tautan quote terbaru dari Niuva."
-                  : "Tinjau scope, asumsi, dan total dari snapshot yang disimpan server sebelum membuat keputusan."
+                  : "Periksa scope, asumsi, dan total sebelum membuat keputusan."
       };
 
   return (
-    <main className="overflow-x-hidden" data-quote-state={state} id="main-content">
-      <section className="border-b border-border bg-card">
-        <div className="mx-auto grid max-w-public gap-8 px-5 py-12 sm:px-8 sm:py-16 lg:grid-cols-12 lg:items-end">
-          <div className="lg:col-span-7">
-            <p className="text-sm font-medium text-brand-700">Quote custom print</p>
-            <h1 className={`${type.display.className} mt-4 max-w-4xl text-balance`}>
-              Tinjau yang dikunci sebelum menyetujui.
-            </h1>
-            <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground">
-              Scope, asumsi operator, dan total ditampilkan sebagai satu snapshot yang tidak dihitung ulang oleh browser.
+    <main className="overflow-x-hidden" data-quote-source={isPreview ? "preview" : "live"} data-quote-state={state} id="main-content">
+      <div className="mx-auto max-w-public px-5 pt-10 sm:px-12 sm:pt-14">
+        {isPreview ? (
+          <aside aria-label="Preview quote" className="mb-8 rounded-[var(--radius-control)] border border-info-border bg-info-background p-4 text-ui font-normal text-info">
+            Preview lokal dengan data contoh. Bukan quote pelanggan, dan keputusan di halaman ini tidak dikirim.
+          </aside>
+        ) : null}
+        <h1 className={`${type.display.className} max-w-[16em] text-balance`}>Tinjau yang dikunci sebelum menyetujui.</h1>
+        <p className="mt-4 max-w-[56ch] text-lead leading-[1.6]">
+          Isi quote ini sudah diperiksa operator dan tidak berubah selama masa berlakunya. Terima untuk membuat pesanan, atau tolak bila ada yang perlu dibahas ulang.
+        </p>
+        <dl className="mt-8 grid gap-px overflow-hidden rounded-[var(--radius-card)] border border-border bg-border sm:grid-cols-3">
+          {[["Nomor quote", quote.quoteNumber], ["Versi", String(quote.version)], ["Berlaku sampai", quote.expiresAt]].map(([term, value]) => (
+            <div className="bg-card px-5 py-4 sm:px-6" key={term}>
+              <dt className="text-ui font-normal text-muted-foreground">{term}</dt>
+              <dd className="mt-1 text-lg font-medium tabular-nums">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+
+      <div className="mx-auto grid max-w-public items-start gap-8 px-5 pt-12 sm:px-12 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-12">
+        <div className="min-w-0 space-y-12">
+          <section aria-labelledby="quote-scope-title">
+            <h2 className="text-2xl font-medium tracking-[-0.015em]" id="quote-scope-title">Scope yang ditawarkan</h2>
+            <p className="mt-2 text-ui font-normal leading-[1.55] text-muted-foreground">
+              Pengajuan {quote.requestReference}. Perubahan setelah quote dikirim dibuat sebagai versi baru.
             </p>
-          </div>
+            <dl className="mt-5 grid gap-px overflow-hidden rounded-[var(--radius-card)] border border-border bg-border sm:grid-cols-2">
+              {quote.scope.map((item) => (
+                <div className="bg-card px-5 py-4 sm:px-6" key={item.label}>
+                  <dt className="text-ui font-normal text-muted-foreground">{item.label}</dt>
+                  <dd className="mt-1 text-lg font-medium">{item.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
 
-          <dl className="grid gap-4 rounded-xl bg-brand-950 p-6 text-neutral-50 sm:grid-cols-2 lg:col-span-5">
-            <div>
-              <dt className="text-xs text-neutral-300">Nomor quote</dt>
-              <dd className="mt-1 font-mono text-sm font-medium">{quote.quoteNumber}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-neutral-300">Versi</dt>
-              <dd className="mt-1 font-mono text-sm font-medium">{quote.version}</dd>
-            </div>
-            <div className="sm:col-span-2">
-              <dt className="text-xs text-neutral-300">Berlaku sampai</dt>
-              <dd className="mt-1 text-sm font-medium">{quote.expiresAt}</dd>
-            </div>
-          </dl>
+          <section aria-labelledby="quote-assumptions-title">
+            <h2 className="text-2xl font-medium tracking-[-0.015em]" id="quote-assumptions-title">Asumsi yang diverifikasi</h2>
+            <p className="mt-2 text-ui font-normal leading-[1.55] text-muted-foreground">
+              Operator mencatat angka ini dari hasil slicing; harga di samping dihitung darinya.
+            </p>
+            <dl className="mt-5 divide-y divide-border rounded-[var(--radius-card)] border border-border bg-card">
+              {quote.assumptions.map((item) => (
+                <div className="grid gap-1 px-5 py-4 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-6 sm:px-6" key={item.label}>
+                  <dt className="text-ui font-normal text-muted-foreground">{item.label}</dt>
+                  <dd>
+                    <span className="block text-lg font-medium">{item.value}</span>
+                    <span className="mt-1 block text-ui font-normal leading-[1.55] text-muted-foreground">{item.detail}</span>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-4 text-ui font-normal leading-[1.55] text-muted-foreground">
+              Quote dikunci saat dikirim. Masa berlaku tujuh hari dihitung dari waktu kirim.
+            </p>
+          </section>
         </div>
-      </section>
 
-      <section className="bg-background">
-        <div className="mx-auto grid max-w-public gap-10 px-5 py-12 sm:px-8 sm:py-16 lg:grid-cols-12 lg:gap-12">
-          <div className="space-y-10 lg:col-span-7">
-            <div className={`${isPreview ? "border-info-border bg-info-background text-info" : "border-success-border bg-success-background text-success"} rounded-xl border p-4 text-sm`}>
-              {isPreview
-                ? "Preview lokal untuk review desain. Bukan quote customer dan tidak memberi akses ke data produksi."
-                : "Projection server terotorisasi token. Nilai di halaman ini berasal dari snapshot quote yang dikunci saat dikirim."}
-            </div>
+        <aside aria-label="Rincian dan keputusan quote" className="space-y-4 lg:sticky lg:top-24">
+          <MoneySummary
+            currency={quote.currency}
+            headingLevel={2}
+            lines={quote.lines}
+            note="Total belum termasuk ongkir. Ongkir ditagih terpisah setelah paket final diukur."
+            sourceStatus="ready"
+            title="Rincian quote"
+            total={quote.total}
+            variant="quote"
+          />
 
-            <section aria-labelledby="quote-scope-title">
-              <div className="flex items-center gap-3">
-                <Icon aria-hidden="true" className="size-5 text-brand-700" name="file-lock-2" />
-                <h2 className={`${type.heading.className}`} id="quote-scope-title">Scope yang ditawarkan</h2>
-              </div>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-                Request {quote.requestReference}. Perubahan setelah quote dikirim harus menjadi versi baru.
+          <section aria-labelledby="quote-decision-title" className="rounded-[var(--radius-card)] border border-border bg-card p-5 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:p-6" ref={stateRef} tabIndex={-1}>
+            <h2 className="sr-only" id="quote-decision-title">Keputusan quote</h2>
+            <StatusNotice description={effectiveCopy.description} title={effectiveCopy.title} tone={effectiveCopy.tone} />
+
+            {actionError ? (
+              <p className="mt-4 rounded-[var(--radius-control)] border border-destructive-border bg-destructive-background p-3 text-ui font-normal leading-[1.55] text-destructive" role="alert">
+                {actionError}
               </p>
-              <dl className="mt-6 grid gap-x-8 gap-y-6 border-y border-border py-6 sm:grid-cols-2">
-                {quote.scope.map((item) => (
-                  <div key={item.label}>
-                    <dt className="text-xs text-muted-foreground">{item.label}</dt>
-                    <dd className="mt-1 text-base font-medium">{item.value}</dd>
-                  </div>
-                ))}
-              </dl>
-            </section>
+            ) : null}
 
-            <section aria-labelledby="quote-assumptions-title">
-              <div className="flex items-center gap-3">
-                <Icon aria-hidden="true" className="size-5 text-brand-700" name="shield-check" />
-                <h2 className={`${type.heading.className}`} id="quote-assumptions-title">Asumsi yang diverifikasi</h2>
-              </div>
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                {quote.assumptions.map((item) => (
-                  <article className="rounded-xl border border-border bg-card p-5" key={item.label}>
-                    <p className="text-xs text-muted-foreground">{item.label}</p>
-                    <p className="mt-2 text-base font-semibold">{item.value}</p>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.detail}</p>
-                  </article>
-                ))}
-              </div>
-            </section>
-
-            <div className="flex gap-3 border-l-2 border-brand-300 pl-4 text-sm leading-6 text-muted-foreground">
-              <Icon aria-hidden="true" className="mt-1 size-4 shrink-0 text-brand-700" name="check" />
-              <p>Quote dikunci saat dikirim. Masa berlaku tujuh hari dihitung dari waktu kirim, bukan dari umur draft.</p>
-            </div>
-          </div>
-
-          <aside className="space-y-6 lg:col-span-5 lg:sticky lg:top-8 lg:self-start" aria-label="Rincian dan keputusan quote">
-            <MoneySummary
-              currency={quote.currency}
-              description={isPreview ? "Nilai sudah diformat dari snapshot quote contoh. Browser tidak menghitung subtotal atau total." : "Nilai diformat dari snapshot quote server. Browser tidak menghitung subtotal atau total."}
-              lines={quote.lines}
-              note={isPreview ? "Fixture development Pricing v1. Ongkir custom dihitung setelah pengukuran paket final." : "Pricing dan ongkir custom mengikuti verifikasi operator; ongkir dihitung setelah pengukuran paket final."}
-              sourceStatus="ready"
-              title="Rincian quote"
-              total={quote.total}
-              variant="quote"
-            />
-
-            <div className="rounded-xl border border-border bg-card p-5 shadow-card" ref={stateRef} tabIndex={-1}>
-              <StatusNotice description={effectiveCopy.description} title={effectiveCopy.title} tone={effectiveCopy.tone} />
-
-              {actionError ? (
-                <p className="mt-4 rounded-lg border border-destructive-border bg-destructive-background p-3 text-sm leading-6 text-destructive" role="alert">
-                  {actionError}
+            {state === "valid" ? (
+              <div className="mt-5">
+                <p className="text-ui font-normal leading-[1.55] text-muted-foreground">
+                  {isPreview
+                    ? `Dikirim ${quote.sentAt}.`
+                    : "Niuva memeriksa ulang masa berlaku dan versi quote sebelum menyimpan keputusan Anda."}
                 </p>
-              ) : null}
-
-              {state === "valid" && !isPreview ? (
-                <div className="mt-5">
-                  <div className="flex items-start gap-3 text-sm leading-6 text-muted-foreground">
-                    <Icon aria-hidden="true" className="mt-1 size-4 shrink-0 text-brand-700" name="clock-3" />
-                    <p>Keputusan diperiksa server dengan token, expiry, versi terbaru, dan snapshot harga.</p>
-                  </div>
-                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                    <Button className="min-h-11 cursor-pointer" disabled={!hydrated || requestState === "submitting"} onClick={() => setDecision("accept")} type="button">
-                      Terima quote
-                    </Button>
-                    <Button className="min-h-11 cursor-pointer" disabled={!hydrated || requestState === "submitting"} onClick={() => setDecision("decline")} type="button" variant="outline">
-                      Tolak quote
-                    </Button>
-                  </div>
-                </div>
-              ) : state === "valid" ? (
-                <div className="mt-5">
-                  <div className="flex items-start gap-3 text-sm leading-6 text-muted-foreground">
-                    <Icon aria-hidden="true" className="mt-1 size-4 shrink-0 text-brand-700" name="clock-3" />
-                    <p>Dikirim {quote.sentAt}. Keputusan nyata selalu diverifikasi ulang oleh server.</p>
-                  </div>
-                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                    <Button className="min-h-11 cursor-pointer" disabled={!hydrated} onClick={() => setDecision("accept")} type="button">
-                      Terima quote
-                    </Button>
-                    <Button className="min-h-11 cursor-pointer" disabled={!hydrated} onClick={() => setDecision("decline")} type="button" variant="outline">
-                      Tolak quote
-                    </Button>
-                  </div>
-                </div>
-              ) : null}
-
-              {orderStatusToken ? (
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {paymentRedirectUrl && paymentStatus === "WAITING_PAYMENT" ? <a className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={paymentRedirectUrl} rel="noreferrer" target="_blank">Buka pembayaran</a> : null}
-                  <NiuvaLink className="min-h-11" href={`/orders/${orderStatusToken}`} variant="outline">
-                    Lihat status order
-                  </NiuvaLink>
-                </div>
-              ) : null}
-            </div>
-
-            {decision !== null ? (
-              <div
-                aria-labelledby="quote-confirmation-title"
-                className="rounded-xl border border-warning-border bg-warning-background p-5 text-warning focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                ref={decisionRef}
-                role="alertdialog"
-                tabIndex={-1}
-              >
-                <h2 className="text-base font-semibold" id="quote-confirmation-title">
-                  {decision === "accept" ? "Konfirmasi penerimaan quote" : "Konfirmasi penolakan quote"}
-                </h2>
-                <p className="mt-2 text-sm leading-6">
-                  {decision === "accept"
-                    ? "Pada alur nyata, server akan memeriksa token, expiry, versi terbaru, dan snapshot harga sebelum membuat order payable."
-                    : "Pada alur nyata, quote yang ditolak tidak dapat diterima kembali. Operator perlu membuat versi baru bila scope berubah."}
-                </p>
-                <p className="mt-2 text-xs">{isPreview ? "Preview ini tidak mengirim keputusan atau mengubah request." : "Keputusan akan dicatat oleh server dan tidak dapat diulang pada quote yang sama."}</p>
-                <div className="mt-5 flex flex-wrap gap-3">
-                  <Button className="min-h-11 cursor-pointer" disabled={requestState === "submitting"} onClick={() => void confirmDecision()} type="button" variant={decision === "accept" ? "default" : "destructive"}>
-                    {requestState === "submitting" ? "Menyimpan keputusan…" : decision === "accept" ? "Konfirmasi terima" : "Konfirmasi tolak"}
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <Button className="min-h-11" disabled={!hydrated || requestState === "submitting"} onClick={() => setDecision("accept")} ref={acceptRef} type="button">
+                    Terima quote
                   </Button>
-                  <Button className="min-h-11 cursor-pointer" onClick={() => setDecision(null)} type="button" variant="outline">
-                    Kembali
+                  <Button className="min-h-11" disabled={!hydrated || requestState === "submitting"} onClick={() => setDecision("decline")} ref={declineRef} type="button" variant="outline">
+                    Tolak quote
                   </Button>
                 </div>
               </div>
             ) : null}
-          </aside>
-        </div>
-      </section>
+
+            {orderStatusToken ? (
+              <div className="mt-5 flex flex-wrap gap-2">
+                {paymentRedirectUrl && paymentStatus === "WAITING_PAYMENT" ? <a className={buttonVariants({ className: "min-h-11" })} href={paymentRedirectUrl} rel="noreferrer" target="_blank">Buka pembayaran</a> : null}
+                <NiuvaLink className="min-h-11" href={`/orders/${orderStatusToken}`} variant="outline">
+                  Lihat status pesanan
+                </NiuvaLink>
+              </div>
+            ) : null}
+          </section>
+
+          {decision !== null ? (
+            <div
+              aria-labelledby="quote-confirmation-title"
+              className="rounded-[var(--radius-card)] border border-warning-border bg-warning-background p-5 text-warning focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:p-6"
+              ref={decisionRef}
+              onKeyDown={(event) => {
+                if (event.key === "Escape" && requestState !== "submitting") cancelDecision();
+              }}
+              role="alertdialog"
+              tabIndex={-1}
+            >
+              <h2 className="text-lg font-semibold" id="quote-confirmation-title">
+                {decision === "accept" ? "Konfirmasi penerimaan quote" : "Konfirmasi penolakan quote"}
+              </h2>
+              <p className="mt-2 text-ui font-normal leading-[1.55]">
+                {decision === "accept"
+                  ? "Niuva memeriksa ulang masa berlaku, versi, dan harga quote, lalu membuat pesanan yang siap dibayar."
+                  : "Quote yang ditolak tidak dapat diterima kembali. Bila kebutuhan berubah, operator membuat versi baru."}
+              </p>
+              <p className="mt-2 text-caption">{isPreview ? "Preview ini tidak mengirim keputusan atau mengubah pengajuan." : "Keputusan ini tercatat dan tidak dapat diubah untuk quote yang sama."}</p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Button className="min-h-11" disabled={requestState === "submitting"} onClick={() => void confirmDecision()} type="button" variant={decision === "accept" ? "default" : "destructive"}>
+                  {requestState === "submitting" ? "Menyimpan keputusan…" : decision === "accept" ? "Konfirmasi terima" : "Konfirmasi tolak"}
+                </Button>
+                <Button className="min-h-11" onClick={cancelDecision} type="button" variant="outline">
+                  Kembali
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </aside>
+      </div>
     </main>
   );
 }

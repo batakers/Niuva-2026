@@ -4,13 +4,13 @@ export const exampleQuote: QuotePreview = {
   assumptions: [
     {
       label: "Berat hasil review",
-      value: "128,400000 g",
-      detail: "Nilai slicer contoh yang dibekukan bersama quote.",
+      value: "128,4 g",
+      detail: "Contoh hasil slicing operator; tidak berubah selama quote berlaku.",
     },
     {
       label: "Durasi mesin",
       value: "5 jam 20 menit",
-      detail: "Durasi contoh dari review operator, bukan estimasi browser.",
+      detail: "Contoh durasi cetak dari review operator.",
     },
     {
       label: "Sumber filament",
@@ -29,7 +29,7 @@ export const exampleQuote: QuotePreview = {
     {
       label: "Material",
       value: "Rp51.360",
-      detail: "PLA, 128,400000 g, 2 unit",
+      detail: "PLA, 128,4 g, 2 unit",
     },
     {
       label: "Waktu mesin",
