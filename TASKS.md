@@ -32,7 +32,7 @@ ada di papan ini; pekerjaan baru masuk tabel task, bukan file lain.
 | | T09 | O | `CUSTOMER_AUTH_CLEANUP` lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
 | | T23, T25, T35 | O | Cek metode dan fitur refund di dashboard Midtrans sandbox (Owner mengecek, 31 Okt); grant `refund` sudah ada | Q1 |
 | Redesign | T46 → T47 | A | Beranda di `main` dan diterima Owner; Layanan, Proyek, dan detailnya selesai lokal di `claude/redesign-company-pages`; sisa legal dan 404 | Postgres lokal untuk E2E (Owner) |
-| | T50–T51 | A | Admin di atas fondasi T46, ditutup motion pass global (T51); verifikasi lokal. Commerce/MAKE (T48) dan Customer/auth (T49) selesai 1 Nov | T46 |
+| | T51 | A | Motion pass global setelah semua halaman v2; verifikasi lokal. Commerce/MAKE (T48), Customer/auth (T49), dan Admin (T50) selesai 1 Nov | T47–T50 |
 | | T36 | O + A | UAT operasi Admin di UI baru | T50 |
 | Berantai | T34 → T08 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim; lalu retensi file pada berkas MAKE | T33 dulu |
 | | T14 | O + A | Privacy hosted dengan sesi Customer penguji; grant sudah ter-deploy (#89) | Sesi Customer Owner |
@@ -207,7 +207,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T47 | M5a | DONE | Redesign Company | T46 | `/`, `/services` dan detail, `/projects` dan detail, legal, 404 sesuai sitemap/flow; satu CTA utama per halaman; tanpa klaim baru; DESIGN.md dan panduan Company ditulis ulang dari hasil build. Capture 320–1440, keyboard/fokus, zoom 200%, reduced motion, kontras. Selesai 1 Nov 2026 dengan bukti lokal dan CI; review visual Owner baru untuk Beranda, route lain menunggu tinjauan terpisah. |
 | T48 | M5a | DONE | Redesign Commerce dan MAKE | T46 | Toko, produk, keranjang, checkout, Custom 3D Print dan workspace dua mode, status/quote token; copy sistem diganti bahasa pelanggan; kalimat MAKE yang dilindungi tetap; aturan server, harga dan pembayaran tidak berubah. Gate lokal dan capture. Selesai 1 Nov 2026 lewat PR #107, #110, #111, #112, dan #113 dengan bukti lokal dan CI; review visual Owner menunggu. Label status dari data dan detail MAKE/order akun lanjut di T49. |
 | T49 | M5a | DONE | Redesign Customer dan auth | T46, T48 | Hub Akun, detail MAKE/order (konfirmasi terima quote, timeline, Rupiah dan label status konsisten), refund, privasi, enam halaman auth dalam satu frame; allowlist dan gate auth tidak berubah. Gate lokal dan capture. Selesai 1 Nov 2026 lewat PR #114, #115, dan #116 dengan bukti lokal dan CI; review visual Owner menunggu. |
-| T50 | M5a | TODO | Redesign Admin | T46 | Shell, Ringkasan, daftar, detail, review Custom Print, keuangan, produk, tarif, konten, laporan, akses/privasi dan state error/denied; Card, status, tabel dan label Indonesia terkonsolidasi; permission dan motion yang disetujui tetap. Gate lokal dan capture. |
+| T50 | M5a | DONE | Redesign Admin | T46 | Shell, Ringkasan, daftar, detail, review Custom Print, keuangan, produk, tarif, konten, laporan, akses/privasi dan state error/denied; Card, status, tabel dan label Indonesia terkonsolidasi; permission dan motion yang disetujui tetap. Gate lokal dan capture. Selesai 1 Nov 2026 lewat PR #117 dengan bukti lokal dan CI; review visual Owner menunggu. |
 | T51 | M5a | TODO | Motion pass global | T47–T50 | Keputusan Owner 31 Okt: motion inti (adegan, pergantian panel) dan umpan balik interaksi dibuat per halaman di T47–T50; pass ini menyusul setelah semua halaman jadi. Durasi dan easing seragam memakai token DESIGN.md, paling banyak satu gerak khas per halaman, keputusan animasi masuk per seksi (DESIGN.md melarang scroll reveal sebagai hiasan), reduced motion dan WCAG 2.2.2 di semua route, kinerja di ponsel. Capture dan rekaman lokal. |
 | T53 | M4 | IN_PROGRESS | Kaitan foto ke varian | T31; keputusan Owner 1 Nov | `ProductVariant.mediaId` nullable (banyak varian boleh satu foto, `ON DELETE SET NULL`) lewat migration baru; importer/seed mengisi dari foto varian sumber; editor varian Admin memilih foto dari galeri produk yang sama dan server menolak foto produk lain; simpan galeri mempertahankan foto yang tetap dipakai; halaman produk memakai kaitan ini dengan alt text sebagai cadangan. Staging: `db:deploy` dan impor ulang katalog hanya atas instruksi Owner. |
 
@@ -2131,6 +2131,87 @@ belum ada yang dikerjakan.
   versi gratis bernilai Rp0. Domain tidak perlu dibeli lagi; biaya
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
+
+### T50 — seluruh Admin dalam satu PR, 2026-11-01
+
+Lanjutan di PR #117 atas permintaan Owner ("kerjakan semuanya saja dalam 1
+PR"), setelah potongan shell dan Ringkasan di bawah.
+
+- **Status:** `src/modules/admin/status-labels.ts` menjadi satu sumber label
+  status Admin berbahasa Indonesia (Pesanan, Custom Print, quote, pembayaran,
+  pengiriman, stok, file, invoice, tarif, undangan) dengan nada attention,
+  danger, success, atau neutral. Lima salinan `formatStatus` yang menampilkan
+  enum mentah ("Ready To Ship") dihapus; filter daftar memakai label yang sama.
+  `AdminStatusBadge` (`src/app/admin/admin-ui.tsx`) menggantikan chip status
+  per halaman; "Published/Draft/Featured/Card-only" menjadi
+  "Terbit/Draft/Unggulan/Kartu saja". Aksi status menjadi "Ubah ke Dikirim"
+  dan seterusnya.
+- **Card, ringkasan, tabel:** override Card di 40-an halaman dilepas sehingga
+  border, radius, dan latar mengikuti default; empat `SummaryCard` menjadi
+  `AdminSummaryCard`; header tabel memakai `adminTableHeaderClass` (tanpa huruf
+  kapital berjarak). Judul seksi weight 500. Label huruf kapital berjarak
+  dilepas.
+- **Tombol:** `buttonVariants` kini menggabungkan kelas dengan tailwind-merge.
+  Sebelumnya `border-transparent` dasar mengalahkan warna garis varian outline
+  di setiap tautan yang memakainya tanpa `cn()`, termasuk tab Laporan, tautan
+  refund, dan paginasi. Kelas buatan sendiri (`rounded-lg bg-brand-700 …`) di
+  tautan dan tombol Admin dipangkas sehingga mengikuti pill bersama.
+- **Copy:** teks yang tampil memakai "pesanan", "Produk Toko", dan "Custom
+  Print" (daftar, detail, refund, laporan, pencarian, grup aktivitas, antrean).
+  Langkah review Custom Print menjadi pill dengan langkah aktif terisi.
+  Sign-in Admin memakai dasar terang, pill "Kembali ke situs", dan kartu
+  hairline. Label sumbu grafik Rupiah tidak lagi terpotong.
+- **State error/denied/not-found:** sudah memakai `SystemStateView` v2; tidak
+  diubah. `admin-loading.tsx` (file yatim yang isinya dikunci hash test) tidak
+  disentuh.
+- **Test:** label di test unit dan E2E Admin mengikuti nama baru; tidak ada
+  assertion yang dihapus.
+- **Bukti lokal:** lint (0 error), typecheck, unit 139 file/1.539 test (satu
+  test properti timeout di bawah beban, lulus saat dijalankan sendiri), backend
+  Admin, tarif, refund, dan privasi 10 file/103 test. E2E Admin lengkap
+  dijalankan lokal dengan sesi Owner dan Admin sungguhan terhadap DB test
+  terisolasi `niuva_variant_media_test` (DB test lama tidak disentuh): 29/31
+  pada run pertama dan kedua; kegagalannya berasal dari label atau kalimat lama
+  di test (`0ea34ec` dan spec laporan), lalu spec yang diperbaiki lulus. Capture dengan sesi Owner: 28 route desktop, 7
+  route ponsel, dan sign-in; satu h1, tanpa overflow, tanpa error console.
+- **Belum:** review visual Owner untuk Admin; motion pass global (T51).
+
+### T50 — shell, Ringkasan, dan label Admin, 2026-11-01
+
+Branch `claude/redesign-admin-shell` dari `main@d2952df` (setelah PR #116);
+potongan pertama T50 ("lanjut ke T50").
+
+- **Label Indonesia (Q20):** sesuai sitemap T45, navigasi, label root,
+  breadcrumb, menu pencarian, grup aktivitas, tab laporan, judul halaman, dan
+  judul tab browser memakai Ringkasan, Pesanan, Produk & Stok, dan Customer
+  (sebelumnya Overview, Orders, Products & Stock, Customers). Label root
+  kompatibilitas menjadi "Antrean tindakan" dan "Tarif Custom Print". Judul
+  "Detail order" menjadi "Detail pesanan".
+- **Card bersama:** default `Card` kini permukaan putih bergaris hairline
+  (`border-border`, sebelumnya `ring-foreground/10`) dengan jarak 20/24px,
+  judul `text-lg` 500, dan deskripsi `text-ui`. Ini dasar untuk melepas
+  override per halaman di potongan berikutnya.
+- **Shell dan header:** tipografi 2.0; tautan kembali menjadi pill outline
+  berpanah; judul halaman `text-2xl`/`text-3xl` weight 500. Paginasi memakai
+  `NiuvaLink` outline; sebelumnya `buttonVariants` outline tanpa `cn()` sehingga
+  garisnya hilang. Tampilan data tidak tersedia tanpa label eyebrow.
+- **Ringkasan:** judul "Ringkasan"; kartu perhatian tanpa panah dekoratif, ikon
+  netral, dan garis amber hanya pada kartu Isu ketika ada isu terbuka; fakta
+  bisnis dalam grid berhairline; "Order dibayar" menjadi "Pesanan dibayar";
+  tautan "Lihat ..." tanpa panah.
+- **Test:** label di test unit, integration, dan E2E Admin mengikuti nama baru
+  (termasuk helper sesi E2E); tidak ada assertion yang dihapus. Dua cek absensi
+  menu lama kini memakai nama barunya.
+- **Bukti lokal:** lint (0 error), typecheck, unit 139 file/1.539 test, backend
+  Admin 7 file/86 test. Ringkasan diperiksa lewat route sementara yang tidak
+  di-commit (halaman Admin butuh sesi Admin dengan TOTP; DB test lama di port
+  55432 punya migration gagal dan tidak disentuh): satu h1, tanpa overflow
+  1440/390/320, tiga keadaan (ada isu, tenang, data gagal dimuat). Konsol hanya
+  berisi 503 dari pusat notifikasi tanpa sesi. Integration dan E2E Admin
+  dibuktikan di CI.
+- **Belum:** daftar, detail, review Custom Print, keuangan, tarif, konten,
+  laporan, akses/privasi, dan state error Admin (potongan berikutnya T50);
+  review visual Owner.
 
 ### T49 — enam halaman auth, 2026-11-01
 

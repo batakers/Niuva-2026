@@ -22,7 +22,7 @@ export function AdminTrendChart({ label, points, unit = "jumlah" }: TrendSeries)
         <AreaChart accessibilityLayer data={rows} margin={{ top: 12, right: 12, left: 0, bottom: 0 }}>
           <CartesianGrid vertical={false} />
           <XAxis dataKey="key" tickLine={false} axisLine={false} tickMargin={10} minTickGap={40} tickFormatter={value => String(value).slice(5)} />
-          <YAxis width={44} tickLine={false} axisLine={false} tickMargin={8} allowDecimals={false} tickFormatter={value => new Intl.NumberFormat("id-ID", { notation: "compact" }).format(Number(value))} />
+          <YAxis width={unit === "Rp" ? 64 : 44} tickLine={false} axisLine={false} tickMargin={8} allowDecimals={false} tickFormatter={value => new Intl.NumberFormat("id-ID", { notation: "compact" }).format(Number(value))} />
           <ChartTooltip content={<ChartTooltipContent hideLabel formatter={(_value, _name, item) => {
             const payload: unknown = item.payload;
             if (typeof payload !== "object" || payload === null || !("canonical" in payload) || typeof payload.canonical !== "string" || !("key" in payload) || typeof payload.key !== "string") return null;

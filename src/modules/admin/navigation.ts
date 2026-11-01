@@ -4,16 +4,16 @@ export const adminRootPaths = ["/admin", "/admin/finance", "/admin/queue", "/adm
 export type AdminRootPath = typeof adminRootPaths[number];
 
 const rootLabels: Readonly<Record<AdminRootPath, string>> = {
-  "/admin": "Overview",
+  "/admin": "Ringkasan",
   "/admin/finance": "Keuangan",
-  "/admin/queue": "Action Queue",
-  "/admin/orders": "Orders",
+  "/admin/queue": "Antrean tindakan",
+  "/admin/orders": "Pesanan",
   "/admin/custom-print": "Custom Print",
-  "/admin/products": "Products & Stock",
+  "/admin/products": "Produk & Stok",
   "/admin/portfolio": "Portfolio",
-  "/admin/pricing": "Pricing Rules",
+  "/admin/pricing": "Tarif Custom Print",
   "/admin/privacy": "Privasi Customer",
-  "/admin/customers": "Customers",
+  "/admin/customers": "Customer",
   "/admin/content/site-information": "Informasi Situs",
   "/admin/finance/invoices": "Invoice",
   "/admin/finance/payments": "Transaksi Pembayaran",

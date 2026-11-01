@@ -72,7 +72,7 @@ test("Admin enrolls TOTP, signs in again with a second factor and revokes the se
     await page.getByLabel("Saya sudah menyimpan kode pemulihan").check();
     await page.getByLabel("Kode authenticator", { exact: true }).fill(generateTestAdminTotp(secret));
     await verifyAuthenticatorAndLand(page);
-    await expect(page.getByRole("heading", { name: "Overview", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Ringkasan", exact: true })).toBeVisible();
     // The proxy only checks cookie presence; requireAdmin() decides access.
     expect((await page.request.get("/api/admin/account")).status()).toBe(200);
     await page.getByRole("button", { name: /Buka menu akun/ }).click();

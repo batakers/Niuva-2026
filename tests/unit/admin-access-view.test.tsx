@@ -230,7 +230,7 @@ describe("admin access route", () => {
     expect(authMocks.requireAdmin).toHaveBeenCalledOnce();
     expect(queueMocks.list).toHaveBeenCalledOnce();
     expect(
-      screen.getByRole("heading", { level: 1, name: "Overview" }),
+      screen.getByRole("heading", { level: 1, name: "Ringkasan" }),
     ).toBeInTheDocument();
     expect(screen.getByText("Owner", { selector: "span" })).toBeInTheDocument();
   });
@@ -264,7 +264,7 @@ describe("admin access route", () => {
     expect(
       screen.getByRole("heading", {
         level: 1,
-        name: "Overview",
+        name: "Ringkasan",
       }),
     ).toBeInTheDocument();
     expect(screen.getByText("Pekerjaan yang perlu perhatian belum dapat dimuat.")).toBeInTheDocument();

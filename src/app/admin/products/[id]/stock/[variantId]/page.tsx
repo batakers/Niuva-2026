@@ -25,7 +25,7 @@ const kindLabel: Readonly<Record<string, string>> = {
   OPENING_BALANCE: "Saldo awal",
   CATALOG_IMPORT: "Impor katalog",
   MANUAL_ADJUSTMENT: "Penyesuaian Admin",
-  ORDER_CONSUMPTION: "Konsumsi order",
+  ORDER_CONSUMPTION: "Konsumsi pesanan",
 };
 
 export default async function AdminStockHistoryPage({
@@ -57,7 +57,7 @@ export default async function AdminStockHistoryPage({
   return (
     <AdminShell active="products" role={access.profile.role}>
       <main className="space-y-8" data-admin-surface="stock-history" id="main-content">
-        <AdminPageHeader title="Riwayat stok varian" description={`${history.variant.name} · ${history.variant.sku}. Riwayat tersedia sejak saldo pembuka saat migrasi.`} returnHref={withAdminReturnTo(`/admin/products/${id}`, returnTo)} returnLabel={`Kembali ke ${history.product.name}`} breadcrumbs={[{ label: "Products & Stock", href: returnTo }, { label: history.product.name, href: withAdminReturnTo(`/admin/products/${id}`, returnTo) }, { label: "Riwayat stok" }]} />
+        <AdminPageHeader title="Riwayat stok varian" description={`${history.variant.name} · ${history.variant.sku}. Riwayat tersedia sejak saldo pembuka saat migrasi.`} returnHref={withAdminReturnTo(`/admin/products/${id}`, returnTo)} returnLabel={`Kembali ke ${history.product.name}`} breadcrumbs={[{ label: "Produk & Stok", href: returnTo }, { label: history.product.name, href: withAdminReturnTo(`/admin/products/${id}`, returnTo) }, { label: "Riwayat stok" }]} />
 
         <section aria-label="Saldo stok saat ini" className="grid gap-3 sm:grid-cols-3">
           <Balance label="Stok fisik" value={history.variant.stockOnHand} />
@@ -65,8 +65,8 @@ export default async function AdminStockHistoryPage({
           <Balance label="Tersedia" value={history.variant.available} />
         </section>
 
-        <Card as="section" aria-labelledby="movements-title" className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-5 sm:p-6">
-          <h2 className="text-xl font-semibold" id="movements-title">Perubahan saldo</h2>
+        <Card as="section" aria-labelledby="movements-title" className="gap-0 p-5 sm:p-6">
+          <h2 className="text-xl font-medium tracking-[-0.015em]" id="movements-title">Perubahan saldo</h2>
           {history.movements.length === 0 ? (
             <p className="mt-5 text-sm text-muted-foreground">Tidak ada perubahan pada halaman ini.</p>
           ) : (
@@ -95,5 +95,5 @@ export default async function AdminStockHistoryPage({
 }
 
 function Balance({ label, value }: Readonly<{ label: string; value: number }>) {
-  return <Card className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-4"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></Card>;
+  return <Card className="gap-0 p-4"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></Card>;
 }

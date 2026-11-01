@@ -20,7 +20,7 @@ function InvitationForm({ mailReady, onNew }: Readonly<{ mailReady: boolean; onN
   if (state.status === "success") return <div className="space-y-6">
     <div role="status" className="space-y-3">
       <Check aria-hidden="true" className="size-6 text-success-icon" />
-      <h2 className="text-xl font-semibold">Undangan sudah dikirim</h2>
+      <h2 className="text-xl font-medium tracking-[-0.015em]">Undangan sudah dikirim</h2>
       <p className="break-words leading-6 text-muted-foreground">Minta penerima memeriksa inbox atau spam di <strong className="font-medium text-foreground">{state.email}</strong>. Tautan berlaku selama 30 menit.</p>
       <p className="text-sm leading-6 text-muted-foreground">Akses Dashboard terbuka setelah penerima membuat password dan memverifikasi authenticator.</p>
     </div>

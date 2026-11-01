@@ -16,9 +16,10 @@ import { StatusNotice } from "@/components/niuva/status-notice";
 import type { AdminAccess } from "@/lib/auth/admin";
 import type { FailureKind } from "@/lib/observability/logger";
 import { AdminOperationsService, type AdminCustomPrintRequestRow } from "@/modules/admin/operations";
+import { AdminStatusBadge, AdminSummaryCard } from "@/app/admin/admin-ui";
 
 export const metadata: Metadata = {
-  title: "Custom Print admin · Niuva",
+  title: "Custom Print · Admin Niuva",
   robots: { follow: false, index: false },
 };
 
@@ -54,16 +55,16 @@ export default async function AdminCustomPrintPage({
           <AdminListControls area="custom-print" query={query} />
 
           <section aria-label="Ringkasan custom print" className="mt-6 grid gap-3 sm:grid-cols-3">
-            <SummaryCard label="Hasil filter" value={String(result.filteredTotal)} />
-            <SummaryCard label="Menunggu review di halaman ini" value={String(waitingReview)} />
-            <SummaryCard label="Quote siap di halaman ini" value={String(waitingQuote)} />
+            <AdminSummaryCard label="Hasil filter" value={String(result.filteredTotal)} />
+            <AdminSummaryCard label="Menunggu review di halaman ini" value={String(waitingReview)} />
+            <AdminSummaryCard label="Quote siap di halaman ini" value={String(waitingQuote)} />
           </section>
 
           <section className="mt-8" aria-labelledby="custom-print-list-title">
             <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
               <div>
-                <h2 className="text-xl font-semibold" id="custom-print-list-title">Request terbaru</h2>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">Buka detail untuk review dan quote; pengiriman order ditangani di Orders.</p>
+                <h2 className="text-xl font-medium tracking-[-0.015em]" id="custom-print-list-title">Request terbaru</h2>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">Buka detail untuk review dan quote; pengiriman ditangani di Pesanan.</p>
               </div>
               <p className="text-sm text-muted-foreground" role="status">Dibaca {dateFormatter.format(result.generatedAt)}</p>
             </div>
@@ -94,20 +95,17 @@ async function loadCustomPrintRequests(access: AdminAccess, query: AdminListQuer
   }
 }
 
-function SummaryCard({ label, value }: Readonly<{ label: string; value: string }>) {
-  return <Card className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-4"><p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p></Card>;
-}
 
 function RequestCard({ item, returnTo }: Readonly<{ item: AdminCustomPrintRequestRow; returnTo: string }>) {
   return (
-    <Card as="article" className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-5 sm:p-6">
+    <Card as="article" className="gap-0 p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <Link className="font-mono text-sm font-semibold text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/custom-print/${item.id}`, returnTo)}>{item.referenceNumber}</Link>
-          <h3 className="mt-2 text-lg font-semibold">{item.customerName}</h3>
+          <h3 className="mt-2 text-lg font-medium tracking-[-0.015em]">{item.customerName}</h3>
           <p className="mt-1 text-sm text-muted-foreground">{item.customerEmail}</p>
         </div>
-        <span className="inline-flex rounded-md border border-brand-300 bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-800">{formatStatus(item.status)}</span>
+        <AdminStatusBadge value={item.status} />
       </div>
       <dl className="mt-5 grid gap-4 border-t border-border pt-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
         <div><dt className="text-xs text-muted-foreground">Material diminta</dt><dd className="mt-1 font-medium">{item.materialRequested}</dd></div>
@@ -122,6 +120,3 @@ function RequestCard({ item, returnTo }: Readonly<{ item: AdminCustomPrintReques
   );
 }
 
-function formatStatus(value: string): string {
-  return value.toLocaleLowerCase("id").split("_").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
-}

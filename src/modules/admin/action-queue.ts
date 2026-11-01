@@ -75,7 +75,7 @@ const ACTION_QUEUE_COPY = {
   PACKAGE_MEASUREMENT: {
     attention: "STANDARD",
     nextAction: "Ukur paket final untuk pengiriman",
-    title: "Custom order menunggu pengukuran paket",
+    title: "Pesanan custom menunggu pengukuran paket",
   },
   PAYMENT_EXCEPTION: {
     attention: "EXCEPTION",

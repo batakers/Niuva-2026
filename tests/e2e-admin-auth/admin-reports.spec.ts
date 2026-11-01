@@ -12,7 +12,7 @@ for (const role of ["OWNER", "ADMIN"] as const) test(`${role} reads bento Overvi
   await mkdir(".local/admin-redesign/captures", { recursive: true });
   for (const width of [1440, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 900 }); await page.emulateMedia({ reducedMotion: "reduce" });
-    await expect(page.getByRole("heading", { name: "Overview", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Ringkasan", exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     await page.screenshot({ path: `.local/admin-redesign/captures/overview-${role.toLowerCase()}-${width}.png`, fullPage: true, caret: "initial" });
   }
@@ -23,7 +23,7 @@ for (const role of ["OWNER", "ADMIN"] as const) test(`${role} reads bento Overvi
   await expect(page.getByRole("table", { name: "Penerimaan terkonfirmasi", exact: true })).toBeVisible();
   await page.getByRole("navigation", { name: "Bagian laporan" }).getByRole("link", { name: "Trafik Situs" }).click();
   await expect(page.getByRole("heading", { name: "Trafik Situs", exact: true })).toBeVisible();
-  await expect(page.getByText(/bukan pengunjung unik atau atribusi order/)).toBeVisible();
+  await expect(page.getByText(/bukan pengunjung unik atau atribusi pesanan/)).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
   await page.screenshot({ path: `.local/admin-redesign/captures/reports-${role.toLowerCase()}-320.png`, fullPage: true, caret: "initial" });
   await page.setViewportSize({ width: 1440, height: 900 }); await page.goto("/admin/reports?tab=summary&range=30d");
@@ -32,7 +32,7 @@ for (const role of ["OWNER", "ADMIN"] as const) test(`${role} reads bento Overvi
   await page.setViewportSize({ width: 768, height: 1024 });
   await page.evaluate(() => { document.documentElement.style.fontSize = "200%"; });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(768);
-  const ordersTab = page.getByRole("navigation", { name: "Bagian laporan" }).getByRole("link", { name: "Orders", exact: true });
+  const ordersTab = page.getByRole("navigation", { name: "Bagian laporan" }).getByRole("link", { name: "Pesanan", exact: true });
   await ordersTab.focus(); await expect(ordersTab).toBeFocused(); await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/tab=orders&range=30d/);
   await expect(page.getByRole("heading", { name: "Operasional", exact: true })).toBeVisible();

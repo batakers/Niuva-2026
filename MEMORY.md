@@ -69,6 +69,7 @@ Carried findings retain their IDs; source fixes do not close hosted or release g
 - [x] Company routes on Foundation v2 (T47), verified locally; Owner visual review per route is tracked in `TASKS.md`
 - [x] Commerce and MAKE routes on Foundation v2 (T48), verified locally; Owner visual review and Customer/Admin routes are tracked in `TASKS.md`
 - [x] Customer account, refund, privacy and auth routes on Foundation v2 (T49), verified locally; Owner visual review and Admin routes are tracked in `TASKS.md`
+- [x] Admin routes on Foundation v2 (T50) with shared Indonesian status labels, verified locally with real Admin sessions; Owner visual review and the motion pass (T51) are tracked in `TASKS.md`
 - [x] Retail/MAKE checkout/quote/order source paths present; runtime belum diverifikasi
 - [ ] UI Foundation: DS-DEC-019 authorization remains; visual/device/AT acceptance belum diverifikasi
 - [ ] v1.0 closure/launch: open gates remain in `TASKS.md`

@@ -50,8 +50,8 @@ const labels: Readonly<Record<string, string>> = {
   "custom-print.request.notification.failed": "Notifikasi Custom Print gagal dikirim",
   "custom-print.request.status.transition": "Status Custom Print diperbarui",
   "custom-print.request.token-reissued": "Tautan Custom Print diperbarui",
-  "order.status.transition": "Status order diperbarui",
-  "order.public-token.reissued": "Tautan order diperbarui",
+  "order.status.transition": "Status pesanan diperbarui",
+  "order.public-token.reissued": "Tautan pesanan diperbarui",
   "checkout.created": "Checkout dibuat",
   "checkout.replayed": "Checkout yang sama diproses ulang",
   "quote.draft.created": "Draft quote dibuat",
@@ -91,8 +91,8 @@ export function activityGroup(entityType: string, action: string): string {
   if (entityType.includes("PRIVACY") || action.startsWith("PRIVACY_")) return "Privasi Customer";
   if (action.startsWith("inquiry.") || action.startsWith("b2b")) return "B2B Inquiries";
   if (action.startsWith("custom-print.") || action.startsWith("quote.")) return "Custom Print";
-  if (action.startsWith("order.") || action.startsWith("checkout.") || action.startsWith("payment.") || action.startsWith("shipping.")) return "Orders";
-  if (action.startsWith("catalog.") || action.startsWith("inventory.")) return "Products & Stock";
+  if (action.startsWith("order.") || action.startsWith("checkout.") || action.startsWith("payment.") || action.startsWith("shipping.")) return "Pesanan";
+  if (action.startsWith("catalog.") || action.startsWith("inventory.")) return "Produk & Stok";
   if (action.startsWith("pricing-")) return "Tarif Custom Print";
   if (action.startsWith("finance.")) return "Keuangan";
   if (action.startsWith("site-information.")) return "Informasi Situs";

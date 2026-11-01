@@ -25,7 +25,7 @@ export async function createAdminBrowserSession(page: Page, prisma: PrismaClient
   await page.getByLabel("Saya sudah menyimpan kode pemulihan").check();
   await page.getByLabel("Kode authenticator", { exact: true }).fill(generateTestAdminTotp(secret));
   await page.getByRole("button", { name: "Verifikasi kode" }).click();
-  await expect(page.getByRole("heading", { name: "Overview", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ringkasan", exact: true })).toBeVisible();
   if (!user.profile) throw new Error("Synthetic Admin profile missing.");
   return user.profile;
 }

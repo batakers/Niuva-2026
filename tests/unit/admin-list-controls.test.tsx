@@ -7,9 +7,9 @@ describe("Admin list controls", () => {
     render(<AdminListControls area="orders" query={{ page: 3, q: "ORD-1", status: "PAID", type: "RETAIL" }} />);
     expect(screen.getByRole("search")).toHaveAttribute("method", "get");
     expect(screen.getByRole("search")).toHaveAttribute("action", "/admin/orders");
-    expect(screen.getByLabelText("Cari nomor order")).toHaveValue("ORD-1");
+    expect(screen.getByLabelText("Cari nomor pesanan")).toHaveValue("ORD-1");
     expect(screen.getByLabelText("Status")).toHaveValue("PAID");
-    expect(screen.getByLabelText("Jenis order")).toHaveValue("RETAIL");
+    expect(screen.getByLabelText("Jenis pesanan")).toHaveValue("RETAIL");
     expect(document.querySelector('input[name="page"]')).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Reset filter" })).toHaveAttribute("href", "/admin/orders");
   });

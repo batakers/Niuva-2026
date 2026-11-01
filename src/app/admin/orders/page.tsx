@@ -17,9 +17,11 @@ import { StatusNotice } from "@/components/niuva/status-notice";
 import type { AdminAccess } from "@/lib/auth/admin";
 import type { FailureKind } from "@/lib/observability/logger";
 import { AdminOperationsService, type AdminOrderRow } from "@/modules/admin/operations";
+import { AdminStatusBadge, AdminSummaryCard, adminTableHeaderClass } from "@/app/admin/admin-ui";
+import { adminStatusLabel } from "@/modules/admin/status-labels";
 
 export const metadata: Metadata = {
-  title: "Orders admin · Niuva",
+  title: "Pesanan · Admin Niuva",
   robots: { follow: false, index: false },
 };
 
@@ -47,25 +49,25 @@ export default async function AdminOrdersPage({
   const { access } = gate;
 
   const loaded = await loadOrders(access, query);
-  if (loaded.status === "unavailable") return <AdminDataUnavailableView active="orders" kind={loaded.kind} role={access.profile.role} title="Orders belum dapat dimuat" />;
+  if (loaded.status === "unavailable") return <AdminDataUnavailableView active="orders" kind={loaded.kind} role={access.profile.role} title="Pesanan belum dapat dimuat" />;
   const result = loaded.data;
   return (
       <AdminShell active="orders" role={result.role}>
         <main id="main-content" data-admin-surface="orders">
           <AdminListPosition listHref={returnTo} />
-          <AdminPageHeader title="Orders" description="Cari order, pantau pembayaran, dan buka detail untuk tindakan fulfillment." breadcrumbs={[{ label: "Orders" }]} />
+          <AdminPageHeader title="Pesanan" description="Cari pesanan, pantau pembayaran, dan buka detail untuk tindakan fulfillment." breadcrumbs={[{ label: "Pesanan" }]} />
           <AdminListControls area="orders" query={query} />
 
-          <section aria-label="Ringkasan orders" className="mt-6 grid gap-3 sm:grid-cols-3">
-            <SummaryCard label="Hasil filter" value={String(result.filteredTotal)} />
-            <SummaryCard label="Retail di halaman ini" value={String(result.items.filter((item) => item.orderType === "RETAIL").length)} />
-            <SummaryCard label="Custom print di halaman ini" value={String(result.items.filter((item) => item.orderType === "CUSTOM_PRINT").length)} />
+          <section aria-label="Ringkasan pesanan" className="mt-6 grid gap-3 sm:grid-cols-3">
+            <AdminSummaryCard label="Hasil filter" value={String(result.filteredTotal)} />
+            <AdminSummaryCard label="Produk Toko di halaman ini" value={String(result.items.filter((item) => item.orderType === "RETAIL").length)} />
+            <AdminSummaryCard label="Custom Print di halaman ini" value={String(result.items.filter((item) => item.orderType === "CUSTOM_PRINT").length)} />
           </section>
 
           <section className="mt-8" aria-labelledby="orders-list-title">
             <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
               <div>
-                <h2 className="text-xl font-semibold" id="orders-list-title">Order terbaru</h2>
+                <h2 className="text-xl font-medium tracking-[-0.015em]" id="orders-list-title">Pesanan terbaru</h2>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">50 record per halaman. Filter berlaku untuk seluruh daftar; buka detail untuk melakukan tindakan.</p>
               </div>
               <p className="text-sm text-muted-foreground" role="status">Dibaca {dateFormatter.format(result.generatedAt)} · Halaman {result.page}</p>
@@ -77,12 +79,12 @@ export default async function AdminOrdersPage({
               </div>
             ) : (
               <>
-                <Card className="gap-0 py-0 ring-0 mt-6 hidden overflow-x-auto rounded-xl border border-border bg-card lg:block">
+                <Card className="gap-0 py-0 mt-6 hidden overflow-x-auto lg:block">
                   <Table className="w-full min-w-[58rem] text-left text-sm">
-                    <TableCaption className="sr-only">Daftar order terbaru</TableCaption>
-                    <TableHeader className="border-b border-border bg-muted text-xs uppercase tracking-[0.1em] text-muted-foreground">
+                    <TableCaption className="sr-only">Daftar pesanan terbaru</TableCaption>
+                    <TableHeader className={adminTableHeaderClass}>
                       <TableRow>
-                        <TableHead className="px-5 py-4 font-medium" scope="col">Order</TableHead>
+                        <TableHead className="px-5 py-4 font-medium" scope="col">Pesanan</TableHead>
                         <TableHead className="px-5 py-4 font-medium" scope="col">Customer</TableHead>
                         <TableHead className="px-5 py-4 font-medium" scope="col">Status</TableHead>
                         <TableHead className="px-5 py-4 font-medium" scope="col">Pembayaran</TableHead>
@@ -119,28 +121,20 @@ async function loadOrders(access: AdminAccess, query: AdminListQuery): Promise<O
   }
 }
 
-function SummaryCard({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <Card className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-4">
-      <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{label}</p>
-      <p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p>
-    </Card>
-  );
-}
 
 function OrderTableRow({ item, returnTo }: Readonly<{ item: AdminOrderRow; returnTo: string }>) {
   return (
     <TableRow>
       <TableHead className="px-5 py-4 align-top font-medium" scope="row">
-        <Link className="block font-mono text-sm text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/orders/${item.id}`, returnTo)}>{item.orderNumber}</Link>
+        <Link className="block break-all font-mono text-sm text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/orders/${item.id}`, returnTo)}>{item.orderNumber}</Link>
         <span className="mt-1 block text-xs font-normal text-muted-foreground">{orderTypeLabel(item.orderType)}</span>
       </TableHead>
       <TableCell className="px-5 py-4 align-top">
         <span className="block font-medium">{item.customerName}</span>
-        <span className="mt-1 block text-xs text-muted-foreground">{item.customerEmail}</span>
+        <span className="mt-1 block break-all text-xs text-muted-foreground">{item.customerEmail}</span>
       </TableCell>
-      <TableCell className="px-5 py-4 align-top"><StatusText value={item.status} /></TableCell>
-      <TableCell className="px-5 py-4 align-top text-muted-foreground">{item.paymentStatus ? formatStatus(item.paymentStatus) : "Belum tercatat"}</TableCell>
+      <TableCell className="px-5 py-4 align-top"><AdminStatusBadge value={item.status} /></TableCell>
+      <TableCell className="px-5 py-4 align-top text-muted-foreground">{item.paymentStatus ? adminStatusLabel(item.paymentStatus) : "Belum tercatat"}</TableCell>
       <TableCell className="px-5 py-4 text-right align-top font-semibold tabular-nums">{currencyFormatter.format(BigInt(item.grandTotalRp))}</TableCell>
       <TableCell className="px-5 py-4 text-right align-top text-xs text-muted-foreground">{dateFormatter.format(item.updatedAt)}</TableCell>
     </TableRow>
@@ -149,32 +143,25 @@ function OrderTableRow({ item, returnTo }: Readonly<{ item: AdminOrderRow; retur
 
 function OrderCard({ item, returnTo }: Readonly<{ item: AdminOrderRow; returnTo: string }>) {
   return (
-    <Card as="article" className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-5">
+    <Card as="article" className="gap-0 p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <Link className="font-mono text-sm font-semibold text-brand-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={withAdminReturnTo(`/admin/orders/${item.id}`, returnTo)}>{item.orderNumber}</Link>
           <p className="mt-1 text-xs text-muted-foreground">{orderTypeLabel(item.orderType)}</p>
         </div>
-        <StatusText value={item.status} />
+        <AdminStatusBadge value={item.status} />
       </div>
       <dl className="mt-5 grid gap-4 border-t border-border pt-4 text-sm sm:grid-cols-2">
         <div><dt className="text-xs text-muted-foreground">Customer</dt><dd className="mt-1 font-medium">{item.customerName}</dd><dd className="text-xs text-muted-foreground">{item.customerEmail}</dd></div>
         <div><dt className="text-xs text-muted-foreground">Total</dt><dd className="mt-1 font-semibold tabular-nums">{currencyFormatter.format(BigInt(item.grandTotalRp))}</dd></div>
-        <div><dt className="text-xs text-muted-foreground">Pembayaran</dt><dd className="mt-1 font-medium">{item.paymentStatus ? formatStatus(item.paymentStatus) : "Belum tercatat"}</dd></div>
+        <div><dt className="text-xs text-muted-foreground">Pembayaran</dt><dd className="mt-1 font-medium">{item.paymentStatus ? adminStatusLabel(item.paymentStatus) : "Belum tercatat"}</dd></div>
         <div><dt className="text-xs text-muted-foreground">Diperbarui</dt><dd className="mt-1 text-muted-foreground">{dateFormatter.format(item.updatedAt)}</dd></div>
       </dl>
     </Card>
   );
 }
 
-function StatusText({ value }: Readonly<{ value: string }>) {
-  return <span className="inline-flex rounded-md border border-brand-300 bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-800">{formatStatus(value)}</span>;
-}
-
-function formatStatus(value: string): string {
-  return value.toLocaleLowerCase("id").split("_").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
-}
 
 function orderTypeLabel(value: AdminOrderRow["orderType"]): string {
-  return value === "CUSTOM_PRINT" ? "Custom print" : "Retail";
+  return value === "CUSTOM_PRINT" ? "Custom Print" : "Produk Toko";
 }

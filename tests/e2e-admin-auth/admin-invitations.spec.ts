@@ -30,7 +30,7 @@ async function enroll(page: Page, password: string) {
   await page.getByLabel("Kode authenticator", { exact: true }).fill(generateTestAdminTotp(secret));
   await page.getByRole("button", { name: "Verifikasi kode" }).click();
   await page.waitForURL("**/admin", { waitUntil: "domcontentloaded", timeout: 30_000 });
-  await expect(page.getByRole("heading", { name: "Overview", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ringkasan", exact: true })).toBeVisible();
 }
 async function ownerFixture() {
   const id = randomUUID();

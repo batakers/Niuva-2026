@@ -62,7 +62,7 @@ describe("AdminActionQueueView", () => {
     expect(screen.getByRole("list", { name: "Pekerjaan operasional Niuva" })).toBeInTheDocument();
     expect(screen.getAllByText("ORD-SHIP-1")).toHaveLength(2);
     expect(screen.getAllByText("Tinjau exception pengiriman")).toHaveLength(2);
-    expect(screen.getAllByText("Exception")).toHaveLength(2);
+    expect(screen.getAllByText("Perlu pemeriksaan")).toHaveLength(2);
     expect(screen.queryByText("client@example.com")).not.toBeInTheDocument();
     expect(within(screen.getByRole("main")).queryByRole("button")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Lipat navigasi Admin" })).toBeInTheDocument();

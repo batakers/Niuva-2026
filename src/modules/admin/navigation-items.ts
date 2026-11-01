@@ -12,11 +12,11 @@ export type AdminNavGroup = Readonly<{ label: string; items: readonly AdminNavIt
 export function getAdminNavigationForRole(role: AdminRole): readonly AdminNavGroup[] {
   return [
     { label: "Operasional", items: [
-      { area: "overview", label: "Overview", href: "/admin", icon: "overview" },
-      { area: "orders", label: "Orders", href: "/admin/orders", icon: "orders" },
+      { area: "overview", label: "Ringkasan", href: "/admin", icon: "overview" },
+      { area: "orders", label: "Pesanan", href: "/admin/orders", icon: "orders" },
       { area: "custom-print", label: "Custom Print", href: "/admin/custom-print", icon: "custom-print" },
     ] },
-    { label: "Kelola", items: [{ area: "products", label: "Products & Stock", href: "/admin/products", icon: "products" }, { area: "customers", label: "Customers", href: "/admin/customers", icon: "customers" }] },
+    { label: "Kelola", items: [{ area: "products", label: "Produk & Stok", href: "/admin/products", icon: "products" }, { area: "customers", label: "Customer", href: "/admin/customers", icon: "customers" }] },
     { label: "Keuangan", items: [{ area: "invoices", label: "Invoice", href: "/admin/finance/invoices", icon: "invoices" }, { area: "payments", label: "Pembayaran", href: "/admin/finance/payments", icon: "payments" }, { area: "expenses", label: "Pengeluaran", href: "/admin/finance/expenses", icon: "expenses" }] },
     { label: "Konten", items: [{ area: "portfolio", label: "Portfolio", href: "/admin/portfolio", icon: "portfolio" }, { area: "site-information", label: "Informasi Situs", href: "/admin/content/site-information", icon: "site-information" }] },
     { label: "Laporan", items: [{ area: "reports", label: "Laporan", href: "/admin/reports", icon: "reports" }] },

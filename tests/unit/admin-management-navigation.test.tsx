@@ -17,7 +17,7 @@ describe("Admin management return context", () => {
   it("returns from product editor to the filtered product list", async () => {
     mocks.read.mockResolvedValue({ id, name: "Synthetic product", slug: "synthetic", description: "Fixture", isPublished: false, category: null, media: [], variants: [] });
     render(await ProductPage({ params: Promise.resolve({ id }), searchParams: Promise.resolve({ returnTo: "/admin/products?publication=draft&page=3" }) }));
-    expect(screen.getByRole("link", { name: "Kembali ke Products & Stock" })).toHaveAttribute("href", "/admin/products?publication=draft&page=3");
+    expect(screen.getByRole("link", { name: "Kembali ke Produk & Stok" })).toHaveAttribute("href", "/admin/products?publication=draft&page=3");
   });
   it("carries the same root origin to variant history", () => {
     render(<StockAdjustmentPanel productId={id} variantId={id} stockOnHand={2} returnTo="/admin/products?publication=draft&page=3" />);
