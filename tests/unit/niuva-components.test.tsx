@@ -60,6 +60,18 @@ describe("Niuva P0 components", () => {
     );
   });
 
+  it("keeps a control's own read-only state, as checkout account fields need", () => {
+    render(
+      <div>
+        <FormField id="account-email" label="Email terverifikasi"><Input defaultValue="pemesan@example.test" readOnly /></FormField>
+        <FormField id="phone" label="Nomor WhatsApp"><Input /></FormField>
+      </div>,
+    );
+
+    expect(screen.getByRole("textbox", { name: "Email terverifikasi" })).toHaveAttribute("readonly");
+    expect(screen.getByRole("textbox", { name: "Nomor WhatsApp" })).not.toHaveAttribute("readonly");
+  });
+
   it("accepts the canonical control and StatusNotice action contracts", () => {
     const onAction = vi.fn();
 

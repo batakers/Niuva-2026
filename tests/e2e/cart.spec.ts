@@ -15,7 +15,8 @@ test("product selection adds only variant ID and quantity to the local cart", as
   await expect(page).toHaveURL(/\/cart\?preview=examples$/);
   await expect(page.locator('a[href="/cart"]').filter({ hasText: "2 item di keranjang" }).first()).toBeAttached();
   await expect(page.getByRole("heading", { level: 3, name: "Dock modular meja" })).toBeVisible();
-  await expect(page.getByText(/Rp\s?390\.000/)).toBeVisible();
+  // The line total sits in the item row; the summary repeats it as the subtotal.
+  await expect(page.getByRole("listitem").filter({ hasText: "Dock modular meja" }).getByText(/Rp\s?390\.000/)).toBeVisible();
 });
 
 test("cart quantity updates locally and remove returns to the empty state", async ({ page }) => {
@@ -29,7 +30,7 @@ test("cart quantity updates locally and remove returns to the empty state", asyn
   expect(await page.evaluate(key => window.localStorage.getItem(key), storageKey)).toContain('"quantity":2');
 
   await page.getByRole("button", { name: "Hapus", exact: true }).click();
-  await expect(page.getByText("Cart Anda masih kosong.")).toBeVisible();
+  await expect(page.getByText("Keranjang Anda masih kosong.")).toBeVisible();
   expect(await page.evaluate(key => window.localStorage.getItem(key), storageKey)).toBe('{"version":1,"items":[]}');
 });
 
@@ -37,8 +38,8 @@ test("cart clears corrupt browser storage and provides recovery", async ({ page 
   await page.addInitScript(({ key }) => window.localStorage.setItem(key, "{broken"), { key: storageKey });
   await page.goto("/cart?preview=examples");
 
-  await expect(page.getByText("Cart lokal dipulihkan.")).toBeVisible();
-  await expect(page.getByText("Cart Anda masih kosong.")).toBeVisible();
+  await expect(page.getByText("Keranjang dipulihkan.")).toBeVisible();
+  await expect(page.getByText("Keranjang Anda masih kosong.")).toBeVisible();
   expect(await page.evaluate(key => window.localStorage.getItem(key), storageKey)).toBeNull();
 });
 
@@ -51,7 +52,7 @@ test("cart keeps unknown items removable when product data is unavailable", asyn
   await expect(page.getByText("Data produk belum dapat diperiksa.")).toBeVisible();
   await expect(page.getByRole("heading", { level: 3, name: "Varian belum dapat dikenali" })).toBeVisible();
   await page.getByRole("button", { name: "Hapus item" }).click();
-  await expect(page.getByText("Cart Anda masih kosong.")).toBeVisible();
+  await expect(page.getByText("Keranjang Anda masih kosong.")).toBeVisible();
 });
 
 test("cart stays readable without horizontal overflow", async ({ page }) => {

@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { typographySystemTokens as type } from "@/design/typography";
 import { PublicShell } from "@/components/niuva/public-shell";
 import { StatusNotice } from "@/components/niuva/status-notice";
+import { Icon } from "@/components/ui/Icon";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { getLiveShopProducts, getShopPreview } from "@/features/frontend-preview/server";
 import { requireCustomer } from "@/lib/auth/customer";
@@ -13,7 +14,7 @@ import { CheckoutForm } from "./checkout-form";
 
 export const metadata: Metadata = {
   title: "Checkout · Niuva",
-  description: "Tinjau alamat, pengiriman, dan ringkasan checkout Customer Niuva.",
+  description: "Isi alamat, pilih pengiriman, dan buat pesanan di Niuva.",
 };
 
 type CheckoutPageProps = {
@@ -36,7 +37,7 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
       return (
         <PublicShell functionalStatus="capability-gated" scope="checkout">
           <main id="main-content">
-            <div className="mx-auto max-w-public px-5 py-16 sm:px-8">
+            <div className="mx-auto max-w-public px-5 py-16 sm:px-12">
               <StatusNotice
                 tone="warning"
                 title="Login Customer belum tersedia."
@@ -85,19 +86,20 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
   return (
     <PublicShell functionalStatus={functionalStatus} scope="checkout">
       <main id="main-content">
-        <section className="border-b border-border bg-card">
-          <div className="mx-auto max-w-public px-5 py-12 sm:px-8 sm:py-16">
-            <p className="text-sm font-medium text-brand-700">Checkout Customer</p>
-            <h1 className={`${type.heading.className} mt-4 max-w-4xl`}>Satu pemeriksaan lagi sebelum transaksi dimulai.</h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground">
-              {liveEnabled
-                ? "Isi nomor kontak dan alamat, muat tarif pengiriman, lalu buat order. Identitas Customer berasal dari akun yang sedang login; harga, stok, ongkir, dan status pembayaran tetap menjadi kewenangan server."
-                : "Isi nomor kontak dan alamat, pilih simulasi pengiriman, lalu tinjau ringkasan. Identitas Customer berasal dari akun yang sedang login; harga, stok, ongkir, dan status pembayaran tetap menjadi kewenangan server."}
-            </p>
-          </div>
-        </section>
+        <div className="mx-auto max-w-public px-5 pt-8 sm:px-12 sm:pt-10">
+          <NiuvaLink href={previewEnabled ? "/cart?preview=examples" : "/cart"} variant="outline" size="sm" className="min-h-11">
+            <Icon aria-hidden="true" className="size-4" name="arrow-left" />
+            Kembali ke keranjang
+          </NiuvaLink>
+          <h1 className={`${type.heading.className} mt-8`}>Selesaikan pesanan</h1>
+          <p className="mt-4 max-w-[56ch] text-lead leading-[1.6]">
+            {previewEnabled && !liveEnabled
+              ? "Isi nomor WhatsApp dan alamat, lalu pilih pengiriman. Di preview lokal ini belum ada pesanan atau pembayaran yang dibuat."
+              : "Isi nomor WhatsApp dan alamat, pilih pengiriman, lalu buat pesanan. Pembayaran dibuka setelah pesanan tersimpan."}
+          </p>
+        </div>
 
-        <div className="mx-auto max-w-public px-5 py-10 sm:px-8 sm:py-14">
+        <div className="mx-auto max-w-public px-5 pb-20 pt-10 sm:px-12 sm:pb-28 sm:pt-12">
           <CheckoutForm catalogStatus={scenario} customer={customer} demoMode={demoMode} initialScenario={state} liveCatalogError={liveCatalogError} liveEnabled={liveEnabled} previewEnabled={previewEnabled} products={products} />
         </div>
       </main>

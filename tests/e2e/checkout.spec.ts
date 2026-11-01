@@ -34,7 +34,7 @@ test("cart hands a valid development preview to authenticated Customer checkout"
   await page.goto("/cart?preview=examples");
   await page.getByRole("link", { name: "Lanjut ke checkout" }).click();
   await expect(page).toHaveURL(/\/checkout\?preview=examples&state=ready$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Satu pemeriksaan lagi sebelum transaksi dimulai." })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Selesaikan pesanan" })).toBeVisible();
   await expect(page.getByText("Dock modular meja")).toBeVisible();
 });
 
