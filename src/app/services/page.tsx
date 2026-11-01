@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   robots: { follow: true, index: true },
 };
 
-const rowLink = "group flex items-center justify-between gap-6 border-b border-border py-5 transition-colors duration-150 hover:text-brand-800 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset";
+const rowLink = "group flex items-center justify-between gap-6 border-b border-border py-5 transition-colors duration-[var(--duration-fast-token)] hover:text-brand-800 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset";
 
 export default function ServicesPage() {
   return (
@@ -46,7 +46,7 @@ export default function ServicesPage() {
                       <span className="block text-2xl font-normal tracking-[-0.015em] sm:text-3xl">{service.title}</span>
                       <span className="mt-1 block text-ui text-muted-foreground">{service.tags.join(" · ")}</span>
                     </span>
-                    <Icon aria-hidden="true" className="size-5 shrink-0 text-brand-700 transition-transform duration-200 group-hover:translate-y-1" name="arrow-down" />
+                    <Icon aria-hidden="true" className="size-5 shrink-0 text-brand-700 transition-transform duration-[var(--duration-fast-token)] group-hover:translate-y-1" name="arrow-down" />
                   </a>
                 </li>
               ))}
@@ -75,7 +75,7 @@ export default function ServicesPage() {
                 </dl>
                 <Link className="group mt-7 inline-flex min-h-11 items-center gap-2 rounded-lg font-semibold underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/services/${service.slug}`}>
                   Lihat detail {service.title}
-                  <Icon aria-hidden="true" className="size-5 text-brand-700 transition-transform duration-200 group-hover:translate-x-1" name="arrow-right" />
+                  <Icon aria-hidden="true" className="size-5 text-brand-700 transition-transform duration-[var(--duration-fast-token)] group-hover:translate-x-1" name="arrow-right" />
                 </Link>
               </div>
             </section>
@@ -97,7 +97,7 @@ export default function ServicesPage() {
                   <dd className="mt-2">
                     <Link className="group inline-flex min-h-11 items-center gap-2 rounded-lg font-semibold underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={product.href}>
                       Ajukan lewat Custom 3D Print
-                      <Icon aria-hidden="true" className="size-5 text-brand-700 transition-transform duration-200 group-hover:translate-x-1" name="arrow-right" />
+                      <Icon aria-hidden="true" className="size-5 text-brand-700 transition-transform duration-[var(--duration-fast-token)] group-hover:translate-x-1" name="arrow-right" />
                     </Link>
                   </dd>
                 ) : null}

@@ -104,7 +104,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export const revalidate = 300;
 
 function ArrowRight() {
-  return <Icon aria-hidden="true" className="size-5 shrink-0 text-brand-700 transition-transform duration-200 group-hover:translate-x-1" name="arrow-right" />;
+  return <Icon aria-hidden="true" className="size-5 shrink-0 text-brand-700 transition-transform duration-[var(--duration-fast-token)] group-hover:translate-x-1" name="arrow-right" />;
 }
 
 export default async function Home() {
@@ -158,7 +158,7 @@ export default async function Home() {
 
         <nav aria-label="Titik mulai" className="mx-3 mt-3 flex flex-wrap gap-2 sm:mx-6 md:mt-4 md:grid md:grid-cols-3 md:gap-3.5" data-home-section="entry-paths">
           {doors.map((door) => (
-            <Link key={door.href} href={door.href} className="group flex min-h-11 items-center justify-between gap-4 rounded-full border border-border bg-card px-4 py-2 transition-[border-color,translate] duration-200 hover:-translate-y-0.5 hover:border-brand-500 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:rounded-[var(--radius-card)] md:px-6 md:py-5">
+            <Link key={door.href} href={door.href} className="group flex min-h-11 items-center justify-between gap-4 rounded-full border border-border bg-card px-4 py-2 transition-[border-color,translate] duration-[var(--duration-fast-token)] hover:-translate-y-0.5 hover:border-brand-500 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:rounded-[var(--radius-card)] md:px-6 md:py-5">
               <span>
                 <span className="block text-ui font-semibold md:text-lg">{door.title}</span>
                 <span className="mt-0.5 hidden text-sm text-muted-foreground md:block">{door.description}</span>

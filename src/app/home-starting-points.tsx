@@ -60,7 +60,7 @@ export function StartingPoints({ paths }: Readonly<{ paths: readonly StartingPat
             <div
               aria-hidden={active !== index}
               className={cn(
-                "absolute inset-0 transition-[opacity,translate] duration-500 ease-[var(--ease-emphasis-token)]",
+                "absolute inset-0 transition-[opacity,translate] duration-[var(--duration-slow-token)] ease-[var(--ease-emphasis-token)]",
                 active === index ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0",
               )}
               key={path.id}

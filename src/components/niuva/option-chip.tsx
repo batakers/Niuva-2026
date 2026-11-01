@@ -30,7 +30,7 @@ export function OptionChip({
       {...buttonProps}
       aria-pressed={isSelected}
       className={cn(
-        "inline-flex min-h-11 max-w-full min-w-0 items-center gap-2 rounded-lg border-2 border-border bg-background px-3 py-2 text-left text-sm leading-5 font-medium text-foreground transition-colors duration-150 ease-[var(--ease-standard-token)] outline-none select-none hover:not-disabled:border-primary hover:not-disabled:text-primary focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:border-border disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 motion-reduce:transition-none",
+        "inline-flex min-h-11 max-w-full min-w-0 items-center gap-2 rounded-lg border-2 border-border bg-background px-3 py-2 text-left text-sm leading-5 font-medium text-foreground transition-colors duration-[var(--duration-fast-token)] ease-[var(--ease-standard-token)] outline-none select-none hover:not-disabled:border-primary hover:not-disabled:text-primary focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:border-border disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 motion-reduce:transition-none",
         isSelected && "border-primary text-primary shadow-[inset_0_-3px_0_var(--primary)]",
         unavailable && "bg-muted text-muted-foreground",
         className,
