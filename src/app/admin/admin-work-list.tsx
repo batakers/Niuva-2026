@@ -10,7 +10,7 @@ import type { ReportRange } from "@/modules/analytics/contract";
 const groupLabels: Record<ActionQueueGroup, string> = {
   all: "Semua",
   "custom-print": "Custom Print",
-  orders: "Orders",
+  orders: "Pesanan",
 };
 
 const dateFormatter = new Intl.DateTimeFormat("id-ID", {

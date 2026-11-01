@@ -20,7 +20,7 @@ import { AdminOperationsService, type AdminPortfolioRow } from "@/modules/admin/
 import { isApprovedCardOnlyPortfolioProject } from "@/modules/portfolio/public-content";
 
 export const metadata: Metadata = {
-  title: "Portfolio admin · Niuva",
+  title: "Portfolio · Admin Niuva",
   robots: { follow: false, index: false },
 };
 

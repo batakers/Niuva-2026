@@ -83,7 +83,7 @@ test("business email failure remains readable and links to its persisted order",
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
   await row.getByRole("link", { name: "Email Customer perlu diperiksa", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/admin/orders/${order.id}$`));
-  await expect(page.getByRole("heading", { name: "Detail order", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Detail pesanan", exact: true })).toBeVisible();
   await expect(page.getByRole("main")).toContainText(order.orderNumber);
   expect((await prisma.order.findUniqueOrThrow({ where: { id: order.id } })).status).toBe("PENDING_PAYMENT");
 });

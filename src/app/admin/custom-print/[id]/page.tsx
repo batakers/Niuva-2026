@@ -22,7 +22,7 @@ import { isEstimateCurrent } from "@/modules/custom-print/estimate";
 import { readCustomerPreviewSnapshot } from "@/modules/custom-print/customer-preview";
 
 export const metadata: Metadata = {
-  title: "Custom print detail admin · Niuva",
+  title: "Detail Custom Print · Admin Niuva",
   robots: { follow: false, index: false },
 };
 

@@ -9,10 +9,10 @@ const searchSchema = z.string().trim().min(2).max(80);
 export type AdminSearchResult = Readonly<{ kind: "MENU" | "ORDER" | "B2B" | "CUSTOM_PRINT" | "PRODUCT" | "PORTFOLIO" | "CUSTOMER" | "INVOICE"; title: string; detail: string; href: string }>;
 
 const menu = [
-  { title: "Overview", href: "/admin" },
-  { title: "Orders", href: "/admin/orders" },
+  { title: "Ringkasan", href: "/admin" },
+  { title: "Pesanan", href: "/admin/orders" },
   { title: "Custom Print", href: "/admin/custom-print" },
-  { title: "Products & Stock", href: "/admin/products" },
+  { title: "Produk & Stok", href: "/admin/products" },
   { title: "Portfolio", href: "/admin/portfolio" },
   { title: "Aktivitas", href: "/admin/activity" },
   { title: "Keamanan akun", href: "/admin/security" },

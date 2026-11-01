@@ -47,7 +47,7 @@ async function enterOwner(page: Page): Promise<string> {
   await page.getByLabel("Saya sudah menyimpan kode pemulihan").check();
   await page.getByLabel("Kode authenticator", { exact: true }).fill(generateTestAdminTotp(secret));
   await page.getByRole("button", { name: "Verifikasi kode" }).click();
-  await expect(page.getByRole("heading", { name: "Overview", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ringkasan", exact: true })).toBeVisible();
   return user.profile.id;
 }
 
@@ -92,8 +92,8 @@ test("BUY operator prepares a paid order for shipping and holds a payment except
   await page.goto(listOrigin);
   await inspectAdminSurface(page, "orders-list");
   await page.getByRole("link", { name: order.orderNumber, exact: true }).first().click();
-  await expect(page.getByRole("link", { name: "Kembali ke Orders", exact: true })).toHaveAttribute("href", listOrigin);
-  await page.getByRole("link", { name: "Kembali ke Orders", exact: true }).click();
+  await expect(page.getByRole("link", { name: "Kembali ke Pesanan", exact: true })).toHaveAttribute("href", listOrigin);
+  await page.getByRole("link", { name: "Kembali ke Pesanan", exact: true }).click();
   await expect.poll(() => new URL(page.url()).pathname + new URL(page.url()).search).toBe(listOrigin);
   await page.goto("/admin?group=orders");
   await inspectAdminSurface(page, "overview");
@@ -101,7 +101,7 @@ test("BUY operator prepares a paid order for shipping and holds a payment except
   await expect(page).toHaveURL(/\/admin\/orders\?view=needs-action&page=1$/);
   await inspectAdminSurface(page, "orders-list");
   await page.getByRole("link", { name: order.orderNumber, exact: true }).first().click();
-  await expect(page.getByRole("link", { name: "Kembali ke Orders", exact: true })).toHaveAttribute("href", "/admin/orders?view=needs-action&page=1");
+  await expect(page.getByRole("link", { name: "Kembali ke Pesanan", exact: true })).toHaveAttribute("href", "/admin/orders?view=needs-action&page=1");
   await inspectAdminSurface(page, "order-detail");
   await page.getByRole("button", { name: "Ubah ke Processing", exact: true }).click();
   await expect.poll(async () => (await prisma.order.findUniqueOrThrow({ where: { id: order.id } })).status).toBe("PROCESSING");
@@ -120,7 +120,7 @@ test("BUY operator prepares a paid order for shipping and holds a payment except
   await page.reload();
   await expect(page.getByRole("heading", { name: "Pembayaran perlu diperiksa", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Ubah ke Shipped", exact: true })).toHaveCount(0);
-  await page.getByRole("link", { name: "Kembali ke Orders", exact: true }).click();
+  await page.getByRole("link", { name: "Kembali ke Pesanan", exact: true }).click();
   await expect(page).toHaveURL(/\/admin\/orders\?view=needs-action&page=1$/);
   await expect(page.getByText(order.orderNumber, { exact: true }).first()).toBeVisible();
 });
@@ -163,7 +163,7 @@ test("management editors and stock history retain their filtered list context", 
   await page.goto(origin);
   await inspectAdminSurface(page, "products-list");
   await page.getByRole("link", { name: product.name, exact: true }).first().click();
-  await expect(page.getByRole("link", { name: "Kembali ke Products & Stock", exact: true })).toHaveAttribute("href", origin);
+  await expect(page.getByRole("link", { name: "Kembali ke Produk & Stok", exact: true })).toHaveAttribute("href", origin);
   await inspectAdminSurface(page, "product-editor");
   await page.getByLabel("Nama produk", { exact: true }).fill("Synthetic updated product");
   await page.getByRole("button", { name: "Simpan produk", exact: true }).click();
@@ -179,7 +179,7 @@ test("management editors and stock history retain their filtered list context", 
   await expect(page.getByText("Alasan: Synthetic stock adjustment for browser verification.", { exact: true }).first()).toBeVisible();
   await inspectAdminSurface(page, "stock-history");
   await page.getByRole("link", { name: "Kembali ke Synthetic updated product", exact: true }).click();
-  await page.getByRole("link", { name: "Kembali ke Products & Stock", exact: true }).click();
+  await page.getByRole("link", { name: "Kembali ke Produk & Stok", exact: true }).click();
   await expect.poll(() => new URL(page.url()).pathname + new URL(page.url()).search).toBe(origin);
   expect((await prisma.product.findUniqueOrThrow({ where: { id: product.id } })).isPublished).toBe(false);
 

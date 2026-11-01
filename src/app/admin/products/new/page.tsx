@@ -23,7 +23,7 @@ export default async function NewProductPage() {
   try { categories = await new CatalogService({ authorizeAdmin: async () => gate.access }).listCategories(); }
   catch (error) { return <AdminDataUnavailableView active="products" role={gate.access.profile.role} kind={recordAdminPageFailure(error, "page:/admin/products/new", { op: "categories" })} />; }
   return <AdminShell active="products" role={gate.access.profile.role}><main id="main-content" className="max-w-3xl">
-    <AdminPageHeader title="Tambah produk" description="Simpan sebagai draft, lalu lengkapi varian dan foto sebelum dipublikasikan." returnHref="/admin/products" breadcrumbs={[{ label: "Products & Stock", href: "/admin/products" }, { label: "Tambah produk" }]} />
+    <AdminPageHeader title="Tambah produk" description="Simpan sebagai draft, lalu lengkapi varian dan foto sebelum dipublikasikan." returnHref="/admin/products" breadcrumbs={[{ label: "Produk & Stok", href: "/admin/products" }, { label: "Tambah produk" }]} />
     <Card as="section" className="p-5 sm:p-6">
       <h2 className="text-lg font-semibold">Informasi awal produk</h2>
       <AdminActionForm action={createProductDraftAction} submitLabel="Simpan draft produk" successLinkLabel="Buka editor produk" className="mt-5">

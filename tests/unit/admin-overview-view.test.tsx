@@ -11,7 +11,7 @@ const data: AdminOverviewData = { range: "30d", generatedAt: now.toISOString(), 
 it("shows the same compact composition for both roles with direct filtered links and honest zero values", () => {
   for (const role of ["OWNER", "ADMIN"] as const) {
     render(<AdminOverviewView data={data} role={role} />);
-    expect(screen.getByRole("heading", { level: 1, name: "Overview" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Ringkasan" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /B2B perlu ditindaklanjuti/ })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Custom Print perlu tindakan/ })).toHaveAttribute("href", "/admin/custom-print?view=needs-action");
     expect(screen.queryByRole("link", { name: /Action Queue/ })).not.toBeInTheDocument();

@@ -26,7 +26,7 @@ import { AdminOperationsService } from "@/modules/admin/operations";
 import { StockAdjustmentPanel } from "./stock-adjustment-panel";
 import { createVariantAction } from "../../content-create-actions";
 
-export const metadata: Metadata = { title: "Product detail admin · Niuva", robots: { follow: false, index: false } };
+export const metadata: Metadata = { title: "Detail produk · Admin Niuva", robots: { follow: false, index: false } };
 const currencyFormatter = new Intl.NumberFormat("id-ID", { currency: "IDR", maximumFractionDigits: 0, style: "currency" });
 
 export default async function AdminProductDetailPage({ params, searchParams }: Readonly<{ params: Promise<{ id: string }>; searchParams?: Promise<Readonly<Record<string, unknown>>> }>) {
@@ -46,7 +46,7 @@ export default async function AdminProductDetailPage({ params, searchParams }: R
   return (
     <AdminShell active="products" role={access.profile.role}>
       <main className="space-y-8" data-admin-surface="product-detail" id="main-content">
-        <AdminPageHeader title={product.name} description={`${product.slug} · ${product.isPublished ? "Published" : "Draft"}`} returnHref={returnTo} returnLabel="Kembali ke Products & Stock" breadcrumbs={[{ label: "Products & Stock", href: returnTo }, { label: product.name }]} />
+        <AdminPageHeader title={product.name} description={`${product.slug} · ${product.isPublished ? "Published" : "Draft"}`} returnHref={returnTo} returnLabel="Kembali ke Produk & Stok" breadcrumbs={[{ label: "Produk & Stok", href: returnTo }, { label: product.name }]} />
 
         <Card as="section" aria-labelledby="product-editor-title" className="gap-0 py-0 ring-0 rounded-xl border border-border bg-card p-5 sm:p-6">
           <h2 className="text-xl font-semibold" id="product-editor-title">Editor produk</h2>

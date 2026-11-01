@@ -57,7 +57,7 @@ export default async function AdminStockHistoryPage({
   return (
     <AdminShell active="products" role={access.profile.role}>
       <main className="space-y-8" data-admin-surface="stock-history" id="main-content">
-        <AdminPageHeader title="Riwayat stok varian" description={`${history.variant.name} · ${history.variant.sku}. Riwayat tersedia sejak saldo pembuka saat migrasi.`} returnHref={withAdminReturnTo(`/admin/products/${id}`, returnTo)} returnLabel={`Kembali ke ${history.product.name}`} breadcrumbs={[{ label: "Products & Stock", href: returnTo }, { label: history.product.name, href: withAdminReturnTo(`/admin/products/${id}`, returnTo) }, { label: "Riwayat stok" }]} />
+        <AdminPageHeader title="Riwayat stok varian" description={`${history.variant.name} · ${history.variant.sku}. Riwayat tersedia sejak saldo pembuka saat migrasi.`} returnHref={withAdminReturnTo(`/admin/products/${id}`, returnTo)} returnLabel={`Kembali ke ${history.product.name}`} breadcrumbs={[{ label: "Produk & Stok", href: returnTo }, { label: history.product.name, href: withAdminReturnTo(`/admin/products/${id}`, returnTo) }, { label: "Riwayat stok" }]} />
 
         <section aria-label="Saldo stok saat ini" className="grid gap-3 sm:grid-cols-3">
           <Balance label="Stok fisik" value={history.variant.stockOnHand} />

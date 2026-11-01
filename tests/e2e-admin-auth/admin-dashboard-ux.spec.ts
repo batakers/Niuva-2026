@@ -35,7 +35,7 @@ async function ownerSession(page: Page) {
   await page.getByLabel("Saya sudah menyimpan kode pemulihan").check();
   await page.getByLabel("Kode authenticator", { exact: true }).fill(generateTestAdminTotp(secret));
   await page.getByRole("button", { name: "Verifikasi kode" }).click();
-  await expect(page.getByRole("heading", { name: "Overview", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ringkasan", exact: true })).toBeVisible();
 }
 
 test("Owner navigates search, activity, account and deactivates an Admin", async ({ page }) => {
@@ -100,7 +100,7 @@ test("Owner navigates search, activity, account and deactivates an Admin", async
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   if (process.env.NIUVA_ADMIN_UX_EVIDENCE === "1") await page.screenshot({ path: resolve(".local/admin-dashboard-ux/captures/admins-390.png"), fullPage: true });
   await page.goto("/admin");
-  await expect(page.getByRole("heading", { name: "Overview", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ringkasan", exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   if (process.env.NIUVA_ADMIN_UX_EVIDENCE === "1") await page.screenshot({ path: resolve(".local/admin-dashboard-ux/captures/overview-390.png"), fullPage: true });
 });

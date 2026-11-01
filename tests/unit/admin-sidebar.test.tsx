@@ -19,8 +19,8 @@ describe("desktop Admin navigation preference", () => {
     render(<AdminShell active="orders" role="ADMIN"><main>Orders</main></AdminShell>);
     expect(screen.queryByRole("navigation", { name: "Owner" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Admin & Akses" })).not.toBeInTheDocument();
-    expect(screen.queryAllByRole("link", { name: "Action Queue" })).toHaveLength(0);
-    expect(screen.queryAllByRole("link", { name: "Pricing Rules" })).toHaveLength(0);
+    expect(screen.queryAllByRole("link", { name: "Antrean tindakan" })).toHaveLength(0);
+    expect(screen.queryAllByRole("link", { name: "Tarif Custom Print" })).toHaveLength(0);
   });
   it("starts expanded and preserves accessible routes when collapsed", async () => {
     render(<AdminShell active="overview" role="OWNER"><main>Overview content</main></AdminShell>);
@@ -42,16 +42,16 @@ describe("desktop Admin navigation preference", () => {
     expect(window.localStorage.getItem(preferenceKey)).toBe("collapsed");
     act(() => { toggle.blur(); });
     const navigation = screen.getByRole("navigation", { name: "Operasional" });
-    expect(within(navigation).getByRole("link", { name: "Overview" })).toHaveAttribute("aria-current", "page");
-    const queue = within(navigation).getByRole("link", { name: "Orders" });
+    expect(within(navigation).getByRole("link", { name: "Ringkasan" })).toHaveAttribute("aria-current", "page");
+    const queue = within(navigation).getByRole("link", { name: "Pesanan" });
     expect(queue).toHaveAttribute("href", "/admin/orders");
     fireEvent.keyDown(document, { key: "Tab" });
     act(() => { queue.focus(); });
-    expect(await screen.findByRole("tooltip")).toHaveTextContent("Orders");
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Pesanan");
     act(() => { queue.blur(); });
     await waitFor(() => expect(screen.queryByRole("tooltip")).not.toBeInTheDocument());
     fireEvent.mouseEnter(queue);
-    expect(await screen.findByRole("tooltip")).toHaveTextContent("Orders");
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Pesanan");
     fireEvent.mouseLeave(queue);
   });
 
@@ -79,7 +79,7 @@ describe("desktop Admin navigation preference", () => {
     first.unmount();
     render(<AdminShell active="orders" role="OWNER"><main>Orders page</main></AdminShell>);
     const navigation = screen.getByRole("navigation", { name: "Operasional" });
-    expect(within(navigation).getByRole("link", { name: "Orders" })).toHaveAttribute("aria-current", "page");
+    expect(within(navigation).getByRole("link", { name: "Pesanan" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("button", { name: "Perluas navigasi Admin" })).toHaveAttribute("aria-expanded", "false");
     window.localStorage.setItem(preferenceKey, "expanded");
     fireEvent(window, new StorageEvent("storage", { key: preferenceKey }));

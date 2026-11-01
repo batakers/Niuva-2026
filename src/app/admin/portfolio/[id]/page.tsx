@@ -20,7 +20,7 @@ import { StatusNotice } from "@/components/niuva/status-notice";
 import { AdminOperationsService } from "@/modules/admin/operations";
 import { isApprovedCardOnlyPortfolioProject } from "@/modules/portfolio/public-content";
 
-export const metadata: Metadata = { title: "Portfolio detail admin · Niuva", robots: { follow: false, index: false } };
+export const metadata: Metadata = { title: "Detail portfolio · Admin Niuva", robots: { follow: false, index: false } };
 const dateFormatter = new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Jakarta" });
 
 export default async function AdminPortfolioDetailPage({ params, searchParams }: Readonly<{ params: Promise<{ id: string }>; searchParams?: Promise<Readonly<Record<string, unknown>>> }>) {

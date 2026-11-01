@@ -19,7 +19,7 @@ import type { FailureKind } from "@/lib/observability/logger";
 import { AdminOperationsService, type AdminOrderRow } from "@/modules/admin/operations";
 
 export const metadata: Metadata = {
-  title: "Orders admin · Niuva",
+  title: "Pesanan · Admin Niuva",
   robots: { follow: false, index: false },
 };
 
@@ -53,7 +53,7 @@ export default async function AdminOrdersPage({
       <AdminShell active="orders" role={result.role}>
         <main id="main-content" data-admin-surface="orders">
           <AdminListPosition listHref={returnTo} />
-          <AdminPageHeader title="Orders" description="Cari order, pantau pembayaran, dan buka detail untuk tindakan fulfillment." breadcrumbs={[{ label: "Orders" }]} />
+          <AdminPageHeader title="Pesanan" description="Cari pesanan, pantau pembayaran, dan buka detail untuk tindakan fulfillment." breadcrumbs={[{ label: "Pesanan" }]} />
           <AdminListControls area="orders" query={query} />
 
           <section aria-label="Ringkasan orders" className="mt-6 grid gap-3 sm:grid-cols-3">

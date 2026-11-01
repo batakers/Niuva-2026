@@ -14,7 +14,7 @@ import { AdminDataUnavailableView, AdminShell } from "@/components/niuva/admin-s
 import { AdminGlobalSearchService, parseAdminSearchQuery } from "@/modules/admin/global-search";
 
 export const metadata: Metadata = { title: "Pencarian Admin · Niuva", robots: { index: false, follow: false } };
-const labels = { MENU: "Menu", ORDER: "Orders", B2B: "B2B Inquiries", CUSTOM_PRINT: "Custom Print", PRODUCT: "Produk", PORTFOLIO: "Portfolio", CUSTOMER: "Customer", INVOICE: "Invoice" };
+const labels = { MENU: "Menu", ORDER: "Pesanan", B2B: "B2B Inquiries", CUSTOM_PRINT: "Custom Print", PRODUCT: "Produk", PORTFOLIO: "Portfolio", CUSTOMER: "Customer", INVOICE: "Invoice" };
 
 export default async function AdminSearchPage({ searchParams }: Readonly<{ searchParams: Promise<{ q?: string | string[] }> }>) {
   await connection();

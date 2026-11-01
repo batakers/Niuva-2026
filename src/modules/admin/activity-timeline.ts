@@ -91,8 +91,8 @@ export function activityGroup(entityType: string, action: string): string {
   if (entityType.includes("PRIVACY") || action.startsWith("PRIVACY_")) return "Privasi Customer";
   if (action.startsWith("inquiry.") || action.startsWith("b2b")) return "B2B Inquiries";
   if (action.startsWith("custom-print.") || action.startsWith("quote.")) return "Custom Print";
-  if (action.startsWith("order.") || action.startsWith("checkout.") || action.startsWith("payment.") || action.startsWith("shipping.")) return "Orders";
-  if (action.startsWith("catalog.") || action.startsWith("inventory.")) return "Products & Stock";
+  if (action.startsWith("order.") || action.startsWith("checkout.") || action.startsWith("payment.") || action.startsWith("shipping.")) return "Pesanan";
+  if (action.startsWith("catalog.") || action.startsWith("inventory.")) return "Produk & Stok";
   if (action.startsWith("pricing-")) return "Tarif Custom Print";
   if (action.startsWith("finance.")) return "Keuangan";
   if (action.startsWith("site-information.")) return "Informasi Situs";

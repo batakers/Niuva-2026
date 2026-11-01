@@ -154,7 +154,7 @@ describe("Admin page route integration", () => {
 
     expect(authMocks.auth).toHaveBeenCalledOnce();
     expect(nextServerMocks.connection).toHaveBeenCalledOnce();
-    expect(markup).toContain("Overview");
+    expect(markup).toContain("Ringkasan");
     expect(markup).not.toContain("/admin/inquiries");
     expect(markup).not.toContain(inquiry.referenceNumber);
     expect(await prisma.b2BInquiry.findUnique({ where: { id: inquiry.id } })).toMatchObject({

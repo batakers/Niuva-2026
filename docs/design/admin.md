@@ -11,7 +11,7 @@ Gunakan [AdminShell](../../src/components/niuva/admin-shell.tsx), [AdminSidebar]
 | Outer shell | Memenuhi viewport tanpa margin luar dekoratif |
 | Area kerja | Inner content max-w-admin 90rem; gutter 16/24/32px mengikuti compact/sm/lg |
 | Sidebar desktop | Primitive lokal memakai lebar 16rem terbuka / 4rem rail; sumbernya src/components/ui/sidebar.tsx |
-| Navigasi | Overview, Orders, Custom Print, Customers, Products & Stock, Konten, Keuangan, Laporan, dan Pengaturan mengikuti grouping/permission source |
+| Navigasi | Ringkasan, Pesanan, Custom Print, Produk & Stok, Customer, Keuangan (Invoice, Pembayaran, Pengeluaran), Konten, Laporan, dan grup Owner mengikuti grouping/permission source; label Indonesia sesuai sitemap T45 (Q20) |
 | Navbar | Pencarian global, Situs publik, lonceng, dan menu akun; utilitas dapat reflow |
 | Compact | Sheet navigasi setelah hydration; native disclosure sebelum hydration/no-JS |
 | Identitas | Logo resmi lengkap/simbol sesuai keadaan sidebar; label, tooltip, aria-current, dan fokus tetap tersedia |
@@ -24,16 +24,16 @@ Penyembunyian menu bukan otorisasi. Role, MFA, AdminProfile, read/download/mutat
 
 | Surface | Susunan informasi | Alasan |
 | --- | --- | --- |
-| Overview | Pekerjaan perlu perhatian → isu bila ada → ringkasan bisnis/aktivitas → trafik yang tersedia | Menemukan pekerjaan sebelum membaca laporan |
+| Ringkasan | Pekerjaan perlu perhatian → isu bila ada → ringkasan bisnis/aktivitas → trafik yang tersedia | Menemukan pekerjaan sebelum membaca laporan |
 | Daftar domain | Judul dan aksi → search/filter → hasil dan pagination | Membandingkan record dengan posisi kembali yang jelas |
 | Detail record | Breadcrumb/back context → identitas/status → data terkait → tindakan sesuai state | Mencegah aksi pada record atau status yang salah |
 | Workspace review MAKE | Artefak/file → input review → estimasi/quote → konsekuensi tindakan | Operator dapat memeriksa dasar keputusan |
 | Form pengaturan | Kelompok label/help → perubahan → review/terapkan sesuai workflow existing | Pengguna nonteknis dapat memeriksa dampak |
 | Laporan | Periode/definisi → angka ringkas → chart dengan data table/fallback | Angka dapat dijelaskan dan diperiksa |
 
-Overview sekarang memiliki **tiga** kartu perhatian: Custom Print, Order, dan Isu. Kartu inquiry keempat tidak dipulihkan setelah keputusan B2B WhatsApp 11 Oktober. Jumlah ini menggambarkan source saat audit, bukan aturan bahwa semua dashboard harus memiliki tiga KPI. Kartu harus menunjuk pekerjaan atau keputusan yang nyata.
+Ringkasan sekarang memiliki **tiga** kartu perhatian: Custom Print, Pesanan, dan Isu. Ikon kartu netral; garis amber hanya pada kartu Isu ketika ada isu terbuka, dan kartu tidak membawa panah dekoratif. Kartu inquiry keempat tidak dipulihkan setelah keputusan B2B WhatsApp 11 Oktober. Jumlah ini menggambarkan source saat audit, bukan aturan bahwa semua dashboard harus memiliki tiga KPI. Kartu harus menunjuk pekerjaan atau keputusan yang nyata.
 
-Bento existing pada Overview boleh dipertahankan. Equal height pada wide hanya membantu alignment; mobile memakai tinggi alami. Jangan menyebarkan bento ke daftar order atau form panjang untuk memaksakan satu tampilan.
+Bento existing pada Ringkasan boleh dipertahankan. Equal height pada wide hanya membantu alignment; mobile memakai tinggi alami. Jangan menyebarkan bento ke daftar order atau form panjang untuk memaksakan satu tampilan.
 
 ## Kepadatan, data, dan state
 
@@ -70,7 +70,7 @@ Arah ringan/cepat 8 Oktober berlaku hanya pada empat interaksi: pop-up perhatian
 | Easing | ease-standard runtime |
 | Exit / reduced motion | Elemen keluar tidak interaktif/tidak masuk navigasi aksesibilitas; keyboard/fokus dan reduced motion langsung |
 
-Tidak ada animasi dekoratif pada Overview, angka, grafik, pencarian shortcut, navigasi daftar, atau lebar sidebar. Penerimaan arah motion tidak sama dengan penerimaan visual implementasinya.
+Tidak ada animasi dekoratif pada Ringkasan, angka, grafik, pencarian shortcut, navigasi daftar, atau lebar sidebar. Penerimaan arah motion tidak sama dengan penerimaan visual implementasinya.
 
 ## Authority dan keputusan yang digantikan
 

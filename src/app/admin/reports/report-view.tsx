@@ -6,7 +6,7 @@ import { AdminPageHeader } from "../admin-page-header";
 import { AdminTrendChart } from "@/components/niuva/admin-trend-chart";
 import type { AdminRole } from "@/generated/prisma/client";
 import { reportTabs, type AdminReportsData, type AdminReportTab } from "@/modules/admin/reports/types";
-const labels: Record<AdminReportTab, string> = { summary: "Ringkasan", orders: "Orders", "custom-print": "Custom Print", finance: "Keuangan", traffic: "Trafik Situs" };
+const labels: Record<AdminReportTab, string> = { summary: "Ringkasan", orders: "Pesanan", "custom-print": "Custom Print", finance: "Keuangan", traffic: "Trafik Situs" };
 const card = "gap-0 py-0 ring-0 min-w-0 rounded-xl border border-border bg-card p-5 sm:p-6";
 const money = (value: string) => "Rp " + new Intl.NumberFormat("id-ID").format(BigInt(value));
 export function AdminReportView({ data, role }: { data: AdminReportsData; role: AdminRole }) {

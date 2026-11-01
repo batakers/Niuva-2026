@@ -217,7 +217,7 @@ describe("order payment hold presentation", () => {
     mocks.service.getOrder.mockResolvedValue({ ...order, orderType: "CUSTOM_PRINT", status: "IN_PRODUCTION" });
     mocks.service.getOrderSourceRequests.mockResolvedValue([{ id: VALID_VARIANT_ID, referenceNumber: "CP-LINKED", status: "APPROVED" }]);
     render(await AdminOrderDetailPage({ params: Promise.resolve({ id: VALID_ID }), searchParams: Promise.resolve({ returnTo: "/admin/queue?group=orders" }) }));
-    expect(screen.getByRole("link", { name: "Kembali ke Action Queue" })).toHaveAttribute("href", "/admin/queue?group=orders");
+    expect(screen.getByRole("link", { name: "Kembali ke Antrean tindakan" })).toHaveAttribute("href", "/admin/queue?group=orders");
     const href = screen.getByRole("link", { name: /CP-LINKED/ }).getAttribute("href");
     expect(new URL(href!, "https://niuva.test").searchParams.get("returnTo")).toBe("/admin/queue?group=orders");
   });

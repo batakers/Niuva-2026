@@ -20,12 +20,12 @@ test("Admin reads a customer and returns from its legitimate order", async ({ pa
   const order = await prisma.order.create({ data: { customerId: customer.id, customerEmail: email, customerName: "Customer Browser Fixture", customerPhone: "+628000000000", orderNumber: `DIR-BROWSER-${randomUUID()}`, orderType: "RETAIL", grandTotalRp: "1000", itemsSubtotalRp: "1000", shippingTotalRp: "0", publicTokenHash: randomUUID() } });
   const list = `/admin/customers?q=${encodeURIComponent(email)}&page=1`;
   await page.goto(list);
-  await expect(page.getByRole("heading", { name: "Customers", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Customer", exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Customer Browser Fixture", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Riwayat pekerjaan" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Kembali ke Customers" })).toHaveAttribute("href", list);
   await page.getByRole("link", { name: order.orderNumber, exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Detail order", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Detail pesanan", exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Kembali ke Riwayat customer", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/admin/customers/${customer.id}\\?tab=orders&page=1$`));
   await page.setViewportSize({ width: 390, height: 844 });

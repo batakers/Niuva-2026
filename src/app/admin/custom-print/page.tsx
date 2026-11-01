@@ -18,7 +18,7 @@ import type { FailureKind } from "@/lib/observability/logger";
 import { AdminOperationsService, type AdminCustomPrintRequestRow } from "@/modules/admin/operations";
 
 export const metadata: Metadata = {
-  title: "Custom Print admin · Niuva",
+  title: "Custom Print · Admin Niuva",
   robots: { follow: false, index: false },
 };
 

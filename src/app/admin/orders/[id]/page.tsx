@@ -40,7 +40,7 @@ import {
 } from "@/modules/order/transitions";
 
 export const metadata: Metadata = {
-  title: "Order detail admin · Niuva",
+  title: "Detail pesanan · Admin Niuva",
   robots: { follow: false, index: false },
 };
 
@@ -91,7 +91,7 @@ export default async function AdminOrderDetailPage({
   return (
     <AdminShell active="orders" role={access.profile.role}>
       <main className="space-y-8" data-admin-surface="order-detail" id="main-content">
-        <AdminPageHeader actions={<div className="flex flex-wrap gap-2"><Link className={buttonVariants({ variant: "outline", className: "inline-flex min-h-11 items-center rounded-lg border border-border bg-card px-4 text-sm font-semibold text-brand-700" })} href={`/admin/finance/invoices/new?kind=ORDER_TOTAL&sourceId=${id}`}>Penagihan pesanan</Link>{order.orderType === "CUSTOM_PRINT" ? <Link className={buttonVariants({ variant: "outline", className: "inline-flex min-h-11 items-center rounded-lg border border-border bg-card px-4 text-sm font-semibold text-brand-700" })} href={`/admin/finance/invoices/new?kind=CUSTOM_SHIPPING&sourceId=${id}`}>Tagihan ongkir final</Link> : null}</div>} title="Detail order" description={`${order.orderNumber} · ${formatStatus(order.status)} · ${order.orderType === "CUSTOM_PRINT" ? "Custom print" : "Retail"}`} returnHref={returnTo} returnLabel="Kembali ke Orders" breadcrumbs={[{ label: "Orders", href: returnTo }, { label: order.orderNumber }]} />
+        <AdminPageHeader actions={<div className="flex flex-wrap gap-2"><Link className={buttonVariants({ variant: "outline", className: "inline-flex min-h-11 items-center rounded-lg border border-border bg-card px-4 text-sm font-semibold text-brand-700" })} href={`/admin/finance/invoices/new?kind=ORDER_TOTAL&sourceId=${id}`}>Penagihan pesanan</Link>{order.orderType === "CUSTOM_PRINT" ? <Link className={buttonVariants({ variant: "outline", className: "inline-flex min-h-11 items-center rounded-lg border border-border bg-card px-4 text-sm font-semibold text-brand-700" })} href={`/admin/finance/invoices/new?kind=CUSTOM_SHIPPING&sourceId=${id}`}>Tagihan ongkir final</Link> : null}</div>} title="Detail pesanan" description={`${order.orderNumber} · ${formatStatus(order.status)} · ${order.orderType === "CUSTOM_PRINT" ? "Custom print" : "Retail"}`} returnHref={returnTo} returnLabel="Kembali ke Pesanan" breadcrumbs={[{ label: "Pesanan", href: returnTo }, { label: order.orderNumber }]} />
 
         {paymentHeld ? (
           <Card as="section" aria-labelledby="payment-exception-title" className="gap-0 py-0 ring-0 rounded-xl border border-warning-border bg-warning-background p-5 text-warning sm:p-6">

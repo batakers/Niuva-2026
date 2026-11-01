@@ -20,7 +20,7 @@ import type { FailureKind } from "@/lib/observability/logger";
 import { AdminOperationsService, type AdminProductRow } from "@/modules/admin/operations";
 
 export const metadata: Metadata = {
-  title: "Products & Stock admin · Niuva",
+  title: "Produk & Stok · Admin Niuva",
   robots: { follow: false, index: false },
 };
 
@@ -52,7 +52,7 @@ export default async function AdminProductsPage({
       <AdminShell active="products" role={result.role}>
         <main id="main-content" data-admin-surface="products">
           <AdminListPosition listHref={returnTo} />
-          <AdminPageHeader title="Products & Stock" description="Cari produk, periksa varian dan stok, lalu buka editor untuk memperbarui katalog." breadcrumbs={[{ label: "Products & Stock" }]} actions={<Button nativeButton={false} role="link" render={<Link href="/admin/products/new" />}>Tambah produk</Button>} />
+          <AdminPageHeader title="Produk & Stok" description="Cari produk, periksa varian dan stok, lalu buka editor untuk memperbarui katalog." breadcrumbs={[{ label: "Produk & Stok" }]} actions={<Button nativeButton={false} role="link" render={<Link href="/admin/products/new" />}>Tambah produk</Button>} />
           <AdminListControls area="products" query={query} />
 
           <section aria-label="Ringkasan products" className="mt-6 grid gap-3 sm:grid-cols-3">
