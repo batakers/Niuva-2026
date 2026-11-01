@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { NativeInput as Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -9,7 +9,7 @@ import { privacyOwnerSchema, privacyRequestSchema, isPrivacyResponseUrl } from "
 import { useHydrated } from "./use-hydrated";
 
 export type PrivacyField = Readonly<{ name: string; label: string; kind?: "textarea" | "select" | "checkbox" | "date"; required?: boolean; help?: string; defaultValue?: string; options?: readonly { value: string; label: string }[] }>;
-export const privacyControlClass = "min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 py-3 text-base text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive";
+export const privacyControlClass = "min-h-11 w-full min-w-0 rounded-lg border border-input bg-card px-3 py-3 text-base text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive";
 export function PrivacyForm({ action, mode, fields = [], hidden = {}, label, prefix, danger = false, initialErrors = {} }: Readonly<{
   action: string; mode: "email" | "request" | "owner" | "export" | "close"; fields?: readonly PrivacyField[]; hidden?: Readonly<Record<string, string>>; label: string; prefix: string; danger?: boolean; initialErrors?: Readonly<Record<string, string>>;
 }>) {
@@ -72,12 +72,12 @@ export function PrivacyForm({ action, mode, fields = [], hidden = {}, label, pre
       const error = errors[field.name];
       const common = { id, name: field.name, required: field.required, "aria-invalid": Boolean(error), "aria-describedby": `${id}-help ${error ? `${id}-error` : ""}`, className: privacyControlClass, defaultValue: field.defaultValue };
       return <div key={field.name}>
-        {field.kind === "checkbox" ? <FieldLabel className="flex min-h-11 items-start gap-3 py-3" htmlFor={id}><input type="checkbox" id={id} name={field.name} required={field.required} defaultChecked={field.defaultValue === "on"} aria-invalid={Boolean(error)} aria-describedby={`${id}-help ${error ? `${id}-error` : ""}`} className="mt-1 size-5 shrink-0 accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" /><span className="text-sm leading-6">{field.label}</span></FieldLabel> : <><FieldLabel htmlFor={id} className="mb-4 block text-sm font-medium">{field.label}</FieldLabel>{field.kind === "textarea" ? <LongInput {...common} rows={4} maxLength={field.name === "holdReason" ? 1000 : 3000} /> : field.kind === "select" ? <Selection {...common}>{field.options?.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</Selection> : <TextInput {...common} type={field.kind === "date" ? "date" : "text"} />}</>}
-        <p id={`${id}-help`} className="mt-2 text-sm leading-6 text-muted-foreground">{field.help}</p>
+        {field.kind === "checkbox" ? <FieldLabel className="flex min-h-11 items-start gap-3 py-3" htmlFor={id}><input type="checkbox" id={id} name={field.name} required={field.required} defaultChecked={field.defaultValue === "on"} aria-invalid={Boolean(error)} aria-describedby={`${id}-help ${error ? `${id}-error` : ""}`} className="mt-1 size-5 shrink-0 accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" /><span className="text-ui leading-[1.55]">{field.label}</span></FieldLabel> : <><FieldLabel htmlFor={id} className="mb-2 block text-ui font-medium">{field.label}</FieldLabel>{field.kind === "textarea" ? <LongInput {...common} rows={4} maxLength={field.name === "holdReason" ? 1000 : 3000} /> : field.kind === "select" ? <Selection {...common}>{field.options?.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</Selection> : <TextInput {...common} type={field.kind === "date" ? "date" : "text"} />}</>}
+        <p id={`${id}-help`} className="mt-2 text-caption leading-[1.45] text-muted-foreground">{field.help}</p>
         {error ? <p id={`${id}-error`} className="mt-1 text-sm text-destructive">{error}</p> : null}
       </div>;
     })}
-    {mode === "owner" ? <Button type="submit" disabled={pending} variant={danger ? "destructive" : "default"}>{label}</Button> : <button type="submit" disabled={pending} className={`inline-flex min-h-11 max-w-full items-center justify-center rounded-lg px-4 py-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 ${danger ? "border border-destructive bg-destructive/10 text-destructive hover:bg-destructive/20" : "bg-primary text-primary-foreground hover:bg-brand-800"}`}>{label}</button>}
+    {mode === "owner" ? <Button type="submit" disabled={pending} variant={danger ? "destructive" : "default"}>{label}</Button> : <button type="submit" disabled={pending} className={buttonVariants({ variant: danger ? "destructive" : "default", className: "min-h-11 max-w-full whitespace-normal" })}>{label}</button>}
     <p role="status" aria-live="polite" className="min-h-6 text-sm leading-6 text-muted-foreground">{pending ? "Memproses permintaan…" : message}</p>
   </form>;
 }
