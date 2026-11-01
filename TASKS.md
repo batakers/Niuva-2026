@@ -2132,6 +2132,41 @@ belum ada yang dikerjakan.
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
 
+### T48 — Custom 3D Print, workspace, dan status pengajuan, 2026-11-01
+
+Branch `claude/redesign-commerce-make` dari `main@79d2f44` (setelah PR #111);
+potongan ketiga T48.
+
+- **Custom 3D Print:** hero gelap dengan render konseptual non-maskot dan
+  panel `brand-950` kedua diganti bidang biru (geometri detail layanan) dengan
+  maskot laptop; dua kartu titik mulai yang setara (format, batas ukuran,
+  tombol outline), daftar "Sebelum mengirim", alur empat langkah bernomor,
+  batas Harga/File/Ongkir, FAQ, dan panel penutup. Label eyebrow, ikon dalam
+  kotak, dan copy sistem ("runtime", "tebakan browser", "storage") dilepas.
+  "Estimasi awal, bukan harga final." dan "Ajukan untuk Review" tetap.
+- **Workspace pengajuan:** form model menjadi empat langkah bernomor dan form
+  referensi dua langkah, seperti checkout; panel "Setelah Anda mengirim" di
+  samping. Validasi, unggah privat, simulasi, endpoint, dan payload tidak
+  berubah. Email akun read-only bergaya `muted`; select native tidak.
+- **Status pengajuan dan tambah model:** judul display, fakta 2×2, notice per
+  tahap, dan form tambah model di permukaan putih (juga tampil di detail MAKE
+  akun, T49).
+- **Copy login:** notice login yang tidak tersedia tetap memakai frasa "login
+  Customer" tanpa "Google" (R11); "pada runtime ini" menjadi "saat ini", dan
+  konstanta `customer-login-copy.test.ts` diperbarui tanpa mengurangi
+  assertion. Dua assertion E2E mengikuti copy dan maskot baru.
+- **Bukti lokal:** lint (0 error), typecheck, unit 137 file/1.531 test. E2E
+  tanpa login terhadap dev server 3/3 (overflow Custom 3D Print, panduan MAKE,
+  aksi header). Pemeriksaan Playwright 56/56 lewat route sementara yang tidak
+  di-commit untuk halaman ber-login: langkah E2E landing, urutan seksi, anchor
+  di bawah header sticky, FAQ dengan keyboard, mode `aria-current`, ringkasan
+  error menerima fokus dan tautannya memfokuskan field, urutan Tab referensi,
+  tiga tahap status, satu h1 dan tanpa overflow 320–1440, tanpa error console.
+  Kontras hero terendah 4,58:1 (judul display, 1024) dan 5,84:1 (subcopy).
+- **Belum:** pengajuan live dengan sesi Customer dan unggah sungguhan (E2E di
+  CI), halaman quote dan status pesanan bertoken, review visual Owner. Render
+  konseptual lama tidak dipakai lagi; penghapusannya menunggu persetujuan.
+
 ### T48 — Keranjang dan checkout, 2026-11-01
 
 Branch `claude/redesign-commerce-checkout` dari `main@5de8a65`; potongan kedua
