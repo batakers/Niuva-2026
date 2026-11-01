@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/input";
 import {
+  cartStorageKey,
   EMPTY_CART,
   MAX_CART_QUANTITY,
   readCart,
@@ -70,16 +71,18 @@ export function CartItems({
   const [snapshot, setSnapshot] = useState<CartSnapshot>(EMPTY_CART);
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [persistenceNotice, setPersistenceNotice] = useState<PersistenceNotice>("none");
+  // Every `?preview=` scenario uses the example cart; live statuses and null use the real cart.
+  const storageKey = cartStorageKey(catalogStatus !== null && !catalogStatus.startsWith("live-"));
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      const result = readCart(window.localStorage);
+      const result = readCart(window.localStorage, storageKey);
       setSnapshot(result.snapshot);
       setPersistenceNotice(result.storageAvailable ? (result.recovered ? "recovered" : "none") : "unavailable");
       setLoadState("ready");
     }, 0);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [storageKey]);
 
   const resolved = useMemo(
     () => snapshot.items.map(item => resolveCartItem(products, item)),
@@ -96,7 +99,7 @@ export function CartItems({
 
   function persist(next: CartSnapshot) {
     setSnapshot(next);
-    if (writeCart(window.localStorage, next)) {
+    if (writeCart(window.localStorage, next, storageKey)) {
       if (persistenceNotice === "unavailable") setPersistenceNotice("none");
       return;
     }

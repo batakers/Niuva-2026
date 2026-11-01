@@ -78,6 +78,8 @@ test("MAKE offers the available intake and BUY continues from catalog to cart", 
   await page.getByRole("link", { name: /Dock modular meja/ }).click();
   await page.getByRole("radio", { name: /Abu-abu/ }).click();
   await page.getByRole("button", { name: "Tambah ke keranjang" }).click();
-  await page.getByRole("navigation", { name: "Navigasi utama" }).getByRole("link", { name: "Keranjang" }).click();
-  await expect(page.getByRole("heading", { name: "Dock modular meja" })).toBeVisible();
+  // The header opens the real cart; the preview journey continues through its own link.
+  await page.getByRole("link", { name: "Lihat keranjang" }).click();
+  await expect(page).toHaveURL(/\/cart\?preview=examples$/);
+  await expect(page.getByRole("heading", { level: 3, name: "Dock modular meja" })).toBeVisible();
 });

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductSelection } from "@/app/shop/[slug]/product-selection";
-import { CART_STORAGE_KEY } from "@/features/cart/cart-state";
+import { CART_STORAGE_KEY, PREVIEW_CART_STORAGE_KEY } from "@/features/cart/cart-state";
 import { exampleShopProducts } from "@/features/frontend-preview/fixtures";
 
 describe("product selection preview", () => {
@@ -39,8 +39,18 @@ describe("product selection preview", () => {
     fireEvent.click(screen.getByRole("button", { name: "Tambah ke keranjang" }));
     expect(screen.getByText("Masuk ke keranjang.")).toBeVisible();
     expect(fetchSpy).not.toHaveBeenCalled();
-    expect(window.localStorage.getItem(CART_STORAGE_KEY)).toBe('{"version":1,"items":[{"variantId":"example-dock-blue","quantity":1}]}');
+    expect(window.localStorage.getItem(PREVIEW_CART_STORAGE_KEY)).toBe('{"version":1,"items":[{"variantId":"example-dock-blue","quantity":1}]}');
+    expect(window.localStorage.getItem(CART_STORAGE_KEY)).toBeNull();
     fetchSpy.mockRestore();
+  });
+
+  it("puts a live catalog variant in the real cart", () => {
+    render(<ProductSelection previewEnabled={false} product={exampleShopProducts[0]} />);
+
+    fireEvent.click(screen.getByRole("radio", { name: /Biru/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Tambah ke keranjang" }));
+    expect(window.localStorage.getItem(CART_STORAGE_KEY)).toBe('{"version":1,"items":[{"variantId":"example-dock-blue","quantity":1}]}');
+    expect(window.localStorage.getItem(PREVIEW_CART_STORAGE_KEY)).toBeNull();
   });
 
   it("keeps every option and action disabled when all variants are out of stock", () => {

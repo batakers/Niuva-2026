@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const storageKey = "niuva.cart.v1";
+const storageKey = "niuva.cart.preview.v1";
 
 test("product selection adds only variant ID and quantity to the local cart", async ({ page }) => {
   await page.goto("/shop/contoh-dock-modular-meja?preview=examples");
@@ -13,10 +13,16 @@ test("product selection adds only variant ID and quantity to the local cart", as
   );
   await page.getByRole("link", { name: "Lihat keranjang" }).click();
   await expect(page).toHaveURL(/\/cart\?preview=examples$/);
-  await expect(page.locator('a[href="/cart"]').filter({ hasText: "2 item di keranjang" }).first()).toBeAttached();
   await expect(page.getByRole("heading", { level: 3, name: "Dock modular meja" })).toBeVisible();
   // The line total sits in the item row; the summary repeats it as the subtotal.
   await expect(page.getByRole("listitem").filter({ hasText: "Dock modular meja" }).getByText(/Rp\s?390\.000/)).toBeVisible();
+
+  // Example variants stay in the preview cart: the header badge and the real cart never see them.
+  await expect(page.locator("[data-cart-count]")).toHaveCount(0);
+  expect(await page.evaluate(() => window.localStorage.getItem("niuva.cart.v1"))).toBeNull();
+  await page.getByRole("navigation", { name: "Navigasi utama" }).getByRole("link", { name: "Keranjang" }).click();
+  await expect(page).toHaveURL(/\/cart$/);
+  await expect(page.getByRole("heading", { name: "Keranjang Anda masih kosong." })).toBeVisible();
 });
 
 test("cart quantity updates locally and remove returns to the empty state", async ({ page }) => {

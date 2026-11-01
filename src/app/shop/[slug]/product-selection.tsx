@@ -8,7 +8,7 @@ import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/input";
-import { addCartItem, readCart, writeCart } from "@/features/cart/cart-state";
+import { addCartItem, cartStorageKey, readCart, writeCart } from "@/features/cart/cart-state";
 import type { PublicShopProduct } from "@/features/frontend-preview/types";
 
 const rupiah = new Intl.NumberFormat("id-ID", {
@@ -46,7 +46,8 @@ export function ProductSelection({ product, previewEnabled = true, onVariantChan
 
   function addSelectionToCart() {
     if (!selected || !canPrepare) return;
-    const current = readCart(window.localStorage);
+    const storageKey = cartStorageKey(previewEnabled);
+    const current = readCart(window.localStorage, storageKey);
     if (!current.storageAvailable) {
       setCartResult("error");
       return;
@@ -57,7 +58,7 @@ export function ProductSelection({ product, previewEnabled = true, onVariantChan
       { variantId: selected.id, quantity },
       selected.stockOnHand,
     );
-    if (!writeCart(window.localStorage, next)) {
+    if (!writeCart(window.localStorage, next, storageKey)) {
       setCartResult("error");
       return;
     }
