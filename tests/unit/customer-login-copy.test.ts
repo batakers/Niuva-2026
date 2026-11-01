@@ -39,7 +39,8 @@ import CustomPrintPage from "@/app/custom-print/page";
 import CustomPrintRequestPage from "@/app/custom-print/request/page";
 
 const UNAVAILABLE_TITLE = "Login Customer belum tersedia";
-const CUSTOM_PRINT_TITLE = "Login Customer belum tersedia pada runtime ini.";
+// T48: "runtime" wording became customer language; the R11 phrase and no-Google rule stay.
+const CUSTOM_PRINT_TITLE = "Login Customer belum tersedia saat ini.";
 const CUSTOM_PRINT_CTA = "Pengajuan menunggu login Customer tersedia.";
 const CUSTOM_PRINT_STATUS_TITLE = "Pengiriman menunggu login Customer.";
 
@@ -74,7 +75,7 @@ const gatedPages = [
   {
     name: "custom-print/request",
     title: UNAVAILABLE_TITLE,
-    description: "Request MAKE memerlukan login Customer sebelum dapat dikirim pada runtime ini.",
+    description: "Pengajuan Custom 3D Print membutuhkan login Customer, yang belum tersedia saat ini.",
     render: () => CustomPrintRequestPage({ searchParams: Promise.resolve({}) }),
     loginRedirect: `REDIRECT:/login?returnTo=${encodeURIComponent("/custom-print/request")}`,
   },

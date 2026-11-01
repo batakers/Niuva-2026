@@ -15,7 +15,7 @@ test("custom request exposes the active capability without accidental mutations"
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Siapkan file untuk review operator.");
 
   if (functionalStatus === "server-backed") {
-    await expect(page.getByText("Upload privat aktif")).toBeVisible();
+    await expect(page.getByText("File langsung tersimpan di ruang privat Niuva", { exact: false })).toBeVisible();
     await expect(page.getByLabel("File model 3D *")).toBeEnabled();
     expect(mutations).toEqual([]);
     return;

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 
@@ -8,7 +7,8 @@ import { FileUploadField, type FileUploadStatus } from "@/components/niuva/file-
 import { FormField } from "@/components/niuva/form-field";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { useHydrated } from "@/components/niuva/use-hydrated";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Input } from "@/components/ui/input";
 import { usePublicSiteInformation } from "@/components/niuva/public-site-information";
 import { createPublicWhatsAppHref } from "@/features/public/company-content";
@@ -18,7 +18,15 @@ import type { CustomerPreviewInput } from "@/modules/custom-print/customer-previ
 
 const acceptedExtensions = [".stl", ".3mf", ".obj", ".step", ".stp"] as const;
 const maxFileSizeLabel = `${CUSTOM_FILE_MAX_BYTES / 1_024 / 1_024} MiB`;
-const controlClass = "min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 py-2 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+const selectClass = "min-h-11 w-full min-w-0 rounded-lg border border-input bg-card px-3 py-2 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+// `select` always matches :read-only, so only text controls carry the account-field style.
+const controlClass = `${selectClass} read-only:border-border read-only:bg-muted/60`;
+const stepClass = "rounded-[var(--radius-card)] border border-border bg-card p-5 sm:p-7";
+const stepTitleClass = "mb-5 flex items-center gap-3 text-xl font-medium tracking-[-0.015em]";
+
+function StepNumber({ value }: { value: number }) {
+  return <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-100 text-ui font-semibold text-brand-800 tabular-nums">{value}</span>;
+}
 
 const optionalText = z.preprocess(
   (value) => (typeof value === "string" && value.trim().length === 0 ? undefined : value),
@@ -611,32 +619,18 @@ export function RequestForm({
     <form
       aria-busy={result === "pending"}
       aria-label="Form request custom print"
-      className="rounded-xl border border-border bg-card p-5 shadow-floating sm:p-8"
+      className="space-y-6"
       data-custom-request-form
       noValidate
       onSubmit={submit}
       ref={formRef}
     >
-      <div className="border-b border-border pb-6">
-        <h2 className="text-xl font-semibold">Lengkapi konteks untuk review.</h2>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          Tanda * menunjukkan field wajib. Nilai yang belum pasti dapat dijelaskan melalui catatan.
-        </p>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          {isLive
-            ? "File dikirim langsung ke ruang privat dan request diteruskan ke review operator setelah metadata dikonfirmasi."
-            : isPreview
-              ? "Isian dan file hanya berada di halaman ini. Tidak ada data yang dikirim atau disimpan."
-              : "Ruang privat belum tersedia pada runtime ini. Tidak ada data yang dikirim atau disimpan."}
-        </p>
-      </div>
-
       {isPreview ? (
-        <div className="my-6 rounded-lg border border-info-border bg-info-background p-4 text-info">
-          <p className="text-sm font-semibold">Preview lokal dengan file contoh</p>
-          <label className="mb-4 mt-3 block text-sm" htmlFor="custom-upload-scenario">Hasil simulasi file</label>
+        <aside aria-label="Kontrol preview pengajuan" className="rounded-[var(--radius-control)] border border-info-border bg-info-background p-4 text-info">
+          <p className="text-ui font-semibold">Preview lokal · tidak membuat pengajuan</p>
+          <label className="mt-3 mb-2 block text-ui font-medium" htmlFor="custom-upload-scenario">Hasil simulasi file</label>
           <select
-            className={controlClass}
+            className={selectClass}
             disabled={!hydrated || fileBusy || result === "pending"}
             id="custom-upload-scenario"
             onChange={(event) => {
@@ -651,29 +645,20 @@ export function RequestForm({
             <option value="failed">Simulasi gagal</option>
             <option value="expired">Sesi berakhir</option>
           </select>
-        </div>
-      ) : isLive ? (
-        <div className="my-6 rounded-lg border border-success-border bg-success-background p-4 text-success">
-          <p className="text-sm font-semibold">Upload privat aktif</p>
-          <p className="mt-2 text-sm leading-6">
-            File dikirim langsung ke storage privat dan hanya metadata yang diteruskan ke server untuk pemeriksaan.
-          </p>
-        </div>
-      ) : (
-        <div className="my-6">
-          <StatusNotice
-            description="Storage privat atau database belum tersedia pada runtime ini. Seluruh kontrol tetap terlihat untuk review, tetapi file dan request tidak dapat dikirim."
-            title="Pengiriman privat belum tersedia."
-            tone="info"
-          />
-        </div>
-      )}
+        </aside>
+      ) : mode === "unavailable" ? (
+        <StatusNotice
+          description="Formulir tetap bisa dibaca, tetapi file dan pengajuan belum bisa dikirim saat ini."
+          title="Pengiriman privat belum tersedia."
+          tone="info"
+        />
+      ) : null}
 
-      <div className="mb-6 rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" ref={statusRef} tabIndex={-1}>
+      <div className="rounded-[var(--radius-control)] empty:hidden focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" ref={statusRef} tabIndex={-1}>
         {Object.keys(errors).length > 0 ? (
-          <div className="rounded-lg border border-destructive-border bg-destructive-background p-4 text-destructive" role="alert">
-            <p className="font-semibold">Periksa kembali request Anda.</p>
-            <ul className="mt-2 list-inside list-disc text-sm">
+          <div className="rounded-[var(--radius-control)] border border-destructive-border bg-destructive-background p-4 text-destructive" role="alert">
+            <p className="text-ui font-semibold">Periksa kembali request Anda.</p>
+            <ul className="mt-2 list-inside list-disc text-ui font-normal">
               {Object.entries(errors).map(([name, message]) => (
                 <li key={name}>
                   <a
@@ -692,7 +677,7 @@ export function RequestForm({
           </div>
         ) : null}
         {result === "pending" ? (
-          <p className="text-sm text-muted-foreground" role="status">
+          <p className="text-ui text-muted-foreground" role="status">
             {isPreview ? "Memeriksa preview request. Data tidak dikirim." : "Mengirim request ke review operator."}
           </p>
         ) : null}
@@ -706,26 +691,26 @@ export function RequestForm({
         {result === "ready" && isLive && referenceNumber ? (
           <div className="space-y-3"><StatusNotice
             action={
-              <div className="flex flex-wrap gap-3">
-              {requestId ? <Link className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={`/account/make/${requestId}`}>Lihat status di akun</Link> : null}
-              <a
-                className="inline-flex min-h-11 items-center rounded-lg border border-success-border bg-background px-4 py-2 text-sm font-semibold text-success underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                href={createPublicWhatsAppHref(referenceNumber, siteInformation.phone)}
-                rel="noreferrer"
-              >
-                Lanjutkan melalui WhatsApp
-              </a>
+              <div className="flex flex-wrap gap-2">
+                {requestId ? <NiuvaLink className="min-h-11" href={`/account/make/${requestId}`}>Lihat status di akun</NiuvaLink> : null}
+                <a
+                  className={buttonVariants({ className: "min-h-11", variant: "outline" })}
+                  href={createPublicWhatsAppHref(referenceNumber, siteInformation.phone)}
+                  rel="noreferrer"
+                >
+                  Lanjutkan melalui WhatsApp
+                </a>
               </div>
             }
-            description={`Referensi ${referenceNumber} sudah tercatat. Operator akan meninjau file dan konteks request Anda.`}
+            description={`Nomor referensi Anda ${referenceNumber}. Operator akan meninjau file dan kebutuhan Anda.`}
             title="Request tersimpan untuk review operator."
             tone="success"
           />
-          {savedPreview ? <p className="rounded-lg border border-info-border bg-info-background p-4 text-sm text-info">Simulasi biaya awal yang tersimpan bersama request: <strong>{rupiah.format(BigInt(savedPreview.finalTotalRp))}</strong>. Angka ini berasal dari input slicer Anda dan belum diverifikasi operator.{previewResult?.status === "READY" && previewResult.finalTotalRp !== savedPreview.finalTotalRp ? " Nilai tersimpan berbeda dari simulasi sebelumnya karena server menghitung ulang saat request dikirim." : ""}</p> : previewOptedIn ? <p className="text-sm text-muted-foreground">Simulasi biaya awal belum tersedia untuk request ini. Operator akan meninjau file dan biaya pekerjaan.</p> : null}</div>
+          {savedPreview ? <p className="rounded-[var(--radius-control)] border border-info-border bg-info-background p-4 text-ui font-normal leading-[1.55] text-info">Simulasi biaya awal yang tersimpan bersama request: <strong className="font-semibold">{rupiah.format(BigInt(savedPreview.finalTotalRp))}</strong>. Angka ini berasal dari input slicer Anda dan belum diperiksa operator.{previewResult?.status === "READY" && previewResult.finalTotalRp !== savedPreview.finalTotalRp ? " Nilai tersimpan berbeda dari simulasi sebelumnya karena dihitung ulang saat request dikirim." : ""}</p> : previewOptedIn ? <p className="text-ui font-normal text-muted-foreground">Simulasi biaya awal belum tersedia untuk request ini. Operator akan meninjau file dan biaya pekerjaan.</p> : null}</div>
         ) : null}
         {result === "unavailable" ? (
           <StatusNotice
-            description="Tidak ada file atau informasi yang dikirim. Simpan konteks Anda di tempat lain sebelum meninggalkan halaman."
+            description="Tidak ada file atau informasi yang dikirim. Simpan catatan Anda di tempat lain sebelum meninggalkan halaman."
             title="Pengiriman request belum tersedia."
             tone="info"
           />
@@ -739,16 +724,22 @@ export function RequestForm({
         ) : null}
       </div>
 
-      <fieldset className="min-w-0 space-y-8" disabled={mode === "unavailable" || result === "pending" || result === "ready"}>
+      <fieldset className="min-w-0 space-y-6" disabled={mode === "unavailable" || result === "pending" || result === "ready"}>
         <legend className="sr-only">Informasi request custom print</legend>
 
-        <section className="space-y-5" aria-labelledby="file-section-title">
-          <h3 className="border-b border-border pb-3 text-base font-semibold" id="file-section-title">File model</h3>
+        <section aria-labelledby="file-section-title" className={stepClass}>
+          <h2 className={stepTitleClass} id="file-section-title"><StepNumber value={1} />File model</h2>
+          <p className="-mt-2 mb-5 text-ui font-normal leading-[1.55] text-muted-foreground">
+            {isLive
+              ? "File langsung tersimpan di ruang privat Niuva dan hanya dibuka operator untuk review."
+              : isPreview
+                ? "Preview hanya membaca nama, jenis, dan ukuran file. Isinya tidak diunggah."
+                : "Unggah model belum tersedia saat ini."}
+            {" "}Tanda * menandai isian wajib.
+          </p>
           <FileUploadField
             acceptedExtensions={acceptedExtensions}
-            description={isPreview
-              ? "STL, 3MF, dan OBJ untuk model awal. STEP/STP menjadi lampiran review manual. Preview tidak membaca isi biner."
-              : "STL, 3MF, dan OBJ untuk model awal. STEP/STP menjadi lampiran review manual. File dikirim langsung ke ruang privat."}
+            description="STL, 3MF, atau OBJ untuk model. STEP/STP diterima sebagai lampiran yang diperiksa manual."
             disabled={!hydrated || mode === "unavailable"}
             error={fileError}
             fileMeta={file ? fileMetadata(file) : undefined}
@@ -780,43 +771,36 @@ export function RequestForm({
           />
         </section>
 
-        {productOptions.length > 0 ? (
-          <section className="space-y-5" aria-labelledby="product-section-title">
-            <div>
-              <h3 className="border-b border-border pb-3 text-base font-semibold" id="product-section-title">Produk referensi</h3>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                Pilihan ini hanya mengarahkan konteks intake. Produk custom tetap melalui review, quote, dan persetujuan operator; tidak ada checkout langsung.
-              </p>
-            </div>
-            <FormField
-              description="Pilih produk draft yang paling mendekati kebutuhan Anda, atau tandai kebutuhan custom lain bila belum yakin."
-              error={errors.productInterest}
-              id="custom-productInterest"
-              label="Produk yang diminati"
-              required
-            >
-              <select
-                className={controlClass}
-                defaultValue={initialProductInterest ?? unspecifiedProductValue}
-                name="productInterest"
+        <section aria-labelledby="configuration-section-title" className={stepClass}>
+          <h2 className={stepTitleClass} id="configuration-section-title"><StepNumber value={2} />Konfigurasi awal</h2>
+          <p className="-mt-2 mb-5 text-ui font-normal leading-[1.55] text-muted-foreground">Operator memeriksa pilihan ini saat review. Nilai yang belum pasti bisa dijelaskan di catatan.</p>
+          <div className="grid gap-5 sm:grid-cols-2">
+            {productOptions.length > 0 ? (
+              <FormField
+                className="sm:col-span-2"
+                description="Pilihan ini hanya memberi konteks. Produk custom tetap melalui review dan quote, tanpa checkout langsung."
+                error={errors.productInterest}
+                id="custom-productInterest"
+                label="Produk yang diminati"
                 required
               >
-                <option value={unspecifiedProductValue}>Belum menentukan / kebutuhan custom lain</option>
-                {productOptions.map((product) => (
-                  <option key={product.sourceProductId} value={product.sourceProductId}>
-                    {product.name}
-                  </option>
-                ))}
-              </select>
-            </FormField>
-          </section>
-        ) : <input name="productInterest" type="hidden" value={unspecifiedProductValue} />}
-
-        <section className="space-y-5" aria-labelledby="configuration-section-title">
-          <h3 className="border-b border-border pb-3 text-base font-semibold" id="configuration-section-title">Konfigurasi awal</h3>
-          <div className="grid gap-5 sm:grid-cols-2">
-            <FormField description="Operator akan memverifikasi pilihan ini saat review." error={errors.materialRequested} id="custom-materialRequested" label="Material" required>
-              <select className={controlClass} defaultValue="" name="materialRequested" onChange={invalidatePreview} required>
+                <select
+                  className={selectClass}
+                  defaultValue={initialProductInterest ?? unspecifiedProductValue}
+                  name="productInterest"
+                  required
+                >
+                  <option value={unspecifiedProductValue}>Belum menentukan / kebutuhan custom lain</option>
+                  {productOptions.map((product) => (
+                    <option key={product.sourceProductId} value={product.sourceProductId}>
+                      {product.name}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+            ) : <input name="productInterest" type="hidden" value={unspecifiedProductValue} />}
+            <FormField error={errors.materialRequested} id="custom-materialRequested" label="Material" required>
+              <select className={selectClass} defaultValue="" name="materialRequested" onChange={invalidatePreview} required>
                 <option value="">Pilih kebutuhan material</option>
                 <option value="PLA">PLA</option>
                 <option value="ABS">ABS</option>
@@ -833,66 +817,66 @@ export function RequestForm({
             <FormField error={errors.requestedSize} id="custom-requestedSize" label="Ukuran target (opsional)">
               <Input className={controlClass} name="requestedSize" placeholder="Contoh: 8 cm atau mengikuti referensi" />
             </FormField>
-            <FormField error={errors.faculty} id="custom-faculty" label="Fakultas/identitas (opsional)">
-              <Input className={controlClass} name="faculty" placeholder="Contoh: Fakultas Teknik" />
-            </FormField>
-            <FormField description="Tanggal ini hanya target pembahasan, bukan janji selesai otomatis." error={errors.targetDeadline} id="custom-targetDeadline" label="Target diperlukan (opsional)">
-              <Input className={controlClass} name="targetDeadline" type="date" />
-            </FormField>
-            <FormField description="Konfirmasi ini membantu mencegah salah ukuran, terutama pada STL." error={errors.unitConfirmation} id="custom-unitConfirmation" label="Unit atau skala" required>
-              <select className={controlClass} defaultValue="" name="unitConfirmation" required>
+            <FormField description="Konfirmasi ini mencegah salah ukuran, terutama pada STL." error={errors.unitConfirmation} id="custom-unitConfirmation" label="Unit atau skala" required>
+              <select className={selectClass} defaultValue="" name="unitConfirmation" required>
                 <option value="">Pilih konfirmasi unit</option>
                 <option value="MILLIMETER_CONFIRMED">Model sudah menggunakan milimeter</option>
                 <option value="OTHER_UNIT_NOTED">Unit lain, dijelaskan di catatan</option>
                 <option value="NEEDS_OPERATOR_HELP">Belum yakin, perlu bantuan operator</option>
               </select>
             </FormField>
-            <FormField className="sm:col-span-2" description="Sertakan fungsi, area kritis, orientasi, atau kebutuhan lain yang perlu diperiksa." error={errors.notes} id="custom-notes" label="Catatan (opsional)">
+            <FormField description="Hanya target untuk dibahas, bukan janji selesai." error={errors.targetDeadline} id="custom-targetDeadline" label="Target diperlukan (opsional)">
+              <Input className={controlClass} name="targetDeadline" type="date" />
+            </FormField>
+            <FormField className="sm:col-span-2" error={errors.faculty} id="custom-faculty" label="Fakultas/identitas (opsional)">
+              <Input className={controlClass} name="faculty" placeholder="Contoh: Fakultas Teknik" />
+            </FormField>
+            <FormField className="sm:col-span-2" description="Fungsi, area kritis, orientasi cetak, atau hal lain yang perlu diperiksa." error={errors.notes} id="custom-notes" label="Catatan (opsional)">
               <textarea className={controlClass} name="notes" rows={4} />
             </FormField>
           </div>
         </section>
 
-        <section className="space-y-5" aria-labelledby="customer-preview-title">
-          <div>
-            <h3 className="border-b border-border pb-3 text-base font-semibold" id="customer-preview-title">Simulasi biaya awal (opsional)</h3>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">Gunakan berat dan durasi cetak <strong>per unit</strong> dari slicer Anda. Jumlah pada konfigurasi akan dihitung otomatis. Simulasi hanya mencakup material PLA/ABS dengan filament stok Niuva dan waktu mesin.</p>
+        <section aria-labelledby="customer-preview-title" className={stepClass}>
+          <h2 className={stepTitleClass} id="customer-preview-title"><StepNumber value={3} />Simulasi biaya awal (opsional)</h2>
+          <p className="-mt-2 mb-5 text-ui font-normal leading-[1.55] text-muted-foreground">Isi berat dan durasi cetak <strong className="font-semibold text-foreground">per unit</strong> dari slicer Anda; jumlah dihitung otomatis. Simulasi hanya mencakup PLA/ABS dari stok Niuva dan waktu mesin.</p>
+          <div className="space-y-5">
+            {!isLive && <StatusNotice title="Perlu review" description="Simulasi memerlukan upload model privat yang aktif. Operator tetap menghitung biaya saat review." tone="info" />}
+            <label className="flex min-h-11 items-start gap-3 text-ui font-medium">
+              <input className="mt-0.5 size-5 shrink-0 accent-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" disabled={!isLive} name="customerPreviewEnabled" onChange={(event) => { setPreviewOptedIn(event.target.checked); invalidatePreview(); }} type="checkbox" />
+              <span>Saya ingin menyertakan input slicer untuk simulasi komponen.</span>
+            </label>
+            <fieldset className="min-w-0 space-y-5" disabled={!isLive || !previewOptedIn}>
+              <legend className="sr-only">Input slicer per unit</legend>
+              <div className="grid gap-5 sm:grid-cols-3">
+                <FormField description="Gram untuk satu unit, bukan total pesanan." error={errors.previewWeightG} id="custom-previewWeightG" label="Berat hasil slicer per unit (g)">
+                  <Input className={controlClass} inputMode="decimal" name="previewWeightG" onChange={invalidatePreview} placeholder="Contoh: 18.4" type="text" />
+                </FormField>
+                <FormField error={errors.previewHours} id="custom-previewHours" label="Durasi per unit (jam)">
+                  <Input className={controlClass} defaultValue="0" min={0} name="previewHours" onChange={invalidatePreview} type="number" />
+                </FormField>
+                <FormField error={errors.previewMinutes} id="custom-previewMinutes" label="Durasi per unit (menit)">
+                  <Input className={controlClass} defaultValue="0" max={59} min={0} name="previewMinutes" onChange={invalidatePreview} type="number" />
+                </FormField>
+              </div>
+              <FormField description="Berat dan durasi berasal dari slicer Anda untuk satu unit model ini. Operator belum memeriksanya." error={errors.previewSource} id="custom-previewSource" label="Saya mengisi angka dari slicer sendiri">
+                <input className="size-5 accent-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" name="previewSource" onChange={invalidatePreview} type="checkbox" />
+              </FormField>
+              <Button className="min-h-11" disabled={fileBusy || previewStatus === "pending"} onClick={() => void previewCustomerComponents()} type="button" variant="outline">{previewStatus === "pending" ? "Menghitung…" : "Lihat simulasi komponen"}</Button>
+              <div aria-live="polite">
+                {previewStatus === "ready" && previewResult?.status === "READY" ? <div className="rounded-[var(--radius-control)] border border-border bg-neutral-50 p-5">
+                  <p className="text-ui font-semibold">Simulasi biaya awal</p>
+                  <dl className="mt-4 space-y-2 text-ui font-normal"><div className="flex justify-between gap-3"><dt className="text-muted-foreground">Material</dt><dd className="tabular-nums">{formatExactRupiah(previewResult.materialSubtotalRp)}</dd></div><div className="flex justify-between gap-3"><dt className="text-muted-foreground">Waktu mesin</dt><dd className="tabular-nums">{formatExactRupiah(previewResult.machineSubtotalRp)}</dd></div></dl>
+                  <p className="mt-4 border-t border-border pt-3 text-lg font-semibold tabular-nums">Total komponen indikatif {rupiah.format(BigInt(previewResult.finalTotalRp))}</p>
+                  <p className="mt-2 text-ui font-normal leading-[1.55] text-muted-foreground">Estimasi awal, bukan harga final. Setup, finishing, biaya lain, dan ongkir belum termasuk. Operator memeriksa file dan konfigurasi sebelum mengirim quote.</p>
+                </div> : previewStatus === "review" ? <p className="text-ui font-normal text-muted-foreground">Perlu review. Simulasi hanya tampil untuk STL/OBJ/3MF, PLA/ABS stok Niuva, dan input slicer per unit yang lengkap.</p> : previewStatus === "error" ? <p className="text-ui font-normal text-destructive" role="alert">{previewError}</p> : null}
+              </div>
+            </fieldset>
           </div>
-          {!isLive && <StatusNotice title="Perlu review" description="Simulasi memerlukan upload model privat yang aktif. Anda tetap dapat memulai dari referensi awal saat database tersedia." tone="info" />}
-          <label className="flex min-h-11 items-start gap-3 text-sm font-medium">
-            <input className="mt-1 size-5 accent-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" disabled={!isLive} name="customerPreviewEnabled" onChange={(event) => { setPreviewOptedIn(event.target.checked); invalidatePreview(); }} type="checkbox" />
-            <span>Saya ingin menyertakan input slicer untuk simulasi komponen.</span>
-          </label>
-          <fieldset className="space-y-5" disabled={!isLive || !previewOptedIn}>
-            <legend className="sr-only">Input slicer per unit</legend>
-            <div className="grid gap-5 sm:grid-cols-3">
-              <FormField description="Gram untuk satu unit, bukan total pesanan." error={errors.previewWeightG} id="custom-previewWeightG" label="Berat hasil slicer per unit (g)">
-                <Input className={controlClass} inputMode="decimal" name="previewWeightG" onChange={invalidatePreview} placeholder="Contoh: 18.4" type="text" />
-              </FormField>
-              <FormField error={errors.previewHours} id="custom-previewHours" label="Durasi per unit (jam)">
-                <Input className={controlClass} defaultValue="0" min={0} name="previewHours" onChange={invalidatePreview} type="number" />
-              </FormField>
-              <FormField error={errors.previewMinutes} id="custom-previewMinutes" label="Durasi per unit (menit)">
-                <Input className={controlClass} defaultValue="0" max={59} min={0} name="previewMinutes" onChange={invalidatePreview} type="number" />
-              </FormField>
-            </div>
-            <FormField description="Berat dan durasi berasal dari hasil slicer Anda untuk satu unit model ini. Operator belum memverifikasinya." error={errors.previewSource} id="custom-previewSource" label="Saya mengisi angka dari slicer sendiri">
-              <input className="size-5 accent-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" name="previewSource" onChange={invalidatePreview} type="checkbox" />
-            </FormField>
-            <Button className="min-h-11" disabled={fileBusy || previewStatus === "pending"} onClick={() => void previewCustomerComponents()} type="button" variant="outline">{previewStatus === "pending" ? "Menghitung…" : "Lihat simulasi komponen"}</Button>
-            <div aria-live="polite">
-              {previewStatus === "ready" && previewResult?.status === "READY" ? <div className="rounded-lg border border-info-border bg-info-background p-5 text-info">
-                <p className="font-semibold">Simulasi biaya awal</p>
-                <dl className="mt-4 space-y-2 text-sm"><div className="flex justify-between gap-3"><dt>Material</dt><dd>{formatExactRupiah(previewResult.materialSubtotalRp)}</dd></div><div className="flex justify-between gap-3"><dt>Waktu mesin</dt><dd>{formatExactRupiah(previewResult.machineSubtotalRp)}</dd></div></dl>
-                <p className="mt-4 border-t border-info-border pt-3 text-lg font-semibold">Total komponen indikatif {rupiah.format(BigInt(previewResult.finalTotalRp))}</p>
-                <p className="mt-2 text-sm leading-6">Estimasi awal, bukan harga final. Setup, finishing, biaya lain, dan ongkir belum termasuk. File serta konfigurasi diperiksa operator sebelum quotation diterbitkan.</p>
-              </div> : previewStatus === "review" ? <p className="text-sm text-muted-foreground">Perlu review. Simulasi hanya tampil untuk STL/OBJ/3MF, PLA/ABS stok Niuva, dan input slicer per unit yang lengkap.</p> : previewStatus === "error" ? <p className="text-sm text-destructive" role="alert">{previewError}</p> : null}
-            </div>
-          </fieldset>
         </section>
 
-        <section className="space-y-5" aria-labelledby="contact-section-title">
-          <h3 className="border-b border-border pb-3 text-base font-semibold" id="contact-section-title">Kontak untuk review</h3>
+        <section aria-labelledby="contact-section-title" className={stepClass}>
+          <h2 className={stepTitleClass} id="contact-section-title"><StepNumber value={4} />Kontak untuk review</h2>
           <div className="grid gap-5 sm:grid-cols-2">
             <FormField error={errors.customerName} id="custom-customerName" label="Nama" required>
               <Input autoComplete="name" className={controlClass} name="customerName" required />
@@ -900,23 +884,25 @@ export function RequestForm({
             <FormField error={errors.customerEmail} id="custom-customerEmail" label="Email" required>
               <Input autoComplete="email" className={controlClass} defaultValue={customerEmail} name="customerEmail" readOnly={customerEmail !== undefined} required type="email" />
             </FormField>
-            <FormField className="sm:col-span-2" error={errors.customerPhone} id="custom-customerPhone" label="Nomor WhatsApp" required>
+            <FormField className="sm:col-span-2" description="Dipakai operator bila ada yang perlu dibahas tentang model Anda." error={errors.customerPhone} id="custom-customerPhone" label="Nomor WhatsApp" required>
               <Input autoComplete="tel" className={controlClass} name="customerPhone" required type="tel" />
             </FormField>
           </div>
-          <FormField
-            description="Saya berhak membagikan file ini untuk pemeriksaan custom print oleh Niuva."
-            error={errors.rightsAck}
-            id="custom-rightsAck"
-            label="Persetujuan pemrosesan"
-            required
-          >
-            <input className="size-5 accent-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" name="rightsAck" required type="checkbox" />
-          </FormField>
+          <div className="mt-6 border-t border-border pt-5">
+            <FormField
+              description="Saya berhak membagikan file ini untuk pemeriksaan custom print oleh Niuva."
+              error={errors.rightsAck}
+              id="custom-rightsAck"
+              label="Persetujuan pemrosesan"
+              required
+            >
+              <input className="size-5 accent-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" name="rightsAck" required type="checkbox" />
+            </FormField>
+          </div>
         </section>
       </fieldset>
 
-      <div className="mt-8 border-t border-border pt-6">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
         <Button
           className="min-h-11 w-full sm:w-auto"
           disabled={!hydrated || mode === "unavailable" || fileBusy || result === "pending" || result === "ready"}
@@ -927,7 +913,8 @@ export function RequestForm({
             ? isPreview ? "Memeriksa preview" : "Mengirim request"
             : isPreview ? "Uji request tanpa mengirim" : isLive ? "Ajukan untuk Review" : "Pengiriman belum tersedia"}
         </Button>
-        <noscript><p className="mt-3 text-sm">Aktifkan JavaScript untuk mengirim file dan request secara aman.</p></noscript>
+        <p className="text-ui font-normal text-muted-foreground">Mengajukan belum membuat pesanan atau pembayaran.</p>
+        <noscript><p className="text-ui">Aktifkan JavaScript untuk mengirim file dan request secara aman.</p></noscript>
       </div>
     </form>
   );
