@@ -30,14 +30,14 @@ export function CustomerGoogleConsentForm({ returnTo, legal }: { returnTo: strin
     } catch { setMessage("Koneksi terputus. Periksa jaringan Anda dan coba lagi."); }
     busy.current = false; setPending(false);
   }
-  const link = "inline-flex min-h-11 items-center rounded-lg text-primary underline focus-visible:ring-3 focus-visible:ring-ring";
+  const link = "inline-flex min-h-11 items-center rounded-lg font-medium text-primary underline underline-offset-4 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring";
   return <form action="/api/auth/google/consent" method="post" onSubmit={submit} data-enhanced={hydrated} aria-busy={pending} className="space-y-5">
     <input type="hidden" name="returnTo" value={returnTo} />
     <input type="hidden" name="termsVersion" value={legal.terms.version} />
     <input type="hidden" name="privacyVersion" value={legal.privacy.version} />
-    <label className="flex min-h-11 items-start gap-3 text-sm leading-6"><input type="checkbox" name="consent" required className="mt-1 size-4 shrink-0 accent-primary focus-visible:ring-3 focus-visible:ring-ring" /><span>Saya menyetujui <a className={link} href={legal.terms.href} target="_blank" rel="noopener noreferrer">Syarat Layanan</a> dan <a className={link} href={legal.privacy.href} target="_blank" rel="noopener noreferrer">Kebijakan Privasi</a> Niuva untuk akun Google yang saya pilih.</span></label>
-    <label className="flex min-h-11 items-start gap-3 text-sm leading-6"><input type="checkbox" name="ageDeclaration" required className="mt-1 size-4 shrink-0 accent-primary focus-visible:ring-3 focus-visible:ring-ring" /><span>{AGE_DECLARATION_LABEL}</span></label>
+    <label className="flex min-h-11 items-start gap-3 text-ui leading-[1.55]"><input type="checkbox" name="consent" required className="mt-1 size-4 shrink-0 accent-primary focus-visible:ring-3 focus-visible:ring-ring" /><span>Saya menyetujui <a className={link} href={legal.terms.href} target="_blank" rel="noopener noreferrer">Syarat Layanan</a> dan <a className={link} href={legal.privacy.href} target="_blank" rel="noopener noreferrer">Kebijakan Privasi</a> Niuva untuk akun Google yang saya pilih.</span></label>
+    <label className="flex min-h-11 items-start gap-3 text-ui leading-[1.55]"><input type="checkbox" name="ageDeclaration" required className="mt-1 size-4 shrink-0 accent-primary focus-visible:ring-3 focus-visible:ring-ring" /><span>{AGE_DECLARATION_LABEL}</span></label>
     <Button type="submit" disabled={pending} className="min-h-12 w-full">{pending ? "Menyimpan persetujuan…" : "Setuju dan lanjutkan ke Google"}</Button>
-    <p role="status" aria-live="polite" className="min-h-6 text-sm text-destructive">{message}</p>
+    <p role="status" aria-live="polite" className="min-h-6 text-ui text-destructive">{message}</p>
   </form>;
 }
