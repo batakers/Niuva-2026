@@ -61,14 +61,13 @@ export async function ShopIndexView({ preview }: { preview: string | undefined }
             <ProductGrid products={products} previewEnabled={scenario === "examples"} />
           )}
           {process.env.NODE_ENV === "development" && !liveEnabled && (
-            <aside aria-label="Preview katalog" className="mt-12 rounded-[var(--radius-control)] border border-info-border bg-info-background p-4 text-info">
-              <p className="text-ui font-semibold">Preview lokal, data sintetis dan bukan inventory Niuva</p>
-              <div className="mt-3 flex flex-wrap gap-2">
+            <StatusNotice aria-label="Preview katalog" className="mt-12" role="note" size="compact" title="Preview lokal, data sintetis dan bukan inventory Niuva" tone="info">
+              <div className="flex flex-wrap gap-2 pt-1">
                 {[["examples", "Contoh"], ["empty", "Kosong"], ["loading", "Memuat"], ["error", "Gagal"]].map(([value, label]) => (
                   <NiuvaLink key={value} href={`/shop?preview=${value}`} variant="outline" size="sm" className="min-h-11" aria-current={scenario === value ? "page" : undefined}>{label}</NiuvaLink>
                 ))}
               </div>
-            </aside>
+            </StatusNotice>
           )}
         </div>
 

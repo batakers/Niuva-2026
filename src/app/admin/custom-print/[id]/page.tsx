@@ -69,9 +69,9 @@ export default async function AdminCustomPrintDetailPage({ params, searchParams 
           <div className="mt-5 border-t border-border pt-4"><p className="text-xs text-muted-foreground">Lampiran terverifikasi</p>{request.files.length === 0 ? <p className="mt-1 text-sm text-muted-foreground">Tidak ada file terikat.</p> : <ul className="mt-2 grid gap-2 text-sm sm:grid-cols-2">{request.files.map((file) => <li className="rounded-lg border border-border px-3 py-2" key={file.id}><span className="font-medium">{file.originalName}</span><span className="mt-1 block text-xs text-muted-foreground">{file.extension.toUpperCase()} · {formatBytes(file.sizeBytes)} · {adminStatusLabel(file.status)}</span>{file.status === "VERIFIED" ? <AdminActionForm action={downloadPrivateFileAction} className="mt-3" submitLabel="Buat tautan unduh"><input name="fileId" type="hidden" value={file.id} /><input name="ownerId" type="hidden" value={request.id} /><input name="ownerType" type="hidden" value="CUSTOM_PRINT_REQUEST" /></AdminActionForm> : null}</li>)}</ul>}<p className="mt-3 text-xs text-muted-foreground">URL dan storage key file privat tidak ditampilkan di browser admin. Tautan unduh dibuat ulang dan kedaluwarsa dalam lima menit.</p></div>
         </Card>
 
-        {customerPreview ? <Card as="section" aria-labelledby="customer-preview-title" className="gap-0 border-info-border bg-info-background p-5 sm:p-6">
-          <h2 className="text-xl font-medium tracking-[-0.015em] text-info" id="customer-preview-title">Simulasi biaya awal customer</h2>
-          <p className="mt-2 text-sm leading-6 text-info">Angka ini dinyatakan customer dari slicer sendiri. Operator belum memverifikasi berat, durasi, konfigurasi, atau biaya pekerjaan.</p>
+        {customerPreview ? <Card as="section" aria-labelledby="customer-preview-title" className="gap-0 border-info-border/40 bg-info-background p-5 sm:p-6">
+          <h2 className="text-xl font-medium tracking-[-0.015em]" id="customer-preview-title">Simulasi biaya awal customer</h2>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">Angka ini dinyatakan customer dari slicer sendiri. Operator belum memverifikasi berat, durasi, konfigurasi, atau biaya pekerjaan.</p>
           <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
             <Info label="Material / filamen" value={`${customerPreview.input.material} · stok Niuva`} />
             <Info label="Berat per unit" value={`${customerPreview.input.weightGramsPerUnit} g`} />

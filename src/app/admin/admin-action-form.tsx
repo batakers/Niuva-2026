@@ -6,6 +6,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import type { AdminAction, AdminActionState } from "./actions";
+import { StatusNotice } from "@/components/niuva/status-notice";
 
 const initialState: AdminActionState = { status: "idle" };
 const FormBusyContext = createContext<(busy: boolean) => void>(() => {});
@@ -47,27 +48,24 @@ export function AdminActionForm({
         </Button>
       </FieldSet>
       {state.status !== "idle" && state.message ? (
-        <div
-          aria-live="polite"
-          className={`mt-4 rounded-lg border px-3 py-3 text-sm ${
-            state.status === "success"
-              ? "border-success-border bg-success-background text-success"
-              : "border-destructive-border bg-destructive-background text-destructive"
-          }`}
-          role={state.status === "error" ? "alert" : "status"}
-        >
-          <p>{state.message}</p>
-          {state.link ? (
+        <StatusNotice
+          action={state.link ? (
             <Link
-              className="mt-2 inline-flex min-h-11 items-center font-semibold underline underline-offset-4 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
               href={state.link}
               rel="noreferrer"
               target="_blank"
             >
               {successLinkLabel}
             </Link>
-          ) : null}
-        </div>
+          ) : undefined}
+          ariaLive="polite"
+          className="mt-4"
+          enter
+          size="compact"
+          title={state.message}
+          tone={state.status === "success" ? "success" : "error"}
+        />
       ) : null}
     </form>
   );

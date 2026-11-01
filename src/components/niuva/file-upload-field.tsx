@@ -5,6 +5,7 @@ import { useId, useRef, type ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/Icon";
 import { cn } from "@/lib/utils";
+import { StatusNotice } from "@/components/niuva/status-notice";
 
 export type FileUploadStatus =
   | "idle"
@@ -299,15 +300,13 @@ export function FileUploadField({
       ) : null}
 
       {errorState ? (
-        <div
-          aria-live="assertive"
-          className="space-y-2 rounded-lg border border-destructive-border bg-destructive-background p-3 text-sm"
-          role="alert"
-        >
-          <p className="font-medium text-destructive">{resolvedStatusLabels[status]}</p>
-          <p className="text-destructive">{error ?? resolvedErrorDefaults[status]}</p>
-          {recoveryAction ? <div className="flex flex-wrap gap-2">{recoveryAction}</div> : null}
-        </div>
+        <StatusNotice
+          action={recoveryAction}
+          description={error ?? resolvedErrorDefaults[status]}
+          size="compact"
+          title={resolvedStatusLabels[status]}
+          tone="error"
+        />
       ) : null}
     </div>
   );

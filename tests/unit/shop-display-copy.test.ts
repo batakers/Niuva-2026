@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import catalogSeed from "../../docs/source/Dataset Shop Niuva/catalog-seed.json";
-import { getShopDisplayCopy } from "@/features/public/shop-display-copy";
+import { customerVariantName, getShopDisplayCopy } from "@/features/public/shop-display-copy";
 
 describe("Shop presentation copy", () => {
   const published = catalogSeed.products.filter((product) => product.isPublished);
@@ -28,5 +28,12 @@ describe("Shop presentation copy", () => {
       name: updated.name,
       summary: updated.description,
     });
+  });
+
+  it("hides the importer's placeholder variant name and keeps real option names", () => {
+    expect(customerVariantName("Default")).toBeNull();
+    expect(customerVariantName(" default ")).toBeNull();
+    expect(customerVariantName("Abu-abu")).toBe("Abu-abu");
+    expect(customerVariantName("Default Hitam")).toBe("Default Hitam");
   });
 });

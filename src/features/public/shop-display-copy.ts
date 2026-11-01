@@ -66,3 +66,11 @@ export function getShopDisplayCopy(product: Readonly<{
 
   return { curated: true, name: approved.name, summary: approved.summary };
 }
+
+/**
+ * The catalog importer names the only variant of a product without options "Default"
+ * (scripts/prepare-shop-catalog.ts). That placeholder is not a choice, so customers never see it.
+ */
+export function customerVariantName(name: string): string | null {
+  return name.trim().toLowerCase() === "default" ? null : name;
+}

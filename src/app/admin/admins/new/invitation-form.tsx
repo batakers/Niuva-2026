@@ -7,6 +7,7 @@ import { useActionState, useState } from "react";
 import { Check, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { inviteAdminAction, type AdminInvitationState } from "./actions";
+import { StatusNotice } from "@/components/niuva/status-notice";
 
 const initial: AdminInvitationState = { status: "idle" };
 const inputClass = "min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base caret-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card disabled:opacity-60";
@@ -27,7 +28,7 @@ function InvitationForm({ mailReady, onNew }: Readonly<{ mailReady: boolean; onN
     <Button type="button" variant="outline" onClick={onNew}>Tambah Admin lain</Button>
   </div>;
   return <form action={action} aria-busy={pending} className="space-y-6">
-    {state.status === "error" && <p role="alert" className="rounded-lg border border-destructive-border bg-destructive-background p-4 text-sm leading-6 text-destructive-icon">{state.message}</p>}
+    {state.status === "error" && state.message && <StatusNotice enter size="compact" title={state.message} tone="error" />}
     <FieldSet disabled={pending || !mailReady} className="space-y-6">
       <FieldLegend className="sr-only">Identitas Admin yang diundang</FieldLegend>
       <div className="space-y-2"><div className="flex flex-col gap-4"><Label className="text-sm font-medium" htmlFor="admin-display-name">Nama Admin</Label><Input aria-describedby="admin-display-name-hint" className={inputClass} id="admin-display-name" name="displayName" autoComplete="name" maxLength={100} required /></div><p className="text-sm leading-5 text-muted-foreground" id="admin-display-name-hint">Nama yang digunakan untuk mengenali operator.</p></div>

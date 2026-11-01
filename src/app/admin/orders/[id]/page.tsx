@@ -96,7 +96,7 @@ export default async function AdminOrderDetailPage({
         <AdminPageHeader actions={<div className="flex flex-wrap gap-2"><Link className={buttonVariants({ variant: "outline", className: "min-h-11" })} href={`/admin/finance/invoices/new?kind=ORDER_TOTAL&sourceId=${id}`}>Penagihan pesanan</Link>{order.orderType === "CUSTOM_PRINT" ? <Link className={buttonVariants({ variant: "outline", className: "min-h-11" })} href={`/admin/finance/invoices/new?kind=CUSTOM_SHIPPING&sourceId=${id}`}>Tagihan ongkir final</Link> : null}</div>} title="Detail pesanan" description={`${order.orderNumber} · ${adminStatusLabel(order.status)} · ${order.orderType === "CUSTOM_PRINT" ? "Custom Print" : "Produk Toko"}`} returnHref={returnTo} returnLabel="Kembali ke Pesanan" breadcrumbs={[{ label: "Pesanan", href: returnTo }, { label: order.orderNumber }]} />
 
         {paymentHeld ? (
-          <Card as="section" aria-labelledby="payment-exception-title" className="gap-0 border-warning-border bg-warning-background p-5 text-warning sm:p-6">
+          <Card as="section" aria-labelledby="payment-exception-title" className="gap-0 border-warning-border/40 bg-warning-background p-5 sm:p-6">
             <h2 className="text-xl font-medium tracking-[-0.015em]" id="payment-exception-title">Pembayaran perlu diperiksa</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6">Proses dan pengiriman pesanan ditahan. Owner perlu mencocokkan referensi pembayaran di dashboard Midtrans dan menangani refund sesuai kondisi pesanan. Refund tidak otomatis mengembalikan stok fisik.</p>
             <ul className="mt-4 space-y-3 text-sm">

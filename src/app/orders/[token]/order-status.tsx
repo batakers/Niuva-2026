@@ -79,9 +79,7 @@ export function OrderStatus({
     <main className="overflow-x-hidden" data-order-source={isPreview ? "preview" : "live"} data-order-state={scenario} id="main-content">
       <div className="mx-auto max-w-public px-5 pt-10 sm:px-12 sm:pt-14">
         {isPreview ? (
-          <aside aria-label="Preview status pesanan" className="mb-8 rounded-[var(--radius-control)] border border-info-border bg-info-background p-4 text-ui font-normal text-info">
-            Preview lokal dengan data sintetis. Pilihan skenario hanya mengubah tampilan, bukan status pesanan sungguhan.
-          </aside>
+          <StatusNotice aria-label="Preview status pesanan" className="mb-8" description="Pilihan skenario hanya mengubah tampilan, bukan status pesanan sungguhan." role="note" size="compact" title="Preview lokal dengan data sintetis." tone="info" />
         ) : null}
         <h1 className={`${type.display.className} max-w-[16em] text-balance`}>{order.currentLabel}</h1>
         <p className="mt-4 max-w-[56ch] text-lead leading-[1.6]">{order.currentDescription}</p>

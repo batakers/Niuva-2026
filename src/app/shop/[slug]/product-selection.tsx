@@ -1,15 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { VariantSelector } from "@/components/niuva/variant-selector";
 import { useHydrated } from "@/components/niuva/use-hydrated";
-import { NiuvaLink } from "@/components/ui/NiuvaLink";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/input";
 import { addCartItem, cartStorageKey, readCart, writeCart } from "@/features/cart/cart-state";
 import type { PublicShopProduct } from "@/features/frontend-preview/types";
+import { customerVariantName } from "@/features/public/shop-display-copy";
 
 const rupiah = new Intl.NumberFormat("id-ID", {
   currency: "IDR",
@@ -24,12 +25,17 @@ export function ProductSelection({ product, previewEnabled = true, onVariantChan
   onVariantChange?: (variantId: string) => void;
 }) {
   const hydrated = useHydrated();
-  const [selectedId, setSelectedId] = useState<string>();
+  // A product with one variant has nothing to choose: it is selected from the start and the list is hidden.
+  const onlyVariant = product.variants.length === 1 ? product.variants[0] : undefined;
+  const [selectedId, setSelectedId] = useState<string | undefined>(onlyVariant && onlyVariant.stockOnHand > 0 ? onlyVariant.id : undefined);
   const [quantity, setQuantity] = useState(1);
   const [cartResult, setCartResult] = useState<"idle" | "added" | "recovered" | "error">("idle");
   const selected = product.variants.find(variant => variant.id === selectedId);
   const canPrepare = Boolean(hydrated && selected && selected.stockOnHand > 0 && quantity >= 1 && quantity <= selected.stockOnHand);
   const hasAvailableVariant = product.variants.some(variant => variant.stockOnHand > 0);
+  const shown = selected ?? onlyVariant;
+  const shownName = shown ? customerVariantName(shown.name) : null;
+  const addedName = selected ? customerVariantName(selected.name) : null;
 
   function chooseVariant(optionId: string) {
     setSelectedId(optionId);
@@ -71,11 +77,13 @@ export function ProductSelection({ product, previewEnabled = true, onVariantChan
 
       {!hasAvailableVariant ? (
         <div className="mb-6">
-          <StatusNotice tone="warning" title="Semua varian sedang habis." description="Anda masih bisa melihat pilihannya, tetapi belum bisa menambahkannya ke keranjang." />
+          {onlyVariant
+            ? <StatusNotice tone="warning" title="Stok sedang habis." description="Produk ini belum bisa ditambahkan ke keranjang." />
+            : <StatusNotice tone="warning" title="Semua varian sedang habis." description="Anda masih bisa melihat pilihannya, tetapi belum bisa menambahkannya ke keranjang." />}
         </div>
       ) : null}
 
-      <VariantSelector
+      {onlyVariant ? null : <VariantSelector
         description="Varian yang stoknya habis tidak bisa dipilih."
         label="Varian"
         onChange={chooseVariant}
@@ -88,16 +96,20 @@ export function ProductSelection({ product, previewEnabled = true, onVariantChan
         }))}
         selectedId={selectedId ?? ""}
         variant="list"
-      />
+      />}
 
       <div className="mt-6 grid gap-5 rounded-[var(--radius-card)] border border-border bg-card p-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:p-6">
         <div>
           <p className="text-caption text-muted-foreground">Harga</p>
           <p className="mt-1 text-2xl font-semibold tabular-nums" aria-live="polite">
-            {selected ? rupiah.format(BigInt(selected.priceRp)) : "Pilih varian dulu"}
+            {shown ? rupiah.format(BigInt(shown.priceRp)) : "Pilih varian dulu"}
           </p>
           <p id="selection-state" className="mt-1 text-caption leading-[1.45] text-muted-foreground">
-            {selected ? `${selected.name}, maksimal ${selected.stockOnHand}${previewEnabled ? " pada data contoh" : ""}.` : "Jumlah bisa diatur setelah varian dipilih."}
+            {shown
+              ? shown.stockOnHand > 0
+                ? `${shownName ? `${shownName}, maksimal` : "Maksimal"} ${shown.stockOnHand}${previewEnabled ? " pada data contoh" : ""}.`
+                : "Stok sedang habis."
+              : "Jumlah bisa diatur setelah varian dipilih."}
           </p>
         </div>
 
@@ -128,15 +140,15 @@ export function ProductSelection({ product, previewEnabled = true, onVariantChan
       </p>
 
       {cartResult === "added" || cartResult === "recovered" ? (
-        <div className="mt-5">
-          <StatusNotice
-            enter
-            tone="success"
-            title="Masuk ke keranjang."
-            description={`${quantity} × ${selected?.name ?? "varian"}. Stok belum ditahan sampai pesanan dibuat.${cartResult === "recovered" ? " Isi keranjang lama yang rusak sudah dibersihkan." : ""}`}
-            action={<NiuvaLink href={previewEnabled ? "/cart?preview=examples" : "/cart"} variant="outline" className="min-h-11">Lihat keranjang</NiuvaLink>}
-          />
-        </div>
+        <StatusNotice
+          action={<Link className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] text-ui font-semibold text-primary underline underline-offset-4 hover:decoration-2 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href={previewEnabled ? "/cart?preview=examples" : "/cart"}>Lihat keranjang</Link>}
+          className="mt-4"
+          description={`${addedName ? `${quantity} × ${addedName}` : `${quantity} barang`}. Stok belum ditahan sampai pesanan dibuat.${cartResult === "recovered" ? " Isi keranjang lama yang rusak sudah dibersihkan." : ""}`}
+          enter
+          size="inline"
+          title="Masuk ke keranjang."
+          tone="success"
+        />
       ) : null}
       {cartResult === "error" ? (
         <div className="mt-5"><StatusNotice enter tone="error" title="Belum bisa disimpan ke keranjang." description="Browser ini menolak penyimpanan. Periksa pengaturan browser, lalu coba lagi." /></div>

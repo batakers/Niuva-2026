@@ -32,7 +32,7 @@ ada di papan ini; pekerjaan baru masuk tabel task, bukan file lain.
 | | T09 | O | `CUSTOMER_AUTH_CLEANUP` lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
 | | T23, T25, T35 | O | Cek metode dan fitur refund di dashboard Midtrans sandbox (Owner mengecek, 31 Okt); grant `refund` sudah ada | Q1 |
 | Redesign | T46 → T47 | A | Beranda di `main` dan diterima Owner; Layanan, Proyek, dan detailnya selesai lokal di `claude/redesign-company-pages`; sisa legal dan 404 | Postgres lokal untuk E2E (Owner) |
-| Redesign | T45–T51, T54 | A | Redesign M5a dan motion lanjutan selesai 2 Nov (bukti lokal; CI di PR); review visual Owner per route masih terbuka | — |
+| Redesign | T45–T51, T54, T55 | A | Redesign M5a, motion lanjutan, dan pesan status v2 selesai 2 Nov (bukti lokal; CI di PR); review visual Owner per route masih terbuka | — |
 | | T36 | O + A | UAT operasi Admin di UI baru | T50 |
 | Berantai | T34 → T08 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim; lalu retensi file pada berkas MAKE | T33 dulu |
 | | T14 | O + A | Privacy hosted dengan sesi Customer penguji; grant sudah ter-deploy (#89) | Sesi Customer Owner |
@@ -210,6 +210,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T50 | M5a | DONE | Redesign Admin | T46 | Shell, Ringkasan, daftar, detail, review Custom Print, keuangan, produk, tarif, konten, laporan, akses/privasi dan state error/denied; Card, status, tabel dan label Indonesia terkonsolidasi; permission dan motion yang disetujui tetap. Gate lokal dan capture. Selesai 1 Nov 2026 lewat PR #117 dengan bukti lokal dan CI; review visual Owner menunggu. |
 | T51 | M5a | DONE | Motion pass global | T47–T50 | Keputusan Owner 31 Okt: motion inti (adegan, pergantian panel) dan umpan balik interaksi dibuat per halaman di T47–T50; pass ini menyusul setelah semua halaman jadi. Durasi dan easing seragam memakai token DESIGN.md, paling banyak satu gerak khas per halaman, keputusan animasi masuk per seksi (DESIGN.md melarang scroll reveal sebagai hiasan), reduced motion dan WCAG 2.2.2 di semua route, kinerja di ponsel. Capture dan rekaman lokal. Selesai 2 Nov 2026 dengan bukti lokal dan CI; Beranda mempertahankan adegan maskot yang diterima Owner sebagai satu bahasa gerak. |
 | T54 | M5a | DONE | Motion lanjutan dari sweep peluang | T51 | Empat saran sweep 2 Nov yang diminta Owner dikerjakan semua: tautan ke seksi di halaman yang sama menggulir halus hanya pada halaman yang ikut (`data-smooth-anchors`) sementara pindah halaman tetap langsung ke atas; panel konfirmasi quote dan notifikasi hasil aksi masuk 220ms; menu publik di bawah 1280px turun 150ms; "Lihat proyek terkait" mendarat di bawah header. Reduced motion tetap mati. Rencana di `plans/002`–`005`. Selesai 2 Nov 2026 dengan bukti lokal. |
+| T55 | M5a | DONE | Pesan status v2 dan produk satu varian | T54 | Atas permintaan Owner 2 Nov ("Ya, kerjakan"): `StatusNotice` versi v2 (permukaan tonal tenang, judul `foreground`, deskripsi `muted-foreground`, label nada hanya untuk pembaca layar, ukuran `inline`, `role="note"`, `children`); sekitar 30 kotak pesan buatan sendiri dan `Alert` mentah di publik, Akun, dan Admin dipindah ke komponen itu; konfirmasi tambah ke keranjang menjadi satu baris; produk satu varian terpilih otomatis tanpa label "Default" di produk, keranjang, dan checkout. Selesai 2 Nov 2026 dengan bukti lokal. |
 | T53 | M4 | IN_PROGRESS | Kaitan foto ke varian | T31; keputusan Owner 1 Nov | `ProductVariant.mediaId` nullable (banyak varian boleh satu foto, `ON DELETE SET NULL`) lewat migration baru; importer/seed mengisi dari foto varian sumber; editor varian Admin memilih foto dari galeri produk yang sama dan server menolak foto produk lain; simpan galeri mempertahankan foto yang tetap dipakai; halaman produk memakai kaitan ini dengan alt text sebagai cadangan. Staging: `db:deploy` dan impor ulang katalog hanya atas instruksi Owner. |
 
 ## Backlog setelah v1
@@ -2132,6 +2133,53 @@ belum ada yang dikerjakan.
   versi gratis bernilai Rp0. Domain tidak perlu dibeli lagi; biaya
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
+
+### T55 — pesan status v2 dan produk satu varian, 2026-11-02
+
+Branch `claude/notice-v2` dari `claude/motion-follow-up` (PR #119 belum
+di-merge saat itu). Dikerjakan atas permintaan Owner ("Ya, kerjakan") setelah
+pemeriksaan notice di detail produk.
+
+- **`StatusNotice` v2:**
+  - permukaan `*-background` dengan garis `*-border/40` dan `--radius-control`;
+  - judul `text-ui` 600 `foreground`, deskripsi `text-ui` `muted-foreground`
+    (kontras 6,4–6,8:1);
+  - ikon nada 18px; label nada hanya untuk pembaca layar;
+  - ukuran `inline`, `role="note"`, `children`, `ref`, dan `tabIndex`.
+- **Satu bentuk pesan:** sekitar 30 kotak berwarna buatan sendiri dan 5 `Alert`
+  mentah di publik, Akun, dan Admin dipindah ke `StatusNotice`. Panel
+  konfirmasi quote dan tiga kartu seksi Admin berwarna memakai permukaan yang
+  sama. Teks dan role tetap.
+- **Keranjang:** konfirmasi tambah ke keranjang menjadi satu baris
+  (`StatusNotice` inline) dengan tautan "Lihat keranjang". Pesan error tetap
+  berupa kotak.
+- **Produk satu varian:**
+  - varian itu terpilih sejak awal, tanpa daftar varian;
+  - `customerVariantName()` menyembunyikan nama pengganti "Default" dari
+    importer di detail produk, keranjang, dan checkout;
+  - bila stoknya habis, pesannya "Stok sedang habis.".
+- **Temuan `cn()`:**
+  - tailwind-merge tanpa konfigurasi membaca `text-ui`, `text-caption`, dan
+    `text-lead` sebagai warna;
+  - perbaikannya dicoba lalu dibatalkan, karena perbandingan sebelum/sesudah di
+    14 route publik mengubah tampilan yang diterima: label tombol 16px menjadi
+    15px, label status timeline 16px menjadi 13,5px;
+  - dicatat di DESIGN.md Known Gaps dan menunggu keputusan Owner.
+- **Bukti lokal:**
+  - lint 0 error; typecheck lulus;
+  - unit 139 file, 1.544 test lulus, termasuk test baru untuk `StatusNotice` v2,
+    produk satu varian, dan `customerVariantName`;
+  - E2E publik dan Customer terhadap dev server: 46 lulus. 18 gagal, semuanya
+    spec yang login sebagai Customer tiruan (`loginCustomer` atau registrasi);
+    spec itu dibuktikan di CI;
+  - E2E Admin dengan sesi Owner/Admin sungguhan di DB test terisolasi: 31/31;
+  - capture notice di Toko, keranjang, status pesanan, quote, undangan Admin,
+    dan hasil informasi situs; produk satu varian di 1280 dan 390px.
+- **Belum:**
+  - review visual Owner;
+  - snapshot nama di pesanan (`Produk — Default`, dibuat di repository checkout)
+    tidak diubah;
+  - uji perangkat fisik dan AT (T37).
 
 ### T54 — motion lanjutan dari sweep peluang, 2026-11-02
 

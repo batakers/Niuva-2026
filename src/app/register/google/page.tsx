@@ -8,6 +8,7 @@ import { getCurrentCustomer } from "@/lib/auth/customer";
 import { safeCustomerReturnTo } from "@/modules/customer-auth/core";
 import { getPublicCustomerAuthLegalDocuments } from "@/modules/customer-auth/legal";
 import { typographySystemTokens } from "@/design/typography";
+import { StatusNotice } from "@/components/niuva/status-notice";
 
 export const metadata = { title: "Persetujuan akun Google · Niuva", robots: { index: false, follow: false } };
 export default async function GoogleConsentPage({ searchParams }: { searchParams: Promise<{ returnTo?: string; error?: string; continue?: string }> }) {
@@ -23,7 +24,7 @@ export default async function GoogleConsentPage({ searchParams }: { searchParams
       <p className="mt-3 text-lead leading-[1.6]">Setujui dokumen Niuva untuk akun Google yang akan Anda pilih.</p>
       <p className="mt-2 text-caption leading-[1.45] text-muted-foreground">Pendaftaran publik dengan Google masih dalam pengujian dan belum dibuka. Kebijakan v1.0 sudah disetujui Owner tetapi belum terbit.</p>
       <div className="mt-8 space-y-5 rounded-[var(--radius-card)] border border-border bg-card p-5 sm:p-6">
-        {params.error ? <p role="alert" className="rounded-[var(--radius-control)] border border-destructive-border bg-destructive-background p-3 text-ui leading-[1.55] text-destructive">{params.error === "rate_limited" ? "Terlalu banyak percobaan. Tunggu beberapa saat." : "Persetujuan tidak dapat digunakan. Periksa pilihan Anda dan ulangi dengan policy yang ditampilkan."}</p> : null}
+        {params.error ? <StatusNotice size="compact" title={params.error === "rate_limited" ? "Terlalu banyak percobaan. Tunggu beberapa saat." : "Persetujuan tidak dapat digunakan. Periksa pilihan Anda dan ulangi dengan policy yang ditampilkan."} tone="error" /> : null}
         {params.continue === "1" && !params.error
           ? <a className={buttonVariants({ className: "min-h-12 w-full" })} href={`/api/auth/google/start?returnTo=${encodeURIComponent(returnTo)}`}>Lanjutkan ke Google</a>
           : <CustomerGoogleConsentForm returnTo={returnTo} legal={legal} />}

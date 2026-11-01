@@ -107,8 +107,9 @@ describe("Niuva P0 components", () => {
     expect(notice).toHaveAttribute("aria-live", "assertive");
     expect(notice).toHaveAttribute("data-size", "compact");
     expect(screen.getByText("Perlu perhatian")).toBeInTheDocument();
-    expect(screen.getByText("Quote perlu divalidasi ulang.")).toHaveClass("text-current");
-    expect(screen.getByText("Quote perlu divalidasi ulang.")).not.toHaveClass("text-current/80");
+    expect(screen.getByText("Quote perlu divalidasi ulang.")).toHaveClass("text-muted-foreground");
+    expect(screen.getByText("Quote perlu divalidasi ulang.")).not.toHaveClass("text-muted-foreground/80");
+    expect(screen.getByText("Perlu pemeriksaan")).toHaveClass("text-foreground");
 
     fireEvent.click(screen.getByRole("button", { name: "Coba lagi" }));
     expect(onAction).toHaveBeenCalledOnce();
@@ -148,6 +149,30 @@ describe("Niuva P0 components", () => {
     const [pageNotice, resultNotice] = document.querySelectorAll("[data-component='status-notice']");
     expect(pageNotice).not.toHaveClass("starting:opacity-0");
     expect(resultNotice).toHaveClass("transition-[opacity,translate]", "starting:opacity-0", "starting:translate-y-2");
+  });
+
+  it("keeps the tone on the surface and icon while the words stay in the reading colors", () => {
+    render(
+      <div>
+        <StatusNotice description="Periksa kolom yang ditandai." title="Periksa kembali data checkout." tone="error">
+          <ul><li>Email: wajib diisi</li></ul>
+        </StatusNotice>
+        <StatusNotice description="1 barang." size="inline" title="Masuk ke keranjang." tone="success" />
+        <StatusNotice role="note" size="compact" title="Preview lokal dengan data contoh." tone="info" />
+      </div>,
+    );
+
+    const [error, inline, note] = document.querySelectorAll<HTMLElement>("[data-component='status-notice']");
+    expect(error).toHaveAttribute("role", "alert");
+    expect(error).toHaveClass("bg-destructive-background", "border-destructive-border/40");
+    expect(screen.getByText("Terjadi kendala")).toHaveClass("sr-only");
+    expect(screen.getByText("Periksa kembali data checkout.")).toHaveClass("text-foreground");
+    expect(screen.getByText("Periksa kolom yang ditandai.")).toHaveClass("text-muted-foreground");
+    expect(screen.getByText("Email: wajib diisi")).toBeInTheDocument();
+    expect(inline).toHaveClass("bg-transparent", "border-0", "p-0");
+    expect(inline).not.toHaveClass("bg-success-background");
+    expect(note).toHaveAttribute("role", "note");
+    expect(note).not.toHaveAttribute("aria-live");
   });
 
   it("keeps ActionQueueItem focused on an operator decision", () => {
@@ -281,9 +306,9 @@ describe("Niuva P1 components", () => {
     );
 
     expect(screen.getByRole("alert")).toHaveTextContent("Format berkas tidak didukung.");
-    expect(screen.getByText("Format berkas tidak didukung.")).toHaveClass("text-destructive");
+    expect(screen.getByText("Format berkas tidak didukung.")).toHaveClass("text-muted-foreground");
     expect(screen.getByText("Format berkas tidak didukung.")).not.toHaveClass(
-      "text-destructive/80",
+      "text-muted-foreground/80",
     );
     expect(screen.getByRole("button", { name: "Pilih berkas lain" })).toBeInTheDocument();
   });

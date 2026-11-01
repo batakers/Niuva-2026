@@ -5,6 +5,7 @@ import type {
 
 import { PublicShell } from "@/components/niuva/public-shell";
 import { NiuvaLink } from "@/components/ui/NiuvaLink";
+import { StatusNotice } from "@/components/niuva/status-notice";
 
 const DATE_FORMATTER = new Intl.DateTimeFormat("id-ID", {
   dateStyle: "medium",
@@ -27,10 +28,7 @@ export function LocalDemoActionQueueView({
             Read-only projection dari database lokal untuk menunjukkan bahwa
             permintaan Custom Print dan pesanan masuk ke antrean operasional.
           </p>
-          <p className="mt-4 rounded-lg border border-warning-border bg-warning-background p-4 text-sm leading-6 text-warning">
-            Demo lokal · tidak menggantikan auth Admin atau halaman Admin
-            production. Tidak ada mutasi operasional dari halaman ini.
-          </p>
+          <StatusNotice className="mt-4" description="Tidak ada mutasi operasional dari halaman ini." role="note" size="compact" title="Demo lokal · tidak menggantikan auth Admin atau halaman Admin production." tone="warning" />
         </header>
 
         <section aria-labelledby="demo-action-queue-title" className="mt-8 max-w-4xl">

@@ -32,11 +32,9 @@ export function ProjectsIndexView({ projects, retryHref, scenario }: ProjectsInd
           {scenario === "loading" ? <div role="status" className="space-y-5 py-8"><p>Memuat daftar project… (preview)</p><div className="h-40 rounded-lg bg-muted motion-safe:animate-pulse" /></div> :
             scenario === "error" ? <StatusNotice tone="error" title="Daftar project belum dapat dimuat." description="Coba muat kembali. Informasi yang Anda masukkan tidak berubah." action={<NiuvaLink className="min-h-11" href={retryHref} variant="outline">Coba lagi</NiuvaLink>} /> :
             <ProjectList projects={projects} previewMode={scenario} />}
-          {process.env.NODE_ENV === "development" && <aside aria-label="Preview frontend" className="mt-12 rounded-lg border border-info-border bg-info-background p-4 text-info">
-            <p className="text-sm font-semibold">Preview lokal · mode pembanding</p>
-            <p className="mt-1 text-sm">Rute normal memakai sumber konten yang disetujui untuk verifikasi lokal; runtime produksi membaca record Prisma yang telah di-seed.</p>
-            <div className="mt-3 flex flex-wrap gap-2">{[["examples","Contoh sintetis"],["empty","Kosong"],["loading","Memuat"],["error","Gagal"]].map(([value,label]) => <NiuvaLink className="min-h-11" key={value} href={`/projects?preview=${value}`} variant="outline" size="sm" aria-current={scenario === value ? "page" : undefined}>{label}</NiuvaLink>)}</div>
-          </aside>}
+          {process.env.NODE_ENV === "development" && <StatusNotice aria-label="Preview frontend" className="mt-12" description="Rute normal memakai sumber konten yang disetujui untuk verifikasi lokal; runtime produksi membaca record Prisma yang telah di-seed." role="note" size="compact" title="Preview lokal · mode pembanding" tone="info">
+            <div className="flex flex-wrap gap-2 pt-1">{[["examples","Contoh sintetis"],["empty","Kosong"],["loading","Memuat"],["error","Gagal"]].map(([value,label]) => <NiuvaLink className="min-h-11" key={value} href={`/projects?preview=${value}`} variant="outline" size="sm" aria-current={scenario === value ? "page" : undefined}>{label}</NiuvaLink>)}</div>
+          </StatusNotice>}
         </div>
         <ClosingPanel id="projects-next-title" mascot={mascotRenders.victory} title="Punya proyek yang ingin dibahas?">
           <p className="mt-4 max-w-[40ch] text-lead leading-[1.6] text-white">Ceritakan kebutuhan proyek Anda kepada tim Niuva.</p>

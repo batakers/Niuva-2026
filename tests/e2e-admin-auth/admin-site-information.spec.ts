@@ -17,7 +17,7 @@ test("Admin previews and publishes actual public contact and footer", async ({ p
   await expect(page.getByRole("heading", { name: "Pratinjau informasi publik" })).toBeVisible();
   expect((await prisma.siteInformation.findUnique({ where: { scope: "PUBLIC_PROFILE" } }))?.version).toBe(before?.version);
   await page.getByRole("button", { name: "Terbitkan perubahan" }).click();
-  await expect(page.getByRole("status")).toHaveText("Informasi situs berhasil diterbitkan.");
+  await expect(page.getByRole("status")).toContainText("Informasi situs berhasil diterbitkan.");
   await page.goto("/");
   await expect(page.locator("footer")).toContainText(description);
   await expect(page.locator("footer a[href='tel:+628100000000']")).toBeVisible();
@@ -27,7 +27,7 @@ test("Admin previews and publishes actual public contact and footer", async ({ p
   await page.getByLabel("Deskripsi singkat").fill(defaultSiteInformation.shortDescription);
   await page.getByLabel("Telepon / WhatsApp").fill(defaultSiteInformation.phone);
   await page.getByRole("button", { name: "Terbitkan perubahan" }).click();
-  await expect(page.getByRole("status")).toHaveText("Informasi situs berhasil diterbitkan.");
+  await expect(page.getByRole("status")).toContainText("Informasi situs berhasil diterbitkan.");
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 });

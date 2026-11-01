@@ -16,6 +16,7 @@ import { Card } from "@/components/ui/card";
 import { RefundService } from "@/modules/refund/service";
 import { isAppError } from "@/modules/shared/errors";
 import { executeRefundAction, reviewRefundAction } from "./actions";
+import { StatusNotice } from "@/components/niuva/status-notice";
 
 export const metadata: Metadata = { title: "Kasus refund · Admin Niuva", robots: { index: false, follow: false } };
 const money = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 });
@@ -32,12 +33,12 @@ export default async function AdminRefundPage({ params }: PageProps<"/admin/orde
   const view = result.record, path = `/admin/orders/${id}/refund`, owner = access.profile.role === "OWNER", refund = view.refund;
   return <AdminShell active="orders" role={access.profile.role}><main id="main-content" className="max-w-reading space-y-6" data-admin-surface="refund-review">
     <AdminPageHeader title="Kasus refund" description={`${view.orderNumber} · ${view.orderStatus}`} returnHref={`/admin/orders/${id}`} returnLabel="Kembali ke pesanan" breadcrumbs={[{ label: "Pesanan", href: "/admin/orders" }, { label: view.orderNumber, href: `/admin/orders/${id}` }, { label: "Refund" }]} />
-    {view.accountClosed ? <p className="rounded-lg border border-warning-border bg-warning-background p-4 text-sm text-warning">Akun terkait sudah ditutup. Tindak lanjut memakai verifikasi pihak yang berwenang melalui nomor kasus ini.</p> : null}
+    {view.accountClosed ? <StatusNotice description="Tindak lanjut memakai verifikasi pihak yang berwenang melalui nomor kasus ini." role="note" size="compact" title="Akun terkait sudah ditutup." tone="warning" /> : null}
     {refund ? <Card as="section" aria-labelledby="refund-summary-title" className="gap-5 p-5 sm:p-6"><h2 id="refund-summary-title" className="text-xl font-medium tracking-[-0.015em]">Pengajuan dan pembayaran</h2><RefundCaseSummary refund={refund} /></Card> : null}
-    {view.eligibilityIssue ? <p role="status" className="rounded-lg border border-warning-border bg-warning-background p-4 text-sm text-warning">{view.eligibilityIssue}</p> : null}
+    {view.eligibilityIssue ? <StatusNotice size="compact" title={view.eligibilityIssue} tone="warning" /> : null}
     {!refund && view.eligibleAmountRp ? <Card as="section" className="gap-0 p-5 sm:p-6"><h2 className="text-xl font-medium tracking-[-0.015em]">Catat pengajuan dari kanal layanan</h2><p className="mt-3 text-sm leading-6">Pembayaran server: <strong className="tabular-nums">{money.format(BigInt(view.eligibleAmountRp))}</strong>. Catat referensi verifikasi pembayar atau pihak yang berwenang sebelum menyimpan pengajuan.</p>
       <RefundWorkflowForm action={reviewRefundAction.bind(null, id, "intake")} mode="intake" permalink={path} submissionKey={randomUUID()} /></Card> : null}
-    {refund && view.snapshotChanged ? <p role="status" className="rounded-lg border border-warning-border bg-warning-background p-4 text-sm text-warning">Rincian pembayaran berubah sejak pengajuan. Persetujuan atau pemrosesan harus ditinjau ulang.</p> : null}
+    {refund && view.snapshotChanged ? <StatusNotice description="Persetujuan atau pemrosesan harus ditinjau ulang." size="compact" title="Rincian pembayaran berubah sejak pengajuan." tone="warning" /> : null}
     {refund && owner && refund.status === "REQUESTED" && !view.snapshotChanged && !view.eligibilityIssue ? <Card as="section" className="gap-0 p-5 sm:p-6"><h2 className="text-xl font-medium tracking-[-0.015em]">Persetujuan Owner</h2><p className="mt-3 text-sm leading-6">Periksa seluruh alokasi pembayaran, alasan pengajuan dan syarat retur. Persetujuan ini mencatat keputusan; dana belum dinyatakan kembali ke Customer.</p>
       <RefundWorkflowForm action={reviewRefundAction.bind(null, id, "approve")} mode="approve" permalink={path} submissionKey={randomUUID()} version={refund.version} /></Card> : null}
     {refund && owner && refund.status === "APPROVED" && refund.returnState === "PENDING" && !view.snapshotChanged && !view.eligibilityIssue ? <Card as="section" className="gap-0 p-5 sm:p-6"><h2 className="text-xl font-medium tracking-[-0.015em]">Pemeriksaan retur</h2><p className="mt-3 text-sm leading-6">Kasus menunggu retur. Catat bukti penerimaan dan hasil pemeriksaan agar syarat persetujuan dapat dipenuhi.</p>
