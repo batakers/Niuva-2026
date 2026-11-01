@@ -130,7 +130,7 @@ export function ReferenceRequestForm({
 
   return <form aria-busy={result === "pending"} aria-label="Form request dari referensi" className="space-y-6" noValidate onSubmit={submit}>
     <div className="rounded-[var(--radius-control)] empty:hidden focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" ref={statusRef} tabIndex={-1}>
-      {Object.keys(errors).length > 0 && <div className="rounded-[var(--radius-control)] border border-destructive-border bg-destructive-background p-4 text-ui font-semibold text-destructive" role="alert">Periksa field yang ditandai sebelum mengirim.</div>}
+      {Object.keys(errors).length > 0 && <StatusNotice title="Periksa field yang ditandai sebelum mengirim." tone="error" />}
       {result === "pending" && <p className="text-ui text-muted-foreground" role="status">Menyimpan referensi untuk review operator…</p>}
       {result === "success" && referenceNumber && requestId && <StatusNotice
         action={<div className="flex flex-wrap gap-2">

@@ -9,6 +9,7 @@ import { typographySystemTokens } from "@/design/typography";
 import { navigateAfterAdminAuth } from "./admin-auth-navigation";
 import QRCode from "react-qr-code";
 import { ADMIN_PASSWORD_MIN_LENGTH, ADMIN_PASSWORD_MAX_LENGTH, ADMIN_EXISTING_PASSWORD_MAX_LENGTH } from "@/modules/admin-auth/password-policy";
+import { StatusNotice } from "@/components/niuva/status-notice";
 
 type Stage = "loading" | "sign-in" | "factor" | "enroll" | "setup" | "forgot" | "reset" | "invitation" | "forbidden";
 const focusClass = "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card";
@@ -124,8 +125,8 @@ export function AdminAuthForm({ resetToken = "", invitation = false, verified = 
       {stage === "sign-in" && <p className="text-base leading-6 text-muted-foreground">Gunakan akun Owner atau Admin yang sudah diaktifkan.</p>}
       {stage === "invitation" && <p className="text-base leading-6 text-muted-foreground">Buat password pribadi sepanjang 8–15 karakter. Setelah masuk, Anda akan menyiapkan authenticator.</p>}
     </div>
-    {error && <p role="alert" className="rounded-lg border border-destructive-border bg-destructive-background px-3 py-3 text-sm leading-6 text-destructive-icon">{error}</p>}
-    {message && <p role="status" className="rounded-lg border border-info-border bg-info-background px-3 py-3 text-sm leading-6 text-info-icon">{message}</p>}
+    {error && <StatusNotice size="compact" title={error} tone="error" />}
+    {message && <StatusNotice size="compact" title={message} tone="info" />}
     {stage === "forbidden" && <p className="text-sm text-muted-foreground">Hubungi Owner untuk memeriksa profil dan akses Admin Anda.</p>}
     {(stage === "sign-in" || stage === "forgot") && <Label className={fieldClass}><span className="text-sm font-medium">Email Admin</span><Input className={inputClass} name="email" type="email" autoComplete="username" required maxLength={254} value={email} onChange={event => setEmail(event.target.value)} disabled={busy || !hydrated}/></Label>}
     {(stage === "sign-in" || stage === "enroll" || stage === "reset" || stage === "invitation") && <Label className={fieldClass}><span className="text-sm font-medium">{stage === "reset" || stage === "invitation" ? "Password baru" : "Password"}</span><Input className={inputClass} name="password" type="password" autoComplete={stage === "reset" || stage === "invitation" ? "new-password" : "current-password"} minLength={stage === "reset" || stage === "invitation" ? ADMIN_PASSWORD_MIN_LENGTH : 1} maxLength={stage === "reset" || stage === "invitation" ? ADMIN_PASSWORD_MAX_LENGTH : ADMIN_EXISTING_PASSWORD_MAX_LENGTH} required value={password} onChange={event => setPassword(event.target.value)} disabled={busy || !hydrated}/></Label>}

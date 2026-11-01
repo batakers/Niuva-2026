@@ -8,6 +8,7 @@ import { useActionState, useState } from "react";
 import { useHydrated } from "@/components/niuva/use-hydrated";
 import { rateLabels, type EditableRates } from "@/modules/pricing/tariff-schema";
 import { tariffAction, type TariffActionState } from "./actions";
+import { StatusNotice } from "@/components/niuva/status-notice";
 export function TariffForm({ initialRates, activeId, canApply }: Readonly<{ initialRates: EditableRates; activeId: string | null; canApply: boolean }>) {
   const [rates, setRates] = useState(initialRates); const [editing, setEditing] = useState(true); const ready = useHydrated();
   const [state, action, pending] = useActionState(tariffAction, { status: "idle" } as TariffActionState);
@@ -16,7 +17,7 @@ export function TariffForm({ initialRates, activeId, canApply }: Readonly<{ init
     <h2 className="text-xl font-medium tracking-[-0.015em]">{review ? "Tinjau perubahan tarif" : "Tarif layanan"}</h2>
     <p className="mt-2 text-sm text-muted-foreground">Tarif bahan dihitung per gram secara bertingkat untuk setiap unit. Waktu mesin hanya dikenakan untuk bahan Niuva; pembulatan dilakukan pada total akhir.</p>
     {state.status === "error" && <p role="alert" className="mt-4 text-sm text-destructive">{state.message}</p>}
-    {state.status === "success" && <p role="status" className="mt-4 rounded-lg bg-success-background p-3 text-sm">{state.message}</p>}
+    {state.status === "success" && state.message && <StatusNotice className="mt-4" enter size="compact" title={state.message} tone="success" />}
     {review ? <div className="mt-5 space-y-5">
       <div className="overflow-x-auto"><Table className="w-full text-sm"><TableCaption className="sr-only">Tarif sebelum dan setelah perubahan dalam rupiah</TableCaption><TableHeader><TableRow><TableHead className="p-2 text-left">Layanan</TableHead><TableHead className="p-2 text-right">Sekarang</TableHead><TableHead className="p-2 text-right">Baru</TableHead></TableRow></TableHeader><TableBody>{(Object.keys(rateLabels) as (keyof EditableRates)[]).map(key => <TableRow key={key} className="border-t border-border"><TableHead className="p-2 text-left font-medium">{rateLabels[key]}</TableHead><TableCell className="p-2 text-right">{review.before[key]}</TableCell><TableCell className="p-2 text-right font-semibold">{review.after[key]}</TableCell></TableRow>)}</TableBody></Table></div>
       <div className="rounded-lg bg-muted p-4"><h3 className="font-semibold">Contoh perhitungan PLA</h3><p className="mt-1 text-sm text-muted-foreground">Satu unit, bahan Niuva, waktu mesin 1 jam. Contoh perhitungan, bukan harga final pesanan.</p><ul className="mt-3 space-y-2 text-sm">{review.samples.map(sample => <li key={sample.weight}>{sample.weight} gram: Rp {sample.beforeRp} → Rp {sample.afterRp}</li>)}</ul></div>

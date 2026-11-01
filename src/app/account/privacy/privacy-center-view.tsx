@@ -40,8 +40,8 @@ export function PrivacyCenterView({ available, errorMessage, initialErrors, requ
       <h1 className={`${type.display.className} mt-8 max-w-[16em] text-balance`}>Kendali atas data Anda.</h1>
       <p className="mt-4 max-w-[56ch] text-lead leading-[1.6]">Unduh salinan data, ajukan koreksi, atau tutup akun Niuva secara permanen. Permintaan terkait pesanan tetap ditangani melalui kontak resmi.</p>
       <p className="mt-3 max-w-[56ch] text-caption leading-[1.45] text-muted-foreground">Pusat privasi saat ini hanya aktif untuk pengujian. Kebijakan privasi untuk Customer publik belum terbit.</p>
-      {errorMessage ? <p role="alert" className="mt-6 max-w-3xl rounded-[var(--radius-control)] border border-destructive-border bg-destructive-background p-4 text-ui font-normal leading-[1.55] text-destructive">{errorMessage}</p> : null}
-      {statusMessage ? <p role="status" className="mt-6 max-w-3xl rounded-[var(--radius-control)] border border-info-border bg-info-background p-4 text-ui font-normal leading-[1.55] text-info">{statusMessage}</p> : null}
+      {errorMessage ? <StatusNotice className="mt-6 max-w-3xl" size="compact" title={errorMessage} tone="error" /> : null}
+      {statusMessage ? <StatusNotice className="mt-6 max-w-3xl" size="compact" title={statusMessage} tone="info" /> : null}
     </div>
     <div className="mx-auto grid max-w-public items-start gap-12 px-5 pt-12 sm:px-12 lg:grid-cols-[minmax(0,1fr)_24rem]">
       {!available ? (

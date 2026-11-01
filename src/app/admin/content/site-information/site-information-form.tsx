@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useHydrated } from "@/components/niuva/use-hydrated";
 import { siteInformationSchema } from "@/modules/site-information/schema";
 import type { SiteInformationActionState, SiteInformationSnapshot } from "@/modules/site-information/types";
+import { StatusNotice } from "@/components/niuva/status-notice";
 const control = "min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
 export function SiteInformationForm({ snapshot, action }: Readonly<{ snapshot: SiteInformationSnapshot; action: (previous: SiteInformationActionState, data: FormData) => Promise<SiteInformationActionState> }>) {
   const hydrated = useHydrated();
@@ -27,6 +28,6 @@ export function SiteInformationForm({ snapshot, action }: Readonly<{ snapshot: S
       <div className="flex flex-wrap gap-3"><Button type="button" variant="outline" disabled={!validated.success} onClick={() => setPreview(value => !value)}>Pratinjau</Button><Button type="submit" disabled={!validated.success || pending}>{pending ? "Menerbitkan…" : "Terbitkan perubahan"}</Button></div>
     </FieldSet>
     {preview && validated.success ? <Card as="section" className="gap-0 space-y-3 border-brand-200 p-5" aria-labelledby="site-preview-title"><h2 id="site-preview-title" className="text-lg font-medium tracking-[-0.015em]">Pratinjau informasi publik</h2><p>{values.shortDescription}</p><address className="space-y-2 break-words text-sm not-italic text-muted-foreground"><p>{values.address}</p><p>{values.email}</p><p>{values.phone}</p></address>{values.socialLinks.map(link => <a key={link.href} className="mr-4 inline-flex min-h-11 items-center text-sm text-brand-700 underline" href={link.href} target="_blank" rel="noopener noreferrer">{link.label}</a>)}</Card> : null}
-    {state.message ? <p className={`rounded-lg border p-4 text-sm ${state.status === "error" ? "border-destructive-border bg-destructive-background text-destructive" : "border-success-border bg-success-background text-success"}`} role={state.status === "error" ? "alert" : "status"}>{state.message}</p> : null}
+    {state.message ? <StatusNotice enter size="compact" title={state.message} tone={state.status === "error" ? "error" : "success"} /> : null}
   </form>;
 }

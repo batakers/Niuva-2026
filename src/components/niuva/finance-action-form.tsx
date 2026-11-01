@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useHydrated } from "./use-hydrated";
 import type { AdminAction } from "@/app/admin/actions";
+import { StatusNotice } from "@/components/niuva/status-notice";
 export type FinanceFormField = Readonly<{ name: string; label: string; type?: "text" | "email" | "date" | "textarea" | "checkbox" | "select"; value?: string; required?: boolean; maxLength?: number; options?: readonly Readonly<{ value: string; label: string }>[]; help?: string }>;
 const control = "min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
 export function FinanceActionForm({ action, fields, hidden = {}, submitLabel, confirmMessage }: Readonly<{ action: AdminAction; fields: readonly FinanceFormField[]; hidden?: Readonly<Record<string, string>>; submitLabel: string; confirmMessage?: string }>) {
@@ -29,6 +30,6 @@ export function FinanceActionForm({ action, fields, hidden = {}, submitLabel, co
         {field.help ? <p id={describedBy} className="text-xs text-muted-foreground">{field.help}</p> : null}
       </div>;
     })}<Button className="min-h-11 w-fit" type="submit">{pending ? "Memproses…" : submitLabel}</Button></FieldSet>
-    {state.message ? <div className={`rounded-lg border p-4 text-sm ${state.status === "error" ? "border-destructive-border bg-destructive-background text-destructive" : "border-success-border bg-success-background text-success"}`} role={state.status === "error" ? "alert" : "status"}><p>{state.message}</p>{state.link ? <Link className="mt-2 inline-flex min-h-11 items-center font-semibold underline" href={state.link}>Buka hasil</Link> : null}</div> : null}
+    {state.message ? <StatusNotice action={state.link ? <Link className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4" href={state.link}>Buka hasil</Link> : undefined} enter size="compact" title={state.message} tone={state.status === "error" ? "error" : "success"} /> : null}
   </form>;
 }

@@ -20,7 +20,7 @@ import {
 } from "@/features/cart/cart-state";
 import type { PreviewScenario, PublicShopProduct } from "@/features/frontend-preview/types";
 import { mascotRenders } from "@/features/public/mascot";
-import { getShopDisplayCopy } from "@/features/public/shop-display-copy";
+import { customerVariantName, getShopDisplayCopy } from "@/features/public/shop-display-copy";
 
 const rupiah = new Intl.NumberFormat("id-ID", {
   currency: "IDR",
@@ -219,7 +219,7 @@ export function CartItems({
                         <h3 className="mt-0.5 text-lead font-medium leading-[1.35]">
                           <Link href={`/shop/${product.slug}${previewQuery}`} className="rounded-[var(--radius-control)] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">{display.name}</Link>
                         </h3>
-                        <p className="mt-1 text-ui font-normal text-muted-foreground">Varian: {variant.name}</p>
+                        {customerVariantName(variant.name) ? <p className="mt-1 text-ui font-normal text-muted-foreground">Varian: {variant.name}</p> : null}
                       </div>
                       <div className="sm:text-right">
                         <p className="text-lead font-semibold tabular-nums">{rupiah.format(BigInt(variant.priceRp) * BigInt(cart.quantity))}</p>

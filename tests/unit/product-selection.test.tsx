@@ -62,4 +62,35 @@ describe("product selection preview", () => {
     }
     expect(screen.getByRole("button", { name: "Tambah ke keranjang" })).toBeDisabled();
   });
+
+  // The catalog importer names the only variant of a product without options "Default".
+  const singleVariant = (stockOnHand: number) => ({
+    ...exampleShopProducts[0],
+    variants: [{ ...exampleShopProducts[0].variants[0], name: "Default", stockOnHand }],
+  });
+
+  it("selects the only variant from the start and never shows its placeholder name", () => {
+    render(<ProductSelection product={singleVariant(4)} />);
+
+    expect(screen.queryByRole("radiogroup")).toBeNull();
+    expect(screen.queryByText(/Default/)).toBeNull();
+    expect(screen.getByText("Maksimal 4 pada data contoh.")).toBeVisible();
+    const prepare = screen.getByRole("button", { name: "Tambah ke keranjang" });
+    expect(prepare).toBeEnabled();
+
+    fireEvent.click(prepare);
+    expect(screen.getByText("Masuk ke keranjang.")).toBeVisible();
+    expect(screen.getByText("1 barang. Stok belum ditahan sampai pesanan dibuat.")).toBeVisible();
+    expect(screen.getByRole("link", { name: "Lihat keranjang" })).toHaveAttribute("href", "/cart?preview=examples");
+    expect(window.localStorage.getItem(PREVIEW_CART_STORAGE_KEY)).toBe('{"version":1,"items":[{"variantId":"example-dock-blue","quantity":1}]}');
+  });
+
+  it("says the stock is out instead of asking for a variant when the only one is sold out", () => {
+    render(<ProductSelection product={singleVariant(0)} />);
+
+    expect(screen.getByText("Stok sedang habis.", { selector: "p.font-semibold" })).toBeVisible();
+    expect(screen.queryByText("Semua varian sedang habis.")).toBeNull();
+    expect(screen.queryByText("Pilih varian dulu")).toBeNull();
+    expect(screen.getByRole("button", { name: "Tambah ke keranjang" })).toBeDisabled();
+  });
 });

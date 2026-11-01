@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useHydrated } from "@/components/niuva/use-hydrated";
 import { motionSystemClasses } from "@/design/motion";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { StatusNotice } from "@/components/niuva/status-notice";
 
 type Decision = "accept" | "decline";
 type Result = Readonly<{ ok: boolean; paymentUrl?: string; text: string }>;
@@ -23,7 +24,7 @@ export function QuoteDecision({ decidable, requestId, quoteId }: Readonly<{ deci
   const acceptRef = useRef<HTMLButtonElement>(null);
   const declineRef = useRef<HTMLButtonElement>(null);
   const confirmRef = useRef<HTMLDivElement>(null);
-  const resultRef = useRef<HTMLParagraphElement>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (decision !== null) confirmRef.current?.focus();
@@ -87,7 +88,7 @@ export function QuoteDecision({ decidable, requestId, quoteId }: Readonly<{ deci
       {decision !== null ? (
         <div
           aria-labelledby="account-quote-confirmation-title"
-          className={`rounded-[var(--radius-card)] border border-warning-border bg-warning-background p-5 text-warning focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 ${motionSystemClasses.enter}`}
+          className={`rounded-[var(--radius-card)] border border-warning-border/40 bg-warning-background p-5 text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 ${motionSystemClasses.enter}`}
           onKeyDown={(event) => {
             if (event.key === "Escape" && !pending) cancel();
           }}
@@ -103,7 +104,7 @@ export function QuoteDecision({ decidable, requestId, quoteId }: Readonly<{ deci
               ? "Niuva memeriksa ulang masa berlaku, versi, dan harga quote, lalu membuat pesanan yang siap dibayar."
               : "Quote yang ditolak tidak dapat diterima kembali. Bila kebutuhan berubah, operator membuat versi baru."}
           </p>
-          <p className="mt-2 text-caption">Keputusan ini tercatat dan tidak dapat diubah untuk quote yang sama.</p>
+          <p className="mt-2 text-caption text-muted-foreground">Keputusan ini tercatat dan tidak dapat diubah untuk quote yang sama.</p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Button className="min-h-11" disabled={pending} onClick={() => void confirm()} type="button" variant={decision === "accept" ? "default" : "destructive"}>
               {pending ? "Menyimpan keputusan…" : decision === "accept" ? "Konfirmasi terima" : "Konfirmasi tolak"}
@@ -114,14 +115,15 @@ export function QuoteDecision({ decidable, requestId, quoteId }: Readonly<{ deci
       ) : null}
 
       {result ? (
-        <p
-          className={`rounded-[var(--radius-control)] border p-3 text-ui font-normal leading-[1.55] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 ${result.ok ? "border-success-border bg-success-background text-success" : "border-destructive-border bg-destructive-background text-destructive"}`}
+        <StatusNotice
+          className="focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          enter
           ref={resultRef}
-          role={result.ok ? "status" : "alert"}
+          size="compact"
           tabIndex={-1}
-        >
-          {result.text}
-        </p>
+          title={result.text}
+          tone={result.ok ? "success" : "error"}
+        />
       ) : null}
       {result?.paymentUrl ? (
         <a className={buttonVariants({ className: "min-h-11" })} href={result.paymentUrl} referrerPolicy="no-referrer" rel="noopener noreferrer">Lanjutkan pembayaran</a>

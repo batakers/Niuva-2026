@@ -9,6 +9,7 @@ import { AdminShell } from "@/components/niuva/admin-shell";
 import { typographySystemTokens } from "@/design/typography";
 import { isAdminSmtpConfigured } from "@/modules/admin-auth/mail";
 import { AdminInvitationForm } from "./invitation-form";
+import { StatusNotice } from "@/components/niuva/status-notice";
 
 export const metadata: Metadata = { title: "Tambah Admin · Niuva", robots: { index: false, follow: false } };
 export default async function AddAdminPage() {
@@ -22,7 +23,7 @@ export default async function AddAdminPage() {
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <Card as="section" aria-labelledby="invitation-heading" className="gap-0 min-w-0 space-y-6 p-5 sm:p-8">
           <h2 id="invitation-heading" className={typographySystemTokens.subheading.className}>Kirim undangan</h2>
-          {!mailReady && <div role="status" className="space-y-2 rounded-lg border border-warning-border bg-warning-background p-4 text-warning-icon"><p className="text-sm font-semibold">Email undangan belum tersedia</p><p className="text-sm leading-6">SMTP Admin belum dikonfigurasi. Minta pengelola menyiapkan layanan email agar undangan dapat dikirim.</p></div>}
+          {!mailReady && <StatusNotice description="SMTP Admin belum dikonfigurasi. Minta pengelola menyiapkan layanan email agar undangan dapat dikirim." title="Email undangan belum tersedia" tone="warning" />}
           <AdminInvitationForm mailReady={mailReady} />
         </Card>
         <aside className="space-y-6 py-1" aria-labelledby="activation-heading">

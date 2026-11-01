@@ -11,6 +11,7 @@ import { CUSTOMER_SESSION_COOKIE, hashOpaqueToken } from "@/modules/customer-aut
 import { isCustomerPrivacyAvailable, privacyPurposeSchema, privacyTokenSchema } from "@/modules/customer-privacy/core";
 import { CustomerPrivacyRepository } from "@/modules/customer-privacy/repository";
 import { typographySystemTokens as type } from "@/design/typography";
+import { StatusNotice } from "@/components/niuva/status-notice";
 export const metadata: Metadata = { title: "Konfirmasi privasi · Niuva", robots: { index: false, follow: false }, referrer: "same-origin" };
 export default async function PrivacyConfirmation({ searchParams }: { searchParams: Promise<{ token?: string; action?: string }> }) {
   await connection(); const query = await searchParams;
@@ -27,7 +28,7 @@ export default async function PrivacyConfirmation({ searchParams }: { searchPara
     <h1 className={`${type.display.className} mt-8 max-w-[16em] text-balance`}>{close ? "Konfirmasi penutupan akun" : "Konfirmasi salinan data"}</h1>
     <div className="mt-8 max-w-2xl">
       {!proof || !token.success ? (
-        <p role="alert" className="rounded-[var(--radius-control)] border border-warning-border bg-warning-background p-4 text-ui font-normal leading-[1.55] text-warning">Tautan tidak berlaku atau sesi berbeda. Buka melalui browser yang meminta tautan. Jika sesi sudah berakhir atau tautan terpakai/kedaluwarsa, masuk dan minta tautan baru.</p>
+        <StatusNotice description="Buka melalui browser yang meminta tautan. Jika sesi sudah berakhir atau tautan terpakai/kedaluwarsa, masuk dan minta tautan baru." role="alert" title="Tautan tidak berlaku atau sesi berbeda." tone="warning" />
       ) : (
         <section aria-label={close ? "Penutupan akun" : "Unduhan data"} className={`rounded-[var(--radius-card)] border bg-card p-5 sm:p-6 ${close ? "border-destructive-border" : "border-border"}`}>
           <p className="text-ui font-normal leading-[1.55]">{close ? "Tindakan ini permanen dan tidak dapat dipulihkan. Akses akun berhenti; profil, credential, sesi, token, dan persetujuan akun dihapus. Pesanan serta pekerjaan aktif tetap diselesaikan melalui kontak terverifikasi. Data bisnis dan berkas dengan retensi tersendiri tetap disimpan. Akun Google dan data provider tidak dihapus." : "Unduh data milik Anda dalam format JSON. Setelah dipakai, tautan ini tidak dapat digunakan kembali. Membuka halaman ini belum mengunduh atau mengubah data."}</p>

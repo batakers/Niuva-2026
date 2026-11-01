@@ -10,7 +10,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cartStorageKey, EMPTY_CART, readCart, type CartSnapshot } from "@/features/cart/cart-state";
 import type { PreviewScenario, PublicShopProduct } from "@/features/frontend-preview/types";
-import { getShopDisplayCopy } from "@/features/public/shop-display-copy";
+import { customerVariantName, getShopDisplayCopy } from "@/features/public/shop-display-copy";
 import { ShippingOptions, type ShippingOptionsMode, type ShippingPreviewOption, type ShippingPreviewStatus } from "./shipping-options";
 
 export type CheckoutPreviewScenario =
@@ -649,15 +649,11 @@ export function CheckoutForm({
     <form noValidate onSubmit={submit} aria-label="Form checkout Customer" aria-busy={busy} className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-12">
       <div className="min-w-0 space-y-6">
         {isLive && demoMode ? (
-          <aside aria-label="Checkout demo lokal" className="rounded-[var(--radius-control)] border border-success-border bg-success-background p-4 text-success">
-            <p className="text-ui font-semibold">Checkout demo lokal aktif</p>
-            <p className="mt-1 text-ui font-normal leading-[1.55]">Pesanan disimpan di database lokal. Pembayaran dan kurir memakai adapter demo, jadi tidak ada panggilan keluar.</p>
-          </aside>
+          <StatusNotice aria-label="Checkout demo lokal" description="Pesanan disimpan di database lokal. Pembayaran dan kurir memakai adapter demo, jadi tidak ada panggilan keluar." role="note" size="compact" title="Checkout demo lokal aktif" tone="success" />
         ) : null}
         {!isLive ? (
-          <aside aria-label="Kontrol preview checkout" className="rounded-[var(--radius-control)] border border-info-border bg-info-background p-4 text-info">
-            <p className="text-ui font-semibold">Preview lokal · tidak membuat transaksi</p>
-            <FormField id="checkout-preview-scenario" label="Skenario checkout" className="mt-3">
+          <StatusNotice aria-label="Kontrol preview checkout" role="note" size="compact" title="Preview lokal · tidak membuat transaksi" tone="info">
+            <FormField id="checkout-preview-scenario" label="Skenario checkout">
               <select
                 className={controlClass}
                 value={scenario}
@@ -673,14 +669,13 @@ export function CheckoutForm({
                 {scenarios.map(value => <option key={value} value={value}>{scenarioLabels[value]}</option>)}
               </select>
             </FormField>
-          </aside>
+          </StatusNotice>
         ) : null}
 
         <div ref={statusRef} tabIndex={-1} className="rounded-[var(--radius-control)] empty:hidden focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
           {Object.keys(errors).length > 0 ? (
-            <div role="alert" className="rounded-[var(--radius-control)] border border-destructive-border bg-destructive-background p-4 text-destructive">
-              <p className="text-ui font-semibold">Periksa kembali data checkout.</p>
-              <ul className="mt-2 list-inside list-disc text-ui font-normal">
+            <StatusNotice title="Periksa kembali data checkout." tone="error">
+              <ul className="list-inside list-disc">
                 {Object.entries(errors).filter((entry): entry is [CheckoutField, string] => Boolean(entry[1])).map(([field, message]) => (
                   <li key={field}>
                     <a href={`#checkout-${field}`} className="underline underline-offset-4" onClick={event => { event.preventDefault(); document.getElementById(`checkout-${field}`)?.focus(); }}>
@@ -689,7 +684,7 @@ export function CheckoutForm({
                   </li>
                 ))}
               </ul>
-            </div>
+            </StatusNotice>
           ) : null}
           {result === "submitting" ? <p role="status" className="text-ui text-muted-foreground">{isLive ? demoMode ? "Membuat pesanan demo…" : "Membuat pesanan…" : "Memeriksa simulasi checkout… Data tidak dikirim."}</p> : null}
           {result === "reviewed" ? <StatusNotice tone="success" title="Preview checkout siap ditinjau." description="Kontak, alamat, dan opsi pengiriman lolos validasi lokal. Belum ada pesanan, pembayaran, atau data yang dikirim." /> : null}
@@ -758,7 +753,7 @@ export function CheckoutForm({
           {resolvedItems.map(({ item, match }) => match ? (
             <li key={item.variantId} className="py-3">
               <p className="text-ui font-medium">{getShopDisplayCopy(match.product).name}</p>
-              <p className="mt-0.5 flex justify-between gap-4 text-caption text-muted-foreground"><span>{match.variant.name} · {item.quantity} barang</span><span className="shrink-0 text-ui font-medium tabular-nums text-foreground">{rupiah.format(BigInt(match.variant.priceRp) * BigInt(item.quantity))}</span></p>
+              <p className="mt-0.5 flex justify-between gap-4 text-caption text-muted-foreground"><span>{customerVariantName(match.variant.name) ? `${match.variant.name} · ` : ""}{item.quantity} barang</span><span className="shrink-0 text-ui font-medium tabular-nums text-foreground">{rupiah.format(BigInt(match.variant.priceRp) * BigInt(item.quantity))}</span></p>
             </li>
           ) : null)}
         </ul>

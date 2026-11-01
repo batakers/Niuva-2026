@@ -284,9 +284,7 @@ export function QuoteReview({
     <main className="overflow-x-hidden" data-quote-source={isPreview ? "preview" : "live"} data-quote-state={state} id="main-content">
       <div className="mx-auto max-w-public px-5 pt-10 sm:px-12 sm:pt-14">
         {isPreview ? (
-          <aside aria-label="Preview quote" className="mb-8 rounded-[var(--radius-control)] border border-info-border bg-info-background p-4 text-ui font-normal text-info">
-            Preview lokal dengan data contoh. Bukan quote pelanggan, dan keputusan di halaman ini tidak dikirim.
-          </aside>
+          <StatusNotice aria-label="Preview quote" className="mb-8" description="Bukan quote pelanggan, dan keputusan di halaman ini tidak dikirim." role="note" size="compact" title="Preview lokal dengan data contoh." tone="info" />
         ) : null}
         <h1 className={`${type.display.className} max-w-[16em] text-balance`}>Tinjau yang dikunci sebelum menyetujui.</h1>
         <p className="mt-4 max-w-[56ch] text-lead leading-[1.6]">
@@ -358,9 +356,7 @@ export function QuoteReview({
             <StatusNotice description={effectiveCopy.description} title={effectiveCopy.title} tone={effectiveCopy.tone} />
 
             {actionError ? (
-              <p className="mt-4 rounded-[var(--radius-control)] border border-destructive-border bg-destructive-background p-3 text-ui font-normal leading-[1.55] text-destructive" role="alert">
-                {actionError}
-              </p>
+              <StatusNotice className="mt-4" enter size="compact" title={actionError} tone="error" />
             ) : null}
 
             {state === "valid" ? (
@@ -394,7 +390,7 @@ export function QuoteReview({
           {decision !== null ? (
             <div
               aria-labelledby="quote-confirmation-title"
-              className={`rounded-[var(--radius-card)] border border-warning-border bg-warning-background p-5 text-warning focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:p-6 ${motionSystemClasses.enter}`}
+              className={`rounded-[var(--radius-card)] border border-warning-border/40 bg-warning-background p-5 text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:p-6 ${motionSystemClasses.enter}`}
               ref={decisionRef}
               onKeyDown={(event) => {
                 if (event.key === "Escape" && requestState !== "submitting") cancelDecision();
@@ -410,7 +406,7 @@ export function QuoteReview({
                   ? "Niuva memeriksa ulang masa berlaku, versi, dan harga quote, lalu membuat pesanan yang siap dibayar."
                   : "Quote yang ditolak tidak dapat diterima kembali. Bila kebutuhan berubah, operator membuat versi baru."}
               </p>
-              <p className="mt-2 text-caption">{isPreview ? "Preview ini tidak mengirim keputusan atau mengubah pengajuan." : "Keputusan ini tercatat dan tidak dapat diubah untuk quote yang sama."}</p>
+              <p className="mt-2 text-caption text-muted-foreground">{isPreview ? "Preview ini tidak mengirim keputusan atau mengubah pengajuan." : "Keputusan ini tercatat dan tidak dapat diubah untuk quote yang sama."}</p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <Button className="min-h-11" disabled={requestState === "submitting"} onClick={() => void confirmDecision()} type="button" variant={decision === "accept" ? "default" : "destructive"}>
                   {requestState === "submitting" ? "Menyimpan keputusan…" : decision === "accept" ? "Konfirmasi terima" : "Konfirmasi tolak"}

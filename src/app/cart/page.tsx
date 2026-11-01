@@ -7,6 +7,7 @@ import { getLiveShopProducts, getShopPreview } from "@/features/frontend-preview
 import type { PreviewScenario } from "@/features/frontend-preview/types";
 import { getServerCapabilities, isLocalDemoMode } from "@/lib/env/server";
 import { CartItems } from "./cart-items";
+import { StatusNotice } from "@/components/niuva/status-notice";
 
 export const metadata: Metadata = {
   title: "Keranjang · Niuva",
@@ -64,14 +65,13 @@ export default async function CartPage({ searchParams }: CartPageProps) {
           <CartItems demoMode={demoMode} products={products} catalogStatus={catalogStatus} liveEnabled={liveEnabled} previewEnabled={previewEnabled} />
 
           {process.env.NODE_ENV === "development" && !liveEnabled ? (
-            <aside aria-label="Preview keranjang" className="mt-12 rounded-[var(--radius-control)] border border-info-border bg-info-background p-4 text-info">
-              <p className="text-ui font-semibold">Preview lokal, data produk sintetis dan bukan inventory Niuva</p>
-              <div className="mt-3 flex flex-wrap gap-2">
+            <StatusNotice aria-label="Preview keranjang" className="mt-12" role="note" size="compact" title="Preview lokal, data produk sintetis dan bukan inventory Niuva" tone="info">
+              <div className="flex flex-wrap gap-2 pt-1">
                 {[["examples", "Contoh"], ["empty", "Data produk kosong"], ["loading", "Data produk memuat"], ["error", "Data produk gagal"]].map(([value, label]) => (
                   <NiuvaLink key={value} href={`/cart?preview=${value}`} variant="outline" size="sm" className="min-h-11" aria-current={scenario === value ? "page" : undefined}>{label}</NiuvaLink>
                 ))}
               </div>
-            </aside>
+            </StatusNotice>
           ) : null}
         </div>
       </main>

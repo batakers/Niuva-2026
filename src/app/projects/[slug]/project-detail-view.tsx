@@ -9,6 +9,7 @@ import { publicServices } from "@/features/public/company-content";
 import { mascotRenders } from "@/features/public/mascot";
 import { ProjectTitle } from "@/features/public/project-title-view";
 import type { PreviewScenario, ProjectPreviewItem } from "@/features/frontend-preview/types";
+import { StatusNotice } from "@/components/niuva/status-notice";
 
 type StorySection = Readonly<{ title: string; body: string }>;
 
@@ -45,9 +46,7 @@ export function ProjectDetailView({ project, scenario }: Readonly<{
           </NiuvaLink>
 
           {isPreview && (
-            <p className="mt-8 rounded-lg border border-info-border bg-info-background p-4 text-sm text-info">
-              Preview lokal · skenario sintetis untuk review desain. Bukan proyek atau hasil client Niuva.
-            </p>
+            <StatusNotice className="mt-8" description="Bukan proyek atau hasil client Niuva." role="note" size="compact" title="Preview lokal · skenario sintetis untuk review desain." tone="info" />
           )}
 
           <div className="grid gap-8 py-9 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.7fr)] lg:items-end">

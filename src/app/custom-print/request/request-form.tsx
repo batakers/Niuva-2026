@@ -626,9 +626,8 @@ export function RequestForm({
       ref={formRef}
     >
       {isPreview ? (
-        <aside aria-label="Kontrol preview pengajuan" className="rounded-[var(--radius-control)] border border-info-border bg-info-background p-4 text-info">
-          <p className="text-ui font-semibold">Preview lokal · tidak membuat pengajuan</p>
-          <label className="mt-3 mb-2 block text-ui font-medium" htmlFor="custom-upload-scenario">Hasil simulasi file</label>
+        <StatusNotice aria-label="Kontrol preview pengajuan" role="note" size="compact" title="Preview lokal · tidak membuat pengajuan" tone="info">
+          <label className="mb-2 block text-ui font-medium" htmlFor="custom-upload-scenario">Hasil simulasi file</label>
           <select
             className={selectClass}
             disabled={!hydrated || fileBusy || result === "pending"}
@@ -645,7 +644,7 @@ export function RequestForm({
             <option value="failed">Simulasi gagal</option>
             <option value="expired">Sesi berakhir</option>
           </select>
-        </aside>
+        </StatusNotice>
       ) : mode === "unavailable" ? (
         <StatusNotice
           description="Formulir tetap bisa dibaca, tetapi file dan pengajuan belum bisa dikirim saat ini."
@@ -656,9 +655,8 @@ export function RequestForm({
 
       <div className="rounded-[var(--radius-control)] empty:hidden focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" ref={statusRef} tabIndex={-1}>
         {Object.keys(errors).length > 0 ? (
-          <div className="rounded-[var(--radius-control)] border border-destructive-border bg-destructive-background p-4 text-destructive" role="alert">
-            <p className="text-ui font-semibold">Periksa kembali request Anda.</p>
-            <ul className="mt-2 list-inside list-disc text-ui font-normal">
+          <StatusNotice title="Periksa kembali request Anda." tone="error">
+            <ul className="list-inside list-disc">
               {Object.entries(errors).map(([name, message]) => (
                 <li key={name}>
                   <a
@@ -674,7 +672,7 @@ export function RequestForm({
                 </li>
               ))}
             </ul>
-          </div>
+          </StatusNotice>
         ) : null}
         {result === "pending" ? (
           <p className="text-ui text-muted-foreground" role="status">
@@ -708,7 +706,7 @@ export function RequestForm({
             title="Request tersimpan untuk review operator."
             tone="success"
           />
-          {savedPreview ? <p className="rounded-[var(--radius-control)] border border-info-border bg-info-background p-4 text-ui font-normal leading-[1.55] text-info">Simulasi biaya awal yang tersimpan bersama request: <strong className="font-semibold">{rupiah.format(BigInt(savedPreview.finalTotalRp))}</strong>. Angka ini berasal dari input slicer Anda dan belum diperiksa operator.{previewResult?.status === "READY" && previewResult.finalTotalRp !== savedPreview.finalTotalRp ? " Nilai tersimpan berbeda dari simulasi sebelumnya karena dihitung ulang saat request dikirim." : ""}</p> : previewOptedIn ? <p className="text-ui font-normal text-muted-foreground">Simulasi biaya awal belum tersedia untuk request ini. Operator akan meninjau file dan biaya pekerjaan.</p> : null}</div>
+          {savedPreview ? <StatusNotice description={`Angka ini berasal dari input slicer Anda dan belum diperiksa operator.${previewResult?.status === "READY" && previewResult.finalTotalRp !== savedPreview.finalTotalRp ? " Nilai tersimpan berbeda dari simulasi sebelumnya karena dihitung ulang saat request dikirim." : ""}`} enter role="note" size="compact" title={`Simulasi biaya awal yang tersimpan bersama request: ${rupiah.format(BigInt(savedPreview.finalTotalRp))}.`} tone="info" /> : previewOptedIn ? <p className="text-ui font-normal text-muted-foreground">Simulasi biaya awal belum tersedia untuk request ini. Operator akan meninjau file dan biaya pekerjaan.</p> : null}</div>
         ) : null}
         {result === "unavailable" ? (
           <StatusNotice
