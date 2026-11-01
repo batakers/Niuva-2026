@@ -29,6 +29,7 @@ import {
 } from "@/modules/pricing/policy";
 import { requireAdminPermission } from "@/modules/admin/permissions";
 import { customPaymentExpiresAt, quoteExpiresAt } from "@/modules/policy/commercial";
+import { formatGrams, formatPrintDuration } from "@/modules/shared/format";
 import type { PaymentProviderResult } from "@/modules/checkout/repository";
 
 import {
@@ -1179,21 +1180,3 @@ const estimateQuoteSnapshotSchema = z.object({
     weightGrams: z.string(),
   }),
 });
-
-function formatPrintDuration(seconds: number): string {
-  const hours = Math.floor(seconds / 3_600);
-  const minutes = Math.floor((seconds % 3_600) / 60);
-
-  if (hours === 0) {
-    return `${minutes} menit`;
-  }
-
-  return `${hours} jam${minutes === 0 ? "" : ` ${minutes} menit`}`;
-}
-
-/** "128.400000" → "128,4": trims stored decimal padding without float conversion. */
-function formatGrams(value: string): string {
-  const [whole, fraction = ""] = value.split(".");
-  const trimmed = fraction.replace(/0+$/, "");
-  return trimmed === "" ? whole : `${whole},${trimmed}`;
-}

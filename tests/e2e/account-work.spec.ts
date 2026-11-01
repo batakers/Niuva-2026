@@ -116,7 +116,10 @@ test("account displays reviewed MAKE components and declines the latest quote", 
     await expect(page.getByRole("heading", { name: "Komponen yang tercakup" })).toBeVisible();
     await expect(page.getByText("Setup")).toHaveCount(2);
     await page.getByRole("button", { name: "Tolak quote" }).click();
+    await expect(page.getByRole("alertdialog", { name: "Konfirmasi penolakan quote" })).toBeFocused();
+    await page.getByRole("button", { name: "Konfirmasi tolak" }).click();
     await expect.poll(async () => (await prisma.customPrintQuote.findUniqueOrThrow({ where: { id: quote.id } })).status).toBe("DECLINED");
+    await expect(page.getByRole("status").filter({ hasText: "Quote ditolak." })).toBeVisible();
     expect(await prisma.order.count({ where: { items: { some: { customQuoteId: quote.id } } } })).toBe(0);
   } finally {
     await prisma.$disconnect();

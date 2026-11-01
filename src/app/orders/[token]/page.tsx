@@ -73,7 +73,7 @@ export default async function OrderStatusPage({ params, searchParams }: PageProp
       <PublicShell scope="order-status">
         <main className="mx-auto max-w-public px-5 pt-10 sm:px-12 sm:pt-14" id="main-content">
           <div aria-busy="true" aria-live="polite">
-            <h1 className={`${type.display.className} max-w-[16em] text-balance`}>Status order sedang diperiksa.</h1>
+            <h1 className={`${type.display.className} max-w-[16em] text-balance`}>Status pesanan sedang diperiksa.</h1>
             <p className="mt-4 max-w-[56ch] text-lead leading-[1.6]">Tahapan pesanan tampil setelah statusnya selesai dimuat.</p>
             <div className="mt-8 h-24 rounded-[var(--radius-card)] bg-muted motion-safe:animate-pulse" />
             <div className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-12">

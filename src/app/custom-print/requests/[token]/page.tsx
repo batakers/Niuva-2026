@@ -4,6 +4,7 @@ import { connection } from "next/server";
 
 import { PublicShell } from "@/components/niuva/public-shell";
 import { typographySystemTokens as type } from "@/design/typography";
+import { customRequestStatusLabel } from "@/features/customer-status/labels";
 import { StatusNotice } from "@/components/niuva/status-notice";
 import { getServerCapabilities } from "@/lib/env/server";
 import { CustomPrintAccessService, canAppendModel } from "@/modules/custom-print/access-service";
@@ -16,16 +17,6 @@ export const metadata: Metadata = {
   description: "Lihat status request custom print dan langkah berikutnya.",
   robots: { follow: false, index: false },
   referrer: "no-referrer",
-};
-
-const statusLabels: Readonly<Record<string, string>> = {
-  APPROVED: "Quote disetujui",
-  CANCELLED: "Dibatalkan",
-  DECLINED: "Quote ditolak",
-  QUOTE_READY: "Quote sedang disiapkan",
-  QUOTE_SENT: "Quote telah dikirim",
-  SUBMITTED: "Menunggu pemeriksaan",
-  UNDER_REVIEW: "Sedang ditinjau",
 };
 
 export default async function CustomPrintRequestStatusPage({ params }: PageProps<"/custom-print/requests/[token]">) {
@@ -52,7 +43,7 @@ export default async function CustomPrintRequestStatusPage({ params }: PageProps
   const canAppend = canAppendModel(status);
 
   const facts = [
-    ["Status saat ini", statusLabels[status.status] ?? status.status],
+    ["Status saat ini", customRequestStatusLabel(status.status)],
     ["Titik mulai", status.intakeMode === "REFERENCE_ONLY" ? "Referensi awal" : "Model 3D/CAD"],
     ["File yang diterima", status.fileExtensions.length === 0 ? "Belum ada" : status.fileExtensions.join(" · ")],
     ["Model 3D untuk diperiksa", status.modelReady ? "Sudah tersedia" : "Belum tersedia"],
