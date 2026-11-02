@@ -26,8 +26,9 @@ export const publicCompanyProfile = {
     location:
       "Bandung Techno Park, Gedung D Lt. 1 (Ruang Makerspace), Jl. Telekomunikasi No. 1, Sukapura",
     email: "niuvamakerspace@gmail.com",
-    phone: "+62 851-1767-8901",
-    phoneHref: "tel:+6285117678901",
+    // One number for the whole site since the Owner decision of 2 Nov 2026 (the pitch-deck number).
+    phone: "+62 813-2140-7815",
+    phoneHref: "tel:+6281321407815",
   },
 } as const;
 

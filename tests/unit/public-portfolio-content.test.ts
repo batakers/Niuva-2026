@@ -23,7 +23,7 @@ describe("approved public content", () => {
   it("keeps company contact, official service titles, and editorial project coverage together", () => {
     expect(publicCompanyProfile.contact).toMatchObject({
       email: "niuvamakerspace@gmail.com",
-      phone: "+62 851-1767-8901",
+      phone: "+62 813-2140-7815",
     });
     expect(publicServices.map((service) => service.title)).toEqual([
       "Riset & Pengembangan",

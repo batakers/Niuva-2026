@@ -11,7 +11,7 @@ test("public homepage exposes the Niuva narrative and entry paths", async ({ pag
   await expect(page.locator("[data-home-section='next-step']")).toBeVisible();
   await expect(page.locator("header").getByRole("link", { name: "Hubungi Kami" })).toHaveAttribute(
     "href",
-    /^https:\/\/wa\.me\/6285117678901\?text=/,
+    /^https:\/\/wa\.me\/6281321407815\?text=/,
   );
   await expect(page.locator("[data-homepage] .font-mono")).toHaveCount(0);
   await expect(page.locator("[data-homepage] .font-technical")).toHaveCount(0);

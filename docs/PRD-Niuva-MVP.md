@@ -209,6 +209,10 @@ perangkat fisik/AT, provider, staging, dan produksi.
 
 ### Customer Pre-Review Simulation dan IA layanan
 
+> **Addendum 2 November 2026:** kalkulator estimasi publik di `/custom-print`
+> memakai rumus yang sama tanpa login dan tanpa file. Lihat addendum di akhir
+> dokumen.
+
 - `/services/[slug]` hanya untuk empat layanan publik yang disetujui. Input
   yang dibutuhkan dan CTA Project Brief disajikan sesuai layanan. Project
   `card-only` tetap dapat tampil sebagai kartu di `/projects`, tetapi tidak
@@ -1037,7 +1041,8 @@ Manual pada MVP.
 
 ### Rental Reservation
 
-Manual pada MVP.
+Manual pada MVP. Sejak Addendum 2 November 2026, harga sewa dan booking
+lewat WhatsApp tampil di `/custom-print`; reservasinya tetap manual.
 
 ### Production Scheduler / Printer Queue
 
@@ -1933,3 +1938,62 @@ dipakai, termasuk gambar yang agen tandai berisiko ("Masukkan semuanya"). Karena
 Savero memiliki 22 gambar dokumentasi, Owner menaikkan batas galeri proyek
 menjadi **24 item** (cover dan dokumentasi). Galeri produk Toko tetap 12 item;
 format, ukuran 10 MiB, ownership, dan validasi server tidak berubah.
+
+## Addendum 2 November 2026 — Sewa Studio dan kalkulator estimasi publik
+
+Owner menyetujui dua tambahan di `/custom-print` ("Ya, ikuti saran"). Pada hari
+yang sama Owner menjawab soal penempatan, kontak, dan Full Service.
+
+**Sewa Studio.** Sewa printer dan workstation tampil sebagai seksi di
+`/custom-print`, bukan menu baru. Seksi itu mengajak pengunjung yang ingin
+mencetak sendiri datang ke studio Niuva. Harga mengikuti pricelist Owner
+(`docs/source/Pricelist 3D Print Niuva.xlsx`, sama dengan pitch deck inkubasi):
+
+- **Sewa printer:** 1 jam Rp12.000, 8 jam Rp75.000, membership 50 jam/bulan
+  Rp500.000.
+- **Filamen saat sewa:** bawa sendiri Rp5.000/proyek; filamen komunal Niuva
+  Rp500 per gram yang terpakai.
+- **Slicing:**
+  - laptop/PC sendiri: gratis;
+  - PC Niuva (self service): Rp15.000/30 menit;
+  - Full Service, yaitu operator membantu seluruh proses slicing: Rp35.000/file.
+    Full Service hanya untuk penyewa studio; harga Custom 3D Print tetap
+    mengikuti Pricing v1.
+
+**Alamat dan booking:**
+- Alamat memakai Informasi Situs.
+- Booking manual lewat nomor WhatsApp di Informasi Situs.
+- Pada hari yang sama Owner meminta satu nomor untuk seluruh situs: nomor dari
+  pitch deck, +62 813-2140-7815, yang kini menjadi nilai awal Informasi Situs.
+- Jam buka: Senin–Jumat, 09.00–17.00 WIB.
+- Jumlah dan tipe mesin, DP, pembatalan, dan syarat membership dikonfirmasi
+  saat booking. Situs tidak memuatnya sampai Owner memberikannya.
+- Booking digital, pembayaran sewa online, dan membership otomatis tetap di luar
+  MVP. Rental Reservation dan Membership Automation tetap manual.
+
+**Kalkulator estimasi publik.** `/custom-print` memuat kalkulator yang bisa
+dipakai tanpa login dan tanpa file.
+- **Input:** material (PLA/ABS), jumlah, serta berat dan durasi per unit dari
+  slicer pengunjung sendiri.
+- **Hitungan:** aturan `CUSTOM_PRINT_V1` yang aktif, dengan filamen stok Niuva.
+  Rumusnya sama dengan simulasi di form pengajuan.
+- **Hasil:** biaya material, waktu mesin, dan total perkiraan, berlabel
+  "Estimasi awal, bukan harga final". Ongkir dan biaya yang ditemukan operator
+  tidak termasuk. Hasil tidak disimpan.
+- **Tanpa aturan yang layak:** bila tidak ada tepat satu aturan aktif yang
+  layak, kalkulator menyatakan dirinya belum tersedia.
+- **Lanjutan ke pengajuan:** tombol lanjutan membawa angka ke form pengajuan
+  model. Pelanggan tetap mengunggah model dan mengonfirmasi sumber angka, dan
+  server menghitung ulang saat submit.
+- **Tiga tingkat harga** (simulasi, estimasi operator, quote) tidak berubah.
+
+**Estimasi dari file (Opsi B).** Estimasi otomatis dari file lewat slicer di
+server dicatat sebagai pilot. Pilot dimulai setelah VPS (T41) tersedia dan
+Owner menyerahkan:
+- versi slicer;
+- profil printer, filamen, dan proses Niuva;
+- model contoh beserta hasil operator.
+
+Hasilnya tetap estimasi. "Automatic browser/server slicing" dan harga final
+instan tetap di luar MVP sampai pilot membuktikan akurasinya dan Owner
+memutuskannya.
