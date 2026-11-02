@@ -26,6 +26,18 @@ afterEach(() => {
 });
 
 describe("custom request frontend preview", () => {
+  it("starts from the public calculator's numbers but leaves the source confirmation to the customer", () => {
+    render(<RequestForm initialEstimate={{ material: "ABS", quantity: 3, weightGramsPerUnit: "18.4", hours: 1, minutes: 30 }} liveEnabled />);
+
+    expect(screen.getByLabelText(/^Material/)).toHaveValue("ABS");
+    expect(screen.getByLabelText(/^Jumlah/)).toHaveValue(3);
+    expect(screen.getByLabelText("Berat hasil slicer per unit (g)")).toHaveValue("18.4");
+    expect(screen.getByLabelText("Durasi per unit (jam)")).toHaveValue(1);
+    expect(screen.getByLabelText("Durasi per unit (menit)")).toHaveValue(30);
+    expect(screen.getByLabelText("Saya ingin menyertakan input slicer untuk simulasi komponen.")).toBeChecked();
+    expect(screen.getByLabelText(/^Saya mengisi angka dari slicer/)).not.toBeChecked();
+  });
+
   it("fails closed when private upload is not enabled", () => {
     render(<RequestForm />);
 

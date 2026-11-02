@@ -15,6 +15,8 @@ import { createPublicWhatsAppHref } from "@/features/public/company-content";
 import type { CustomFlowProductOption } from "@/modules/custom-print/product-intake";
 import { CUSTOM_FILE_MAX_BYTES } from "@/modules/policy/privacy";
 import type { CustomerPreviewInput } from "@/modules/custom-print/customer-preview";
+import type { PublicEstimatePrefill } from "@/modules/custom-print/public-estimate";
+import { formatExactRupiah } from "@/modules/shared/format";
 
 const acceptedExtensions = [".stl", ".3mf", ".obj", ".step", ".stp"] as const;
 const maxFileSizeLabel = `${CUSTOM_FILE_MAX_BYTES / 1_024 / 1_024} MiB`;
@@ -93,12 +95,6 @@ const customerPreviewResponseSchema = z.discriminatedUnion("status", [
 ]);
 
 const rupiah = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 });
-const decimalDigits = new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 });
-
-function formatExactRupiah(value: string): string {
-  const [whole, fractional] = value.split(".");
-  return `Rp ${decimalDigits.format(BigInt(whole))}${fractional ? `,${fractional}` : ""}`;
-}
 
 function readCustomerPreviewInput(formData: FormData): { input?: CustomerPreviewInput; errors: PreviewErrors } {
   if (formData.get("customerPreviewEnabled") !== "on") return { errors: {} };
@@ -192,12 +188,15 @@ export function RequestForm({
   liveEnabled = false,
   previewEnabled = false,
   initialProductInterest,
+  initialEstimate,
   productOptions = [],
 }: {
   customerEmail?: string;
   liveEnabled?: boolean;
   previewEnabled?: boolean;
   initialProductInterest?: string;
+  /** Slicer numbers from the public calculator; the visitor still confirms their source. */
+  initialEstimate?: PublicEstimatePrefill;
   productOptions?: readonly CustomFlowProductOption[];
 }) {
   const mode: RequestFormMode = liveEnabled
@@ -224,7 +223,7 @@ export function RequestForm({
   const [previewResult, setPreviewResult] = useState<z.infer<typeof customerPreviewResponseSchema> | null>(null);
   const [previewError, setPreviewError] = useState<string>();
   const [savedPreview, setSavedPreview] = useState<z.infer<typeof customRequestResponseSchema>["customerPreview"]>();
-  const [previewOptedIn, setPreviewOptedIn] = useState(false);
+  const [previewOptedIn, setPreviewOptedIn] = useState(initialEstimate !== undefined);
   const pending = useRef(false);
   const formRef = useRef<HTMLFormElement>(null);
   const previewOperationRef = useRef(0);
@@ -802,7 +801,7 @@ export function RequestForm({
               </FormField>
             ) : <input name="productInterest" type="hidden" value={unspecifiedProductValue} />}
             <FormField error={errors.materialRequested} id="custom-materialRequested" label="Material" required>
-              <select className={selectClass} defaultValue="" name="materialRequested" onChange={invalidatePreview} required>
+              <select className={selectClass} defaultValue={initialEstimate?.material ?? ""} name="materialRequested" onChange={invalidatePreview} required>
                 <option value="">Pilih kebutuhan material</option>
                 <option value="PLA">PLA</option>
                 <option value="ABS">ABS</option>
@@ -814,7 +813,7 @@ export function RequestForm({
               <Input className={controlClass} name="colorRequested" />
             </FormField>
             <FormField error={errors.quantity} id="custom-quantity" label="Jumlah" required>
-              <Input className={controlClass} inputMode="numeric" min={1} name="quantity" onChange={invalidatePreview} required type="number" />
+              <Input className={controlClass} defaultValue={initialEstimate?.quantity} inputMode="numeric" min={1} name="quantity" onChange={invalidatePreview} required type="number" />
             </FormField>
             <FormField error={errors.requestedSize} id="custom-requestedSize" label="Ukuran target (opsional)">
               <Input className={controlClass} name="requestedSize" placeholder="Contoh: 8 cm atau mengikuti referensi" />
@@ -845,20 +844,20 @@ export function RequestForm({
           <div className="space-y-5">
             {!isLive && <StatusNotice title="Perlu review" description="Simulasi memerlukan upload model privat yang aktif. Operator tetap menghitung biaya saat review." tone="info" />}
             <label className="flex min-h-11 items-start gap-3 text-ui font-medium">
-              <input className="mt-0.5 size-5 shrink-0 accent-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" disabled={!isLive} name="customerPreviewEnabled" onChange={(event) => { setPreviewOptedIn(event.target.checked); invalidatePreview(); }} type="checkbox" />
+              <input className="mt-0.5 size-5 shrink-0 accent-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" defaultChecked={initialEstimate !== undefined} disabled={!isLive} name="customerPreviewEnabled" onChange={(event) => { setPreviewOptedIn(event.target.checked); invalidatePreview(); }} type="checkbox" />
               <span>Saya ingin menyertakan input slicer untuk simulasi komponen.</span>
             </label>
             <fieldset className="min-w-0 space-y-5" disabled={!isLive || !previewOptedIn}>
               <legend className="sr-only">Input slicer per unit</legend>
               <div className="grid gap-5 sm:grid-cols-3">
                 <FormField description="Gram untuk satu unit, bukan total pesanan." error={errors.previewWeightG} id="custom-previewWeightG" label="Berat hasil slicer per unit (g)">
-                  <Input className={controlClass} inputMode="decimal" name="previewWeightG" onChange={invalidatePreview} placeholder="Contoh: 18.4" type="text" />
+                  <Input className={controlClass} defaultValue={initialEstimate?.weightGramsPerUnit} inputMode="decimal" name="previewWeightG" onChange={invalidatePreview} placeholder="Contoh: 18.4" type="text" />
                 </FormField>
                 <FormField error={errors.previewHours} id="custom-previewHours" label="Durasi per unit (jam)">
-                  <Input className={controlClass} defaultValue="0" min={0} name="previewHours" onChange={invalidatePreview} type="number" />
+                  <Input className={controlClass} defaultValue={initialEstimate?.hours ?? 0} min={0} name="previewHours" onChange={invalidatePreview} type="number" />
                 </FormField>
                 <FormField error={errors.previewMinutes} id="custom-previewMinutes" label="Durasi per unit (menit)">
-                  <Input className={controlClass} defaultValue="0" max={59} min={0} name="previewMinutes" onChange={invalidatePreview} type="number" />
+                  <Input className={controlClass} defaultValue={initialEstimate?.minutes ?? 0} max={59} min={0} name="previewMinutes" onChange={invalidatePreview} type="number" />
                 </FormField>
               </div>
               <FormField description="Berat dan durasi berasal dari slicer Anda untuk satu unit model ini. Operator belum memeriksanya." error={errors.previewSource} id="custom-previewSource" label="Saya mengisi angka dari slicer sendiri">

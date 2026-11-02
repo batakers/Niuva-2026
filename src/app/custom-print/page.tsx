@@ -11,6 +11,11 @@ import { Icon, type IconName } from "@/components/ui/Icon";
 import { mascotRenders } from "@/features/public/mascot";
 import { getServerCapabilities } from "@/lib/env/server";
 import { CUSTOM_FLOW_PRODUCT_OPTIONS } from "@/modules/custom-print/product-intake";
+import { readPublicEstimatePolicy } from "@/modules/custom-print/public-estimate-service";
+import { formatRupiah } from "@/modules/shared/format";
+import { studioHourlyFromRp } from "@/features/public/studio-rental";
+import { EstimateCalculator } from "./estimate-calculator";
+import { StudioRentalSection } from "./studio-rental-section";
 import { CUSTOM_FILE_MAX_BYTES, REFERENCE_PHOTO_MAX_BYTES } from "@/modules/policy/privacy";
 
 export const metadata: Metadata = {
@@ -99,6 +104,7 @@ export default async function CustomPrintPage() {
 
   const maxFileSizeLabel = `${CUSTOM_FILE_MAX_BYTES / 1_024 / 1_024} MiB`;
   const maxPhotoSizeLabel = `${REFERENCE_PHOTO_MAX_BYTES / 1_024 / 1_024} MiB`;
+  const estimatePolicy = databaseEnabled ? await readPublicEstimatePolicy() : null;
 
   return (
     <PublicShell functionalStatus={functionalStatus} scope="custom-print" headerAction={{ href: "#start-custom", label: "Pilih titik mulai" }}>
@@ -161,6 +167,11 @@ export default async function CustomPrintPage() {
             </article>
           </div>
 
+          <p className="mt-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-1 rounded-[var(--radius-card)] border border-border bg-card px-6 py-3 text-base leading-[1.55] sm:px-8">
+            <span>Ingin mencetak sendiri? Sewa printer di studio Niuva mulai {formatRupiah(BigInt(studioHourlyFromRp))} per jam.</span>
+            <a className="inline-flex min-h-11 items-center font-semibold text-primary underline underline-offset-4 hover:decoration-2" href="#studio">Lihat harga sewa</a>
+          </p>
+
           <div className="mt-10 grid gap-6 border-t border-border pt-8 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] lg:gap-10">
             <h3 className="text-xl font-medium tracking-[-0.01em]">Sebelum mengirim</h3>
             <ul className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
@@ -209,6 +220,12 @@ export default async function CustomPrintPage() {
           </section>
         ) : null}
 
+        <section aria-labelledby="estimate-title" className="mx-auto max-w-public scroll-mt-24 px-5 pt-24 sm:px-12 sm:pt-32" id="estimate">
+          <h2 className={type.heading.className} id="estimate-title">Perkirakan biaya dari angka slicer Anda.</h2>
+          <p className="mt-4 max-w-[52ch] text-lead leading-[1.6] text-muted-foreground">Punya berat dan durasi cetak dari slicer? Lihat perkiraan material dan waktu mesin sebelum mengirim model. Tanpa login, dan angka Anda tidak disimpan.</p>
+          <EstimateCalculator policy={estimatePolicy} requestHref={modelAvailable ? "/custom-print/request" : null} />
+        </section>
+
         <section aria-labelledby="boundaries-title" className="mx-auto grid max-w-public gap-10 px-5 pt-24 sm:px-12 sm:pt-32 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
           <div>
             <h2 className={type.heading.className} id="boundaries-title">Harga, file, dan ongkir punya aturannya sendiri.</h2>
@@ -223,6 +240,8 @@ export default async function CustomPrintPage() {
             ))}
           </dl>
         </section>
+
+        <StudioRentalSection />
 
         <section aria-labelledby="faq-title" className="mx-auto grid max-w-public gap-8 px-5 pt-24 sm:px-12 sm:pt-32 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
           <h2 className={type.heading.className} id="faq-title">Pertanyaan yang sering muncul.</h2>

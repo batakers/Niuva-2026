@@ -16,7 +16,7 @@ test("B2B contact works without login on mobile and desktop", async ({ page }, t
     const contact = page.getByRole("main").getByRole("link", { name: "Hubungi Kami", exact: true }).first();
     const url = new URL((await contact.getAttribute("href"))!);
     expect(url.origin).toBe("https://wa.me");
-    expect(url.pathname).toBe("/6285117678901");
+    expect(url.pathname).toBe("/6281321407815");
     expect(url.searchParams.get("text")).toBe("Halo Niuva, saya ingin membahas kebutuhan Desain & Rekayasa.");
     await expect(page.getByRole("main").getByText("Melalui WhatsApp", { exact: true })).toHaveCount(0);
     await expect(page.getByRole("form", { name: "Form project brief" })).toHaveCount(0);
@@ -53,7 +53,7 @@ test("WhatsApp contact and legacy redirect work without JavaScript", async ({ br
     const page = await context.newPage();
     await page.goto("/project-brief?service=design-prototyping");
     await expect(page).toHaveURL(/\/services\/desain-rekayasa$/);
-    await expect(page.getByRole("main").getByRole("link", { name: "Hubungi Kami" }).first()).toHaveAttribute("href", /^https:\/\/wa\.me\/6285117678901\?text=/);
+    await expect(page.getByRole("main").getByRole("link", { name: "Hubungi Kami" }).first()).toHaveAttribute("href", /^https:\/\/wa\.me\/6281321407815\?text=/);
     await expect(page.getByRole("form")).toHaveCount(0);
   } finally {
     await context.close();

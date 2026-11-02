@@ -15,6 +15,14 @@ export function formatRupiah(value: string | bigint): string {
   return rupiahFormatter.format(BigInt(match[1]));
 }
 
+const wholeRupiah = new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 });
+
+/** "18450.5" → "Rp 18.450,5": a component subtotal shown exactly, fraction included, without float conversion. */
+export function formatExactRupiah(value: string): string {
+  const [whole, fraction] = value.split(".");
+  return `Rp ${wholeRupiah.format(BigInt(whole))}${fraction ? `,${fraction}` : ""}`;
+}
+
 /** "128.400000" → "128,4": trims stored decimal padding without float conversion. */
 export function formatGrams(value: string): string {
   const [whole, fraction = ""] = value.split(".");

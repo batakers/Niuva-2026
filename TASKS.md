@@ -31,9 +31,8 @@ ada di papan ini; pekerjaan baru masuk tabel task, bukan file lain.
 | | T03, T19 | O + A | Smoke R2 privat/publik lewat unggah media Admin | Sesi Admin Owner |
 | | T09 | O | `CUSTOMER_AUTH_CLEANUP` lewat CLI berkredensial DB di terminal Owner | Sesi Owner |
 | | T23, T25, T35 | O | Cek metode dan fitur refund di dashboard Midtrans sandbox (Owner mengecek, 31 Okt); grant `refund` sudah ada | Q1 |
-| Redesign | T46 → T47 | A | Beranda di `main` dan diterima Owner; Layanan, Proyek, dan detailnya selesai lokal di `claude/redesign-company-pages`; sisa legal dan 404 | Postgres lokal untuk E2E (Owner) |
-| Redesign | T45–T51, T54–T56 | A | Redesign M5a, motion lanjutan, pesan status v2, dan ukuran bernama di `cn()` selesai 2 Nov (bukti lokal; CI di PR); review visual Owner per route masih terbuka | — |
-| | T36 | O + A | UAT operasi Admin di UI baru | T50 |
+| Redesign | T45–T51, T54–T56 | O | Review visual per route; Beranda diterima 31 Okt. Kode selesai 2 Nov dan ada di `main` (bukti lokal dan CI); cek staging setelah 26 Nov | Review Owner |
+| | T36 | O + A | UAT operasi Admin di UI baru | Sesi UAT Owner (T50 selesai) |
 | Berantai | T34 → T08 | O + A | MAKE: unggah R2 → review/quote → bayar → produksi/QC → paket final → kirim; lalu retensi file pada berkas MAKE | T33 dulu |
 | | T14 | O + A | Privacy hosted dengan sesi Customer penguji; grant sudah ter-deploy (#89) | Sesi Customer Owner |
 | | T43 | O + A | Owner menambah redirect URI `https://niuva-t03-staging.netlify.app/api/auth/google/callback` di Google Cloud; env `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` di Netlify staging atas instruksi Owner; env baru berlaku setelah deploy berikutnya | Kredit Netlify pulih 26 Nov (Q17) |
@@ -203,7 +202,7 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T43 | M2 | BLOCKED_INPUT | Login Google hosted (D04) | T12; grant Q4 | Owner menambah redirect URI staging di Google Cloud; env OAuth staging diisi atas instruksi Owner; consent dan login Google berhasil di staging dengan akun uji. Production ikut T40. |
 | T44 | M6 | BLOCKED_INPUT | Policy privacy untuk penyedia production | T11; Q5; Q12–Q13; Owner | Daftar penyedia dan lokasi pemrosesan di `src/content/customer-policy/privacy-v1.0.md` (Netlify Ohio, Neon Singapura) diganti versi baru yang mencantumkan Helipod VPS Jakarta, penyedia backup dan storage file production; Owner menyetujui teks; versi baru terbit sebelum production menerima data Customer (T40). Ditemukan saat perbandingan S3, 30 Okt. Draf v1.1 disetujui Owner 31 Okt (Q15–Q16); tanggal terbit, file runtime dan pemberitahuan belum; terbit menunggu T41 dan T38. |
 | T45 | M5a | DONE | Audit, sitemap dan user flow redesign | Keputusan Owner 31 Okt | Audit tampilan sekarang, sitemap dan user flow dengan pembagian visual vs aturan bisnis tercatat di [audit IA](docs/design/redesign-2026-10-31-audit-ia.md); Q19–Q22 dijawab Owner; T36/T37 bergantung pada redesign. Log "T45 — audit, sitemap dan user flow". |
-| T46 | M5a | IN_PROGRESS | Fondasi design system baru | T45; pilihan arah Q19 | Arah terpilih diterapkan ke token, tipe, motion, primitive `components/ui`, shell publik/auth/sistem/Admin, status label, format Rupiah, timeline dan page header bersama; tanpa dependency npm baru; URL, API, data, auth, harga dan pembayaran tetap. Lint/typecheck/test/E2E/build dan capture lokal. |
+| T46 | M5a | DONE | Fondasi design system baru | T45; pilihan arah Q19 | Arah terpilih diterapkan ke token, tipe, motion, primitive `components/ui`, shell publik/auth/sistem/Admin, status label, format Rupiah, timeline dan page header bersama; tanpa dependency npm baru; URL, API, data, auth, harga dan pembayaran tetap. Lint/typecheck/test/E2E/build dan capture lokal. Selesai 2 Nov 2026 lewat #103 dan T47–T56 (#104–#121), dengan bukti lokal dan CI; review visual Owner per route masih terbuka (Beranda diterima 31 Okt). |
 | T47 | M5a | DONE | Redesign Company | T46 | `/`, `/services` dan detail, `/projects` dan detail, legal, 404 sesuai sitemap/flow; satu CTA utama per halaman; tanpa klaim baru; DESIGN.md dan panduan Company ditulis ulang dari hasil build. Capture 320–1440, keyboard/fokus, zoom 200%, reduced motion, kontras. Selesai 1 Nov 2026 dengan bukti lokal dan CI; review visual Owner baru untuk Beranda, route lain menunggu tinjauan terpisah. |
 | T48 | M5a | DONE | Redesign Commerce dan MAKE | T46 | Toko, produk, keranjang, checkout, Custom 3D Print dan workspace dua mode, status/quote token; copy sistem diganti bahasa pelanggan; kalimat MAKE yang dilindungi tetap; aturan server, harga dan pembayaran tidak berubah. Gate lokal dan capture. Selesai 1 Nov 2026 lewat PR #107, #110, #111, #112, dan #113 dengan bukti lokal dan CI; review visual Owner menunggu. Label status dari data dan detail MAKE/order akun lanjut di T49. |
 | T49 | M5a | DONE | Redesign Customer dan auth | T46, T48 | Hub Akun, detail MAKE/order (konfirmasi terima quote, timeline, Rupiah dan label status konsisten), refund, privasi, enam halaman auth dalam satu frame; allowlist dan gate auth tidak berubah. Gate lokal dan capture. Selesai 1 Nov 2026 lewat PR #114, #115, dan #116 dengan bukti lokal dan CI; review visual Owner menunggu. |
@@ -212,6 +211,8 @@ Perbarui papan ini saat gelombang bergeser; log tetap di bagian bawah.
 | T54 | M5a | DONE | Motion lanjutan dari sweep peluang | T51 | Empat saran sweep 2 Nov yang diminta Owner dikerjakan semua: tautan ke seksi di halaman yang sama menggulir halus hanya pada halaman yang ikut (`data-smooth-anchors`) sementara pindah halaman tetap langsung ke atas; panel konfirmasi quote dan notifikasi hasil aksi masuk 220ms; menu publik di bawah 1280px turun 150ms; "Lihat proyek terkait" mendarat di bawah header. Reduced motion tetap mati. Rencana di `plans/002`–`005`. Selesai 2 Nov 2026 dengan bukti lokal. |
 | T55 | M5a | DONE | Pesan status v2 dan produk satu varian | T54 | Atas permintaan Owner 2 Nov ("Ya, kerjakan"): `StatusNotice` versi v2 (permukaan tonal tenang, judul `foreground`, deskripsi `muted-foreground`, label nada hanya untuk pembaca layar, ukuran `inline`, `role="note"`, `children`); sekitar 30 kotak pesan buatan sendiri dan `Alert` mentah di publik, Akun, dan Admin dipindah ke komponen itu; konfirmasi tambah ke keranjang menjadi satu baris; produk satu varian terpilih otomatis tanpa label "Default" di produk, keranjang, dan checkout. Selesai 2 Nov 2026 dengan bukti lokal. |
 | T56 | M5a | DONE | Ukuran bernama di `cn()` | T55 | Keputusan Owner 2 Nov (pilihan B, "Ikuti DESIGN.md"): `cn()` mengenal `text-caption`/`text-ui`/`text-lead` sebagai ukuran font sehingga tidak lagi terbuang oleh kelas warna. Akibatnya label tombol 15px, label status timeline pesanan 13,5px, kualifier proyek `muted-foreground`, deskripsi Card 15px, serta badge status, header tabel, dan breadcrumb Admin 13,5px. Perbandingan sebelum/sesudah di 19 route publik dan 24 halaman Admin. Selesai 2 Nov 2026 dengan bukti lokal; review visual Owner menunggu. |
+| T57 | M4 | DONE | Sewa Studio di Custom 3D Print | Keputusan Owner 2 Nov | Seksi `#studio` di `/custom-print` dan satu baris ajakan di bawah kartu titik mulai. Harga sewa printer, filamen, dan slicing dari pricelist Owner; alamat dari Informasi Situs; jam buka Senin–Jumat 09.00–17.00 WIB; booking manual lewat nomor WhatsApp Informasi Situs, yang kini satu untuk seluruh situs (+62 813-2140-7815). Mesin, DP, pembatalan, dan syarat membership menunggu data Owner dan dikonfirmasi saat booking. Booking digital tetap di luar MVP. Selesai 2 Nov 2026 dengan bukti lokal. |
+| T58 | M4 | DONE | Kalkulator estimasi publik | Keputusan Owner 2 Nov | Seksi `#estimate` di `/custom-print` tanpa login dan tanpa file: material PLA/ABS, jumlah, berat dan durasi per unit dari slicer; aturan `CUSTOM_PRINT_V1` aktif dan filamen stok Niuva; tidak disimpan; label estimasi awal. Tombol membawa angka ke form pengajuan (prefill tervalidasi, sumber angka tetap dikonfirmasi pelanggan). Tampil "belum tersedia" tanpa tepat satu aturan aktif yang layak atau saat database gagal. Aturan v1 `PER_UNIT` sudah aktif di lokal dan di staging (sejak 30 Okt); production mengikuti gerbang rilis T31. Selesai 2 Nov 2026 dengan bukti lokal. |
 | T53 | M4 | IN_PROGRESS | Kaitan foto ke varian | T31; keputusan Owner 1 Nov | `ProductVariant.mediaId` nullable (banyak varian boleh satu foto, `ON DELETE SET NULL`) lewat migration baru; importer/seed mengisi dari foto varian sumber; editor varian Admin memilih foto dari galeri produk yang sama dan server menolak foto produk lain; simpan galeri mempertahankan foto yang tetap dipakai; halaman produk memakai kaitan ini dengan alt text sebagai cadangan. Staging: `db:deploy` dan impor ulang katalog hanya atas instruksi Owner. |
 
 ## Backlog setelah v1
@@ -222,6 +223,18 @@ berikutnya. Dikerjakan hanya atas permintaan Owner.
 - Data terstruktur JSON-LD untuk Organization/LocalBusiness dan Product.
 - Gambar Open Graph saat link dibagikan; menunggu aset yang disetujui Owner.
 - Google Business Profile dengan data usaha yang benar (langkah Owner).
+- **T59 — Pilot estimasi harga dari file 3D (Opsi B)**:
+  - **Asal:** dipilih Owner, lalu dicatat 2 November 2026 sesuai addendum PRD hari itu.
+  - **Cara kerja:** slicer (Bambu Studio atau OrcaSlicer CLI) berjalan di VPS
+    dengan profil Niuva. Antrean di `src/modules/jobs/` menghasilkan berat dan
+    durasi untuk kalkulator Pricing v1. Hasilnya tetap estimasi.
+  - **Penghambat:**
+    - VPS (T41);
+    - bahan Owner: versi slicer, ekspor profil printer, PLA/ABS, dan proses
+      Niuva, serta 10–20 model yang pernah dicetak dengan berat dan durasi
+      hasil operator;
+    - persetujuan dependency binary slicer.
+  - **Langkah pertama:** uji akurasi lokal.
 - **T52 — Tag, tahun, dan urutan proyek lewat Dashboard Admin** (dicatat atas
   permintaan Owner, 1 November 2026; belum dijadwalkan). Saat ini tag dan tahun
   ke-17 proyek berasal dari data kurasi di kode, proyek baru dari Dashboard
@@ -2134,6 +2147,106 @@ belum ada yang dikerjakan.
   versi gratis bernilai Rp0. Domain tidak perlu dibeli lagi; biaya
   perpanjangan `niuva.id` di Rumahweb belum diverifikasi. Harga paket gratis
   pihak ketiga belum diverifikasi ulang.
+
+### T57/T58 — Sewa Studio dan kalkulator estimasi publik, 2026-11-02
+
+Branch `claude/studio-and-estimate`. Owner memilih arah yang disarankan agen
+("Ya, ikuti saran"), lalu menjawab beberapa hal. Setelah PR dibuka, Owner
+juga meminta satu nomor WhatsApp untuk seluruh situs ("ya kamu saja yg ubah")
+dan memberi jam buka Senin–Jumat 09.00–17.00 WIB:
+- penempatan: seksi di Custom 3D Print dengan ajakan "kalau mau print sendiri";
+- WhatsApp: nomor pitch deck;
+- isi halaman: harga dan alamat;
+- Full Service: hanya untuk penyewa;
+- filamen komunal di tarif jasa cetak: tetap ada, dengan tarif Pricing v1
+  yang sudah disetujui (jawaban "tetap" setelah PR dibuka).
+
+Sumber harga adalah `docs/source/Pricelist 3D Print Niuva.xlsx`. Tabel "Service"
+di pitch deck ternyata salinan tabel Workstation, jadi yang dipakai adalah isi
+Excel. Keputusan dicatat di addendum PRD dan Tech Design 2 November 2026.
+
+- **T57 Sewa Studio:**
+  - `src/features/public/studio-rental.ts` memuat tiga kelompok harga, yaitu
+    sewa printer, filamen, dan slicing; "Sewa PC" dan "Self Service" di Excel
+    sama persis, jadi digabung menjadi satu baris.
+  - `src/app/custom-print/studio-rental-section.tsx` menampilkan alamat dari
+    Informasi Situs, jam buka, dan "Booking lewat WhatsApp" ke nomor
+    Informasi Situs.
+  - Nomor awal Informasi Situs (`publicCompanyProfile.contact`) kini
+    +62 813-2140-7815. Lingkungan yang sudah menerbitkan Informasi Situs
+    tetap memakai nilai tersimpan sampai nomornya diganti lewat Admin.
+  - Ajakan satu baris "Ingin mencetak sendiri? … Lihat harga sewa" ada di
+    bawah dua kartu titik mulai.
+- **T58 Kalkulator:**
+  - `src/modules/custom-print/public-estimate.ts` memakai validasi input yang
+    sama dengan simulasi form dan `calculatePrintQuote()` dengan `NIUVA_STOCK`.
+  - `public-estimate-service.ts` membaca tepat satu aturan aktif yang layak.
+  - `src/app/custom-print/estimate-calculator.tsx` menghitung di browser,
+    tanpa endpoint baru dan tanpa penyimpanan.
+  - Form pengajuan menerima prefill (material, jumlah, berat, durasi) yang
+    divalidasi ulang di server dan dibawa melalui login. Kotak opt-in sudah
+    tercentang, tetapi konfirmasi sumber angka tetap kosong.
+  - `formatExactRupiah` dipindah ke `src/modules/shared/format.ts`.
+- **Bukti lokal:**
+  - lint 0 error; typecheck lulus;
+  - unit 141 file, 1.566 test lulus, termasuk `public-estimate.test.tsx` dan
+    test prefill form;
+  - pemeriksaan Playwright di dev server pada 1440 dan 390px:
+    - harga, alamat, dan tautan WhatsApp studio;
+    - ajakan melompat ke `#studio`;
+    - tanpa overflow dan tanpa error console;
+  - kalkulator di dev server: database development lokal sempat mati,
+    sehingga kalkulator tampil "belum tersedia". Setelah database dinyalakan,
+    aturan `CUSTOM_PRINT_V1` v1 `PER_UNIT` yang sudah aktif di sana langsung
+    dipakai: 2 × 18,4 g PLA × 1 jam 30 menit = Rp51.800, dengan tautan prefill
+    yang benar. Owner meminta agen mengaktifkan tarif ("kamu aja yg ubah");
+    tidak ada yang perlu diubah karena aturan sudah aktif;
+  - E2E publik tanpa login: 16 lulus. Satu test butuh login Customer tiruan
+    dan dibuktikan di CI.
+- **Belum:**
+  - review visual Owner;
+  - aktivasi aturan Pricing v1 di production, pada gerbang rilis T31. Staging
+    sudah aktif sejak 30 Oktober, jadi kalkulator langsung tampil setelah PR
+    ini di-deploy;
+  - data mesin, DP, pembatalan, dan membership dari Owner;
+  - kebijakan privasi dan syarat layanan v1.0, dua halaman privasi Akun, dan
+    SOP layanan masih mencantumkan 085117678901 sebagai kontak. Mengubahnya
+    menyentuh versi kebijakan, jadi menunggu keputusan Owner.
+
+### T46 — penutupan status fondasi v2, 2026-11-02
+
+Atas permintaan Owner ("Ya, rapikan"). Status T46 tertinggal di IN_PROGRESS
+setelah semua kriterianya masuk `main`:
+
+- **Token, tipe, motion:**
+  - token v2, Manrope, dan ukuran bernama di #103;
+  - motion memakai token di #118 (T51) dan #119 (T54);
+  - ukuran bernama dihormati `cn()` di #121 (T56).
+- **Primitive `components/ui`:**
+  - tombol pil di #103;
+  - `buttonVariants` dengan tailwind-merge dan Card default di #117 (T50);
+  - `StatusNotice` v2 di #120 (T55).
+- **Shell:**
+  - header dan footer publik serta 404 di #103 dan #106;
+  - `CustomerAuthFrame` di #116;
+  - shell Admin di #117.
+- **Status label dan format Rupiah:**
+  - `src/features/customer-status/labels.ts` dan `src/modules/shared/format.ts`
+    di #114;
+  - `src/modules/admin/status-labels.ts` di #117.
+- **Timeline dan page header bersama:**
+  - `OrderStatusTimeline` di #113;
+  - `src/app/admin/admin-page-header.tsx` di #117.
+- **Batas:**
+  - `package.json` tidak berubah sejak T45 (#101), jadi tidak ada dependency
+    npm baru;
+  - setiap PR menyatakan URL, API, data, auth, harga, dan pembayaran tetap.
+- **Gate:** Quality gates (lint, typecheck, test, E2E, build) lulus di ke-16 PR
+  redesign, dari #103 sampai #121; capture lokal tercatat di log tiap task.
+- **Belum:**
+  - review visual Owner per route (baru Beranda yang diterima);
+  - uji perangkat dan AT (T37);
+  - cek staging setelah deploy Netlify dibuka lagi 26 November.
 
 ### T56 — ukuran bernama di `cn()`, 2026-11-02
 
