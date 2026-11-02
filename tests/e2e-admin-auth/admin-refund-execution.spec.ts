@@ -51,7 +51,8 @@ for (const enhanced of [true, false]) test(`Owner verifies and records one full 
     const transferReference = `TEST-BANK-${randomUUID()}`;
     await form.getByLabel("Referensi transfer bank yang unik").fill(transferReference);
     await form.getByLabel("Referensi bukti transfer yang sudah diperiksa").fill("TEST-BANK-RECEIPT-VERIFIED");
-    const local = new Date(Date.now() + 7 * 3600000).toISOString().slice(0, 19);
+    // datetime-local drops ":00" seconds, and fill() rejects a value the input rewrites.
+    const local = new Date(Date.now() + 7 * 3600000).toISOString().slice(0, 19).replace(/:00$/, "");
     await form.getByLabel("Waktu transfer selesai (WIB)").fill(local);
     await form.getByRole("button", { name: "Catat transfer terkonfirmasi", exact: true }).click();
     await expect(current.getByText("Penyelesaian terkonfirmasi", { exact: true })).toBeVisible({ timeout: 30000 });
